@@ -16,7 +16,6 @@
 
 package com.facebook.buck.util.concurrent;
 
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -36,7 +35,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  * </pre>
  */
-public class AutoCloseableReadWriteLock implements ReadWriteLock {
+public class AutoCloseableReadWriteLock {
 
   private final ReentrantReadWriteLock reentrantReadWriteLock;
 
@@ -44,13 +43,11 @@ public class AutoCloseableReadWriteLock implements ReadWriteLock {
     reentrantReadWriteLock = new ReentrantReadWriteLock();
   }
 
-  @Override
-  public AutoCloseableLock readLock() {
-    return AutoCloseableLock.createFor(reentrantReadWriteLock.readLock());
+  public AutoCloseableLocked lockRead() {
+    return AutoCloseableLocked.createFor(reentrantReadWriteLock.readLock());
   }
 
-  @Override
-  public AutoCloseableLock writeLock() {
-    return AutoCloseableLock.createFor(reentrantReadWriteLock.writeLock());
+  public AutoCloseableLocked lockWrite() {
+    return AutoCloseableLocked.createFor(reentrantReadWriteLock.writeLock());
   }
 }

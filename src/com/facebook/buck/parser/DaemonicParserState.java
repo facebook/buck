@@ -40,7 +40,7 @@ import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.util.concurrent.AutoCloseableLock;
+import com.facebook.buck.util.concurrent.AutoCloseableLocked;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteLock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -385,13 +385,13 @@ public class DaemonicParserState {
 
   @Nullable
   private DaemonicCellState getCellState(Cell cell) {
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+    try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
       return cellToDaemonicState.get(cell.getCanonicalName());
     }
   }
 
   private DaemonicCellState getOrCreateCellState(Cell cell) {
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+    try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
       return cellToDaemonicState.computeIfAbsent(
           cell.getCanonicalName(), r -> new DaemonicCellState(cell, locks));
     }
@@ -433,7 +433,7 @@ public class DaemonicParserState {
     // We only care about creation and deletion events because modified should result in a
     // rule key change.  For parsing, these are the only events we need to care about.
     if (isPathCreateOrDeleteEvent(event)) {
-      try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+      try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
         for (DaemonicCellState state : cellToDaemonicState.values()) {
           try {
             Cell cell = state.getCell();
@@ -481,7 +481,7 @@ public class DaemonicParserState {
    * file.
    */
   private boolean configurationRulesDependOn(ForwardRelPath path) {
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+    try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
       for (DaemonicCellState state : cellToDaemonicState.values()) {
         if (state.pathDependentPresentIn(path, configurationBuildFiles)) {
           return true;
@@ -496,7 +496,7 @@ public class DaemonicParserState {
 
     // The paths from watchman are not absolute. Because of this, we adopt a conservative approach
     // to invalidating the caches.
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+    try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
       for (DaemonicCellState state : cellToDaemonicState.values()) {
         invalidatePath(state, path);
       }
@@ -573,7 +573,7 @@ public class DaemonicParserState {
         cell.getBuckConfig().getView(ParserConfig.class).getDefaultIncludes();
 
     ImmutableList<String> expected;
-    try (AutoCloseableLock readLock = cachedStateLock.readLock()) {
+    try (AutoCloseableLocked readLock = cachedStateLock.lockRead()) {
       expected = defaultIncludesByCellName.get(cell.getCanonicalName());
 
       if (expected != null && defaultIncludes.equals(expected)) {
@@ -584,7 +584,7 @@ public class DaemonicParserState {
       // cached data to be enormously wonky.
     }
 
-    try (AutoCloseableLock writeLock = cachedStateLock.writeLock()) {
+    try (AutoCloseableLocked writeLock = cachedStateLock.lockWrite()) {
       defaultIncludesByCellName.put(cell.getCanonicalName(), defaultIncludes);
     }
     if (invalidateCellCaches(cell)) {
@@ -597,7 +597,7 @@ public class DaemonicParserState {
 
   private boolean invalidateCellCaches(Cell cell) {
     LOG.debug("Starting to invalidate caches for %s..", cell.getRoot());
-    try (AutoCloseableLock writeLock = cellStateLock.writeLock()) {
+    try (AutoCloseableLocked writeLock = cellStateLock.lockWrite()) {
       DaemonicCellState invalidated = cellToDaemonicState.remove(cell.getCanonicalName());
       if (invalidated != null) {
         LOG.debug("Cell cache data invalidated.");
@@ -611,7 +611,7 @@ public class DaemonicParserState {
 
   public boolean invalidateAllCaches() {
     LOG.debug("Starting to invalidate all caches..");
-    try (AutoCloseableLock writeLock = cellStateLock.writeLock()) {
+    try (AutoCloseableLocked writeLock = cellStateLock.lockWrite()) {
       boolean invalidated = !cellToDaemonicState.isEmpty();
       cellToDaemonicState.clear();
       buildFileTrees.invalidateAll();
@@ -631,7 +631,7 @@ public class DaemonicParserState {
 
   @Override
   public String toString() {
-    try (AutoCloseableLock readLock = cellStateLock.readLock()) {
+    try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
       return String.format("memoized=%s", cellToDaemonicState);
     }
   }

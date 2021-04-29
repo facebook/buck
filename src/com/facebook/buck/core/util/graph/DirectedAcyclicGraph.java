@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.util.graph;
 
-import com.facebook.buck.util.concurrent.AutoCloseableLock;
+import com.facebook.buck.util.concurrent.AutoCloseableLocked;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteLock;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -259,21 +259,21 @@ public class DirectedAcyclicGraph<T> implements TraversableGraph<T> {
 
     @Override
     public Builder<T> addNode(T node) {
-      try (AutoCloseableLock readLock = lock.readLock()) {
+      try (AutoCloseableLocked readLock = lock.lockRead()) {
         return super.addNode(node);
       }
     }
 
     @Override
     public Builder<T> addEdge(T source, T sink) {
-      try (AutoCloseableLock readLock = lock.readLock()) {
+      try (AutoCloseableLocked readLock = lock.lockRead()) {
         return super.addEdge(source, sink);
       }
     }
 
     @Override
     public DirectedAcyclicGraph<T> build() {
-      try (AutoCloseableLock writeLock = lock.writeLock()) {
+      try (AutoCloseableLocked writeLock = lock.lockWrite()) {
         return super.build();
       }
     }
