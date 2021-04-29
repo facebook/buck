@@ -33,7 +33,6 @@ import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
-import com.facebook.buck.util.concurrent.AutoCloseableReadWriteUpdateLock;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
@@ -90,7 +89,7 @@ class DaemonicCellState {
     }
 
     public T putComputedNodeIfNotPresent(K target, T targetNode) throws BuildTargetException {
-      try (AutoCloseableLock readLock = cachesLock.readLock()) {
+      try (AutoCloseableLock readLock = locks.cachesLock.readLock()) {
         T updatedNode = allComputedNodes.putIfAbsentAndGet(target, targetNode);
         Preconditions.checkState(
             allRawNodeTargets.contains(type.keyToUnflavoredBuildTargetView.apply(target)),
@@ -188,18 +187,18 @@ class DaemonicCellState {
 
   private final Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> rawTargetNodeCache;
 
-  private final AutoCloseableReadWriteUpdateLock cachesLock;
+  private final DaemonicParserStateLocks locks;
 
-  DaemonicCellState(Cell cell) {
+  DaemonicCellState(Cell cell, DaemonicParserStateLocks locks) {
     this.cell = new AtomicReference<>(cell);
     this.cellRoot = cell.getRoot();
     this.cellCanonicalName = cell.getCanonicalName();
+    this.locks = locks;
     this.buildFileDependents = new ConcurrentHashMap<>();
     this.packageFileDependents = new ConcurrentHashMap<>();
     this.allBuildFileManifests = new ConcurrentMapCache<>();
     this.allPackageFileManifests = new ConcurrentMapCache<>();
     this.allRawNodeTargets = Collections.newSetFromMap(new ConcurrentHashMap<>());
-    this.cachesLock = new AutoCloseableReadWriteUpdateLock();
     this.targetNodeCache = new Cache<>(TARGET_NODE_CACHE_TYPE);
     this.rawTargetNodeCache = new Cache<>(RAW_TARGET_NODE_CACHE_TYPE);
   }
@@ -225,7 +224,7 @@ class DaemonicCellState {
       AbsPath buildFile,
       BuildFileManifest buildFileManifest,
       ImmutableSet<AbsPath> dependentsOfEveryNode) {
-    try (AutoCloseableLock readLock = cachesLock.readLock()) {
+    try (AutoCloseableLock readLock = locks.cachesLock.readLock()) {
       BuildFileManifest updated =
           allBuildFileManifests.putIfAbsentAndGet(buildFile, buildFileManifest);
       for (RawTargetNode node : updated.getTargets().values()) {
@@ -254,7 +253,7 @@ class DaemonicCellState {
       AbsPath packageFile,
       PackageFileManifest packageFileManifest,
       ImmutableSet<AbsPath> packageDependents) {
-    try (AutoCloseableLock readLock = cachesLock.readLock()) {
+    try (AutoCloseableLock readLock = locks.cachesLock.readLock()) {
       PackageFileManifest updated =
           allPackageFileManifests.putIfAbsentAndGet(packageFile, packageFileManifest);
       if (updated == packageFileManifest) {
@@ -277,7 +276,7 @@ class DaemonicCellState {
    * @return The number of invalidated nodes.
    */
   int invalidateNodesInPath(AbsPath path, boolean invalidateBuildTargets) {
-    try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
+    try (AutoCloseableLock writeLock = locks.cachesLock.writeLock()) {
       int invalidatedRawNodes = 0;
       BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(path);
       if (buildFileManifest != null) {
@@ -320,7 +319,7 @@ class DaemonicCellState {
    * @return Count of all invalidated raw nodes for the path
    */
   int invalidatePath(AbsPath path, boolean invalidateManifests) {
-    try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
+    try (AutoCloseableLock writeLock = locks.cachesLock.writeLock()) {
       // If `path` is a build file with a valid entry in `allBuildFileManifests`, we also want to
       // invalidate the build targets in the manifest.
       int invalidatedRawNodes = invalidateNodesInPath(path, true);

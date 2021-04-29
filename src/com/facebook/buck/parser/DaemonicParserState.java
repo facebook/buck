@@ -321,6 +321,7 @@ public class DaemonicParserState {
 
   private final AutoCloseableReadWriteLock cachedStateLock;
   private final AutoCloseableReadWriteLock cellStateLock;
+  private final DaemonicParserStateLocks locks;
 
   public DaemonicParserState() {
     this.counters = new DaemonicParserStateCounters();
@@ -343,6 +344,7 @@ public class DaemonicParserState {
 
     this.cachedStateLock = new AutoCloseableReadWriteLock();
     this.cellStateLock = new AutoCloseableReadWriteLock();
+    this.locks = new DaemonicParserStateLocks();
   }
 
   LoadingCache<Cell, BuildFileTree> getBuildFileTrees() {
@@ -396,7 +398,7 @@ public class DaemonicParserState {
   private DaemonicCellState getOrCreateCellState(Cell cell) {
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       return cellToDaemonicState.computeIfAbsent(
-          cell.getCanonicalName(), r -> new DaemonicCellState(cell));
+          cell.getCanonicalName(), r -> new DaemonicCellState(cell, locks));
     }
   }
 

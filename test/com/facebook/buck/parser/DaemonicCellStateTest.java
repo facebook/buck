@@ -107,8 +107,9 @@ public class DaemonicCellStateTest {
             .build();
     cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     childCell = cells.getCell(CanonicalCellName.of(Optional.of("xplat")));
-    state = new DaemonicCellState(cells.getRootCell());
-    childState = new DaemonicCellState(childCell);
+    DaemonicParserStateLocks locks = new DaemonicParserStateLocks();
+    state = new DaemonicCellState(cells.getRootCell(), locks);
+    childState = new DaemonicCellState(childCell, locks);
   }
 
   private UnconfiguredTargetNode rawTargetNode(String name) {
