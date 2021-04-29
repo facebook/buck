@@ -599,7 +599,10 @@ public class ParserWithConfigurableAttributesTest {
     filterAllTargetsInProject(parser, parsingContext);
 
     // Process event.
-    parser.getPermState().invalidateBasedOn(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
+    parser
+        .getPermState()
+        .invalidateBasedOn(
+            ImmutableList.of(WatchmanOverflowEvent.of(filesystem.getRootPath(), "")));
 
     // Call filterAllTargetsInProject to request cached rules.
     filterAllTargetsInProject(parser, parsingContext);
@@ -614,7 +617,10 @@ public class ParserWithConfigurableAttributesTest {
     filterAllTargetsInProject(parser, parsingContext);
 
     // Send overflow event.
-    parser.getPermState().invalidateBasedOn(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
+    parser
+        .getPermState()
+        .invalidateBasedOn(
+            ImmutableList.of(WatchmanOverflowEvent.of(filesystem.getRootPath(), "")));
 
     // Call filterAllTargetsInProject to request cached rules.
     filterAllTargetsInProject(parser, parsingContext);

@@ -106,6 +106,7 @@ public class WatchmanWatcherTest {
         BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertTrue(eventBuffer.events.isEmpty());
+    assertTrue(eventBuffer.bigEvents.isEmpty());
   }
 
   @Test
@@ -123,6 +124,7 @@ public class WatchmanWatcherTest {
         "Path should match watchman output.",
         ForwardRelativePath.of("foo/bar/baz"),
         pathEvent.getPath());
+    assertEquals(ImmutableList.of(pathEvent), eventBuffer.getOnlyBigEvent().getPathEvents());
   }
 
   @Test
@@ -137,6 +139,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
     WatchmanPathEvent pathEvent = eventBuffer.getOnlyEvent(WatchmanPathEvent.class);
     assertEquals("Should be create event.", Kind.CREATE, pathEvent.getKind());
+    assertEquals(ImmutableList.of(pathEvent), eventBuffer.getOnlyBigEvent().getPathEvents());
   }
 
   @Test
@@ -153,6 +156,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
     WatchmanPathEvent pathEvent = eventBuffer.getOnlyEvent(WatchmanPathEvent.class);
     assertEquals("Should be delete event.", Kind.DELETE, pathEvent.getKind());
+    assertEquals(ImmutableList.of(pathEvent), eventBuffer.getOnlyBigEvent().getPathEvents());
   }
 
   @Test
@@ -172,6 +176,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
     WatchmanPathEvent pathEvent = eventBuffer.getOnlyEvent(WatchmanPathEvent.class);
     assertEquals("Should be delete event.", Kind.DELETE, pathEvent.getKind());
+    assertEquals(ImmutableList.of(pathEvent), eventBuffer.getOnlyBigEvent().getPathEvents());
   }
 
   @Test
@@ -196,6 +201,7 @@ public class WatchmanWatcherTest {
         "Path should match watchman output.",
         ForwardRelativePath.of("foo/bar/boz"),
         pathEvents.get(1).getPath());
+    assertEquals(pathEvents, eventBuffer.getOnlyBigEvent().getPathEvents());
   }
 
   @Test
@@ -213,6 +219,7 @@ public class WatchmanWatcherTest {
         BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertEquals(1, eventBuffer.filterEventsByClass(WatchmanOverflowEvent.class).size());
+    assertEquals(1, eventBuffer.getOnlyBigEvent().getOverflowEvents().size());
   }
 
   @Test
@@ -234,6 +241,7 @@ public class WatchmanWatcherTest {
       assertTrue("Should be expected error", e.getMessage().startsWith("oops"));
     }
     assertEquals(1, eventBuffer.filterEventsByClass(WatchmanOverflowEvent.class).size());
+    assertEquals(1, eventBuffer.getOnlyBigEvent().getOverflowEvents().size());
   }
 
   @Test
@@ -256,6 +264,7 @@ public class WatchmanWatcherTest {
       assertEquals("Should be test interruption.", e.getMessage(), message);
     }
     assertEquals(1, eventBuffer.filterEventsByClass(WatchmanOverflowEvent.class).size());
+    assertEquals(1, eventBuffer.getOnlyBigEvent().getOverflowEvents().size());
   }
 
   @Test
@@ -290,6 +299,7 @@ public class WatchmanWatcherTest {
           WatchmanWatcher.FreshInstanceAction.NONE);
     } finally {
       assertEquals(1, eventBuffer.filterEventsByClass(WatchmanOverflowEvent.class).size());
+      assertEquals(1, eventBuffer.getOnlyBigEvent().getOverflowEvents().size());
     }
   }
 
@@ -313,6 +323,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT);
 
     assertEquals(1, eventBuffer.filterEventsByClass(WatchmanOverflowEvent.class).size());
+    assertEquals(1, eventBuffer.getOnlyBigEvent().getOverflowEvents().size());
   }
 
   @Test
@@ -335,6 +346,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
 
     assertTrue("no events were posted", eventBuffer.events.isEmpty());
+    assertTrue("no events were posted", eventBuffer.bigEvents.isEmpty());
   }
 
   @Test
@@ -362,6 +374,7 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
 
     assertEquals(1, eventBuffer.filterEventsByClass(WatchmanOverflowEvent.class).size());
+    assertEquals(1, eventBuffer.getOnlyBigEvent().getOverflowEvents().size());
   }
 
   @Test
@@ -486,6 +499,7 @@ public class WatchmanWatcherTest {
         BuckEventBusForTests.newInstance(FakeClock.doNotCare()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertTrue(eventBuffer.events.isEmpty());
+    assertTrue(eventBuffer.bigEvents.isEmpty());
   }
 
   @Test
@@ -561,6 +575,7 @@ public class WatchmanWatcherTest {
 
     assertEquals(watcher.getWatchmanQuery(FAKE_ROOT).get().getSince(), Optional.of("c:1:0"));
     assertEquals(1, eventBuffer.filterEventsByClass(WatchmanOverflowEvent.class).size());
+    assertEquals(1, eventBuffer.getOnlyBigEvent().getOverflowEvents().size());
   }
 
   @Test
@@ -665,10 +680,16 @@ public class WatchmanWatcherTest {
 
   private static class EventBuffer {
     public final List<WatchmanEvent> events = new ArrayList<>();
+    public final List<WatchmanWatcherOneBigEvent> bigEvents = new ArrayList<>();
 
     @Subscribe
     public void on(WatchmanEvent event) {
       events.add(event);
+    }
+
+    @Subscribe
+    public void on(WatchmanWatcherOneBigEvent bigEvent) {
+      bigEvents.add(bigEvent);
     }
 
     /** Helper to retrieve the only event of the specific class that should be in the list. */
@@ -687,6 +708,11 @@ public class WatchmanWatcherTest {
           1,
           filteredEvents.size());
       return filteredEvents.get(0);
+    }
+
+    public WatchmanWatcherOneBigEvent getOnlyBigEvent() {
+      assertEquals(1, bigEvents.size());
+      return bigEvents.iterator().next();
     }
   }
 }

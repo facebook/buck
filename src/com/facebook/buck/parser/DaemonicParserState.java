@@ -34,6 +34,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
+import com.facebook.buck.io.watchman.WatchmanWatcherOneBigEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -400,18 +401,31 @@ public class DaemonicParserState {
   }
 
   @Subscribe
-  public void invalidateBasedOn(WatchmanOverflowEvent event) {
+  public void invalidateBasedOn(WatchmanWatcherOneBigEvent event) {
+    if (!event.getOverflowEvents().isEmpty()) {
+      invalidateBasedOn(event.getOverflowEvents());
+    } else {
+      for (WatchmanPathEvent pathEvent : event.getPathEvents()) {
+        invalidateBasedOn(pathEvent);
+      }
+    }
+  }
+
+  @VisibleForTesting
+  void invalidateBasedOn(ImmutableList<WatchmanOverflowEvent> events) {
+    Preconditions.checkArgument(!events.isEmpty(), "overflow event list must not be empty");
+
     // Non-path change event, likely an overflow due to many change events: invalidate everything.
-    LOG.debug("Received non-path change event %s, assuming overflow and checking caches.", event);
+    LOG.debug("Received non-path change event %s, assuming overflow and checking caches.", events);
 
     if (invalidateAllCaches()) {
-      LOG.warn("Invalidated cache on watch event %s.", event);
+      LOG.warn("Invalidated cache on watch event %s.", events);
       counters.recordCacheInvalidatedByWatchOverflow();
     }
   }
 
-  @Subscribe
-  public void invalidateBasedOn(WatchmanPathEvent event) {
+  @VisibleForTesting
+  void invalidateBasedOn(WatchmanPathEvent event) {
     LOG.verbose("Parser watched event %s %s", event.getKind(), event.getPath());
 
     counters.recordFilesChanged();

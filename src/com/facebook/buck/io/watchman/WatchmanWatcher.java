@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -186,6 +187,7 @@ public class WatchmanWatcher {
     buckEventBus.post(WatchmanStatusEvent.started());
 
     try {
+      ConcurrentLinkedQueue<WatchmanWatcherOneBigEvent> bigEvents = new ConcurrentLinkedQueue<>();
       List<Callable<Unit>> watchmanQueries = new ArrayList<>();
       for (AbsPath cellPath : queries.keySet()) {
         watchmanQueries.add(
@@ -210,7 +212,8 @@ public class WatchmanWatcher {
                       query,
                       cursor,
                       filesHaveChanged,
-                      perfEvent);
+                      perfEvent,
+                      bigEvents);
                 }
               }
               return Unit.UNIT;
@@ -220,18 +223,28 @@ public class WatchmanWatcher {
       // Run all of the Watchman queries in parallel. This can be significant if you have a lot of
       // cells.
       List<Future<Unit>> futures = executorService.invokeAll(watchmanQueries);
+      List<ExecutionException> exceptions = new ArrayList<>();
       for (Future<Unit> future : futures) {
         try {
           future.get();
         } catch (ExecutionException e) {
-          Throwable cause = e.getCause();
-          if (cause != null) {
-            Throwables.throwIfUnchecked(cause);
-            Throwables.propagateIfPossible(cause, IOException.class);
-            Throwables.propagateIfPossible(cause, InterruptedException.class);
-          }
-          throw new RuntimeException(e);
+          exceptions.add(e);
         }
+      }
+
+      WatchmanWatcherOneBigEvent bigEvent = WatchmanWatcherOneBigEvent.merge(bigEvents);
+      if (!bigEvent.isEmpty()) {
+        fileChangeEventBus.post(bigEvent);
+      }
+
+      for (ExecutionException exception : exceptions) {
+        Throwable cause = exception.getCause();
+        if (cause != null) {
+          Throwables.throwIfUnchecked(cause);
+          Throwables.propagateIfPossible(cause, IOException.class);
+          Throwables.propagateIfPossible(cause, InterruptedException.class);
+        }
+        throw new RuntimeException(exception);
       }
 
       if (!filesHaveChanged.get()) {
@@ -252,7 +265,8 @@ public class WatchmanWatcher {
       WatchmanWatcherQuery query,
       WatchmanCursor cursor,
       AtomicBoolean filesHaveChanged,
-      SimplePerfEvent.Scope perfEvent)
+      SimplePerfEvent.Scope perfEvent,
+      ConcurrentLinkedQueue<WatchmanWatcherOneBigEvent> bigEvents)
       throws IOException, InterruptedException {
     try {
       Either<Map<String, Object>, WatchmanClient.Timeout> queryResponse;
@@ -267,10 +281,11 @@ public class WatchmanWatcher {
         // This message is not de-duplicated via WatchmanDiagnostic.
         WatchmanWatcherException e = new WatchmanWatcherException(e1);
         LOG.debug(e, "Error in Watchman output. Posting an overflow event to flush the caches");
-        postWatchEvent(
-            buckEventBus,
+        WatchmanOverflowEvent overflow =
             ImmutableWatchmanOverflowEvent.ofImpl(
-                cellPath, "Watchman error occurred: " + e.getMessage()));
+                cellPath, "Watchman error occurred: " + e.getMessage());
+        postWatchEvent(buckEventBus, overflow);
+        bigEvents.add(WatchmanWatcherOneBigEvent.overflow(overflow));
         throw e;
       }
 
@@ -280,13 +295,14 @@ public class WatchmanWatcher {
           LOG.warn(
               "Could not get response from Watchman for query %s within %d ms",
               query, timeoutMillis);
-          postWatchEvent(
-              buckEventBus,
+          WatchmanOverflowEvent overflow =
               ImmutableWatchmanOverflowEvent.ofImpl(
                   cellPath,
                   "Timed out after "
                       + TimeUnit.MILLISECONDS.toSeconds(timeoutMillis)
-                      + " sec waiting for watchman query."));
+                      + " sec waiting for watchman query.");
+          postWatchEvent(buckEventBus, overflow);
+          bigEvents.add(WatchmanWatcherOneBigEvent.overflow(overflow));
           filesHaveChanged.set(true);
           return;
         }
@@ -318,10 +334,11 @@ public class WatchmanWatcher {
             case NONE:
               break;
             case POST_OVERFLOW_EVENT:
-              postWatchEvent(
-                  buckEventBus,
+              ImmutableWatchmanOverflowEvent overflow =
                   ImmutableWatchmanOverflowEvent.ofImpl(
-                      cellPath, "Watchman has been initialized recently."));
+                      cellPath, "Watchman has been initialized recently.");
+              postWatchEvent(buckEventBus, overflow);
+              bigEvents.add(WatchmanWatcherOneBigEvent.overflow(overflow));
               break;
           }
           filesHaveChanged.set(true);
@@ -340,9 +357,10 @@ public class WatchmanWatcher {
           LOG.warn(
               "Posting overflow event: too many files changed: %d > %d",
               files.size(), OVERFLOW_THRESHOLD);
-          postWatchEvent(
-              buckEventBus,
-              ImmutableWatchmanOverflowEvent.ofImpl(cellPath, "Too many files changed."));
+          WatchmanOverflowEvent overflow =
+              ImmutableWatchmanOverflowEvent.ofImpl(cellPath, "Too many files changed.");
+          postWatchEvent(buckEventBus, overflow);
+          bigEvents.add(WatchmanWatcherOneBigEvent.overflow(overflow));
           filesHaveChanged.set(true);
           return;
         }
@@ -352,14 +370,17 @@ public class WatchmanWatcher {
           perfEvent.appendFinishedInfo("files_sample", files.subList(0, TRACE_CHANGES_THRESHOLD));
         }
 
+        ImmutableList.Builder<WatchmanPathEvent> pathEvents = ImmutableList.builder();
+
         for (Map<String, Object> file : files) {
           String fileName = (String) file.get("name");
           if (fileName == null) {
             LOG.warn("Filename missing from watchman file response %s", file);
-            postWatchEvent(
-                buckEventBus,
+            WatchmanOverflowEvent overflow =
                 ImmutableWatchmanOverflowEvent.ofImpl(
-                    cellPath, "Filename missing from watchman response."));
+                    cellPath, "Filename missing from watchman response.");
+            postWatchEvent(buckEventBus, overflow);
+            bigEvents.add(WatchmanWatcherOneBigEvent.overflow(overflow));
             filesHaveChanged.set(true);
             return;
           }
@@ -395,9 +416,16 @@ public class WatchmanWatcher {
             // behavior and we want to keep it.
             // TODO(buck_team): switch everything to use WatchmanMultiplePathEvent and retire
             // WatchmanPathEvent
-            postWatchEvent(
-                buckEventBus, ImmutableWatchmanPathEvent.ofImpl(cellPath, kind, filePath));
+            ImmutableWatchmanPathEvent pathEvent =
+                ImmutableWatchmanPathEvent.ofImpl(cellPath, kind, filePath);
+            postWatchEvent(buckEventBus, pathEvent);
+            pathEvents.add(pathEvent);
           }
+        }
+
+        ImmutableList<WatchmanPathEvent> pathEventsList = pathEvents.build();
+        if (!pathEventsList.isEmpty()) {
+          bigEvents.add(WatchmanWatcherOneBigEvent.pathEvents(pathEventsList));
         }
 
         if (!files.isEmpty() || freshInstanceAction == FreshInstanceAction.NONE) {
@@ -408,15 +436,23 @@ public class WatchmanWatcher {
       String message = "The communication with watchman daemon has been interrupted.";
       LOG.warn(e, message);
       // Events may have been lost, signal overflow.
-      postWatchEvent(buckEventBus, ImmutableWatchmanOverflowEvent.ofImpl(cellPath, message));
+      ImmutableWatchmanOverflowEvent overflow =
+          ImmutableWatchmanOverflowEvent.ofImpl(cellPath, message);
+      postWatchEvent(buckEventBus, overflow);
+      bigEvents.add(WatchmanWatcherOneBigEvent.overflow(overflow));
       Threads.interruptCurrentThread();
       throw e;
-    } catch (IOException e) {
+    } catch (WatchmanWatcherException e) {
+      // handled above
+      throw e;
+    } catch (Throwable e) {
       String message =
           "There was an error while communicating with the watchman daemon: " + e.getMessage();
       LOG.error(e, message);
       // Events may have been lost, signal overflow.
-      postWatchEvent(buckEventBus, ImmutableWatchmanOverflowEvent.ofImpl(cellPath, message));
+      WatchmanOverflowEvent overflow = ImmutableWatchmanOverflowEvent.ofImpl(cellPath, message);
+      postWatchEvent(buckEventBus, overflow);
+      bigEvents.add(WatchmanWatcherOneBigEvent.overflow(overflow));
       throw e;
     }
   }
