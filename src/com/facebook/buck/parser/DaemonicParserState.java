@@ -594,7 +594,7 @@ public class DaemonicParserState {
     return true;
   }
 
-  public boolean invalidateCellCaches(Cell cell) {
+  private boolean invalidateCellCaches(Cell cell) {
     LOG.debug("Starting to invalidate caches for %s..", cell.getRoot());
     try (AutoCloseableLock writeLock = cellStateLock.writeLock()) {
       DaemonicCellState invalidated = cellToDaemonicState.remove(cell.getCanonicalName());
