@@ -21,13 +21,13 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.Counter;
 import com.facebook.buck.event.BuckEventBus;
@@ -430,7 +430,7 @@ public class DaemonicParserState {
 
     counters.recordFilesChanged();
 
-    ForwardRelativePath path = event.getPath();
+    ForwardRelPath path = event.getPath();
     AbsPath fullPath = event.getCellPath().resolve(event.getRelPath());
 
     // We only care about creation and deletion events because modified should result in a
@@ -483,7 +483,7 @@ public class DaemonicParserState {
    * Check whether at least one build file in {@link #configurationBuildFiles} depends on the given
    * file.
    */
-  private boolean configurationRulesDependOn(ForwardRelativePath path) {
+  private boolean configurationRulesDependOn(ForwardRelPath path) {
     try (AutoCloseableLock readLock = cellStateLock.readLock()) {
       for (DaemonicCellState state : cellToDaemonicState.values()) {
         if (state.pathDependentPresentIn(path, configurationBuildFiles)) {
@@ -514,13 +514,13 @@ public class DaemonicParserState {
    *     to find and invalidate.
    */
   private void invalidateContainingBuildFile(
-      DaemonicCellState state, Cell cell, BuildFileTree buildFiles, ForwardRelativePath path) {
+      DaemonicCellState state, Cell cell, BuildFileTree buildFiles, ForwardRelPath path) {
     LOG.verbose("Invalidating rules dependent on change to %s in cell %s", path, cell);
-    Set<ForwardRelativePath> packageBuildFiles = new HashSet<>();
+    Set<ForwardRelPath> packageBuildFiles = new HashSet<>();
 
     // Find the closest ancestor package for the input path.  We'll definitely need to invalidate
     // that.
-    Optional<ForwardRelativePath> packageBuildFile = buildFiles.getBasePathOfAncestorTarget(path);
+    Optional<ForwardRelPath> packageBuildFile = buildFiles.getBasePathOfAncestorTarget(path);
     if (packageBuildFile.isPresent()) {
       packageBuildFiles.add(packageBuildFile.get());
     }
@@ -547,8 +547,8 @@ public class DaemonicParserState {
     counters.recordPathsAddedOrRemovedInvalidatingBuildFiles(path.toString());
 
     // Invalidate all the packages we found.
-    for (ForwardRelativePath buildFile : packageBuildFiles) {
-      ForwardRelativePath withBuildFile =
+    for (ForwardRelPath buildFile : packageBuildFiles) {
+      ForwardRelPath withBuildFile =
           buildFile.resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
       invalidatePath(
           state, cell.getRoot().resolve(withBuildFile.toRelPath(cell.getRoot().getFileSystem())));

@@ -17,12 +17,12 @@
 package com.facebook.buck.core.starlark.rule.attr;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
@@ -136,7 +136,7 @@ public abstract class Attribute<CoercedType> extends StarlarkValue implements At
   public CoercedType getValue(
       CellNameResolver cellNameResolver,
       ProjectFilesystem projectFilesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       HostTargetConfigurationResolver hostConfigurationResolver,
       Object value)

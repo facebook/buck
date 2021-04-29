@@ -18,11 +18,11 @@ package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.util.types.Either;
 
 /** A factory that parses a given build target name using the provided {@link BuildTargetParser}. */
@@ -55,7 +55,7 @@ public class ParsingUnconfiguredBuildTargetViewFactory
 
   @Override
   public UnconfiguredBuildTarget createForPathRelativeToProjectRoot(
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       String buildTargetName,
       CellNameResolver cellNameResolver) {
     return createForBaseName(
@@ -64,7 +64,7 @@ public class ParsingUnconfiguredBuildTargetViewFactory
 
   @Override
   public UnflavoredBuildTarget createUnflavoredForPathRelativeToProjectRoot(
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       String buildTargetName,
       CellNameResolver cellNameResolver) {
     UnconfiguredBuildTarget unconfiguredBuildTarget =

@@ -20,7 +20,7 @@ import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -33,12 +33,12 @@ import org.junit.Test;
 public class VisibilityPatternParserTest {
 
   private ProjectFilesystem filesystem;
-  private ForwardRelativePath definingPath;
+  private ForwardRelPath definingPath;
 
   @Before
   public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    definingPath = ForwardRelativePath.of("BUCK");
+    definingPath = ForwardRelPath.of("BUCK");
   }
 
   @Test

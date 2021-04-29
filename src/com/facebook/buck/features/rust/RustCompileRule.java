@@ -19,10 +19,10 @@ package com.facebook.buck.features.rust;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
@@ -352,7 +352,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
                       environment, v -> Arg.stringify(v, buildContext.getSourcePathResolver())));
 
               AbsPath root = filesystem.getRootPath();
-              ForwardRelativePath basePath = buildTarget.getCellRelativeBasePath().getPath();
+              ForwardRelPath basePath = buildTarget.getCellRelativeBasePath().getPath();
 
               // These need to be set as absolute paths - the intended use
               // is within an `include!(concat!(env!("..."), "...")`

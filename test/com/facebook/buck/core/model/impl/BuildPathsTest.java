@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.Iterables;
@@ -43,18 +43,18 @@ public class BuildPathsTest {
   private Object getTargetsForTest() {
     return new Object[] {
       new Object[] {
-        BuildTargetFactory.newInstance("//my/folder:foo"), ForwardRelativePath.of("my/folder/foo__")
+        BuildTargetFactory.newInstance("//my/folder:foo"), ForwardRelPath.of("my/folder/foo__")
       },
       new Object[] {
         BuildTargetFactory.newInstance("//my/folder:foo#flavour"),
-        ForwardRelativePath.of("my/folder/foo#flavour")
+        ForwardRelPath.of("my/folder/foo#flavour")
       }
     };
   }
 
   @Test
   @Parameters(method = "getTargetsForTest")
-  public void genPathFormat(BuildTarget target, ForwardRelativePath path) {
+  public void genPathFormat(BuildTarget target, ForwardRelPath path) {
     assertTrue(BuildPaths.getGenDir(filesystem.getBuckPaths(), target).startsWith("buck-out/gen"));
     assertTrue(
         BuildPaths.getGenDir(filesystem.getBuckPaths(), target)
@@ -63,7 +63,7 @@ public class BuildPathsTest {
 
   @Test
   @Parameters(method = "getTargetsForTest")
-  public void annotationPathFormat(BuildTarget target, ForwardRelativePath path) {
+  public void annotationPathFormat(BuildTarget target, ForwardRelPath path) {
     assertTrue(BuildPaths.getAnnotationDir(filesystem, target).startsWith("buck-out/annotation"));
     assertTrue(
         BuildPaths.getAnnotationDir(filesystem, target)
@@ -72,7 +72,7 @@ public class BuildPathsTest {
 
   @Test
   @Parameters(method = "getTargetsForTest")
-  public void scratchPathFormat(BuildTarget target, ForwardRelativePath path) {
+  public void scratchPathFormat(BuildTarget target, ForwardRelPath path) {
     assertTrue(BuildPaths.getScratchDir(filesystem, target).startsWith("buck-out/bin"));
     assertTrue(
         BuildPaths.getScratchDir(filesystem, target)
@@ -81,18 +81,17 @@ public class BuildPathsTest {
 
   @Test
   @Parameters(method = "getTargetsForTest")
-  public void basePathFormat(BuildTarget target, ForwardRelativePath path) {
+  public void basePathFormat(BuildTarget target, ForwardRelPath path) {
     assertTrue(BuildPaths.getBaseDir(filesystem, target).endsWith(path));
   }
 
   @Test
   @Parameters(method = "getTargetsForTest")
-  public void basePathFormatWithTargetConfigHash(BuildTarget target, ForwardRelativePath path) {
+  public void basePathFormatWithTargetConfigHash(BuildTarget target, ForwardRelPath path) {
     ProjectFilesystem filesystem =
         FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(true);
     String hash = TargetConfigurationHasher.hash(target.getTargetConfiguration());
-    assertEquals(
-        BuildPaths.getBaseDir(filesystem, target), ForwardRelativePath.of(hash).resolve(path));
+    assertEquals(BuildPaths.getBaseDir(filesystem, target), ForwardRelPath.of(hash).resolve(path));
   }
 
   @Test

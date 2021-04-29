@@ -18,7 +18,7 @@ package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.parser.syntax.ListWithSelects;
@@ -46,7 +46,7 @@ public class SelectorListFactory {
    */
   public SelectorList<Object> create(
       CellNameResolver cellNameResolver,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       ListWithSelects listWithSelects) {
     ImmutableList.Builder<Selector<Object>> builder =
         ImmutableList.builderWithExpectedSize(listWithSelects.getElements().size());

@@ -17,9 +17,9 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Collection;
@@ -66,7 +66,7 @@ public abstract class CollectionTypeCoercer<
   protected void fillUnconfigured(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       ImmutableCollection.Builder<U> builder,
       Object object)
       throws CoerceFailedException {
@@ -88,7 +88,7 @@ public abstract class CollectionTypeCoercer<
   protected boolean fillConfigured(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       HostTargetConfigurationResolver hostConfigurationResolver,
       ImmutableCollection.Builder<T> builder,

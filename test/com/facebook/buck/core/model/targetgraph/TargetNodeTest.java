@@ -30,6 +30,7 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -40,7 +41,6 @@ import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -143,8 +143,8 @@ public class TargetNodeTest {
     assertThat(
         targetNode.getInputs(),
         containsInAnyOrder(
-            ForwardRelativePath.of("example/path/MyClass.java"),
-            ForwardRelativePath.of("example/path/AnotherClass.java")));
+            ForwardRelPath.of("example/path/MyClass.java"),
+            ForwardRelPath.of("example/path/AnotherClass.java")));
 
     assertThat(
         targetNode.getExtraDeps(),

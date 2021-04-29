@@ -17,12 +17,12 @@
 package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ComparisonChain;
 
 /**
- * A pair of {@link CanonicalCellName} and {@link ForwardRelativePath} relative the the cell.
+ * A pair of {@link CanonicalCellName} and {@link ForwardRelPath} relative the the cell.
  *
  * <p>This object can identify a buck package or a buck file.
  */
@@ -31,7 +31,7 @@ public abstract class CellRelativePath implements Comparable<CellRelativePath> {
 
   public abstract CanonicalCellName getCellName();
 
-  public abstract ForwardRelativePath getPath();
+  public abstract ForwardRelPath getPath();
 
   public boolean startsWith(CellRelativePath other) {
     return this.getCellName().equals(other.getCellName())
@@ -51,7 +51,7 @@ public abstract class CellRelativePath implements Comparable<CellRelativePath> {
         .result();
   }
 
-  public static CellRelativePath of(CanonicalCellName cellName, ForwardRelativePath path) {
+  public static CellRelativePath of(CanonicalCellName cellName, ForwardRelPath path) {
     return ImmutableCellRelativePath.ofImpl(cellName, path);
   }
 

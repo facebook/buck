@@ -18,11 +18,11 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.util.stream.RichStream;
@@ -116,7 +116,7 @@ final class OwnersReport<N extends Comparable<N>> {
 
   @VisibleForTesting
   static <N extends Comparable<N>> OwnersReport<N> generateOwnersReport(
-      Function<N, ImmutableSet<ForwardRelativePath>> inputsFunction,
+      Function<N, ImmutableSet<ForwardRelPath>> inputsFunction,
       Cell rootCell,
       N targetNode,
       String filePath) {
@@ -135,7 +135,7 @@ final class OwnersReport<N extends Comparable<N>> {
           ImmutableSet.of(filePath));
     } else {
       Path commandInput = rootCell.getFilesystem().getPath(filePath);
-      ImmutableSet<ForwardRelativePath> ruleInputs = inputsFunction.apply(targetNode);
+      ImmutableSet<ForwardRelPath> ruleInputs = inputsFunction.apply(targetNode);
       ImmutableSet<Path> ruleInputPaths =
           ruleInputs.stream()
               .map(p -> p.toPath(commandInput.getFileSystem()))
@@ -181,13 +181,13 @@ final class OwnersReport<N extends Comparable<N>> {
     private final Cell rootCell;
     private final Path clientWorkingDir;
     private final BiFunction<Cell, AbsPath, ImmutableList<N>> buildfileNodesFunction;
-    private final Function<N, ImmutableSet<ForwardRelativePath>> inputsFunction;
+    private final Function<N, ImmutableSet<ForwardRelPath>> inputsFunction;
 
     private Builder(
         Cell rootCell,
         Path clientWorkingDir,
         BiFunction<Cell, AbsPath, ImmutableList<N>> buildfileNodesFunction,
-        Function<N, ImmutableSet<ForwardRelativePath>> inputsFunction) {
+        Function<N, ImmutableSet<ForwardRelPath>> inputsFunction) {
       this.rootCell = rootCell;
       this.clientWorkingDir = clientWorkingDir;
       this.buildfileNodesFunction = buildfileNodesFunction;

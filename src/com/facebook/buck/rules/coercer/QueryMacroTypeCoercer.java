@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.QueryMacro;
@@ -76,7 +76,7 @@ class QueryMacroTypeCoercer<U extends UnconfiguredQueryMacro, M extends QueryMac
   public U coerceToUnconfigured(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (args.size() != 1) {

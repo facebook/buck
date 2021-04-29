@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.path;
+package com.facebook.buck.core.filesystems;
 
-import com.facebook.buck.core.filesystems.BuckFileSystem;
-import com.facebook.buck.core.filesystems.BuckUnixPath;
-import com.facebook.buck.core.filesystems.FileName;
-import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
 /**
  * A normalized relative path object which:
@@ -40,13 +34,12 @@ import javax.annotation.Nullable;
  *   <li>Does not contain slash-slash
  * </ul>
  */
-// TODO(nga): move to the same package as RelPath
-public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
-  public static final ForwardRelativePath EMPTY = new ForwardRelativePath(new String[0]);
+public class ForwardRelPath implements Comparable<ForwardRelPath> {
+  public static final ForwardRelPath EMPTY = new ForwardRelPath(new String[0]);
 
   private final String[] segments;
 
-  private ForwardRelativePath(String[] segments) {
+  private ForwardRelPath(String[] segments) {
     this.segments = segments;
   }
 
@@ -55,13 +48,13 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
    *
    * <p>This function throws if path is not normalized (e. g. contains two consecutive slashes).
    */
-  public static ForwardRelativePath of(String path) {
+  public static ForwardRelPath of(String path) {
     return ofSubstring(path, 0);
   }
 
-  public static ForwardRelativePath ofFileName(FileName fileName) {
+  public static ForwardRelPath ofFileName(FileName fileName) {
     // This is safe because `FileName.name` is interned.
-    return new ForwardRelativePath(new String[] {fileName.getName()});
+    return new ForwardRelPath(new String[] {fileName.getName()});
   }
 
   /**
@@ -72,13 +65,15 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
    * @param offset is the number of characters to be removed from the path before parsing (useful in
    *     certain cases to avoid extra string allocation).
    */
-  public static ForwardRelativePath ofSubstring(String path, int offset) {
-    Preconditions.checkArgument(offset <= path.length());
+  public static ForwardRelPath ofSubstring(String path, int offset) {
+    if (offset > path.length()) {
+      throw new IllegalArgumentException(String.format("too short path: '%s'", path));
+    }
     if (offset == path.length()) {
       return EMPTY;
     }
 
-    return new ForwardRelativePath(splitAndIntern(path, offset));
+    return new ForwardRelPath(splitAndIntern(path, offset));
   }
 
   public int getNameCount() {
@@ -90,23 +85,46 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
   }
 
   /** Compatible with {@link Path#iterator()}. */
-  public Iterable<ForwardRelativePath> asIterable() {
+  public Iterable<ForwardRelPath> asIterable() {
     if (segments.length == 0) {
-      return ImmutableList.of(this);
+      return Collections.singletonList(this);
     }
+    return new AbstractList<ForwardRelPath>() {
+      @Override
+      public ForwardRelPath get(int index) {
+        return new ForwardRelPath(new String[] {segments[index]});
+      }
 
-    return Arrays.stream(segments)
-        .map(s -> new ForwardRelativePath(new String[] {s}))
-        .collect(ImmutableList.toImmutableList());
+      @Override
+      public int size() {
+        return segments.length;
+      }
+    };
+  }
+
+  /** Similar to {@link #asIterable()} but does not return empty name for empty path. */
+  public Iterable<FileName> nameComponents() {
+    return new AbstractList<FileName>() {
+
+      @Override
+      public int size() {
+        return segments.length;
+      }
+
+      @Override
+      public FileName get(int index) {
+        return FileName.ofUnchecked(segments[index]);
+      }
+    };
   }
 
   /** Similar to {@link Path#getParent()}. */
-  @Nullable
-  public ForwardRelativePath getParent() {
+  // @Nullable
+  public ForwardRelPath getParent() {
     if (segments.length < 2) {
       return null;
     }
-    return new ForwardRelativePath(Arrays.copyOf(this.segments, segments.length - 1));
+    return new ForwardRelPath(Arrays.copyOf(this.segments, segments.length - 1));
   }
 
   private static class Substring {
@@ -114,7 +132,10 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     private final int offset;
 
     public Substring(String string, int offset) {
-      Preconditions.checkArgument(offset <= string.length());
+      if (offset > string.length()) {
+        throw new IllegalArgumentException(String.format("too short path: '%s'", string));
+      }
+
       this.string = string;
       this.offset = offset;
     }
@@ -126,33 +147,45 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
   }
 
   private static String[] splitAndIntern(String path, int offset) {
-    Preconditions.checkState(path.length() > offset);
+    if (path.length() <= offset) {
+      throw new IllegalArgumentException(
+          String.format("too short path: '%s', offset: %s", path, offset));
+    }
 
     Substring pathSubstring = new Substring(path, offset);
 
-    Preconditions.checkArgument(
-        !path.startsWith("/", offset), "path must not start with slash: %s", pathSubstring);
-    Preconditions.checkArgument(
-        !path.endsWith("/"), "path must not end with slash: %s", pathSubstring);
+    if (path.startsWith("/", offset)) {
+      throw new IllegalArgumentException(
+          String.format("path must not start with slash: '%s'", pathSubstring));
+    }
+    if (path.endsWith("/")) {
+      throw new IllegalArgumentException(
+          String.format("path must not end with slash: '%s'", pathSubstring));
+    }
 
     ArrayList<String> segments = new ArrayList<>();
 
     int offsetAfterLastSlash = offset;
     for (int i = offset; i != path.length() + 1; ++i) {
       char c = i != path.length() ? path.charAt(i) : '/';
-      Preconditions.checkArgument(c != '\\', "backslash in path: %s", pathSubstring);
+      if (c == '\\') {
+        throw new IllegalArgumentException(String.format("backslash in path: '%s'", pathSubstring));
+      }
       if (c == '/') {
         if (i - offsetAfterLastSlash == 0) {
-          throw new IllegalArgumentException("two slashes in path: " + pathSubstring);
+          throw new IllegalArgumentException(
+              String.format("two slashes in path: '%s'", pathSubstring));
         }
         if (i - offsetAfterLastSlash == 1) {
-          Preconditions.checkArgument(path.charAt(i - 1) != '.', "dot in path: %s", pathSubstring);
+          if (path.charAt(i - 1) == '.') {
+            throw new IllegalArgumentException(String.format("dot in path: '%s'", pathSubstring));
+          }
         }
         if (i - offsetAfterLastSlash == 2) {
-          Preconditions.checkArgument(
-              path.charAt(i - 1) != '.' || path.charAt(i - 2) != '.',
-              "dot-dot in path: %s",
-              pathSubstring);
+          if (path.charAt(i - 1) == '.' && path.charAt(i - 2) == '.') {
+            throw new IllegalArgumentException(
+                String.format("dot-dot in path: '%s'", pathSubstring));
+          }
         }
         String segment = path.substring(offsetAfterLastSlash, i);
         segments.add(FileName.internName(segment));
@@ -168,8 +201,10 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
    *
    * <p>This functions calls {@link Path#normalize()}. Throw if path is not relative.
    */
-  public static ForwardRelativePath ofPath(Path path) {
-    Preconditions.checkArgument(!path.isAbsolute(), "path must not be absolute: %s", path);
+  public static ForwardRelPath ofPath(Path path) {
+    if (path.isAbsolute()) {
+      throw new IllegalArgumentException(String.format("path must not be absolute: '%s'", path));
+    }
     path = path.normalize();
     if (path instanceof BuckUnixPath) {
       String[] segments = ((BuckUnixPath) path).getSegmentsUnsafe();
@@ -177,13 +212,17 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
         return EMPTY;
       }
       for (String segment : segments) {
-        Preconditions.checkArgument(!segment.equals("."), "dot in path: %s", path);
-        Preconditions.checkArgument(!segment.equals(".."), "dot-dot in path: %s", path);
+        if (segment.equals(".")) {
+          throw new IllegalArgumentException(String.format("dot in path: '%s'", path));
+        }
+        if (segment.equals("..")) {
+          throw new IllegalArgumentException(String.format("dot-dot in path: '%s'", path));
+        }
       }
-      return new ForwardRelativePath(segments);
+      return new ForwardRelPath(segments);
     } else {
       String pathString = path.toString();
-      if (Platform.detect() == Platform.WINDOWS) {
+      if (HostOs.IS_WINDOWS) {
         // Suboptimal
         pathString = pathString.replace('\\', '/');
       }
@@ -192,12 +231,12 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
   }
 
   /** Construct from given relative {@link Path}. */
-  public static ForwardRelativePath ofRelPath(RelPath path) {
+  public static ForwardRelPath ofRelPath(RelPath path) {
     return ofPath(path.getPath());
   }
 
   /** Append given path to the current path. */
-  public ForwardRelativePath resolve(ForwardRelativePath other) {
+  public ForwardRelPath resolve(ForwardRelPath other) {
     if (this.isEmpty()) {
       return other;
     } else if (other.isEmpty()) {
@@ -207,16 +246,16 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
       String[] segments = new String[this.segments.length + other.segments.length];
       System.arraycopy(this.segments, 0, segments, 0, this.segments.length);
       System.arraycopy(other.segments, 0, segments, this.segments.length, other.segments.length);
-      return new ForwardRelativePath(segments);
+      return new ForwardRelPath(segments);
     }
   }
 
   /** Append given name to the current path. */
-  public ForwardRelativePath resolve(FileName fileName) {
-    return resolve(ForwardRelativePath.ofFileName(fileName));
+  public ForwardRelPath resolve(FileName fileName) {
+    return resolve(ForwardRelPath.ofFileName(fileName));
   }
 
-  public ForwardRelativePath resolve(String other) {
+  public ForwardRelPath resolve(String other) {
     return resolve(of(other));
   }
 
@@ -263,22 +302,22 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
   }
 
   /** Last segment of path */
-  public Optional<ForwardRelativePath> nameAsPath() {
+  public Optional<ForwardRelPath> nameAsPath() {
     if (isEmpty()) {
       return Optional.empty();
     } else {
-      return Optional.of(new ForwardRelativePath(new String[] {segments[segments.length - 1]}));
+      return Optional.of(new ForwardRelPath(new String[] {segments[segments.length - 1]}));
     }
   }
 
   /** Path without last segment */
-  public Optional<ForwardRelativePath> parent() {
+  public Optional<ForwardRelPath> parent() {
     if (isEmpty()) {
       return Optional.empty();
     } else if (segments.length == 1) {
       return Optional.of(EMPTY);
     } else {
-      return Optional.of(new ForwardRelativePath(Arrays.copyOf(segments, segments.length - 1)));
+      return Optional.of(new ForwardRelPath(Arrays.copyOf(segments, segments.length - 1)));
     }
   }
 
@@ -299,7 +338,7 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ForwardRelativePath that = (ForwardRelativePath) o;
+    ForwardRelPath that = (ForwardRelPath) o;
     return Arrays.equals(segments, that.segments);
   }
 
@@ -308,7 +347,7 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
    *
    * <p>{@code ab/cd} starts with {@code ab/cd}, {@code ab}, but not {@code ab/c}.
    */
-  public boolean startsWith(ForwardRelativePath path) {
+  public boolean startsWith(ForwardRelPath path) {
     if (this.segments.length < path.segments.length) {
       return false;
     }
@@ -327,7 +366,7 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
    *
    * <p>{@code ab/cd} ends with {@code ab/cd}, {@code cd}, but not {@code b/cd}.
    */
-  public boolean endsWith(ForwardRelativePath path) {
+  public boolean endsWith(ForwardRelPath path) {
     if (this.segments.length < path.segments.length) {
       return false;
     }
@@ -342,16 +381,12 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     return true;
   }
 
-  public ImmutableList<String> segments() {
-    return ImmutableList.copyOf(segments);
-  }
-
   /**
    * Constructs a relative path between this path and a given path.
    *
    * <p>Returns empty string when paths are equal.
    */
-  public String relativize(ForwardRelativePath other) {
+  public String relativize(ForwardRelPath other) {
     int prefix = 0;
     for (; ; ) {
       if (prefix >= this.segments.length || prefix >= other.segments.length) {
@@ -392,7 +427,7 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
   }
 
   @Override
-  public int compareTo(ForwardRelativePath that) {
+  public int compareTo(ForwardRelPath that) {
     for (int i = 0; ; ++i) {
       if (this.segments.length == i || that.segments.length == i) {
         return Boolean.compare(this.segments.length != i, that.segments.length != i);

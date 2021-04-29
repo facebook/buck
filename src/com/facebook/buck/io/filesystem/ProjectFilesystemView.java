@@ -16,7 +16,7 @@
 
 package com.facebook.buck.io.filesystem;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;
@@ -60,7 +60,7 @@ public interface ProjectFilesystemView {
   Path resolve(String path);
 
   /** @see #resolve(Path) */
-  Path resolve(ForwardRelativePath path);
+  Path resolve(ForwardRelPath path);
 
   /**
    * Checks whether there is a normal file at the specified path

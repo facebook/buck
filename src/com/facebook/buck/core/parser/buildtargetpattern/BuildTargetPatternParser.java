@@ -19,9 +19,9 @@ package com.facebook.buck.core.parser.buildtargetpattern;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import java.util.Optional;
 
 /**
@@ -142,7 +142,7 @@ public class BuildTargetPatternParser {
         "base path should not end with '%s'",
         BuildTargetLanguageConstants.PATH_SYMBOL);
 
-    ForwardRelativePath basePath = ForwardRelativePath.of(path);
+    ForwardRelPath basePath = ForwardRelPath.of(path);
 
     CanonicalCellName canonicalCellName =
         cellNameResolver.getName(cellName.isEmpty() ? Optional.empty() : Optional.of(cellName));

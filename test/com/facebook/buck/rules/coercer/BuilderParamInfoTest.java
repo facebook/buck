@@ -24,9 +24,9 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.arg.DataTransferObject;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.ErrorLogger;
@@ -90,7 +90,7 @@ public class BuilderParamInfoTest {
         .set(
             TestCellPathResolver.get(filesystem).getCellNameResolver(),
             filesystem,
-            ForwardRelativePath.of("doesnotexist"),
+            ForwardRelPath.of("doesnotexist"),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             builder,

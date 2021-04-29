@@ -21,9 +21,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
@@ -37,8 +37,7 @@ public class ManifestEntriesTypeCoercerTest {
   private ManifestEntriesTypeCoercer manifestEntriesTypeCoercer;
 
   private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final ForwardRelativePath basePath =
-      ForwardRelativePath.of("java/com/facebook/buck/example");
+  private final ForwardRelPath basePath = ForwardRelPath.of("java/com/facebook/buck/example");
 
   @Before
   public void setUp() {

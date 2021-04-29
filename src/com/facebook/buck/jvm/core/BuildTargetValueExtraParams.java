@@ -16,9 +16,9 @@
 
 package com.facebook.buck.jvm.core;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BuckPaths;
 
@@ -26,11 +26,11 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 @BuckStyleValue
 public abstract class BuildTargetValueExtraParams {
 
-  public abstract ForwardRelativePath getCellRelativeBasePath();
+  public abstract ForwardRelPath getCellRelativeBasePath();
 
   public abstract boolean isFlavored();
 
-  public abstract ForwardRelativePath getBasePathForBaseName();
+  public abstract ForwardRelPath getBasePathForBaseName();
 
   public abstract String getShortNameAndFlavorPostfix();
 
@@ -53,9 +53,9 @@ public abstract class BuildTargetValueExtraParams {
 
   /** Creates {@link BuildTargetValueExtraParams} */
   public static BuildTargetValueExtraParams of(
-      ForwardRelativePath cellRelativeBasePath,
+      ForwardRelPath cellRelativeBasePath,
       boolean flavored,
-      ForwardRelativePath basePathForBaseName,
+      ForwardRelPath basePathForBaseName,
       String shortNameAndFlavorPostfix,
       String shortName,
       BuckPaths buckPaths) {

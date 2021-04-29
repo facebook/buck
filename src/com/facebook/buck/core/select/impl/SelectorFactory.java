@@ -17,9 +17,9 @@
 package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.google.common.collect.ImmutableMap;
@@ -44,7 +44,7 @@ public class SelectorFactory {
   /** Creates a new Selector using the default error message when no conditions match. */
   public Selector<Object> createSelector(
       CellNameResolver cellNameResolver,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       Map<String, ?> rawAttributes) {
     return createSelector(cellNameResolver, pathRelativeToProjectRoot, rawAttributes, "");
   }
@@ -57,7 +57,7 @@ public class SelectorFactory {
    */
   public Selector<Object> createSelector(
       CellNameResolver cellNameResolver,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       Map<String, ?> rawAttributes,
       String noMatchMessage) {
     LinkedHashMap<SelectorKey, Object> result =

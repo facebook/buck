@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.description.attr;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableSet;
@@ -29,6 +29,6 @@ import com.google.common.collect.ImmutableSet;
  */
 public interface ImplicitInputsInferringDescription {
 
-  ImmutableSet<ForwardRelativePath> inferInputsFromAttributes(
+  ImmutableSet<ForwardRelPath> inferInputsFromAttributes(
       UnflavoredBuildTarget buildTarget, TwoArraysImmutableHashMap<ParamName, Object> attributes);
 }

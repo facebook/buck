@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.parser.spec.BuildTargetMatcherTargetNodeParser;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.BuckCellArg;
@@ -156,7 +156,7 @@ public class CommandLineTargetNodeSpecParser {
    */
   private void validateTargetSpec(TargetNodeSpec spec, String arg, Cell owningCell) {
     CanonicalCellName cellName = spec.getBuildFileSpec().getCellRelativeBaseName().getCellName();
-    ForwardRelativePath basePath = spec.getBuildFileSpec().getCellRelativeBaseName().getPath();
+    ForwardRelPath basePath = spec.getBuildFileSpec().getCellRelativeBaseName().getPath();
     Path basePathPath = basePath.toPath(owningCell.getFilesystem().getFileSystem());
     Cell realCell = owningCell.getCellProvider().getCellByCanonicalCellName(cellName);
     if (!realCell.getFilesystem().exists(basePathPath)) {

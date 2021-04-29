@@ -18,12 +18,12 @@ package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.NodeCopier;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.VisibilityChecker;
@@ -80,10 +80,10 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
   public abstract ProjectFilesystem getFilesystem();
 
   @Override
-  public abstract ImmutableSet<ForwardRelativePath> getInputs();
+  public abstract ImmutableSet<ForwardRelPath> getInputs();
 
   @Override
-  public abstract ImmutableSet<ForwardRelativePath> getImplicitInputs();
+  public abstract ImmutableSet<ForwardRelPath> getImplicitInputs();
 
   @Override
   public abstract ImmutableSet<BuildTarget> getDeclaredDeps();
@@ -327,8 +327,8 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
       BaseDescription<T> description,
       T constructorArg,
       ProjectFilesystem filesystem,
-      ImmutableSet<ForwardRelativePath> inputs,
-      ImmutableSet<ForwardRelativePath> implicitInputs,
+      ImmutableSet<ForwardRelPath> inputs,
+      ImmutableSet<ForwardRelPath> implicitInputs,
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSortedSet<BuildTarget> extraDeps,
       ImmutableSortedSet<BuildTarget> targetGraphOnlyDeps,

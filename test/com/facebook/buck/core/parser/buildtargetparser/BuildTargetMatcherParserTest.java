@@ -27,13 +27,13 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -69,8 +69,7 @@ public class BuildTargetMatcherParserTest {
     assertEquals(
         ImmutableImmediateDirectoryBuildTargetMatcher.ofImpl(
             CellRelativePath.of(
-                CanonicalCellName.rootCell(),
-                ForwardRelativePath.of("test/com/facebook/buck/parser"))),
+                CanonicalCellName.rootCell(), ForwardRelPath.of("test/com/facebook/buck/parser"))),
         buildTargetPatternParser.parse(
             "//test/com/facebook/buck/parser:", createCellRoots(filesystem).getCellNameResolver()));
 
@@ -86,7 +85,7 @@ public class BuildTargetMatcherParserTest {
         ImmutableSubdirectoryBuildTargetMatcher.ofImpl(
             CellRelativePath.of(
                 CanonicalCellName.unsafeRootCell(),
-                ForwardRelativePath.of("test/com/facebook/buck/parser"))),
+                ForwardRelPath.of("test/com/facebook/buck/parser"))),
         buildTargetPatternParser.parse(
             "//test/com/facebook/buck/parser/...",
             createCellRoots(filesystem).getCellNameResolver()));
@@ -99,7 +98,7 @@ public class BuildTargetMatcherParserTest {
 
     assertEquals(
         ImmutableImmediateDirectoryBuildTargetMatcher.ofImpl(
-            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of(""))),
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of(""))),
         buildTargetPatternParser.parse("//:", createCellRoots(filesystem).getCellNameResolver()));
 
     assertEquals(
@@ -110,7 +109,7 @@ public class BuildTargetMatcherParserTest {
 
     assertEquals(
         ImmutableSubdirectoryBuildTargetMatcher.ofImpl(
-            CellRelativePath.of(CanonicalCellName.unsafeRootCell(), ForwardRelativePath.of(""))),
+            CellRelativePath.of(CanonicalCellName.unsafeRootCell(), ForwardRelPath.of(""))),
         buildTargetPatternParser.parse("//...", createCellRoots(filesystem).getCellNameResolver()));
   }
 
@@ -131,7 +130,7 @@ public class BuildTargetMatcherParserTest {
     assertEquals(
         ImmutableSubdirectoryBuildTargetMatcher.ofImpl(
             CellRelativePath.of(
-                CanonicalCellName.unsafeOf(Optional.of("other")), ForwardRelativePath.of("sub"))),
+                CanonicalCellName.unsafeOf(Optional.of("other")), ForwardRelPath.of("sub"))),
         buildTargetPatternParser.parse("other//sub/...", cellNames.getCellNameResolver()));
   }
 

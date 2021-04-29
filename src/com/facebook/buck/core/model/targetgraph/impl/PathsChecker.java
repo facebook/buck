@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 
@@ -28,15 +28,15 @@ public interface PathsChecker {
   void checkPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> paths);
+      ImmutableSet<ForwardRelPath> paths);
 
   void checkFilePaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> filePaths);
+      ImmutableSet<ForwardRelPath> filePaths);
 
   void checkDirPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> dirPaths);
+      ImmutableSet<ForwardRelPath> dirPaths);
 }

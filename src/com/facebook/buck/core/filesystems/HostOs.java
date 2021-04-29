@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.core.filesystems;
 
-import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.filesystems.ForwardRelPath;
-import com.facebook.buck.core.model.BuildTarget;
-import com.google.common.collect.ImmutableSet;
+/** Utility to detect host operating system. */
+class HostOs {
+  static boolean IS_WINDOWS;
 
-public class NoopPackageBoundaryChecker implements PackageBoundaryChecker {
-  @Override
-  public void enforceBuckPackageBoundaries(
-      Cell targetCell, BuildTarget target, ImmutableSet<ForwardRelPath> paths) {}
+  static {
+    String osName = System.getProperty("os.name");
+    if (osName == null) {
+      IS_WINDOWS = false;
+    } else {
+      IS_WINDOWS = osName.startsWith("Windows");
+    }
+  }
 }

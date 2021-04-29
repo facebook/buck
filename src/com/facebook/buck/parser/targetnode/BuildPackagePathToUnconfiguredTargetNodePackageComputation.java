@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -34,7 +35,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -213,7 +213,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
 
     BuildFileManifest buildFileManifest =
         env.getDep(BuildPackagePathToBuildFileManifestKey.of(key.getPath()));
-    ForwardRelativePath basePath = ForwardRelativePath.ofPath(key.getPath());
+    ForwardRelPath basePath = ForwardRelPath.ofPath(key.getPath());
 
     ImmutableSet.Builder<BuildTargetToUnconfiguredTargetNodeKey> builder =
         ImmutableSet.builderWithExpectedSize(buildFileManifest.getTargets().size());

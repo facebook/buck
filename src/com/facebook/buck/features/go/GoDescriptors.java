@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -26,7 +27,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -195,7 +195,7 @@ abstract class GoDescriptors {
   @VisibleForTesting
   static ImmutableMap<Path, Path> getPackageImportMap(
       ImmutableList<Path> globalVendorPaths,
-      ForwardRelativePath basePackagePath,
+      ForwardRelPath basePackagePath,
       Iterable<Path> packageNameIter) {
     Map<Path, Path> importMapBuilder = new HashMap<>();
     ImmutableSortedSet<Path> packageNames = ImmutableSortedSet.copyOf(packageNameIter);

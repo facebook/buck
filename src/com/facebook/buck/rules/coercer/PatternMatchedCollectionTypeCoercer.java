@@ -17,9 +17,9 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.reflect.TypeParameter;
@@ -93,7 +93,7 @@ public class PatternMatchedCollectionTypeCoercer<U, T>
   public PatternMatchedCollection<U> coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof List)) {
@@ -123,7 +123,7 @@ public class PatternMatchedCollectionTypeCoercer<U, T>
   public PatternMatchedCollection<T> coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       HostTargetConfigurationResolver hostConfigurationResolver,
       PatternMatchedCollection<U> object)

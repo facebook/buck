@@ -18,9 +18,9 @@ package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.FileName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -83,7 +83,7 @@ public interface ProjectFilesystem {
   /**
    * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
    */
-  default AbsPath resolve(ForwardRelativePath path) {
+  default AbsPath resolve(ForwardRelPath path) {
     return AbsPath.of(resolve(path.toPath(getFileSystem())));
   }
 
@@ -131,7 +131,7 @@ public interface ProjectFilesystem {
 
   boolean exists(Path pathRelativeToProjectRoot, LinkOption... options);
 
-  default boolean exists(ForwardRelativePath pathRelativeToProjectRoot, LinkOption... options) {
+  default boolean exists(ForwardRelPath pathRelativeToProjectRoot, LinkOption... options) {
     return exists(pathRelativeToProjectRoot.toPath(getFileSystem()), options);
   }
 
@@ -164,7 +164,7 @@ public interface ProjectFilesystem {
   boolean isFile(Path pathRelativeToProjectRoot, LinkOption... options);
 
   /** Checks whether there is a normal file at the specified path. */
-  default boolean isFile(ForwardRelativePath pathRelativeToProjectRoot, LinkOption... options) {
+  default boolean isFile(ForwardRelPath pathRelativeToProjectRoot, LinkOption... options) {
     return isFile(pathRelativeToProjectRoot.toRelPath(getFileSystem()), options);
   }
 
@@ -501,7 +501,7 @@ public interface ProjectFilesystem {
    * @return whether ignoredPaths contains path or any of its ancestors.
    */
   @Deprecated
-  default boolean isIgnored(ForwardRelativePath path) {
+  default boolean isIgnored(ForwardRelPath path) {
     return isIgnored(path.toRelPath(getFileSystem()));
   }
 

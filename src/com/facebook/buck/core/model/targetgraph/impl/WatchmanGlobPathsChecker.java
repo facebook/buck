@@ -18,8 +18,8 @@ package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
@@ -56,15 +56,15 @@ class WatchmanPathsChecker implements PathsChecker {
   private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(20);
 
   // Caches by filesystem root
-  private final LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache = initCache();
-  private final LoadingCache<AbsPath, Set<ForwardRelativePath>> filePathsCache = initCache();
-  private final LoadingCache<AbsPath, Set<ForwardRelativePath>> dirPathsCache = initCache();
+  private final LoadingCache<AbsPath, Set<ForwardRelPath>> pathsCache = initCache();
+  private final LoadingCache<AbsPath, Set<ForwardRelPath>> filePathsCache = initCache();
+  private final LoadingCache<AbsPath, Set<ForwardRelPath>> dirPathsCache = initCache();
 
   private final boolean useFallbackFileSystemPathsChecker;
   private final MissingPathsChecker fallbackFileSystemPathsChecker = new MissingPathsChecker();
   private final Watchman watchman;
 
-  private static LoadingCache<AbsPath, Set<ForwardRelativePath>> initCache() {
+  private static LoadingCache<AbsPath, Set<ForwardRelPath>> initCache() {
     return CacheBuilder.newBuilder()
         .build(CacheLoader.from(rootPath -> Sets.newConcurrentHashSet()));
   }
@@ -83,7 +83,7 @@ class WatchmanPathsChecker implements PathsChecker {
   public void checkPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> paths) {
+      ImmutableSet<ForwardRelPath> paths) {
     checkPathsWithExtraCheckThenFallbackIfEnabled(
         projectFilesystem,
         buildTarget,
@@ -99,7 +99,7 @@ class WatchmanPathsChecker implements PathsChecker {
   public void checkFilePaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> filePaths) {
+      ImmutableSet<ForwardRelPath> filePaths) {
     checkPathsWithExtraCheckThenFallbackIfEnabled(
         projectFilesystem,
         buildTarget,
@@ -117,7 +117,7 @@ class WatchmanPathsChecker implements PathsChecker {
   public void checkDirPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> dirPaths) {
+      ImmutableSet<ForwardRelPath> dirPaths) {
     checkPathsWithExtraCheckThenFallbackIfEnabled(
         projectFilesystem,
         buildTarget,
@@ -139,8 +139,8 @@ class WatchmanPathsChecker implements PathsChecker {
   private void checkPathsWithExtraCheckThenFallbackIfEnabled(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> paths,
-      LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache,
+      ImmutableSet<ForwardRelPath> paths,
+      LoadingCache<AbsPath, Set<ForwardRelPath>> pathsCache,
       EnumSet<WatchmanGlobber.Option> options,
       FallbackPathChecker fallbackPathChecker) {
     try {
@@ -158,20 +158,19 @@ class WatchmanPathsChecker implements PathsChecker {
   private void checkPathsWithExtraCheck(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ImmutableSet<ForwardRelativePath> paths,
-      LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache,
+      ImmutableSet<ForwardRelPath> paths,
+      LoadingCache<AbsPath, Set<ForwardRelPath>> pathsCache,
       EnumSet<WatchmanGlobber.Option> options) {
     if (paths.isEmpty()) {
       return;
     }
 
-    Set<ForwardRelativePath> checkedPaths =
-        pathsCache.getUnchecked(projectFilesystem.getRootPath());
+    Set<ForwardRelPath> checkedPaths = pathsCache.getUnchecked(projectFilesystem.getRootPath());
 
     Set<String> uncheckedPaths = new HashSet<>();
     ProjectWatch watch = watchman.getProjectWatches().get(projectFilesystem.getRootPath());
     Path watchmanRootPath = Paths.get(watch.getWatchRoot());
-    for (ForwardRelativePath relativePath : paths) {
+    for (ForwardRelPath relativePath : paths) {
       if (!checkedPaths.add(relativePath)) {
         continue;
       }

@@ -23,8 +23,8 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -87,7 +87,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(projectFilesystem).build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/Test.java")));
+        ImmutableSet.of(ForwardRelPath.of("a/Test.java")));
   }
 
   @Test
@@ -110,7 +110,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
             .build()
             .getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/Test.java")));
+        ImmutableSet.of(ForwardRelPath.of("a/Test.java")));
   }
 
   @Test
@@ -130,7 +130,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(projectFilesystem).build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/b/Test.java")));
+        ImmutableSet.of(ForwardRelPath.of("a/b/Test.java")));
   }
 
   @Test
@@ -163,7 +163,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(projectFilesystem).build().getRootCell(),
         BuildTargetFactory.newInstance("//a:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/b/Test.java")));
+        ImmutableSet.of(ForwardRelPath.of("a/b/Test.java")));
   }
 
   @Test
@@ -180,7 +180,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(projectFilesystem).build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/b/Test.java")));
+        ImmutableSet.of(ForwardRelPath.of("a/b/Test.java")));
   }
 
   @Test
@@ -196,7 +196,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(projectFilesystem).build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/b")));
+        ImmutableSet.of(ForwardRelPath.of("a/b")));
   }
 
   @Test
@@ -213,7 +213,7 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(projectFilesystem).build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/b"), ForwardRelativePath.of("a/b/Test.java")));
+        ImmutableSet.of(ForwardRelPath.of("a/b"), ForwardRelPath.of("a/b/Test.java")));
   }
 
   @Test
@@ -231,10 +231,10 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
         new TestCellBuilder().setFilesystem(projectFilesystem).build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
         ImmutableSet.of(
-            ForwardRelativePath.of("a/b"),
-            ForwardRelativePath.of("a/b/c"),
-            ForwardRelativePath.of("a/b/c/d"),
-            ForwardRelativePath.of("a/b/c/d/Test.java")));
+            ForwardRelPath.of("a/b"),
+            ForwardRelPath.of("a/b/c"),
+            ForwardRelPath.of("a/b/c/d"),
+            ForwardRelPath.of("a/b/c/d/Test.java")));
   }
 
   private void touch(AbsPath path) throws IOException {

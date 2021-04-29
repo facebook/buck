@@ -16,7 +16,7 @@
 
 package com.facebook.buck.skylark.parser.context;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 /** Rule representation internal to Starlark parser. */
 @BuckStyleValue
 public abstract class RecordedRule {
-  public abstract ForwardRelativePath getBasePath();
+  public abstract ForwardRelPath getBasePath();
 
   public abstract String getBuckType();
 
@@ -37,7 +37,7 @@ public abstract class RecordedRule {
   public abstract TwoArraysImmutableHashMap<ParamName, Object> getRawRule();
 
   public static RecordedRule of(
-      ForwardRelativePath basePath,
+      ForwardRelPath basePath,
       String buckType,
       ImmutableList<String> visibility,
       ImmutableList<String> withinView,

@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
@@ -31,7 +32,6 @@ import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -345,7 +345,7 @@ public class ConfiguredQueryEnvironment
       BuildTarget buildTarget = target.getBuildTarget();
       Cell cell = cells.getCell(buildTarget.getCell());
       BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
-      Optional<ForwardRelativePath> path =
+      Optional<ForwardRelPath> path =
           buildFileTree.getBasePathOfAncestorTarget(
               buildTarget.getCellRelativeBasePath().getPath());
       Preconditions.checkState(path.isPresent());

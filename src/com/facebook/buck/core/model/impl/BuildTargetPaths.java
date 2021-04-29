@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -142,7 +142,7 @@ public class BuildTargetPaths {
    *     will be filled in with the rule's short name. It should not start with a slash.
    * @return A {@link java.nio.file.Path} scoped to the base path of {@code target}.
    */
-  public static ForwardRelativePath getBasePath(
+  public static ForwardRelPath getBasePath(
       boolean includeTargetConfigHash, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
@@ -152,10 +152,10 @@ public class BuildTargetPaths {
   }
 
   /** Return a relative path for all targets in a package of a {@link BuildTarget}. */
-  public static ForwardRelativePath getBasePathForBaseName(
+  public static ForwardRelPath getBasePathForBaseName(
       boolean includeTargetConfigHash, BuildTarget target) {
-    ForwardRelativePath configHashPath =
-        ForwardRelativePath.of(
+    ForwardRelPath configHashPath =
+        ForwardRelPath.of(
             includeTargetConfigHash
                 ? TargetConfigurationHasher.hash(target.getTargetConfiguration())
                 : "");

@@ -25,10 +25,10 @@ import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescriptio
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
@@ -190,7 +190,7 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
   }
 
   /** The set of {@code ForwardRelativePath}`s that are used as input for {@code node} */
-  public ImmutableSet<ForwardRelativePath> getInputPathsForNode(UnconfiguredTargetNode node) {
+  public ImmutableSet<ForwardRelPath> getInputPathsForNode(UnconfiguredTargetNode node) {
     return getTraversalResult(node).getInputs();
   }
 
@@ -356,7 +356,7 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
     ImmutableSet.Builder<UnconfiguredBuildTarget> extraDepsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<UnconfiguredBuildTarget> targetGraphOnlyDepsBuilder =
         ImmutableSet.builder();
-    ImmutableSet.Builder<ForwardRelativePath> inputsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<ForwardRelPath> inputsBuilder = ImmutableSet.builder();
 
     attributeTraverser.traverseAttributes(
         node,
@@ -373,7 +373,7 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
         },
         (info) -> {
           ParamName name = info.getName();
-          Optional<ImmutableSet.Builder<ForwardRelativePath>> fileBuilder =
+          Optional<ImmutableSet.Builder<ForwardRelPath>> fileBuilder =
               info.isInput() ? Optional.of(inputsBuilder) : Optional.empty();
 
           return (path) -> {
@@ -447,7 +447,7 @@ public class UnconfiguredTargetGraph implements TraversableGraph<UnconfiguredTar
 
     public abstract ImmutableSet<UnconfiguredBuildTarget> getTargetGraphOnlyDeps();
 
-    public abstract ImmutableSet<ForwardRelativePath> getInputs();
+    public abstract ImmutableSet<ForwardRelPath> getInputs();
 
     @Value.Derived
     public ImmutableSet<UnconfiguredBuildTarget> getParseDeps() {

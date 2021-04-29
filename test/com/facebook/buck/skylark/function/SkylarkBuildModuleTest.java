@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.eventhandler.Event;
 import com.facebook.buck.core.starlark.eventhandler.EventCollector;
@@ -114,7 +114,7 @@ public class SkylarkBuildModuleTest {
                 NativeGlobber.create(root),
                 rawConfig,
                 CanonicalCellName.rootCell(),
-                ForwardRelativePath.of("my/package"),
+                ForwardRelPath.of("my/package"),
                 eventHandler,
                 ImmutableMap.of()))
         .setup(env);

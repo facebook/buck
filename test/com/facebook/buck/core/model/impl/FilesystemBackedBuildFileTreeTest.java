@@ -22,9 +22,9 @@ import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.FileName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -61,20 +61,17 @@ public class FilesystemBackedBuildFileTreeTest {
     BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
     assertEquals(
-        ForwardRelativePath.of("src/com/example"),
+        ForwardRelPath.of("src/com/example"),
+        buildFiles.getBasePathOfAncestorTarget(ForwardRelPath.of("src/com/example/foo")).get());
+    assertEquals(
+        ForwardRelPath.of("src/com/example"),
         buildFiles
-            .getBasePathOfAncestorTarget(ForwardRelativePath.of("src/com/example/foo"))
+            .getBasePathOfAncestorTarget(ForwardRelPath.of("src/com/example/some/bar"))
             .get());
     assertEquals(
-        ForwardRelativePath.of("src/com/example"),
+        ForwardRelPath.of("src/com/example/some/directory"),
         buildFiles
-            .getBasePathOfAncestorTarget(ForwardRelativePath.of("src/com/example/some/bar"))
-            .get());
-    assertEquals(
-        ForwardRelativePath.of("src/com/example/some/directory"),
-        buildFiles
-            .getBasePathOfAncestorTarget(
-                ForwardRelativePath.of("src/com/example/some/directory/baz"))
+            .getBasePathOfAncestorTarget(ForwardRelPath.of("src/com/example/some/directory/baz"))
             .get());
   }
 
@@ -94,9 +91,9 @@ public class FilesystemBackedBuildFileTreeTest {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir, config);
     BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
-    ForwardRelativePath ancestor =
-        buildFiles.getBasePathOfAncestorTarget(ForwardRelativePath.of("foo/bar/xyzzy")).get();
-    assertEquals(ForwardRelativePath.of("foo"), ancestor);
+    ForwardRelPath ancestor =
+        buildFiles.getBasePathOfAncestorTarget(ForwardRelPath.of("foo/bar/xyzzy")).get();
+    assertEquals(ForwardRelPath.of("foo"), ancestor);
   }
 
   @Test
@@ -110,9 +107,9 @@ public class FilesystemBackedBuildFileTreeTest {
     BuildFileTree buildFileTree =
         new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
-    Optional<ForwardRelativePath> ancestor =
-        buildFileTree.getBasePathOfAncestorTarget(ForwardRelativePath.of("bar/baz"));
-    assertEquals(Optional.of(ForwardRelativePath.of("")), ancestor);
+    Optional<ForwardRelPath> ancestor =
+        buildFileTree.getBasePathOfAncestorTarget(ForwardRelPath.of("bar/baz"));
+    assertEquals(Optional.of(ForwardRelPath.of("")), ancestor);
   }
 
   @Test
@@ -125,8 +122,8 @@ public class FilesystemBackedBuildFileTreeTest {
     BuildFileTree buildFileTree =
         new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
-    Optional<ForwardRelativePath> ancestor =
-        buildFileTree.getBasePathOfAncestorTarget(ForwardRelativePath.of("bar/baz"));
+    Optional<ForwardRelPath> ancestor =
+        buildFileTree.getBasePathOfAncestorTarget(ForwardRelPath.of("bar/baz"));
     assertEquals(Optional.empty(), ancestor);
   }
 
@@ -146,9 +143,9 @@ public class FilesystemBackedBuildFileTreeTest {
     BuildFileTree buildFileTree =
         new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
-    Optional<ForwardRelativePath> ancestor =
+    Optional<ForwardRelPath> ancestor =
         buildFileTree.getBasePathOfAncestorTarget(
-            ForwardRelativePath.ofPath(filesystem.getBuckPaths().getBuckOut().resolve("someFile")));
+            ForwardRelPath.ofPath(filesystem.getBuckPaths().getBuckOut().resolve("someFile")));
     assertFalse(ancestor.isPresent());
   }
 
@@ -168,9 +165,9 @@ public class FilesystemBackedBuildFileTreeTest {
     BuildFileTree buildFileTree =
         new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
-    Optional<ForwardRelativePath> ancestor =
+    Optional<ForwardRelPath> ancestor =
         buildFileTree.getBasePathOfAncestorTarget(
-            ForwardRelativePath.ofRelPath(cacheDir.resolveRel("someFile")));
+            ForwardRelPath.ofRelPath(cacheDir.resolveRel("someFile")));
     assertFalse(ancestor.isPresent());
   }
 

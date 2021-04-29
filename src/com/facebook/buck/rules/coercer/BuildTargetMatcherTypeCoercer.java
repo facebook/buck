@@ -17,9 +17,9 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 
@@ -35,7 +35,7 @@ class BuildTargetMatcherTypeCoercer extends LeafUnconfiguredOnlyCoercer<BuildTar
   public BuildTargetMatcher coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     // This is only actually used directly by ConstructorArgMarshaller, for parsing the

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -28,7 +29,6 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.BuildTargetMacro;
 import com.facebook.buck.rules.macros.Macro;
@@ -112,7 +112,7 @@ public class BuildTargetMacroTypeCoercerTest {
         coercer.coerceBoth(
             TestCellPathResolver.get(new FakeProjectFilesystem()).getCellNameResolver(),
             new FakeProjectFilesystem(),
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             targetConfiguration,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("//:rrr[label]"));

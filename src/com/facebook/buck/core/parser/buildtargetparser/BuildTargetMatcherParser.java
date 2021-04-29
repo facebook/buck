@@ -20,10 +20,10 @@ import com.facebook.buck.core.cell.exception.UnknownCellException;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
@@ -131,8 +131,8 @@ public abstract class BuildTargetMatcherParser<T> {
     if (basePath.endsWith("/")) {
       basePath = basePath.substring(0, basePath.length() - "/".length());
     }
-    ForwardRelativePath forwardRelativePath = ForwardRelativePath.of(basePath);
-    return createForDescendants(CellRelativePath.of(cellName, forwardRelativePath));
+    ForwardRelPath forwardRelPath = ForwardRelPath.of(basePath);
+    return createForDescendants(CellRelativePath.of(cellName, forwardRelPath));
   }
 
   /** Used when parsing target names in the {@code visibility} argument to a build rule. */

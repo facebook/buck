@@ -23,11 +23,11 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -414,7 +414,7 @@ public class CxxTestDescriptionTest {
                   SourceSortedSet.ofUnnamedSources(
                       ImmutableSortedSet.of(FakeSourcePath.of(resource))))
               .build();
-      assertThat(cxxTestWithResources.getInputs(), hasItem(ForwardRelativePath.ofPath(resource)));
+      assertThat(cxxTestWithResources.getInputs(), hasItem(ForwardRelPath.ofPath(resource)));
     }
   }
 

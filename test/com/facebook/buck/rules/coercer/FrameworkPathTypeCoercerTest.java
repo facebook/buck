@@ -19,12 +19,12 @@ package com.facebook.buck.rules.coercer;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -47,7 +47,7 @@ public class FrameworkPathTypeCoercerTest {
       new FrameworkPathTypeCoercer(sourcePathTypeCoercer);
 
   private FakeProjectFilesystem projectFilesystem;
-  private final ForwardRelativePath pathRelativeToProjectRoot = ForwardRelativePath.of("");
+  private final ForwardRelPath pathRelativeToProjectRoot = ForwardRelPath.of("");
 
   @Before
   public void setUp() {

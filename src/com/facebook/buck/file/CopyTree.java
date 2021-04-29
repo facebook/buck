@@ -17,9 +17,9 @@
 package com.facebook.buck.file;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -48,7 +48,7 @@ public class CopyTree extends ModernBuildRule<CopyTree.Impl> {
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       SourcePathRuleFinder finder,
-      ImmutableSortedMap<ForwardRelativePath, SourcePath> paths) {
+      ImmutableSortedMap<ForwardRelPath, SourcePath> paths) {
     super(buildTarget, filesystem, finder, new Impl(paths));
   }
 
@@ -63,14 +63,14 @@ public class CopyTree extends ModernBuildRule<CopyTree.Impl> {
     private static final OutputPath OUTPUT_PATH = new OutputPath("copy_tree");
 
     // `ForwardRelativePath` cannot be added to rule keys, so we stringify it below.
-    private final ImmutableSortedMap<ForwardRelativePath, SourcePath> paths;
+    private final ImmutableSortedMap<ForwardRelPath, SourcePath> paths;
 
     @AddToRuleKey private final Supplier<ImmutableMap<String, SourcePath>> stringifedPaths;
 
-    Impl(ImmutableSortedMap<ForwardRelativePath, SourcePath> paths) {
+    Impl(ImmutableSortedMap<ForwardRelPath, SourcePath> paths) {
       this.paths = paths;
       this.stringifedPaths =
-          Suppliers.memoize(() -> MoreMaps.transformKeys(paths, ForwardRelativePath::toString));
+          Suppliers.memoize(() -> MoreMaps.transformKeys(paths, ForwardRelPath::toString));
     }
 
     @Override

@@ -25,12 +25,12 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactDeclarationException;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisContextImpl;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -62,7 +62,7 @@ public class OutputListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("foo/bar.cpp", "foo/baz.cpp"));
@@ -77,7 +77,7 @@ public class OutputListAttributeTest {
     attr.getValue(
         cellRoots,
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         1);
@@ -90,7 +90,7 @@ public class OutputListAttributeTest {
     attr.getValue(
         cellRoots,
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         Starlark.NONE);
@@ -114,7 +114,7 @@ public class OutputListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("foo/baz.cpp", "foo/bar\0"));
@@ -130,7 +130,7 @@ public class OutputListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("foo/baz.cpp", Paths.get("").toAbsolutePath().toString()));
@@ -146,7 +146,7 @@ public class OutputListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("foo/baz.cpp", "../foo.txt"));
@@ -163,7 +163,7 @@ public class OutputListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("subdir/other.cpp", "main.cpp"));
@@ -206,7 +206,7 @@ public class OutputListAttributeTest {
     attr.getValue(
         cellRoots,
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         ImmutableList.of());
@@ -218,7 +218,7 @@ public class OutputListAttributeTest {
         attr.getValue(
             cellRoots,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of());

@@ -18,8 +18,8 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.fasterxml.jackson.core.JsonEncoding;
@@ -37,7 +37,7 @@ public class CxxResourcesStep extends IsolatedStep {
 
   private final RelPath output;
   private final AbsPath relativeFrom;
-  private final ImmutableMap<ForwardRelativePath, AbsPath> resolvedResources;
+  private final ImmutableMap<ForwardRelPath, AbsPath> resolvedResources;
 
   /**
    * @param output path to write JSON file to.
@@ -47,7 +47,7 @@ public class CxxResourcesStep extends IsolatedStep {
   public CxxResourcesStep(
       RelPath output,
       AbsPath relativeFrom,
-      ImmutableMap<ForwardRelativePath, AbsPath> resolvedResources) {
+      ImmutableMap<ForwardRelPath, AbsPath> resolvedResources) {
     this.output = output;
     this.relativeFrom = relativeFrom;
     this.resolvedResources = resolvedResources;
@@ -62,7 +62,7 @@ public class CxxResourcesStep extends IsolatedStep {
       JsonFactory factory = new JsonFactory();
       try (JsonGenerator generator = factory.createGenerator(stream, JsonEncoding.UTF8)) {
         generator.writeStartObject();
-        for (Map.Entry<ForwardRelativePath, AbsPath> ent : resolvedResources.entrySet()) {
+        for (Map.Entry<ForwardRelPath, AbsPath> ent : resolvedResources.entrySet()) {
           generator.writeStringField(
               ent.getKey().toString(), relativeFrom.relativize(ent.getValue()).toString());
         }

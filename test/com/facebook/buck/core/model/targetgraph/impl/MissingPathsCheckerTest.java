@@ -17,8 +17,8 @@
 package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
@@ -46,7 +46,7 @@ public class MissingPathsCheckerTest {
     checker.checkPaths(
         new FakeProjectFilesystem(),
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -56,7 +56,7 @@ public class MissingPathsCheckerTest {
     checker.checkPaths(
         new FakeProjectFilesystem(ImmutableSet.of(Paths.get("b"))),
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -68,12 +68,12 @@ public class MissingPathsCheckerTest {
     checker.checkPaths(
         fakeProjectFileSystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
 
     checker.checkDirPaths(
         fakeProjectFileSystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -85,12 +85,12 @@ public class MissingPathsCheckerTest {
     checker.checkPaths(
         fakeProjectFileSystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
 
     checker.checkFilePaths(
         fakeProjectFileSystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -106,7 +106,7 @@ public class MissingPathsCheckerTest {
     checker.checkFilePaths(
         fakeProjectFileSystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -122,7 +122,7 @@ public class MissingPathsCheckerTest {
     checker.checkDirPaths(
         fakeProjectFileSystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -144,6 +144,6 @@ public class MissingPathsCheckerTest {
     checker.checkPaths(
         filesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 }

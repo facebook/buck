@@ -17,6 +17,7 @@
 package com.facebook.buck.parser.spec;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
@@ -27,7 +28,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -132,7 +132,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
         cell.getCanonicalName().equals(getUnconfiguredBuildTarget().getCell()));
 
     // TODO(strager): Check these invariants during construction.
-    ForwardRelativePath basePath = buildFileSpec.getCellRelativeBaseName().getPath();
+    ForwardRelPath basePath = buildFileSpec.getCellRelativeBaseName().getPath();
     if (!basePath.equals(getUnconfiguredBuildTarget().getCellRelativeBasePath().getPath())) {
       throw new IllegalStateException(
           String.format(

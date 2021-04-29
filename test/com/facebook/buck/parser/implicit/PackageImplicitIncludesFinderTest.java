@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.implicit;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.junit.Assert;
@@ -39,20 +39,17 @@ public class PackageImplicitIncludesFinderTest {
     PackageImplicitIncludesFinder finder = PackageImplicitIncludesFinder.fromConfiguration(config);
 
     Assert.assertEquals(
-        finder.findIncludeForBuildFile(ForwardRelativePath.of("foo/bar/baz1/subbaz")),
+        finder.findIncludeForBuildFile(ForwardRelPath.of("foo/bar/baz1/subbaz")),
         Optional.of(include1));
     Assert.assertEquals(
-        finder.findIncludeForBuildFile(ForwardRelativePath.of("foo/bar/baz1")),
-        Optional.of(include1));
+        finder.findIncludeForBuildFile(ForwardRelPath.of("foo/bar/baz1")), Optional.of(include1));
     Assert.assertEquals(
-        finder.findIncludeForBuildFile(ForwardRelativePath.of("foo/bar/baz2")),
-        Optional.of(include2));
+        finder.findIncludeForBuildFile(ForwardRelPath.of("foo/bar/baz2")), Optional.of(include2));
     Assert.assertEquals(
-        finder.findIncludeForBuildFile(ForwardRelativePath.of("foo/bar")), Optional.of(include2));
+        finder.findIncludeForBuildFile(ForwardRelPath.of("foo/bar")), Optional.of(include2));
+    Assert.assertEquals(finder.findIncludeForBuildFile(ForwardRelPath.of("foo")), Optional.empty());
     Assert.assertEquals(
-        finder.findIncludeForBuildFile(ForwardRelativePath.of("foo")), Optional.empty());
-    Assert.assertEquals(
-        finder.findIncludeForBuildFile(ForwardRelativePath.of("BUCK")), Optional.empty());
+        finder.findIncludeForBuildFile(ForwardRelPath.of("BUCK")), Optional.empty());
   }
 
   @Test
@@ -65,9 +62,8 @@ public class PackageImplicitIncludesFinderTest {
     Optional<ImplicitInclude> expected =
         Optional.of(ImplicitInclude.fromConfigurationString("//:include.bzl::get_name"));
 
-    Assert.assertEquals(
-        expected, finder.findIncludeForBuildFile(ForwardRelativePath.of("foo/bar/baz")));
-    Assert.assertEquals(expected, finder.findIncludeForBuildFile(ForwardRelativePath.of("")));
+    Assert.assertEquals(expected, finder.findIncludeForBuildFile(ForwardRelPath.of("foo/bar/baz")));
+    Assert.assertEquals(expected, finder.findIncludeForBuildFile(ForwardRelPath.of("")));
   }
 
   @Test
@@ -82,7 +78,6 @@ public class PackageImplicitIncludesFinderTest {
 
     PackageImplicitIncludesFinder finder = PackageImplicitIncludesFinder.fromConfiguration(config);
 
-    Assert.assertEquals(
-        expected, finder.findIncludeForBuildFile(ForwardRelativePath.of("foo/bar")));
+    Assert.assertEquals(expected, finder.findIncludeForBuildFile(ForwardRelPath.of("foo/bar")));
   }
 }

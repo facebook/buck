@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetLabelMatcher;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetMatcher;
@@ -28,7 +29,6 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
 import java.util.Collection;
@@ -100,7 +100,7 @@ public class CxxLinkGroupMappingTargetCoercer
   public UnconfiguredCxxLinkGroupMappingTarget coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
 
@@ -134,7 +134,7 @@ public class CxxLinkGroupMappingTargetCoercer
   private CxxLinkGroupMappingTargetMatcher extractMatcher(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     String error =
@@ -166,7 +166,7 @@ public class CxxLinkGroupMappingTargetCoercer
   public CxxLinkGroupMappingTarget coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       HostTargetConfigurationResolver hostConfigurationResolver,
       UnconfiguredCxxLinkGroupMappingTarget object)

@@ -17,9 +17,9 @@
 package com.facebook.buck.remoteexecution;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
@@ -74,8 +74,7 @@ public class FileBasedWorkerRequirementsProviderTest {
     EasyMock.expect(buildTarget.getFullyQualifiedName()).andReturn(FULL_NAME).anyTimes();
     EasyMock.expect(buildTarget.getShortNameAndFlavorPostfix()).andReturn(SHORT_NAME).anyTimes();
     EasyMock.expect(buildTarget.getCellRelativeBasePath())
-        .andReturn(
-            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of(BASE_DIR)))
+        .andReturn(CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of(BASE_DIR)))
         .anyTimes();
 
     EasyMock.replay(buildTarget);

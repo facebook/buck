@@ -22,7 +22,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.eventhandler.Event;
 import com.facebook.buck.core.starlark.eventhandler.EventCollector;
@@ -168,7 +168,7 @@ public class GlobTest {
                 NativeGlobber.create(root),
                 ImmutableMap.of(),
                 CanonicalCellName.rootCell(),
-                ForwardRelativePath.of("pkg"),
+                ForwardRelPath.of("pkg"),
                 eventHandler,
                 ImmutableMap.of()))
         .setup(env);

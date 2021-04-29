@@ -17,9 +17,9 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -60,7 +60,7 @@ public class SortedSetTypeCoercer<U, T extends Comparable<? super T>>
   public ImmutableList<U> coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Collection) {
@@ -91,7 +91,7 @@ public class SortedSetTypeCoercer<U, T extends Comparable<? super T>>
   public ImmutableSortedSet<T> coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       HostTargetConfigurationResolver hostConfigurationResolver,
       ImmutableList<U> object)

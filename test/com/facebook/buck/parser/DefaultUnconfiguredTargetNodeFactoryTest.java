@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -29,7 +30,6 @@ import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -143,7 +143,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             buildTarget,
             DependencyStack.root(),
             RawTargetNode.copyOf(
-                ForwardRelativePath.of("a/b"),
+                ForwardRelPath.of("a/b"),
                 "java_library",
                 ImmutableList.of("//a/..."),
                 ImmutableList.of("//b/..."),
@@ -187,7 +187,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             buildTarget,
             DependencyStack.root(),
             RawTargetNode.copyOf(
-                ForwardRelativePath.of("a/b"),
+                ForwardRelPath.of("a/b"),
                 "java_library",
                 ImmutableList.of("//a/..."),
                 ImmutableList.of("//b/..."),
@@ -220,7 +220,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             buildTarget,
             DependencyStack.root(),
             RawTargetNode.copyOf(
-                ForwardRelativePath.of("a/b"),
+                ForwardRelPath.of("a/b"),
                 "java_library",
                 ImmutableList.of("//a/..."),
                 ImmutableList.of("//b/...", "EXTEND_PACKAGE"),

@@ -19,7 +19,7 @@ package com.facebook.buck.core.model;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -29,28 +29,25 @@ public class CellRelativePathTest {
     assertEquals(
         "foo//bar/baz",
         CellRelativePath.of(
-                CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelativePath.of("bar/baz"))
+                CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelPath.of("bar/baz"))
             .toString());
     assertEquals(
         "//bar/baz",
-        CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("bar/baz"))
-            .toString());
+        CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("bar/baz")).toString());
   }
 
   @Test
   public void startsWith() {
     CellRelativePath fooBarBaz =
         CellRelativePath.of(
-            CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelativePath.of("bar/baz"));
+            CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelPath.of("bar/baz"));
     CellRelativePath fooBar =
         CellRelativePath.of(
-            CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelativePath.of("bar"));
+            CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelPath.of("bar"));
     CellRelativePath foo =
-        CellRelativePath.of(
-            CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelativePath.of(""));
+        CellRelativePath.of(CanonicalCellName.unsafeOf(Optional.of("foo")), ForwardRelPath.of(""));
     CellRelativePath bar =
-        CellRelativePath.of(
-            CanonicalCellName.unsafeOf(Optional.of("bar")), ForwardRelativePath.of(""));
+        CellRelativePath.of(CanonicalCellName.unsafeOf(Optional.of("bar")), ForwardRelPath.of(""));
 
     CellRelativePath[] paths = {
       foo, fooBar, fooBarBaz, bar,

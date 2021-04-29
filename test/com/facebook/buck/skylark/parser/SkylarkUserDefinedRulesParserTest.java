@@ -25,7 +25,7 @@ import static org.junit.Assert.assertNull;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -601,7 +601,7 @@ public class SkylarkUserDefinedRulesParserTest {
         ImmutableMap.of(
             "target1",
             RawTargetNode.copyOf(
-                ForwardRelativePath.of("subdir"),
+                ForwardRelPath.of("subdir"),
                 "//subdir:foo.bzl:some_rule",
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -636,7 +636,7 @@ public class SkylarkUserDefinedRulesParserTest {
         ImmutableMap.of(
             "target1",
             RawTargetNode.copyOf(
-                ForwardRelativePath.of("subdir"),
+                ForwardRelPath.of("subdir"),
                 "//subdir:foo.bzl:some_rule",
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -653,7 +653,7 @@ public class SkylarkUserDefinedRulesParserTest {
                     .build()),
             "target2",
             RawTargetNode.copyOf(
-                ForwardRelativePath.of("subdir"),
+                ForwardRelPath.of("subdir"),
                 "//subdir:foo.bzl:some_rule",
                 ImmutableList.of(),
                 ImmutableList.of(),

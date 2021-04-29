@@ -26,12 +26,12 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -272,7 +272,7 @@ public class TargetNodeVisibilityTest {
     FakeRuleDescriptionArg arg =
         FakeRuleDescriptionArg.builder().setName(buildTarget.getShortName()).build();
     VisibilityDefiningPath definingPath =
-        VisibilityDefiningPath.of(ForwardRelativePath.ofRelPath(relativeBuildFile), true);
+        VisibilityDefiningPath.of(ForwardRelPath.ofRelPath(relativeBuildFile), true);
     return new TargetNodeFactory(
             new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE)
         .createFromObject(

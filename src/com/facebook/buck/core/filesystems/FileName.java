@@ -28,10 +28,7 @@ public class FileName {
     return name;
   }
 
-  /**
-   * Intern name same way for both this class and {@link
-   * com.facebook.buck.core.path.ForwardRelativePath}.
-   */
+  /** Intern name same way for both this class and {@link ForwardRelPath}. */
   public static String internName(String name) {
     return name.intern();
   }
@@ -54,6 +51,11 @@ public class FileName {
           String.format("file name must not be dot or dot-dot: '%s'", name));
     }
     return new FileName(internName(name));
+  }
+
+  /** Create file name from valid interned name. */
+  static FileName ofUnchecked(String name) {
+    return new FileName(name);
   }
 
   @Override

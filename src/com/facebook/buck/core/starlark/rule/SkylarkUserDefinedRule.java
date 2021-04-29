@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.starlark.rule;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.label.Label;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
 import com.facebook.buck.core.starlark.compatible.StarlarkExportable;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -121,7 +121,7 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
     ImmutableList<String> names = Objects.requireNonNull(signature).getParameterNames();
 
     ParseContext parseContext = ParseContext.getParseContext(thread, getName());
-    ForwardRelativePath basePath = parseContext.getPackageContext().getBasePath();
+    ForwardRelPath basePath = parseContext.getPackageContext().getBasePath();
     ImmutableList<String> visibility = ImmutableList.of();
     ImmutableList<String> withinView = ImmutableList.of();
     TwoArraysImmutableHashMap.Builder<ParamName, Object> builder =

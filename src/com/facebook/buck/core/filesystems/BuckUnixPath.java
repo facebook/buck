@@ -217,8 +217,8 @@ public abstract class BuckUnixPath implements Path, PathWrapper {
   }
 
   /**
-   * Access path segments. This operation must not be used anywhere except in {@link
-   * com.facebook.buck.core.path.ForwardRelativePath} implementation.
+   * Access path segments. This operation must not be used anywhere except in {@link ForwardRelPath}
+   * implementation.
    */
   public String[] getSegmentsUnsafe() {
     return segments;

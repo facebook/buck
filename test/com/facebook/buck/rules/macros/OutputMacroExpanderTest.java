@@ -22,12 +22,12 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -101,7 +101,7 @@ public class OutputMacroExpanderTest {
         .coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "$(output )");

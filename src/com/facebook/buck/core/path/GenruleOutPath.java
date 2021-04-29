@@ -17,6 +17,7 @@
 package com.facebook.buck.core.path;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.google.common.base.Preconditions;
 
 /**
@@ -56,7 +57,7 @@ public class GenruleOutPath {
     if (s.equals(".") || s.equals("./")) {
       return;
     }
-    ForwardRelativePath.of(s);
+    ForwardRelPath.of(s);
   }
 
   @Override

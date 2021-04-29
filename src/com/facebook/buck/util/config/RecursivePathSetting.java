@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.config;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -31,7 +31,7 @@ public class RecursivePathSetting<T> {
   }
 
   /** Check if the given {@code path} component is enabled. */
-  public Optional<T> get(ForwardRelativePath path) {
+  public Optional<T> get(ForwardRelPath path) {
     Node<T> node = root;
     T value = node.value;
     for (int index = 0; index < path.getNameCount(); index++) {
@@ -61,7 +61,7 @@ public class RecursivePathSetting<T> {
     private Builder() {}
 
     /** Enable, recursively, for the given {@code path} component. */
-    public Builder<T> set(ForwardRelativePath path, T value) {
+    public Builder<T> set(ForwardRelPath path, T value) {
       Node<T> node = root;
       for (int index = 0; index < path.getNameCount(); index++) {
         node = node.map.computeIfAbsent(path.getSegment(index), e -> new Node<>());

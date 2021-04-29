@@ -18,8 +18,8 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.visibility.VisibilityDefiningPath;
@@ -40,7 +40,7 @@ public class PackageFactory {
 
     VisibilityDefiningPath definingPath =
         VisibilityDefiningPath.of(
-            ForwardRelativePath.ofRelPath(cell.getRoot().relativize(packageFile)), false);
+            ForwardRelPath.ofRelPath(cell.getRoot().relativize(packageFile)), false);
 
     String visibilityDefinerDescription =
         String.format("the package() at %s", definingPath.getPath());

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.DefaultCellNameResolverProvider;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
@@ -39,7 +40,6 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.select.TestSelectableResolver;
@@ -134,14 +134,14 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             TwoArraysImmutableHashMap.of(
                 "target1",
                 RawTargetNode.copyOf(
-                    ForwardRelativePath.EMPTY,
+                    ForwardRelPath.EMPTY,
                     "java_library",
                     ImmutableList.of(),
                     ImmutableList.of(),
                     TwoArraysImmutableHashMap.copyOf(rawAttributes1)),
                 "target2",
                 RawTargetNode.copyOf(
-                    ForwardRelativePath.EMPTY,
+                    ForwardRelPath.EMPTY,
                     "java_library",
                     ImmutableList.of(),
                     ImmutableList.of(),

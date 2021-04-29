@@ -53,6 +53,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -68,7 +69,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -635,7 +635,7 @@ public class ParserWithConfigurableAttributesTest {
             WatchmanPathEvent.of(
                 filesystem.getRootPath(),
                 Kind.CREATE,
-                ForwardRelativePath.of("java/com/facebook/Something.java")));
+                ForwardRelPath.of("java/com/facebook/Something.java")));
 
     // Call filterAllTargetsInProject to request cached rules.
     filterAllTargetsInProject(parser, parsingContext);
@@ -677,7 +677,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), configBuckFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -732,7 +732,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), defsFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -790,7 +790,7 @@ public class ParserWithConfigurableAttributesTest {
             WatchmanPathEvent.of(
                 filesystem.getRootPath(),
                 Kind.CREATE,
-                ForwardRelativePath.ofRelPath(
+                ForwardRelPath.ofRelPath(
                     MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile))));
 
     // Call parseBuildFile to request cached rules.
@@ -829,7 +829,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -869,7 +869,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.DELETE,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -909,7 +909,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.CREATE,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -951,7 +951,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -991,7 +991,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.DELETE,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -1031,7 +1031,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.CREATE,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -1071,7 +1071,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -1111,7 +1111,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.DELETE,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -1151,7 +1151,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.CREATE,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -1191,7 +1191,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -1231,7 +1231,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.DELETE,
-            ForwardRelativePath.ofRelPath(
+            ForwardRelPath.ofRelPath(
                 MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile)));
     parser.getPermState().invalidateBasedOn(event);
 
@@ -1272,7 +1272,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.CREATE,
-            ForwardRelativePath.of("java/com/facebook/SomeClass.java"));
+            ForwardRelPath.of("java/com/facebook/SomeClass.java"));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1325,7 +1325,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.CREATE,
-            ForwardRelativePath.of("java/com/facebook/SomeClass.java"));
+            ForwardRelPath.of("java/com/facebook/SomeClass.java"));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1364,7 +1364,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            ForwardRelativePath.of("java/com/facebook/SomeClass.java"));
+            ForwardRelPath.of("java/com/facebook/SomeClass.java"));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1404,7 +1404,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.DELETE,
-            ForwardRelativePath.of("java/com/facebook/SomeClass.java"));
+            ForwardRelPath.of("java/com/facebook/SomeClass.java"));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1443,7 +1443,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.CREATE,
-            ForwardRelativePath.of("java/com/facebook/MumbleSwp.Java.swp"));
+            ForwardRelPath.of("java/com/facebook/MumbleSwp.Java.swp"));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1482,7 +1482,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            ForwardRelativePath.of("java/com/facebook/MumbleSwp.Java.swp"));
+            ForwardRelPath.of("java/com/facebook/MumbleSwp.Java.swp"));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1521,7 +1521,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.DELETE,
-            ForwardRelativePath.of("java/com/facebook/MumbleSwp.Java.swp"));
+            ForwardRelPath.of("java/com/facebook/MumbleSwp.Java.swp"));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1558,9 +1558,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            filesystem.getRootPath(),
-            Kind.CREATE,
-            ForwardRelativePath.of("SomeClass.java__backup"));
+            filesystem.getRootPath(), Kind.CREATE, ForwardRelPath.of("SomeClass.java__backup"));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1597,9 +1595,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            filesystem.getRootPath(),
-            Kind.MODIFY,
-            ForwardRelativePath.of("SomeClass.java__backup"));
+            filesystem.getRootPath(), Kind.MODIFY, ForwardRelPath.of("SomeClass.java__backup"));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1636,9 +1632,7 @@ public class ParserWithConfigurableAttributesTest {
     // Process event.
     WatchmanPathEvent event =
         WatchmanPathEvent.of(
-            filesystem.getRootPath(),
-            Kind.DELETE,
-            ForwardRelativePath.of("SomeClass.java__backup"));
+            filesystem.getRootPath(), Kind.DELETE, ForwardRelPath.of("SomeClass.java__backup"));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1756,12 +1750,10 @@ public class ParserWithConfigurableAttributesTest {
     Files.delete(testFooBuckFile.getPath());
     Files.write(testBarBuckFile.getPath(), "java_library(name = 'bar')\n".getBytes(UTF_8));
     WatchmanPathEvent deleteEvent =
-        WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.DELETE, ForwardRelativePath.of("foo/BUCK"));
+        WatchmanPathEvent.of(filesystem.getRootPath(), Kind.DELETE, ForwardRelPath.of("foo/BUCK"));
     parser.getPermState().invalidateBasedOn(deleteEvent);
     WatchmanPathEvent modifyEvent =
-        WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.MODIFY, ForwardRelativePath.of("bar/BUCK"));
+        WatchmanPathEvent.of(filesystem.getRootPath(), Kind.MODIFY, ForwardRelPath.of("bar/BUCK"));
     parser.getPermState().invalidateBasedOn(modifyEvent);
 
     parser.buildTargetGraph(parsingContext, buildTargets);
@@ -1809,7 +1801,7 @@ public class ParserWithConfigurableAttributesTest {
     Files.delete(testBarJavaFile.getPath());
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.DELETE, ForwardRelativePath.of("foo/Bar.java"));
+            filesystem.getRootPath(), Kind.DELETE, ForwardRelPath.of("foo/Bar.java"));
     parser.getPermState().invalidateBasedOn(deleteEvent);
 
     HashCode updatedHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1837,10 +1829,10 @@ public class ParserWithConfigurableAttributesTest {
     Files.move(testFooJavaFile.getPath(), testFooJavaFile.getPath().resolveSibling("Bar.java"));
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.DELETE, ForwardRelativePath.of("foo/Foo.java"));
+            filesystem.getRootPath(), Kind.DELETE, ForwardRelPath.of("foo/Foo.java"));
     WatchmanPathEvent createEvent =
         WatchmanPathEvent.of(
-            (filesystem.getRootPath()), Kind.CREATE, ForwardRelativePath.of("foo/Bar.java"));
+            (filesystem.getRootPath()), Kind.CREATE, ForwardRelPath.of("foo/Bar.java"));
     parser.getPermState().invalidateBasedOn(deleteEvent);
     parser.getPermState().invalidateBasedOn(createEvent);
 
@@ -1961,7 +1953,7 @@ public class ParserWithConfigurableAttributesTest {
     tempDir.newFile("bar/Baz.java");
     WatchmanPathEvent createEvent =
         WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.CREATE, ForwardRelativePath.of("bar/Baz.java"));
+            filesystem.getRootPath(), Kind.CREATE, ForwardRelPath.of("bar/Baz.java"));
     parser.getPermState().invalidateBasedOn(createEvent);
 
     {
@@ -2019,7 +2011,7 @@ public class ParserWithConfigurableAttributesTest {
     Files.delete(bazSourceFile.getPath());
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.DELETE, ForwardRelativePath.of("bar/Baz.java"));
+            filesystem.getRootPath(), Kind.DELETE, ForwardRelPath.of("bar/Baz.java"));
     parser.getPermState().invalidateBasedOn(deleteEvent);
 
     {
@@ -2479,7 +2471,7 @@ public class ParserWithConfigurableAttributesTest {
                             BuildFileSpec.fromRecursivePath(
                                 CellRelativePath.of(
                                     parsingContext.getCells().getRootCell().getCanonicalName(),
-                                    ForwardRelativePath.of(""))))),
+                                    ForwardRelPath.of(""))))),
                     Optional.empty())
                 .getTargetGraph()
                 .getNodes())

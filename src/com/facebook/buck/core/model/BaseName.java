@@ -16,16 +16,16 @@
 
 package com.facebook.buck.core.model;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.google.common.base.Preconditions;
 
 /** {@code //foo/bar} part of {@code cell//foo/bar:baz}. */
 public class BaseName implements Comparable<BaseName> {
-  public static final BaseName ROOT = new BaseName(ForwardRelativePath.EMPTY);
+  public static final BaseName ROOT = new BaseName(ForwardRelPath.EMPTY);
 
-  private final ForwardRelativePath path;
+  private final ForwardRelPath path;
 
-  private BaseName(ForwardRelativePath path) {
+  private BaseName(ForwardRelPath path) {
     this.path = path;
   }
 
@@ -36,12 +36,12 @@ public class BaseName implements Comparable<BaseName> {
     if (baseName.length() == "//".length()) {
       return ROOT;
     } else {
-      return ofPath(ForwardRelativePath.ofSubstring(baseName, "//".length()));
+      return ofPath(ForwardRelPath.ofSubstring(baseName, "//".length()));
     }
   }
 
   /** Create a base name from path (prepend "//"). */
-  public static BaseName ofPath(ForwardRelativePath path) {
+  public static BaseName ofPath(ForwardRelPath path) {
     if (path.isEmpty()) {
       return ROOT;
     } else {
@@ -49,7 +49,7 @@ public class BaseName implements Comparable<BaseName> {
     }
   }
 
-  public ForwardRelativePath getPath() {
+  public ForwardRelPath getPath() {
     return path;
   }
 

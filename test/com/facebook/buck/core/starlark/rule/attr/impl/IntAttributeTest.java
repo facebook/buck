@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +46,7 @@ public class IntAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             5);
@@ -63,7 +63,7 @@ public class IntAttributeTest {
     attr.getValue(
         cellNameResolver,
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         "foo");
@@ -77,7 +77,7 @@ public class IntAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             3);
@@ -92,7 +92,7 @@ public class IntAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             3);
@@ -110,7 +110,7 @@ public class IntAttributeTest {
     attr.getValue(
         cellNameResolver,
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         3);

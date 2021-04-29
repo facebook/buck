@@ -4,7 +4,7 @@ java_test(
     name = "json",
     srcs = glob(["*Test.java"]),
     deps = [
-        "//src/com/facebook/buck/core/path:path",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/util/collect:collect",
         "//src/com/facebook/buck/util/json:json",
         "//third-party/java/guava:guava",

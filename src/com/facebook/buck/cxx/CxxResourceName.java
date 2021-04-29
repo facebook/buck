@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import java.util.Objects;
@@ -29,13 +29,13 @@ public final class CxxResourceName implements AddsToRuleKey {
 
   // Stringify to avoid unsupported field error when adding to rule key.
   @AddToRuleKey(stringify = true)
-  private final ForwardRelativePath name;
+  private final ForwardRelPath name;
 
-  public CxxResourceName(ForwardRelativePath name) {
+  public CxxResourceName(ForwardRelPath name) {
     this.name = name;
   }
 
-  public ForwardRelativePath getNameAsPath() {
+  public ForwardRelPath getNameAsPath() {
     return name;
   }
 

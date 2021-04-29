@@ -20,8 +20,8 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -134,10 +134,9 @@ class SymlinkCache {
   private Map<Path, Path> inputFilesUnderSymlink(
       // We use Collection<Path> instead of Iterable<Path> to prevent
       // accidentally passing in Path, since Path itself is Iterable<Path>.
-      Collection<ForwardRelativePath> inputs, ProjectFilesystem projectFilesystem)
-      throws IOException {
+      Collection<ForwardRelPath> inputs, ProjectFilesystem projectFilesystem) throws IOException {
     Map<Path, Path> newSymlinksEncountered = new HashMap<>();
-    for (ForwardRelativePath input : inputs) {
+    for (ForwardRelPath input : inputs) {
       Path inputPath = input.toPath(projectFilesystem.getFileSystem());
       for (int i = 1; i < inputPath.getNameCount(); i++) {
         Path subpath = inputPath.subpath(0, i);

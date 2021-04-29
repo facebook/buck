@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 
@@ -27,17 +27,17 @@ class NoopPathsChecker implements PathsChecker {
   public void checkPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> paths) {}
+      ImmutableSet<ForwardRelPath> paths) {}
 
   @Override
   public void checkFilePaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> paths) {}
+      ImmutableSet<ForwardRelPath> paths) {}
 
   @Override
   public void checkDirPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> dirPaths) {}
+      ImmutableSet<ForwardRelPath> dirPaths) {}
 }

@@ -21,11 +21,11 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.parser.spec.BuildFileSpec;
@@ -138,7 +138,7 @@ public class ParserBenchmark {
             TargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(
                     CellRelativePath.of(
-                        cells.getRootCell().getCanonicalName(), ForwardRelativePath.of(""))))),
+                        cells.getRootCell().getCanonicalName(), ForwardRelPath.of(""))))),
         Optional.empty());
   }
 }

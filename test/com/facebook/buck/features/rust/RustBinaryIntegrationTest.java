@@ -21,10 +21,10 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -1085,7 +1085,7 @@ public class RustBinaryIntegrationTest {
                         .getBuckPaths()
                         .shouldIncludeTargetConfigHash(
                             CellRelativePath.of(
-                                CanonicalCellName.rootCell(), ForwardRelativePath.of(""))),
+                                CanonicalCellName.rootCell(), ForwardRelPath.of(""))),
                     BuildTargetFactory.newInstance("//:thinguser#binary"),
                     "%s")
                 .resolve("thinguser");

@@ -19,13 +19,13 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -186,7 +186,7 @@ public class UnconfiguredTargetNodeAttributeTraverser {
                       }
                     });
           } else if (object instanceof Path) {
-            ForwardRelativePath path = ForwardRelativePath.ofPath((Path) object);
+            ForwardRelPath path = ForwardRelPath.ofPath((Path) object);
             pathConsumer.accept(CellRelativePath.of(currentCellName, path));
           }
         });

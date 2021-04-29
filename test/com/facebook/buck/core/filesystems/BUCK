@@ -20,6 +20,7 @@ standard_java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/junit:junit",
         "//third-party/java/junitparams:junitparams",
     ],

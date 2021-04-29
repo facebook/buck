@@ -28,11 +28,11 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.DataTransferObject;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -86,7 +86,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -105,7 +105,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -125,7 +125,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -144,7 +144,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -162,7 +162,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -255,7 +255,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             inputSet));
@@ -264,7 +264,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             inputMap));
@@ -285,7 +285,7 @@ public class TypeCoercerTest {
             coercer.coerceBoth(
                 cellNameResolver,
                 filesystem,
-                ForwardRelativePath.of(""),
+                ForwardRelPath.of(""),
                 UnconfiguredTargetConfiguration.INSTANCE,
                 new ConstantHostTargetConfigurationResolver(
                     UnconfiguredTargetConfiguration.INSTANCE),
@@ -307,7 +307,7 @@ public class TypeCoercerTest {
             coercer.coerceBoth(
                 cellNameResolver,
                 filesystem,
-                ForwardRelativePath.of(""),
+                ForwardRelPath.of(""),
                 UnconfiguredTargetConfiguration.INSTANCE,
                 new ConstantHostTargetConfigurationResolver(
                     UnconfiguredTargetConfiguration.INSTANCE),
@@ -331,7 +331,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             inputString));
@@ -340,7 +340,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             inputList));
@@ -395,7 +395,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input));
@@ -438,7 +438,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -463,7 +463,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -492,7 +492,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -523,7 +523,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -547,7 +547,7 @@ public class TypeCoercerTest {
       coercer.coerceBoth(
           cellNameResolver,
           filesystem,
-          ForwardRelativePath.of(""),
+          ForwardRelPath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
           new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
           ImmutableList.of(ImmutableList.of(-5, "//some:build-target")));
@@ -562,7 +562,7 @@ public class TypeCoercerTest {
       coercer.coerceBoth(
           cellNameResolver,
           filesystem,
-          ForwardRelativePath.of(""),
+          ForwardRelPath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
           new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
           ImmutableList.of(ImmutableList.of(101, "//some:build-target")));
@@ -577,7 +577,7 @@ public class TypeCoercerTest {
       coercer.coerceBoth(
           cellNameResolver,
           filesystem,
-          ForwardRelativePath.of(""),
+          ForwardRelPath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
           new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
           ImmutableList.of(ImmutableList.of(50.5f, "//some:build-target")));
@@ -592,7 +592,7 @@ public class TypeCoercerTest {
       coercer.coerceBoth(
           cellNameResolver,
           filesystem,
-          ForwardRelativePath.of(""),
+          ForwardRelPath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
           new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
           ImmutableList.of(ImmutableList.of(0.3f, "//some:build-target")));
@@ -614,7 +614,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -634,7 +634,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -654,7 +654,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -685,7 +685,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -708,7 +708,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             input);
@@ -738,7 +738,7 @@ public class TypeCoercerTest {
       coercer.coerceBoth(
           cellNameResolver,
           filesystem,
-          ForwardRelativePath.of(""),
+          ForwardRelPath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
           new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
           input);
@@ -761,7 +761,7 @@ public class TypeCoercerTest {
       coercer.coerceBoth(
           cellNameResolver,
           filesystem,
-          ForwardRelativePath.of(""),
+          ForwardRelPath.of(""),
           UnconfiguredTargetConfiguration.INSTANCE,
           new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
           object);
@@ -855,7 +855,7 @@ public class TypeCoercerTest {
         coercer.coerceBoth(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             map);
@@ -883,7 +883,7 @@ public class TypeCoercerTest {
     coercer.coerceBoth(
         cellNameResolver,
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         map);

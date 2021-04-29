@@ -35,6 +35,7 @@ import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -45,7 +46,6 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -2019,7 +2019,7 @@ public class AppleDescriptions {
 
   public static boolean targetNodeContainsSwiftSourceCode(
       TargetNode<? extends CxxLibraryDescription.CommonArg> node) {
-    for (ForwardRelativePath inputPath : node.getInputs()) {
+    for (ForwardRelPath inputPath : node.getInputs()) {
       if (inputPath.toString().endsWith(".swift")) {
         return true;
       }

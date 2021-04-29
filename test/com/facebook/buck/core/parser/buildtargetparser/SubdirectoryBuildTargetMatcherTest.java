@@ -20,9 +20,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import org.junit.Test;
@@ -36,7 +36,7 @@ public class SubdirectoryBuildTargetMatcherTest {
     SubdirectoryBuildTargetMatcher pattern =
         ImmutableSubdirectoryBuildTargetMatcher.ofImpl(
             CellRelativePath.of(
-                CanonicalCellName.rootCell(), ForwardRelativePath.of("src/com/facebook/buck")));
+                CanonicalCellName.rootCell(), ForwardRelPath.of("src/com/facebook/buck")));
 
     assertTrue(
         pattern.matches(

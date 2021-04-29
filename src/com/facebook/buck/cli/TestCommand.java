@@ -37,13 +37,13 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -558,7 +558,7 @@ public class TestCommand extends BuildCommand {
                               BuildFileSpec.fromRecursivePath(
                                   CellRelativePath.of(
                                       cells.getRootCell().getCanonicalName(),
-                                      ForwardRelativePath.of(""))),
+                                      ForwardRelPath.of(""))),
                               true)),
                       params.getTargetConfiguration());
           targetGraphCreationResult = targetGraphCreationResult.withBuildTargets(ImmutableSet.of());

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.Iterables;
@@ -77,7 +77,7 @@ public class BuildPaths {
    * @param target The {@link BuildTarget} to scope this path to.
    * @return A {@link java.nio.file.Path} scoped to the base path to {@code target}.
    */
-  public static ForwardRelativePath getBaseDir(ProjectFilesystem filesystem, BuildTarget target) {
+  public static ForwardRelPath getBaseDir(ProjectFilesystem filesystem, BuildTarget target) {
     return BuildTargetPaths.getBasePath(
         filesystem.getBuckPaths().shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()),
         target,

@@ -19,13 +19,13 @@ package com.facebook.buck.core.model.targetgraph;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.ObeysVisibility;
 import com.facebook.buck.rules.visibility.VisibilityError;
@@ -63,10 +63,10 @@ public interface TargetNode<T extends ConstructorArg>
   ProjectFilesystem getFilesystem();
 
   /** Cell root-relative paths. */
-  ImmutableSet<ForwardRelativePath> getInputs();
+  ImmutableSet<ForwardRelPath> getInputs();
 
   /** The subset of inputs that were implicitly computed */
-  ImmutableSet<ForwardRelativePath> getImplicitInputs();
+  ImmutableSet<ForwardRelPath> getImplicitInputs();
 
   ImmutableSet<BuildTarget> getDeclaredDeps();
 

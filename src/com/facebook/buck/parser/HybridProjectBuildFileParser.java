@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
@@ -112,8 +112,7 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
         buildFile,
         cellRoot);
 
-    ForwardRelativePath buildFileRel =
-        ForwardRelativePath.ofRelPath(cellRoot.relativize(buildFile));
+    ForwardRelPath buildFileRel = ForwardRelPath.ofRelPath(cellRoot.relativize(buildFile));
 
     @Nullable
     String firstLine =

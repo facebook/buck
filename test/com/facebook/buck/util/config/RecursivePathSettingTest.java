@@ -18,7 +18,7 @@ package com.facebook.buck.util.config;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -28,14 +28,14 @@ public class RecursivePathSettingTest {
   public void test() {
     RecursivePathSetting<Boolean> setting =
         RecursivePathSetting.<Boolean>builder()
-            .set(ForwardRelativePath.of("foo"), false)
-            .set(ForwardRelativePath.of("foo/bar"), true)
+            .set(ForwardRelPath.of("foo"), false)
+            .set(ForwardRelPath.of("foo/bar"), true)
             .build();
-    assertEquals(setting.get(ForwardRelativePath.of("")), Optional.empty());
-    assertEquals(setting.get(ForwardRelativePath.of("bar")), Optional.empty());
-    assertEquals(setting.get(ForwardRelativePath.of("foo")), Optional.of(false));
-    assertEquals(setting.get(ForwardRelativePath.of("foo/baz")), Optional.of(false));
-    assertEquals(setting.get(ForwardRelativePath.of("foo/bar")), Optional.of(true));
-    assertEquals(setting.get(ForwardRelativePath.of("foo/bar/baz")), Optional.of(true));
+    assertEquals(setting.get(ForwardRelPath.of("")), Optional.empty());
+    assertEquals(setting.get(ForwardRelPath.of("bar")), Optional.empty());
+    assertEquals(setting.get(ForwardRelPath.of("foo")), Optional.of(false));
+    assertEquals(setting.get(ForwardRelPath.of("foo/baz")), Optional.of(false));
+    assertEquals(setting.get(ForwardRelPath.of("foo/bar")), Optional.of(true));
+    assertEquals(setting.get(ForwardRelPath.of("foo/bar/baz")), Optional.of(true));
   }
 }

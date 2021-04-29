@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.cache.impl;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
@@ -115,6 +115,6 @@ public class CacheBenchmark {
         leaf ->
             cache.onFileSystemChange(
                 WatchmanPathEvent.of(
-                    projectFilesystem.resolve(leaf), Kind.CREATE, ForwardRelativePath.of(leaf))));
+                    projectFilesystem.resolve(leaf), Kind.CREATE, ForwardRelPath.of(leaf))));
   }
 }

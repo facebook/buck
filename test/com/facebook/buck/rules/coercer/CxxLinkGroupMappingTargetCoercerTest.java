@@ -20,6 +20,7 @@ import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetLabelMatcher;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetPatternMatcher;
@@ -28,7 +29,6 @@ import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -39,8 +39,7 @@ import org.junit.rules.ExpectedException;
 
 public class CxxLinkGroupMappingTargetCoercerTest {
   private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final ForwardRelativePath basePath =
-      ForwardRelativePath.of("java/com/facebook/buck/example");
+  private final ForwardRelPath basePath = ForwardRelPath.of("java/com/facebook/buck/example");
   private CxxLinkGroupMappingTargetCoercer coercer;
 
   public static CxxLinkGroupMappingTargetCoercer buildTypeCoercer(

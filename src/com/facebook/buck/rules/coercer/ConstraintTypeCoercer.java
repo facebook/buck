@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.versions.Constraint;
 import com.facebook.buck.versions.ExactConstraint;
@@ -36,7 +36,7 @@ public class ConstraintTypeCoercer extends LeafUnconfiguredOnlyCoercer<Constrain
   public Constraint coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {

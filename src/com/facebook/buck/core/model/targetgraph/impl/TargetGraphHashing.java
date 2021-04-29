@@ -17,10 +17,10 @@
 package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -131,7 +131,7 @@ public class TargetGraphHashing {
 
       // Hash the contents of all input files and directories.
       ProjectFilesystem cellFilesystem = node.getFilesystem();
-      for (ForwardRelativePath input : ImmutableSortedSet.copyOf(node.getInputs())) {
+      for (ForwardRelPath input : ImmutableSortedSet.copyOf(node.getInputs())) {
         try {
           hasher.putBytes(fileHashLoader.get(cellFilesystem.resolve(input)).asBytes());
         } catch (IOException e) {

@@ -18,11 +18,11 @@ package com.facebook.buck.util.json;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -299,19 +299,19 @@ public class ObjectMappers {
 
   private static SimpleModule forwardRelativePathModule() {
     SimpleModule module = new SimpleModule();
-    module.addSerializer(ForwardRelativePath.class, new ToStringSerializer());
+    module.addSerializer(ForwardRelPath.class, new ToStringSerializer());
     module.addDeserializer(
-        ForwardRelativePath.class,
-        new FromStringDeserializer<ForwardRelativePath>(ForwardRelativePath.class) {
+        ForwardRelPath.class,
+        new FromStringDeserializer<ForwardRelPath>(ForwardRelPath.class) {
           @Override
-          protected ForwardRelativePath _deserialize(String value, DeserializationContext ctxt)
+          protected ForwardRelPath _deserialize(String value, DeserializationContext ctxt)
               throws IOException {
-            return ForwardRelativePath.of(value);
+            return ForwardRelPath.of(value);
           }
 
           @Override
-          protected ForwardRelativePath _deserializeFromEmptyString() throws IOException {
-            return ForwardRelativePath.EMPTY;
+          protected ForwardRelPath _deserializeFromEmptyString() throws IOException {
+            return ForwardRelPath.EMPTY;
           }
         });
     return module;

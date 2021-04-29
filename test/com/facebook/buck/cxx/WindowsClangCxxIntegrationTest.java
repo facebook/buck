@@ -23,10 +23,10 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -271,7 +271,7 @@ public class WindowsClangCxxIntegrationTest {
             .getProjectFileSystem()
             .getBuckPaths()
             .shouldIncludeTargetConfigHash(
-                CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("lib")));
+                CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("lib")));
     Path outputPath =
         workspace
             .resolve("xplat/buck-out/gen")

@@ -17,7 +17,7 @@
 package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.skylark.function.packages.Info;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
@@ -140,7 +140,7 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
 
     boolean buildRoot =
         parseContext.getPackageContext().getCellName().equals(CanonicalCellName.rootCell())
-            && parseContext.getPackageContext().getBasePath().equals(ForwardRelativePath.EMPTY);
+            && parseContext.getPackageContext().getBasePath().equals(ForwardRelPath.EMPTY);
     if (buildRoot
         && include.stream()
             .anyMatch(str -> TOP_LEVEL_GLOB_PATTERN.matcher((String) str).matches())) {

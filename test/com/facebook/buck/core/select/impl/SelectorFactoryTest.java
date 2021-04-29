@@ -22,8 +22,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -51,7 +51,7 @@ public class SelectorFactoryTest {
     Selector<Object> selector =
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             ImmutableMap.of());
 
     assertTrue(selector.getConditions().isEmpty());
@@ -62,7 +62,7 @@ public class SelectorFactoryTest {
     Selector<Object> selector =
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             ImmutableMap.of("DEFAULT", "flavor1", "//:a", "flavor2"));
 
     assertEquals(2, selector.getConditions().size());
@@ -80,7 +80,7 @@ public class SelectorFactoryTest {
     Selector<Object> selector =
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             ImmutableMap.of("//:z", "flavor1", "//:a", "flavor2"));
 
     assertEquals(2, selector.getConditions().size());
@@ -98,7 +98,7 @@ public class SelectorFactoryTest {
     Selector<Object> selector =
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             ImmutableMap.of("DEFAULT", "flavor1"));
 
     assertEquals(1, selector.getConditions().size());
@@ -114,7 +114,7 @@ public class SelectorFactoryTest {
     Selector<Object> selector =
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             ImmutableMap.of("//:z", Starlark.NONE, "//:a", "flavor2"));
 
     assertEquals(1, selector.getConditions().size());

@@ -20,10 +20,10 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.InMemoryBuildFileTree;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -61,7 +61,7 @@ public class ThrowingPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/Test.java")));
+        ImmutableSet.of(ForwardRelPath.of("a/Test.java")));
   }
 
   @Test
@@ -87,7 +87,7 @@ public class ThrowingPackageBoundaryCheckerTest {
             .build()
             .getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/Test.java")));
+        ImmutableSet.of(ForwardRelPath.of("a/Test.java")));
   }
 
   @Test
@@ -100,8 +100,8 @@ public class ThrowingPackageBoundaryCheckerTest {
                   public BuildFileTree load(Cell cell) {
                     return new InMemoryBuildFileTree(Collections.emptyList()) {
                       @Override
-                      public Optional<ForwardRelativePath> getBasePathOfAncestorTarget(
-                          ForwardRelativePath filePath) {
+                      public Optional<ForwardRelPath> getBasePathOfAncestorTarget(
+                          ForwardRelPath filePath) {
                         return Optional.empty();
                       }
                     };
@@ -117,7 +117,7 @@ public class ThrowingPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/b/Test.java")));
+        ImmutableSet.of(ForwardRelPath.of("a/b/Test.java")));
   }
 
   @Test
@@ -130,9 +130,9 @@ public class ThrowingPackageBoundaryCheckerTest {
                   public BuildFileTree load(Cell cell) {
                     return new InMemoryBuildFileTree(Collections.emptyList()) {
                       @Override
-                      public Optional<ForwardRelativePath> getBasePathOfAncestorTarget(
-                          ForwardRelativePath filePath) {
-                        return Optional.of(ForwardRelativePath.of("d"));
+                      public Optional<ForwardRelPath> getBasePathOfAncestorTarget(
+                          ForwardRelPath filePath) {
+                        return Optional.of(ForwardRelPath.of("d"));
                       }
                     };
                   }
@@ -158,7 +158,7 @@ public class ThrowingPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/b/Test.java")));
+        ImmutableSet.of(ForwardRelPath.of("a/b/Test.java")));
   }
 
   @Test
@@ -170,7 +170,7 @@ public class ThrowingPackageBoundaryCheckerTest {
                   @Override
                   public BuildFileTree load(Cell cell) {
                     return new InMemoryBuildFileTree(
-                        Collections.singleton(ForwardRelativePath.of("a/b")));
+                        Collections.singleton(ForwardRelPath.of("a/b")));
                   }
                 });
     ThrowingPackageBoundaryChecker boundaryChecker =
@@ -179,6 +179,6 @@ public class ThrowingPackageBoundaryCheckerTest {
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().setFilesystem(new FakeProjectFilesystem()).build().getRootCell(),
         BuildTargetFactory.newInstance("//a/b:c"),
-        ImmutableSet.of(ForwardRelativePath.of("a/b/Test.java")));
+        ImmutableSet.of(ForwardRelPath.of("a/b/Test.java")));
   }
 }

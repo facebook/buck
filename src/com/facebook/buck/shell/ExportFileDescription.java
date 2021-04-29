@@ -20,9 +20,9 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
@@ -112,9 +112,9 @@ public class ExportFileDescription
 
   /** If the src field is absent, add the name field to the list of inputs. */
   @Override
-  public ImmutableSet<ForwardRelativePath> inferInputsFromAttributes(
+  public ImmutableSet<ForwardRelPath> inferInputsFromAttributes(
       UnflavoredBuildTarget buildTarget, TwoArraysImmutableHashMap<ParamName, Object> attributes) {
-    ImmutableSet.Builder<ForwardRelativePath> inputs = ImmutableSet.builder();
+    ImmutableSet.Builder<ForwardRelPath> inputs = ImmutableSet.builder();
     if (!attributes.containsKey(ParamName.bySnakeCase("src"))) {
       inputs.add(
           buildTarget.getCellRelativeBasePath().getPath().resolve(buildTarget.getLocalName()));

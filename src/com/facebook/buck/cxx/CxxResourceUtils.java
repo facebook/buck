@@ -18,9 +18,9 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -49,8 +49,8 @@ public class CxxResourceUtils {
       BuildTarget target,
       Optional<String> headerNamespace,
       ImmutableMap<String, SourcePath> resources) {
-    ForwardRelativePath basePath =
-        headerNamespace.map(ForwardRelativePath::of).orElse(target.getBaseName().getPath());
+    ForwardRelPath basePath =
+        headerNamespace.map(ForwardRelPath::of).orElse(target.getBaseName().getPath());
     return MoreMaps.transformKeys(
         resources,
         name -> new CxxResourceName(basePath.resolve(PathFormatter.pathWithUnixSeparators(name))));

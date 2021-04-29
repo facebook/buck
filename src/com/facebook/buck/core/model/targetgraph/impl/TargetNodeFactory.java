@@ -24,6 +24,7 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
@@ -31,7 +32,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.NodeCopier;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -126,7 +126,7 @@ public class TargetNodeFactory implements NodeCopier {
       RuleType ruleType)
       throws NoSuchBuildTargetException {
 
-    ImmutableSet<ForwardRelativePath> implicitInputs = ImmutableSet.of();
+    ImmutableSet<ForwardRelPath> implicitInputs = ImmutableSet.of();
     if (description instanceof ImplicitInputsInferringDescription) {
       implicitInputs =
           ((ImplicitInputsInferringDescription) description)
@@ -164,7 +164,7 @@ public class TargetNodeFactory implements NodeCopier {
           DependencyStack dependencyStack,
           ImmutableSet<BuildTarget> declaredDeps,
           ImmutableSortedSet<BuildTarget> configurationDeps,
-          ImmutableSet<ForwardRelativePath> implicitInputs,
+          ImmutableSet<ForwardRelPath> implicitInputs,
           ImmutableSet<VisibilityPattern> visibilityPatterns,
           ImmutableSet<VisibilityPattern> withinViewPatterns,
           RuleType ruleType)
@@ -193,9 +193,9 @@ public class TargetNodeFactory implements NodeCopier {
     ImmutableSortedSet.Builder<BuildTarget> extraDepsBuilder = ImmutableSortedSet.naturalOrder();
     ImmutableSortedSet.Builder<BuildTarget> targetGraphOnlyDepsBuilder =
         ImmutableSortedSet.naturalOrder();
-    ImmutableSet.Builder<ForwardRelativePath> pathsBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<ForwardRelativePath> filePathsBuilder = ImmutableSet.builder();
-    ImmutableSet.Builder<ForwardRelativePath> dirPathsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<ForwardRelPath> pathsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<ForwardRelPath> filePathsBuilder = ImmutableSet.builder();
+    ImmutableSet.Builder<ForwardRelPath> dirPathsBuilder = ImmutableSet.builder();
 
     ParamsInfo paramInfos = typeCoercerFactory.paramInfos(constructorArg);
 
@@ -241,13 +241,13 @@ public class TargetNodeFactory implements NodeCopier {
               .build();
     }
 
-    ImmutableSet<ForwardRelativePath> paths = pathsBuilder.build();
+    ImmutableSet<ForwardRelPath> paths = pathsBuilder.build();
     pathsChecker.checkPaths(filesystem, buildTarget, paths);
 
-    ImmutableSet<ForwardRelativePath> filePaths = filePathsBuilder.build();
+    ImmutableSet<ForwardRelPath> filePaths = filePathsBuilder.build();
     pathsChecker.checkFilePaths(filesystem, buildTarget, filePaths);
 
-    ImmutableSet<ForwardRelativePath> dirPaths = dirPathsBuilder.build();
+    ImmutableSet<ForwardRelPath> dirPaths = dirPathsBuilder.build();
     pathsChecker.checkDirPaths(filesystem, buildTarget, dirPaths);
 
     // This method uses the TargetNodeFactory, rather than just calling withBuildTarget,
@@ -277,9 +277,9 @@ public class TargetNodeFactory implements NodeCopier {
       BuildTarget buildTarget,
       CellNameResolver cellRoots,
       ImmutableSet.Builder<BuildTarget> depsBuilder,
-      ImmutableSet.Builder<ForwardRelativePath> pathsBuilder,
-      ImmutableSet.Builder<ForwardRelativePath> filePathsBuilder,
-      ImmutableSet.Builder<ForwardRelativePath> dirPathsBuilder,
+      ImmutableSet.Builder<ForwardRelPath> pathsBuilder,
+      ImmutableSet.Builder<ForwardRelPath> filePathsBuilder,
+      ImmutableSet.Builder<ForwardRelPath> dirPathsBuilder,
       ParamInfo<?> info,
       ConstructorArg constructorArg)
       throws NoSuchBuildTargetException {
@@ -292,8 +292,8 @@ public class TargetNodeFactory implements NodeCopier {
             if (object instanceof PathSourcePath) {
               // We know that coercer returns normalized object, so
               // converting to ForwardRelativePath is OK
-              ForwardRelativePath path =
-                  ForwardRelativePath.ofPath(((PathSourcePath) object).getRelativePath());
+              ForwardRelPath path =
+                  ForwardRelPath.ofPath(((PathSourcePath) object).getRelativePath());
               switch (info.pathsMustBe()) {
                 case REGULAR_FILE:
                   filePathsBuilder.add(path);
@@ -308,7 +308,7 @@ public class TargetNodeFactory implements NodeCopier {
                   throw new AssertionError("unreachable");
               }
             } else if (object instanceof Path) {
-              ForwardRelativePath path = ForwardRelativePath.ofPath((Path) object);
+              ForwardRelPath path = ForwardRelPath.ofPath((Path) object);
               switch (info.pathsMustBe()) {
                 case REGULAR_FILE:
                   filePathsBuilder.add(path);

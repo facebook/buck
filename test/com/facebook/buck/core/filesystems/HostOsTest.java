@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.core.filesystems;
 
-import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.filesystems.ForwardRelPath;
-import com.facebook.buck.core.model.BuildTarget;
-import com.google.common.collect.ImmutableSet;
+import static org.junit.Assert.*;
 
-public class NoopPackageBoundaryChecker implements PackageBoundaryChecker {
-  @Override
-  public void enforceBuckPackageBoundaries(
-      Cell targetCell, BuildTarget target, ImmutableSet<ForwardRelPath> paths) {}
+import com.facebook.buck.util.environment.Platform;
+import org.junit.Test;
+
+public class HostOsTest {
+  @Test
+  public void isWindows() {
+    assertEquals(HostOs.IS_WINDOWS, (Platform.detect() == Platform.WINDOWS));
+  }
 }

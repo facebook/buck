@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.api;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 /** What we got from Starlark/Python interpreter. */
 @BuckStyleValue
 public abstract class RawTargetNode {
-  public abstract ForwardRelativePath getBasePath();
+  public abstract ForwardRelPath getBasePath();
 
   public abstract String getBuckType();
 
@@ -66,7 +66,7 @@ public abstract class RawTargetNode {
   }
 
   public static RawTargetNode of(
-      ForwardRelativePath basePath,
+      ForwardRelPath basePath,
       String buckType,
       ImmutableList<String> visibility,
       ImmutableList<String> withinView,
@@ -76,7 +76,7 @@ public abstract class RawTargetNode {
   }
 
   public static RawTargetNode copyOf(
-      ForwardRelativePath basePath,
+      ForwardRelPath basePath,
       String buckType,
       ImmutableList<String> visibility,
       ImmutableList<String> withinView,

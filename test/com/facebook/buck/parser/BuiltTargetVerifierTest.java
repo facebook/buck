@@ -19,10 +19,10 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -66,7 +66,7 @@ public class BuiltTargetVerifierTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new SomeDescription(),
         RawTargetNode.copyOf(
-            ForwardRelativePath.EMPTY,
+            ForwardRelPath.EMPTY,
             "java_library",
             ImmutableList.of(),
             ImmutableList.of(),
@@ -90,7 +90,7 @@ public class BuiltTargetVerifierTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new SomeDescription(),
         RawTargetNode.copyOf(
-            ForwardRelativePath.of("z/y/z"),
+            ForwardRelPath.of("z/y/z"),
             "java_library",
             ImmutableList.of(),
             ImmutableList.of(),
@@ -113,7 +113,7 @@ public class BuiltTargetVerifierTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new SomeDescription(),
         RawTargetNode.copyOf(
-            ForwardRelativePath.of("a/b"),
+            ForwardRelPath.of("a/b"),
             "java_library",
             ImmutableList.of(),
             ImmutableList.of(),

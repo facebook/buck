@@ -16,7 +16,7 @@
 
 package com.facebook.buck.io.filesystem.impl;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
@@ -100,7 +100,7 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
   }
 
   @Override
-  public Path resolve(ForwardRelativePath path) {
+  public Path resolve(ForwardRelPath path) {
     return resolve(path.toPath(filesystemParent.getFileSystem()));
   }
 

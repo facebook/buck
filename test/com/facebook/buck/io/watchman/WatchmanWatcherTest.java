@@ -25,8 +25,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -122,7 +122,7 @@ public class WatchmanWatcherTest {
     assertEquals(Kind.MODIFY, pathEvent.getKind());
     assertEquals(
         "Path should match watchman output.",
-        ForwardRelativePath.of("foo/bar/baz"),
+        ForwardRelPath.of("foo/bar/baz"),
         pathEvent.getPath());
     assertEquals(ImmutableList.of(pathEvent), eventBuffer.getOnlyBigEvent().getPathEvents());
   }
@@ -195,11 +195,11 @@ public class WatchmanWatcherTest {
     List<WatchmanPathEvent> pathEvents = eventBuffer.filterEventsByClass(WatchmanPathEvent.class);
     assertEquals(
         "Path should match watchman output.",
-        ForwardRelativePath.of("foo/bar/baz"),
+        ForwardRelPath.of("foo/bar/baz"),
         pathEvents.get(0).getPath());
     assertEquals(
         "Path should match watchman output.",
-        ForwardRelativePath.of("foo/bar/boz"),
+        ForwardRelPath.of("foo/bar/boz"),
         pathEvents.get(1).getPath());
     assertEquals(pathEvents, eventBuffer.getOnlyBigEvent().getPathEvents());
   }

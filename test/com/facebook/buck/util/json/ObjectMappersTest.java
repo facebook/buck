@@ -18,7 +18,7 @@ package com.facebook.buck.util.json;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -73,7 +73,7 @@ public class ObjectMappersTest {
 
   @Test
   public void canSerializeToJsonAsString() throws Exception {
-    ForwardRelativePath path = ForwardRelativePath.of("bar/baz");
+    ForwardRelPath path = ForwardRelPath.of("bar/baz");
     String data = ObjectMappers.WRITER.writeValueAsString(path);
     assertEquals("\"bar/baz\"", data);
   }
@@ -81,17 +81,15 @@ public class ObjectMappersTest {
   @Test
   public void canDeserializeFromJsonString() throws Exception {
     String data = "\"bar/baz\"";
-    ForwardRelativePath path =
-        ObjectMappers.READER.forType(ForwardRelativePath.class).readValue(data);
-    assertEquals(ForwardRelativePath.of("bar/baz"), path);
+    ForwardRelPath path = ObjectMappers.READER.forType(ForwardRelPath.class).readValue(data);
+    assertEquals(ForwardRelPath.of("bar/baz"), path);
   }
 
   @Test
   public void canDeserializeFromEmptyString() throws Exception {
     String data = "\"\"";
-    ForwardRelativePath path =
-        ObjectMappers.READER.forType(ForwardRelativePath.class).readValue(data);
-    assertEquals(ForwardRelativePath.of(""), path);
+    ForwardRelPath path = ObjectMappers.READER.forType(ForwardRelPath.class).readValue(data);
+    assertEquals(ForwardRelPath.of(""), path);
   }
 
   public static class TestObject {

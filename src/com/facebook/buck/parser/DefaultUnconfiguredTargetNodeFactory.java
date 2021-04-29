@@ -22,13 +22,13 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -303,8 +303,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             entryType.getSnakeCase(),
             entries,
             VisibilityDefiningPath.of(
-                ForwardRelativePath.ofRelPath(cell.getRoot().relativize(buildFile.getPath())),
-                true),
+                ForwardRelPath.ofRelPath(cell.getRoot().relativize(buildFile.getPath())), true),
             target::getFullyQualifiedName);
 
     if (entryPatterns.isEmpty() || addPackageEntries) {

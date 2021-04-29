@@ -22,11 +22,11 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
 import com.facebook.buck.core.util.graph.ConsumingTraverser;
 import com.facebook.buck.core.util.graph.CycleException;
@@ -264,7 +264,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
     CellRelativePath cellRelativePath =
         CellRelativePath.of(
             cell.getCanonicalName(),
-            ForwardRelativePath.ofRelPath(cell.getRoot().relativize(buildFileDirectory)));
+            ForwardRelPath.ofRelPath(cell.getRoot().relativize(buildFileDirectory)));
     return pathToBuildTargetIndex.get(cellRelativePath).stream()
         .map(targetToNodeIndex::get)
         .collect(ImmutableList.toImmutableList());

@@ -17,12 +17,12 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -57,7 +57,7 @@ public class SourcePathTypeCoercer extends LeafTypeNewCoercer<UnconfiguredSource
   public UnconfiguredSourcePath coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
@@ -79,7 +79,7 @@ public class SourcePathTypeCoercer extends LeafTypeNewCoercer<UnconfiguredSource
             object, getOutputType(), "SourcePath cannot contain an absolute path");
       }
       return new UnconfiguredSourcePath.Path(
-          CellRelativePath.of(cellRoots.getCurrentCellName(), ForwardRelativePath.ofPath(path)));
+          CellRelativePath.of(cellRoots.getCurrentCellName(), ForwardRelPath.ofPath(path)));
     }
   }
 
@@ -87,7 +87,7 @@ public class SourcePathTypeCoercer extends LeafTypeNewCoercer<UnconfiguredSource
   public SourcePath coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       HostTargetConfigurationResolver hostConfigurationResolver,
       UnconfiguredSourcePath object)

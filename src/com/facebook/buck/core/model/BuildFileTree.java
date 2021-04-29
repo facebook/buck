@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import java.util.Optional;
 
 /**
@@ -35,14 +35,14 @@ public interface BuildFileTree {
    * @param filePath the path whose base path to find.
    * @return the base path if there is one.
    */
-  Optional<ForwardRelativePath> getBasePathOfAncestorTarget(ForwardRelativePath filePath);
+  Optional<ForwardRelPath> getBasePathOfAncestorTarget(ForwardRelPath filePath);
 
-  /** Rel-path version of {@link #getBasePathOfAncestorTarget(ForwardRelativePath)}. */
+  /** Rel-path version of {@link #getBasePathOfAncestorTarget(ForwardRelPath)}. */
   default Optional<RelPath> getBasePathOfAncestorTarget(RelPath filePath) {
     if (filePath.startsWith("..")) {
       return Optional.empty();
     }
-    return getBasePathOfAncestorTarget(ForwardRelativePath.ofRelPath(filePath))
+    return getBasePathOfAncestorTarget(ForwardRelPath.ofRelPath(filePath))
         .map(p -> p.toRelPath(filePath.getFileSystem()));
   }
 }

@@ -18,7 +18,7 @@ package com.facebook.buck.skylark.io.impl;
 
 import static org.junit.Assert.*;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import org.junit.Test;
 
 public class UnixGlobPatternTest {
@@ -31,44 +31,44 @@ public class UnixGlobPatternTest {
 
   @Test
   public void matches() {
-    assertTrue(UnixGlobPattern.parse("*").matches(ForwardRelativePath.of("a"), null));
-    assertFalse(UnixGlobPattern.parse("*").matches(ForwardRelativePath.of("a/b"), null));
-    assertTrue(UnixGlobPattern.parse("*/a/*").matches(ForwardRelativePath.of("c/a/b"), null));
-    assertFalse(UnixGlobPattern.parse("*/a/*").matches(ForwardRelativePath.of("c/x/b"), null));
-    assertFalse(UnixGlobPattern.parse("*/a/*").matches(ForwardRelativePath.of("c/a"), null));
-    assertFalse(UnixGlobPattern.parse("*/a").matches(ForwardRelativePath.of("c/a/b"), null));
+    assertTrue(UnixGlobPattern.parse("*").matches(ForwardRelPath.of("a"), null));
+    assertFalse(UnixGlobPattern.parse("*").matches(ForwardRelPath.of("a/b"), null));
+    assertTrue(UnixGlobPattern.parse("*/a/*").matches(ForwardRelPath.of("c/a/b"), null));
+    assertFalse(UnixGlobPattern.parse("*/a/*").matches(ForwardRelPath.of("c/x/b"), null));
+    assertFalse(UnixGlobPattern.parse("*/a/*").matches(ForwardRelPath.of("c/a"), null));
+    assertFalse(UnixGlobPattern.parse("*/a").matches(ForwardRelPath.of("c/a/b"), null));
 
-    assertTrue(UnixGlobPattern.parse("**").matches(ForwardRelativePath.of(""), null));
-    assertTrue(UnixGlobPattern.parse("**").matches(ForwardRelativePath.of("a"), null));
-    assertTrue(UnixGlobPattern.parse("**").matches(ForwardRelativePath.of("a/b"), null));
+    assertTrue(UnixGlobPattern.parse("**").matches(ForwardRelPath.of(""), null));
+    assertTrue(UnixGlobPattern.parse("**").matches(ForwardRelPath.of("a"), null));
+    assertTrue(UnixGlobPattern.parse("**").matches(ForwardRelPath.of("a/b"), null));
 
-    assertTrue(UnixGlobPattern.parse("a/**").matches(ForwardRelativePath.of("a"), null));
-    assertTrue(UnixGlobPattern.parse("a/**").matches(ForwardRelativePath.of("a/b"), null));
-    assertFalse(UnixGlobPattern.parse("a/**").matches(ForwardRelativePath.of("c"), null));
-    assertFalse(UnixGlobPattern.parse("a/**").matches(ForwardRelativePath.of("c/a"), null));
-    assertFalse(UnixGlobPattern.parse("a/**").matches(ForwardRelativePath.of("c/a/b"), null));
+    assertTrue(UnixGlobPattern.parse("a/**").matches(ForwardRelPath.of("a"), null));
+    assertTrue(UnixGlobPattern.parse("a/**").matches(ForwardRelPath.of("a/b"), null));
+    assertFalse(UnixGlobPattern.parse("a/**").matches(ForwardRelPath.of("c"), null));
+    assertFalse(UnixGlobPattern.parse("a/**").matches(ForwardRelPath.of("c/a"), null));
+    assertFalse(UnixGlobPattern.parse("a/**").matches(ForwardRelPath.of("c/a/b"), null));
 
-    assertTrue(UnixGlobPattern.parse("a/**/b").matches(ForwardRelativePath.of("a/b"), null));
-    assertTrue(UnixGlobPattern.parse("a/**/b").matches(ForwardRelativePath.of("a/x/b"), null));
-    assertTrue(UnixGlobPattern.parse("a/**/b").matches(ForwardRelativePath.of("a/x/y/b"), null));
+    assertTrue(UnixGlobPattern.parse("a/**/b").matches(ForwardRelPath.of("a/b"), null));
+    assertTrue(UnixGlobPattern.parse("a/**/b").matches(ForwardRelPath.of("a/x/b"), null));
+    assertTrue(UnixGlobPattern.parse("a/**/b").matches(ForwardRelPath.of("a/x/y/b"), null));
 
-    assertFalse(UnixGlobPattern.parse("a/**/b").matches(ForwardRelativePath.of("a/x/y/b/z"), null));
-    assertFalse(UnixGlobPattern.parse("a/**/b").matches(ForwardRelativePath.of("a"), null));
-    assertFalse(UnixGlobPattern.parse("a/**/b").matches(ForwardRelativePath.of("a/x"), null));
+    assertFalse(UnixGlobPattern.parse("a/**/b").matches(ForwardRelPath.of("a/x/y/b/z"), null));
+    assertFalse(UnixGlobPattern.parse("a/**/b").matches(ForwardRelPath.of("a"), null));
+    assertFalse(UnixGlobPattern.parse("a/**/b").matches(ForwardRelPath.of("a/x"), null));
 
-    assertFalse(UnixGlobPattern.parse("a/**/*").matches(ForwardRelativePath.of("a"), null));
-    assertTrue(UnixGlobPattern.parse("a/**/*").matches(ForwardRelativePath.of("a/b"), null));
-    assertTrue(UnixGlobPattern.parse("a/**/*").matches(ForwardRelativePath.of("a/b/c"), null));
+    assertFalse(UnixGlobPattern.parse("a/**/*").matches(ForwardRelPath.of("a"), null));
+    assertTrue(UnixGlobPattern.parse("a/**/*").matches(ForwardRelPath.of("a/b"), null));
+    assertTrue(UnixGlobPattern.parse("a/**/*").matches(ForwardRelPath.of("a/b/c"), null));
 
-    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelativePath.of("a"), null));
-    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelativePath.of("x/a"), null));
-    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelativePath.of("x/y/a"), null));
-    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelativePath.of("a/x"), null));
-    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelativePath.of("a/x/y"), null));
-    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelativePath.of("x/a/y"), null));
+    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelPath.of("a"), null));
+    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelPath.of("x/a"), null));
+    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelPath.of("x/y/a"), null));
+    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelPath.of("a/x"), null));
+    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelPath.of("a/x/y"), null));
+    assertTrue(UnixGlobPattern.parse("**/a/**").matches(ForwardRelPath.of("x/a/y"), null));
 
-    assertFalse(UnixGlobPattern.parse("**/a/**").matches(ForwardRelativePath.of("x"), null));
-    assertFalse(UnixGlobPattern.parse("**/a/**").matches(ForwardRelativePath.of("x/y"), null));
-    assertFalse(UnixGlobPattern.parse("**/a/**").matches(ForwardRelativePath.of("x/y/z"), null));
+    assertFalse(UnixGlobPattern.parse("**/a/**").matches(ForwardRelPath.of("x"), null));
+    assertFalse(UnixGlobPattern.parse("**/a/**").matches(ForwardRelPath.of("x/y"), null));
+    assertFalse(UnixGlobPattern.parse("**/a/**").matches(ForwardRelPath.of("x/y/z"), null));
   }
 }

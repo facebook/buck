@@ -17,7 +17,7 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -409,7 +409,7 @@ public class WatchmanWatcher {
             }
           }
 
-          ForwardRelativePath filePath = ForwardRelativePath.of(fileName);
+          ForwardRelPath filePath = ForwardRelPath.of(fileName);
 
           if (type != WatchmanEvent.Type.DIRECTORY) {
             // WatchmanPathEvent is sent for everything but directories - this is legacy

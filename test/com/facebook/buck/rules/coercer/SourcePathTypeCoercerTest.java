@@ -21,13 +21,13 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -45,7 +45,7 @@ import org.junit.rules.ExpectedException;
 public class SourcePathTypeCoercerTest {
   private FakeProjectFilesystem projectFilesystem;
   private CellNameResolver cellRoots;
-  private final ForwardRelativePath pathRelativeToProjectRoot = ForwardRelativePath.of("");
+  private final ForwardRelPath pathRelativeToProjectRoot = ForwardRelPath.of("");
   private final SourcePathTypeCoercer sourcePathTypeCoercer =
       new SourcePathTypeCoercer(
           new BuildTargetWithOutputsTypeCoercer(
@@ -87,7 +87,7 @@ public class SourcePathTypeCoercerTest {
         sourcePathTypeCoercer.coerceBoth(
             cellRoots,
             projectFilesystem,
-            ForwardRelativePath.of("foo/bar"),
+            ForwardRelPath.of("foo/bar"),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "hello.a");

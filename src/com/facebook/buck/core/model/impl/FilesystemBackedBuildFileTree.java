@@ -17,9 +17,9 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.filesystems.FileName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -48,41 +48,39 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
    * value is a base path. If folder is a package itself (i.e. it does have a build file) then key
    * and value are the same object. All paths are relative to provided filesystem root.
    */
-  private final LoadingCache<ForwardRelativePath, Optional<ForwardRelativePath>>
-      basePathOfAncestorCache =
-          CacheBuilder.newBuilder()
-              .weakValues()
-              .build(
-                  new CacheLoader<ForwardRelativePath, Optional<ForwardRelativePath>>() {
-                    @Override
-                    public Optional<ForwardRelativePath> load(ForwardRelativePath folderPath)
-                        throws Exception {
+  private final LoadingCache<ForwardRelPath, Optional<ForwardRelPath>> basePathOfAncestorCache =
+      CacheBuilder.newBuilder()
+          .weakValues()
+          .build(
+              new CacheLoader<ForwardRelPath, Optional<ForwardRelPath>>() {
+                @Override
+                public Optional<ForwardRelPath> load(ForwardRelPath folderPath) throws Exception {
 
-                      ForwardRelativePath buildFileCandidate = folderPath.resolve(buildFile);
+                  ForwardRelPath buildFileCandidate = folderPath.resolve(buildFile);
 
-                      // projectFilesystem.isIgnored() is invoked for any folder in a tree
-                      // this is not effective, can be optimized by using more efficient tree
-                      // matchers
-                      // for ignored paths
-                      if (projectFilesystem.isFile(buildFileCandidate)
-                          && !projectFilesystem.isIgnored(buildFileCandidate)
-                          && !isBuckSpecialPath(folderPath)) {
-                        return Optional.of(folderPath);
-                      }
+                  // projectFilesystem.isIgnored() is invoked for any folder in a tree
+                  // this is not effective, can be optimized by using more efficient tree
+                  // matchers
+                  // for ignored paths
+                  if (projectFilesystem.isFile(buildFileCandidate)
+                      && !projectFilesystem.isIgnored(buildFileCandidate)
+                      && !isBuckSpecialPath(folderPath)) {
+                    return Optional.of(folderPath);
+                  }
 
-                      if (folderPath.equals(ForwardRelativePath.EMPTY)) {
-                        return Optional.empty();
-                      }
+                  if (folderPath.equals(ForwardRelPath.EMPTY)) {
+                    return Optional.empty();
+                  }
 
-                      // traverse up
-                      ForwardRelativePath parent = folderPath.getParent();
-                      if (parent == null) {
-                        parent = ForwardRelativePath.EMPTY;
-                      }
+                  // traverse up
+                  ForwardRelPath parent = folderPath.getParent();
+                  if (parent == null) {
+                    parent = ForwardRelPath.EMPTY;
+                  }
 
-                      return basePathOfAncestorCache.get(parent);
-                    }
-                  });
+                  return basePathOfAncestorCache.get(parent);
+                }
+              });
 
   public FilesystemBackedBuildFileTree(
       ProjectFilesystem projectFilesystem, FileName buildFileName) {
@@ -95,7 +93,7 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
    * filePath that contains a build file. If no base directory is found, returns an empty path.
    */
   @Override
-  public Optional<ForwardRelativePath> getBasePathOfAncestorTarget(ForwardRelativePath filePath) {
+  public Optional<ForwardRelPath> getBasePathOfAncestorTarget(ForwardRelPath filePath) {
 
     // This will do `stat` which might be expensive. In fact, we almost always know if filePath
     // is a file or folder at caller's site, but the API based on Path is just too generic.
@@ -104,7 +102,7 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
     if (projectFilesystem.isFile(filePath)) {
       filePath = filePath.getParent();
       if (filePath == null) {
-        filePath = ForwardRelativePath.EMPTY;
+        filePath = ForwardRelPath.EMPTY;
       }
     }
 
@@ -115,7 +113,7 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
    * @return True if path should be ignored because it is Buck special path, like buck-out or cache
    *     folder, which means it cannot contain build files
    */
-  private boolean isBuckSpecialPath(ForwardRelativePath path) {
+  private boolean isBuckSpecialPath(ForwardRelPath path) {
     Path pathPath = path.toPath(projectFilesystem.getFileSystem());
 
     RelPath buckOut = projectFilesystem.getBuckPaths().getBuckOut();

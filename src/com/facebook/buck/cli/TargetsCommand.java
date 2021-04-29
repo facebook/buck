@@ -27,6 +27,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.FileName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
@@ -50,7 +51,6 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDe
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -687,8 +687,7 @@ public class TargetsCommand extends AbstractCommand {
           TargetNodePredicateSpec.of(
               BuildFileSpec.fromRecursivePath(
                   CellRelativePath.of(
-                      params.getCells().getRootCell().getCanonicalName(),
-                      ForwardRelativePath.of("")))));
+                      params.getCells().getRootCell().getCanonicalName(), ForwardRelPath.of("")))));
     }
     return parseArgumentsAsTargetNodeSpecs(
         params.getCells().getRootCell(),
@@ -841,7 +840,7 @@ public class TargetsCommand extends AbstractCommand {
                               BuildFileSpec.fromRecursivePath(
                                   CellRelativePath.of(
                                       params.getCells().getRootCell().getCanonicalName(),
-                                      ForwardRelativePath.of(""))))),
+                                      ForwardRelPath.of(""))))),
                       params.getTargetConfiguration())
                   .getTargetGraph(),
               ImmutableSet.of());
@@ -1638,7 +1637,7 @@ public class TargetsCommand extends AbstractCommand {
         return false;
       }
 
-      for (ForwardRelativePath input : node.getInputs()) {
+      for (ForwardRelPath input : node.getInputs()) {
         for (RelPath referencedInput : referencedInputs) {
           if (referencedInput.startsWith(input.toPath(projectFilesystem.getFileSystem()))) {
             return true;

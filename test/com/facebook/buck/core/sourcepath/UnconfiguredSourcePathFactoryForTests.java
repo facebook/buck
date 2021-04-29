@@ -17,11 +17,11 @@
 package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
-import com.facebook.buck.core.path.ForwardRelativePath;
 
 /** Utility to create {@link com.facebook.buck.core.sourcepath.UnconfiguredSourcePath} for tests. */
 public class UnconfiguredSourcePathFactoryForTests {
@@ -33,7 +33,7 @@ public class UnconfiguredSourcePathFactoryForTests {
               UnconfiguredBuildTargetParser.parse(path), OutputLabel.defaultLabel()));
     } else {
       return new UnconfiguredSourcePath.Path(
-          CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of(path)));
+          CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of(path)));
     }
   }
 }

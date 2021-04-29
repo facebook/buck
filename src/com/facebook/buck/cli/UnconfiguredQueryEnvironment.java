@@ -19,13 +19,13 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.TraversableGraph;
@@ -366,7 +366,7 @@ public class UnconfiguredQueryEnvironment
     UnconfiguredBuildTarget buildTarget = queryBuildTarget.getBuildTarget();
     Cell cell = cells.getCell(buildTarget.getCell());
     BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
-    Optional<ForwardRelativePath> path =
+    Optional<ForwardRelPath> path =
         buildFileTree.getBasePathOfAncestorTarget(buildTarget.getCellRelativeBasePath().getPath());
     Preconditions.checkState(path.isPresent());
 

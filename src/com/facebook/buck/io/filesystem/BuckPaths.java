@@ -17,9 +17,9 @@
 package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.config.Config;
@@ -192,11 +192,11 @@ public abstract class BuckPaths {
     RecursivePathSetting.Builder<Boolean> builder = RecursivePathSetting.builder();
     config.getListWithoutComments("project", "buck_out_target_config_hash_excludes").stream()
         // TODO(agallagher): Improve error message when this fails.
-        .map(ForwardRelativePath::of)
+        .map(ForwardRelPath::of)
         .forEach(p -> builder.set(p, false));
     config.getListWithoutComments("project", "buck_out_target_config_hash_includes").stream()
         // TODO(agallagher): Improve error message when this fails.
-        .map(ForwardRelativePath::of)
+        .map(ForwardRelPath::of)
         .forEach(p -> builder.set(p, true));
     return builder.build();
   }

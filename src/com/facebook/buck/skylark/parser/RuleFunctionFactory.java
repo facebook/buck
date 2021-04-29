@@ -19,7 +19,7 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -86,7 +86,7 @@ public class RuleFunctionFactory {
         }
 
         ParseContext parseContext = ParseContext.getParseContext(thread, name);
-        ForwardRelativePath basePath = parseContext.getPackageContext().getBasePath();
+        ForwardRelPath basePath = parseContext.getPackageContext().getBasePath();
         RecordedRule recordedRule = populateAttributes(ruleClass, getName(), basePath, named);
         parseContext.recordRule(recordedRule);
         return Starlark.NONE;
@@ -125,7 +125,7 @@ public class RuleFunctionFactory {
    * @param kwargs The keyword arguments and their values passed to rule function in build file.
    */
   private RecordedRule populateAttributes(
-      BaseDescription<?> ruleClass, String name, ForwardRelativePath basePath, Object[] kwargs)
+      BaseDescription<?> ruleClass, String name, ForwardRelPath basePath, Object[] kwargs)
       throws EvalException {
 
     TwoArraysImmutableHashMap.Builder<ParamName, Object> builder =

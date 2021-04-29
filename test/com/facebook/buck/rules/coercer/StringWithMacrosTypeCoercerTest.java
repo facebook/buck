@@ -23,11 +23,11 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
@@ -55,7 +55,7 @@ public class StringWithMacrosTypeCoercerTest {
   private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final CellNameResolver cellNameResolver =
       TestCellPathResolver.get(filesystem).getCellNameResolver();
-  private final ForwardRelativePath basePath = ForwardRelativePath.of("");
+  private final ForwardRelPath basePath = ForwardRelPath.of("");
 
   @Test
   public void plainString() throws CoerceFailedException {
@@ -564,7 +564,7 @@ public class StringWithMacrosTypeCoercerTest {
     public TestMacro coerceToUnconfigured(
         CellNameResolver cellNameResolver,
         ProjectFilesystem filesystem,
-        ForwardRelativePath pathRelativeToProjectRoot,
+        ForwardRelPath pathRelativeToProjectRoot,
         ImmutableList<String> args) {
       return new TestMacro(args);
     }
@@ -598,7 +598,7 @@ public class StringWithMacrosTypeCoercerTest {
     public Test2Macro coerceToUnconfigured(
         CellNameResolver cellNameResolver,
         ProjectFilesystem filesystem,
-        ForwardRelativePath pathRelativeToProjectRoot,
+        ForwardRelPath pathRelativeToProjectRoot,
         ImmutableList<String> args) {
       return new Test2Macro(args);
     }
@@ -632,7 +632,7 @@ public class StringWithMacrosTypeCoercerTest {
     public TestMacro coerceToUnconfigured(
         CellNameResolver cellNameResolver,
         ProjectFilesystem filesystem,
-        ForwardRelativePath pathRelativeToProjectRoot,
+        ForwardRelPath pathRelativeToProjectRoot,
         ImmutableList<String> args)
         throws CoerceFailedException {
       throw new CoerceFailedException("failed");

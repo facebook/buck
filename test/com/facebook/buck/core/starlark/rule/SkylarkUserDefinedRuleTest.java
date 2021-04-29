@@ -20,9 +20,9 @@ import static com.facebook.buck.skylark.function.SkylarkRuleFunctions.IMPLICIT_A
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.model.label.LabelSyntaxException;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.eventhandler.EventKind;
@@ -117,7 +117,7 @@ public class SkylarkUserDefinedRuleTest {
                 },
                 ImmutableMap.of(),
                 CanonicalCellName.unsafeOf(Optional.of("repo")),
-                ForwardRelativePath.of("some_package/subdir"),
+                ForwardRelPath.of("some_package/subdir"),
                 eventHandler,
                 ImmutableMap.of()));
 

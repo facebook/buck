@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.visibility;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
@@ -25,11 +25,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
  */
 @BuckStyleValue
 public abstract class VisibilityDefiningPath {
-  public abstract ForwardRelativePath getPath();
+  public abstract ForwardRelPath getPath();
 
   public abstract boolean isBuildFile();
 
-  public static VisibilityDefiningPath of(ForwardRelativePath path, boolean isBuildFile) {
+  public static VisibilityDefiningPath of(ForwardRelPath path, boolean isBuildFile) {
     return ImmutableVisibilityDefiningPath.ofImpl(path, isBuildFile);
   }
 }

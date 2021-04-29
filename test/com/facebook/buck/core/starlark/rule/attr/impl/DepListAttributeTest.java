@@ -22,11 +22,11 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
@@ -77,7 +77,7 @@ public class DepListAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("//foo/bar:baz"));
@@ -92,7 +92,7 @@ public class DepListAttributeTest {
     attr.getValue(
         cellNameResolver,
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         "foo");
@@ -105,7 +105,7 @@ public class DepListAttributeTest {
     attr.getValue(
         cellNameResolver,
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         ImmutableList.of(1));
@@ -122,7 +122,7 @@ public class DepListAttributeTest {
     attr.getValue(
         cellNameResolver,
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         ImmutableList.of());
@@ -135,7 +135,7 @@ public class DepListAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of());
@@ -170,7 +170,7 @@ public class DepListAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("//foo:bar"));
@@ -194,7 +194,7 @@ public class DepListAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("//foo:bar"));
@@ -240,7 +240,7 @@ public class DepListAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             ImmutableList.of("//foo:bar", "//foo:baz"));

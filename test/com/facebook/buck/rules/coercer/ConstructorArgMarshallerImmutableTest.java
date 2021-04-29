@@ -29,6 +29,7 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
@@ -46,7 +47,6 @@ import com.facebook.buck.core.model.platform.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.LabelledAnySelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
@@ -431,7 +431,7 @@ public class ConstructorArgMarshallerImmutableTest {
                             new UnconfiguredSourcePath.Path(
                                 CellRelativePath.of(
                                     CanonicalCellName.rootCell(),
-                                    ForwardRelativePath.of("example/path/" + p))))
+                                    ForwardRelPath.of("example/path/" + p))))
                     .collect(ImmutableList.toImmutableList())));
 
     ImmutableSet<String> observedValues =

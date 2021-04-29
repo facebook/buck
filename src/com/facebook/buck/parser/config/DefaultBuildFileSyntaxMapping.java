@@ -17,7 +17,7 @@
 package com.facebook.buck.parser.config;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -27,11 +27,11 @@ import java.util.stream.Stream;
 
 /** Describes mapping from build file path to build file syntax. */
 public class DefaultBuildFileSyntaxMapping {
-  private final ImmutableList<Pair<ForwardRelativePath, Syntax>> syntaxByPrefix;
+  private final ImmutableList<Pair<ForwardRelPath, Syntax>> syntaxByPrefix;
   private final Syntax defaultSyntax;
 
   DefaultBuildFileSyntaxMapping(
-      ImmutableList<Pair<ForwardRelativePath, Syntax>> syntaxByPrefix, Syntax defaultSyntax) {
+      ImmutableList<Pair<ForwardRelPath, Syntax>> syntaxByPrefix, Syntax defaultSyntax) {
     this.syntaxByPrefix = syntaxByPrefix;
     this.defaultSyntax = defaultSyntax;
   }
@@ -52,8 +52,8 @@ public class DefaultBuildFileSyntaxMapping {
   }
 
   /** Find syntax for given file path. */
-  public Syntax syntaxForPath(ForwardRelativePath path) {
-    for (Pair<ForwardRelativePath, Syntax> mapping : syntaxByPrefix) {
+  public Syntax syntaxForPath(ForwardRelPath path) {
+    for (Pair<ForwardRelPath, Syntax> mapping : syntaxByPrefix) {
       if (path.startsWith(mapping.getFirst())) {
         return mapping.getSecond();
       }
@@ -70,7 +70,7 @@ public class DefaultBuildFileSyntaxMapping {
 
     String[] parts = string.split(",");
 
-    ImmutableList<Pair<ForwardRelativePath, Syntax>> mapping =
+    ImmutableList<Pair<ForwardRelPath, Syntax>> mapping =
         Arrays.stream(parts)
             .flatMap(
                 s -> {
@@ -87,7 +87,7 @@ public class DefaultBuildFileSyntaxMapping {
                   }
                   return Stream.of(
                       new Pair<>(
-                          ForwardRelativePath.of(pathToSyntax[0].trim()),
+                          ForwardRelPath.of(pathToSyntax[0].trim()),
                           Syntax.parseOrThrowHumanReadableException(pathToSyntax[1].trim())));
                 })
             .collect(ImmutableList.toImmutableList());

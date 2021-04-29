@@ -19,11 +19,11 @@ package com.facebook.buck.shell;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -105,8 +105,7 @@ public class ShTestDescriptionTest {
             .setTest(FakeSourcePath.of(filesystem, "some_test"))
             .setResources(ImmutableSortedSet.of(PathSourcePath.of(filesystem, resource)))
             .build();
-    assertThat(
-        shTestWithResources.getInputs(), Matchers.hasItem(ForwardRelativePath.ofPath(resource)));
+    assertThat(shTestWithResources.getInputs(), Matchers.hasItem(ForwardRelPath.ofPath(resource)));
   }
 
   @Test

@@ -18,12 +18,12 @@ package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.core.model.label.PackageIdentifier;
 import com.facebook.buck.core.model.label.PathFragment;
 import com.facebook.buck.core.model.label.RepositoryName;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.compatible.BuckStarlarkModule;
 import com.facebook.buck.core.starlark.compatible.BuckStarlarkPrintHandler;
@@ -120,7 +120,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   abstract Globber getGlobber(AbsPath parseFile);
 
   private ImplicitlyLoadedExtension loadImplicitExtension(
-      ForwardRelativePath basePath, Label containingLabel, LoadStack loadStack)
+      ForwardRelPath basePath, Label containingLabel, LoadStack loadStack)
       throws IOException, InterruptedException {
     Optional<ImplicitInclude> implicitInclude =
         packageImplicitIncludeFinder.findIncludeForBuildFile(basePath);
@@ -154,7 +154,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   protected ParseResult parse(AbsPath parseFile)
       throws IOException, BuildFileParseException, InterruptedException {
 
-    ForwardRelativePath basePath = getBasePath(parseFile);
+    ForwardRelPath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad =
         loadImplicitExtension(
@@ -243,7 +243,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   private PackageContext createPackageContext(
-      ForwardRelativePath basePath,
+      ForwardRelPath basePath,
       Globber globber,
       ImmutableMap<String, Object> implicitlyLoadedSymbols) {
     return PackageContext.of(
@@ -255,7 +255,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         implicitlyLoadedSymbols);
   }
 
-  protected Label createContainingLabel(ForwardRelativePath basePath) {
+  protected Label createContainingLabel(ForwardRelPath basePath) {
     return Label.createUnvalidated(
         PackageIdentifier.create(
             RepositoryName.createFromValidStrippedName(options.getCellName()),
@@ -863,17 +863,17 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     /Users/foo/repo/src/bar/BUCK}, where {@code /Users/foo/repo} is the path to the repo, it
    *     would return {@code src/bar}.
    */
-  protected ForwardRelativePath getBasePath(AbsPath buildFile) {
+  protected ForwardRelPath getBasePath(AbsPath buildFile) {
     return Optional.ofNullable(options.getProjectRoot().relativize(buildFile).getParent())
-        .map(ForwardRelativePath::ofRelPath)
-        .orElse(ForwardRelativePath.EMPTY);
+        .map(ForwardRelPath::ofRelPath)
+        .orElse(ForwardRelPath.EMPTY);
   }
 
   @Override
   public ImmutableSortedSet<String> getIncludedFiles(AbsPath parseFile)
       throws BuildFileParseException, InterruptedException, IOException {
 
-    ForwardRelativePath basePath = getBasePath(parseFile);
+    ForwardRelPath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad =
         loadImplicitExtension(basePath, containingLabel, LoadStack.EMPTY);

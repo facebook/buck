@@ -140,8 +140,8 @@ public class BuckFileSystem extends FileSystem {
   /**
    * Construct a path object from given segments without and validation or postprocessing.
    *
-   * <p>This function is only used for implementation of {@link
-   * com.facebook.buck.core.path.ForwardRelativePath} and must not be used elsewhere.
+   * <p>This function is only used for implementation of {@link ForwardRelPath} and must not be used
+   * elsewhere.
    */
   public Path getPathFromSegmentsUnsafe(String[] segments) {
     if (segments.length == 0) {

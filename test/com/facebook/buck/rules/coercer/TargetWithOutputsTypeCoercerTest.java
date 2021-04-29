@@ -20,6 +20,7 @@ import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
@@ -28,7 +29,6 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.util.Arrays;
@@ -44,8 +44,8 @@ import org.junit.runners.Parameterized;
 public class TargetWithOutputsTypeCoercerTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private static final ForwardRelativePath BASE_PATH =
-      ForwardRelativePath.of("java/com/facebook/buck/example");
+  private static final ForwardRelPath BASE_PATH =
+      ForwardRelPath.of("java/com/facebook/buck/example");
   private static final ProjectFilesystem FILESYSTEM = new FakeProjectFilesystem();
   private static final BiFunction<String, OutputLabel, UnconfiguredBuildTargetWithOutputs>
       EXPECTED_UNCONFIGURED_BUILD_TARGET_WITH_OUTPUTS_BI_FUNCTION =

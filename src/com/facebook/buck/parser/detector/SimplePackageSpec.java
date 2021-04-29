@@ -19,9 +19,9 @@ package com.facebook.buck.parser.detector;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -52,11 +52,11 @@ class SimplePackageSpec {
 
     String cellName = split[0];
 
-    ForwardRelativePath basePath;
+    ForwardRelPath basePath;
     if (split[1].equals("...")) {
-      basePath = ForwardRelativePath.EMPTY;
+      basePath = ForwardRelPath.EMPTY;
     } else if (split[1].endsWith("/...")) {
-      basePath = ForwardRelativePath.of(split[1].substring(0, split[1].length() - "/...".length()));
+      basePath = ForwardRelPath.of(split[1].substring(0, split[1].length() - "/...".length()));
     } else {
       throw new HumanReadableException("package spec must end with ...: '%s'", spec);
     }

@@ -23,8 +23,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -107,8 +107,7 @@ public class WatchedFileHashCacheTest {
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
     cache.onFileSystemChange(
-        WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.CREATE, ForwardRelativePath.ofPath(path)));
+        WatchmanPathEvent.of(filesystem.getRootPath(), Kind.CREATE, ForwardRelPath.ofPath(path)));
     assertFalse("Cache should not contain path", cache.getIfPresent(path).isPresent());
     assertThat(
         "Cache should not contain path",
@@ -131,8 +130,7 @@ public class WatchedFileHashCacheTest {
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
     cache.onFileSystemChange(
-        WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.MODIFY, ForwardRelativePath.ofPath(path)));
+        WatchmanPathEvent.of(filesystem.getRootPath(), Kind.MODIFY, ForwardRelPath.ofPath(path)));
     assertFalse("Cache should not contain path", cache.getIfPresent(path).isPresent());
     assertThat(
         "Cache should not contain path",
@@ -155,8 +153,7 @@ public class WatchedFileHashCacheTest {
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
     cache.onFileSystemChange(
-        WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.DELETE, ForwardRelativePath.ofPath(path)));
+        WatchmanPathEvent.of(filesystem.getRootPath(), Kind.DELETE, ForwardRelPath.ofPath(path)));
     assertFalse("Cache should not contain path", cache.getIfPresent(path).isPresent());
     assertThat(
         "Cache should not contain path",
@@ -181,7 +178,7 @@ public class WatchedFileHashCacheTest {
     Files.write(inputFile.getPath(), "Goodbye world".getBytes(StandardCharsets.UTF_8));
     cache.onFileSystemChange(
         WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.MODIFY, ForwardRelativePath.ofPath(dir.resolve("baz"))));
+            filesystem.getRootPath(), Kind.MODIFY, ForwardRelPath.ofPath(dir.resolve("baz"))));
     HashCode dirHash2 = cache.get(dir);
     assertNotEquals(dirHash, dirHash2);
   }
@@ -202,9 +199,7 @@ public class WatchedFileHashCacheTest {
     cache.fileHashCacheEngine.putSize(dir, 1234L);
     cache.onFileSystemChange(
         WatchmanPathEvent.of(
-            filesystem.getRootPath(),
-            Kind.CREATE,
-            ForwardRelativePath.ofPath(dir.resolve("blech"))));
+            filesystem.getRootPath(), Kind.CREATE, ForwardRelPath.ofPath(dir.resolve("blech"))));
     assertFalse("Cache should not contain path", cache.getIfPresent(dir).isPresent());
     assertThat(
         "Cache should not contain path",
@@ -236,8 +231,7 @@ public class WatchedFileHashCacheTest {
 
     // Trigger an event on the directory.
     cache.onFileSystemChange(
-        WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.MODIFY, ForwardRelativePath.ofPath(dir)));
+        WatchmanPathEvent.of(filesystem.getRootPath(), Kind.MODIFY, ForwardRelPath.ofPath(dir)));
 
     assertFalse(cache.getIfPresent(dir).isPresent());
     assertFalse(cache.getIfPresent(child1).isPresent());
@@ -261,8 +255,7 @@ public class WatchedFileHashCacheTest {
     cache.fileHashCacheEngine.put(path, value);
     cache.fileHashCacheEngine.putSize(path, 1234L);
     cache.onFileSystemChange(
-        WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.MODIFY, ForwardRelativePath.ofPath(parent)));
+        WatchmanPathEvent.of(filesystem.getRootPath(), Kind.MODIFY, ForwardRelPath.ofPath(parent)));
     assertFalse("Cache should not contain path", cache.getIfPresent(path).isPresent());
     assertThat(
         "Cache should not contain path",

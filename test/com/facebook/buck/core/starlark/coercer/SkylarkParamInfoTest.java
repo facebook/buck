@@ -22,10 +22,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.label.LabelSyntaxException;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -229,7 +229,7 @@ public class SkylarkParamInfoTest {
     info.set(
         TestCellPathResolver.get(filesystem).getCellNameResolver(),
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         arg,
@@ -255,7 +255,7 @@ public class SkylarkParamInfoTest {
     info.set(
         TestCellPathResolver.get(filesystem).getCellNameResolver(),
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         arg,

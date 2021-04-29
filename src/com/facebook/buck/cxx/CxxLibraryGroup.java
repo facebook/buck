@@ -19,11 +19,11 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -583,7 +583,7 @@ public class CxxLibraryGroup extends NoopBuildRule
       collector.addNativeLinkable(this);
     }
     if (!resources.isEmpty()) {
-      ForwardRelativePath cxxResRoot = ForwardRelativePath.of("cxx-resources");
+      ForwardRelPath cxxResRoot = ForwardRelPath.of("cxx-resources");
       collector.addAssetsDirectory(
           getBuildTarget(),
           graphBuilder

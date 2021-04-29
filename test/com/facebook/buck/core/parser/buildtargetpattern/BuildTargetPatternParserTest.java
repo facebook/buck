@@ -22,9 +22,9 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import java.util.Optional;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -48,21 +48,21 @@ public class BuildTargetPatternParserTest {
         "cell//path/to:target",
         BuildTargetPattern.of(
             CellRelativePath.of(
-                CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelativePath.of("path/to")),
+                CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelPath.of("path/to")),
             Kind.SINGLE,
             "target")
       },
       new Object[] {
         "//path/to:target",
         BuildTargetPattern.of(
-            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("path/to")),
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("path/to")),
             Kind.SINGLE,
             "target")
       },
       new Object[] {
         "//path/to",
         BuildTargetPattern.of(
-            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("path/to")),
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("path/to")),
             Kind.SINGLE,
             "to")
       },
@@ -70,21 +70,21 @@ public class BuildTargetPatternParserTest {
         "cell//path/to",
         BuildTargetPattern.of(
             CellRelativePath.of(
-                CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelativePath.of("path/to")),
+                CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelPath.of("path/to")),
             Kind.SINGLE,
             "to")
       },
       new Object[] {
         "//root",
         BuildTargetPattern.of(
-            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("root")),
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("root")),
             Kind.SINGLE,
             "root")
       },
       new Object[] {
         "//:target",
         BuildTargetPattern.of(
-            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("")),
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("")),
             Kind.SINGLE,
             "target")
       },
@@ -92,21 +92,21 @@ public class BuildTargetPatternParserTest {
         "cell//path/to/...",
         BuildTargetPattern.of(
             CellRelativePath.of(
-                CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelativePath.of("path/to")),
+                CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelPath.of("path/to")),
             Kind.RECURSIVE,
             "")
       },
       new Object[] {
         "//path/to/...",
         BuildTargetPattern.of(
-            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("path/to")),
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("path/to")),
             Kind.RECURSIVE,
             "")
       },
       new Object[] {
         "//...",
         BuildTargetPattern.of(
-            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("")),
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("")),
             Kind.RECURSIVE,
             "")
       },
@@ -114,14 +114,14 @@ public class BuildTargetPatternParserTest {
         "cell//...",
         BuildTargetPattern.of(
             CellRelativePath.of(
-                CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelativePath.of("")),
+                CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelPath.of("")),
             Kind.RECURSIVE,
             "")
       },
       new Object[] {
         "//path/to:",
         BuildTargetPattern.of(
-            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("path/to")),
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("path/to")),
             Kind.PACKAGE,
             "")
       },
@@ -129,14 +129,14 @@ public class BuildTargetPatternParserTest {
         "cell//path/to:",
         BuildTargetPattern.of(
             CellRelativePath.of(
-                CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelativePath.of("path/to")),
+                CanonicalCellName.unsafeOf(Optional.of("cell")), ForwardRelPath.of("path/to")),
             Kind.PACKAGE,
             "")
       },
       new Object[] {
         "//:",
         BuildTargetPattern.of(
-            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("")),
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("")),
             Kind.PACKAGE,
             "")
       },
@@ -144,7 +144,7 @@ public class BuildTargetPatternParserTest {
         "a//b:c",
         BuildTargetPattern.of(
             CellRelativePath.of(
-                CanonicalCellName.unsafeOf(Optional.of("a")), ForwardRelativePath.of("b")),
+                CanonicalCellName.unsafeOf(Optional.of("a")), ForwardRelPath.of("b")),
             Kind.SINGLE,
             "c")
       },
@@ -152,14 +152,14 @@ public class BuildTargetPatternParserTest {
         "a//b",
         BuildTargetPattern.of(
             CellRelativePath.of(
-                CanonicalCellName.unsafeOf(Optional.of("a")), ForwardRelativePath.of("b")),
+                CanonicalCellName.unsafeOf(Optional.of("a")), ForwardRelPath.of("b")),
             Kind.SINGLE,
             "b")
       },
       new Object[] {
         "//a",
         BuildTargetPattern.of(
-            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelativePath.of("a")),
+            CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("a")),
             Kind.SINGLE,
             "a")
       },

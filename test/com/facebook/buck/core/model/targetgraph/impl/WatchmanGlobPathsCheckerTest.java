@@ -21,8 +21,8 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -78,7 +78,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkPaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -91,7 +91,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkPaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -105,7 +105,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -119,7 +119,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkDirPaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -136,7 +136,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -153,7 +153,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkDirPaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -170,7 +170,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -185,7 +185,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("symlink-to-regular-file")));
+        ImmutableSet.of(ForwardRelPath.of("symlink-to-regular-file")));
   }
 
   @Test
@@ -203,8 +203,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(
-            ForwardRelativePath.of("b"), ForwardRelativePath.of("c"), ForwardRelativePath.of("d")));
+        ImmutableSet.of(ForwardRelPath.of("b"), ForwardRelPath.of("c"), ForwardRelPath.of("d")));
   }
 
   @Test
@@ -221,7 +220,7 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkDirPaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(ForwardRelativePath.of("b")));
+        ImmutableSet.of(ForwardRelPath.of("b")));
   }
 
   @Test
@@ -240,7 +239,6 @@ public class WatchmanGlobPathsCheckerTest {
     checker.checkFilePaths(
         projectFilesystem,
         BuildTargetFactory.newInstance("//:a"),
-        ImmutableSet.of(
-            ForwardRelativePath.of("b"), ForwardRelativePath.of("c"), ForwardRelativePath.of("d")));
+        ImmutableSet.of(ForwardRelPath.of("b"), ForwardRelPath.of("c"), ForwardRelPath.of("d")));
   }
 }

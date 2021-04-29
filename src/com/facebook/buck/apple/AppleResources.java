@@ -20,11 +20,11 @@ import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -87,7 +87,7 @@ public class AppleResources {
     CxxLibraryDescriptionArg arg =
         description.getConstructorArgType().cast(node.getConstructorArg());
     if (!arg.getResources().isEmpty()) {
-      ForwardRelativePath cxxResRoot = ForwardRelativePath.of("CxxResources");
+      ForwardRelPath cxxResRoot = ForwardRelPath.of("CxxResources");
       CopyTree resourceTree =
           (CopyTree)
               resolver.computeIfAbsent(

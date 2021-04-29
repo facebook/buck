@@ -18,8 +18,8 @@ package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -34,11 +34,11 @@ import java.util.Set;
 /** Checks that paths exist and throw an exception if at least one path doesn't exist. */
 class MissingPathsChecker implements PathsChecker {
 
-  private final LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache = initCache();
-  private final LoadingCache<AbsPath, Set<ForwardRelativePath>> filePathsCache = initCache();
-  private final LoadingCache<AbsPath, Set<ForwardRelativePath>> dirPathsCache = initCache();
+  private final LoadingCache<AbsPath, Set<ForwardRelPath>> pathsCache = initCache();
+  private final LoadingCache<AbsPath, Set<ForwardRelPath>> filePathsCache = initCache();
+  private final LoadingCache<AbsPath, Set<ForwardRelPath>> dirPathsCache = initCache();
 
-  private static LoadingCache<AbsPath, Set<ForwardRelativePath>> initCache() {
+  private static LoadingCache<AbsPath, Set<ForwardRelPath>> initCache() {
     return CacheBuilder.newBuilder()
         .weakValues()
         .build(CacheLoader.from(rootPath -> Sets.newConcurrentHashSet()));
@@ -48,7 +48,7 @@ class MissingPathsChecker implements PathsChecker {
   public void checkPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> paths) {
+      ImmutableSet<ForwardRelPath> paths) {
     checkPathsWithExtraCheck(
         projectFilesystem, buildTarget, paths, pathsCache, (path, attrs) -> {});
   }
@@ -57,7 +57,7 @@ class MissingPathsChecker implements PathsChecker {
   public void checkFilePaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> filePaths) {
+      ImmutableSet<ForwardRelPath> filePaths) {
     checkPathsWithExtraCheck(
         projectFilesystem,
         buildTarget,
@@ -74,7 +74,7 @@ class MissingPathsChecker implements PathsChecker {
   public void checkDirPaths(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> dirPaths) {
+      ImmutableSet<ForwardRelPath> dirPaths) {
     checkPathsWithExtraCheck(
         projectFilesystem,
         buildTarget,
@@ -88,18 +88,17 @@ class MissingPathsChecker implements PathsChecker {
   }
 
   private interface ExtraCheck {
-    void check(ForwardRelativePath path, BasicFileAttributes attrs);
+    void check(ForwardRelPath path, BasicFileAttributes attrs);
   }
 
   private static void checkPathsWithExtraCheck(
       ProjectFilesystem projectFilesystem,
       BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> paths,
-      LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache,
+      ImmutableSet<ForwardRelPath> paths,
+      LoadingCache<AbsPath, Set<ForwardRelPath>> pathsCache,
       ExtraCheck extraCheck) {
-    Set<ForwardRelativePath> checkedPaths =
-        pathsCache.getUnchecked(projectFilesystem.getRootPath());
-    for (ForwardRelativePath path : paths) {
+    Set<ForwardRelPath> checkedPaths = pathsCache.getUnchecked(projectFilesystem.getRootPath());
+    for (ForwardRelPath path : paths) {
       if (!checkedPaths.add(path)) {
         continue;
       }

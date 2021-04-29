@@ -26,11 +26,11 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
@@ -53,7 +53,7 @@ public class BuildTargetParserTest {
         parser.parseTarget("//:fb4a", null, createCellRoots(null).getCellNameResolver());
     assertEquals("fb4a", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName().toString());
-    assertEquals(ForwardRelativePath.of(""), buildTarget.getCellRelativeBasePath().getPath());
+    assertEquals(ForwardRelPath.of(""), buildTarget.getCellRelativeBasePath().getPath());
     assertEquals("//:fb4a", buildTarget.getFullyQualifiedName());
   }
 

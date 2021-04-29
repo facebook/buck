@@ -17,7 +17,7 @@
 package com.facebook.buck.skylark.packages;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.starlark.eventhandler.EventHandler;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.skylark.io.Globber;
@@ -40,7 +40,7 @@ public abstract class PackageContext {
   /** Returns a cell name of the build file that is being parsed. */
   public abstract CanonicalCellName getCellName();
 
-  public abstract ForwardRelativePath getBasePath();
+  public abstract ForwardRelPath getBasePath();
 
   @Value.Lazy
   public String getBasePathString() {
@@ -54,7 +54,7 @@ public abstract class PackageContext {
       Globber globber,
       Map<String, ? extends ImmutableMap<String, String>> rawConfig,
       CanonicalCellName cellName,
-      ForwardRelativePath basePath,
+      ForwardRelPath basePath,
       EventHandler eventHandler,
       Map<String, ? extends Object> implicitlyLoadedSymbols) {
     return ImmutablePackageContext.ofImpl(

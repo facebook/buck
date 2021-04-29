@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -498,10 +498,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    *     /Users/foo/repo/src/bar/BUCK}, where {@code /Users/foo/repo} is the path to the repo, it
    *     would return {@code src/bar}.
    */
-  private ForwardRelativePath getBasePath(AbsPath buildFile) {
-    return ForwardRelativePath.ofRelPath(MorePaths.relativize(options.getProjectRoot(), buildFile))
+  private ForwardRelPath getBasePath(AbsPath buildFile) {
+    return ForwardRelPath.ofRelPath(MorePaths.relativize(options.getProjectRoot(), buildFile))
         .parent()
-        .orElse(ForwardRelativePath.EMPTY);
+        .orElse(ForwardRelPath.EMPTY);
   }
 
   @SuppressWarnings("unchecked")
@@ -534,14 +534,14 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     TwoArraysImmutableHashMap.Builder<ParamName, Object> attrs =
         TwoArraysImmutableHashMap.builderWithExpectedSize(values.size());
 
-    ForwardRelativePath basePath = null;
+    ForwardRelPath basePath = null;
     String type = null;
     ImmutableList<String> visibility = ImmutableList.of();
     ImmutableList<String> withinView = ImmutableList.of();
     for (Map.Entry<String, Object> entry : values.entrySet()) {
       switch (entry.getKey()) {
         case InternalTargetAttributeNames.BASE_PATH:
-          basePath = ForwardRelativePath.of((String) entry.getValue());
+          basePath = ForwardRelPath.of((String) entry.getValue());
           break;
         case InternalTargetAttributeNames.BUCK_TYPE:
           type = (String) entry.getValue();

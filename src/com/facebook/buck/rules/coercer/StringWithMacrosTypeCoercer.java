@@ -17,11 +17,11 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.macros.MacroFinderAutomaton;
 import com.facebook.buck.core.macros.MacroMatchResult;
 import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
@@ -144,7 +144,7 @@ public class StringWithMacrosTypeCoercer
   public UnconfiguredStringWithMacros coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
@@ -167,7 +167,7 @@ public class StringWithMacrosTypeCoercer
   private UnconfiguredStringWithMacros parse(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       String blob)
       throws CoerceFailedException {
 
@@ -253,7 +253,7 @@ public class StringWithMacrosTypeCoercer
   public StringWithMacros coerce(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
+      ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       HostTargetConfigurationResolver hostConfigurationResolver,
       UnconfiguredStringWithMacros object)

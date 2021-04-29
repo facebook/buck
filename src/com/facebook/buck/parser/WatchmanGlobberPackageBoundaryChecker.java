@@ -18,8 +18,8 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
@@ -61,38 +61,37 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
 
   private final Watchman watchman;
   private final Optional<PackageBoundaryChecker> fallbackPackageBoundaryChecker;
-  private final LoadingCache<Pair<Cell, ForwardRelativePath>, Optional<ForwardRelativePath>>
+  private final LoadingCache<Pair<Cell, ForwardRelPath>, Optional<ForwardRelPath>>
       basePathOfAncestorCache =
           CacheBuilder.newBuilder()
               .weakValues()
               .build(
-                  new CacheLoader<
-                      Pair<Cell, ForwardRelativePath>, Optional<ForwardRelativePath>>() {
+                  new CacheLoader<Pair<Cell, ForwardRelPath>, Optional<ForwardRelPath>>() {
                     @Override
-                    public Optional<ForwardRelativePath> load(
-                        Pair<Cell, ForwardRelativePath> cellPathPair) throws Exception {
-                      ForwardRelativePath buildFileName =
-                          ForwardRelativePath.ofFileName(
+                    public Optional<ForwardRelPath> load(Pair<Cell, ForwardRelPath> cellPathPair)
+                        throws Exception {
+                      ForwardRelPath buildFileName =
+                          ForwardRelPath.ofFileName(
                               cellPathPair
                                   .getFirst()
                                   .getBuckConfigView(ParserConfig.class)
                                   .getBuildFileName());
-                      ForwardRelativePath folderPath = cellPathPair.getSecond();
-                      ForwardRelativePath buildFileCandidate = folderPath.resolve(buildFileName);
+                      ForwardRelPath folderPath = cellPathPair.getSecond();
+                      ForwardRelPath buildFileCandidate = folderPath.resolve(buildFileName);
                       // This will stat the build file for EdenFS, but should be fine since
                       // we need to materialize build files anyway
                       if (cellPathPair.getFirst().getFilesystem().isFile(buildFileCandidate)) {
                         return Optional.of(folderPath);
                       }
 
-                      if (folderPath.equals(ForwardRelativePath.EMPTY)) {
+                      if (folderPath.equals(ForwardRelPath.EMPTY)) {
                         return Optional.empty();
                       }
 
                       // traverse up
-                      ForwardRelativePath parent = folderPath.getParent();
+                      ForwardRelPath parent = folderPath.getParent();
                       if (parent == null) {
-                        parent = ForwardRelativePath.EMPTY;
+                        parent = ForwardRelPath.EMPTY;
                       }
 
                       return basePathOfAncestorCache.get(
@@ -114,9 +113,9 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
 
   @Override
   public void enforceBuckPackageBoundaries(
-      Cell targetCell, BuildTarget target, ImmutableSet<ForwardRelativePath> paths) {
+      Cell targetCell, BuildTarget target, ImmutableSet<ForwardRelPath> paths) {
 
-    ForwardRelativePath basePath = target.getCellRelativeBasePath().getPath();
+    ForwardRelPath basePath = target.getCellRelativeBasePath().getPath();
 
     ParserConfig.PackageBoundaryEnforcement enforcing =
         targetCell
@@ -127,7 +126,7 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
       return;
     }
 
-    ImmutableSet<ForwardRelativePath> folderPaths;
+    ImmutableSet<ForwardRelPath> folderPaths;
     try {
       folderPaths = filterFolderPaths(paths, targetCell.getFilesystem());
     } catch (Exception e) {
@@ -146,7 +145,7 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
 
     boolean isBasePathEmpty = basePath.isEmpty();
 
-    for (ForwardRelativePath path : paths) {
+    for (ForwardRelPath path : paths) {
       if (!isBasePathEmpty && !path.startsWith(basePath)) {
         String formatString = "'%s' in '%s' refers to a parent directory.";
         warnOrError(
@@ -163,7 +162,7 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
         continue;
       }
 
-      Optional<ForwardRelativePath> ancestor =
+      Optional<ForwardRelPath> ancestor =
           getBasePathOfAncestorTarget(path, targetCell, folderPaths);
 
       if (!ancestor.isPresent()) {
@@ -180,10 +179,10 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
       }
 
       if (!ancestor.get().equals(basePath)) {
-        ForwardRelativePath buildFileName =
-            ForwardRelativePath.ofFileName(
+        ForwardRelPath buildFileName =
+            ForwardRelPath.ofFileName(
                 targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName());
-        ForwardRelativePath buckFile = ancestor.get().resolve(buildFileName);
+        ForwardRelPath buckFile = ancestor.get().resolve(buildFileName);
         String formatString =
             "The target '%1$s' tried to reference '%2$s'.\n"
                 + "This is not allowed because '%2$s' can only be referenced from '%3$s' \n"
@@ -223,12 +222,12 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
    *     files or symlinks.
    * @return optional base path of ancestor of a target
    */
-  private Optional<ForwardRelativePath> getBasePathOfAncestorTarget(
-      ForwardRelativePath path, Cell cell, ImmutableSet<ForwardRelativePath> folderPaths) {
+  private Optional<ForwardRelPath> getBasePathOfAncestorTarget(
+      ForwardRelPath path, Cell cell, ImmutableSet<ForwardRelPath> folderPaths) {
 
-    ForwardRelativePath folderPath = folderPaths.contains(path) ? path : path.getParent();
+    ForwardRelPath folderPath = folderPaths.contains(path) ? path : path.getParent();
     if (folderPath == null) {
-      folderPath = ForwardRelativePath.EMPTY;
+      folderPath = ForwardRelPath.EMPTY;
     }
     return basePathOfAncestorCache.getUnchecked(new Pair<>(cell, folderPath));
   }
@@ -240,14 +239,14 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
    * @param projectFilesystem project file system for the input path
    * @return a set of folder paths out of input path
    */
-  private ImmutableSet<ForwardRelativePath> filterFolderPaths(
-      Set<ForwardRelativePath> paths, ProjectFilesystem projectFilesystem)
+  private ImmutableSet<ForwardRelPath> filterFolderPaths(
+      Set<ForwardRelPath> paths, ProjectFilesystem projectFilesystem)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     ProjectWatch watch = watchman.getProjectWatches().get(projectFilesystem.getRootPath());
     Path watchmanRootPath = Paths.get(watch.getWatchRoot());
 
     Set<String> watchmanPaths = new HashSet<>();
-    for (ForwardRelativePath path : paths) {
+    for (ForwardRelPath path : paths) {
       Path actualPath = path.toPath(projectFilesystem.getFileSystem());
       Path watchmanPath = watchmanRootPath.relativize(projectFilesystem.resolve(actualPath));
       watchmanPaths.add(watchmanPath.toString());
@@ -264,7 +263,7 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
       return ImmutableSet.of();
     } else {
       return watchmanGlob.get().stream()
-          .map(pathString -> ForwardRelativePath.of(pathString))
+          .map(pathString -> ForwardRelPath.of(pathString))
           .collect(ImmutableSet.toImmutableSet());
     }
   }
@@ -296,7 +295,7 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
       ParserConfig.PackageBoundaryEnforcement enforcing,
       Cell cell,
       BuildTarget target,
-      ImmutableSet<ForwardRelativePath> paths,
+      ImmutableSet<ForwardRelPath> paths,
       Optional<PackageBoundaryChecker> fallbackPackageBoundaryChecker,
       String formatString,
       Object... formatArgs) {

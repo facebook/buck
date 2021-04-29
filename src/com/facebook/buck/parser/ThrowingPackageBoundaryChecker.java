@@ -19,9 +19,9 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.FileName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.cache.LoadingCache;
@@ -44,9 +44,9 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
 
   @Override
   public void enforceBuckPackageBoundaries(
-      Cell targetCell, BuildTarget target, ImmutableSet<ForwardRelativePath> paths) {
+      Cell targetCell, BuildTarget target, ImmutableSet<ForwardRelPath> paths) {
 
-    ForwardRelativePath basePath = target.getCellRelativeBasePath().getPath();
+    ForwardRelPath basePath = target.getCellRelativeBasePath().getPath();
 
     ParserConfig.PackageBoundaryEnforcement enforcing =
         targetCell
@@ -60,7 +60,7 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
     BuildFileTree buildFileTree = buildFileTrees.getUnchecked(targetCell);
     boolean isBasePathEmpty = basePath.isEmpty();
 
-    for (ForwardRelativePath path : paths) {
+    for (ForwardRelPath path : paths) {
       if (!isBasePathEmpty && !path.startsWith(basePath)) {
         String formatString = "'%s' in '%s' refers to a parent directory.";
         warnOrError(
@@ -73,7 +73,7 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
         continue;
       }
 
-      Optional<ForwardRelativePath> ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
+      Optional<ForwardRelPath> ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
       // It should not be possible for us to ever get an Optional.empty() for this because that
       // would require one of two conditions:
       // 1) The source path references parent directories, which we check for above.
@@ -90,7 +90,7 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
       if (!ancestor.get().equals(basePath)) {
         FileName buildFileName =
             targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName();
-        ForwardRelativePath buckFile = ancestor.get().resolve(buildFileName);
+        ForwardRelPath buckFile = ancestor.get().resolve(buildFileName);
         // TODO(cjhopman): If we want to manually split error message lines ourselves, we should
         // have a utility to do it correctly after formatting instead of doing it manually.
         String formatString =

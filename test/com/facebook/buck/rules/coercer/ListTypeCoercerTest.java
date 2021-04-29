@@ -20,11 +20,11 @@ import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
@@ -43,7 +43,7 @@ public class ListTypeCoercerTest {
         coercer.coerce(
             TestCellNameResolver.forRoot(),
             new FakeProjectFilesystem(),
-            ForwardRelativePath.EMPTY,
+            ForwardRelPath.EMPTY,
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             list);
@@ -58,10 +58,7 @@ public class ListTypeCoercerTest {
     ImmutableList<String> raw = ImmutableList.of("aa", "bb");
     ImmutableList<String> unconfigured =
         coercer.coerceToUnconfigured(
-            TestCellNameResolver.forRoot(),
-            new FakeProjectFilesystem(),
-            ForwardRelativePath.EMPTY,
-            raw);
+            TestCellNameResolver.forRoot(), new FakeProjectFilesystem(), ForwardRelPath.EMPTY, raw);
     assertSame(raw, unconfigured);
   }
 
@@ -97,7 +94,7 @@ public class ListTypeCoercerTest {
     public String coerceToUnconfigured(
         CellNameResolver cellRoots,
         ProjectFilesystem filesystem,
-        ForwardRelativePath pathRelativeToProjectRoot,
+        ForwardRelPath pathRelativeToProjectRoot,
         Object object) {
       throw new AssertionError();
     }
@@ -106,7 +103,7 @@ public class ListTypeCoercerTest {
     public String coerce(
         CellNameResolver cellRoots,
         ProjectFilesystem filesystem,
-        ForwardRelativePath pathRelativeToProjectRoot,
+        ForwardRelPath pathRelativeToProjectRoot,
         TargetConfiguration targetConfiguration,
         HostTargetConfigurationResolver hostConfigurationResolver,
         String object) {
@@ -130,7 +127,7 @@ public class ListTypeCoercerTest {
         coercer.coerce(
             TestCellNameResolver.forRoot(),
             new FakeProjectFilesystem(),
-            ForwardRelativePath.EMPTY,
+            ForwardRelPath.EMPTY,
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             list);

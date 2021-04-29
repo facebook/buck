@@ -29,6 +29,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
@@ -36,7 +37,6 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.DaemonicCellState.Cache;
@@ -86,7 +86,7 @@ public class DaemonicCellStateTest {
             ImmutableMap.of(
                 target.getShortName(),
                 RawTargetNode.copyOf(
-                    ForwardRelativePath.of(target.getCellRelativeBasePath().getPath().toString()),
+                    ForwardRelPath.of(target.getCellRelativeBasePath().getPath().toString()),
                     "java_library",
                     ImmutableList.of(),
                     ImmutableList.of(),
@@ -175,7 +175,7 @@ public class DaemonicCellStateTest {
                 "target",
                 // Forms the target "//path/to:target"
                 RawTargetNode.copyOf(
-                    ForwardRelativePath.of("path/to"),
+                    ForwardRelPath.of("path/to"),
                     "java_library",
                     ImmutableList.of(),
                     ImmutableList.of(),

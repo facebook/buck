@@ -21,7 +21,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingEventListener;
@@ -70,7 +70,7 @@ public class TargetCountVerificationParserDecoratorTest {
       builder.put(
           name,
           RawTargetNode.copyOf(
-              ForwardRelativePath.EMPTY,
+              ForwardRelPath.EMPTY,
               "java_library",
               ImmutableList.of(),
               ImmutableList.of(),

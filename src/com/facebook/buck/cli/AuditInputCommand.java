@@ -18,10 +18,10 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
@@ -119,7 +119,7 @@ public class AuditInputCommand extends AbstractCommand {
 
         ImmutableSortedSet.Builder<Path> targetInputs =
             new ImmutableSortedSet.Builder<>(Ordering.natural());
-        for (ForwardRelativePath input : node.getInputs()) {
+        for (ForwardRelPath input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
             if (!cell.getFilesystem().exists(input)) {
@@ -160,7 +160,7 @@ public class AuditInputCommand extends AbstractCommand {
       @Override
       public void visit(TargetNode<?> node) {
         Cell cell = params.getCells().getCell(node.getBuildTarget().getCell());
-        for (ForwardRelativePath input : node.getInputs()) {
+        for (ForwardRelPath input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
             if (!cell.getFilesystem().exists(input)) {

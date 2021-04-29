@@ -24,12 +24,12 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactDeclarationException;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisContextImpl;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -58,7 +58,7 @@ public class OutputAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "foo/bar.cpp");
@@ -73,7 +73,7 @@ public class OutputAttributeTest {
     attr.getValue(
         cellNameResolver,
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         1);
@@ -86,7 +86,7 @@ public class OutputAttributeTest {
     attr.getValue(
         cellNameResolver,
         filesystem,
-        ForwardRelativePath.of(""),
+        ForwardRelPath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
         Starlark.NONE);
@@ -110,7 +110,7 @@ public class OutputAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "foo/bar\0");
@@ -126,7 +126,7 @@ public class OutputAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             Paths.get("").toAbsolutePath().toString());
@@ -142,7 +142,7 @@ public class OutputAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "../foo.txt");
@@ -158,7 +158,7 @@ public class OutputAttributeTest {
         attr.getValue(
             cellNameResolver,
             filesystem,
-            ForwardRelativePath.of(""),
+            ForwardRelPath.of(""),
             UnconfiguredTargetConfiguration.INSTANCE,
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
             "subdir/main.cpp");

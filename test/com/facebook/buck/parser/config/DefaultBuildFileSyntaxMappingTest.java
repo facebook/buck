@@ -18,7 +18,7 @@ package com.facebook.buck.parser.config;
 
 import static org.junit.Assert.*;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -33,8 +33,8 @@ public class DefaultBuildFileSyntaxMappingTest {
     assertEquals(
         new DefaultBuildFileSyntaxMapping(
             ImmutableList.of(
-                new Pair<>(ForwardRelativePath.of("foo/bar"), Syntax.PYTHON_DSL),
-                new Pair<>(ForwardRelativePath.of("foo"), Syntax.SKYLARK)),
+                new Pair<>(ForwardRelPath.of("foo/bar"), Syntax.PYTHON_DSL),
+                new Pair<>(ForwardRelPath.of("foo"), Syntax.SKYLARK)),
             Syntax.PYTHON_DSL),
         DefaultBuildFileSyntaxMapping.parse(
             ",  foo/bar=> PYTHON_DSL ,foo  =>SKYLARK ", Syntax.PYTHON_DSL));

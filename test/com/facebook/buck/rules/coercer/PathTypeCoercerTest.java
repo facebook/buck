@@ -19,7 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.path.ForwardRelativePath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -34,7 +34,7 @@ import org.junit.rules.ExpectedException;
 public class PathTypeCoercerTest {
 
   private ProjectFilesystem filesystem;
-  private final ForwardRelativePath pathRelativeToProjectRoot = ForwardRelativePath.of("");
+  private final ForwardRelPath pathRelativeToProjectRoot = ForwardRelPath.of("");
   private final PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
@@ -96,7 +96,7 @@ public class PathTypeCoercerTest {
     pathTypeCoercer.coerceToUnconfigured(
         createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
-        ForwardRelativePath.of("foo"),
+        ForwardRelPath.of("foo"),
         invalidPath);
   }
 
@@ -118,7 +118,7 @@ public class PathTypeCoercerTest {
             .coerceToUnconfigured(
                 createCellRoots(filesystem).getCellNameResolver(),
                 filesystem,
-                ForwardRelativePath.of("foo"),
+                ForwardRelPath.of("foo"),
                 "./bar/././fish.txt");
     assertEquals("foo/bar/fish.txt", coerced.toString().replace('\\', '/'));
   }
