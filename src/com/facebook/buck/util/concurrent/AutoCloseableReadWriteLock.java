@@ -43,11 +43,11 @@ public class AutoCloseableReadWriteLock {
     reentrantReadWriteLock = new ReentrantReadWriteLock();
   }
 
-  public AutoCloseableLocked lockRead() {
-    return AutoCloseableLocked.createFor(reentrantReadWriteLock.readLock());
+  public AutoCloseableReadLocked lockRead() {
+    return AutoCloseableReadLocked.createFor(reentrantReadWriteLock.readLock());
   }
 
-  public AutoCloseableLocked lockWrite() {
-    return AutoCloseableLocked.createFor(reentrantReadWriteLock.writeLock());
+  public AutoCloseableWriteLocked lockWrite() {
+    return AutoCloseableWriteLocked.createFor(reentrantReadWriteLock.writeLock());
   }
 }

@@ -16,26 +16,17 @@
 
 package com.facebook.buck.util.concurrent;
 
-import com.google.common.base.Preconditions;
 import java.util.concurrent.locks.Lock;
 
 /** Locked state of the lock. */
-public abstract class AutoCloseableLocked implements AutoCloseable {
-  private final Lock lock;
-  // Volatile here is just to make infer happy, this
-  // class is not thread safe.
-  private volatile boolean locked;
+public class AutoCloseableReadLocked extends AutoCloseableLocked {
 
-  AutoCloseableLocked(Lock lock) {
-    lock.lock();
-    this.lock = lock;
-    this.locked = true;
+  private AutoCloseableReadLocked(Lock lock) {
+    super(lock);
   }
 
-  @Override
-  public void close() {
-    Preconditions.checkState(locked);
-    lock.unlock();
-    locked = false;
+  /** Lock the lock and return an object which unlocks on close. */
+  static AutoCloseableReadLocked createFor(Lock lock) {
+    return new AutoCloseableReadLocked(lock);
   }
 }
