@@ -30,7 +30,8 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** A pipeline that provides cached parsed results for a given file. */
-public class GenericFileParsePipeline<T extends FileManifest> implements FileParsePipeline<T> {
+public abstract class GenericFileParsePipeline<T extends FileManifest>
+    implements FileParsePipeline<T> {
   protected final BuckEventBus eventBus;
   protected final PipelineNodeCache<AbsPath, T> cache;
   private final ListeningExecutorService executorService;
