@@ -153,7 +153,6 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       BuildTargetValue buildTargetValue,
       JavacPipelineState state,
-      boolean needInitSteps,
       CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableList.Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
@@ -163,7 +162,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
     CompilerOutputPaths outputPath = compilerOutputPathsValue.getByType(buildTargetValue.getType());
     addAnnotationGenFolderStep(steps, buildableContext, outputPath.getAnnotationPath());
 
-    if (needInitSteps) {
+    if (!state.isRunning()) {
       steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, compilerParameters));
     }
 
@@ -186,7 +185,6 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
           compilerOutputPathsValue,
           cellToPathMappings,
           state,
-          !needInitSteps,
           buildTargetValue,
           steps);
     }
@@ -280,10 +278,9 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       JavacPipelineState state,
-      boolean isRunning,
       BuildTargetValue invokingRule,
       ImmutableList.Builder<IsolatedStep> steps) {
-    if (hasAnnotationProcessing() && isRunning) {
+    if (hasAnnotationProcessing() && state.isRunning()) {
       CompilerOutputPaths outputPath = compilerOutputPathsValue.getByType(invokingRule.getType());
       steps.add(
           SymlinkIsolatedStep.of(

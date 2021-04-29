@@ -260,7 +260,6 @@ public class CalculateSourceAbi
                   basePipeliningCommand.getCellToPathMappingsMap()),
               buildTargetValue,
               stateHolder.getState(),
-              stateHolder.isFirstStage(),
               compilerOutputPathsValue,
               stepsBuilder,
               path -> {},

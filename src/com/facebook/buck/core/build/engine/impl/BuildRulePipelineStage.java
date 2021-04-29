@@ -48,7 +48,7 @@ class BuildRulePipelineStage<State extends RulePipelineState>
   private Function<StateHolder<State>, RunnableWithFuture<Optional<BuildResult>>>
       ruleStepRunnerFactory;
 
-  @Nullable private RunnableWithFuture<Optional<BuildResult>> runner;
+  @Nullable private StateHolder<State> stateHolder;
 
   BuildRulePipelineStage(SupportsPipelining<State> rule) {
     this.rule = rule;
@@ -68,18 +68,14 @@ class BuildRulePipelineStage<State extends RulePipelineState>
   }
 
   public void setRuleStepRunnerFactory(
-      Function<StateHolder<State>, RunnableWithFuture<Optional<BuildResult>>>
-          ruleStepRunnerFactory) {
+      Function<StateHolder<State>, RunnableWithFuture<Optional<BuildResult>>> ruleStepsFactory) {
     Preconditions.checkState(this.ruleStepRunnerFactory == null);
-    this.ruleStepRunnerFactory = ruleStepRunnerFactory;
+    this.ruleStepRunnerFactory = ruleStepsFactory;
   }
 
-  public void init(StateHolder<State> stateHolder, boolean isFirst) {
-    Preconditions.checkState(this.runner == null);
-    Preconditions.checkNotNull(ruleStepRunnerFactory);
-
-    stateHolder.setFirstStage(isFirst);
-    this.runner = ruleStepRunnerFactory.apply(stateHolder);
+  void init(StateHolder<State> stateHolder) {
+    Preconditions.checkState(this.stateHolder == null);
+    this.stateHolder = stateHolder;
   }
 
   public void setNextStage(BuildRulePipelineStage<State> nextStage) {
@@ -93,7 +89,7 @@ class BuildRulePipelineStage<State extends RulePipelineState>
   }
 
   public boolean isReady() {
-    return runner != null;
+    return stateHolder != null;
   }
 
   public void waitForResult() {
@@ -119,8 +115,10 @@ class BuildRulePipelineStage<State extends RulePipelineState>
 
   @Override
   public void run() {
-    Preconditions.checkNotNull(runner);
+    Preconditions.checkNotNull(stateHolder);
+    Preconditions.checkNotNull(ruleStepRunnerFactory);
 
+    RunnableWithFuture<Optional<BuildResult>> runner = ruleStepRunnerFactory.apply(stateHolder);
     future.setFuture(runner.getFuture());
     runner.run();
   }

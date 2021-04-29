@@ -1448,7 +1448,7 @@ class CachingBuildRuleBuilder {
     private final CacheResult cacheResult;
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
     private final StepExecutionContext ruleExecutionContext;
-    private final ImmutableList<? extends Step> steps;
+    private final Optional<StateHolder<State>> stateHolder;
 
     public BuildRuleSteps(CacheResult cacheResult) {
       this(cacheResult, Optional.empty());
@@ -1458,10 +1458,10 @@ class CachingBuildRuleBuilder {
       this(cacheResult, Optional.of(stateHolder));
     }
 
-    private BuildRuleSteps(
-        CacheResult cacheResult, Optional<StateHolder<State>> stateHolderOptional) {
+    private BuildRuleSteps(CacheResult cacheResult, Optional<StateHolder<State>> stateHolder) {
       cacheResult.getType().verifyValidFinalType();
       this.cacheResult = cacheResult;
+      this.stateHolder = stateHolder;
       ContextualProcessExecutor contextualProcessExecutor =
           new ContextualProcessExecutor(
               executionContext.getProcessExecutor(), processExecutorContext);
@@ -1470,7 +1470,6 @@ class CachingBuildRuleBuilder {
               executionContext.withProcessExecutor(contextualProcessExecutor),
               rule.getProjectFilesystem().getRootPath(),
               rule.getFullyQualifiedName());
-      this.steps = getSteps(stateHolderOptional);
     }
 
     public SettableFuture<Optional<BuildResult>> getFuture() {
@@ -1507,24 +1506,22 @@ class CachingBuildRuleBuilder {
         throws StepFailedException, InterruptedException {
       try (Scope ignored = BuildRuleExecutionEvent.scope(eventBus, rule)) {
         // Get and run all of the commands.
-        for (Step step : steps) {
+        for (Step step : getSteps()) {
           StepRunner.runStep(executionContext, step, Optional.of(rule.getBuildTarget()));
           rethrowIgnoredInterruptedException(step);
         }
       }
     }
 
-    private ImmutableList<? extends Step> getSteps(
-        Optional<StateHolder<State>> stateHolderOptional) {
+    private List<? extends Step> getSteps() {
       try (Scope ignored = LeafEvents.scope(eventBus, "get_build_steps")) {
-        if (stateHolderOptional.isPresent()) {
+        if (stateHolder.isPresent()) {
           @SuppressWarnings("unchecked")
           SupportsPipelining<State> pipelinedRule = (SupportsPipelining<State>) rule;
-
-          StateHolder<State> stateHolder = stateHolderOptional.get();
           return pipelinedRule.getPipelinedBuildSteps(
-              buildRuleBuildContext, buildableContext, stateHolder);
+              buildRuleBuildContext, buildableContext, stateHolder.get());
         }
+
         return rule.getBuildSteps(buildRuleBuildContext, buildableContext);
       }
     }

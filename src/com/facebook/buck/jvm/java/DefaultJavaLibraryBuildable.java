@@ -339,7 +339,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             cellToPathMappings,
             buildTargetValue,
             stateHolder.getState(),
-            stateHolder.isFirstStage(),
             compilerOutputPathsValue,
             stepsBuilder,
             path -> {},
