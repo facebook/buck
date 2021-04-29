@@ -36,11 +36,9 @@ import com.facebook.buck.util.concurrent.AutoCloseableLocked;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 class DaemonicCellState {
@@ -106,7 +104,7 @@ class DaemonicCellState {
 
   private final AbsPath cellRoot;
   private final CanonicalCellName cellCanonicalName;
-  private final AtomicReference<Cell> cell;
+  private final Cell cell;
 
   /**
    * A mapping from dependent files (typically .bzl or PACKAGE files) to all build files which
@@ -182,7 +180,7 @@ class DaemonicCellState {
   private final DaemonicParserStateLocks locks;
 
   DaemonicCellState(Cell cell, DaemonicParserStateLocks locks) {
-    this.cell = new AtomicReference<>(cell);
+    this.cell = cell;
     this.cellRoot = cell.getRoot();
     this.cellCanonicalName = cell.getCanonicalName();
     this.locks = locks;
@@ -197,7 +195,7 @@ class DaemonicCellState {
 
   // TODO(mzlee): Only needed for invalidateBasedOn which does not have access to cell metadata
   Cell getCell() {
-    return Objects.requireNonNull(cell.get());
+    return cell;
   }
 
   AbsPath getCellRoot() {
