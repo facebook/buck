@@ -53,6 +53,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -492,7 +493,7 @@ public class DaemonicParserState {
   }
 
   /** Invalidate everything which depend on path. */
-  public void invalidatePath(AbsPath path) {
+  private void invalidatePath(AbsPath path) {
 
     // The paths from watchman are not absolute. Because of this, we adopt a conservative approach
     // to invalidating the caches.
@@ -500,6 +501,13 @@ public class DaemonicParserState {
       for (DaemonicCellState state : cellToDaemonicState.values()) {
         invalidatePath(state, path);
       }
+    }
+  }
+
+  /** Invalidate everything which depend on path. */
+  public void invalidatePaths(Collection<AbsPath> paths) {
+    for (AbsPath path : paths) {
+      invalidatePath(path);
     }
   }
 

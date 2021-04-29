@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -177,10 +176,9 @@ class SymlinkCache {
           "Cleaning cache of build files with inputs under symlink %s",
           buildInputPathsUnderSymlink);
     }
-    Set<AbsPath> buildInputPathsUnderSymlinkCopy = new HashSet<>(buildInputPathsUnderSymlink);
+    ImmutableList<AbsPath> buildInputPathsUnderSymlinkCopy =
+        ImmutableList.copyOf(buildInputPathsUnderSymlink);
     buildInputPathsUnderSymlink.clear();
-    for (AbsPath buildFilePath : buildInputPathsUnderSymlinkCopy) {
-      daemonicParserState.invalidatePath(buildFilePath);
-    }
+    daemonicParserState.invalidatePaths(buildInputPathsUnderSymlinkCopy);
   }
 }

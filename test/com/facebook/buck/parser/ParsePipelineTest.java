@@ -722,7 +722,7 @@ public class ParsePipelineTest {
     }
 
     public void invalidatePath(AbsPath path) {
-      daemonicParserState.invalidatePath(path);
+      daemonicParserState.invalidatePaths(ImmutableList.of(path));
     }
 
     private void waitForParsersToClose() throws InterruptedException {
