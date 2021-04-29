@@ -25,7 +25,10 @@ import java.util.Set;
 import org.immutables.value.Value;
 
 /** A contract for matching {@link Path}s. */
-public interface PathMatcher extends java.nio.file.PathMatcher {
+public interface PathMatcher {
+
+  /** Check if given path matches pattern. */
+  boolean matches(Path path);
 
   /**
    * Transforms this matcher into a Watchman match query arguments matching the same set of paths as
