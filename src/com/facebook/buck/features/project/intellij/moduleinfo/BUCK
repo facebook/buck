@@ -4,7 +4,10 @@ java_library_with_plugins(
     name = "moduleinfo",
     srcs = glob(
         ["*.java"],
-        exclude = ["LookupTool.java"],
+        exclude = [
+            "LookupTool.java",
+            "UpdateBinaryIndexFromIMLListTool.java",
+        ],
     ),
     provided_deps = ["//third-party/java/guava:guava"],
     tests = [
@@ -26,6 +29,23 @@ java_binary(
     main_class = "com.facebook.buck.features.project.intellij.moduleinfo.LookupTool",
     deps = [
         ":lookuptool-lib",
+        "//third-party/java/guava:guava",
+    ],
+)
+
+java_library_with_plugins(
+    name = "update-index-tool-lib",
+    srcs = ["UpdateBinaryIndexFromIMLListTool.java"],
+    deps = [
+        ":moduleinfo",
+    ],
+)
+
+java_binary(
+    name = "update-binary-index-from-iml-list-tool",
+    main_class = "com.facebook.buck.features.project.intellij.moduleinfo.UpdateBinaryIndexFromIMLListTool",
+    deps = [
+        ":update-index-tool-lib",
         "//third-party/java/guava:guava",
     ],
 )
