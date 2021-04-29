@@ -32,7 +32,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
@@ -128,7 +128,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       "filter_buck_config_fields_for_re";
 
   private final InputsMapBuilder inputsMapBuilder;
-  private final ImmutableSet<PathMatcher> ignorePaths;
+  private final ImmutableSet<GlobPatternMatcher> ignorePaths;
 
   /** Gets the shared path prefix of all the cells. */
   private static AbsPath getCellPathPrefix(
@@ -218,7 +218,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       SourcePathRuleFinder ruleFinder,
       Cell rootCell,
       FileHashLoader fileHasher,
-      ImmutableSet<PathMatcher> ignorePaths,
+      ImmutableSet<GlobPatternMatcher> ignorePaths,
       ConsoleParams consoleParams,
       boolean sanitizeBuckConfig) {
     this.consoleParams = consoleParams;
@@ -576,7 +576,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                     new FileInputsAdder.AbstractDelegate() {
                       @Override
                       public void addFile(AbsPath path) throws IOException {
-                        for (PathMatcher matcher : ignorePaths) {
+                        for (GlobPatternMatcher matcher : ignorePaths) {
                           if (matcher.matches(path.getPath())) {
                             LOG.info("Ignoring input: " + path);
                             return;

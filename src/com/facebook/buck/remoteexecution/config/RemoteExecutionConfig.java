@@ -25,7 +25,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
-import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.util.RemoteExecutionUtil;
@@ -390,7 +389,7 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
             .getValue(SECTION, WORKER_REQUIREMENTS_FILENAME)
             .orElse("re_worker_requirements");
 
-    ImmutableSet.Builder<PathMatcher> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<GlobPatternMatcher> builder = ImmutableSet.builder();
     getDelegate()
         .getListWithoutComments(SECTION, INPUT_IGNORE_KEY)
         .forEach(
@@ -399,7 +398,7 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
                 builder.add(GlobPatternMatcher.of(input));
               }
             });
-    ImmutableSet<PathMatcher> ignorePaths = builder.build();
+    ImmutableSet<GlobPatternMatcher> ignorePaths = builder.build();
 
     boolean tryLargerWorkerOnOom =
         getDelegate().getBoolean(SECTION, TRY_LARGER_WORKER_ON_OOM).orElse(false);
@@ -518,7 +517,7 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
       }
 
       @Override
-      public ImmutableSet<PathMatcher> getIgnorePaths() {
+      public ImmutableSet<GlobPatternMatcher> getIgnorePaths() {
         return ignorePaths;
       }
     };

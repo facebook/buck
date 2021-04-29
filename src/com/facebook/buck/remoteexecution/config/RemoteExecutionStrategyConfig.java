@@ -16,7 +16,7 @@
 
 package com.facebook.buck.remoteexecution.config;
 
-import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.OptionalLong;
@@ -51,7 +51,7 @@ public interface RemoteExecutionStrategyConfig {
 
   boolean tryLargerWorkerOnOom();
 
-  ImmutableSet<PathMatcher> getIgnorePaths();
+  ImmutableSet<GlobPatternMatcher> getIgnorePaths();
 
   int getGrpcKeepAlivePeriodSeconds();
 
