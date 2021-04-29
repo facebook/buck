@@ -23,7 +23,6 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
-import java.nio.file.FileSystem;
 
 /**
  * Static helpers for working with build targets.
@@ -57,7 +56,6 @@ public class BuildTargetPaths {
     return getRelativePath(
         target,
         format,
-        buckPaths.getFileSystem(),
         buckPaths.shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()),
         buckPaths.getScratchDir());
   }
@@ -79,7 +77,6 @@ public class BuildTargetPaths {
     return getRelativePath(
         target,
         format,
-        buckPaths.getFileSystem(),
         buckPaths.shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()),
         buckPaths.getAnnotationDir());
   }
@@ -102,32 +99,23 @@ public class BuildTargetPaths {
     return getRelativePath(
         target,
         format,
-        buckPaths.getFileSystem(),
         buckPaths.shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()),
         buckPaths.getGenDir());
   }
 
   public static RelPath getRelativePath(
-      BuildTarget target,
-      String format,
-      FileSystem fileSystem,
-      boolean includeTargetConfigHash,
-      RelPath directory) {
-    return directory.resolve(
-        getBasePath(includeTargetConfigHash, target, format).toRelPath(fileSystem));
+      BuildTarget target, String format, boolean includeTargetConfigHash, RelPath directory) {
+    return directory.resolve(getBasePath(includeTargetConfigHash, target, format));
   }
 
   /** A folder where all targets in the file of target are created. */
   public static RelPath getGenPathForBaseName(ProjectFilesystem filesystem, BuildTarget target) {
     BuckPaths buckPaths = filesystem.getBuckPaths();
-    FileSystem fileSystem = filesystem.getFileSystem();
     return buckPaths
         .getGenDir()
         .resolve(
             getBasePathForBaseName(
-                    buckPaths.shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()),
-                    target)
-                .toRelPath(fileSystem));
+                buckPaths.shouldIncludeTargetConfigHash(target.getCellRelativeBasePath()), target));
   }
 
   /**

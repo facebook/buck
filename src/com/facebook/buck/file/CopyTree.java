@@ -84,7 +84,7 @@ public class CopyTree extends ModernBuildRule<CopyTree.Impl> {
       Set<RelPath> dirs = new HashSet<>();
       paths.forEach(
           (name, path) -> {
-            RelPath dest = output.resolve(name.toRelPath(filesystem.getFileSystem()));
+            RelPath dest = output.resolve(name);
             if (dest.getParent() != null && dirs.add(dest.getParent())) {
               builder.add(MkdirIsolatedStep.of(dest.getParent()));
             }

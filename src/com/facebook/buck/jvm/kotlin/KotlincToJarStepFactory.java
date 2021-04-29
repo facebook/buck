@@ -71,7 +71,6 @@ import java.io.ObjectOutputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
@@ -552,19 +551,19 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
   public static RelPath getAnnotationPath(
       BuckPaths buckPaths, BuildTargetValue target, String format) {
     checkArgument(!format.startsWith("/"), "format string should not start with a slash");
-    return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getAnnotationDir());
+    return getRelativePath(target, format, buckPaths.getAnnotationDir());
   }
 
   /** Returns `gen` directory path for the given {@code target} and {@code format} */
   public static RelPath getGenPath(BuckPaths buckPaths, BuildTargetValue target, String format) {
     checkArgument(!format.startsWith("/"), "format string should not start with a slash");
 
-    return getRelativePath(target, format, buckPaths.getFileSystem(), buckPaths.getGenDir());
+    return getRelativePath(target, format, buckPaths.getGenDir());
   }
 
   private static RelPath getRelativePath(
-      BuildTargetValue target, String format, FileSystem fileSystem, RelPath directory) {
-    return directory.resolve(getBasePath(target, format).toRelPath(fileSystem));
+      BuildTargetValue target, String format, RelPath directory) {
+    return directory.resolve(getBasePath(target, format));
   }
 
   private static ForwardRelPath getBasePath(BuildTargetValue target, String format) {

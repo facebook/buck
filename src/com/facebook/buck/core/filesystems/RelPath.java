@@ -62,6 +62,7 @@ public interface RelPath extends PathWrapper {
   }
 
   default Path resolve(Path other) {
+    // TODO(nga): optimize for `BuckUnixRelPath`
     return getPath().resolve(other);
   }
 
@@ -71,6 +72,10 @@ public interface RelPath extends PathWrapper {
 
   default RelPath resolve(RelPath other) {
     return RelPath.of(getPath().resolve(other.getPath()));
+  }
+
+  default RelPath resolve(ForwardRelPath other) {
+    return resolve(other.toRelPath(getFileSystem()));
   }
 
   default RelPath resolve(FileName fileName) {

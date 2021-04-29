@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.jvm.core.JavaAbis;
-import java.nio.file.FileSystem;
 import java.util.Optional;
 
 /** Provides access to the various output paths for a java library. */
@@ -47,17 +46,16 @@ public abstract class CompilerOutputPaths {
   public static CompilerOutputPaths of(BuildTarget target, BuckPaths buckPath) {
     boolean shouldIncludeTargetConfigHash =
         buckPath.shouldIncludeTargetConfigHash(target.getCellRelativeBasePath());
-    FileSystem fileSystem = buckPath.getFileSystem();
     RelPath genDir = buckPath.getGenDir();
     RelPath scratchDir = buckPath.getScratchDir();
     RelPath annotationDir = buckPath.getAnnotationDir();
 
     RelPath genRoot =
         BuildTargetPaths.getRelativePath(
-            target, "lib__%s__output", fileSystem, shouldIncludeTargetConfigHash, genDir);
+            target, "lib__%s__output", shouldIncludeTargetConfigHash, genDir);
     RelPath scratchRoot =
         BuildTargetPaths.getRelativePath(
-            target, "lib__%s__scratch", fileSystem, shouldIncludeTargetConfigHash, scratchDir);
+            target, "lib__%s__scratch", shouldIncludeTargetConfigHash, scratchDir);
 
     return ImmutableCompilerOutputPaths.builder()
         .setClassesDir(scratchRoot.resolveRel("classes"))
@@ -75,17 +73,13 @@ public abstract class CompilerOutputPaths {
                 : Optional.empty())
         .setAnnotationPath(
             BuildTargetPaths.getRelativePath(
-                target, "__%s_gen__", fileSystem, shouldIncludeTargetConfigHash, annotationDir))
+                target, "__%s_gen__", shouldIncludeTargetConfigHash, annotationDir))
         .setPathToSourcesList(
             BuildTargetPaths.getRelativePath(
-                target, "__%s__srcs", fileSystem, shouldIncludeTargetConfigHash, genDir))
+                target, "__%s__srcs", shouldIncludeTargetConfigHash, genDir))
         .setWorkingDirectory(
             BuildTargetPaths.getRelativePath(
-                target,
-                "lib__%s__working_directory",
-                fileSystem,
-                shouldIncludeTargetConfigHash,
-                genDir))
+                target, "lib__%s__working_directory", shouldIncludeTargetConfigHash, genDir))
         .build();
   }
 

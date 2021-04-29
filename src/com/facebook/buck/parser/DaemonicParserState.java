@@ -431,7 +431,7 @@ public class DaemonicParserState {
     counters.recordFilesChanged();
 
     ForwardRelPath path = event.getPath();
-    AbsPath fullPath = event.getCellPath().resolve(event.getRelPath());
+    AbsPath fullPath = event.getCellPath().resolve(event.getPath());
 
     // We only care about creation and deletion events because modified should result in a
     // rule key change.  For parsing, these are the only events we need to care about.
@@ -550,8 +550,7 @@ public class DaemonicParserState {
     for (ForwardRelPath buildFile : packageBuildFiles) {
       ForwardRelPath withBuildFile =
           buildFile.resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
-      invalidatePath(
-          state, cell.getRoot().resolve(withBuildFile.toRelPath(cell.getRoot().getFileSystem())));
+      invalidatePath(state, cell.getRoot().resolve(withBuildFile));
     }
   }
 
