@@ -21,6 +21,7 @@ import static java.util.Comparator.comparing;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -82,6 +83,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   public CompileToJarStepFactory configure(
       @Nullable JvmLibraryArg args,
       JavacOptions javacOptions,
+      ActionGraphBuilder actionGraphBuilder,
       BuildRuleResolver buildRuleResolver,
       TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider) {
@@ -94,7 +96,8 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         pathToAbiGenerationPluginJar,
         condenseCompilerArguments(kotlinArgs),
         kotlinArgs.getKotlincPlugins(),
-        getFriendSourcePaths(buildRuleResolver, kotlinArgs.getFriendPaths(), kotlinBuckConfig),
+        getFriendSourcePaths(
+          actionGraphBuilder, buildRuleResolver, kotlinArgs.getFriendPaths(), kotlinBuckConfig),
         kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
         kotlinArgs.getKaptApOptions(),
         extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
@@ -147,6 +150,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   private static ImmutableList<SourcePath> getFriendSourcePaths(
+      ActionGraphBuilder actionGraphBuilder,
       BuildRuleResolver buildRuleResolver,
       ImmutableSortedSet<BuildTarget> friendPaths,
       KotlinBuckConfig kotlinBuckConfig) {
@@ -157,13 +161,11 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       if (shouldCompileAgainstAbis && rule instanceof HasJavaAbi) {
         Optional<BuildTarget> abiJarTarget = ((HasJavaAbi) rule).getAbiJar();
         if (abiJarTarget.isPresent()) {
-          Optional<BuildRule> abiJarRule = buildRuleResolver.getRuleOptional(abiJarTarget.get());
-          if (abiJarRule.isPresent()) {
-            SourcePath abiJarPath = abiJarRule.get().getSourcePathToOutput();
-            if (abiJarPath != null) {
-              sourcePaths.add(abiJarPath);
-              continue;
-            }
+          BuildRule abiJarRule = actionGraphBuilder.requireRule(abiJarTarget.get());
+          SourcePath abiJarPath = abiJarRule.getSourcePathToOutput();
+          if (abiJarPath != null) {
+            sourcePaths.add(abiJarPath);
+            continue;
           }
         }
       }

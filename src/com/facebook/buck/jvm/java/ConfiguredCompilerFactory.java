@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -31,11 +32,12 @@ public abstract class ConfiguredCompilerFactory {
   // TODO(jkeljo): args is not actually Nullable in all subclasses, but it is also not
   // straightforward to create a safe "empty" default value. Find a fix.
   public abstract CompileToJarStepFactory configure(
-      @Nullable JvmLibraryArg args,
-      JavacOptions javacOptions,
-      BuildRuleResolver buildRuleResolver,
-      TargetConfiguration targetConfiguration,
-      ToolchainProvider toolchainProvider);
+    @Nullable JvmLibraryArg args,
+    JavacOptions javacOptions,
+    ActionGraphBuilder actionGraphBuilder,
+    BuildRuleResolver buildRuleResolver,
+    TargetConfiguration targetConfiguration,
+    ToolchainProvider toolchainProvider);
 
   public abstract Optional<ExtraClasspathProvider> getExtraClasspathProvider(
       ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration);
