@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.starlark.eventhandler.EventHandler;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -82,7 +83,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
         .setProjectRoot(cell.getRoot())
         .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
         .setIgnorePaths(ImmutableSet.of())
-        .setBuildFileName("BUCK")
+        .setBuildFileName(FileName.of("BUCK"))
         .setRawConfig(ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
         .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
         .setPerFeatureProviders(

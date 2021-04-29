@@ -17,6 +17,7 @@
 package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -537,4 +538,13 @@ public interface ProjectFilesystem {
    * @see FileSystem#getPath(String, String...)
    */
   Path getPath(String first, String... rest);
+
+  /**
+   * Converts a path string (or sequence of strings) to a Path with the same VFS as this instance.
+   *
+   * @see FileSystem#getPath(String, String...)
+   */
+  default Path getPath(FileName fileName) {
+    return getPath(fileName.getName());
+  }
 }

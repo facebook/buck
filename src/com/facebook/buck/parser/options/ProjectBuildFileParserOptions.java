@@ -19,6 +19,7 @@ package com.facebook.buck.parser.options;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -45,7 +46,7 @@ public abstract class ProjectBuildFileParserOptions {
 
   public abstract ImmutableSet<PathMatcher> getIgnorePaths();
 
-  public abstract String getBuildFileName();
+  public abstract FileName getBuildFileName();
 
   public abstract List<String> getDefaultIncludes();
 

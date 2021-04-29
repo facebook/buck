@@ -73,6 +73,11 @@ public interface RelPath extends PathWrapper {
     return RelPath.of(getPath().resolve(other.getPath()));
   }
 
+  default RelPath resolve(FileName fileName) {
+    // TODO(nga): specialize in `BuckUnixRelPath`
+    return resolveRel(fileName.getName());
+  }
+
   default RelPath subpath(int beginIndex, int endIndex) {
     return RelPath.of(getPath().subpath(beginIndex, endIndex));
   }

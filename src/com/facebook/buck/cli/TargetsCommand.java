@@ -26,6 +26,7 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
@@ -936,7 +937,7 @@ public class TargetsCommand extends AbstractCommand {
       Optional<ImmutableSet<BuildTarget>> matchingBuildTargets,
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses,
       boolean detectTestChanges,
-      String buildFileName,
+      FileName buildFileName,
       ProjectFilesystem projectFilesystem) {
     ImmutableSet<TargetNode<?>> directOwners;
     if (referencedFiles.isPresent()) {
@@ -1603,7 +1604,7 @@ public class TargetsCommand extends AbstractCommand {
     private final ProjectFilesystem projectFilesystem;
     private final ImmutableSet<RelPath> referencedInputs;
     private final ImmutableSet<RelPath> basePathOfTargets;
-    private final String buildFileName;
+    private final FileName buildFileName;
 
     /**
      * @param referencedInputs A {@link TargetNode} must reference at least one of these paths as
@@ -1613,7 +1614,7 @@ public class TargetsCommand extends AbstractCommand {
         BuildFileTree buildFileTree,
         ProjectFilesystem projectFilesystem,
         ImmutableSet<RelPath> referencedInputs,
-        String buildFileName) {
+        FileName buildFileName) {
       this.projectFilesystem = projectFilesystem;
       this.referencedInputs = referencedInputs;
 
@@ -1646,12 +1647,11 @@ public class TargetsCommand extends AbstractCommand {
       }
 
       return referencedInputs.contains(
-          RelPath.of(
-              node.getBuildTarget()
-                  .getCellRelativeBasePath()
-                  .getPath()
-                  .toRelPath(projectFilesystem.getFileSystem())
-                  .resolve(buildFileName)));
+          node.getBuildTarget()
+              .getCellRelativeBasePath()
+              .getPath()
+              .toRelPath(projectFilesystem.getFileSystem())
+              .resolve(buildFileName));
     }
   }
 

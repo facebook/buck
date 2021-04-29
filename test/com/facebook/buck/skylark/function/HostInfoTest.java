@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.starlark.eventhandler.Event;
 import com.facebook.buck.core.starlark.eventhandler.EventCollector;
 import com.facebook.buck.core.starlark.eventhandler.EventHandler;
@@ -254,7 +255,7 @@ public class HostInfoTest {
             .setProjectRoot(filesystem.getRootPath())
             .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
             .setIgnorePaths(ImmutableSet.of())
-            .setBuildFileName("BUCK")
+            .setBuildFileName(FileName.of("BUCK"))
             .setPythonInterpreter("skylark")
             .setUserDefinedRulesState(UserDefinedRulesState.of(false))
             .build();

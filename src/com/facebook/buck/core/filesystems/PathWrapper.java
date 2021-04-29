@@ -65,6 +65,11 @@ public interface PathWrapper {
     return getPath().endsWith(path);
   }
 
+  default boolean endsWith(FileName fileName) {
+    // TODO(nga): optimize for `BuckUnixPath`
+    return endsWith(fileName.getName());
+  }
+
   default FileSystem getFileSystem() {
     return getPath().getFileSystem();
   }

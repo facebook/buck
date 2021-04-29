@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -78,7 +79,7 @@ public class SkylarkPackageFileParserTest {
             .setProjectRoot(cell.getRootCell().getRoot())
             .setAllowEmptyGlobs(false)
             .setIgnorePaths(ImmutableSet.of())
-            .setBuildFileName("PACKAGE")
+            .setBuildFileName(FileName.of("PACKAGE"))
             .setRawConfig(
                 ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
             .setDescriptions(ImmutableSet.of())

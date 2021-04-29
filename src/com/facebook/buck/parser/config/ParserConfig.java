@@ -23,6 +23,7 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisComputationMode;
@@ -48,7 +49,7 @@ import org.immutables.value.Value;
 public abstract class ParserConfig implements ConfigView<BuckConfig> {
 
   public static final boolean DEFAULT_ALLOW_EMPTY_GLOBS = true;
-  public static final String DEFAULT_BUILD_FILE_NAME = "BUCK";
+  public static final FileName DEFAULT_BUILD_FILE_NAME = FileName.of("BUCK");
   public static final String BUILDFILE_SECTION_NAME = "buildfile";
   public static final String INCLUDES_PROPERTY_NAME = "includes";
   public static final String PACKAGE_INCLUDES_PROPERTY_NAME = "package_includes";
@@ -124,8 +125,11 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
-  public String getBuildFileName() {
-    return getDelegate().getValue(BUILDFILE_SECTION_NAME, "name").orElse(DEFAULT_BUILD_FILE_NAME);
+  public FileName getBuildFileName() {
+    return getDelegate()
+        .getValue(BUILDFILE_SECTION_NAME, "name")
+        .map(FileName::of)
+        .orElse(DEFAULT_BUILD_FILE_NAME);
   }
 
   /**
@@ -413,7 +417,12 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
               .getCellRelativeBasePath()
               .getPath()
               .toPath(cell.getFilesystem().getFileSystem())
-              .resolve(targetCell.getBuckConfig().getView(ParserConfig.class).getBuildFileName()));
+              .resolve(
+                  targetCell
+                      .getBuckConfig()
+                      .getView(ParserConfig.class)
+                      .getBuildFileName()
+                      .getName()));
     }
     return buildFile;
   }

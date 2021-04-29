@@ -557,7 +557,7 @@ public class XCodeProjectCommandHelper {
               !appleConfig.getXcodeDisableParallelizeBuild(),
               defaultCxxPlatform,
               appleCxxFlavors,
-              buckConfig.getView(ParserConfig.class).getBuildFileName(),
+              buckConfig.getView(ParserConfig.class).getBuildFileName().getName(),
               actionGraphBuilder,
               buckEventBus,
               ruleKeyConfiguration,

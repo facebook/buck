@@ -58,6 +58,11 @@ public interface AbsPath extends PathWrapper {
     return resolve(other.getPath());
   }
 
+  default AbsPath resolve(FileName fileName) {
+    // TODO(nga): optimize for `BuckUnixAbsPath`
+    return resolve(fileName.getName());
+  }
+
   default boolean startsWith(AbsPath path) {
     return startsWith(path.getPath());
   }

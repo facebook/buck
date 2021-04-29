@@ -19,6 +19,7 @@ package com.facebook.buck.parser.targetnode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -36,7 +37,6 @@ import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -48,16 +48,13 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
 
   private final UnconfiguredTargetNodeFactory unconfiguredTargetNodeFactory;
   private final Cell cell;
-  private final Path buildFileName;
+  private final FileName buildFileName;
 
   private BuildTargetToUnconfiguredTargetNodeComputation(
       UnconfiguredTargetNodeFactory unconfiguredTargetNodeFactory, Cell cell) {
     this.unconfiguredTargetNodeFactory = unconfiguredTargetNodeFactory;
     this.cell = cell;
-    buildFileName =
-        cell.getRoot()
-            .getFileSystem()
-            .getPath(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
+    buildFileName = cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
   }
 
   /**

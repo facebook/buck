@@ -27,6 +27,7 @@ import com.facebook.buck.core.files.DirectoryListComputation;
 import com.facebook.buck.core.files.FileTreeCache;
 import com.facebook.buck.core.files.FileTreeComputation;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformationEngine;
@@ -98,7 +99,7 @@ public class TargetSpecResolver implements AutoCloseable {
   private interface EngineFactory {
     GraphTransformationEngine makeEngine(
         Path cellPath,
-        String buildFileName,
+        FileName buildFileName,
         ProjectFilesystemView fileSystemView,
         Duration timeout);
   }
@@ -121,7 +122,7 @@ public class TargetSpecResolver implements AutoCloseable {
                     name -> {
                       Cell cell = cellProvider.getCellByCanonicalCellName(name);
                       ParserConfig config = cell.getBuckConfigView(ParserConfig.class);
-                      String buildFileName = config.getBuildFileName();
+                      FileName buildFileName = config.getBuildFileName();
                       ProjectFilesystemView fileSystemView = cell.getFilesystemViewForSourceFiles();
                       Duration timeout =
                           config
@@ -166,7 +167,7 @@ public class TargetSpecResolver implements AutoCloseable {
         eventBus,
         cellProvider,
         (Path cellPath,
-            String buildFileName,
+            FileName buildFileName,
             ProjectFilesystemView fileSystemView,
             Duration watchmanTimeout) -> {
           DirectoryListCache dirListCache = dirListCachePerRoot.getUnchecked(cellPath);
@@ -185,7 +186,7 @@ public class TargetSpecResolver implements AutoCloseable {
               ImmutableList.of(
                   new GraphComputationStage<>(
                       BuildTargetPatternToBuildPackagePathComputation.of(
-                          buildFileName, fileSystemView)),
+                          buildFileName.getName(), fileSystemView)),
                   new GraphComputationStage<>(
                       DirectoryListComputation.of(fileSystemView), dirListCache),
                   new GraphComputationStage<>(FileTreeComputation.of(), fileTreeCache)),
@@ -212,14 +213,14 @@ public class TargetSpecResolver implements AutoCloseable {
         eventBus,
         cellProvider,
         (Path cellPath,
-            String buildFileName,
+            FileName buildFileName,
             ProjectFilesystemView fileSystemView,
             Duration timeout) ->
             new DefaultGraphTransformationEngine(
                 ImmutableList.of(
                     new GraphComputationStage<>(
                         new WatchmanBuildPackageComputation(
-                            buildFileName, fileSystemView, watchman, timeout))),
+                            buildFileName.getName(), fileSystemView, watchman, timeout))),
                 1,
                 executor));
   }
@@ -356,10 +357,11 @@ public class TargetSpecResolver implements AutoCloseable {
                   .getUnchecked(cell.getCanonicalName())
                   .computeUnchecked(BuildTargetPatternToBuildPackagePathKey.of(pattern));
 
-          String buildFileName = cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
+          FileName buildFileName = cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
           for (Path path : paths.getPackageRoots()) {
             perBuildFileSpecs.put(
-                AbsPath.of(projectFilesystemView.resolve(path).resolve(buildFileName)), index);
+                AbsPath.of(projectFilesystemView.resolve(path).resolve(buildFileName.getName())),
+                index);
           }
         }
       }

@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.facebook.buck.core.starlark.eventhandler.EventKind;
@@ -34,7 +35,6 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.SkylarkPackageModule;
 import com.facebook.buck.skylark.parser.BuckGlobals;
-import com.facebook.buck.skylark.parser.FileKind;
 import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkPackageFileParser;
 import com.google.common.collect.ImmutableList;
@@ -80,7 +80,7 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
             .setPythonModuleSearchPath(pythonModuleSearchPath)
             .setAllowEmptyGlobs(false)
             .setIgnorePaths(cell.getFilesystem().getIgnoredDirectories())
-            .setBuildFileName(FileKind.PACKAGE.toString())
+            .setBuildFileName(FileName.of("PACKAGE"))
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(ImmutableList.of())
             .setUseWatchmanGlob(false)

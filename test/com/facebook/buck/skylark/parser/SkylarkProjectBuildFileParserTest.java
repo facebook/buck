@@ -33,6 +33,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -995,7 +996,7 @@ public class SkylarkProjectBuildFileParserTest {
             .setProjectRoot(cell.getRootCell().getRoot())
             .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
             .setIgnorePaths(ImmutableSet.of())
-            .setBuildFileName("BUCK")
+            .setBuildFileName(FileName.of("BUCK"))
             .setDescriptions(
                 knownRuleTypesProvider.getNativeRuleTypes(cell.getRootCell()).getDescriptions())
             .setPerFeatureProviders(

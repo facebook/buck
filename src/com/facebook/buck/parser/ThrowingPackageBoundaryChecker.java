@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -87,7 +88,8 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
       }
 
       if (!ancestor.get().equals(basePath)) {
-        String buildFileName = targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName();
+        FileName buildFileName =
+            targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName();
         ForwardRelativePath buckFile = ancestor.get().resolve(buildFileName);
         // TODO(cjhopman): If we want to manually split error message lines ourselves, we should
         // have a utility to do it correctly after formatting instead of doing it manually.

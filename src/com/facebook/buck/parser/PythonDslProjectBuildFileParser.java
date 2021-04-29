@@ -347,7 +347,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
     argBuilder.add("--cell_name", options.getCellName().getName());
 
-    argBuilder.add("--build_file_name", options.getBuildFileName());
+    argBuilder.add("--build_file_name", options.getBuildFileName().getName());
 
     // Tell the parser not to print exceptions to stderr.
     argBuilder.add("--quiet");

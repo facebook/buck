@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -57,7 +58,7 @@ public class FilesystemBackedBuildFileTreeTest {
     touch(tempDir.resolve("src/com/example/build/notbuck/BUCK"));
     touch(tempDir.resolve("src/com/example/some/directory/BUCK"));
 
-    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
+    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
     assertEquals(
         ForwardRelativePath.of("src/com/example"),
@@ -91,7 +92,7 @@ public class FilesystemBackedBuildFileTreeTest {
 
     Config config = ConfigBuilder.createFromText("[project]", "ignore = foo/bar");
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir, config);
-    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
+    BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
     ForwardRelativePath ancestor =
         buildFiles.getBasePathOfAncestorTarget(ForwardRelativePath.of("foo/bar/xyzzy")).get();
@@ -106,7 +107,8 @@ public class FilesystemBackedBuildFileTreeTest {
     Files.createFile(root.resolve("foo/BUCK").getPath());
 
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(root);
-    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
+    BuildFileTree buildFileTree =
+        new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
     Optional<ForwardRelativePath> ancestor =
         buildFileTree.getBasePathOfAncestorTarget(ForwardRelativePath.of("bar/baz"));
@@ -120,7 +122,8 @@ public class FilesystemBackedBuildFileTreeTest {
     Files.createFile(root.resolve("foo/BUCK").getPath());
 
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(root);
-    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
+    BuildFileTree buildFileTree =
+        new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
     Optional<ForwardRelativePath> ancestor =
         buildFileTree.getBasePathOfAncestorTarget(ForwardRelativePath.of("bar/baz"));
@@ -140,7 +143,8 @@ public class FilesystemBackedBuildFileTreeTest {
     touch(sibling);
 
     // Config doesn't set any "ignore" entries.
-    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
+    BuildFileTree buildFileTree =
+        new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
     Optional<ForwardRelativePath> ancestor =
         buildFileTree.getBasePathOfAncestorTarget(
@@ -161,7 +165,8 @@ public class FilesystemBackedBuildFileTreeTest {
     // Config doesn't set any "ignore" entries.
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(root, new Config());
-    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
+    BuildFileTree buildFileTree =
+        new FilesystemBackedBuildFileTree(filesystem, FileName.of("BUCK"));
 
     Optional<ForwardRelativePath> ancestor =
         buildFileTree.getBasePathOfAncestorTarget(

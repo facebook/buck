@@ -29,6 +29,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.FileTreeCache;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -226,7 +227,7 @@ public class BuckGlobalStateFactory {
               @Override
               public BuildFileManifestCache load(CanonicalCellName cellName) {
                 Cell cell = cellProvider.getCellByCanonicalCellName(cellName);
-                String buildFileName =
+                FileName buildFileName =
                     cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
                 BuildFileManifestCache cache =
                     BuildFileManifestCache.of(

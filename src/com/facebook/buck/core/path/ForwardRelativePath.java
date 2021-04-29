@@ -18,6 +18,7 @@ package com.facebook.buck.core.path;
 
 import com.facebook.buck.core.filesystems.BuckFileSystem;
 import com.facebook.buck.core.filesystems.BuckUnixPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
@@ -39,6 +40,7 @@ import javax.annotation.Nullable;
  *   <li>Does not contain slash-slash
  * </ul>
  */
+// TODO(nga): move to the same package as RelPath
 public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
   public static final ForwardRelativePath EMPTY = new ForwardRelativePath(new String[0]);
 
@@ -55,6 +57,11 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
    */
   public static ForwardRelativePath of(String path) {
     return ofSubstring(path, 0);
+  }
+
+  public static ForwardRelativePath ofFileName(FileName fileName) {
+    // This is safe because `FileName.name` is interned.
+    return new ForwardRelativePath(new String[] {fileName.getName()});
   }
 
   /**
@@ -148,7 +155,7 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
               pathSubstring);
         }
         String segment = path.substring(offsetAfterLastSlash, i);
-        segments.add(segment.intern());
+        segments.add(FileName.internName(segment));
         offsetAfterLastSlash = i + 1;
       }
     }
@@ -189,7 +196,7 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     return ofPath(path.getPath());
   }
 
-  /** Append given path to the current path */
+  /** Append given path to the current path. */
   public ForwardRelativePath resolve(ForwardRelativePath other) {
     if (this.isEmpty()) {
       return other;
@@ -202,6 +209,11 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
       System.arraycopy(other.segments, 0, segments, this.segments.length, other.segments.length);
       return new ForwardRelativePath(segments);
     }
+  }
+
+  /** Append given name to the current path. */
+  public ForwardRelativePath resolve(FileName fileName) {
+    return resolve(ForwardRelativePath.ofFileName(fileName));
   }
 
   public ForwardRelativePath resolve(String other) {

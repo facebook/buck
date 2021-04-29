@@ -72,7 +72,7 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
                     public Optional<ForwardRelativePath> load(
                         Pair<Cell, ForwardRelativePath> cellPathPair) throws Exception {
                       ForwardRelativePath buildFileName =
-                          ForwardRelativePath.of(
+                          ForwardRelativePath.ofFileName(
                               cellPathPair
                                   .getFirst()
                                   .getBuckConfigView(ParserConfig.class)
@@ -181,7 +181,7 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
 
       if (!ancestor.get().equals(basePath)) {
         ForwardRelativePath buildFileName =
-            ForwardRelativePath.of(
+            ForwardRelativePath.ofFileName(
                 targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName());
         ForwardRelativePath buckFile = ancestor.get().resolve(buildFileName);
         String formatString =

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -40,7 +41,7 @@ import java.util.Optional;
  */
 public class FilesystemBackedBuildFileTree implements BuildFileTree {
   private final ProjectFilesystem projectFilesystem;
-  private final ForwardRelativePath buildFile;
+  private final FileName buildFile;
 
   /**
    * Cache for the base path of a given path. Key is a folder for which base path is wanted and
@@ -83,9 +84,10 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
                     }
                   });
 
-  public FilesystemBackedBuildFileTree(ProjectFilesystem projectFilesystem, String buildFileName) {
+  public FilesystemBackedBuildFileTree(
+      ProjectFilesystem projectFilesystem, FileName buildFileName) {
     this.projectFilesystem = projectFilesystem;
-    this.buildFile = ForwardRelativePath.of(buildFileName);
+    this.buildFile = buildFileName;
   }
 
   /**

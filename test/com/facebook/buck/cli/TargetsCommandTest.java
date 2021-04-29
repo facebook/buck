@@ -34,6 +34,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
@@ -296,7 +297,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertTrue(matchingBuildRules.isEmpty());
 
@@ -309,7 +310,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(ImmutableSet.of("//javatest:test-java-library"), matchingBuildRules.keySet());
 
@@ -323,7 +324,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
@@ -338,7 +339,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
@@ -355,7 +356,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(ImmutableSet.of("//javatest:test-java-library"), matchingBuildRules.keySet());
 
@@ -367,7 +368,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library", "//empty:empty"),
@@ -381,7 +382,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.of(ImmutableSet.of(JavaTestDescription.class, JavaLibraryDescription.class)),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(
         ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
@@ -395,7 +396,7 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
             Optional.of(ImmutableSet.of(JavaTestDescription.class, JavaLibraryDescription.class)),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
 
@@ -407,7 +408,7 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
 
@@ -419,7 +420,7 @@ public class TargetsCommandTest {
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(ImmutableSet.<String>of(), matchingBuildRules.keySet());
   }
@@ -445,7 +446,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertTrue(matchingBuildRules.isEmpty());
 
@@ -457,7 +458,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(ImmutableSet.of("//foo:lib"), matchingBuildRules.keySet());
   }
@@ -491,7 +492,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertTrue(matchingBuildRules.isEmpty());
 
@@ -503,7 +504,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(ImmutableSet.of("//foo:lib", "//foo:xctest"), matchingBuildRules.keySet());
 
@@ -515,7 +516,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(ImmutableSet.of("//foo:xctest"), matchingBuildRules.keySet());
   }
@@ -550,7 +551,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             projectFilesystem);
     assertEquals(ImmutableSet.of(androidResourceTarget.toString()), matchingBuildRules.keySet());
 
@@ -565,7 +566,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             projectFilesystem);
     assertTrue(matchingBuildRules.isEmpty());
 
@@ -578,7 +579,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             false,
-            "BUCK",
+            FileName.of("BUCK"),
             projectFilesystem);
     assertEquals(
         ImmutableSet.of(androidResourceTarget.toString(), genTarget.toString()),
@@ -644,7 +645,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             true,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertTrue(matchingBuildRules.isEmpty());
 
@@ -656,7 +657,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             true,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(ImmutableSet.of("//foo:lib", "//foo:xctest1"), matchingBuildRules.keySet());
 
@@ -668,7 +669,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             true,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(
         ImmutableSet.of("//foo:lib", "//foo:xctest1", "//foo:xctest2"),
@@ -682,7 +683,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             true,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(
         ImmutableSet.of(
@@ -701,7 +702,7 @@ public class TargetsCommandTest {
             Optional.empty(),
             Optional.empty(),
             true,
-            "BUCK",
+            FileName.of("BUCK"),
             filesystem);
     assertEquals(
         ImmutableSet.of(
