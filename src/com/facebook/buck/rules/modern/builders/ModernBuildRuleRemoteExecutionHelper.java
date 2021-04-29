@@ -575,9 +575,9 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                 new FileInputsAdder(
                     new FileInputsAdder.AbstractDelegate() {
                       @Override
-                      public void addFile(Path path) throws IOException {
+                      public void addFile(AbsPath path) throws IOException {
                         for (PathMatcher matcher : ignorePaths) {
-                          if (matcher.matches(path)) {
+                          if (matcher.matches(path.getPath())) {
                             LOG.info("Ignoring input: " + path);
                             return;
                           }
@@ -586,13 +586,14 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                             cellPathPrefix.relativize(path).getPath(),
                             protocol.newFileNode(
                                 protocol.newDigest(
-                                    fileHasher.get(path).toString(), (int) Files.size(path)),
+                                    fileHasher.get(path).toString(),
+                                    (int) Files.size(path.getPath())),
                                 path.getFileName().toString(),
-                                Files.isExecutable(path)));
+                                Files.isExecutable(path.getPath())));
                       }
 
                       @Override
-                      public void addEmptyDirectory(Path path) {
+                      public void addEmptyDirectory(AbsPath path) {
                         DirectoryNode directoryNode =
                             protocol.newDirectoryNode(
                                 path.getFileName().toString(), getEmptyDirectoryDigest());
@@ -601,7 +602,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                       }
 
                       @Override
-                      public void addSymlink(Path path, Path fixedTarget) {
+                      public void addSymlink(AbsPath path, Path fixedTarget) {
                         symlinks.put(
                             cellPathPrefix.relativize(path).getPath(),
                             protocol.newSymlinkNode(path.getFileName().toString(), fixedTarget));
@@ -610,7 +611,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                     cellPathPrefix);
 
             for (SourcePath path : inputs.getPaths()) {
-              inputsAdder.addInput(pathResolver.getAbsolutePath(path).getPath());
+              inputsAdder.addInput(pathResolver.getAbsolutePath(path));
             }
 
             List<MerkleTreeNode> nodes = new ArrayList<>();

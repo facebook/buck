@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,7 +27,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -40,11 +40,11 @@ import javax.annotation.Nullable;
 class FileInputsAdder {
   /** Interface for consuming the found inputs and for accessing some filesystem information. */
   interface Delegate {
-    void addFile(Path path) throws IOException;
+    void addFile(AbsPath path) throws IOException;
 
-    void addEmptyDirectory(Path path) throws IOException;
+    void addEmptyDirectory(AbsPath path) throws IOException;
 
-    void addSymlink(Path symlink, Path fixedTarget);
+    void addSymlink(AbsPath symlink, Path fixedTarget);
 
     /**
      * Returns the iterable elements which are the entries in the directory.
@@ -54,25 +54,35 @@ class FileInputsAdder {
      * @throws IOException if an I/O error occurs when opening the directory
      */
     @Nullable
-    Iterable<Path> getDirectoryContents(Path target) throws IOException;
+    ImmutableList<Path> getDirectoryContents(Path target) throws IOException;
+
+    /**
+     * Returns the iterable elements which are the entries in the directory.
+     *
+     * @param target The path to the directory
+     * @return directory contents or {@code null} if {@code target} is not a directory
+     * @throws IOException if an I/O error occurs when opening the directory
+     */
+    @Nullable
+    default Iterable<AbsPath> getDirectoryContents(AbsPath target) throws IOException {
+      ImmutableList<Path> contents = getDirectoryContents(target.getPath());
+      return contents != null
+          ? contents.stream().map(AbsPath::of).collect(ImmutableList.toImmutableList())
+          : null;
+    }
 
     @Nullable
     Path getSymlinkTarget(Path path) throws IOException;
   }
 
-  private final Set<Path> addedInputs = new HashSet<>();
-  private final Map<Path, Path> map = new HashMap<>();
+  private final Set<AbsPath> addedInputs = new HashSet<>();
+  private final Map<AbsPath, AbsPath> map = new HashMap<>();
   private final Delegate delegate;
-  private final Path cellPathPrefix;
-
-  FileInputsAdder(Delegate delegate, Path cellPathPrefix) {
-    this.delegate = delegate;
-    this.cellPathPrefix = cellPathPrefix;
-  }
+  private final AbsPath cellPathPrefix;
 
   FileInputsAdder(Delegate delegate, AbsPath cellPathPrefix) {
     this.delegate = delegate;
-    this.cellPathPrefix = cellPathPrefix.getPath();
+    this.cellPathPrefix = cellPathPrefix;
   }
 
   /**
@@ -81,11 +91,10 @@ class FileInputsAdder {
    * of a path that has already been added. To prevent repeatedly iterating over directory contents,
    * we maintain a cache of which paths have been added as inputs.
    */
-  void addInput(Path path) throws IOException {
+  void addInput(AbsPath path) throws IOException {
     if (addedInputs.contains(path)) {
       return;
     }
-    Preconditions.checkState(path.isAbsolute(), "Expected absolute path: %s", path);
     addedInputs.add(path);
 
     if (!path.startsWith(cellPathPrefix)) {
@@ -93,10 +102,10 @@ class FileInputsAdder {
       return;
     }
 
-    Path target = addSingleInput(path);
+    AbsPath target = addSingleInput(path);
 
     if (target.startsWith(cellPathPrefix)) {
-      Iterable<Path> children = delegate.getDirectoryContents(target);
+      Iterable<AbsPath> children = delegate.getDirectoryContents(target);
       /// skip if is not a directory
       if (children == null) {
         return;
@@ -105,7 +114,7 @@ class FileInputsAdder {
       if (Iterables.isEmpty(children)) {
         delegate.addEmptyDirectory(target);
       } else {
-        for (Path child : children) {
+        for (AbsPath child : children) {
           addInput(child);
         }
       }
@@ -123,7 +132,7 @@ class FileInputsAdder {
    * underlying FileTreeBuilder, and if path itself is a regular file, it too will be added to the
    * FileTreeBuilder.
    */
-  private Path addSingleInput(Path path) throws IOException {
+  private AbsPath addSingleInput(AbsPath path) throws IOException {
     if (map.containsKey(path)) {
       return map.get(path);
     }
@@ -135,35 +144,35 @@ class FileInputsAdder {
       return path;
     }
 
-    Path parent = path.getParent();
-    if (parent.getNameCount() != cellPathPrefix.getNameCount()) {
+    AbsPath parent = path.getParent();
+    if (parent.getPath().getNameCount() != cellPathPrefix.getPath().getNameCount()) {
       parent = addSingleInput(parent);
     }
 
     if (!parent.equals(path.getParent())) {
       // Some parent is a symlink, add the target.
-      Path target = addSingleInput(parent.resolve(path.getFileName()));
+      AbsPath target = addSingleInput(parent.resolve(path.getFileName()));
       map.put(path, target);
       return target;
     }
 
-    Path symlinkTarget = delegate.getSymlinkTarget(path);
+    Path symlinkTarget = delegate.getSymlinkTarget(path.getPath());
     if (symlinkTarget != null) {
-      Path resolvedTarget = path.getParent().resolve(symlinkTarget).normalize();
+      AbsPath resolvedTarget = path.getParent().resolve(symlinkTarget).normalize();
 
       boolean contained = resolvedTarget.startsWith(cellPathPrefix);
-      Path fixedTarget = resolvedTarget;
+      Path fixedTarget = resolvedTarget.getPath();
       if (contained) {
-        fixedTarget = parent.relativize(resolvedTarget);
+        fixedTarget = parent.relativize(resolvedTarget).getPath();
       }
       delegate.addSymlink(path, fixedTarget);
 
-      Path target = contained ? addSingleInput(resolvedTarget) : resolvedTarget;
+      AbsPath target = contained ? addSingleInput(resolvedTarget) : resolvedTarget;
       map.put(path, target);
       return target;
     }
 
-    if (Files.isRegularFile(path)) {
+    if (Files.isRegularFile(path.getPath())) {
       delegate.addFile(path);
     }
     map.put(path, path);
@@ -176,12 +185,12 @@ class FileInputsAdder {
    */
   public abstract static class AbstractDelegate implements Delegate {
     @Override
-    public Iterable<Path> getDirectoryContents(Path target) throws IOException {
+    public ImmutableList<Path> getDirectoryContents(Path target) throws IOException {
       if (!Files.isDirectory(target)) {
         return null;
       }
       try (Stream<Path> listing = Files.list(target)) {
-        return listing.collect(Collectors.toList());
+        return listing.collect(ImmutableList.toImmutableList());
       }
     }
 

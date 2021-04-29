@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.builders;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.rules.modern.builders.FileInputsAdder.AbstractDelegate;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -91,23 +92,23 @@ public class FileInputsAdderTest {
         new FileInputsAdder(
             new AbstractDelegate() {
               @Override
-              public void addFile(Path path) {
+              public void addFile(AbsPath path) {
                 computeDirectory(path)
                     .files
-                    .put(path.getFileName().toString(), fileHashes.get(path).toString());
+                    .put(path.getFileName().toString(), fileHashes.get(path.getPath()).toString());
               }
 
               @Override
-              public void addEmptyDirectory(Path path) {
+              public void addEmptyDirectory(AbsPath path) {
                 computeDirectory(path);
               }
 
               @Override
-              public void addSymlink(Path path, Path fixedTarget) {
+              public void addSymlink(AbsPath path, Path fixedTarget) {
                 computeDirectory(path).symlinks.put(path.getFileName().toString(), fixedTarget);
               }
 
-              Directory computeDirectory(Path path) {
+              Directory computeDirectory(AbsPath path) {
                 Directory dir = rootDirectory;
                 Path working = tmp.getRoot().relativize(path).getPath();
                 while (working.getNameCount() > 1) {
@@ -119,14 +120,14 @@ public class FileInputsAdderTest {
                 return dir;
               }
             },
-            tmp.getRoot().getPath());
+            tmp.getRoot());
   }
 
   @Test
   public void testAddFile() throws IOException {
     Path file = tmp.newFile("file").getPath();
     fileHashes.put(file, HashCode.fromInt(1));
-    adder.addInput(file);
+    adder.addInput(AbsPath.of(file));
 
     new Directory().addFile("file", 1).assertSame(rootDirectory);
   }
@@ -136,7 +137,7 @@ public class FileInputsAdderTest {
     tmp.newFolder("subdir1");
     Path file = tmp.newFile("subdir1/file").getPath();
     fileHashes.put(file, HashCode.fromInt(1));
-    adder.addInput(file);
+    adder.addInput(AbsPath.of(file));
 
     new Directory()
         .addChild("subdir1", new Directory().addFile("file", 1))
@@ -151,7 +152,7 @@ public class FileInputsAdderTest {
 
     fileHashes.put(file1, HashCode.fromInt(1));
     fileHashes.put(file2, HashCode.fromInt(2));
-    adder.addInput(subdir);
+    adder.addInput(AbsPath.of(subdir));
 
     new Directory()
         .addChild("subdir1", new Directory().addFile("file1", 1).addFile("file2", 2))
@@ -167,7 +168,7 @@ public class FileInputsAdderTest {
 
     fileHashes.put(file1, HashCode.fromInt(1));
 
-    adder.addInput(link1);
+    adder.addInput(AbsPath.of(link1));
 
     new Directory()
         .addChild("subdir1", new Directory().addSymlink("link1", "../file1"))
@@ -181,7 +182,7 @@ public class FileInputsAdderTest {
     Path absoluteTarget = tmp.getRoot().getParent().resolve("other_random_place").getPath();
     CreateSymlinksForTests.createSymLink(link1, absoluteTarget);
 
-    adder.addInput(link1);
+    adder.addInput(AbsPath.of(link1));
 
     new Directory().addSymlink("link1", absoluteTarget.toString()).assertSame(rootDirectory);
   }
@@ -195,7 +196,7 @@ public class FileInputsAdderTest {
     CreateSymlinksForTests.createSymLink(link1, subdir);
     fileHashes.put(file1, HashCode.fromInt(1));
 
-    adder.addInput(link1.resolve("file1"));
+    adder.addInput(AbsPath.of(link1.resolve("file1")));
 
     new Directory()
         .addChild("subdir1", new Directory().addFile("file1", 1))
@@ -217,7 +218,7 @@ public class FileInputsAdderTest {
 
     fileHashes.put(file1, HashCode.fromInt(1));
 
-    adder.addInput(link1);
+    adder.addInput(AbsPath.of(link1));
 
     new Directory()
         .addSymlink("link1", "link2")
