@@ -17,9 +17,17 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import argparse
 import codecs
 import collections
-import json
 import math
 import os
+
+try:
+    import ujson as json
+except ImportError:
+    print(
+        "Using Python's json module. Consider installing ujson with "
+        "`pip install ujson` for better performance."
+    )
+    import json
 
 
 def parse_args():
