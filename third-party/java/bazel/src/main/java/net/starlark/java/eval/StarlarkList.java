@@ -235,6 +235,14 @@ public final class StarlarkList<E> extends Sequence<E> implements
     return ImmutableList.copyOf(this);
   }
 
+  /** Get list data.
+   *
+   * <p>Note the returned array may have more elements than the list size.
+   */
+  Object[] getElemsUnsafe() {
+    return elems;
+  }
+
   /**
    * Returns a new {@code StarlarkList} that is the concatenation of two {@code StarlarkList}s. The
    * new list will have the given {@link Mutability}.

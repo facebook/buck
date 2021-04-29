@@ -19,12 +19,23 @@ class BcEval {
   /** Registers. */
   private final Object[] slots;
 
-  /**
-   * Currently executed loops stack: pairs of (iterable, iterator).
-   *
-   * <p>The array is preallocated, {@link #loopDepth} holds the number of currently executed loops.
-   */
+  // These variables hold iterator data for the loops.
+  //
+  // Each iteration is represented by a pair of objects and pair of ints,
+  // stored respectively in `loops` and `loopInts` arrays.
+  //
+  // Iterations is done for either:
+  // * array-based collection (list or tuple)
+  // * anything else
+  //
+  // For default iteration (of anything except list or tuple), `loops` array pair
+  // is a (collection, iterator). Int array is not used.
+  //
+  // For array-based iteration,
+  // * `loops` array contains a pair of (collection, collection data array)
+  // * `loopInts` array contains a pair of (collection size, current index)
   private final Object[] loops;
+  private final int[] loopInts;
 
   /** Current loop depth. */
   private int loopDepth = 0;
@@ -48,6 +59,7 @@ class BcEval {
     this.compiled = fn.compiled;
     this.slots = fr.locals;
     this.loops = ArraysForStarlark.newObjectArray(fn.compiled.loopDepth * 2);
+    this.loopInts = ArraysForStarlark.newIntArray(fn.compiled.loopDepth * 2);
     this.text = fn.compiled.text;
   }
 
@@ -224,8 +236,13 @@ class BcEval {
 
   /** Pop one for statement. */
   private void popFor() {
-    EvalUtils.removeIterator((StarlarkIterable<?>) loops[(loopDepth - 1) * 2]);
-    loops[(loopDepth - 1) * 2] = null;
+    StarlarkIterable<?> iterable = (StarlarkIterable<?>) loops[(loopDepth - 1) * 2];
+    if (iterable != null) {
+      // Iterable is not initialized (null) for tuple
+      // because there's no iterator counter for tuple.
+      EvalUtils.removeIterator(iterable);
+      loops[(loopDepth - 1) * 2] = null;
+    }
     loops[(loopDepth - 1) * 2 + 1] = null;
     --loopDepth;
   }
@@ -423,25 +440,61 @@ class BcEval {
     }
   }
 
+  /** Set the instruction pointer. */
+  private void goTo(int addr) {
+    validateInstructionDecodedCorrectly();
+    ip = addr;
+  }
+
   private void forInit() throws EvalException {
     Object value = getSlot(nextOperand());
     int nextValueSlot = nextOperand();
     int end = nextOperand();
 
-    StarlarkIterable<?> seq = Starlark.toIterable(value);
-    Iterator<?> iterator = seq.iterator();
-    if (!iterator.hasNext()) {
-      validateInstructionDecodedCorrectly();
-      ip = end;
-      return;
+    // See the documentation of `loops` field for the explanation
+    // of this logic.
+    Object item;
+    if (value instanceof StarlarkList<?>) {
+      StarlarkList<?> list = (StarlarkList<?>) value;
+      int size = list.size();
+      if (size == 0) {
+        goTo(end);
+        return;
+      }
+      EvalUtils.addIterator(list);
+      Object[] elems = list.getElemsUnsafe();
+      loops[loopDepth * 2] = list;
+      loops[loopDepth * 2 + 1] = elems;
+      loopInts[loopDepth * 2] = size;
+      loopInts[loopDepth * 2 + 1] = 1;
+      item = elems[0];
+    } else if (value instanceof Tuple) {
+      Tuple tuple = (Tuple) value;
+      Object[] elems = tuple.getElemsUnsafe();
+      if (elems.length == 0) {
+        goTo(end);
+        return;
+      }
+      // skipping addIterator for tuple, it is no-op
+      loops[loopDepth * 2 + 1] = elems;
+      loopInts[loopDepth * 2] = elems.length;
+      loopInts[loopDepth * 2 + 1] = 1;
+      item = elems[0];
+    } else {
+      StarlarkIterable<?> seq = Starlark.toIterable(value);
+      Iterator<?> iterator = seq.iterator();
+      if (!iterator.hasNext()) {
+        goTo(end);
+        return;
+      }
+      EvalUtils.addIterator(seq);
+      loops[loopDepth * 2] = seq;
+      loops[loopDepth * 2 + 1] = iterator;
+      item = iterator.next();
     }
 
-    EvalUtils.addIterator(seq);
-    loops[loopDepth * 2] = seq;
-    loops[loopDepth * 2 + 1] = iterator;
     ++loopDepth;
 
-    Object item = iterator.next();
     setSlot(nextValueSlot, item);
     validateInstructionDecodedCorrectly();
   }
@@ -453,16 +506,37 @@ class BcEval {
 
     fr.thread.checkInterrupt();
 
-    Iterator<?> iterator = (Iterator<?>) loops[(loopDepth - 1) * 2 + 1];
-    if (iterator.hasNext()) {
-      setSlot(nextValueSlot, iterator.next());
-      validateInstructionDecodedCorrectly();
-      ip = b;
+    // After then continue iteration we are branching to either
+    // `b` or `e` label.
+    int gotoAddr;
+
+    // See the documentation of `loops` field for the explanation
+    // of this logic.
+    Object iteratorObject = loops[(loopDepth - 1) * 2 + 1];
+    if (iteratorObject.getClass() == Object[].class) {
+      Object[] elems = (Object[]) iteratorObject;
+      int currentIndex = loopInts[(loopDepth - 1) * 2 + 1];
+      int size = loopInts[(loopDepth - 1) * 2];
+      if (currentIndex != size) {
+        // has next
+        Object next = elems[loopInts[(loopDepth - 1) * 2 + 1]++];
+        setSlot(nextValueSlot, next);
+        gotoAddr = b;
+      } else {
+        popFor();
+        gotoAddr = e;
+      }
     } else {
-      popFor();
-      validateInstructionDecodedCorrectly();
-      ip = e;
+      Iterator<?> iterator = (Iterator<?>) iteratorObject;
+      if (iterator.hasNext()) {
+        setSlot(nextValueSlot, iterator.next());
+        gotoAddr = b;
+      } else {
+        popFor();
+        gotoAddr = e;
+      }
     }
+    goTo(gotoAddr);
   }
 
   private void breakInstr() {

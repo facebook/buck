@@ -198,6 +198,10 @@ public final class Tuple extends Sequence<Object>
     return wrapImmutable(elems);
   }
 
+  Object[] getElemsUnsafe() {
+    return elems;
+  }
+
   /**
    * Returns a new ImmutableList<T> backed by {@code array}, which must not be subsequently
    * modified.
