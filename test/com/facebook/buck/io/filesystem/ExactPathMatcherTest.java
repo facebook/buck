@@ -23,11 +23,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.InvalidPathException;
-import java.nio.file.Paths;
 import java.util.EnumSet;
 import org.junit.Test;
 
@@ -36,13 +36,13 @@ public class ExactPathMatcherTest {
   @Test
   public void matchesExplicitlyProvidedPaths() {
     ExactPathMatcher matcher = ExactPathMatcher.of(".idea");
-    assertTrue(matcher.matches(Paths.get(".idea")));
+    assertTrue(matcher.matches(RelPath.get(".idea")));
   }
 
   @Test
   public void doesNotMatchPathsThatAreNotExactlyTheSame() {
     ExactPathMatcher matcher = ExactPathMatcher.of(".idea");
-    assertFalse(matcher.matches(Paths.get(".ideas")));
+    assertFalse(matcher.matches(RelPath.get(".ideas")));
   }
 
   @Test

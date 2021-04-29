@@ -21,7 +21,6 @@ import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
 
@@ -61,8 +60,8 @@ public class ExactPathMatcher implements PathMatcher {
   }
 
   @Override
-  public boolean matches(Path path) {
-    return this.path.getPath().equals(path);
+  public boolean matches(RelPath path) {
+    return this.path.equals(path);
   }
 
   @Override

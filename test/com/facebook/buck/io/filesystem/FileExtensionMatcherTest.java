@@ -22,10 +22,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Paths;
 import java.util.EnumSet;
 import org.junit.Test;
 
@@ -34,13 +34,13 @@ public class FileExtensionMatcherTest {
   @Test
   public void matchesPathsWithMatchingExtension() {
     FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
-    assertTrue(matcher.matches(Paths.get("foo.cpp")));
+    assertTrue(matcher.matches(RelPath.get("foo.cpp")));
   }
 
   @Test
   public void doesNotMatchPathsWithADifferentExtension() {
     FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
-    assertFalse(matcher.matches(Paths.get("foo.java")));
+    assertFalse(matcher.matches(RelPath.get("foo.java")));
   }
 
   @Test

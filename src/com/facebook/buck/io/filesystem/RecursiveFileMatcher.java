@@ -20,7 +20,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
 
@@ -56,7 +55,7 @@ public class RecursiveFileMatcher implements PathMatcher {
   }
 
   @Override
-  public boolean matches(Path path) {
+  public boolean matches(RelPath path) {
     return path.startsWith(basePath.getPath());
   }
 

@@ -28,7 +28,7 @@ import org.immutables.value.Value;
 public interface PathMatcher {
 
   /** Check if given path matches pattern. */
-  boolean matches(Path path);
+  boolean matches(RelPath path);
 
   /**
    * Transforms this matcher into a Watchman match query arguments matching the same set of paths as

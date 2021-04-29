@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -61,6 +62,10 @@ public class GlobPatternMatcher implements PathMatcher {
   }
 
   @Override
+  public boolean matches(RelPath path) {
+    return matches(path.getPath());
+  }
+
   public boolean matches(Path path) {
     return globPatternMatcher.matches(path);
   }

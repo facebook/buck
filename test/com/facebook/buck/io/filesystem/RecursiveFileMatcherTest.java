@@ -25,7 +25,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.EnumSet;
 import org.junit.Test;
 
@@ -35,13 +34,13 @@ public class RecursiveFileMatcherTest {
   public void matchesPathsUnderProvidedBasePath() {
     RelPath basePath = RelPath.get("foo");
     RecursiveFileMatcher matcher = RecursiveFileMatcher.of(basePath);
-    assertTrue(matcher.matches(basePath.resolve("bar")));
+    assertTrue(matcher.matches(basePath.resolveRel("bar")));
   }
 
   @Test
   public void doesNotMatchPathsOutsideOfProvidedBasePath() {
     RecursiveFileMatcher matcher = RecursiveFileMatcher.of(RelPath.get("foo"));
-    assertFalse(matcher.matches(Paths.get("not_relative_too_root")));
+    assertFalse(matcher.matches(RelPath.get("not_relative_too_root")));
   }
 
   @Test

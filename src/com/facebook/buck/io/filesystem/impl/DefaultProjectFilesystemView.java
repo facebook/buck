@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.filesystem.impl;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -129,7 +130,7 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
   public DefaultProjectFilesystemView withView(
       Path newRelativeRoot, ImmutableSet<PathMatcher> additionalIgnores) {
     Path newRoot = projectRoot.resolve(newRelativeRoot);
-    Path resolvedNewRoot = filesystemParent.resolve(newRoot);
+    AbsPath resolvedNewRoot = AbsPath.of(filesystemParent.resolve(newRoot));
     ImmutableMap.Builder<PathMatcher, Predicate<Path>> mapBuilder =
         ImmutableMap.builderWithExpectedSize(ignoredPaths.size() + additionalIgnores.size());
     mapBuilder.putAll(ignoredPaths);
@@ -137,7 +138,7 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
       mapBuilder.put(p, path -> p.matches(resolvedNewRoot.relativize(path)));
     }
     return new DefaultProjectFilesystemView(
-        filesystemParent, newRoot, resolvedNewRoot, mapBuilder.build());
+        filesystemParent, newRoot, resolvedNewRoot.getPath(), mapBuilder.build());
   }
 
   @Override

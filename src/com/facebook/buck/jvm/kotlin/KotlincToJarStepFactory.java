@@ -187,8 +187,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
 
     boolean generatingCode = !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
     boolean hasKotlinSources =
-        sourceFilePaths.stream().map(RelPath::getPath).anyMatch(KOTLIN_PATH_MATCHER::matches)
-            || sourceFilePaths.stream().map(RelPath::getPath).anyMatch(SRC_ZIP_MATCHER::matches);
+        sourceFilePaths.stream().anyMatch(KOTLIN_PATH_MATCHER::matches)
+            || sourceFilePaths.stream().anyMatch(SRC_ZIP_MATCHER::matches);
 
     ImmutableSortedSet.Builder<RelPath> sourceBuilder =
         ImmutableSortedSet.orderedBy(RelPath.comparator()).addAll(sourceFilePaths);
@@ -387,7 +387,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     // Note that this filters out only .kt files, so this keeps both .java and .src.zip files.
     ImmutableSortedSet<RelPath> javaSourceFiles =
         sourceBuilder.build().stream()
-            .filter(input -> !KOTLIN_PATH_MATCHER.matches(input.getPath()))
+            .filter(input -> !KOTLIN_PATH_MATCHER.matches(input))
             .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
 
     CompilerParameters javacParameters =

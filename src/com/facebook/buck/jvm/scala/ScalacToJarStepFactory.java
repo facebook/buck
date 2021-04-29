@@ -102,7 +102,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
     BuildContext context = extraParams.getBuildContext();
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
 
-    if (sourceFilePaths.stream().map(RelPath::getPath).anyMatch(SCALA_PATH_MATCHER::matches)) {
+    if (sourceFilePaths.stream().anyMatch(SCALA_PATH_MATCHER::matches)) {
 
       ImmutableList<String> commandPrefix = scalac.getCommandPrefix(sourcePathResolver);
       ImmutableMap<String, String> environment = scalac.getEnvironment(sourcePathResolver);
@@ -140,7 +140,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
 
     ImmutableSortedSet<RelPath> javaSourceFiles =
         sourceFilePaths.stream()
-            .filter(relPath -> JAVA_PATH_MATCHER.matches(relPath.getPath()))
+            .filter(JAVA_PATH_MATCHER::matches)
             .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
 
     // Don't invoke javac if we don't have any java files.

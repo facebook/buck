@@ -147,7 +147,7 @@ public class ProjectFilesystemUtils {
    */
   public static boolean isIgnored(
       RelPath path, ImmutableCollection<? extends PathMatcher> ignores) {
-    return ignores.stream().anyMatch(pathMatcher -> pathMatcher.matches(path.getPath()));
+    return ignores.stream().anyMatch(pathMatcher -> pathMatcher.matches(path));
   }
 
   /**
