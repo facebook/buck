@@ -20,6 +20,7 @@ import com.facebook.buck.command.config.ConfigDifference;
 import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -245,20 +246,58 @@ public class BuckGlobalStateLifecycleManager {
 
   /** Compare cells, return non-empty lifecycle status if global state needs to be invalidated. */
   private CellCompareResult compareCells(Cells stateCells, Cells newCells) {
-    if (!stateCells.getRootCell().getFilesystem().equals(newCells.getRootCell().getFilesystem())) {
+    CellCompareResult rootCellCompareResult =
+        compareCell(stateCells.getRootCell(), newCells.getRootCell());
+    if (rootCellCompareResult.getLifecycleStatus() != LifecycleStatus.REUSED) {
+      return rootCellCompareResult;
+    }
+
+    ImmutableMap<CanonicalCellName, Cell> stateCellsByName =
+        stateCells.getAllCells().stream()
+            .collect(ImmutableMap.toImmutableMap(Cell::getCanonicalName, c -> c));
+    ImmutableMap<CanonicalCellName, Cell> newCellsByName =
+        newCells.getAllCells().stream()
+            .collect(ImmutableMap.toImmutableMap(Cell::getCanonicalName, c -> c));
+
+    Preconditions.checkState(
+        stateCellsByName.keySet().equals(newCellsByName.keySet()),
+        "we already validated root cell buckconfig is identical");
+
+    for (Map.Entry<CanonicalCellName, Cell> stateCellEntry : stateCellsByName.entrySet()) {
+      CanonicalCellName cellName = stateCellEntry.getKey();
+      if (cellName == CanonicalCellName.rootCell()) {
+        // we already compared root cell before
+        continue;
+      }
+
+      Cell stateCell = stateCellEntry.getValue();
+      Cell newCell = newCellsByName.get(cellName);
+      Preconditions.checkNotNull(
+          newCell,
+          "we already compared root cell, and it is identical, so new cell must be not null");
+      CellCompareResult lifecycleStatus = compareCell(stateCell, newCell);
+      if (lifecycleStatus.getLifecycleStatus() != LifecycleStatus.REUSED) {
+        return lifecycleStatus;
+      }
+    }
+
+    return CellCompareResult.of(LifecycleStatus.REUSED);
+  }
+
+  private CellCompareResult compareCell(Cell stateCell, Cell newCell) {
+    if (!stateCell.getFilesystem().equals(newCell.getFilesystem())) {
       return CellCompareResult.of(LifecycleStatus.INVALIDATED_FILESYSTEM_CHANGED);
     }
 
     Map<String, ConfigChange> configDifference =
-        ConfigDifference.compareForCaching(
-            stateCells.getBuckConfig(), newCells.getRootCell().getBuckConfig());
+        ConfigDifference.compareForCaching(stateCell.getBuckConfig(), newCell.getBuckConfig());
     if (!configDifference.isEmpty()) {
       return ImmutableCellCompareResult.ofImpl(
           LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED, configDifference);
     }
 
     if (!BuckGlobalStateCompatibilityCellChecker.areToolchainsCompatibleForCaching(
-        stateCells.getRootCell(), newCells.getRootCell())) {
+        stateCell, newCell)) {
       return CellCompareResult.of(LifecycleStatus.INVALIDATED_TOOLCHAINS_INCOMPATIBLE);
     }
 
