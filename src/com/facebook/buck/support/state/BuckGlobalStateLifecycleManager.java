@@ -24,6 +24,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.watchman.Watchman;
@@ -31,6 +32,7 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Optional;
@@ -38,6 +40,7 @@ import java.util.OptionalInt;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+import org.immutables.value.Value;
 
 /**
  * Guards access to the {@link BuckGlobalState} instance behind cell configuration checks. Creates
@@ -152,22 +155,14 @@ public class BuckGlobalStateLifecycleManager {
     if (buckGlobalState != null) {
       // Check if current cell and cell for cached state are similar enough to re-use global state.
       // Considers only a subset of the information provided by the cells.
-      Cells stateCells = buckGlobalState.getCells();
-      if (!stateCells.getRootCell().getFilesystem().equals(rootCell.getFilesystem())) {
-        lifecycleStatus = LifecycleStatus.INVALIDATED_FILESYSTEM_CHANGED;
-      } else {
-        configDifference =
-            ConfigDifference.compareForCaching(
-                stateCells.getBuckConfig(), rootCell.getBuckConfig());
-        if (!configDifference.isEmpty()) {
-          lifecycleStatus = LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED;
-        } else if (!BuckGlobalStateCompatibilityCellChecker.areToolchainsCompatibleForCaching(
-            stateCells.getRootCell(), rootCell)) {
-          lifecycleStatus = LifecycleStatus.INVALIDATED_TOOLCHAINS_INCOMPATIBLE;
-        }
-      }
 
-      if (lifecycleStatus != LifecycleStatus.REUSED) {
+      Cells stateCells = buckGlobalState.getCells();
+
+      CellCompareResult compareCells = compareCells(stateCells, cells);
+      if (compareCells.getLifecycleStatus() != LifecycleStatus.REUSED) {
+        lifecycleStatus = compareCells.getLifecycleStatus();
+        configDifference = compareCells.getConfigDifference();
+
         LOG.info(
             "Shutting down and restarting daemon state on config or directory graphBuilder change (%s != %s)",
             stateCells.getRootCell(), rootCell);
@@ -226,6 +221,48 @@ public class BuckGlobalStateLifecycleManager {
     }
 
     return new Pair<>(buckGlobalState, lifecycleStatus);
+  }
+
+  /** A pair returned from cell compare. */
+  @BuckStyleValue
+  abstract static class CellCompareResult {
+
+    public abstract LifecycleStatus getLifecycleStatus();
+
+    public abstract Map<String, ConfigChange> getConfigDifference();
+
+    @Value.Check
+    protected void check() {
+      Preconditions.checkArgument(
+          (getLifecycleStatus() == LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED)
+              == !getConfigDifference().isEmpty());
+    }
+
+    public static CellCompareResult of(LifecycleStatus lifecycleStatus) {
+      return ImmutableCellCompareResult.ofImpl(lifecycleStatus, ImmutableMap.of());
+    }
+  }
+
+  /** Compare cells, return non-empty lifecycle status if global state needs to be invalidated. */
+  private CellCompareResult compareCells(Cells stateCells, Cells newCells) {
+    if (!stateCells.getRootCell().getFilesystem().equals(newCells.getRootCell().getFilesystem())) {
+      return CellCompareResult.of(LifecycleStatus.INVALIDATED_FILESYSTEM_CHANGED);
+    }
+
+    Map<String, ConfigChange> configDifference =
+        ConfigDifference.compareForCaching(
+            stateCells.getBuckConfig(), newCells.getRootCell().getBuckConfig());
+    if (!configDifference.isEmpty()) {
+      return ImmutableCellCompareResult.ofImpl(
+          LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED, configDifference);
+    }
+
+    if (!BuckGlobalStateCompatibilityCellChecker.areToolchainsCompatibleForCaching(
+        stateCells.getRootCell(), newCells.getRootCell())) {
+      return CellCompareResult.of(LifecycleStatus.INVALIDATED_TOOLCHAINS_INCOMPATIBLE);
+    }
+
+    return CellCompareResult.of(LifecycleStatus.REUSED);
   }
 
   /** Manually reset the {@link BuckGlobalState}, used for testing. */
