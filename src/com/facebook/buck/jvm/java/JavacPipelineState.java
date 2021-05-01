@@ -145,6 +145,7 @@ public class JavacPipelineState implements RulePipelineState {
               processExecutor,
               configuredBuckOut);
 
+      CompilerOutputPaths outputPaths = compilerParameters.getOutputPaths();
       invocation =
           getResolvedJavac()
               .newBuildInvocation(
@@ -155,8 +156,8 @@ public class JavacPipelineState implements RulePipelineState {
                   resolvedJavacOptions.getAnnotationProcessors(),
                   resolvedJavacOptions.getJavaPlugins(),
                   compilerParameters.getSourceFilePaths(),
-                  compilerParameters.getOutputPaths().getPathToSourcesList(),
-                  compilerParameters.getOutputPaths().getWorkingDirectory(),
+                  outputPaths.getPathToSourcesList(),
+                  outputPaths.getWorkingDirectory(),
                   compilerParameters.shouldTrackClassUsage(),
                   compilerParameters.shouldTrackJavacPhaseEvents(),
                   abiJarParameters,
@@ -283,7 +284,7 @@ public class JavacPipelineState implements RulePipelineState {
     return builder.build();
   }
 
-  CompilerParameters getCompilerParameters() {
+  public CompilerParameters getCompilerParameters() {
     return compilerParameters;
   }
 

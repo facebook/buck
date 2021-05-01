@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -113,6 +114,7 @@ import javax.annotation.Nullable;
  */
 public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     implements SupportsInputBasedRuleKey {
+
   private OutputPathResolver outputPathResolver;
   private Supplier<ImmutableSortedSet<BuildRule>> deps;
   private T buildable;
@@ -348,8 +350,8 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
             .collect(ImmutableSet.toImmutableSet());
     ImmutableSet<Path> excludedFullPaths =
         excludedRelPaths.stream()
-            .map(relPath -> filesystem.resolve(relPath))
-            .map(absPath -> absPath.getPath())
+            .map(filesystem::resolve)
+            .map(PathWrapper::getPath)
             .collect(ImmutableSet.toImmutableSet());
 
     // TODO(cjhopman): This should probably actually be handled by the build engine.

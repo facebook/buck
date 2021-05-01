@@ -72,9 +72,9 @@ public class JavaStepsBuilder {
   }
 
   private Pair<AbsPath, ImmutableList<IsolatedStep>> buildSteps(BuildJavaCommand buildJavaCommand) {
-    boolean withDownwardApi = buildJavaCommand.getBaseCommandParams().getWithDownwardApi();
     DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> factory =
-        creteDefaultStepsFactory(buildJavaCommand, withDownwardApi);
+        creteDefaultStepsFactory(buildJavaCommand);
+    boolean withDownwardApi = buildJavaCommand.getBaseCommandParams().getWithDownwardApi();
 
     BuildJavaCommand.CommandCase commandCase = buildJavaCommand.getCommandCase();
     AbsPath ruleCellRoot;
@@ -198,19 +198,24 @@ public class JavaStepsBuilder {
     return getRootPath(filesystemParams);
   }
 
-  private AbsPath getRootPath(FilesystemParams filesystemParams) {
+  public static AbsPath getRootPath(FilesystemParams filesystemParams) {
     return AbsPath.get(filesystemParams.getRootPath().getPath());
   }
 
-  private DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> creteDefaultStepsFactory(
-      BuildJavaCommand buildJavaCommand, boolean withDownwardApi) {
-    BaseCommandParams baseCommandParams = buildJavaCommand.getBaseCommandParams();
+  private static DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> creteDefaultStepsFactory(
+      BuildJavaCommand buildJavaCommand) {
     BaseJavacToJarStepFactory baseJavacToJarStepFactory =
-        new BaseJavacToJarStepFactory(
-            baseCommandParams.getSpoolMode(),
-            baseCommandParams.getHasAnnotationProcessing(),
-            withDownwardApi);
+        getBaseJavacToJarStepFactory(buildJavaCommand.getBaseCommandParams());
     return new DefaultJavaCompileStepsBuilderFactory<>(baseJavacToJarStepFactory);
+  }
+
+  /** Returns {@link BaseJavacToJarStepFactory} */
+  public static BaseJavacToJarStepFactory getBaseJavacToJarStepFactory(
+      BaseCommandParams baseCommandParams) {
+    return new BaseJavacToJarStepFactory(
+        baseCommandParams.getSpoolMode(),
+        baseCommandParams.getHasAnnotationProcessing(),
+        baseCommandParams.getWithDownwardApi());
   }
 
   private void maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(

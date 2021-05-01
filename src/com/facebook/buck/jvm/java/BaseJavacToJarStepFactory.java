@@ -162,8 +162,11 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
     CompilerOutputPaths outputPath = compilerOutputPathsValue.getByType(buildTargetValue.getType());
     addAnnotationGenFolderStep(steps, buildableContext, outputPath.getAnnotationPath());
 
+    boolean emptySources = compilerParameters.getSourceFilePaths().isEmpty();
     if (!state.isRunning()) {
-      steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, compilerParameters));
+      steps.addAll(
+          getCompilerSetupIsolatedSteps(
+              resourcesMap, compilerParameters.getOutputPaths(), emptySources));
     }
 
     Optional<JarParameters> jarParameters =
@@ -175,7 +178,7 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
 
     // Only run javac if there are .java files to compile or we need to shovel the manifest file
     // into the built jar.
-    if (!compilerParameters.getSourceFilePaths().isEmpty()) {
+    if (!emptySources) {
       recordDepFileIfNecessary(
           compilerOutputPathsValue, buildTargetValue, compilerParameters, buildableContext);
 

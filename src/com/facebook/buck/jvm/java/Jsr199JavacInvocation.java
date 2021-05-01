@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.checkForSourceOnlyAbiCompatibility;
 import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.getDiagnosticKindForSourceOnlyAbiCompatibility;
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -46,7 +47,6 @@ import com.facebook.buck.jvm.java.tracing.TranslatingJavacPhaseTracer;
 import com.facebook.buck.util.concurrent.MostExecutors.NamedThreadFactory;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.base.Throwables;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -164,11 +164,14 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
     // since we do not print them out to console in case of error
     try {
       AbsPath ruleCellRoot = context.getRuleCellRoot();
+
       ProjectFilesystemUtils.writeLinesToPath(
           ruleCellRoot,
-          FluentIterable.from(javaSourceFilePaths)
-              .transform(Object::toString)
-              .transform(ResolvedJavac.ARGFILES_ESCAPER::apply),
+          () ->
+              javaSourceFilePaths.stream()
+                  .map(Object::toString)
+                  .map(ResolvedJavac.ARGFILES_ESCAPER::apply)
+                  .iterator(),
           pathToSrcsList.getPath());
     } catch (IOException e) {
       context
@@ -250,7 +253,8 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
               // Propagate failure
               abiResult.setException(t);
             }
-          });
+          },
+          directExecutor());
 
       JarParameters jarParameters = Objects.requireNonNull(abiJarParameters);
       BuckJavacTaskProxy javacTask = getJavacTask(buildSourceOnlyAbi);
@@ -307,7 +311,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
       try {
         String threadName = startCompiler(javacTask);
-        try (JavacEventSinkScopedSimplePerfEvent event =
+        try (JavacEventSinkScopedSimplePerfEvent ignore =
             new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), threadName)) {
           return abiResult.get();
         }
@@ -345,7 +349,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       shouldCompileFullJar.set(true);
       try {
         String threadName = startCompiler(getJavacTask(false));
-        try (JavacEventSinkScopedSimplePerfEvent event =
+        try (JavacEventSinkScopedSimplePerfEvent ignore =
             new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), threadName)) {
           return compilerResult.get();
         }

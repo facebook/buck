@@ -193,7 +193,7 @@ public class JavacStep extends IsolatedStep {
     if (!stdOut.isEmpty()) {
       buckEventBus.post(ConsoleEvent.info("%s", stdOut));
     }
-    return Optional.of(Joiner.on("\n").join(errorMessage.build()));
+    return Optional.of(Joiner.on(System.lineSeparator()).join(errorMessage.build()));
   }
 
   @VisibleForTesting

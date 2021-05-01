@@ -73,7 +73,11 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       T extraParams) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
-    steps.addAll(getCompilerSetupIsolatedSteps(resourcesMap, compilerParameters));
+    steps.addAll(
+        getCompilerSetupIsolatedSteps(
+            resourcesMap,
+            compilerParameters.getOutputPaths(),
+            compilerParameters.getSourceFilePaths().isEmpty()));
 
     JarParameters jarParameters =
         abiJarParameters != null ? abiJarParameters : libraryJarParameters;
@@ -111,11 +115,12 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
   }
 
   /** Returns Compiler Setup steps */
-  protected ImmutableList<IsolatedStep> getCompilerSetupIsolatedSteps(
-      ImmutableMap<RelPath, RelPath> resourcesMap, CompilerParameters compilerParameters) {
+  public ImmutableList<IsolatedStep> getCompilerSetupIsolatedSteps(
+      ImmutableMap<RelPath, RelPath> resourcesMap,
+      CompilerOutputPaths outputPaths,
+      boolean emptySources) {
     // Always create the output directory, even if there are no .java files to compile because there
     // might be resources that need to be copied there.
-    CompilerOutputPaths outputPaths = compilerParameters.getOutputPaths();
 
     Builder<IsolatedStep> steps = ImmutableList.builder();
 
@@ -126,7 +131,7 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
     // If there are resources, then link them to the appropriate place in the classes directory.
     steps.addAll(CopyResourcesStep.of(resourcesMap));
 
-    if (!compilerParameters.getSourceFilePaths().isEmpty()) {
+    if (!emptySources) {
       steps.add(MkdirIsolatedStep.of(outputPaths.getPathToSourcesList().getParent()));
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(outputPaths.getWorkingDirectory()));
     }
