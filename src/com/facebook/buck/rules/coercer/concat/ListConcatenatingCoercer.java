@@ -17,16 +17,18 @@
 package com.facebook.buck.rules.coercer.concat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 /** Concatenate {@link List}s of unknown types. */
 final class ListConcatenatingCoercer extends JsonTypeConcatenatingCoercer {
 
+  @SuppressWarnings("unchecked")
   @Override
   public Object concat(Iterable<Object> elements) {
-    Iterable<List<Object>> lists = Iterables.transform(elements, List.class::cast);
-    return ImmutableList.copyOf(Iterables.concat(lists));
+    return StreamSupport.stream(elements.spliterator(), false)
+        .flatMap(o -> ((List<Object>) o).stream())
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override
