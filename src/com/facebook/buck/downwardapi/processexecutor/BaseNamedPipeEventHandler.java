@@ -148,17 +148,24 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
             requireNonNull(
                 downwardProtocol.readEvent(inputStream, eventType),
                 "message with event type:" + eventType + " is missing");
+
         if (eventType.equals(EventType.END_EVENT)) {
           LOGGER.debug("Received end event for named pipe %s", namedPipeName);
           break;
         }
+
         DownwardApiProcessExecutor.HANDLER_THREAD_POOL.execute(
             () -> {
               LOGGER.verbose(
                   "Processing event of type %s in the thread: %s",
                   eventType, Thread.currentThread().getName());
-              processEvent(eventType, event);
+              try {
+                processEvent(eventType, event);
+              } catch (Exception e) {
+                LOGGER.error(e, "Cannot process event: %s", event);
+              }
             });
+
       } catch (PipeNotConnectedException e) {
         LOGGER.info(e, "Named pipe %s is closed", namedPipeName);
         break;

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.downwardapi.processexecutor;
 
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
@@ -29,8 +28,6 @@ import com.google.protobuf.AbstractMessage;
 /** Default implementation of {@link NamedPipeEventHandler} interface. */
 public class DefaultNamedPipeEventHandler extends BaseNamedPipeEventHandler {
 
-  private static final Logger LOG = Logger.get(DefaultNamedPipeEventHandler.class);
-
   public static final NamedPipeEventHandlerFactory FACTORY = DefaultNamedPipeEventHandler::new;
 
   public DefaultNamedPipeEventHandler(
@@ -42,10 +39,6 @@ public class DefaultNamedPipeEventHandler extends BaseNamedPipeEventHandler {
   protected void processEvent(EventTypeMessage.EventType eventType, AbstractMessage event) {
     EventHandler<AbstractMessage> eventHandler =
         EventHandlerUtils.getStandardEventHandler(eventType);
-    try {
-      eventHandler.handleEvent(getContext(), event);
-    } catch (Exception e) {
-      LOG.error(e, "Cannot handle event: %s", event);
-    }
+    eventHandler.handleEvent(getContext(), event);
   }
 }

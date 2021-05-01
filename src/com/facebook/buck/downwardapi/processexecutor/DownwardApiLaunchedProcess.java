@@ -64,7 +64,7 @@ public class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
     } catch (ExecutionException e) {
       LOG.warn(e.getCause(), "Exception while cancelling named pipe events processing.");
     } catch (TimeoutException e) {
-      LOG.error(
+      LOG.warn(
           "Cannot shutdown downward api reader handler for named pipe: '%s'", namedPipe.getName());
       readerThreadTerminated = false;
     }
