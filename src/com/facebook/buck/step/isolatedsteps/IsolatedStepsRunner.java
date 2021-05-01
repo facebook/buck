@@ -18,6 +18,7 @@ package com.facebook.buck.step.isolatedsteps;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.step.StepExecutionResult;
@@ -81,7 +82,7 @@ public class IsolatedStepsRunner {
       throws InterruptedException, StepFailedException {
     String stepDescription = step.getIsolatedStepDescription(context);
     if (context.getVerbosity().shouldPrintCommand()) {
-      context.getStdErr().println(stepDescription);
+      context.postEvent(ConsoleEvent.info(stepDescription));
     }
 
     StepEvent.Started started = StepEvent.started(step.getShortName(), stepDescription);
