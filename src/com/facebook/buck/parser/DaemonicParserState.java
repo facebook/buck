@@ -66,12 +66,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
-/**
- * Persistent parsing data, that can exist between invocations of the {@link Parser}. All public
- * methods that cause build files to be read must be guarded by calls to {@link
- * #invalidateIfProjectBuildFileParserStateChanged(Cell)} in order to ensure that state is
- * maintained correctly.
- */
+/** Persistent parsing data, that can exist between invocations of the {@link Parser}. */
 public class DaemonicParserState {
 
   private static final Logger LOG = Logger.get(DaemonicParserState.class);
@@ -92,8 +87,6 @@ public class DaemonicParserState {
     @Override
     public Optional<T> lookupComputedNode(Cell cell, K target, BuckEventBus eventBus)
         throws BuildTargetException {
-      invalidateIfProjectBuildFileParserStateChanged(cell);
-
       DaemonicCellState.Cache<K, T> state = getCache(cell);
       if (state == null) {
         return Optional.empty();
@@ -106,13 +99,6 @@ public class DaemonicParserState {
         Cell cell, K target, T targetNode, boolean targetIsConfiguration, BuckEventBus eventBus)
         throws BuildTargetException {
 
-      // Verify we don't invalidate the build file at this point, as, at this point, we should have
-      // already called `lookupComputedNode` which should have done any invalidation.
-      Preconditions.checkState(
-          !invalidateIfProjectBuildFileParserStateChanged(cell),
-          "Unexpected invalidation due to build file parser state change for %s %s",
-          cell.getRoot(),
-          target);
       AbsPath buildFile =
           cell.getBuckConfigView(ParserConfig.class)
               .getAbsolutePathToBuildFileUnsafe(
@@ -145,8 +131,6 @@ public class DaemonicParserState {
     @Override
     public Optional<BuildFileManifest> lookupComputedNode(
         Cell cell, AbsPath buildFile, BuckEventBus eventBus) throws BuildTargetException {
-      invalidateIfProjectBuildFileParserStateChanged(cell);
-
       DaemonicCellState state = getCellState(cell);
       if (state == null) {
         return Optional.empty();
@@ -169,13 +153,6 @@ public class DaemonicParserState {
         boolean targetIsConfiguration,
         BuckEventBus eventBus)
         throws BuildTargetException {
-      // Technically this leads to inconsistent state if the state change happens after rawNodes
-      // were computed, but before we reach the synchronized section here, however that's a problem
-      // we already have, as we don't invalidate any nodes that have been retrieved from the cache
-      // (and so the partially-constructed graph will contain stale nodes if the cache was
-      // invalidated mid-way through the parse).
-      invalidateIfProjectBuildFileParserStateChanged(cell);
-
       ImmutableSet.Builder<AbsPath> dependentsOfEveryNode = ImmutableSet.builder();
 
       addAllIncludes(dependentsOfEveryNode, manifest.getIncludes(), cell);
@@ -200,8 +177,6 @@ public class DaemonicParserState {
     @Override
     public Optional<PackageFileManifest> lookupComputedNode(
         Cell cell, AbsPath packageFile, BuckEventBus eventBus) throws BuildTargetException {
-      invalidateIfProjectBuildFileParserStateChanged(cell);
-
       DaemonicCellState state = getCellState(cell);
       if (state == null) {
         return Optional.empty();
@@ -309,13 +284,6 @@ public class DaemonicParserState {
 
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
 
-  /**
-   * The default includes used by the previous run of the parser in each cell (the key is the cell's
-   * root path). If this value changes, then we need to invalidate all the caches.
-   */
-  private ConcurrentHashMap<CanonicalCellName, ImmutableList<String>> defaultIncludesByCellName;
-
-  private final AutoCloseableReadWriteLock cachedStateLock;
   private final AutoCloseableReadWriteLock cellStateLock;
   private final DaemonicParserStateLocks locks;
 
@@ -332,13 +300,11 @@ public class DaemonicParserState {
                         cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
                   }
                 });
-    this.defaultIncludesByCellName = new ConcurrentHashMap<>();
     this.cellToDaemonicState = new ConcurrentHashMap<>();
 
     this.rawNodeCache = new DaemonicRawCacheView();
     this.packageFileCache = new DaemonicPackageCache();
 
-    this.cachedStateLock = new AutoCloseableReadWriteLock();
     this.cellStateLock = new AutoCloseableReadWriteLock();
     this.locks = new DaemonicParserStateLocks();
   }
@@ -574,47 +540,6 @@ public class DaemonicParserState {
 
   public static boolean isPathCreateOrDeleteEvent(WatchmanPathEvent event) {
     return event.getKind() == Kind.CREATE || event.getKind() == Kind.DELETE;
-  }
-
-  private boolean invalidateIfProjectBuildFileParserStateChanged(Cell cell) {
-    ImmutableList<String> defaultIncludes =
-        cell.getBuckConfig().getView(ParserConfig.class).getDefaultIncludes();
-
-    ImmutableList<String> expected;
-    try (AutoCloseableLocked readLock = cachedStateLock.lockRead()) {
-      expected = defaultIncludesByCellName.get(cell.getCanonicalName());
-
-      if (expected != null && defaultIncludes.equals(expected)) {
-        return false;
-      }
-
-      // Someone's changed the default includes. That's almost definitely caused all our lovingly
-      // cached data to be enormously wonky.
-    }
-
-    try (AutoCloseableLocked writeLock = cachedStateLock.lockWrite()) {
-      defaultIncludesByCellName.put(cell.getCanonicalName(), defaultIncludes);
-    }
-    if (invalidateCellCaches(cell)) {
-      LOG.warn(
-          "Invalidating cache on default includes change (%s != %s)", expected, defaultIncludes);
-      counters.recordCacheInvalidatedByDefaultIncludesChange();
-    }
-    return true;
-  }
-
-  private boolean invalidateCellCaches(Cell cell) {
-    LOG.debug("Starting to invalidate caches for %s..", cell.getRoot());
-    try (AutoCloseableLocked writeLock = cellStateLock.lockWrite()) {
-      DaemonicCellState invalidated = cellToDaemonicState.remove(cell.getCanonicalName());
-      if (invalidated != null) {
-        LOG.debug("Cell cache data invalidated.");
-      } else {
-        LOG.debug("Cell caches were empty, no data invalidated.");
-      }
-
-      return invalidated != null;
-    }
   }
 
   public boolean invalidateAllCaches() {

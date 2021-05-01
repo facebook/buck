@@ -1652,26 +1652,6 @@ public class ParserWithConfigurableAttributesTest {
   }
 
   @Test
-  public void whenAllRulesAreRequestedWithDifferingIncludesThenRulesAreParsedTwice()
-      throws BuildFileParseException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, parsingContext);
-
-    BuckConfig config =
-        FakeBuckConfig.builder()
-            .setFilesystem(filesystem)
-            .setSections(
-                ImmutableMap.of(
-                    ParserConfig.BUILDFILE_SECTION_NAME,
-                    ImmutableMap.of(ParserConfig.INCLUDES_PROPERTY_NAME, "//bar.py")))
-            .build();
-    Cells cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
-
-    filterAllTargetsInProject(parser, parsingContext.withCells(cell));
-
-    assertEquals("Should have invalidated cache.", 2, counter.calls);
-  }
-
-  @Test
   public void whenAllRulesAreRequestedWithDifferingCellsThenRulesAreParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
     filterAllTargetsInProject(parser, parsingContext);
