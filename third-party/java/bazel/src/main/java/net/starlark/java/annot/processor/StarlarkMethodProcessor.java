@@ -194,17 +194,20 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
           sw.writeLine("public Object invoke(Object receiver, Object[] args, net.starlark.java.eval.StarlarkThread thread) throws Exception {");
           sw.indented(
               () -> {
+                int argsSize = method.getParameters().size() - (starlarkMethod.useStarlarkThread() ? 1 : 0);
                 sw.writeLineF(
                     "%s receiverTyped = (%s) receiver;",
                     classElement.getQualifiedName(), classElement.getQualifiedName());
                 ArrayList<String> callArgs = new ArrayList<>();
-                int i = 0;
-                for (VariableElement p : method.getParameters()) {
+                for (int i = 0; i != argsSize; ++i) {
+                  VariableElement p = method.getParameters().get(i);
                   sw.writeLineF(
                       "%s a%s = (%s) args[%s];",
                       types.erasure(p.asType()), i, types.erasure(p.asType()), i);
                   callArgs.add(String.format("a%s", i));
-                  ++i;
+                }
+                if (starlarkMethod.useStarlarkThread()) {
+                  callArgs.add("thread");
                 }
                 String callArgsFormatted = String.join(", ", callArgs);
                 if (method.getReturnType().getKind() == TypeKind.VOID) {

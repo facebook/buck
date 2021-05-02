@@ -83,7 +83,7 @@ final class MethodDescriptor {
     this.speculativeSafe = annotation.speculativeSafe();
     this.generated = generated;
 
-    if (extraKeywords || extraPositionals || useStarlarkSemantics || useStarlarkThread) {
+    if (extraKeywords || extraPositionals || useStarlarkSemantics) {
       this.canReusePositionalWithoutChecks = false;
     } else if (!Arrays.stream(parameters).allMatch(MethodDescriptor::paramCanBeUsedAsPositionalWithoutChecks)) {
       this.canReusePositionalWithoutChecks = false;

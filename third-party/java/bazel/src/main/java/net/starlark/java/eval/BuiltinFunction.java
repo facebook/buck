@@ -221,9 +221,6 @@ public final class BuiltinFunction extends StarlarkCallable {
     if (desc.acceptsExtraKwargs()) {
       n++;
     }
-    if (desc.isUseStarlarkThread()) {
-      n++;
-    }
     Object[] vector = new Object[n];
 
     // positional arguments
@@ -326,9 +323,6 @@ public final class BuiltinFunction extends StarlarkCallable {
     }
     if (desc.acceptsExtraKwargs()) {
       vector[i++] = Dict.wrap(thread.mutability(), kwargs);
-    }
-    if (desc.isUseStarlarkThread()) {
-      vector[i++] = thread;
     }
 
     return vector;
