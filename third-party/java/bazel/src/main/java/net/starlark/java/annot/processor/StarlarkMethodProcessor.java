@@ -141,14 +141,16 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
             method);
       }
 
-      generateBuiltins(classElement, entry.getValue());
+      generateBuiltins(classElement, entry.getValue(), stringType, booleanType, starlarkValueType);
     }
 
     // Returning false allows downstream processors to work on the same annotations
     return false;
   }
 
-  private void generateBuiltins(TypeElement classElement, List<Element> methods) {
+  private void generateBuiltins(TypeElement classElement, List<Element> methods,
+      TypeMirror stringType, TypeMirror booleanType,
+      TypeMirror starlarkValueType) {
     String builtinsName = generatedClassLocalName(classElement);
     String builtinsFqn = elements.getPackageOf(classElement) + "." + builtinsName;
     try {
@@ -165,7 +167,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
             sw.writeLine(
                 "public static net.starlark.java.eval.MethodDescriptorGenerated[] HANDLERS = {");
             for (Element element : methods) {
-              generateMethod(sw, classElement, (ExecutableElement) element);
+              generateMethod(sw, classElement, (ExecutableElement) element, stringType, booleanType, starlarkValueType);
             }
             sw.writeLine("};");
           });
@@ -177,47 +179,84 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     }
   }
 
-  private void generateMethod(SourceWriter sw, TypeElement classElement, ExecutableElement method)
+  private void generateMethod(SourceWriter sw, TypeElement classElement, ExecutableElement method,
+      TypeMirror stringType, TypeMirror booleanType,
+      TypeMirror starlarkValueType)
       throws IOException {
+    StarlarkMethod starlarkMethod = method.getAnnotation(StarlarkMethod.class);
+    sw.writeLine(
+        "new net.starlark.java.eval.MethodDescriptorGenerated(\""
+            + method.getSimpleName()
+            + "\") {");
     sw.indented(
         () -> {
-          sw.writeLine(
-              "new net.starlark.java.eval.MethodDescriptorGenerated(\""
-                  + method.getSimpleName()
-                  + "\") {");
+          sw.writeLine("@Override");
+          sw.writeLine("public Object invoke(Object receiver, Object[] args, net.starlark.java.eval.StarlarkThread thread) throws Exception {");
           sw.indented(
               () -> {
-                sw.writeLine("@Override");
-                sw.writeLine(
-                    "public Object invoke(Object receiver, Object[] args) throws Exception {");
-                sw.indented(
-                    () -> {
-                      sw.writeLineF(
-                          "%s receiverTyped = (%s) receiver;",
-                          classElement.getQualifiedName(), classElement.getQualifiedName());
-                      ArrayList<String> callArgs = new ArrayList<>();
-                      int i = 0;
-                      for (VariableElement p : method.getParameters()) {
-                        sw.writeLineF(
-                            "%s a%s = (%s) args[%s];",
-                            types.erasure(p.asType()), i, types.erasure(p.asType()), i);
-                        callArgs.add(String.format("a%s", i));
-                        ++i;
-                      }
-                      String callArgsFormatted = String.join(", ", callArgs);
-                      if (method.getReturnType().getKind() == TypeKind.VOID) {
-                        sw.writeLineF("receiverTyped.%s(%s);", method.getSimpleName(), callArgsFormatted);
-                      } else {
-                        sw.writeLineF("return receiverTyped.%s(%s);", method.getSimpleName(), callArgsFormatted);
-                      }
-                      if (method.getReturnType().getKind() == TypeKind.VOID) {
-                        sw.writeLine("return net.starlark.java.eval.Starlark.NONE;");
-                      }
-                    });
-                sw.writeLine("}");
+                sw.writeLineF(
+                    "%s receiverTyped = (%s) receiver;",
+                    classElement.getQualifiedName(), classElement.getQualifiedName());
+                ArrayList<String> callArgs = new ArrayList<>();
+                int i = 0;
+                for (VariableElement p : method.getParameters()) {
+                  sw.writeLineF(
+                      "%s a%s = (%s) args[%s];",
+                      types.erasure(p.asType()), i, types.erasure(p.asType()), i);
+                  callArgs.add(String.format("a%s", i));
+                  ++i;
+                }
+                String callArgsFormatted = String.join(", ", callArgs);
+                if (method.getReturnType().getKind() == TypeKind.VOID) {
+                  sw.writeLineF(
+                      "receiverTyped.%s(%s);",
+                      method.getSimpleName(),
+                      callArgsFormatted);
+                } else {
+                  sw.writeLineF(
+                      "%s r = receiverTyped.%s(%s);",
+                      types.erasure(method.getReturnType()),
+                      method.getSimpleName(),
+                      callArgsFormatted);
+                }
+                if (method.getReturnType().getKind() == TypeKind.VOID) {
+                  sw.writeLine("return net.starlark.java.eval.Starlark.NONE;");
+                } else if (method.getReturnType().getKind() == TypeKind.INT) {
+                  sw.writeLine("return net.starlark.java.eval.StarlarkInt.of(r);");
+                } else if (method.getReturnType().getKind() == TypeKind.BOOLEAN) {
+                  sw.writeLine("return r;");
+                } else {
+                  sw.writeLine("if (r == null) {");
+                  sw.indented(() -> {
+                    if (starlarkMethod.allowReturnNones()) {
+                      sw.writeLine("return net.starlark.java.eval.Starlark.NONE;");
+                    } else {
+                      sw.writeLine("throw methodInvocationReturnedNull(args);");
+                    }
+                  });
+                  sw.writeLine("}");
+                  if (needToCallFromJava(starlarkMethod, method.getReturnType(), stringType, booleanType, starlarkValueType)) {
+                    sw.writeLine("return net.starlark.java.eval.Starlark.fromJava(r, thread.mutability());");
+                  } else {
+                    sw.writeLine("return r;");
+                  }
+                }
               });
-          sw.writeLine("},");
+          sw.writeLine("}");
         });
+    sw.writeLine("},");
+  }
+
+  private boolean needToCallFromJava(
+      StarlarkMethod starlarkMethod,
+      TypeMirror returnType,
+      TypeMirror stringType,
+      TypeMirror booleanType,
+      TypeMirror starlarkValueType) {
+    return !starlarkMethod.trustReturnsValid()
+        && !types.isSameType(returnType, booleanType)
+        && !types.isSameType(returnType, stringType)
+        && !types.isAssignable(returnType, starlarkValueType);
   }
 
   private static String generatedClassLocalName(TypeElement type) {

@@ -51,15 +51,6 @@ final class MethodDescriptor {
   private final boolean speculativeSafe;
   private final MethodDescriptorGenerated generated;
 
-  private enum HowToHandleReturn {
-    NULL_TO_NONE, // any Starlark value; null -> None
-    ERROR_ON_NULL, // any Starlark value; null -> error
-    STARLARK_INT_OF_INT, // Java int -> StarlarkInt
-    FROM_JAVA, // Starlark.fromJava conversion (List, Map, various Numbers, null perhaps)
-  }
-
-  private final HowToHandleReturn howToHandleReturn;
-
   private MethodDescriptor(
       Method method,
       StarlarkMethod annotation,
@@ -91,24 +82,6 @@ final class MethodDescriptor {
     this.useStarlarkSemantics = useStarlarkSemantics;
     this.speculativeSafe = annotation.speculativeSafe();
     this.generated = generated;
-
-    Class<?> ret = method.getReturnType();
-    if (ret == void.class || ret == boolean.class) {
-      // * `void` function returns `null`
-      // * `boolean` function never returns `null`
-      // We could have specialized enum variant, but null check is cheap.
-      howToHandleReturn = HowToHandleReturn.NULL_TO_NONE;
-    } else if (StarlarkValue.class.isAssignableFrom(ret)
-        || String.class == ret
-        || Boolean.class == ret
-        || trustReturnsValid) {
-      howToHandleReturn =
-          allowReturnNones ? HowToHandleReturn.NULL_TO_NONE : HowToHandleReturn.ERROR_ON_NULL;
-    } else if (ret == int.class) {
-      howToHandleReturn = HowToHandleReturn.STARLARK_INT_OF_INT;
-    } else {
-      howToHandleReturn = HowToHandleReturn.FROM_JAVA;
-    }
 
     if (extraKeywords || extraPositionals || useStarlarkSemantics || useStarlarkThread) {
       this.canReusePositionalWithoutChecks = false;
@@ -179,9 +152,8 @@ final class MethodDescriptor {
   Object call(Object obj, Object[] args, StarlarkThread thread)
       throws EvalException, InterruptedException {
     Preconditions.checkNotNull(obj);
-    Object result;
     try {
-      result = generated.invoke(obj, args);
+      return generated.invoke(obj, args, thread);
     } catch (EvalException | InterruptedException | RuntimeException | Error e) {
       // Don't intercept unchecked exceptions.
       throw e;
@@ -189,26 +161,6 @@ final class MethodDescriptor {
       // All other checked exceptions (e.g. LabelSyntaxException) are reported to Starlark.
       throw new EvalException(e);
     }
-
-    // This switch is an optimization to reduce the overhead
-    // of an unconditional null check and fromJava call.
-    switch (howToHandleReturn) {
-      case NULL_TO_NONE:
-        return result != null ? result : Starlark.NONE;
-      case ERROR_ON_NULL:
-        if (result == null) {
-          throw methodInvocationReturnedNull(args);
-        }
-        return result;
-      case STARLARK_INT_OF_INT:
-        return StarlarkInt.of((Integer) result);
-      case FROM_JAVA:
-        if (result == null && !allowReturnNones) {
-          throw methodInvocationReturnedNull(args);
-        }
-        return Starlark.fromJava(result, thread.mutability());
-    }
-    throw new IllegalStateException("unreachable: " + howToHandleReturn);
   }
 
   @CheckReturnValue // don't forget to throw it

@@ -333,7 +333,7 @@ public final class ScriptTest {
   }
 
   // A trivial struct-like class with Starlark fields defined by a map.
-  private static class Struct extends Structure {
+  static class Struct extends Structure {
     final Map<String, Object> fields;
 
     Struct(Map<String, Object> fields) {
