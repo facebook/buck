@@ -118,6 +118,10 @@ final class ParamDescriptor {
 
   /** Returns a description of allowed argument types suitable for an error message. */
   String getTypeErrorMessage() {
+    return typeErrorMessage(this.allowedClasses);
+  }
+
+  static String typeErrorMessage(List<Class<?>> allowedClasses) {
     // Result has one of these forms:
     // "a"
     // "a or b"
@@ -130,14 +134,6 @@ final class ParamDescriptor {
       buf.append(Starlark.classType(allowedClasses.get(i)));
     }
     return buf.toString();
-  }
-
-  List<Class<?>> getAllowedClasses() {
-    return allowedClasses;
-  }
-
-  public boolean isAllowedClassesContainObject() {
-    return allowedClassesContainObject;
   }
 
   /** @see Param#positional() */

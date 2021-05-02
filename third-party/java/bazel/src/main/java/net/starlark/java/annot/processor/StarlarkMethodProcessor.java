@@ -96,14 +96,58 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     return elements.getTypeElement(canonicalName).asType();
   }
 
-  @Override
-  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+  private static class StarlarkTypeNames {
+    final TypeMirror objectType;
+    final TypeMirror stringType;
+    final TypeMirror integerType;
+    final TypeMirror booleanType;
+    final TypeMirror listType;
+    final TypeMirror mapType;
+    final TypeMirror starlarkValueType;
+    private final TypeMirror stringModuleType;
+    private final TypeMirror methodLibraryType;
+
+    public StarlarkTypeNames(TypeMirror objectType, TypeMirror stringType,
+        TypeMirror integerType, TypeMirror booleanType, TypeMirror listType,
+        TypeMirror mapType, TypeMirror starlarkValueType,
+        TypeMirror stringModuleType, TypeMirror methodLibraryType) {
+      this.objectType = objectType;
+      this.stringType = stringType;
+      this.integerType = integerType;
+      this.booleanType = booleanType;
+      this.listType = listType;
+      this.mapType = mapType;
+      this.starlarkValueType = starlarkValueType;
+      this.stringModuleType = stringModuleType;
+      this.methodLibraryType = methodLibraryType;
+    }
+  }
+
+  private StarlarkTypeNames makeTypeNames() {
+    TypeMirror objectType = getType("java.lang.Object");
     TypeMirror stringType = getType("java.lang.String");
     TypeMirror integerType = getType("java.lang.Integer");
     TypeMirror booleanType = getType("java.lang.Boolean");
     TypeMirror listType = getType("java.util.List");
     TypeMirror mapType = getType("java.util.Map");
     TypeMirror starlarkValueType = getType("net.starlark.java.eval.StarlarkValue");
+    TypeMirror stringModuleType = getType("net.starlark.java.eval.StringModule");
+    TypeMirror methodLibraryType = getType("net.starlark.java.eval.MethodLibrary");
+    return new StarlarkTypeNames(
+        objectType,
+        stringType,
+        integerType,
+        booleanType,
+        listType,
+        mapType,
+        starlarkValueType,
+        stringModuleType,
+        methodLibraryType);
+  }
+
+  @Override
+  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    StarlarkTypeNames typeNames = makeTypeNames();
 
     if (roundEnv.processingOver()) {
       return false;
@@ -115,7 +159,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
         // Interfaces cannot extend `StarlarkValue` so we cannot test it
         continue;
       }
-      if (!types.isAssignable(cls.asType(), starlarkValueType)) {
+      if (!types.isAssignable(cls.asType(), typeNames.starlarkValueType)) {
         errorf(
             cls,
             "class %s has StarlarkBuiltin annotation but does not implement StarlarkValue",
@@ -131,17 +175,12 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
       TypeElement classElement = (TypeElement) entry.getKey();
       for (Element method : entry.getValue()) {
         processElement(
-            stringType,
-            integerType,
-            booleanType,
-            listType,
-            mapType,
-            starlarkValueType,
+            typeNames,
             classElement,
             method);
       }
 
-      generateBuiltins(classElement, entry.getValue(), stringType, booleanType, starlarkValueType);
+      generateBuiltins(classElement, entry.getValue(), typeNames);
     }
 
     // Returning false allows downstream processors to work on the same annotations
@@ -149,12 +188,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
   }
 
   private void generateBuiltins(TypeElement classElement, List<Element> methods,
-      TypeMirror stringType, TypeMirror booleanType,
-      TypeMirror starlarkValueType) {
-    boolean isStringModule = classElement.getQualifiedName()
-        .contentEquals("net.starlark.java.eval.StringModule");
-    boolean isMethodLibrary = classElement.getQualifiedName()
-        .contentEquals("net.starlark.java.eval.MethodLibrary");
+      StarlarkTypeNames typeNames) {
     String builtinsName = generatedClassLocalName(classElement);
     String builtinsFqn = elements.getPackageOf(classElement) + "." + builtinsName;
     try {
@@ -172,8 +206,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
                 "public static net.starlark.java.eval.MethodDescriptorGenerated[] HANDLERS = {");
             for (Element element : methods) {
               generateMethod(sw, classElement,
-                  isStringModule, isMethodLibrary,
-                  (ExecutableElement) element, stringType, booleanType, starlarkValueType);
+                  (ExecutableElement) element, typeNames);
             }
             sw.writeLine("};");
           });
@@ -186,22 +219,26 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
   }
 
   private void generateMethod(SourceWriter sw, TypeElement classElement,
-      boolean isStringModule, boolean isMethodLibrary,
       ExecutableElement method,
-      TypeMirror stringType, TypeMirror booleanType,
-      TypeMirror starlarkValueType)
+      StarlarkTypeNames typeNames)
       throws IOException {
+    boolean isStringModule = types.isSameType(classElement.asType(), typeNames.stringModuleType);
+    boolean isMethodLibrary = types.isSameType(classElement.asType(), typeNames.methodLibraryType);
+
     StarlarkMethod starlarkMethod = method.getAnnotation(StarlarkMethod.class);
-    sw.writeLine(
-        "new net.starlark.java.eval.MethodDescriptorGenerated(\""
-            + method.getSimpleName()
-            + "\") {");
+    sw.writeLineF(
+        "new net.starlark.java.eval.MethodDescriptorGenerated(\"%s\", \"%s\") {",
+        method.getSimpleName(),
+        starlarkMethod.name());
     sw.indented(
         () -> {
-          sw.writeLine("@Override");
-          sw.writeLine("public Object invoke(Object receiver, Object[] args, net.starlark.java.eval.StarlarkThread thread) throws Exception {");
+          sw.writeLine("@java.lang.Override");
+          sw.writeLine("public Object invoke(java.lang.Object receiver, java.lang.Object[] args, net.starlark.java.eval.StarlarkThread thread)");
           sw.indented(
               () -> {
+                sw.indented(() -> {
+                  sw.writeLine("throws java.lang.Exception {");
+                });
                 int argsSize = method.getParameters().size()
                     - (starlarkMethod.useStarlarkThread() ? 1 : 0)
                     - (isStringModule ? 1 : 0);
@@ -222,10 +259,13 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
                   callArgs.add("(String) receiver");
                 }
                 for (int i = 0; i != argsSize; ++i) {
-                  VariableElement p = method.getParameters().get(i + (isStringModule ? 1 : 0));
+                  int index = i + (isStringModule ? 1 : 0);
+                  VariableElement p = method.getParameters().get(index);
+                  TypeMirror varType = types.erasure(p.asType());
+                  writeCheckAllowedTypes(sw, typeNames, starlarkMethod, varType, index, String.format("args[%s]", i));
                   sw.writeLineF(
                       "%s a%s = (%s) args[%s];",
-                      types.erasure(p.asType()), i, types.erasure(p.asType()), i);
+                      varType, i, varType, i);
                   callArgs.add(String.format("a%s", i));
                 }
                 if (starlarkMethod.useStarlarkThread()) {
@@ -260,7 +300,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
                     }
                   });
                   sw.writeLine("}");
-                  if (needToCallFromJava(starlarkMethod, method.getReturnType(), stringType, booleanType, starlarkValueType)) {
+                  if (needToCallFromJava(starlarkMethod, method.getReturnType(), typeNames)) {
                     sw.writeLine("return net.starlark.java.eval.Starlark.fromJava(r, thread.mutability());");
                   } else {
                     sw.writeLine("return r;");
@@ -275,13 +315,55 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
   private boolean needToCallFromJava(
       StarlarkMethod starlarkMethod,
       TypeMirror returnType,
-      TypeMirror stringType,
-      TypeMirror booleanType,
-      TypeMirror starlarkValueType) {
+      StarlarkTypeNames typeNames) {
     return !starlarkMethod.trustReturnsValid()
-        && !types.isSameType(returnType, booleanType)
-        && !types.isSameType(returnType, stringType)
-        && !types.isAssignable(returnType, starlarkValueType);
+        && !types.isSameType(returnType, typeNames.booleanType)
+        && !types.isSameType(returnType, typeNames.stringType)
+        && !types.isAssignable(returnType, typeNames.starlarkValueType);
+  }
+
+  private void writeCheckAllowedTypes(
+      SourceWriter sw,
+      StarlarkTypeNames typeNames,
+      StarlarkMethod starlarkMethod,
+      TypeMirror varType, int index,
+      String expr) throws IOException {
+    if (index >= starlarkMethod.parameters().length) {
+      return;
+    }
+
+    Param param = starlarkMethod.parameters()[index];
+    ArrayList<String> exprs = new ArrayList<>();
+    ArrayList<String> allowedTypes = new ArrayList<>();
+    if (param.allowedTypes().length != 0) {
+      for (ParamType paramType : param.allowedTypes()) {
+        TypeMirror paramTypeType = getParamTypeType(paramType);
+        if (types.isSameType(paramTypeType, typeNames.objectType)) {
+          return;
+        }
+        exprs.add(String.format("!(%s instanceof %s)", expr, paramTypeType));
+        allowedTypes.add(paramTypeType + ".class");
+      }
+    } else {
+      if (types.isSameType(varType, typeNames.objectType)) {
+        return;
+      } else if (varType.getKind() == TypeKind.BOOLEAN) {
+        exprs.add(String.format("!(%s instanceof java.lang.Boolean)", expr));
+        allowedTypes.add("java.lang.Boolean.class");
+      } else {
+        exprs.add(String.format("!(%s instanceof %s)", expr, varType));
+        allowedTypes.add(varType + ".class");
+      }
+    }
+    sw.writeLineF("if (%s) {", String.join(" && ", exprs));
+    sw.indented(() -> {
+      sw.writeLineF(
+          "throw notAllowedArgument(\"%s\", %s, new Class[] { %s });",
+          param.name(),
+          expr,
+          String.join(", ", allowedTypes));
+    });
+    sw.writeLine("}");
   }
 
   private static String generatedClassLocalName(TypeElement type) {
@@ -335,12 +417,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
   }
 
   private void processElement(
-      TypeMirror stringType,
-      TypeMirror integerType,
-      TypeMirror booleanType,
-      TypeMirror listType,
-      TypeMirror mapType,
-      TypeMirror starlarkValueType,
+      StarlarkTypeNames typeNames,
       Element classOrInterface,
       Element element) {
     // Only methods are annotated with StarlarkMethod.
@@ -410,12 +487,12 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     if (ret.getKind() == TypeKind.DECLARED) {
       DeclaredType obj = (DeclaredType) ret;
       if (obj.asElement().getModifiers().contains(Modifier.FINAL)
-          && !types.isSameType(ret, stringType)
-          && !types.isSameType(ret, integerType)
-          && !types.isSameType(ret, booleanType)
-          && !types.isAssignable(obj, starlarkValueType)
-          && !types.isAssignable(obj, listType)
-          && !types.isAssignable(obj, mapType)) {
+          && !types.isSameType(ret, typeNames.stringType)
+          && !types.isSameType(ret, typeNames.integerType)
+          && !types.isSameType(ret, typeNames.booleanType)
+          && !types.isAssignable(obj, typeNames.starlarkValueType)
+          && !types.isAssignable(obj, typeNames.listType)
+          && !types.isAssignable(obj, typeNames.mapType)) {
         errorf(
             method,
             "StarlarkMethod-annotated method %s returns %s, which has no legal Starlark values"

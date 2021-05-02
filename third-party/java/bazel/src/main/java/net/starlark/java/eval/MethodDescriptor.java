@@ -93,7 +93,7 @@ final class MethodDescriptor {
   }
 
   private static boolean paramCanBeUsedAsPositionalWithoutChecks(ParamDescriptor param) {
-    return param.isPositional() && param.disabledByFlag() == null && param.getAllowedClasses().contains(Object.class);
+    return param.isPositional() && param.disabledByFlag() == null;
   }
 
   /** Returns the StarlarkMethod annotation corresponding to this method. */

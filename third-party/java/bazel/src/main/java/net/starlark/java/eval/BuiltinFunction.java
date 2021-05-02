@@ -242,7 +242,6 @@ public final class BuiltinFunction extends StarlarkCallable {
           argIndex < linkSig.numPositionals
               ? args[argIndex++]
               : starArgs.get(argIndex++ - linkSig.numPositionals);
-      checkParamValue(param, value);
       vector[paramIndex] = value;
     }
 
@@ -385,8 +384,6 @@ public final class BuiltinFunction extends StarlarkCallable {
       return;
     }
 
-    checkParamValue(param, value);
-
     // duplicate?
     if (vector[index] != null) {
       throw Starlark.errorf("%s() got multiple values for argument '%s'", methodName, name);
@@ -397,26 +394,6 @@ public final class BuiltinFunction extends StarlarkCallable {
 
   private static String plural(int n) {
     return n == 1 ? "" : "s";
-  }
-
-  private void checkParamValue(ParamDescriptor param, Object value) throws EvalException {
-    if (param.isAllowedClassesContainObject()) {
-      return;
-    }
-
-    // Value must belong to one of the specified classes.
-    boolean ok = false;
-    for (Class<?> cls : param.getAllowedClasses()) {
-      if (cls.isInstance(value)) {
-        ok = true;
-        break;
-      }
-    }
-    if (!ok) {
-      throw Starlark.errorf(
-          "in call to %s(), parameter '%s' got value of type '%s', want '%s'",
-          methodName, param.getName(), Starlark.type(value), param.getTypeErrorMessage());
-    }
   }
 
   // Returns a phrase meaning "disabled" appropriate to the specified flag.
