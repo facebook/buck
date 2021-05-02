@@ -1947,7 +1947,7 @@ public final class StarlarkEvaluationTest {
   }
 
   // SimpleStructWithMethods augments SimpleStruct's fields with annotated Java methods.
-  private static final class SimpleStructWithMethods extends SimpleStruct {
+  static final class SimpleStructWithMethods extends SimpleStruct {
 
     // A function that returns "fromValues".
     private static final Object returnFromValues =

@@ -14,17 +14,22 @@
 
 package net.starlark.java.eval;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.StarlarkAnnotations;
+import net.starlark.java.annot.StarlarkGeneratedFiles;
 import net.starlark.java.annot.StarlarkMethod;
+import net.starlark.java.annot.processor.StarlarkMethodProcessor;
 import net.starlark.java.syntax.StarlarkStringInterner;
 
 /** Helper functions for StarlarkMethod-annotated fields and methods. */
@@ -100,6 +105,8 @@ final class CallUtils {
     ImmutableMap.Builder<String, MethodDescriptor> methods = ImmutableMap.builder();
     Map<String, MethodDescriptor> fields = new HashMap<>();
 
+    GeneratedDescriptors generatedDescriptors = null;
+
     // Sort methods by Java name, for determinism.
     Method[] classMethods = key.cls.getMethods();
     Arrays.sort(classMethods, Comparator.comparing(Method::getName));
@@ -121,7 +128,18 @@ final class CallUtils {
         continue;
       }
 
-      MethodDescriptor descriptor = MethodDescriptor.of(method, callable, key.semantics);
+      if (generatedDescriptors == null) {
+        generatedDescriptors = generatedDescriptors(key.cls);
+      }
+
+      MethodDescriptorGenerated generated = generatedDescriptors.descriptors.get(method.getName());
+      Preconditions.checkState(
+          generated != null,
+          "descriptor for method %s not found among descriptors of %s",
+          method,
+          key.cls);
+
+      MethodDescriptor descriptor = MethodDescriptor.of(method, callable, key.semantics, generated);
 
       // self-call method?
       if (callable.selfCall()) {
@@ -155,6 +173,70 @@ final class CallUtils {
     value.methods = methods.build();
     value.fields = ImmutableMap.copyOf(fields);
     return value;
+  }
+
+  private static class GeneratedDescriptors {
+    private final ImmutableMap<String, MethodDescriptorGenerated> descriptors;
+
+    private GeneratedDescriptors(
+        ImmutableMap<String, MethodDescriptorGenerated> descriptors) {
+      this.descriptors = descriptors;
+    }
+  }
+
+  private static GeneratedDescriptors generatedDescriptors(Class<?> declaringClass) {
+    Verify.verify(declaringClass.getName().startsWith(declaringClass.getPackage().getName()));
+
+    ImmutableMap.Builder<String, MethodDescriptorGenerated> descriptors = ImmutableMap.builder();
+
+    findHandlerClasses(declaringClass, descriptors, new HashSet<>());
+
+    return new GeneratedDescriptors(descriptors.build());
+  }
+
+  private static void findHandlerClasses(
+      Class<?> current,
+      ImmutableMap.Builder<String, MethodDescriptorGenerated> descriptors,
+      HashSet<Class<?>> visitedClasses) {
+    if (current == Object.class) {
+      return;
+    }
+
+    if (!visitedClasses.add(current)) {
+      return;
+    }
+
+    String packageRelativeName = current.getName().substring(current.getPackage().getName().length() + 1);
+    String generatedFqn = current.getPackage().getName()
+        + "."
+        + packageRelativeName.replace("$", "_")
+        + StarlarkGeneratedFiles.GENERATED_CLASS_NAME_SUFFIX;
+    if (current.getClassLoader() == null) {
+      if (current.getName().startsWith("java.")) {
+        return;
+      }
+      throw new RuntimeException("class has no classloader: " + current);
+    }
+    try {
+      Class<?> builtinsClass = current.getClassLoader().loadClass(generatedFqn);
+      try {
+        MethodDescriptorGenerated[] handlers = (MethodDescriptorGenerated[]) builtinsClass.getField("HANDLERS").get(null);
+        for (MethodDescriptorGenerated handler : handlers) {
+          descriptors.put(handler.javaMethodName, handler);
+        }
+      } catch (NoSuchFieldException | IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    } catch (ClassNotFoundException e) {
+      // ignore
+    }
+
+    if (current.getSuperclass() != null) {
+      findHandlerClasses(current.getSuperclass(), descriptors, visitedClasses);
+    }
+    for (Class<?> intf : current.getInterfaces()) {
+      findHandlerClasses(intf, descriptors, visitedClasses);
+    }
   }
 
   /**

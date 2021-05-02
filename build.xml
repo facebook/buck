@@ -277,11 +277,20 @@
     <fileset refid="third-party.jars" />
   </path>
 
+  <path id="starlark.processorpath">
+    <!-- Use prebuilt jars -->
+    <pathelement location="third-party/java/bazel/jars-for-idea/starlark-annot.jar"/>
+    <pathelement location="third-party/java/bazel/jars-for-idea/starlark-annot-processor.jar"/>
+    <pathelement location="third-party/java/guava/guava-25.1-jre.jar"/>
+    <pathelement location="third-party/java/jsr/jsr305.jar"/>
+  </path>
+
   <path id="processorpath">
     <pathelement location="${immutables-value-standalone.jar}"/>
     <pathelement location="${immutables-builder-standalone.jar}"/>
     <pathelement location="${pf4j-standalone.jar}"/>
     <pathelement location="src/com/facebook/buck/core/util/immutables/resources"/>
+    <path refid="starlark.processorpath"/>
   </path>
 
   <pathconvert refid="processorpath" property="processorpath" />
@@ -292,9 +301,17 @@
     <pathelement location="${pf4j-standalone.jar}"/>
     <pathelement location="${buck.modules.annotation.processor.jar}"/>
     <pathelement location="src/com/facebook/buck/core/util/immutables/resources"/>
+    <path refid="starlark.processorpath"/>
   </path>
 
   <pathconvert refid="module.processorpath" property="module.processorpath" />
+
+  <path id="bazel.processorpath">
+    <pathelement location="third-party/java/auto/auto-value-1.6.3rc1.jar" />
+    <path refid="starlark.processorpath"/>
+  </path>
+
+  <pathconvert refid="bazel.processorpath" property="bazel.processorpath"/>
 
   <target name="clean" description="remove all generated files" depends="clear-successful-build,antout.check" if="dir.exists">
     <delete includeEmptyDirs="true" >
@@ -897,8 +914,8 @@
       debug="on"
       source="8"
       target="8">
-      <compilerarg value="-processorpath" />
-      <compilerarg value="third-party/java/auto/auto-value-1.6.3rc1.jar" />
+      <compilerarg value="-processorpath"/>
+      <compilerarg value="${bazel.processorpath}"/>
       <src path="third-party/java/bazel/src/main/java"/>
       <classpath>
         <pathelement location="third-party/java/guava/guava-25.1-jre.jar" />

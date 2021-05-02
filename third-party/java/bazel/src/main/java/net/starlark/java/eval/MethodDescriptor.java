@@ -49,6 +49,7 @@ final class MethodDescriptor {
   /** Can reuse fastcall positional arguments if parameter count matches. */
   private final boolean canReusePositionalWithoutChecks;
   private final boolean speculativeSafe;
+  private final MethodDescriptorGenerated generated;
 
   private enum HowToHandleReturn {
     NULL_TO_NONE, // any Starlark value; null -> None
@@ -73,7 +74,8 @@ final class MethodDescriptor {
       boolean allowReturnNones,
       boolean trustReturnsValid,
       boolean useStarlarkThread,
-      boolean useStarlarkSemantics) {
+      boolean useStarlarkSemantics,
+      MethodDescriptorGenerated generated) {
     this.method = method;
     this.annotation = annotation;
     this.name = name;
@@ -88,6 +90,7 @@ final class MethodDescriptor {
     this.useStarlarkThread = useStarlarkThread;
     this.useStarlarkSemantics = useStarlarkSemantics;
     this.speculativeSafe = annotation.speculativeSafe();
+    this.generated = generated;
 
     Class<?> ret = method.getReturnType();
     if (ret == void.class || ret == boolean.class) {
@@ -127,7 +130,8 @@ final class MethodDescriptor {
 
   /** @return Starlark method descriptor for provided Java method and signature annotation. */
   static MethodDescriptor of(
-      Method method, StarlarkMethod annotation, StarlarkSemantics semantics) {
+      Method method, StarlarkMethod annotation, StarlarkSemantics semantics,
+      MethodDescriptorGenerated generated) {
     // This happens when the interface is public but the implementation classes
     // have reduced visibility.
     method.setAccessible(true);
@@ -151,7 +155,8 @@ final class MethodDescriptor {
         annotation.allowReturnNones(),
         annotation.trustReturnsValid(),
         annotation.useStarlarkThread(),
-        annotation.useStarlarkSemantics());
+        annotation.useStarlarkSemantics(),
+        generated);
   }
 
   /** Calls this method, which must have {@code structField=true}. */
@@ -176,42 +181,13 @@ final class MethodDescriptor {
     Preconditions.checkNotNull(obj);
     Object result;
     try {
-      result = method.invoke(obj, args);
-    } catch (IllegalAccessException ex) {
-      // "Can't happen": the annotated processor ensures that annotated methods are accessible.
-      throw new IllegalStateException(ex);
-
-    } catch (IllegalArgumentException ex) {
-      // "Can't happen": unexpected type mismatch.
-      // Show details to aid debugging (see e.g. b/162444744).
-      StringBuilder buf = new StringBuilder();
-      buf.append(
-          String.format(
-              "IllegalArgumentException (%s) in Starlark call of %s, obj=%s (%s), args=[",
-              ex.getMessage(), method, Starlark.repr(obj), Starlark.type(obj)));
-      String sep = "";
-      for (Object arg : args) {
-        buf.append(String.format("%s%s (%s)", sep, Starlark.repr(arg), Starlark.type(arg)));
-        sep = ", ";
-      }
-      buf.append(']');
-      throw new IllegalArgumentException(buf.toString());
-
-    } catch (InvocationTargetException ex) {
-      Throwable e = ex.getCause();
-      if (e == null) {
-        throw new IllegalStateException(e);
-      }
+      result = generated.invoke(obj, args);
+    } catch (EvalException | InterruptedException | RuntimeException | Error e) {
       // Don't intercept unchecked exceptions.
-      Throwables.throwIfUnchecked(e);
-      if (e instanceof EvalException) {
-        throw (EvalException) e;
-      } else if (e instanceof InterruptedException) {
-        throw (InterruptedException) e;
-      } else {
-        // All other checked exceptions (e.g. LabelSyntaxException) are reported to Starlark.
-        throw new EvalException(e);
-      }
+      throw e;
+    } catch (Exception e) {
+      // All other checked exceptions (e.g. LabelSyntaxException) are reported to Starlark.
+      throw new EvalException(e);
     }
 
     // This switch is an optimization to reduce the overhead

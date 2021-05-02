@@ -17,11 +17,18 @@ package net.starlark.java.annot.processor;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.errorprone.annotations.FormatMethod;
+import java.io.IOException;
+import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -40,9 +47,11 @@ import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
+import net.starlark.java.annot.StarlarkGeneratedFiles;
 import net.starlark.java.annot.StarlarkMethod;
 
 /**
@@ -59,6 +68,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
   private Types types;
   private Elements elements;
   private Messager messager;
+  private Filer filer;
 
   // A set containing a TypeElement for each class with a StarlarkMethod.selfCall annotation.
   private Set<Element> classesWithSelfcall;
@@ -77,6 +87,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     this.types = env.getTypeUtils();
     this.elements = env.getElementUtils();
     this.messager = env.getMessager();
+    this.filer = env.getFiler();
     this.classesWithSelfcall = new HashSet<>();
     this.processedClassMethods = LinkedHashMultimap.create();
   }
@@ -94,6 +105,10 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     TypeMirror mapType = getType("java.util.Map");
     TypeMirror starlarkValueType = getType("net.starlark.java.eval.StarlarkValue");
 
+    if (roundEnv.processingOver()) {
+      return false;
+    }
+
     // Ensure StarlarkBuiltin-annotated classes implement StarlarkValue.
     for (Element cls : roundEnv.getElementsAnnotatedWith(StarlarkBuiltin.class)) {
       if (cls.getKind().isInterface()) {
@@ -108,92 +123,243 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
       }
     }
 
-    for (Element element : roundEnv.getElementsAnnotatedWith(StarlarkMethod.class)) {
-      // Only methods are annotated with StarlarkMethod.
-      // This is ensured by the @Target(ElementType.METHOD) annotation.
-      ExecutableElement method = (ExecutableElement) element;
-      if (!method.getModifiers().contains(Modifier.PUBLIC)) {
-        errorf(method, "StarlarkMethod-annotated methods must be public.");
-      }
-      if (method.getModifiers().contains(Modifier.STATIC)) {
-        errorf(method, "StarlarkMethod-annotated methods cannot be static.");
+    Map<Element, List<Element>> methodsByEncosing =
+        roundEnv.getElementsAnnotatedWith(StarlarkMethod.class).stream()
+            .collect(Collectors.groupingBy(Element::getEnclosingElement));
+
+    for (Map.Entry<Element, List<Element>> entry : methodsByEncosing.entrySet()) {
+      TypeElement classElement = (TypeElement) entry.getKey();
+      for (Element method : entry.getValue()) {
+        processElement(
+            stringType,
+            integerType,
+            booleanType,
+            listType,
+            mapType,
+            starlarkValueType,
+            classElement,
+            method);
       }
 
-      // Check the annotation itself.
-      StarlarkMethod annot = method.getAnnotation(StarlarkMethod.class);
-      if (annot.name().isEmpty()) {
-        errorf(method, "StarlarkMethod.name must be non-empty.");
-      }
-      Element cls = method.getEnclosingElement();
-      if (!processedClassMethods.put(cls, annot.name())) {
-        errorf(method, "Containing class defines more than one method named '%s'.", annot.name());
-      }
-      if (annot.documented() && annot.doc().isEmpty()) {
-        errorf(method, "The 'doc' string must be non-empty if 'documented' is true.");
-      }
-      if (annot.structField()) {
-        checkStructFieldAnnotation(method, annot);
-      } else if (annot.useStarlarkSemantics()) {
-        errorf(
-            method,
-            "a StarlarkMethod-annotated method with structField=false may not also specify"
-                + " useStarlarkSemantics. (Instead, set useStarlarkThread and call"
-                + " getSemantics().)");
-      }
-      if (annot.selfCall() && !classesWithSelfcall.add(cls)) {
-        errorf(method, "Containing class has more than one selfCall method defined.");
-      }
-
-      boolean hasFlag = false;
-      if (!annot.enableOnlyWithFlag().isEmpty()) {
-        if (!hasPlusMinusPrefix(annot.enableOnlyWithFlag())) {
-          errorf(method, "enableOnlyWithFlag name must have a + or - prefix");
-        }
-        hasFlag = true;
-      }
-      if (!annot.disableWithFlag().isEmpty()) {
-        if (!hasPlusMinusPrefix(annot.disableWithFlag())) {
-          errorf(method, "disableWithFlag name must have a + or - prefix");
-        }
-        if (hasFlag) {
-          errorf(
-              method,
-              "Only one of StarlarkMethod.enableOnlyWithFlag and StarlarkMethod.disableWithFlag"
-                  + " may be specified.");
-        }
-        hasFlag = true;
-      }
-
-      if (annot.allowReturnNones() != (method.getAnnotation(Nullable.class) != null)) {
-        errorf(method, "Method must be annotated with @Nullable iff allowReturnNones is set.");
-      }
-
-      checkParameters(method, annot);
-
-      // Verify that result type, if final, might satisfy Starlark.fromJava.
-      // (If the type is non-final we can't prove that all subclasses are invalid.)
-      TypeMirror ret = method.getReturnType();
-      if (ret.getKind() == TypeKind.DECLARED) {
-        DeclaredType obj = (DeclaredType) ret;
-        if (obj.asElement().getModifiers().contains(Modifier.FINAL)
-            && !types.isSameType(ret, stringType)
-            && !types.isSameType(ret, integerType)
-            && !types.isSameType(ret, booleanType)
-            && !types.isAssignable(obj, starlarkValueType)
-            && !types.isAssignable(obj, listType)
-            && !types.isAssignable(obj, mapType)) {
-          errorf(
-              method,
-              "StarlarkMethod-annotated method %s returns %s, which has no legal Starlark values"
-                  + " (see Starlark.fromJava)",
-              method.getSimpleName(),
-              ret);
-        }
-      }
+      generateBuiltins(classElement, entry.getValue());
     }
 
     // Returning false allows downstream processors to work on the same annotations
     return false;
+  }
+
+  private void generateBuiltins(TypeElement classElement, List<Element> methods) {
+    String builtinsName = generatedClassLocalName(classElement);
+    String builtinsFqn = elements.getPackageOf(classElement) + "." + builtinsName;
+    try {
+      JavaFileObject classFile = filer.createSourceFile(builtinsFqn, classElement);
+      Writer writer = classFile.openWriter();
+      SourceWriter sw = new SourceWriter(writer);
+      sw.writeLineF("package %s;", elements.getPackageOf(classElement).getQualifiedName());
+      sw.writeLine("");
+      sw.writeLineF("// @javax.annotation.Generated(\"%s\")", this.getClass().getName());
+      sw.writeLine("@java.lang.SuppressWarnings({\"all\"})");
+      sw.writeLine("public class " + builtinsName + " {");
+      sw.indented(
+          () -> {
+            sw.writeLine(
+                "public static net.starlark.java.eval.MethodDescriptorGenerated[] HANDLERS = {");
+            for (Element element : methods) {
+              generateMethod(sw, classElement, (ExecutableElement) element);
+            }
+            sw.writeLine("};");
+          });
+      sw.writeLine("}");
+      writer.flush();
+      writer.close();
+    } catch (IOException e) {
+      errorf(classElement, "Failed to write class file %s: %s", classElement, e);
+    }
+  }
+
+  private void generateMethod(SourceWriter sw, TypeElement classElement, ExecutableElement method)
+      throws IOException {
+    sw.indented(
+        () -> {
+          sw.writeLine(
+              "new net.starlark.java.eval.MethodDescriptorGenerated(\""
+                  + method.getSimpleName()
+                  + "\") {");
+          sw.indented(
+              () -> {
+                sw.writeLine("@Override");
+                sw.writeLine(
+                    "public Object invoke(Object receiver, Object[] args) throws Exception {");
+                sw.indented(
+                    () -> {
+                      sw.writeLineF(
+                          "%s receiverTyped = (%s) receiver;",
+                          classElement.getQualifiedName(), classElement.getQualifiedName());
+                      ArrayList<String> callArgs = new ArrayList<>();
+                      int i = 0;
+                      for (VariableElement p : method.getParameters()) {
+                        sw.writeLineF(
+                            "%s a%s = (%s) args[%s];",
+                            types.erasure(p.asType()), i, types.erasure(p.asType()), i);
+                        callArgs.add(String.format("a%s", i));
+                        ++i;
+                      }
+                      String callArgsFormatted = String.join(", ", callArgs);
+                      if (method.getReturnType().getKind() == TypeKind.VOID) {
+                        sw.writeLineF("receiverTyped.%s(%s);", method.getSimpleName(), callArgsFormatted);
+                      } else {
+                        sw.writeLineF("return receiverTyped.%s(%s);", method.getSimpleName(), callArgsFormatted);
+                      }
+                      if (method.getReturnType().getKind() == TypeKind.VOID) {
+                        sw.writeLine("return net.starlark.java.eval.Starlark.NONE;");
+                      }
+                    });
+                sw.writeLine("}");
+              });
+          sw.writeLine("},");
+        });
+  }
+
+  private static String generatedClassLocalName(TypeElement type) {
+    String name = type.getSimpleName().toString();
+    while (type.getEnclosingElement() instanceof TypeElement) {
+      type = (TypeElement) type.getEnclosingElement();
+      name = type.getSimpleName() + "_" + name;
+    }
+    return name + StarlarkGeneratedFiles.GENERATED_CLASS_NAME_SUFFIX;
+  }
+
+  private static class SourceWriter {
+    private final Writer writer;
+    private int indent = 0;
+
+    SourceWriter(Writer writer) {
+      this.writer = writer;
+    }
+
+    void indent() {
+      ++indent;
+    }
+
+    void dedent() {
+      --indent;
+    }
+
+    interface IoRunnable {
+      void run() throws IOException;
+    }
+
+    void indented(IoRunnable runnable) throws IOException {
+      indent();
+      runnable.run();
+      dedent();
+    }
+
+    void writeLine(String line) throws IOException {
+      if (!line.isEmpty()) {
+        for (int i = 0; i != indent; ++i) {
+          writer.write("  ");
+        }
+      }
+      writer.write(line);
+      writer.write("\n");
+    }
+
+    void writeLineF(String line, Object... args) throws IOException {
+      writeLine(String.format(Locale.US, line, args));
+    }
+  }
+
+  private void processElement(
+      TypeMirror stringType,
+      TypeMirror integerType,
+      TypeMirror booleanType,
+      TypeMirror listType,
+      TypeMirror mapType,
+      TypeMirror starlarkValueType,
+      Element classOrInterface,
+      Element element) {
+    // Only methods are annotated with StarlarkMethod.
+    // This is ensured by the @Target(ElementType.METHOD) annotation.
+    ExecutableElement method = (ExecutableElement) element;
+    if (!method.getModifiers().contains(Modifier.PUBLIC)) {
+      errorf(method, "StarlarkMethod-annotated methods must be public.");
+    }
+    if (method.getModifiers().contains(Modifier.STATIC)) {
+      errorf(method, "StarlarkMethod-annotated methods cannot be static.");
+    }
+
+    // Check the annotation itself.
+    StarlarkMethod annot = method.getAnnotation(StarlarkMethod.class);
+    if (annot.name().isEmpty()) {
+      errorf(method, "StarlarkMethod.name must be non-empty.");
+    }
+    Element cls = method.getEnclosingElement();
+    if (!processedClassMethods.put(cls, annot.name())) {
+      errorf(method, "Containing class defines more than one method named '%s'.", annot.name());
+    }
+    if (annot.documented() && annot.doc().isEmpty()) {
+      errorf(method, "The 'doc' string must be non-empty if 'documented' is true.");
+    }
+    if (annot.structField()) {
+      checkStructFieldAnnotation(method, annot);
+    } else if (annot.useStarlarkSemantics()) {
+      errorf(
+          method,
+          "a StarlarkMethod-annotated method with structField=false may not also specify"
+              + " useStarlarkSemantics. (Instead, set useStarlarkThread and call"
+              + " getSemantics().)");
+    }
+    if (annot.selfCall() && !classesWithSelfcall.add(cls)) {
+      errorf(method, "Containing class has more than one selfCall method defined.");
+    }
+
+    boolean hasFlag = false;
+    if (!annot.enableOnlyWithFlag().isEmpty()) {
+      if (!hasPlusMinusPrefix(annot.enableOnlyWithFlag())) {
+        errorf(method, "enableOnlyWithFlag name must have a + or - prefix");
+      }
+      hasFlag = true;
+    }
+    if (!annot.disableWithFlag().isEmpty()) {
+      if (!hasPlusMinusPrefix(annot.disableWithFlag())) {
+        errorf(method, "disableWithFlag name must have a + or - prefix");
+      }
+      if (hasFlag) {
+        errorf(
+            method,
+            "Only one of StarlarkMethod.enableOnlyWithFlag and StarlarkMethod.disableWithFlag"
+                + " may be specified.");
+      }
+      hasFlag = true;
+    }
+
+    if (annot.allowReturnNones() != (method.getAnnotation(Nullable.class) != null)) {
+      errorf(method, "Method must be annotated with @Nullable iff allowReturnNones is set.");
+    }
+
+    checkParameters(method, annot);
+
+    // Verify that result type, if final, might satisfy Starlark.fromJava.
+    // (If the type is non-final we can't prove that all subclasses are invalid.)
+    TypeMirror ret = method.getReturnType();
+    if (ret.getKind() == TypeKind.DECLARED) {
+      DeclaredType obj = (DeclaredType) ret;
+      if (obj.asElement().getModifiers().contains(Modifier.FINAL)
+          && !types.isSameType(ret, stringType)
+          && !types.isSameType(ret, integerType)
+          && !types.isSameType(ret, booleanType)
+          && !types.isAssignable(obj, starlarkValueType)
+          && !types.isAssignable(obj, listType)
+          && !types.isAssignable(obj, mapType)) {
+        errorf(
+            method,
+            "StarlarkMethod-annotated method %s returns %s, which has no legal Starlark values"
+                + " (see Starlark.fromJava)",
+            method.getSimpleName(),
+            ret);
+      }
+    }
   }
 
   // TODO(adonovan): obviate these checks by separating field/method interfaces.
