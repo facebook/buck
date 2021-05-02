@@ -92,7 +92,7 @@ public final class Starlark {
         .put("False", false)
         .put("True", true)
         .put("None", NONE);
-    addMethods(env, new MethodLibrary());
+    addMethods(env, MethodLibrary.INSTANCE);
     return env.build();
   }
 

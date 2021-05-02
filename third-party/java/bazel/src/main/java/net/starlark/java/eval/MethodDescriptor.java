@@ -73,7 +73,7 @@ final class MethodDescriptor {
     this.doc = doc;
     this.documented = documented;
     this.structField = structField;
-    this.parameters = parameters;
+    this.parameters = method.getDeclaringClass() == StringModule.class ? Arrays.copyOfRange(parameters, 1, parameters.length) : parameters;
     this.extraPositionals = extraPositionals;
     this.extraKeywords = extraKeywords;
     this.selfCall = selfCall;

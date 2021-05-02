@@ -31,6 +31,11 @@ import net.starlark.java.annot.StarlarkMethod;
 /** The universal predeclared functions of core Starlark. */
 class MethodLibrary {
 
+  static final MethodLibrary INSTANCE = new MethodLibrary();
+
+  private MethodLibrary() {
+  }
+
   @StarlarkMethod(
       name = "min",
       doc =

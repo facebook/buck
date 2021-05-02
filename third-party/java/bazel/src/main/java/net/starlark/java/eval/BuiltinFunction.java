@@ -120,8 +120,7 @@ public final class BuiltinFunction extends StarlarkCallable {
     long start = StarlarkRuntimeStats.ENABLED ? System.nanoTime() : 0;
 
     Object[] vector = getArgumentVector(thread, desc, linkSig, args, starArgs, starStarArgs);
-    Object result = desc.call(
-        obj instanceof String ? StringModule.INSTANCE : obj, vector, thread);
+    Object result = desc.call(obj, vector, thread);
 
     if (StarlarkRuntimeStats.ENABLED) {
       StarlarkRuntimeStats.recordNativeCall(getName(), System.nanoTime() - start);
@@ -226,11 +225,6 @@ public final class BuiltinFunction extends StarlarkCallable {
     // positional arguments
     int paramIndex = 0;
     int argIndex = 0;
-    if (obj instanceof String) {
-      // String methods get the string as an extra argument
-      // because their true receiver is StringModule.INSTANCE.
-      vector[paramIndex++] = obj;
-    }
     for (; argIndex < numPositionals && paramIndex < parameters.length; paramIndex++) {
       ParamDescriptor param = parameters[paramIndex];
       if (!param.isPositional()) {
