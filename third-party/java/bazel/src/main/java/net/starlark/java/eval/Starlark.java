@@ -41,7 +41,6 @@ import net.starlark.java.syntax.ImportedScopeObjects;
 import net.starlark.java.syntax.ParserInput;
 import net.starlark.java.syntax.Program;
 import net.starlark.java.syntax.Resolver;
-import net.starlark.java.syntax.ResolverModule;
 import net.starlark.java.syntax.StarlarkFile;
 import net.starlark.java.syntax.SyntaxError;
 
@@ -734,17 +733,17 @@ public final class Starlark {
    * defaultValue} if non-null, or throws an EvalException otherwise.
    */
   public static Object getattr(
-      Mutability mu,
-      StarlarkSemantics semantics,
+      StarlarkThread thread,
       Object x,
       String name,
       @Nullable Object defaultValue)
       throws EvalException, InterruptedException {
+    StarlarkSemantics semantics = thread.getSemantics();
     // StarlarkMethod-annotated field or method?
     MethodDescriptor method = CallUtils.getAnnotatedMethods(semantics, x.getClass()).get(name);
     if (method != null) {
       if (method.isStructField()) {
-        return method.callField(x, semantics, mu);
+        return method.callField(x, semantics, thread);
       } else {
         return new BuiltinFunction(x, name, method);
       }
@@ -773,7 +772,7 @@ public final class Starlark {
 
     throw Starlark.errorf(
         "'%s' value has no field or method '%s'%s",
-        Starlark.type(x), name, SpellChecker.didYouMean(name, dir(mu, semantics, x)));
+        Starlark.type(x), name, SpellChecker.didYouMean(name, dir(thread.mutability(), semantics, x)));
   }
 
   /**

@@ -707,8 +707,7 @@ class Bc {
           // `ImmutableStructure` interface.
           Object attrValue =
               Starlark.getattr(
-                  Mutability.IMMUTABLE,
-                  thread.getSemantics(),
+                  thread,
                   object.value,
                   dotExpression.getField().getName(),
                   null);

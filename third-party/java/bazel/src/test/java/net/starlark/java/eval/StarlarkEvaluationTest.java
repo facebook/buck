@@ -31,7 +31,6 @@ import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.syntax.FileOptions;
 import net.starlark.java.syntax.ParserInput;
-import net.starlark.java.syntax.ResolverModule;
 import net.starlark.java.syntax.SyntaxError;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -74,7 +73,7 @@ public final class StarlarkEvaluationTest {
   private static Object getattr(Object x, String name) {
     try {
       return Starlark.getattr(
-          Mutability.IMMUTABLE, StarlarkSemantics.DEFAULT, x, name, Starlark.NONE);
+          new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT), x, name, Starlark.NONE);
     } catch (EvalException | InterruptedException ex) {
       throw new IllegalStateException(ex);
     }
@@ -354,7 +353,7 @@ public final class StarlarkEvaluationTest {
         if (name.equals("interrupted_struct_field")) {
           continue; // skip, because getattr would be interrupted
         }
-        Object v = Starlark.getattr(thread.mutability(), thread.getSemantics(), this, name, null);
+        Object v = Starlark.getattr(thread, this, name, null);
         builder.put(name, v);
       }
       return new SimpleStruct(builder.build());

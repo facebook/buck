@@ -637,8 +637,7 @@ class MethodLibrary {
   public Object getattr(Object obj, String name, Object defaultValue, StarlarkThread thread)
       throws EvalException, InterruptedException {
     return Starlark.getattr(
-        thread.mutability(),
-        thread.getSemantics(),
+        thread,
         obj,
         name,
         defaultValue == Starlark.UNBOUND ? null : defaultValue);

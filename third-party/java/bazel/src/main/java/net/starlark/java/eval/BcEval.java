@@ -634,7 +634,7 @@ class BcEval {
   private void dot() throws EvalException, InterruptedException {
     Object object = getSlot(nextOperand());
     String name = compiled.strings[nextOperand()];
-    Object result = Starlark.getattr(fr.thread.mutability(), fr.thread.getSemantics(), object, name, null);
+    Object result = Starlark.getattr(fr.thread, object, name, null);
     setSlot(nextOperand(), result);
   }
 

@@ -160,13 +160,13 @@ final class MethodDescriptor {
   }
 
   /** Calls this method, which must have {@code structField=true}. */
-  Object callField(Object obj, StarlarkSemantics semantics, @Nullable Mutability mu)
+  Object callField(Object obj, StarlarkSemantics semantics, StarlarkThread thread)
       throws EvalException, InterruptedException {
     if (!structField) {
       throw new IllegalStateException("not a struct field: " + name);
     }
     Object[] args = useStarlarkSemantics ? new Object[] {semantics} : ArraysForStarlark.EMPTY_OBJECT_ARRAY;
-    return call(obj, args, mu);
+    return call(obj, args, thread);
   }
 
   /**
@@ -176,7 +176,7 @@ final class MethodDescriptor {
    *
    * <p>The Mutability is used if it is necessary to allocate a Starlark copy of a Java result.
    */
-  Object call(Object obj, Object[] args, @Nullable Mutability mu)
+  Object call(Object obj, Object[] args, StarlarkThread thread)
       throws EvalException, InterruptedException {
     Preconditions.checkNotNull(obj);
     Object result;
@@ -206,7 +206,7 @@ final class MethodDescriptor {
         if (result == null && !allowReturnNones) {
           throw methodInvocationReturnedNull(args);
         }
-        return Starlark.fromJava(result, mu);
+        return Starlark.fromJava(result, thread.mutability());
     }
     throw new IllegalStateException("unreachable: " + howToHandleReturn);
   }

@@ -121,7 +121,7 @@ public final class BuiltinFunction extends StarlarkCallable {
 
     Object[] vector = getArgumentVector(thread, desc, linkSig, args, starArgs, starStarArgs);
     Object result = desc.call(
-        obj instanceof String ? StringModule.INSTANCE : obj, vector, thread.mutability());
+        obj instanceof String ? StringModule.INSTANCE : obj, vector, thread);
 
     if (StarlarkRuntimeStats.ENABLED) {
       StarlarkRuntimeStats.recordNativeCall(getName(), System.nanoTime() - start);
