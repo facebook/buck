@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -99,11 +100,11 @@ public interface Parser {
 
   @Nullable
   SortedMap<ParamNameOrSpecial, Object> getTargetNodeRawAttributes(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
+      PerBuildState state, Cells cells, TargetNode<?> targetNode, DependencyStack dependencyStack)
       throws BuildFileParseException;
 
   ListenableFuture<SortedMap<ParamNameOrSpecial, Object>> getTargetNodeRawAttributesJob(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
+      PerBuildState state, Cells cells, TargetNode<?> targetNode, DependencyStack dependencyStack)
       throws BuildFileParseException;
 
   TargetGraphCreationResult buildTargetGraph(

@@ -425,10 +425,7 @@ public class ConfiguredQueryCommand
         params
             .getParser()
             .getTargetNodeRawAttributes(
-                perBuildState,
-                params.getCells().getRootCell(),
-                node,
-                DependencyStack.top(node.getBuildTarget()));
+                perBuildState, params.getCells(), node, DependencyStack.top(node.getBuildTarget()));
     if (rawAttributes == null) {
       params
           .getConsole()

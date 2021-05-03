@@ -494,7 +494,7 @@ public class QueryCommand
         params
             .getParser()
             .getTargetNodeRawAttributes(
-                perBuildState, params.getCells().getRootCell(), node.getAnyNode(), dependencyStack);
+                perBuildState, params.getCells(), node.getAnyNode(), dependencyStack);
     if (rawAttributes == null) {
       params
           .getConsole()

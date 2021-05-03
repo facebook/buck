@@ -959,16 +959,16 @@ public class BuildCommandTest {
     @Nullable
     @Override
     public SortedMap<ParamNameOrSpecial, Object> getTargetNodeRawAttributes(
-        PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
+        PerBuildState state, Cells cells, TargetNode<?> targetNode, DependencyStack dependencyStack)
         throws BuildFileParseException {
-      return parser.getTargetNodeRawAttributes(state, cell, targetNode, dependencyStack);
+      return parser.getTargetNodeRawAttributes(state, cells, targetNode, dependencyStack);
     }
 
     @Override
     public ListenableFuture<SortedMap<ParamNameOrSpecial, Object>> getTargetNodeRawAttributesJob(
-        PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
+        PerBuildState state, Cells cells, TargetNode<?> targetNode, DependencyStack dependencyStack)
         throws BuildFileParseException {
-      return parser.getTargetNodeRawAttributesJob(state, cell, targetNode, dependencyStack);
+      return parser.getTargetNodeRawAttributesJob(state, cells, targetNode, dependencyStack);
     }
 
     @Override

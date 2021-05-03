@@ -1891,7 +1891,7 @@ public class ParserWithConfigurableAttributesTest {
         parser.getPerBuildStateFactory().create(parsingContext, parser.getPermState());
     SortedMap<ParamNameOrSpecial, Object> targetNodeAttributes =
         parser.getTargetNodeRawAttributes(
-            state, parsingContext.getCells().getRootCell(), targetNode, DependencyStack.root());
+            state, parsingContext.getCells(), targetNode, DependencyStack.root());
     assertThat(
         targetNodeAttributes.get(ParamName.bySnakeCase("name")),
         equalTo(targetNode.getBuildTarget().getShortName()));
@@ -2536,7 +2536,7 @@ public class ParserWithConfigurableAttributesTest {
             Preconditions.checkNotNull(
                 parser.getTargetNodeRawAttributes(
                     state,
-                    cells.getRootCell(),
+                    cells,
                     parser.getTargetNodeAssertCompatible(
                         parsingContext, buildTarget, DependencyStack.root()),
                     DependencyStack.root())));

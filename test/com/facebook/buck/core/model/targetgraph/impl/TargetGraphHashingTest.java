@@ -125,8 +125,7 @@ public class TargetGraphHashingTest {
                 parser.getPermState());
     targetNodeRawAttributesProvider =
         node ->
-            parser.getTargetNodeRawAttributesJob(
-                parserState, cells.getRootCell(), node, DependencyStack.root());
+            parser.getTargetNodeRawAttributesJob(parserState, cells, node, DependencyStack.root());
   }
 
   @Test

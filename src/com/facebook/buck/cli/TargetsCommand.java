@@ -1067,7 +1067,7 @@ public class TargetsCommand extends AbstractCommand {
                 .getParser()
                 .getTargetNodeRawAttributes(
                     state,
-                    params.getCells().getRootCell(),
+                    params.getCells(),
                     targetNode,
                     DependencyStack.top(targetNode.getBuildTarget()));
         if (targetNodeAttributes == null) {
@@ -1514,7 +1514,7 @@ public class TargetsCommand extends AbstractCommand {
                           .getParser()
                           .getTargetNodeRawAttributesJob(
                               state,
-                              params.getCells().getRootCell(),
+                              params.getCells(),
                               node,
                               DependencyStack.top(node.getBuildTarget())),
                   getHashFunction())

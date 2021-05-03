@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -134,30 +135,30 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   @Override
   @Nullable
   public SortedMap<ParamNameOrSpecial, Object> getTargetNodeRawAttributes(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
+      PerBuildState state, Cells cells, TargetNode<?> targetNode, DependencyStack dependencyStack)
       throws BuildFileParseException {
     BuildTarget buildTarget = targetNode.getBuildTarget();
-    Cell owningCell = cell.getCell(buildTarget.getCell());
+    Cell cell = cells.getCell(buildTarget.getCell());
     BuildFileManifest buildFileManifest =
         getTargetNodeRawAttributes(
             state,
-            owningCell,
+            cell,
             cell.getBuckConfigView(ParserConfig.class)
                 .getAbsolutePathToBuildFile(
                     cell,
                     buildTarget.getUnconfiguredBuildTarget(),
                     dependencyStack.child(buildTarget)));
-    return getTargetFromManifest(state, owningCell, targetNode, dependencyStack, buildFileManifest);
+    return getTargetFromManifest(state, cell, targetNode, dependencyStack, buildFileManifest);
   }
 
   @Override
   public ListenableFuture<SortedMap<ParamNameOrSpecial, Object>> getTargetNodeRawAttributesJob(
-      PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
+      PerBuildState state, Cells cells, TargetNode<?> targetNode, DependencyStack dependencyStack)
       throws BuildFileParseException {
-    Cell owningCell = cell.getCell(targetNode.getBuildTarget().getCell());
+    Cell cell = cells.getCell(targetNode.getBuildTarget().getCell());
     ListenableFuture<BuildFileManifest> buildFileManifestFuture =
         state.getBuildFileManifestJob(
-            owningCell,
+            cell,
             cell.getBuckConfigView(ParserConfig.class)
                 .getAbsolutePathToBuildFile(
                     cell,
@@ -166,8 +167,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     return Futures.transform(
         buildFileManifestFuture,
         buildFileManifest ->
-            getTargetFromManifest(
-                state, owningCell, targetNode, dependencyStack, buildFileManifest),
+            getTargetFromManifest(state, cell, targetNode, dependencyStack, buildFileManifest),
         MoreExecutors.directExecutor());
   }
 

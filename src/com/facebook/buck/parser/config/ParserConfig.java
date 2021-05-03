@@ -35,6 +35,7 @@ import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.UserDefinedRulesState;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -392,11 +393,16 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    * @return path which may or may not exist.
    */
   public AbsPath getAbsolutePathToBuildFileUnsafe(Cell cell, UnconfiguredBuildTarget target) {
-    Cell targetCell = cell.getCell(target.getCell());
-    ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
+    Preconditions.checkArgument(
+        cell.getCanonicalName() == target.getCell(),
+        "wrong cell '%s' for target %s",
+        cell.getCanonicalName(),
+        target);
+
+    ProjectFilesystem targetFilesystem = cell.getFilesystem();
     return targetFilesystem
         .resolve(target.getCellRelativeBasePath().getPath())
-        .resolve(targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName());
+        .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
   }
 
   /**
@@ -408,8 +414,7 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
       Cell cell, UnconfiguredBuildTarget target, DependencyStack dependencyStack)
       throws MissingBuildFileException {
     AbsPath buildFile = getAbsolutePathToBuildFileUnsafe(cell, target);
-    Cell targetCell = cell.getCell(target.getCell());
-    if (!targetCell.getFilesystem().isFile(buildFile)) {
+    if (!cell.getFilesystem().isFile(buildFile)) {
       throw new MissingBuildFileException(
           dependencyStack,
           target.getFullyQualifiedName(),
@@ -418,11 +423,7 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
               .getPath()
               .toPath(cell.getFilesystem().getFileSystem())
               .resolve(
-                  targetCell
-                      .getBuckConfig()
-                      .getView(ParserConfig.class)
-                      .getBuildFileName()
-                      .getName()));
+                  cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName().getName()));
     }
     return buildFile;
   }
