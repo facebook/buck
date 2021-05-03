@@ -116,7 +116,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="asm" level="project" />
     <orderEntry type="library" name="buck-lib" level="project" />
-    <orderEntry type="library" name="concurrent-locks" level="project" />
     <orderEntry type="library" name="dd-plist" level="project" />
     <orderEntry type="library" name="gson" level="project" />
     <orderEntry type="library" name="guava" level="project" />
@@ -174,7 +173,6 @@
     <orderEntry type="library" name="jsr305" level="project" />
     <orderEntry type="library" name="junixsocket" level="project" />
     <orderEntry type="module" module-name="bazel" />
-    <orderEntry type="library" name="Bundled Protobuf Distribution" level="application" />
     <orderEntry type="module" module-name="buck" />
     <orderEntry type="library" name="compile-testing" level="project" />
     <orderEntry type="library" name="starlark-annot-processor" level="project" />
