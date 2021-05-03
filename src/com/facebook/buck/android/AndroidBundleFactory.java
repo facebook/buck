@@ -143,7 +143,6 @@ public class AndroidBundleFactory {
         filesInfo.getNativeFilesInfo(),
         filesInfo.getResourceFilesInfo(),
         ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
-        filesInfo.getExopackageInfo(),
         args.getBundleConfigFile(),
         downwardApiConfig.isEnabledForAndroid());
   }

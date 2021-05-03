@@ -68,7 +68,6 @@ public class AndroidBundleBuilder
             DEFAULT_JAVACD_CONFIG,
             new ProGuardConfig(buckConfig),
             new AndroidBuckConfig(buckConfig, Platform.detect()),
-            buckConfig,
             CxxPlatformUtils.DEFAULT_CONFIG,
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             CxxPlatformUtils.DEFAULT_EXTERNAL_ACTIONS_CONFIG,

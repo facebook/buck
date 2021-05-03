@@ -21,7 +21,6 @@ import static com.facebook.buck.android.BinaryType.AAB;
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
@@ -36,7 +35,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasDeclaredAndExtraDeps;
-import com.facebook.buck.core.rules.attr.HasInstallHelpers;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.common.BuildableSupport;
@@ -81,9 +79,7 @@ public class AndroidBundle extends AbstractBuildRule
     implements SupportsInputBasedRuleKey,
         HasDeclaredAndExtraDeps,
         HasClasspathEntries,
-        HasRuntimeDeps,
-        HasInstallableApk,
-        HasInstallHelpers {
+        HasRuntimeDeps {
   private final Keystore keystore;
 
   private final int optimizationPasses;
@@ -102,8 +98,6 @@ public class AndroidBundle extends AbstractBuildRule
   private final boolean isCacheable;
 
   private final Optional<BuildRule> moduleVerification;
-  private final Optional<ExopackageInfo> exopackageInfo;
-  private final SourcePath manifestPath;
 
   private final BuildRuleParams buildRuleParams;
 
@@ -142,7 +136,6 @@ public class AndroidBundle extends AbstractBuildRule
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
-      Optional<ExopackageInfo> exopackageInfo,
       Optional<SourcePath> bundleConfigFilePath,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
@@ -161,7 +154,6 @@ public class AndroidBundle extends AbstractBuildRule
     this.manifestEntries = manifestEntries;
     this.isCacheable = isCacheable;
     this.moduleVerification = moduleVerification;
-    this.manifestPath = enhancementResult.getAndroidManifestPath();
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(
@@ -221,8 +213,6 @@ public class AndroidBundle extends AbstractBuildRule
             resourceCompressionMode.isCompressResources(),
             zipalignTool,
             withDownwardApi);
-
-    this.exopackageInfo = exopackageInfo;
 
     params =
         params.withExtraDeps(
@@ -284,17 +274,6 @@ public class AndroidBundle extends AbstractBuildRule
     return javaRuntimeLauncher;
   }
 
-  /** The APK at this path is the final one that points to an APK that a user should install. */
-  @Override
-  public ApkInfo getApkInfo() {
-    return ImmutableApkInfo.ofImpl(manifestPath, getSourcePathToOutput(), exopackageInfo);
-  }
-
-  @Override
-  public Stream<BuildTarget> getInstallHelpers() {
-    return Stream.of(getBuildTarget().withFlavors(AndroidApkInstallGraphEnhancer.INSTALL_FLAVOR));
-  }
-
   @Override
   public boolean isCacheable() {
     return isCacheable;
@@ -352,9 +331,7 @@ public class AndroidBundle extends AbstractBuildRule
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return RichStream.from(moduleVerification)
-        .map(BuildRule::getBuildTarget)
-        .concat(HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, buildRuleResolver));
+    return RichStream.from(moduleVerification).map(BuildRule::getBuildTarget);
   }
 
   @Override

@@ -102,7 +102,6 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             javaCDBuckConfig,
             proGuardConfig,
             androidBuckConfig,
-            buckConfig,
             cxxBuckConfig,
             downwardApiConfig,
             buildBuckConfig,

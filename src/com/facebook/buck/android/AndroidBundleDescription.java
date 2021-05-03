@@ -20,12 +20,10 @@ import static com.facebook.buck.android.AndroidBinaryResourcesGraphEnhancer.PACK
 
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
-import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -91,7 +89,6 @@ public class AndroidBundleDescription
   private final Function<TargetConfiguration, JavaOptions> javaOptions;
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
-  private final AdbConfig adbConfig;
   private final ToolchainProvider toolchainProvider;
   private final AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory;
   private final AndroidBundleFactory androidBundleFactory;
@@ -101,7 +98,6 @@ public class AndroidBundleDescription
       JavaCDBuckConfig javaCDBuckConfig,
       ProGuardConfig proGuardConfig,
       AndroidBuckConfig androidBuckConfig,
-      BuckConfig buckConfig,
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
       BuildBuckConfig buildBuckConfig,
@@ -117,7 +113,6 @@ public class AndroidBundleDescription
     this.androidBuckConfig = androidBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.adbConfig = buckConfig.getView(AdbConfig.class);
     this.toolchainProvider = toolchainProvider;
     this.androidBinaryGraphEnhancerFactory = androidBinaryGraphEnhancerFactory;
     this.androidBundleFactory = androidBundleFactory;
@@ -215,10 +210,6 @@ public class AndroidBundleDescription
             resourceFilter,
             args,
             javaOptions.apply(buildTarget.getTargetConfiguration()));
-    // The exo installer is always added to the index so that the action graph is the same
-    // between build and install calls.
-    new AndroidApkInstallGraphEnhancer(adbConfig, projectFilesystem, buildTarget, androidBundle)
-        .enhance(graphBuilder);
     return androidBundle;
   }
 
