@@ -245,4 +245,13 @@ public class ModuleInfoBinaryIndex {
     }
     return list;
   }
+
+  /** Convert a folder URL into a relative URL. If the relative URL is empty, use "." instead */
+  public static String extractRelativeFolderUrl(String contentUrl, String folderUrl) {
+    Preconditions.checkArgument(
+        folderUrl.startsWith(contentUrl),
+        folderUrl + " doesn't start with the content root url: " + contentUrl);
+    String relativeUrl = folderUrl.substring(contentUrl.length());
+    return relativeUrl.isEmpty() ? "." : relativeUrl;
+  }
 }

@@ -25,7 +25,6 @@ import com.facebook.buck.features.project.intellij.moduleinfo.ContentRootInfo;
 import com.facebook.buck.features.project.intellij.moduleinfo.ModuleInfo;
 import com.facebook.buck.features.project.intellij.moduleinfo.ModuleInfoBinaryIndex;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -122,14 +121,9 @@ public final class ModuleInfoManager {
       String url, IjSourceFolder folder) {
     if (InclusiveFolder.FOLDER_IJ_NAME.equals(folder.getType())
         || ExcludeFolder.FOLDER_IJ_NAME.equals(folder.getType())) {
-      Preconditions.checkState(
-          folder.getUrl().startsWith(url),
-          folder.getUrl() + " doesn't start with the content root url: " + url);
-      String relativeUrl = folder.getUrl().substring(url.length());
-      if (relativeUrl.isEmpty()) {
-        relativeUrl = ".";
-      }
-      return new Pair<>(relativeUrl, InclusiveFolder.FOLDER_IJ_NAME.endsWith(folder.getType()));
+      return new Pair<>(
+          ModuleInfoBinaryIndex.extractRelativeFolderUrl(folder.getUrl(), url),
+          InclusiveFolder.FOLDER_IJ_NAME.equals(folder.getType()));
     }
     return null;
   }

@@ -118,12 +118,7 @@ public class UpdateBinaryIndexFromIMLListTool {
 
   private static String normalizeContentPath(@Nonnull String contentUrl, @Nonnull Node childNode) {
     final String childUrl = extractAttributeNamed(childNode, "url");
-    if (!childUrl.startsWith(contentUrl)) {
-      throw new RuntimeException(
-          "Found content URL " + childUrl + " without content prefix " + contentUrl);
-    }
-    final String relativePath = childUrl.substring(contentUrl.length());
-    return (relativePath.isEmpty() ? "." : relativePath);
+    return ModuleInfoBinaryIndex.extractRelativeFolderUrl(contentUrl, childUrl);
   }
 
   private static ImmutableList<String> dependenciesFromDocument(@Nonnull Document document) {
