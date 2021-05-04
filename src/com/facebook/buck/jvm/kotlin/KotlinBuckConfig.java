@@ -40,6 +40,8 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
   private static final String SECTION = "kotlin";
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
   public static final String PROPERTY_ABI_GENERATION_MODE = "abi_generation_mode";
+  public static final String PROPERTY_GENERATE_ANNOTATION_PROCESSING_STATS =
+      "generate_annotation_processing_stats";
 
   private static final Path DEFAULT_KOTLIN_COMPILER = Paths.get("kotlinc");
 
@@ -85,6 +87,10 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
     return delegate
         .getEnum(SECTION, PROPERTY_ABI_GENERATION_MODE, AbiGenerationMode.class)
         .orElse(AbiGenerationMode.CLASS);
+  }
+
+  public boolean shouldGenerateAnnotationProcessingStats() {
+    return delegate.getBooleanValue(SECTION, PROPERTY_GENERATE_ANNOTATION_PROCESSING_STATS, false);
   }
 
   Path getPathToCompilerBinary() {

@@ -100,6 +100,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
   private static final String CORRECT_ERROR_TYPES = KAPT3_PLUGIN + "correctErrorTypes=";
   private static final String JAVAC_ARG = KAPT3_PLUGIN + "javacArguments=";
   private static final String AP_OPTIONS = KAPT3_PLUGIN + "apoptions=";
+  private static final String AP_STATS_REPORT_ARG = KAPT3_PLUGIN + "dumpProcessorTimings=";
   private static final String KAPT_GENERATED = "kapt.kotlin.generated";
   private static final String MODULE_NAME = "-module-name";
   private static final String NO_STDLIB = "-no-stdlib";
@@ -108,6 +109,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
 
   private static final PathMatcher KOTLIN_PATH_MATCHER = FileExtensionMatcher.of("kt");
   private static final PathMatcher SRC_ZIP_MATCHER = GlobPatternMatcher.of("**.src.zip");
+  public static final String AP_STATS_REPORT_FILE = "ap_stats.report";
 
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final Kotlinc kotlinc;
@@ -124,6 +126,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> kotlinHomeLibraries;
+  @AddToRuleKey private final boolean shouldGenerateAnnotationProcessingStats;
 
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
@@ -137,7 +140,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       Optional<String> jvmTarget,
       ExtraClasspathProvider extraClasspathProvider,
       JavacOptions javacOptions,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean shouldGenerateAnnotationProcessingStats) {
     super(CompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
     this.javacOptions = javacOptions;
     this.kotlinc = kotlinc;
@@ -150,6 +154,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     this.annotationProcessingTool = annotationProcessingTool;
     this.jvmTarget = jvmTarget;
     this.extraClasspathProvider = extraClasspathProvider;
+    this.shouldGenerateAnnotationProcessingStats = shouldGenerateAnnotationProcessingStats;
   }
 
   @Override
@@ -198,6 +203,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       RelPath stubsOutput = getAnnotationPath(buckPaths, invokingRule, "__%s_stubs__");
       RelPath sourcesOutput = getAnnotationPath(buckPaths, invokingRule, "__%s_sources__");
       RelPath classesOutput = getAnnotationPath(buckPaths, invokingRule, "__%s_classes__");
+      RelPath reportsOutput = getAnnotationPath(buckPaths, invokingRule, "__%s_reports__");
       RelPath kaptGeneratedOutput =
           getAnnotationPath(buckPaths, invokingRule, "__%s_kapt_generated__");
       RelPath kotlincPluginGeneratedOutput =
@@ -215,6 +221,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(sourcesOutput));
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(annotationGenFolder));
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(genOutputFolder));
+      steps.addAll(MakeCleanDirectoryIsolatedStep.of(reportsOutput));
 
       ImmutableSortedSet<Path> allClasspaths =
           ImmutableSortedSet.<Path>naturalOrder()
@@ -273,8 +280,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
             sourcePathResolver.getAbsolutePath(annotationProcessingClassPath).getPath();
         Path standardLibraryPath =
             sourcePathResolver.getAbsolutePath(standardLibraryClasspath).getPath();
+        Path annotationProcessorsStatsFilePath =
+            reportsOutput.getPath().resolve(AP_STATS_REPORT_FILE);
 
-        ImmutableList<String> kaptPluginOptions =
+        Builder<String> kaptPluginOptionsBuilder =
             ImmutableList.<String>builder()
                 .add(AP_CLASSPATH_ARG + annotationProcessorPath)
                 .add(AP_CLASSPATH_ARG + standardLibraryPath)
@@ -289,13 +298,20 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
                             apOptions.build(), rootPath.resolve(kaptGeneratedOutput).toString()))
                 .add(JAVAC_ARG + encodeOptions(Collections.emptyMap()))
                 .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument
-                .add(CORRECT_ERROR_TYPES + "true")
-                .build();
+                .add(CORRECT_ERROR_TYPES + "true");
+
+        if (shouldGenerateAnnotationProcessingStats) {
+          kaptPluginOptionsBuilder.add(AP_STATS_REPORT_ARG + annotationProcessorsStatsFilePath);
+        }
 
         annotationProcessingOptionsBuilder
             .add(X_PLUGIN_ARG + annotationProcessorPath)
             .add(PLUGIN)
-            .add(KAPT3_PLUGIN + APT_MODE + "compile," + Joiner.on(",").join(kaptPluginOptions));
+            .add(
+                KAPT3_PLUGIN
+                    + APT_MODE
+                    + "compile,"
+                    + Joiner.on(",").join(kaptPluginOptionsBuilder.build()));
 
         postKotlinCompilationSteps.add(
             CopyIsolatedStep.forDirectory(
@@ -306,6 +322,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
         postKotlinCompilationSteps.add(
             CopyIsolatedStep.forDirectory(
                 kaptGeneratedOutput, annotationGenFolder, CopySourceMode.DIRECTORY_CONTENTS_ONLY));
+
+        if (shouldGenerateAnnotationProcessingStats) {
+          postKotlinCompilationSteps.add(
+              new KaptStatsReportParseStep(
+                  annotationProcessorsStatsFilePath, invokingRule, buildContext.getEventBus()));
+        }
 
         postKotlinCompilationSteps.add(
             ZipIsolatedStep.of(

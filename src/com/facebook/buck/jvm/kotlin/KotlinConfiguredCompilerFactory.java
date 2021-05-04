@@ -95,7 +95,8 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         kotlinArgs.getTarget().map(this::getKotlincCompatibleTarget),
         extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
         javacOptions,
-        downwardApiConfig.isEnabledForKotlin());
+        downwardApiConfig.isEnabledForKotlin(),
+        kotlinBuckConfig.shouldGenerateAnnotationProcessingStats());
   }
 
   @Override
