@@ -1594,7 +1594,7 @@ public class XcodeNativeTargetGenerator {
                 generateMergedDependenciesForTargetNode(targetNode, dependencies)
                     .ifPresent(resultsBuilder::add);
               } catch (Exception e) {
-                LOG.debug(
+                LOG.warn(
                     "Exception generating merged target dependencies for target '%s': '%s'",
                     targetNode.getBuildTarget().getShortName(), e.getLocalizedMessage());
               }
@@ -1696,25 +1696,33 @@ public class XcodeNativeTargetGenerator {
     recursiveBuildDependencies.stream()
         .forEach(
             depTargetNode -> {
-              ConstructorArg constructorArg = depTargetNode.getConstructorArg();
-              if (constructorArg instanceof CommonArg) {
-                addDepFilesToNativeTarget(
-                    depTargetNode.cast(CommonArg.class),
-                    headersBuilder,
-                    exportedHeadersBuilder,
-                    platformHeadersIterableBuilder,
-                    sourcesWithFlagsBuilder,
-                    extraXcodeSourcesBuilder,
-                    extraXcodeFilesBuilder,
-                    platformSourcesMap);
-              } else if (constructorArg instanceof GenruleDescriptionArg) {
-                GenruleDescriptionArg genruleDescriptionArg =
-                    (GenruleDescriptionArg) constructorArg;
-                xcodeNativeTargetAttributesBuilder.addAllGenruleFiles(
-                    genruleDescriptionArg.getSrcs().getPaths());
+              try {
+                ConstructorArg constructorArg = depTargetNode.getConstructorArg();
+                if (constructorArg instanceof CommonArg) {
+                  addDepFilesToNativeTarget(
+                      depTargetNode.cast(CommonArg.class),
+                      headersBuilder,
+                      exportedHeadersBuilder,
+                      platformHeadersIterableBuilder,
+                      sourcesWithFlagsBuilder,
+                      extraXcodeSourcesBuilder,
+                      extraXcodeFilesBuilder,
+                      platformSourcesMap);
+                } else if (constructorArg instanceof GenruleDescriptionArg) {
+                  GenruleDescriptionArg genruleDescriptionArg =
+                      (GenruleDescriptionArg) constructorArg;
+                  xcodeNativeTargetAttributesBuilder.addAllGenruleFiles(
+                      genruleDescriptionArg.getSrcs().getPaths());
+                }
+                xcodeNativeTargetAttributesBuilder.addBuckFilePaths(
+                    getBuckBuildFilePath(depTargetNode.getBuildTarget()));
+              } catch (Exception e) {
+                LOG.warn(
+                    "Failed to add dependency '%s' to merged dependencies for '%s' ... %s",
+                    depTargetNode.getBuildTarget().getShortName(),
+                    dummyTargetShortName,
+                    e.getLocalizedMessage());
               }
-              xcodeNativeTargetAttributesBuilder.addBuckFilePaths(
-                  getBuckBuildFilePath(depTargetNode.getBuildTarget()));
             });
 
     platformSourcesMap.keySet().stream()
