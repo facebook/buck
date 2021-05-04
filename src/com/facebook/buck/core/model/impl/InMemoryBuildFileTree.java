@@ -121,9 +121,9 @@ public class InMemoryBuildFileTree implements BuildFileTree {
       if (candidate != null) {
         return candidate;
       }
-      current = current.getParent();
+      current = current.getParentButEmptyForSingleSegment();
     }
-    return basePathToNodeIndex.get(ForwardRelPath.of(""));
+    return null;
   }
 
   /** Represents a build file in the project directory. */

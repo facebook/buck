@@ -17,6 +17,7 @@
 package com.facebook.buck.core.model;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
@@ -58,5 +59,20 @@ public class CellRelativePathTest {
         assertEquals(p1.startsWith(p2), p1.toString().startsWith(p2.toString()));
       }
     }
+  }
+
+  @Test
+  public void getParentButEmptyForSingleSegment() {
+    assertNull(
+        CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of(""))
+            .getParentButEmptyForSingleSegment());
+    assertEquals(
+        CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("")),
+        CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("foo"))
+            .getParentButEmptyForSingleSegment());
+    assertEquals(
+        CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("foo")),
+        CellRelativePath.of(CanonicalCellName.rootCell(), ForwardRelPath.of("foo/bar"))
+            .getParentButEmptyForSingleSegment());
   }
 }

@@ -221,6 +221,17 @@ public class ForwardRelPathTest {
   }
 
   @Test
+  public void endsWithFileName() {
+    assertTrue(ForwardRelPath.of("a").endsWith(FileName.of("a")));
+    assertTrue(ForwardRelPath.of("b/a").endsWith(FileName.of("a")));
+    assertTrue(ForwardRelPath.of("c/b/a").endsWith(FileName.of("a")));
+
+    assertFalse(ForwardRelPath.of("").endsWith(FileName.of("a")));
+    assertFalse(ForwardRelPath.of("b").endsWith(FileName.of("a")));
+    assertFalse(ForwardRelPath.of("a/b").endsWith(FileName.of("a")));
+  }
+
+  @Test
   public void resolve() {
     String[] paths = new String[] {"", "foo", "bar/baz"};
     for (String p1 : paths) {
@@ -277,6 +288,16 @@ public class ForwardRelPathTest {
     assertEquals(Paths.get("foo"), Paths.get("foo/bar").getParent());
     assertEquals(ForwardRelPath.of("foo/bar"), ForwardRelPath.of("foo/bar/baz").getParent());
     assertEquals(Paths.get("foo/bar"), Paths.get("foo/bar/baz").getParent());
+  }
+
+  @Test
+  public void getParentButEmptyForSingleSegment() {
+    assertNull(ForwardRelPath.of("").getParentButEmptyForSingleSegment());
+    assertEquals(ForwardRelPath.of(""), ForwardRelPath.of("a").getParentButEmptyForSingleSegment());
+    assertEquals(
+        ForwardRelPath.of("a"), ForwardRelPath.of("a/b").getParentButEmptyForSingleSegment());
+    assertEquals(
+        ForwardRelPath.of("a/b"), ForwardRelPath.of("a/b/c").getParentButEmptyForSingleSegment());
   }
 
   @Test

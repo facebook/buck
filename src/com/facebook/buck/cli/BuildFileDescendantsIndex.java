@@ -16,13 +16,10 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -50,35 +47,24 @@ class BuildFileDescendantsIndex {
   public static BuildFileDescendantsIndex createFromLeafPaths(Collection<CellRelativePath> paths) {
     ImmutableSetMultimap.Builder<CellRelativePath, CellRelativePath> result =
         ImmutableSetMultimap.builder();
-    HashMap<CanonicalCellName, HashSet<ForwardRelPath>> seen = new HashMap<>();
+    HashSet<CellRelativePath> seen = new HashSet<>();
     for (CellRelativePath path : paths) {
-      CanonicalCellName cellName = path.getCellName();
-      HashSet<ForwardRelPath> seenForCell =
-          seen.computeIfAbsent(cellName, _cellName -> new HashSet<>());
       CellRelativePath current = path;
       // We break out of this loop below when `getParent()` returns `null`.
       while (true) {
-        ForwardRelPath pathInCell = current.getPath();
         // Minor optimization, to avoid the case where `//some/deep/path/a` and `//some/deep/path/b`
         // spend most of their time calculating the same things.
-        if (seenForCell.contains(pathInCell)) {
+        if (!seen.add(current)) {
           break;
         }
 
-        seenForCell.add(pathInCell);
-
-        ForwardRelPath parent = pathInCell.getParent();
+        CellRelativePath parent = current.getParentButEmptyForSingleSegment();
         if (parent == null) {
-          // Base case - `current` is a top level directory (eg `//foo`). We need to make a final
-          // link between the root directory and current then break out of the while loop. Since
-          // parent is `null` we need to use ForwardRelativePath.EMPTY instead.
-          result.put(CellRelativePath.of(cellName, ForwardRelPath.EMPTY), current);
           break;
         }
-        CellRelativePath parentCellRelativePath = CellRelativePath.of(cellName, parent);
-        result.put(parentCellRelativePath, current);
+        result.put(parent, current);
 
-        current = parentCellRelativePath;
+        current = parent;
       }
     }
     return new BuildFileDescendantsIndex(result.build());

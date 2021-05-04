@@ -68,14 +68,10 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
                     return Optional.of(folderPath);
                   }
 
-                  if (folderPath.equals(ForwardRelPath.EMPTY)) {
-                    return Optional.empty();
-                  }
-
                   // traverse up
-                  ForwardRelPath parent = folderPath.getParent();
+                  ForwardRelPath parent = folderPath.getParentButEmptyForSingleSegment();
                   if (parent == null) {
-                    parent = ForwardRelPath.EMPTY;
+                    return Optional.empty();
                   }
 
                   return basePathOfAncestorCache.get(parent);
@@ -100,8 +96,9 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
     // To avoid this call we might want to come up with 2 different functions (or cache
     // `projectFilesystem.isFile`) on BuildFileTree interface.
     if (projectFilesystem.isFile(filePath)) {
-      filePath = filePath.getParent();
+      filePath = filePath.getParentButEmptyForSingleSegment();
       if (filePath == null) {
+        // This should not be possible: cell root cannot be a file.
         filePath = ForwardRelPath.EMPTY;
       }
     }

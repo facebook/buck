@@ -84,14 +84,10 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
                         return Optional.of(folderPath);
                       }
 
-                      if (folderPath.equals(ForwardRelPath.EMPTY)) {
-                        return Optional.empty();
-                      }
-
                       // traverse up
-                      ForwardRelPath parent = folderPath.getParent();
+                      ForwardRelPath parent = folderPath.getParentButEmptyForSingleSegment();
                       if (parent == null) {
-                        parent = ForwardRelPath.EMPTY;
+                        return Optional.empty();
                       }
 
                       return basePathOfAncestorCache.get(

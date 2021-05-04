@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ComparisonChain;
+import javax.annotation.Nullable;
 
 /**
  * A pair of {@link CanonicalCellName} and {@link ForwardRelPath} relative the the cell.
@@ -32,6 +33,21 @@ public abstract class CellRelativePath implements Comparable<CellRelativePath> {
   public abstract CanonicalCellName getCellName();
 
   public abstract ForwardRelPath getPath();
+
+  /**
+   * Parent path.
+   *
+   * <ul>
+   *   <li>foo//bar for foo//bar/baz
+   *   <li>foo// for foo//bar
+   *   <li>null for foo//
+   * </ul>
+   */
+  @Nullable
+  public CellRelativePath getParentButEmptyForSingleSegment() {
+    ForwardRelPath pathParent = getPath().getParentButEmptyForSingleSegment();
+    return pathParent != null ? CellRelativePath.of(getCellName(), pathParent) : null;
+  }
 
   public boolean startsWith(CellRelativePath other) {
     return this.getCellName().equals(other.getCellName())

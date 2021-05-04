@@ -118,11 +118,39 @@ public class ForwardRelPath implements Comparable<ForwardRelPath> {
     };
   }
 
-  /** Similar to {@link Path#getParent()}. */
+  /**
+   * Similar to {@link Path#getParent()}.
+   *
+   * <p>Note this function returns null for single-segment path, that's usually not what is needed.
+   *
+   * @see #getParentButEmptyForSingleSegment()
+   */
   // @Nullable
   public ForwardRelPath getParent() {
     if (segments.length < 2) {
       return null;
+    }
+    return new ForwardRelPath(Arrays.copyOf(this.segments, segments.length - 1));
+  }
+
+  /**
+   * Similar to {@link #getParent()} but returns empty path for single-segment path.
+   *
+   * <p>Returns:
+   *
+   * <ul>
+   *   <li>foo for foo/bar
+   *   <li>empty for foo
+   *   <li>null for empty
+   * </ul>
+   */
+  // @Nullable
+  public ForwardRelPath getParentButEmptyForSingleSegment() {
+    if (segments.length < 1) {
+      return null;
+    }
+    if (segments.length == 1) {
+      return EMPTY;
     }
     return new ForwardRelPath(Arrays.copyOf(this.segments, segments.length - 1));
   }
@@ -379,6 +407,11 @@ public class ForwardRelPath implements Comparable<ForwardRelPath> {
     }
 
     return true;
+  }
+
+  /** This path ends with given file name. */
+  public boolean endsWith(FileName fileName) {
+    return segments.length >= 1 && segments[segments.length - 1].equals(fileName.getName());
   }
 
   /**
