@@ -27,7 +27,6 @@ import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -111,20 +110,6 @@ public class PackagePipeline implements AutoCloseable {
     }
     AbsPath parentPackageFile = currentDir.getParent().resolve(PACKAGE_FILE_NAME);
     return Optional.of(parentPackageFile);
-  }
-
-  /**
-   * @return all the parent package files for the given {@param packageFile}, all the way to the
-   *     root of the passed {@param cell}.
-   */
-  static ImmutableSet<AbsPath> getAllParentPackageFiles(Cell cell, AbsPath packageFile) {
-    ImmutableSet.Builder<AbsPath> paths = ImmutableSet.builder();
-    Optional<AbsPath> parentPackageFile = getParentPackageFile(cell, packageFile);
-    while (parentPackageFile.isPresent()) {
-      paths.add(parentPackageFile.get());
-      parentPackageFile = getParentPackageFile(cell, parentPackageFile.get());
-    }
-    return paths.build();
   }
 
   /**
