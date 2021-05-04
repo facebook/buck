@@ -122,7 +122,7 @@ public final class ModuleInfoManager {
     if (InclusiveFolder.FOLDER_IJ_NAME.equals(folder.getType())
         || ExcludeFolder.FOLDER_IJ_NAME.equals(folder.getType())) {
       return new Pair<>(
-          ModuleInfoBinaryIndex.extractRelativeFolderUrl(folder.getUrl(), url),
+          ModuleInfoBinaryIndex.extractRelativeFolderUrl(url, folder.getUrl()),
           InclusiveFolder.FOLDER_IJ_NAME.equals(folder.getType()));
     }
     return null;
