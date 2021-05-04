@@ -698,10 +698,19 @@ public class RealAndroidDevice implements AndroidDevice {
 
   @Override
   public void installFiles(String filesType, Map<Path, Path> installPaths) throws Exception {
+    if (this.isZstdCompressionEnabled) {
+      try {
+        doMultiInstall(filesType, installPaths, /* tryZstdCompressionIfPossible */ true);
+      } catch (Exception e) {
+        LOG.warn(e, "doMultiInstall with zstd compression failed");
+      }
+    }
     try {
-      doMultiInstall(filesType, installPaths);
+      doMultiInstall(filesType, installPaths, /* tryZstdCompressionIfPossible */ false);
     } catch (Exception e) {
-      LOG.warn(e, "doMultiInstall failed, falling back to doMultiInstallViaADB");
+      LOG.warn(
+          e,
+          "doMultiInstall without zstd compression failed, falling back to doMultiInstallViaADB");
       doMultiInstallViaADB(installPaths);
     }
   }
@@ -879,13 +888,15 @@ public class RealAndroidDevice implements AndroidDevice {
     chan.close();
   }
 
-  private void doMultiInstall(String filesType, Map<Path, Path> installPaths) throws Exception {
+  private void doMultiInstall(
+      String filesType, Map<Path, Path> installPaths, boolean tryZstdCompressionIfPossible)
+      throws Exception {
     if (installPaths.isEmpty()) {
       return;
     }
 
     // We only do zstd compression for the Java agent.
-    boolean doZstdCompression = this.isZstdCompressionEnabled && !agent.get().isUseNativeAgent();
+    boolean doZstdCompression = tryZstdCompressionIfPossible && !agent.get().isUseNativeAgent();
 
     String javaLibraryPath = null;
     if (doZstdCompression) {
