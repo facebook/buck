@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import net.starlark.java.annot.FnPurity;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkMethod;
@@ -80,10 +81,8 @@ public abstract class AbstractSkylarkFunctions extends StarlarkValue {
             doc = "the value to return if the desired value is not set in the .buckconfig."),
       },
       documented = false, // this is an API that we should remove once select is available
-      allowReturnNones = true,
       useStarlarkThread = true,
-      speculativeSafe = true)
-  @Nullable
+      purity = FnPurity.SPEC_SAFE)
   public Object readConfig(String section, String field, Object defaultValue, StarlarkThread env)
       throws EvalException {
     ReadConfigContext configContext = ReadConfigContext.getContext(env);

@@ -21,6 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import javax.annotation.Nullable;
+import net.starlark.java.annot.FnPurity;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.StarlarkMethod;
 
@@ -48,8 +49,8 @@ final class MethodDescriptor {
   private final boolean useStarlarkSemantics;
   /** Can reuse fastcall positional arguments if parameter count matches. */
   private final boolean canReusePositionalWithoutChecks;
-  private final boolean speculativeSafe;
   private final MethodDescriptorGenerated generated;
+  private final FnPurity purity;
 
   private MethodDescriptor(
       Method method,
@@ -80,8 +81,8 @@ final class MethodDescriptor {
     this.allowReturnNones = allowReturnNones;
     this.useStarlarkThread = useStarlarkThread;
     this.useStarlarkSemantics = useStarlarkSemantics;
-    this.speculativeSafe = annotation.speculativeSafe();
     this.generated = generated;
+    this.purity = annotation.purity();
 
     if (extraKeywords || extraPositionals || useStarlarkSemantics) {
       this.canReusePositionalWithoutChecks = false;
@@ -233,8 +234,8 @@ final class MethodDescriptor {
     return selfCall;
   }
 
-  public boolean isSpeculativeSafe() {
-    return speculativeSafe;
+  public FnPurity getPurity() {
+    return purity;
   }
 
   /** Descriptor behavior depends on semantics. */

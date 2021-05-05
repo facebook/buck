@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import net.starlark.java.annot.FnPurity;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
@@ -193,7 +194,7 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
               + "      ),\n"
               + "  )</pre>\n",
       documented = true,
-      speculativeSafe = true)
+      purity = FnPurity.SPEC_SAFE)
   public Info hostInfo() {
     return HostInfo.HOST_INFO;
   }

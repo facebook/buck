@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
+import net.starlark.java.annot.FnPurity;
 import net.starlark.java.syntax.Argument;
 import net.starlark.java.syntax.AssignmentStatement;
 import net.starlark.java.syntax.BinaryOperatorExpression;
@@ -976,7 +977,7 @@ class Bc {
       }
 
       boolean functionIsSpeculativeSafe = callable instanceof BuiltinFunction
-          && ((BuiltinFunction) callable).isSpeculativeSafe();
+          && ((BuiltinFunction) callable).purity() == FnPurity.SPEC_SAFE;
       if (functionIsSpeculativeSafe
           && !linkSig.hasStars()
           && regArgsResult.constants != null

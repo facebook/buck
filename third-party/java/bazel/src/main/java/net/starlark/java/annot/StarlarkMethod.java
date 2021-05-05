@@ -171,15 +171,12 @@ public @interface StarlarkMethod {
   boolean trustReturnsValid() default false;
 
   /**
-   * When true, Starlark may speculatively invoke the function at bytecode generation time.
+   * When true, Starlark may speculatively invoke the function at bytecode generation time
+   * or function invocation can be cached.
    *
-   * To be safe, the function must:
-   * <ul>
-   *   <li>Be pure</li>
-   *   <li>Return immutable object (for example, {@code list} function is not safe)</li>
-   * </ul>
+   * @see FnPurity for the definition of purity levels.
    */
-  boolean speculativeSafe() default false;
+  FnPurity purity() default FnPurity.DEFAULT;
 
   /**
    * If true, the StarlarkThread will be passed as an argument of the annotated function. (Thus, the

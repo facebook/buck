@@ -22,6 +22,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import net.starlark.java.annot.FnPurity;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.spelling.SpellChecker;
@@ -413,7 +414,11 @@ public final class BuiltinFunction extends StarlarkCallable {
     }
   }
 
-  public boolean isSpeculativeSafe() {
-    return desc != null && desc.isSpeculativeSafe();
+  public FnPurity purity() {
+    if (desc != null) {
+      return desc.getPurity();
+    } else {
+      return FnPurity.DEFAULT;
+    }
   }
 }
