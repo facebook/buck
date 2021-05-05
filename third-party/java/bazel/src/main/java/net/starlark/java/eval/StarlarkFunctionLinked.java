@@ -115,7 +115,9 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
           ++boundKeyCount;
           if (fn.hasKwargs()) {
             if (boundsKeys == null) {
-              boundsKeys = new BoundsKeys();
+              int boundKeyCountUpperBound =
+                  Math.min(starStarArgs.size(), paramFromArg.length - paramIndex);
+              boundsKeys = new BoundsKeys(boundKeyCountUpperBound);
             }
             boundsKeys.add(name);
           }
@@ -204,13 +206,14 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
    * and also non-empty dict assigned to **kwargs parameter.
   */
   private static class BoundsKeys {
-    private String[] keysArray = new String[16];
+    private final String[] keysArray;
     private int size = 0;
 
+    BoundsKeys(int capacity) {
+      keysArray = new String[capacity];
+    }
+
     void add(String key) {
-      if (size == keysArray.length) {
-        keysArray = Arrays.copyOf(keysArray, keysArray.length * 2);
-      }
       keysArray[size++] = key;
     }
 
