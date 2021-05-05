@@ -419,6 +419,7 @@ class BcVisitor {
   protected void visitCallLinked(BcCallLocs callLocs, StarlarkCallableLinked callableLinked,
       int argsOffset, int star, int starStar, int out) {
     visitInListArg(argsOffset);
+    visitInConst(callableLinked.orig);
     visitInOrNull(star);
     visitInOrNull(starStar);
     visitOut(out);
