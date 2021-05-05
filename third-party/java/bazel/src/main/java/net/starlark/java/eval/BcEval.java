@@ -173,6 +173,9 @@ class BcEval {
           case BcInstr.CALL_LINKED:
             callLinked();
             break;
+          case BcInstr.CALL_CACHED:
+            callCached();
+            break;
           case BcInstr.RETURN:
             return returnInstr();
           case BcInstr.NEW_FUNCTION:
@@ -726,6 +729,14 @@ class BcEval {
 
     Object result = Starlark.callLinked(fr.thread, fn, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
     setSlot(nextOperand(), result);
+  }
+
+  private void callCached() throws EvalException, InterruptedException {
+    int callCachedIndex = nextOperand();
+    int resultSlot = nextOperand();
+    BcCallCached callCached = (BcCallCached) compiled.objects[callCachedIndex];
+    Object result = callCached.call(fr.thread);
+    setSlot(resultSlot, result);
   }
 
   /** Not operator. */

@@ -129,6 +129,12 @@ class BcVisitor {
         visitCallLinked(callLocs, callableLinked, fnArgsOffset, fnStar, fnStarStar, out);
         break;
       }
+      case CALL_CACHED: {
+        BcCallCached callCached = (BcCallCached) objects.get(parser.nextInt());
+        int out = parser.nextInt();
+        visitCallCached(callCached, out);
+        break;
+      }
       case RETURN:
         visitReturn(parser.nextInt());
         break;
@@ -422,6 +428,11 @@ class BcVisitor {
     visitInConst(callableLinked.orig);
     visitInOrNull(star);
     visitInOrNull(starStar);
+    visitOut(out);
+  }
+
+  protected void visitCallCached(BcCallCached callCached, int out) {
+    visitInConst(callCached.fn.orig);
     visitOut(out);
   }
 

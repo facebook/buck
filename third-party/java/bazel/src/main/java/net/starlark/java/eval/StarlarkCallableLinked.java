@@ -27,4 +27,9 @@ public abstract class StarlarkCallableLinked {
       @Nullable Sequence<?> starArgs,
       @Nullable Dict<?, ?> starStarArgs)
       throws EvalException, InterruptedException;
+
+  /** Function name. */
+  public String getName() {
+    return orig.getName();
+  }
 }

@@ -935,6 +935,23 @@ class Bc {
       return new CompileExpressionResult(result, null);
     }
 
+    private CompileExpressionResult compileCallCached(
+        CallExpression callExpression, StarlarkFunction callable,
+        StarlarkCallableLinkSig linkSig, Object[] argObjects,
+        int result
+    ) {
+      Preconditions.checkState(!linkSig.hasStars());
+      if (result == BcSlot.ANY_FLAG) {
+        result = bcWriter.allocSlot();
+      }
+      int callCached = bcWriter.allocObject(new BcCallCached(callable, linkSig, argObjects));
+      return writeToOut(
+          BcInstr.Opcode.CALL_CACHED,
+          callExpression,
+          new int[] { callCached },
+          result);
+    }
+
     private CompileExpressionResult compileCallLinked(
         StarlarkCallable callable, StarlarkCallableLinkSig linkSig,
         CallExpression callExpression, int result) {
@@ -1013,6 +1030,18 @@ class Bc {
           saved.reset();
           return compileConstantTo(callExpression, constResult, result);
         }
+      }
+
+      if (regArgsResult.allConstantsImmutable() && !linkSig.hasStars()
+          && callable instanceof StarlarkFunction && callable.isImmutable())
+      {
+        saved.reset();
+        return compileCallCached(
+            callExpression,
+            (StarlarkFunction) callable,
+            linkSig,
+            regArgsResult.constants,
+            result);
       }
 
       int[] newArgs = BcWriter.args(

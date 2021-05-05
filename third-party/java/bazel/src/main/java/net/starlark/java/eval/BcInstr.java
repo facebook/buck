@@ -40,7 +40,8 @@ class BcInstr {
   public static final int SLICE = INDEX + 1;
   public static final int CALL = SLICE + 1;
   public static final int CALL_LINKED = CALL + 1;
-  public static final int RETURN = CALL_LINKED + 1;
+  public static final int CALL_CACHED = CALL_LINKED + 1;
+  public static final int RETURN = CALL_CACHED + 1;
   public static final int NEW_FUNCTION = RETURN + 1;
   public static final int FOR_INIT = NEW_FUNCTION + 1;
   public static final int CONTINUE = FOR_INIT + 1;
@@ -216,6 +217,13 @@ class BcInstr {
         BcInstrOperand.IN_SLOT,
         // **kwargs
         BcInstrOperand.IN_SLOT,
+        // Where to store result
+        BcInstrOperand.OUT_SLOT
+    ),
+    CALL_CACHED(
+        BcInstr.CALL_CACHED,
+        // BcCallCached
+        BcInstrOperand.OBJECT,
         // Where to store result
         BcInstrOperand.OUT_SLOT
     ),

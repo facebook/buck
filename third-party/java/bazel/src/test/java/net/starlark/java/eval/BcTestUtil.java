@@ -1,6 +1,8 @@
 package net.starlark.java.eval;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 import net.starlark.java.syntax.FileOptions;
 import net.starlark.java.syntax.ParserInput;
 
@@ -13,8 +15,32 @@ public class BcTestUtil {
         new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT));
   }
 
+  static Object evalAndFreeze(String program, ImmutableMap<String, Object> globals)
+      throws Exception {
+    StarlarkThread thread = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
+    Module module = Module.create();
+    for (Map.Entry<String, Object> entry : globals.entrySet()) {
+      module.setGlobal(entry.getKey(), entry.getValue());
+    }
+    Object result = Starlark.execFile(
+        ParserInput.fromString(program, "f.star"),
+        FileOptions.DEFAULT,
+        module,
+        thread);
+    thread.mutability().freeze();
+    return result;
+  }
+
   static StarlarkFunction makeFunction(String program) throws Exception {
     return (StarlarkFunction) eval(program);
+  }
+
+  static StarlarkFunction makeFrozenFunction(String program) throws Exception {
+    return makeFrozenFunction(program, ImmutableMap.of());
+  }
+
+  static StarlarkFunction makeFrozenFunction(String program, ImmutableMap<String, Object> globals) throws Exception {
+    return (StarlarkFunction) evalAndFreeze(program, globals);
   }
 
   static ImmutableList<BcInstr.Opcode> opcodes(String makeFunction) throws Exception {

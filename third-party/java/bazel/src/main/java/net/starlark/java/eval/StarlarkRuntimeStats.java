@@ -92,8 +92,39 @@ public class StarlarkRuntimeStats {
     }
   }
 
+  private static class CachedCallStats {
+    private final AtomicIntegerArray countByResult =
+        new AtomicIntegerArray(CallCachedResult.values().length);
+
+    int countByResult(CallCachedResult result) {
+      return countByResult.get(result.ordinal());
+    }
+
+    CachedCallStats copy() {
+      CachedCallStats copy = new CachedCallStats();
+      for (CallCachedResult result : CallCachedResult.values()) {
+        copy.countByResult.set(result.ordinal(), countByResult.get(result.ordinal()));
+      }
+      return copy;
+    }
+  }
+
+  enum CallCachedResult {
+    /** Cache hit. */
+    HIT,
+    /** Skip cache. */
+    SKIP,
+    /** Computed value stored. */
+    STORE,
+    /** Computed value is not stored because value is mutable. */
+    MUTABLE,
+    /** Computed value is not stored because of computation side effect. */
+    SIDE_EFFECT,
+  }
+
   private ConcurrentHashMap<String, NativeCallStats> nativeCalls = new ConcurrentHashMap<>();
   private ConcurrentHashMap<String, StarlarkCallStats> starlarkCalls = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, CachedCallStats> cachedCalls = new ConcurrentHashMap<>();
   private AtomicIntegerArray instructions = new AtomicIntegerArray(BcInstr.Opcode.values().length);
   private AtomicIntegerArray binaryOps = new AtomicIntegerArray(TokenKind.values().length);
 
@@ -118,6 +149,17 @@ public class StarlarkRuntimeStats {
         stats.starlarkCalls.computeIfAbsent(name, k -> new StarlarkCallStats());
     callStats.count.addAndGet(1);
     callStats.steps.addAndGet(steps);
+  }
+
+  static void recordCallCached(String name, CallCachedResult result) {
+    if (!ENABLED) {
+      return;
+    }
+
+    CachedCallStats callStats = stats.cachedCalls
+        .computeIfAbsent(name, k -> new CachedCallStats());
+
+    callStats.countByResult.addAndGet(result.ordinal(), 1);
   }
 
   static void recordInst(int opcode) {
@@ -410,6 +452,83 @@ public class StarlarkRuntimeStats {
             new Object[] {
               e.getKey(), e.getValue().count, e.getValue().steps, e.getValue().avgSteps(),
             });
+
+    printCallCachedStats(out);
+  }
+
+  private void printCallCachedStats(PrintStream out) {
+    ImmutableList<AbstractMap.SimpleEntry<String, CachedCallStats>> cachedCalls = this.cachedCalls
+        .entrySet()
+        .stream()
+        .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().copy()))
+        .collect(ImmutableList.toImmutableList());
+
+    int[] countByResult = new int[CallCachedResult.values().length];
+    for (AbstractMap.SimpleEntry<String, CachedCallStats> call : cachedCalls) {
+      for (CallCachedResult result : CallCachedResult.values()) {
+        countByResult[result.ordinal()] += call.getValue().countByResult.get(result.ordinal());
+      }
+    }
+
+    out.println();
+    out.println(BcInstr.Opcode.CALL_CACHED + " result counts:");
+    printTable(
+        out,
+        ImmutableList.copyOf(CallCachedResult.values()),
+        new String[] { "result", "count" },
+        r -> new Object[] { r.name(), countByResult[r.ordinal()] });
+
+    ImmutableList<AbstractMap.SimpleEntry<String, CachedCallStats>> topHitFunctions = cachedCalls
+        .stream()
+        .filter(e -> e.getValue().countByResult(CallCachedResult.HIT) != 0)
+        .sorted(Comparator.comparing((AbstractMap.SimpleEntry<String, CachedCallStats> e) -> {
+          return e.getValue().countByResult(CallCachedResult.HIT);
+        }).reversed())
+        .limit(50)
+        .collect(ImmutableList.toImmutableList());
+
+    ImmutableList<AbstractMap.SimpleEntry<String, CachedCallStats>> topSkippedFunctions = cachedCalls
+        .stream()
+        .filter(e -> e.getValue().countByResult(CallCachedResult.SKIP) != 0)
+        .sorted(Comparator.comparing((AbstractMap.SimpleEntry<String, CachedCallStats> e) -> {
+          return e.getValue().countByResult(CallCachedResult.SKIP);
+        }).reversed())
+        .limit(50)
+        .collect(ImmutableList.toImmutableList());
+
+    out.println();
+    out.println("Top " + CallCachedResult.HIT + " functions:");
+    printTable(
+        out,
+        topHitFunctions,
+        new String[] {
+            "name",
+            CallCachedResult.HIT.name(),
+            CallCachedResult.STORE.name(),
+        },
+        e -> new Object[] {
+            e.getKey(),
+            e.getValue().countByResult(CallCachedResult.HIT),
+            e.getValue().countByResult(CallCachedResult.STORE),
+        });
+
+    out.println();
+    out.println("Top " + CallCachedResult.SKIP + " functions:");
+    printTable(
+        out,
+        topSkippedFunctions,
+        new String[] {
+            "name",
+            CallCachedResult.SKIP.name(),
+            CallCachedResult.SIDE_EFFECT.name(),
+            CallCachedResult.MUTABLE.name(),
+        },
+        e -> new Object[] {
+            e.getKey(),
+            e.getValue().countByResult(CallCachedResult.SKIP),
+            e.getValue().countByResult(CallCachedResult.SIDE_EFFECT),
+            e.getValue().countByResult(CallCachedResult.MUTABLE),
+        });
   }
 
   private void printInstructionStats(PrintStream out) {
