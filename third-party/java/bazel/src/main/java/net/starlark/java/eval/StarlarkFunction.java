@@ -34,8 +34,6 @@ public final class StarlarkFunction extends StarlarkCallable {
   private final String name;
   private final boolean isTopLevel;
   private final ImmutableList<String> parameterNames;
-  private final boolean hasVarargs;
-  private final boolean hasKwargs;
   final int numNonStarParams;
   final int numKeywordOnlyParams;
   final int varargsIndex;
@@ -69,8 +67,6 @@ public final class StarlarkFunction extends StarlarkCallable {
     this.name = rfn.getName();
     this.isTopLevel = rfn.isToplevel();
     this.parameterNames = rfn.getParameterNames();
-    this.hasVarargs = rfn.hasVarargs();
-    this.hasKwargs = rfn.hasKwargs();
     this.numNonStarParams = rfn.numNonStarParams();
     this.numKeywordOnlyParams = rfn.numKeywordOnlyParams();
     this.varargsIndex = rfn.getVarargsIndex();
@@ -126,7 +122,7 @@ public final class StarlarkFunction extends StarlarkCallable {
    * f(*args)}.
    */
   public boolean hasVarargs() {
-    return hasVarargs;
+    return varargsIndex >= 0;
   }
 
   /**
@@ -134,7 +130,7 @@ public final class StarlarkFunction extends StarlarkCallable {
    * f(**kwargs)}.
    */
   public boolean hasKwargs() {
-    return hasKwargs;
+    return kwargsIndex >= 0;
   }
 
   /** Returns the location of the function's defining identifier. */
@@ -169,7 +165,7 @@ public final class StarlarkFunction extends StarlarkCallable {
     int numPositionalParams = nparams - numKeywordOnlyParams;
 
     if (sig.namedNames.length == 0 && !sig.hasStar && !sig.hasStarStar) {
-      if (!hasVarargs && !hasKwargs && numKeywordOnlyParams == 0 && nparams == sig.numPositionals) {
+      if (!hasVarargs() && !hasKwargs() && numKeywordOnlyParams == 0 && nparams == sig.numPositionals) {
         // positional-only invocation
         return new StarlarkFunctionLinkedPos(sig, this);
       }
@@ -186,7 +182,7 @@ public final class StarlarkFunction extends StarlarkCallable {
     for (int argIndex = 0; argIndex < sig.numPositionals; ++argIndex) {
       if (argIndex < numPositionalParams) {
         paramFromArg[argIndex] = argIndex;
-      } else if (hasVarargs) {
+      } else if (hasVarargs()) {
         argToStar.add(argIndex);
       } else {
         return new StarlarkFunctionLinkedErrorTooManyPositionals(this, sig);
@@ -208,7 +204,7 @@ public final class StarlarkFunction extends StarlarkCallable {
               argName
           ));
         }
-      } else if (hasKwargs) {
+      } else if (hasKwargs()) {
         argToStarStar.add(argIndex);
         argToStarStarName.add(argName);
       } else {
