@@ -69,7 +69,8 @@ public class RemoteExecutionConsoleLineProviderTest {
     Assert.assertEquals(
         "[RE] Metadata: Session ID=[super cool info about the session]", lines.get(0));
     Assert.assertEquals(
-        lines.get(1), "[RE] Waiting on 0 remote actions. Completed 84 actions remotely.");
+        lines.get(1),
+        "[RE] Waiting on 0 remote actions. Completed 84 actions remotely, action cache hit rate: 0.00%.");
 
     for (String line : lines) {
       Assert.assertFalse(line.contains("LocalFallback"));
@@ -87,7 +88,7 @@ public class RemoteExecutionConsoleLineProviderTest {
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(7, lines.size());
     Assert.assertEquals(
-        "[RE] Actions: Local=0 Remote=[wait=0 comp=0 upl_in=0 upl_act=0 exec=0 del=0 dwl=0 suc=84 fail=0 cncl=0]",
+        "[RE] Actions: Local=0 Remote=[wait=0 comp=0 upl_in=0 upl_act=0 exec=0 del=0 dwl=0 suc=84 fail=0 cncl=0 cache=0]",
         lines.get(1));
     Assert.assertEquals(
         "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(2));

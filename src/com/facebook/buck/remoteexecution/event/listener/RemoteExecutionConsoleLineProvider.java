@@ -99,10 +99,16 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
         waitingActions += actionsPerState.getOrDefault(state, 0);
       }
     }
+
+    long succeeded = actionsPerState.getOrDefault(State.ACTION_SUCCEEDED, 0);
     lines.add(
         String.format(
-            "[RE] Waiting on %d remote actions. Completed %d actions remotely.",
-            waitingActions, actionsPerState.getOrDefault(State.ACTION_SUCCEEDED, 0)));
+            "[RE] Waiting on %d remote actions. Completed %d actions remotely, action cache hit rate: %.2f%%.",
+            waitingActions,
+            succeeded,
+            succeeded == 0
+                ? 0
+                : actionsPerState.getOrDefault(State.LOADED_FROM_CACHE, 0) / 1. / succeeded * 100));
 
     LocalFallbackStats localFallbackStats = statsProvider.getLocalFallbackStats();
     if (localFallbackStats.getLocallyExecutedRules() > 0) {

@@ -254,7 +254,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   Optional.of(ruleContext.timeMsAfterState),
                   Status.UNKNOWN,
                   ruleContext.lastNonTerminalState,
-                  OptionalInt.empty());
+                  OptionalInt.empty(),
+                  false);
             } else {
               // actionInfo and executionInfo must be set at this point
               Preconditions.checkState(actionInfo.get() != null);
@@ -273,7 +274,10 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   Optional.of(ruleContext.timeMsAfterState),
                   Status.OK,
                   ruleContext.lastNonTerminalState,
-                  OptionalInt.of(0));
+                  OptionalInt.of(0),
+                  Optional.ofNullable(executionInfo.get())
+                      .map(ExecutionResult::cachedResult)
+                      .orElse(false));
             }
           }
 
@@ -297,7 +301,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 Optional.of(ruleContext.timeMsAfterState),
                 exitCode.isPresent() ? Status.OK : Status.fromThrowable(t),
                 ruleContext.lastNonTerminalState,
-                exitCode);
+                exitCode,
+                false);
           }
         },
         MoreExecutors.directExecutor());

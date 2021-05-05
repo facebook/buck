@@ -225,6 +225,11 @@ public class RemoteExecutionEventListener
     hasFirstRemoteActionStarted.set(true);
     getStateCount(State.WAITING).decrement();
     getStateCount(event.getState()).increment();
+
+    if (event.getCachedResult()) {
+      getStateCount(State.LOADED_FROM_CACHE).increment();
+    }
+
     if (event.getExecutedActionMetadata().isPresent()) {
       ExecutedActionInfo executedActionInfo =
           event.getRemoteExecutionMetadata().get().getExecutedActionInfo();

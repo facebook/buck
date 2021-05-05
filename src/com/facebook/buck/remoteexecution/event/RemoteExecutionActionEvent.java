@@ -57,7 +57,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     MATERIALIZING_OUTPUTS("dwl"),
     ACTION_SUCCEEDED("suc"),
     ACTION_FAILED("fail"),
-    ACTION_CANCELLED("cncl");
+    ACTION_CANCELLED("cncl"),
+    LOADED_FROM_CACHE("cache");
 
     private final String abbreviateName;
 
@@ -96,7 +97,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       Optional<Map<State, Long>> stateWaitingMetadata,
       Status grpcStatus,
       State lastNonTerminalState,
-      OptionalInt exitCode) {
+      OptionalInt exitCode,
+      boolean cachedResult) {
     final Terminal event =
         new Terminal(
             state,
@@ -108,7 +110,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
             stateWaitingMetadata,
             grpcStatus,
             lastNonTerminalState,
-            exitCode);
+            exitCode,
+            cachedResult);
     eventBus.post(event);
   }
 
@@ -181,6 +184,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     private final Status grpcStatus;
     private final State lastNonTerminalState;
     private final OptionalInt exitCode;
+    private final boolean cachedResult;
 
     @VisibleForTesting
     Terminal(
@@ -193,7 +197,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
         Optional<Map<State, Long>> stateWaitingMetadata,
         Status grpcStatus,
         State lastNonTerminalState,
-        OptionalInt exitCode) {
+        OptionalInt exitCode,
+        boolean cachedResult) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           RemoteExecutionActionEvent.isTerminalState(state),
@@ -209,6 +214,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       this.grpcStatus = grpcStatus;
       this.lastNonTerminalState = lastNonTerminalState;
       this.exitCode = exitCode;
+      this.cachedResult = cachedResult;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -261,6 +267,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
     public OptionalInt getExitCode() {
       return exitCode;
+    }
+
+    public boolean getCachedResult() {
+      return cachedResult;
     }
 
     @JsonIgnore
