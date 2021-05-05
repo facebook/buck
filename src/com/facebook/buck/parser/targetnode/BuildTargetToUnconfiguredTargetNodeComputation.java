@@ -18,8 +18,8 @@ package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.FileName;
-import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -93,9 +93,9 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
      * required computations.
      */
     // TODO(nga): dependency stack
-    ForwardRelPath buildFile =
+    AbsPath buildFile =
         cell.getBuckConfigView(ParserConfig.class)
-            .getRelativePathToBuildFile(cell, buildTarget, DependencyStack.top(buildTarget));
+            .getAbsolutePathToBuildFile(cell, buildTarget, DependencyStack.top(buildTarget));
 
     Package stubPackage =
         PackageFactory.create(cell, buildFile, PackageMetadata.EMPTY_SINGLETON, Optional.empty());

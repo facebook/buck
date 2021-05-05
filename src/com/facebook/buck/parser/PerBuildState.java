@@ -19,8 +19,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.ForwardRelPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -33,6 +31,7 @@ import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -97,16 +96,8 @@ public class PerBuildState implements AutoCloseable {
   ImmutableList<TargetNodeMaybeIncompatible> getAllTargetNodes(
       Cell cell, AbsPath buildFile, Optional<TargetConfiguration> targetConfiguration)
       throws BuildFileParseException {
+    Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    ForwardRelPath buildFileRel = ForwardRelPath.ofRelPath(buildFile.removePrefix(cell.getRoot()));
-
-    return targetNodeParsePipeline.getAllRequestedTargetNodes(
-        cell, buildFileRel, targetConfiguration);
-  }
-
-  ImmutableList<TargetNodeMaybeIncompatible> getAllTargetNodes(
-      Cell cell, ForwardRelPath buildFile, Optional<TargetConfiguration> targetConfiguration)
-      throws BuildFileParseException {
     return targetNodeParsePipeline.getAllRequestedTargetNodes(cell, buildFile, targetConfiguration);
   }
 
@@ -131,18 +122,17 @@ public class PerBuildState implements AutoCloseable {
   ListenableFuture<ImmutableList<TargetNodeMaybeIncompatible>> getRequestedTargetNodesJob(
       Cell cell, AbsPath buildFile, Optional<TargetConfiguration> targetConfiguration)
       throws BuildTargetException {
-    ForwardRelPath buildFileRel = ForwardRelPath.ofRelPath(buildFile.removePrefix(cell.getRoot()));
+    Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
     return targetNodeParsePipeline.getAllRequestedTargetNodesJob(
-        cell, buildFileRel, targetConfiguration);
+        cell, buildFile, targetConfiguration);
   }
 
   ListenableFuture<ImmutableList<UnconfiguredTargetNode>> getAllUnconfiguredTargetNodesJobs(
       Cell cell, AbsPath buildFile) throws BuildFileParseException {
+    Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    ForwardRelPath buildFileRel = ForwardRelPath.ofRelPath(buildFile.removePrefix(cell.getRoot()));
-
-    return unconfiguredTargetNodeParsePipeline.getAllNodesJob(cell, buildFileRel);
+    return unconfiguredTargetNodeParsePipeline.getAllNodesJob(cell, buildFile);
   }
 
   ListenableFuture<UnconfiguredTargetNode> getUnconfiguredTargetNodeJob(
@@ -155,24 +145,13 @@ public class PerBuildState implements AutoCloseable {
 
   public BuildFileManifest getBuildFileManifest(Cell cell, AbsPath buildFile)
       throws BuildFileParseException {
-    RelPath buildFileRelative = buildFile.removePrefix(cell.getRoot());
-    return getBuildFileManifest(cell, ForwardRelPath.ofRelPath(buildFileRelative));
-  }
-
-  public BuildFileManifest getBuildFileManifest(Cell cell, ForwardRelPath buildFile)
-      throws BuildFileParseException {
+    Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
     return buildFileRawNodeParsePipeline.getFile(cell, buildFile);
   }
 
   ListenableFuture<BuildFileManifest> getBuildFileManifestJob(Cell cell, AbsPath buildFile)
       throws BuildFileParseException {
-    RelPath buildFileRelative = buildFile.removePrefix(cell.getRoot());
-    return buildFileRawNodeParsePipeline.getFileJob(
-        cell, ForwardRelPath.ofRelPath(buildFileRelative));
-  }
-
-  ListenableFuture<BuildFileManifest> getBuildFileManifestJob(Cell cell, ForwardRelPath buildFile)
-      throws BuildFileParseException {
+    Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
     return buildFileRawNodeParsePipeline.getFileJob(cell, buildFile);
   }
 

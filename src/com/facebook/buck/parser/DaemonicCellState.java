@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
@@ -369,7 +370,8 @@ class DaemonicCellState {
 
   /** @return {@code true} if the given path has dependencies that are present in the given set. */
   boolean pathDependentPresentIn(ForwardRelPath path, Set<AbsPath> buildFiles) {
+    RelPath relPath = path.toRelPath(cellRoot.getFileSystem());
     return !Collections.disjoint(
-        buildFileDependents.getOrDefault(cellRoot.resolve(path), ImmutableSet.of()), buildFiles);
+        buildFileDependents.getOrDefault(cellRoot.resolve(relPath), ImmutableSet.of()), buildFiles);
   }
 }

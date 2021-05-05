@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.PackageFileManifest;
@@ -34,7 +34,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 public class PackageFileParsePipeline extends GenericFileParsePipeline<PackageFileManifest> {
 
   public PackageFileParsePipeline(
-      PipelineNodeCache<ForwardRelPath, PackageFileManifest> cache,
+      PipelineNodeCache<AbsPath, PackageFileManifest> cache,
       PackageFileParserPool packageFileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
@@ -54,7 +54,7 @@ public class PackageFileParsePipeline extends GenericFileParsePipeline<PackageFi
           ImmutableList.of());
 
   @Override
-  public ListenableFuture<PackageFileManifest> getFileJob(Cell cell, ForwardRelPath packageFile)
+  public ListenableFuture<PackageFileManifest> getFileJob(Cell cell, AbsPath packageFile)
       throws BuildTargetException {
     // If the file exists, parse the file and cache accordingly.
     if (cell.getFilesystem().isFile(packageFile)) {

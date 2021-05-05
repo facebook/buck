@@ -246,6 +246,9 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
         PackageMetadata.of(false, ImmutableList.of("//a/..."), ImmutableList.of("//d/..."));
 
     return PackageFactory.create(
-        cell.getRootCell(), ForwardRelPath.of("a/b/PACKAGE"), pkg, Optional.empty());
+        cell.getRootCell(),
+        cell.getRootCell().getRoot().resolve("a/b/PACKAGE"),
+        pkg,
+        Optional.empty());
   }
 }

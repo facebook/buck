@@ -19,7 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.FileManifest;
@@ -33,14 +33,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public abstract class GenericFileParsePipeline<T extends FileManifest>
     implements FileParsePipeline<T> {
   protected final BuckEventBus eventBus;
-  protected final PipelineNodeCache<ForwardRelPath, T> cache;
+  protected final PipelineNodeCache<AbsPath, T> cache;
   private final ListeningExecutorService executorService;
   private final FileParserPool<T> fileParserPool;
   private final Watchman watchman;
   protected final AtomicBoolean shuttingDown;
 
   public GenericFileParsePipeline(
-      PipelineNodeCache<ForwardRelPath, T> cache,
+      PipelineNodeCache<AbsPath, T> cache,
       FileParserPool<T> fileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
@@ -54,13 +54,11 @@ public abstract class GenericFileParsePipeline<T extends FileManifest>
   }
 
   @Override
-  public ListenableFuture<T> getFileJob(Cell cell, ForwardRelPath manifestFile)
+  public ListenableFuture<T> getFileJob(Cell cell, AbsPath manifestFile)
       throws BuildTargetException {
     if (shuttingDown.get()) {
       return Futures.immediateCancelledFuture();
     }
-
-    AbsPath absManifestPath = cell.getFilesystem().resolve(manifestFile);
 
     return cache.getJobWithCacheLookup(
         cell,
@@ -70,14 +68,15 @@ public abstract class GenericFileParsePipeline<T extends FileManifest>
             return Futures.immediateCancelledFuture();
           }
 
-          if (cell.getFilesystem().isIgnored(manifestFile)) {
+          RelPath pathToCheck = cell.getRoot().relativize(manifestFile.getParent());
+          if (cell.getFilesystem().isIgnored(pathToCheck)) {
             throw new HumanReadableException(
                 "Content of '%s' cannot be built because it is defined in an ignored directory.",
-                absManifestPath);
+                pathToCheck);
           }
 
           return fileParserPool.getManifest(
-              eventBus, cell, watchman, absManifestPath, executorService);
+              eventBus, cell, watchman, manifestFile, executorService);
         },
         eventBus);
   }
