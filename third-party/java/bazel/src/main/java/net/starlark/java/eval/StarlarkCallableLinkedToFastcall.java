@@ -61,6 +61,9 @@ class StarlarkCallableLinkedToFastcall extends StarlarkCallableLinked {
     }
     Verify.verify(i == fastcallNNamed, "Named arguments populated incorrectly");
 
+    // We know nothing about external functions, so record side effects.
+    thread.recordSideEffect();
+
     return orig.fastcall(thread, fastcallPositional, fastcallNamed);
   }
 }

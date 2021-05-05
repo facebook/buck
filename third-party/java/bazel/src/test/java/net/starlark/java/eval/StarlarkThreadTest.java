@@ -15,7 +15,9 @@
 package net.starlark.java.eval;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import net.starlark.java.syntax.FileOptions;
 import net.starlark.java.syntax.ParserInput;
@@ -109,5 +111,40 @@ public final class StarlarkThreadTest {
             "global variable 'len' is referenced before assignment",
             "print(len)", // fwd ref to global len
             "len = 1"); // binding => len is local
+  }
+
+  @Test
+  public void externalSideEffectNop() {
+    StarlarkThread t = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
+
+    boolean saved = t.pushSideEffect();
+    // by default side effect is considered true
+    assertTrue(saved);
+    // side effect is reset
+    assertFalse(t.wasSideEffect());
+    t.popSideEffect(saved);
+    assertTrue(t.wasSideEffect());
+  }
+
+  @Test
+  public void externalSideEffectSimpleRecord() {
+    StarlarkThread t = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
+
+    boolean saved = t.pushSideEffect();
+    t.recordSideEffect();
+    assertTrue(t.wasSideEffect());
+    t.popSideEffect(saved);
+    assertTrue(t.wasSideEffect());
+  }
+
+  @Test
+  public void externalSideEffectInNested() {
+    StarlarkThread t = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
+    boolean saved0 = t.pushSideEffect();
+    boolean saved1 = t.pushSideEffect();
+    t.recordSideEffect();
+    t.popSideEffect(saved1);
+    assertTrue(t.wasSideEffect());
+    t.popSideEffect(saved0);
   }
 }

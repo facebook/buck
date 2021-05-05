@@ -70,6 +70,32 @@ public final class StarlarkThread {
   long steps; // count of logical computation steps executed so far
   long stepLimit = Long.MAX_VALUE; // limit on logical computation steps
 
+  /** Current evaluation produced external side effect, e. g. print or rule creation. */
+  private boolean wasSideEffect = true;
+
+  /** Clear side effect flag for the current thread and return the previous flag value. */
+  boolean pushSideEffect() {
+    boolean prevExternalSideEffect = wasSideEffect;
+    wasSideEffect = false;
+    return prevExternalSideEffect;
+  }
+
+  /** Query side effect flag. */
+  boolean wasSideEffect() {
+    return wasSideEffect;
+  }
+
+  /** Restore previous side effect flag. */
+  void popSideEffect(boolean saved) {
+    // If nested invocation performed side effect, then outer invocation also has side effect.
+    wasSideEffect |= saved;
+  }
+
+  /** Mark current thread as performing side effects. */
+  void recordSideEffect() {
+    wasSideEffect = true;
+  }
+
   /**
    * Returns the number of Starlark computation steps executed by this thread according to a
    * small-step semantics. (Today, that means exec, eval, and assign operations executed by the

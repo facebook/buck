@@ -114,12 +114,15 @@ public final class BuiltinFunction extends StarlarkCallable {
   public Object linkAndCall(StarlarkCallableLinkSig linkSig,
       StarlarkThread thread, Object[] args, @Nullable Sequence<?> starArgs,
       @Nullable Dict<?, ?> starStarArgs) throws InterruptedException, EvalException {
-
     if (StarlarkRuntimeStats.ENABLED) {
       StarlarkRuntimeStats.enter(StarlarkRuntimeStats.WhereWeAre.NATIVE_CALL);
     }
 
     try {
+      if (purity() == FnPurity.DEFAULT) {
+        thread.recordSideEffect();
+      }
+
       MethodDescriptor desc = getMethodDescriptor(thread.getSemantics());
 
       Object[] vector = getArgumentVector(thread, desc, linkSig, args, starArgs, starStarArgs);
