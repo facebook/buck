@@ -20,6 +20,7 @@ import com.google.common.collect.Iterables;
 import java.util.Arrays;
 import java.util.Collection;
 import javax.annotation.Nullable;
+import net.starlark.java.annot.FnPurity;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
@@ -458,7 +459,8 @@ public final class StarlarkList<E> extends Sequence<E> implements
       doc =
           "Removes the first item from the list whose value is x. "
               + "It is an error if there is no such item.",
-      parameters = {@Param(name = "x", doc = "The object to remove.")})
+      parameters = {@Param(name = "x", doc = "The object to remove.")},
+      purity = FnPurity.PURE)
   public void removeElement(Object x) throws EvalException {
     for (int i = 0; i < size; i++) {
       if (elems[i].equals(x)) {
@@ -482,13 +484,17 @@ public final class StarlarkList<E> extends Sequence<E> implements
   @StarlarkMethod(
       name = "append",
       doc = "Adds an item to the end of the list.",
-      parameters = {@Param(name = "item", doc = "Item to add at the end.")})
+      parameters = {@Param(name = "item", doc = "Item to add at the end.")},
+      purity = FnPurity.PURE)
   @SuppressWarnings("unchecked")
   public void append(Object item) throws EvalException {
     addElement((E) item); // unchecked
   }
 
-  @StarlarkMethod(name = "clear", doc = "Removes all the elements of the list.")
+  @StarlarkMethod(
+      name = "clear",
+      doc = "Removes all the elements of the list.",
+      purity = FnPurity.PURE)
   public void clearElements() throws EvalException {
     checkMutable();
     for (int i = 0; i < size; i++) {
@@ -503,7 +509,8 @@ public final class StarlarkList<E> extends Sequence<E> implements
       parameters = {
         @Param(name = "index", doc = "The index of the given position."),
         @Param(name = "item", doc = "The item.")
-      })
+      },
+      purity = FnPurity.PURE)
   @SuppressWarnings("unchecked")
   public void insert(StarlarkInt index, Object item) throws EvalException {
     addElementAt(EvalUtils.toIndex(index.toInt("index"), size), (E) item); // unchecked
@@ -512,7 +519,8 @@ public final class StarlarkList<E> extends Sequence<E> implements
   @StarlarkMethod(
       name = "extend",
       doc = "Adds all items to the end of the list.",
-      parameters = {@Param(name = "items", doc = "Items to add at the end.")})
+      parameters = {@Param(name = "items", doc = "Items to add at the end.")},
+      purity = FnPurity.PURE)
   public void extend(Object items) throws EvalException {
     @SuppressWarnings("unchecked")
     Iterable<? extends E> src = (Iterable<? extends E>) Starlark.toIterable(items);
@@ -544,7 +552,8 @@ public final class StarlarkList<E> extends Sequence<E> implements
             defaultValue = "None",
             named = true, // TODO(adonovan): this is wrong
             doc = "The end index of the list portion to inspect.")
-      })
+      },
+      purity = FnPurity.PURE)
   public int index(Object x, Object start, Object end) throws EvalException {
     int i = start == Starlark.NONE ? 0 : EvalUtils.toIndex(Starlark.toInt(start, "start"), size);
     int j = end == Starlark.NONE ? size : EvalUtils.toIndex(Starlark.toInt(end, "end"), size);
@@ -572,7 +581,8 @@ public final class StarlarkList<E> extends Sequence<E> implements
             defaultValue = "-1",
             doc = "The index of the item.")
       },
-      trustReturnsValid = true)
+      trustReturnsValid = true,
+      purity = FnPurity.PURE)
   public Object pop(Object i) throws EvalException {
     int arg = i == Starlark.NONE ? -1 : Starlark.toInt(i, "i");
     int index = EvalUtils.getSequenceIndex(arg, size);

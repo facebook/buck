@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.starlark.java.annot.FnPurity;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
@@ -143,7 +144,8 @@ final class StringModule extends StarlarkValue {
               + "joined by this string as a separator. Example:<br>"
               + "<pre class=\"language-python\">\"|\".join([\"a\", \"b\", \"c\"]) == \"a|b|c\""
               + "</pre>",
-      parameters = {@Param(name = "self"), @Param(name = "elements", doc = "The objects to join.")})
+      parameters = {@Param(name = "self"), @Param(name = "elements", doc = "The objects to join.")},
+      purity = FnPurity.PURE)
   public String join(String self, Object elements) throws EvalException {
     StringBuilder sb = new StringBuilder();
     Iterable<?> items = Starlark.toIterable(elements);
@@ -165,7 +167,8 @@ final class StringModule extends StarlarkValue {
   @StarlarkMethod(
       name = "lower",
       doc = "Returns the lower case version of this string.",
-      parameters = {@Param(name = "self")})
+      parameters = {@Param(name = "self")},
+      purity = FnPurity.SPEC_SAFE)
   public String lower(String self) {
     return Ascii.toLowerCase(self);
   }
@@ -173,7 +176,8 @@ final class StringModule extends StarlarkValue {
   @StarlarkMethod(
       name = "upper",
       doc = "Returns the upper case version of this string.",
-      parameters = {@Param(name = "self")})
+      parameters = {@Param(name = "self")},
+      purity = FnPurity.SPEC_SAFE)
   public String upper(String self) {
     return Ascii.toUpperCase(self);
   }
@@ -233,7 +237,8 @@ final class StringModule extends StarlarkValue {
             },
             doc = "The characters to remove, or all whitespace if None.",
             defaultValue = "None")
-      })
+      },
+      purity = FnPurity.SPEC_SAFE)
   public String lstrip(String self, Object charsOrNone) {
     String chars = charsOrNone != Starlark.NONE ? (String) charsOrNone : LATIN1_WHITESPACE;
     return stringLStrip(self, chars);
@@ -258,7 +263,8 @@ final class StringModule extends StarlarkValue {
             },
             doc = "The characters to remove, or all whitespace if None.",
             defaultValue = "None")
-      })
+      },
+      purity = FnPurity.SPEC_SAFE)
   public String rstrip(String self, Object charsOrNone) {
     String chars = charsOrNone != Starlark.NONE ? (String) charsOrNone : LATIN1_WHITESPACE;
     return stringRStrip(self, chars);
@@ -284,7 +290,8 @@ final class StringModule extends StarlarkValue {
             },
             doc = "The characters to remove, or all whitespace if None.",
             defaultValue = "None")
-      })
+      },
+      purity = FnPurity.SPEC_SAFE)
   public String strip(String self, Object charsOrNone) {
     String chars = charsOrNone != Starlark.NONE ? (String) charsOrNone : LATIN1_WHITESPACE;
     return stringStrip(self, chars);
@@ -307,7 +314,8 @@ final class StringModule extends StarlarkValue {
                 "The maximum number of replacements. If omitted, or if the value is negative, "
                     + "there is no limit.")
       },
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.SPEC_SAFE)
   public String replace(
       String self, String oldString, String newString, StarlarkInt countI, StarlarkThread thread)
       throws EvalException {
@@ -356,7 +364,8 @@ final class StringModule extends StarlarkValue {
             defaultValue = "None",
             doc = "The maximum number of splits.")
       },
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.SPEC_SAFE)
   public StarlarkList<String> split(
       String self, String sep, Object maxSplitO, StarlarkThread thread) throws EvalException {
     if (sep.isEmpty()) {
@@ -398,7 +407,8 @@ final class StringModule extends StarlarkValue {
             defaultValue = "None",
             doc = "The maximum number of splits.")
       },
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public StarlarkList<String> rsplit(
       String self, String sep, Object maxSplitO, StarlarkThread thread) throws EvalException {
     if (sep.isEmpty()) {
@@ -430,7 +440,8 @@ final class StringModule extends StarlarkValue {
               + " returns the resulting partition as a three-element tuple of the form (before,"
               + " separator, after). If the input string does not contain the separator, partition"
               + " returns (self, '', '').",
-      parameters = {@Param(name = "self"), @Param(name = "sep", doc = "The string to split on.")})
+      parameters = {@Param(name = "self"), @Param(name = "sep", doc = "The string to split on.")},
+      purity = FnPurity.SPEC_SAFE)
   public Tuple partition(String self, String sep) throws EvalException {
     return partitionCommon(self, sep, /*first=*/ true);
   }
@@ -442,7 +453,8 @@ final class StringModule extends StarlarkValue {
               + " returns the resulting partition as a three-element tuple of the form (before,"
               + " separator, after). If the input string does not contain the separator,"
               + " rpartition returns ('', '', self).",
-      parameters = {@Param(name = "self"), @Param(name = "sep", doc = "The string to split on.")})
+      parameters = {@Param(name = "self"), @Param(name = "sep", doc = "The string to split on.")},
+      purity = FnPurity.SPEC_SAFE)
   public Tuple rpartition(String self, String sep) throws EvalException {
     return partitionCommon(self, sep, /*first=*/ false);
   }
@@ -482,7 +494,8 @@ final class StringModule extends StarlarkValue {
       doc =
           "Returns a copy of the string with its first character (if any) capitalized and the rest "
               + "lowercased. This method does not support non-ascii characters. ",
-      parameters = {@Param(name = "self", doc = "This string.")})
+      parameters = {@Param(name = "self", doc = "This string.")},
+      purity = FnPurity.SPEC_SAFE)
   public String capitalize(String self) throws EvalException {
     if (self.isEmpty()) {
       return self;
@@ -498,7 +511,8 @@ final class StringModule extends StarlarkValue {
               + "uppercase letter while the remaining letters are lowercase. In this "
               + "context, a word means strictly a sequence of letters. This method does "
               + "not support supplementary Unicode characters.",
-      parameters = {@Param(name = "self", doc = "This string.")})
+      parameters = {@Param(name = "self", doc = "This string.")},
+      purity = FnPurity.SPEC_SAFE)
   public String title(String self) throws EvalException {
     char[] data = self.toCharArray();
     boolean previousWasLetter = false;
@@ -566,7 +580,8 @@ final class StringModule extends StarlarkValue {
             },
             defaultValue = "None",
             doc = "optional position before which to restrict to search.")
-      })
+      },
+      purity = FnPurity.SPEC_SAFE)
   public int rfind(String self, String sub, Object start, Object end) throws EvalException {
     return stringFind(false, self, sub, start, end);
   }
@@ -596,7 +611,8 @@ final class StringModule extends StarlarkValue {
             },
             defaultValue = "None",
             doc = "optional position before which to restrict to search.")
-      })
+      },
+      purity = FnPurity.SPEC_SAFE)
   public int find(String self, String sub, Object start, Object end) throws EvalException {
     return stringFind(true, self, sub, start, end);
   }
@@ -626,7 +642,8 @@ final class StringModule extends StarlarkValue {
             },
             defaultValue = "None",
             doc = "optional position before which to restrict to search.")
-      })
+      },
+      purity = FnPurity.SPEC_SAFE)
   public int rindex(String self, String sub, Object start, Object end) throws EvalException {
     int res = stringFind(false, self, sub, start, end);
     if (res < 0) {
@@ -660,7 +677,8 @@ final class StringModule extends StarlarkValue {
             },
             defaultValue = "None",
             doc = "optional position before which to restrict to search.")
-      })
+      },
+      purity = FnPurity.SPEC_SAFE)
   public int index(String self, String sub, Object start, Object end) throws EvalException {
     int res = stringFind(true, self, sub, start, end);
     if (res < 0) {
@@ -682,7 +700,8 @@ final class StringModule extends StarlarkValue {
             defaultValue = "False",
             doc = "Whether the line breaks should be included in the resulting list.")
       },
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public Sequence<String> splitLines(String self, boolean keepEnds, StarlarkThread thread)
       throws EvalException {
     StarlarkList<String> result = StarlarkList.newList(thread.mutability());
@@ -710,7 +729,8 @@ final class StringModule extends StarlarkValue {
       doc =
           "Returns True if all characters in the string are alphabetic ([a-zA-Z]) and there is "
               + "at least one character.",
-      parameters = {@Param(name = "self", doc = "This string.")})
+      parameters = {@Param(name = "self", doc = "This string.")},
+      purity = FnPurity.SPEC_SAFE)
   public boolean isAlpha(String self) throws EvalException {
     return matches(self, ALPHA, false);
   }
@@ -720,7 +740,8 @@ final class StringModule extends StarlarkValue {
       doc =
           "Returns True if all characters in the string are alphanumeric ([a-zA-Z0-9]) and there "
               + "is at least one character.",
-      parameters = {@Param(name = "self", doc = "This string.")})
+      parameters = {@Param(name = "self", doc = "This string.")},
+      purity = FnPurity.SPEC_SAFE)
   public boolean isAlnum(String self) throws EvalException {
     return matches(self, ALNUM, false);
   }
@@ -730,7 +751,8 @@ final class StringModule extends StarlarkValue {
       doc =
           "Returns True if all characters in the string are digits ([0-9]) and there is "
               + "at least one character.",
-      parameters = {@Param(name = "self", doc = "This string.")})
+      parameters = {@Param(name = "self", doc = "This string.")},
+      purity = FnPurity.SPEC_SAFE)
   public boolean isDigit(String self) throws EvalException {
     return matches(self, DIGIT, false);
   }
@@ -740,7 +762,8 @@ final class StringModule extends StarlarkValue {
       doc =
           "Returns True if all characters are white space characters and the string "
               + "contains at least one character.",
-      parameters = {@Param(name = "self", doc = "This string.")})
+      parameters = {@Param(name = "self", doc = "This string.")},
+      purity = FnPurity.SPEC_SAFE)
   public boolean isSpace(String self) throws EvalException {
     return matches(self, SPACE, false);
   }
@@ -750,7 +773,8 @@ final class StringModule extends StarlarkValue {
       doc =
           "Returns True if all cased characters in the string are lowercase and there is "
               + "at least one character.",
-      parameters = {@Param(name = "self", doc = "This string.")})
+      parameters = {@Param(name = "self", doc = "This string.")},
+      purity = FnPurity.SPEC_SAFE)
   public boolean isLower(String self) throws EvalException {
     // Python also accepts non-cased characters, so we cannot use LOWER.
     return matches(self, UPPER.negate(), true);
@@ -761,7 +785,8 @@ final class StringModule extends StarlarkValue {
       doc =
           "Returns True if all cased characters in the string are uppercase and there is "
               + "at least one character.",
-      parameters = {@Param(name = "self", doc = "This string.")})
+      parameters = {@Param(name = "self", doc = "This string.")},
+      purity = FnPurity.SPEC_SAFE)
   public boolean isUpper(String self) throws EvalException {
     // Python also accepts non-cased characters, so we cannot use UPPER.
     return matches(self, LOWER.negate(), true);
@@ -774,7 +799,8 @@ final class StringModule extends StarlarkValue {
               + "This means that every uppercase character must follow an uncased one (e.g. "
               + "whitespace) and every lowercase character must follow a cased one (e.g. "
               + "uppercase or lowercase).",
-      parameters = {@Param(name = "self", doc = "This string.")})
+      parameters = {@Param(name = "self", doc = "This string.")},
+      purity = FnPurity.SPEC_SAFE)
   public boolean isTitle(String self) throws EvalException {
     if (self.isEmpty()) {
       return false;
@@ -859,7 +885,8 @@ final class StringModule extends StarlarkValue {
             },
             defaultValue = "None",
             doc = "optional position before which to restrict to search.")
-      })
+      },
+      purity = FnPurity.SPEC_SAFE)
   public int count(String self, String sub, Object start, Object end) throws EvalException {
     long indices = substringIndices(self, start, end);
     if (sub.isEmpty()) {
@@ -884,7 +911,8 @@ final class StringModule extends StarlarkValue {
           "Returns an iterable value containing successive 1-element substrings of the string. "
               + "Equivalent to <code>[s[i] for i in range(len(s))]</code>, except that the "
               + "returned value might not be a list.",
-      parameters = {@Param(name = "self", doc = "This string.")})
+      parameters = {@Param(name = "self", doc = "This string.")},
+      purity = FnPurity.PURE)
   public Sequence<String> elems(String self) {
     // TODO(adonovan): opt: return a new type that is lazily iterable.
     char[] chars = self.toCharArray();
@@ -926,7 +954,8 @@ final class StringModule extends StarlarkValue {
             },
             defaultValue = "None",
             doc = "optional position at which to stop comparing.")
-      })
+      },
+      purity = FnPurity.SPEC_SAFE)
   public boolean endsWith(String self, Object sub, Object start, Object end) throws EvalException {
     long indices = substringIndices(self, start, end);
     if (sub instanceof String) {
@@ -971,7 +1000,8 @@ final class StringModule extends StarlarkValue {
       },
       extraPositionals = @Param(name = "args", defaultValue = "()", doc = "List of arguments."),
       extraKeywords =
-          @Param(name = "kwargs", defaultValue = "{}", doc = "Dictionary of arguments."))
+          @Param(name = "kwargs", defaultValue = "{}", doc = "Dictionary of arguments."),
+      purity = FnPurity.SPEC_SAFE)
   public String format(String self, Tuple args, Dict<String, Object> kwargs) throws EvalException {
     return new FormatParser().format(self, args, kwargs);
   }
@@ -1007,7 +1037,8 @@ final class StringModule extends StarlarkValue {
             },
             defaultValue = "None",
             doc = "Stop comparing at this position.")
-      })
+      },
+      purity = FnPurity.SPEC_SAFE)
   public boolean startsWith(String self, Object sub, Object start, Object end)
       throws EvalException {
     long indices = substringIndices(self, start, end);

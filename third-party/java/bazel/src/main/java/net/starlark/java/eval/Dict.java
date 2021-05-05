@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
+import net.starlark.java.annot.FnPurity;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;
@@ -177,7 +178,8 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
             named = true,
             doc = "The default value to use (instead of None) if the key is not found.")
       },
-      trustReturnsValid = true)
+      trustReturnsValid = true,
+      purity = FnPurity.PURE)
   // TODO(adonovan): This method is named get2 as a temporary workaround for a bug in
   // StarlarkAnnotations.getStarlarkMethod. The two 'get' methods cause it to get
   // confused as to which one has the annotation. Fix it and remove "2" suffix.
@@ -208,7 +210,8 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
             named = true,
             doc = "a default value if the key is absent."),
       },
-      trustReturnsValid = true)
+      trustReturnsValid = true,
+      purity = FnPurity.PURE)
   public Object pop(Object key, Object defaultValue) throws EvalException {
     checkMutable();
     Object value = contents.remove(key);
@@ -231,7 +234,8 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
           "Remove and return the first <code>(key, value)</code> pair from the dictionary. "
               + "<code>popitem</code> is useful to destructively iterate over a dictionary, "
               + "as often used in set algorithms. "
-              + "If the dictionary is empty, the <code>popitem</code> call fails.")
+              + "If the dictionary is empty, the <code>popitem</code> call fails.",
+      purity = FnPurity.PURE)
   public Tuple popitem() throws EvalException {
     if (isEmpty()) {
       throw Starlark.errorf("popitem: empty dictionary");
@@ -260,7 +264,8 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
             named = true,
             doc = "a default value if the key is absent."),
       },
-      trustReturnsValid = true)
+      trustReturnsValid = true,
+      purity = FnPurity.PURE)
   public V setdefault(K key, V defaultValue) throws EvalException {
     checkMutable();
     Starlark.checkHashable(key);
@@ -288,7 +293,8 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
                 "Either a dictionary or a list of entries. Entries must be tuples or lists with "
                     + "exactly two elements: key, value."),
       },
-      extraKeywords = @Param(name = "kwargs", doc = "Dictionary of additional entries."))
+      extraKeywords = @Param(name = "kwargs", doc = "Dictionary of additional entries."),
+      purity = FnPurity.PURE)
   public void update(Object pairs, Dict<String, Object> kwargs)
       throws EvalException {
     checkMutable();
@@ -339,7 +345,8 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
           "Returns the list of values:"
               + "<pre class=\"language-python\">"
               + "{2: \"a\", 4: \"b\", 1: \"c\"}.values() == [\"a\", \"b\", \"c\"]</pre>\n",
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public StarlarkList<?> values0(StarlarkThread thread) throws EvalException {
     return StarlarkList.copyOfUnchecked(thread.mutability(), contents.values());
   }
@@ -351,7 +358,8 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
               + "<pre class=\"language-python\">"
               + "{2: \"a\", 4: \"b\", 1: \"c\"}.items() == [(2, \"a\"), (4, \"b\"), (1, \"c\")]"
               + "</pre>\n",
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public StarlarkList<?> items(StarlarkThread thread) throws EvalException {
     Object[] array = new Object[size()];
     int i = 0;
@@ -367,7 +375,8 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
           "Returns the list of keys:"
               + "<pre class=\"language-python\">{2: \"a\", 4: \"b\", 1: \"c\"}.keys() == [2, 4, 1]"
               + "</pre>\n",
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public StarlarkList<?> keys(StarlarkThread thread) throws EvalException {
     Object[] array = new Object[size()];
     int i = 0;
@@ -501,7 +510,10 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
    *
    * @throws EvalException if the dict is frozen
    */
-  @StarlarkMethod(name = "clear", doc = "Remove all items from the dictionary.")
+  @StarlarkMethod(
+      name = "clear",
+      doc = "Remove all items from the dictionary.",
+      purity = FnPurity.PURE)
   public void clearEntries() throws EvalException {
     checkMutable();
     contents.clear();

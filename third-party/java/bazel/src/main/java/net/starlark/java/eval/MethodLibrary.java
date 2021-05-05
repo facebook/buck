@@ -47,7 +47,8 @@ class MethodLibrary {
               + "<pre class=\"language-python\">min(2, 5, 4) == 2\n"
               + "min([5, 6, 3]) == 3</pre>",
       extraPositionals = @Param(name = "args", doc = "The elements to be checked."),
-      trustReturnsValid = true)
+      trustReturnsValid = true,
+      purity = FnPurity.PURE)
   public Object min(Sequence<?> args) throws EvalException {
     return findExtreme(args, Starlark.ORDERING.reverse());
   }
@@ -62,7 +63,8 @@ class MethodLibrary {
               + "<pre class=\"language-python\">max(2, 5, 4) == 5\n"
               + "max([5, 6, 3]) == 6</pre>",
       extraPositionals = @Param(name = "args", doc = "The elements to be checked."),
-      trustReturnsValid = true)
+      trustReturnsValid = true,
+      purity = FnPurity.PURE)
   public Object max(Sequence<?> args) throws EvalException {
     return findExtreme(args, Starlark.ORDERING);
   }
@@ -89,7 +91,8 @@ class MethodLibrary {
               + "Elements are converted to boolean using the <a href=\"#bool\">bool</a> function."
               + "<pre class=\"language-python\">all([\"hello\", 3, True]) == True\n"
               + "all([-1, 0, 1]) == False</pre>",
-      parameters = {@Param(name = "elements", doc = "A string or a collection of elements.")})
+      parameters = {@Param(name = "elements", doc = "A string or a collection of elements.")},
+      purity = FnPurity.PURE)
   public boolean all(Object collection) throws EvalException {
     return !hasElementWithBooleanValue(collection, false);
   }
@@ -101,7 +104,8 @@ class MethodLibrary {
               + "Elements are converted to boolean using the <a href=\"#bool\">bool</a> function."
               + "<pre class=\"language-python\">any([-1, 0, 1]) == True\n"
               + "any([False, 0, \"\"]) == False</pre>",
-      parameters = {@Param(name = "elements", doc = "A string or a collection of elements.")})
+      parameters = {@Param(name = "elements", doc = "A string or a collection of elements.")},
+      purity = FnPurity.PURE)
   public boolean any(Object collection) throws EvalException {
     return hasElementWithBooleanValue(collection, true);
   }
@@ -141,7 +145,8 @@ class MethodLibrary {
             defaultValue = "False",
             positional = false)
       },
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public StarlarkList<?> sorted(
       StarlarkIterable<?> iterable, Object key, boolean reverse, StarlarkThread thread)
       throws EvalException, InterruptedException {
@@ -235,7 +240,8 @@ class MethodLibrary {
       parameters = {
         @Param(name = "sequence", doc = "The iterable sequence (e.g. list) to be reversed."),
       },
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public StarlarkList<?> reversed(StarlarkIterable<?> sequence, StarlarkThread thread)
       throws EvalException {
     Object[] array = Starlark.toArray(sequence);
@@ -267,7 +273,8 @@ class MethodLibrary {
               + "list((2, 3, 2)) == [2, 3, 2]\n"
               + "list({5: \"a\", 2: \"b\", 4: \"c\"}) == [5, 2, 4]</pre>",
       parameters = {@Param(name = "x", defaultValue = "[]", doc = "The object to convert.")},
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public StarlarkList<?> list(StarlarkIterable<?> x, StarlarkThread thread) throws EvalException {
     return StarlarkList.wrap(thread.mutability(), Starlark.toArray(x));
   }
@@ -503,7 +510,8 @@ class MethodLibrary {
             doc = "A dict, or an iterable whose elements are each of length 2 (key, value)."),
       },
       extraKeywords = @Param(name = "kwargs", doc = "Dictionary of additional entries."),
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public Dict<?, ?> dict(Object pairs, Dict<String, Object> kwargs, StarlarkThread thread)
       throws EvalException {
     // common case: dict(k=v, ...)
@@ -527,7 +535,8 @@ class MethodLibrary {
         @Param(name = "list", doc = "input sequence.", named = true),
         @Param(name = "start", doc = "start index.", defaultValue = "0", named = true),
       },
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public StarlarkList<?> enumerate(Object input, StarlarkInt startI, StarlarkThread thread)
       throws EvalException {
     int start = Starlark.toInt(startI, "start");
@@ -615,7 +624,8 @@ class MethodLibrary {
         @Param(name = "x", doc = "The object to check."),
         @Param(name = "name", doc = "The name of the attribute.")
       },
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public boolean hasattr(Object obj, String name, StarlarkThread thread) throws EvalException {
     return Starlark.hasattr(thread.getSemantics(), obj, name);
   }
@@ -639,7 +649,8 @@ class MethodLibrary {
                     + "doesn't have an attribute of the given name.")
       },
       trustReturnsValid = true,
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public Object getattr(Object obj, String name, Object defaultValue, StarlarkThread thread)
       throws EvalException, InterruptedException {
     return Starlark.getattr(
@@ -655,7 +666,8 @@ class MethodLibrary {
           "Returns a list of strings: the names of the attributes and "
               + "methods of the parameter object.",
       parameters = {@Param(name = "x", doc = "The object to check.")},
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public StarlarkList<?> dir(Object object, StarlarkThread thread) throws EvalException {
     return Starlark.dir(thread.mutability(), thread.getSemantics(), object);
   }
@@ -692,7 +704,8 @@ class MethodLibrary {
               name = "args",
               doc =
                   "A list of values, formatted with str and joined with spaces, that appear in the"
-                      + " error message."))
+                      + " error message."),
+      purity = FnPurity.PURE)
   public void fail(Object msg, Object attr, Tuple args) throws EvalException {
     List<String> elems = new ArrayList<>();
     // msg acts like a leading element of args.
@@ -784,7 +797,8 @@ class MethodLibrary {
               + "zip([1, 2], [3, 4])  # == [(1, 3), (2, 4)]\n"
               + "zip([1, 2], [3, 4, 5])  # == [(1, 3), (2, 4)]</pre>",
       extraPositionals = @Param(name = "args", doc = "lists to zip."),
-      useStarlarkThread = true)
+      useStarlarkThread = true,
+      purity = FnPurity.PURE)
   public StarlarkList<?> zip(Sequence<?> args, StarlarkThread thread) throws EvalException {
     StarlarkList<Tuple> result = StarlarkList.newList(thread.mutability());
     int ncols = args.size();
