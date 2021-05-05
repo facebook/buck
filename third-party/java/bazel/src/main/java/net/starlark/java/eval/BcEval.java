@@ -66,7 +66,16 @@ class BcEval {
   /** Public API. */
   public static Object eval(StarlarkThread.Frame fr, StarlarkFunction fn)
       throws InterruptedException, EvalException {
-    return new BcEval(fr, fn).eval();
+    if (StarlarkRuntimeStats.ENABLED) {
+      StarlarkRuntimeStats.enter(StarlarkRuntimeStats.WhereWeAre.BC_EVAL);
+    }
+    try {
+      return new BcEval(fr, fn).eval();
+    } finally {
+      if (StarlarkRuntimeStats.ENABLED) {
+        StarlarkRuntimeStats.leave();
+      }
+    }
   }
 
   private Object eval() throws EvalException, InterruptedException {

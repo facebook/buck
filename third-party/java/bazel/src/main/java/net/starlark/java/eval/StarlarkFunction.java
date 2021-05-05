@@ -154,7 +154,12 @@ public final class StarlarkFunction extends StarlarkCallable {
     if (nanoCache != null && nanoCache.linkSig == sig) {
       return nanoCache;
     }
-    return this.linkCache = linkCallImpl(sig);
+    StarlarkRuntimeStats.enter(StarlarkRuntimeStats.WhereWeAre.DEF_LINK);
+    try {
+      return this.linkCache = linkCallImpl(sig);
+    } finally {
+      StarlarkRuntimeStats.leave();
+    }
   }
 
   private StarlarkCallableLinked linkCallImpl(StarlarkCallableLinkSig sig) {

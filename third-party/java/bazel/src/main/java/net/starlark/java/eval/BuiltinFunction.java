@@ -13,10 +13,8 @@
 // limitations under the License.
 package net.starlark.java.eval;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -116,18 +114,22 @@ public final class BuiltinFunction extends StarlarkCallable {
   public Object linkAndCall(StarlarkCallableLinkSig linkSig,
       StarlarkThread thread, Object[] args, @Nullable Sequence<?> starArgs,
       @Nullable Dict<?, ?> starStarArgs) throws InterruptedException, EvalException {
-    MethodDescriptor desc = getMethodDescriptor(thread.getSemantics());
-
-    long start = StarlarkRuntimeStats.ENABLED ? System.nanoTime() : 0;
-
-    Object[] vector = getArgumentVector(thread, desc, linkSig, args, starArgs, starStarArgs);
-    Object result = desc.call(obj, vector, thread);
 
     if (StarlarkRuntimeStats.ENABLED) {
-      StarlarkRuntimeStats.recordNativeCall(getName(), System.nanoTime() - start);
+      StarlarkRuntimeStats.enter(StarlarkRuntimeStats.WhereWeAre.NATIVE_CALL);
     }
 
-    return result;
+    try {
+      MethodDescriptor desc = getMethodDescriptor(thread.getSemantics());
+
+      Object[] vector = getArgumentVector(thread, desc, linkSig, args, starArgs, starStarArgs);
+
+      return desc.call(obj, vector, thread);
+    } finally {
+      if (StarlarkRuntimeStats.ENABLED) {
+        StarlarkRuntimeStats.leaveNativeCall(getName());
+      }
+    }
   }
 
   private MethodDescriptor getMethodDescriptor(StarlarkSemantics semantics) {

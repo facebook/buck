@@ -1347,13 +1347,17 @@ class Bc {
 
   public static BcCompiled compileFunction(StarlarkThread thread, Resolver.Function rfn, Module module,
       Tuple freevars) {
-    long start = StarlarkRuntimeStats.ENABLED ? System.nanoTime() : 0;
-    Compiler compiler = new Compiler(thread, rfn, module, freevars);
-    compiler.compileStatements(rfn.getBody(), rfn.isToplevel());
-    BcCompiled compiled = compiler.finish();
     if (StarlarkRuntimeStats.ENABLED) {
-      StarlarkRuntimeStats.recordCompileTimeNanos(System.nanoTime() - start);
+      StarlarkRuntimeStats.enter(StarlarkRuntimeStats.WhereWeAre.BC_COMPILE);
     }
-    return compiled;
+    try {
+      Compiler compiler = new Compiler(thread, rfn, module, freevars);
+      compiler.compileStatements(rfn.getBody(), rfn.isToplevel());
+      return compiler.finish();
+    } finally {
+      if (StarlarkRuntimeStats.ENABLED) {
+        StarlarkRuntimeStats.leave();
+      }
+    }
   }
 }

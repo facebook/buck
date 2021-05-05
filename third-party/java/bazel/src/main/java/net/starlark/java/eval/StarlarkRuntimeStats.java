@@ -10,11 +10,13 @@ import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.TokenKind;
@@ -94,12 +96,13 @@ public class StarlarkRuntimeStats {
   private ConcurrentHashMap<String, StarlarkCallStats> starlarkCalls = new ConcurrentHashMap<>();
   private AtomicIntegerArray instructions = new AtomicIntegerArray(BcInstr.Opcode.values().length);
   private AtomicIntegerArray binaryOps = new AtomicIntegerArray(TokenKind.values().length);
-  private AtomicLong compileTimeNanos = new AtomicLong();
 
-  static void recordNativeCall(String name, long durationNanos) {
+  static void leaveNativeCall(String name) {
     if (!ENABLED) {
       return;
     }
+
+    long durationNanos = StarlarkRuntimeStats.leave();
 
     NativeCallStats callStats = stats.nativeCalls.computeIfAbsent(name, k -> new NativeCallStats());
     callStats.count.addAndGet(1);
@@ -133,12 +136,81 @@ public class StarlarkRuntimeStats {
     stats.binaryOps.addAndGet(op.ordinal(), 1);
   }
 
-  public static void recordCompileTimeNanos(long compileTimeNanos) {
+  enum WhereWeAre {
+    NATIVE_CALL,
+    BC_EVAL,
+    BC_COMPILE,
+    DEF_LINK,
+    DEF_PREPARE_ARGS,
+  }
+
+  private final AtomicLongArray whereDurationNanos = new AtomicLongArray(WhereWeAre.values().length);
+  private final AtomicLongArray whereCounts = new AtomicLongArray(WhereWeAre.values().length);
+
+  private static class WhereWeAreThreadLocal {
+    private WhereWeAre[] whereStack = new WhereWeAre[20];
+    private int stackSize = 0;
+    private long startNanos;
+
+    void push(WhereWeAre state) {
+      if (stackSize == whereStack.length) {
+        whereStack = Arrays.copyOf(whereStack, whereStack.length << 1);
+      }
+      whereStack[stackSize++] = state;
+    }
+
+    WhereWeAre pop() {
+      if (stackSize == 0) {
+        throw new IllegalStateException("pop off empty stack");
+      } else {
+        return whereStack[--stackSize];
+      }
+    }
+
+    @Nullable
+    WhereWeAre top() {
+      if (stackSize == 0) {
+        return null;
+      } else {
+        return whereStack[stackSize - 1];
+      }
+    }
+  }
+
+  private static final ThreadLocal<WhereWeAreThreadLocal> whereWeAreThreaLocal = ThreadLocal
+      .withInitial(WhereWeAreThreadLocal::new);
+
+  static void enter(WhereWeAre where) {
     if (!ENABLED) {
       return;
     }
 
-    stats.compileTimeNanos.addAndGet(compileTimeNanos);
+    long now = System.nanoTime();
+
+    WhereWeAreThreadLocal state = whereWeAreThreaLocal.get();
+
+    WhereWeAre top = state.top();
+    if (top != null) {
+      stats.whereDurationNanos.addAndGet(top.ordinal(), now - state.startNanos);
+    }
+    stats.whereCounts.addAndGet(where.ordinal(), 1);
+    state.push(where);
+    state.startNanos = now;
+  }
+
+  static long leave() {
+    if (!ENABLED) {
+      return 0;
+    }
+
+    long now = System.nanoTime();
+
+    WhereWeAreThreadLocal state = whereWeAreThreaLocal.get();
+    long durationNanos = now - state.startNanos;
+    WhereWeAre top = state.pop();
+    stats.whereDurationNanos.addAndGet(top.ordinal(), durationNanos);
+    state.startNanos = now;
+    return durationNanos;
   }
 
   public static void printStatsAndReset() {
@@ -171,12 +243,44 @@ public class StarlarkRuntimeStats {
 
   private void printStats(PrintStream out) {
     out.println("Starlark stats:");
-    out.println();
-    out.println("Compile time ms: " + compileTimeNanos.get() / 1_000_000);
 
+    printTimeStats(out);
     printCallStats(out);
     printInstructionStats(out);
     printBinaryOpStats(out);
+  }
+
+  private void printTimeStats(PrintStream out) {
+    class WhereTriple {
+      final WhereWeAre cat;
+      final long durationNanos;
+      final long count;
+
+      public WhereTriple(WhereWeAre cat, long durationNanos, long count) {
+        this.cat = cat;
+        this.durationNanos = durationNanos;
+        this.count = count;
+      }
+    }
+
+    ImmutableList<WhereTriple> stats =
+        Arrays.stream(WhereWeAre.values())
+            .map(cat -> {
+              return new WhereTriple(cat, whereDurationNanos.get(cat.ordinal()),
+                  whereCounts.get(cat.ordinal()));
+            })
+            .collect(ImmutableList.toImmutableList());
+    long totalTimeNanos = stats.stream().mapToLong(t -> t.durationNanos).sum();
+
+    out.println();
+    out.println("Total time spent in Starlark (except parser), ms: " + (totalTimeNanos / 1_000_000));
+    out.println();
+    out.println("Time spent by category:");
+    printTable(
+        out,
+        stats,
+        new String[] { WhereWeAre.class.getSimpleName(), "tot_ms", "count" },
+        t -> new Object[] { t.cat, t.durationNanos / 1_000_000, t.count });
   }
 
   private void printCallStats(PrintStream out) {
@@ -348,7 +452,7 @@ public class StarlarkRuntimeStats {
 
   private <K, V> void printTable(
       PrintStream out,
-      ImmutableList<AbstractMap.SimpleEntry<K, V>> entries,
+      ImmutableList<? extends Map.Entry<K, V>> entries,
       String keyName,
       String valueName) {
     printTable(
