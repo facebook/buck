@@ -31,10 +31,8 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -42,15 +40,11 @@ import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFact
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
-import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLink;
-import com.facebook.buck.cxx.FakeCxxLibrary;
-import com.facebook.buck.cxx.HeaderSymlinkTreeWithHeaderMap;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -65,11 +59,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -93,61 +83,6 @@ public class SwiftLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmpDir);
     workspace.addBuckConfigLocalOption("swift", "use_argfile", "true");
     return workspace;
-  }
-
-  @Test
-  public void headersOfDependentTargetsAreIncluded() {
-    // The output path used by the buildable for the link tree.
-    BuildTarget symlinkTarget = BuildTargetFactory.newInstance("//:symlink");
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(tmpDir.getRoot());
-    RelPath symlinkTreeRoot =
-        BuildTargetPaths.getGenPath(
-            projectFilesystem.getBuckPaths(), symlinkTarget, "%s/symlink-tree-root");
-
-    // Setup the map representing the link tree.
-    ImmutableMap<Path, SourcePath> links = ImmutableMap.of();
-
-    HeaderSymlinkTreeWithHeaderMap symlinkTreeBuildRule =
-        HeaderSymlinkTreeWithHeaderMap.create(
-            symlinkTarget, projectFilesystem, symlinkTreeRoot.getPath(), links);
-    graphBuilder.addToIndex(symlinkTreeBuildRule);
-
-    BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
-    BuildRuleParams libParams = TestBuildRuleParams.create();
-    FakeCxxLibrary depRule =
-        new FakeCxxLibrary(
-            libTarget,
-            new FakeProjectFilesystem(),
-            libParams,
-            BuildTargetFactory.newInstance("//:header"),
-            symlinkTarget,
-            BuildTargetFactory.newInstance("//:privateheader"),
-            BuildTargetFactory.newInstance("//:privatesymlink"),
-            new FakeBuildRule("//:archive"),
-            new FakeBuildRule("//:shared"),
-            Paths.get("output/path/lib.so"),
-            "lib.so",
-            ImmutableSortedSet.of());
-
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
-    BuildRuleParams params =
-        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(depRule));
-
-    SwiftLibraryDescriptionArg args = createDummySwiftArg();
-
-    SwiftCompile buildRule =
-        (SwiftCompile)
-            FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
-                TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
-                buildTarget,
-                params,
-                args);
-
-    ImmutableList<String> swiftIncludeArgs = buildRule.getSwiftIncludeArgs(pathResolver);
-
-    assertThat(swiftIncludeArgs.size(), Matchers.equalTo(2));
-    assertThat(swiftIncludeArgs.get(0), Matchers.equalTo("-I"));
-    assertThat(swiftIncludeArgs.get(1), Matchers.endsWith("symlink.hmap"));
   }
 
   @Test

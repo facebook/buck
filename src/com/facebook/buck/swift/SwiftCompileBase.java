@@ -25,6 +25,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.ThrowingSerialization;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -142,7 +145,18 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final String appleSdkVersion;
 
-  // The following fields do not have to be part of the rulekey, all the other must.
+  // We need the dependent swiftmodule paths to contribute to the rulekey. These
+  // paths are not used directly in the compilation action as the compiler does
+  // not take explicit swiftmodule paths. Instead we use the containing folders
+  // in `swiftIncludePaths` with `-I`.
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> swiftmoduleDeps;
+
+  // The following fields do not have to be part of the rulekey, all the others must.
+  @ExcludeFromRuleKey(
+      reason = "This is a folder path to the swiftmodule output already included in the rulekey.",
+      serialization = ThrowingSerialization.class,
+      inputs = DefaultFieldInputs.class)
+  private final ImmutableSet<SourcePath> swiftIncludePaths;
 
   private BuildableSupport.DepsSupplier depsSupplier;
   protected final Optional<AbsPath> swiftFileListPath; // internal scratch temp path
@@ -237,6 +251,22 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.prefixSerializedDebugInfo =
         hasPrefixSerializedDebugInfo || swiftBuckConfig.getPrefixSerializedDebugInfo();
     this.appleSdkVersion = appleSdk.getVersion();
+
+    // TODO: the swiftmodule dependencies should be passed in the constructor instead of being
+    // determined from getBuildDeps().
+    ImmutableSortedSet.Builder<SourcePath> swiftmoduleDepPathBuilder =
+        ImmutableSortedSet.naturalOrder();
+    ImmutableSet.Builder<SourcePath> swiftIncludePathBuilder = ImmutableSet.builder();
+    for (BuildRule dep : getBuildDeps()) {
+      if (dep instanceof SwiftCompile) {
+        SwiftCompile swiftCompile = (SwiftCompile) dep;
+        swiftmoduleDepPathBuilder.add(swiftCompile.getSwiftModuleOutputPath());
+        swiftIncludePathBuilder.add(swiftCompile.getSourcePathToOutput());
+      }
+    }
+    this.swiftmoduleDeps = swiftmoduleDepPathBuilder.build();
+    this.swiftIncludePaths = swiftIncludePathBuilder.build();
+
     performChecks(buildTarget);
   }
 
@@ -287,14 +317,12 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
     compilerArgs.addAll(
         MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"), getSwiftIncludeArgs(resolver)));
-    compilerArgs.addAll(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle(INCLUDE_FLAG),
-            getBuildDeps().stream()
-                .filter(SwiftCompile.class::isInstance)
-                .map(BuildRule::getSourcePathToOutput)
-                .map(input -> resolver.getCellUnsafeRelPath(input).toString())
-                .collect(ImmutableSet.toImmutableSet())));
+
+    for (SourcePath includePath : swiftIncludePaths) {
+      compilerArgs.add(
+          INCLUDE_FLAG,
+          getProjectFilesystem().relativize(resolver.getAbsolutePath(includePath)).toString());
+    }
 
     boolean hasMainEntry =
         srcs.stream()
@@ -547,5 +575,14 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
    */
   public SourcePath getOutputPath() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
+  }
+
+  /**
+   * @return {@link SourcePath} to the .swiftmodule output from the compilation process. A
+   *     swiftmodule file contains the public interface for a module, and is basically a binary file
+   *     format equivalent to header files for a C framework or library.
+   */
+  public SourcePath getSwiftModuleOutputPath() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), modulePath);
   }
 }
