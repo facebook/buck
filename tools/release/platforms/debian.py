@@ -48,7 +48,7 @@ buck ({version}) stable; urgency=low
 
 
 def validate(linux_host, image_tag, deb_path):
-    """ Spin up a fresh docker image, and make sure that the deb installs and runs """
+    """Spin up a fresh docker image, and make sure that the deb installs and runs"""
     DOCKERFILE = r"""\
 FROM azul/zulu-openjdk:8
 RUN sed -i 's,archive\.canonical\.com,mirror\.facebook\.net,g' /etc/apt/sources.list

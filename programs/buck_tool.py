@@ -202,7 +202,7 @@ class BuckDaemonErrorException(BuckToolException):
 
 
 class ExitCodeCallable(object):
-    """ Simple callable class that just returns a given exit code """
+    """Simple callable class that just returns a given exit code"""
 
     def __init__(self, exit_code):
         self.exit_code = exit_code
@@ -212,7 +212,7 @@ class ExitCodeCallable(object):
 
 
 class ExecuteProcess(ExitCodeCallable):
-    """ Callable that executes a given process after core buck finishes """
+    """Callable that executes a given process after core buck finishes"""
 
     def __init__(self, exit_code, path, argv, envp, cwd):
         super(ExecuteProcess, self).__init__(exit_code)
@@ -311,7 +311,7 @@ class ExecuteFixScript(ExitCodeCallable):
 
 
 class PrintExecution(ExitCodeCallable):
-    """ Callable that prints how to execute a given target after the build finishes """
+    """Callable that prints how to execute a given target after the build finishes"""
 
     def __init__(self, exit_code, path, argv, envp, cwd):
         super(PrintExecution, self).__init__(exit_code)
@@ -345,7 +345,7 @@ class BuckStatusReporter(object):
         self.start_time = time.time()
 
     def report(self, exit_code):
-        """ Add custom code here to track Buck invocations """
+        """Add custom code here to track Buck invocations"""
         pass
 
 
@@ -715,7 +715,7 @@ class BuckTool(object):
                     return ExecuteProcess(exit_code, path, argv, envp, cwd)
 
     def _register_basic_info_for_report(self):
-        """ Store common information in reporter """
+        """Store common information in reporter"""
         try:
             repository = self._get_repository()
             self._reporter.repository = repository

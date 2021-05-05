@@ -30,7 +30,7 @@ class ReleaseException(Exception):
 
 @contextlib.contextmanager
 def temp_file_with_contents(dest, contents):
-    """ Write out a temp file specific contents that gets deleted on context exit """
+    """Write out a temp file specific contents that gets deleted on context exit"""
     with open(dest, "w") as fout:
         fout.write(contents)
     yield
@@ -40,7 +40,7 @@ def temp_file_with_contents(dest, contents):
 
 @contextlib.contextmanager
 def temp_move_file(path):
-    """ Move a file out of the way on entrance, and back to its original location on exit """
+    """Move a file out of the way on entrance, and back to its original location on exit"""
     bak_path = None
     if os.path.exists(path):
         bak_path = os.path.join(os.path.dirname(path), os.path.basename(path) + ".bak")
@@ -79,7 +79,7 @@ def run(
     check=True,
     **subprocess_run_kwargs
 ):
-    """ Wrapper for subprocess.run() that sets some sane defaults """
+    """Wrapper for subprocess.run() that sets some sane defaults"""
     logging.info("Running {} in {}".format(" ".join(command), cwd or os.getcwd()))
     if isinstance(input, str):
         input = input.encode("utf-8")

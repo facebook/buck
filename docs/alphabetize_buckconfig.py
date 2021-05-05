@@ -78,7 +78,7 @@ option_re = re.compile(
 def overlapping_iter(
     regex: Pattern[str], data: str, group: str
 ) -> Generator[Match[str], None, None]:
-    """ Regex iterator that allows us to overlap a bit with other matches """
+    """Regex iterator that allows us to overlap a bit with other matches"""
     start_idx = 0
     while start_idx < len(data):
         match = regex.match(data, start_idx)
@@ -118,7 +118,7 @@ def get_options(path: Path) -> Config:
 
 
 def sort_one_option(config: Config, exclude: List[str]) -> Optional[Option]:
-    """ Here it is, an in the wild usecase for a bubble sort """
+    """Here it is, an in the wild usecase for a bubble sort"""
     changed_option = None
     for section in config.sections:
         for i in range(len(section.options) - 1):

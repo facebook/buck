@@ -97,7 +97,7 @@ class ImportWhitelistManager(object):
 
     @staticmethod
     def _block_unsafe_function(module, name):
-        """Returns a function that ignores any arguments and raises AttributeError. """
+        """Returns a function that ignores any arguments and raises AttributeError."""
 
         def func(*args, **kwargs):
             raise AttributeError(

@@ -37,7 +37,7 @@ Includes various improvements and bug fixes, viewable here: {html_url}
 
 
 def get_version_and_timestamp_from_release(release):
-    """ Returns the version (without a 'v' prefix) and the timestamp of the release """
+    """Returns the version (without a 'v' prefix) and the timestamp of the release"""
     release_version = release["tag_name"].lstrip("v")
     release_timestamp = dateutil.parser.parse(release["created_at"]).strftime("%s")
     return release_version, release_timestamp
@@ -55,7 +55,7 @@ def get_token(token_file):
 
 
 def get_current_user(github_token, prefer_fb_email=True):
-    """ Gets info about the current github user """
+    """Gets info about the current github user"""
     url = "https://api.github.com/user"
     emails_url = "https://api.github.com/user/emails"
     headers = get_headers(github_token)
@@ -83,7 +83,7 @@ def get_current_user(github_token, prefer_fb_email=True):
 
 
 def get_commit(repository, github_token, commit):
-    """ Gets a specific commit's info from github """
+    """Gets a specific commit's info from github"""
     url = "https://api.github.com/repos/{}/commits/{}".format(repository, commit)
     headers = get_headers(github_token)
     logging.info("Fetching commit {} for {}".format(commit, repository))
@@ -93,7 +93,7 @@ def get_commit(repository, github_token, commit):
 
 
 def get_latest_release(repository, github_token):
-    """ Gets the latest release object from github or None if there are no releases """
+    """Gets the latest release object from github or None if there are no releases"""
     url = "https://api.github.com/repos/{}/releases/latest".format(repository)
     headers = get_headers(github_token)
     logging.info("Fetching latest release for {}".format(repository))
@@ -106,7 +106,7 @@ def get_latest_release(repository, github_token):
 
 
 def get_summary_from_commit(commit):
-    """ Takes a full commit message, and gives something abbreviated for changelogs """
+    """Takes a full commit message, and gives something abbreviated for changelogs"""
     message = commit["commit"]["message"].split("\n")[0]
     return "{}: {}".format(commit["sha"], message)
 
@@ -167,7 +167,7 @@ def create_release(repository, github_token, message, version_tag, commit):
 
 
 def get_all_releases(repository, github_token):
-    """ Get all of the releases from github for a repository. Useful for changelogs """
+    """Get all of the releases from github for a repository. Useful for changelogs"""
     url = "https://api.github.com/repos/{}/releases".format(repository)
     headers = get_headers(github_token)
     logging.info("Getting all releases")
@@ -185,7 +185,7 @@ def get_all_releases(repository, github_token):
 
 
 def get_release_for_tag(repository, github_token, version_tag):
-    """ Gets the release from github for a specific git tag """
+    """Gets the release from github for a specific git tag"""
     url = "https://api.github.com/repos/{}/releases/tags/{}".format(
         repository, version_tag
     )

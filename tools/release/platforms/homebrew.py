@@ -61,7 +61,7 @@ def install_homebrew(homebrew_dir):
 
 
 def fetch_tarball_sha256(url):
-    """ Get the sha256 of a tarball """
+    """Get the sha256 of a tarball"""
     logging.info("Fetching tarball from {}...".format(url))
     response = requests.get(url, stream=True)
     sha256 = hashlib.sha256()
@@ -73,13 +73,13 @@ def fetch_tarball_sha256(url):
 
 
 def get_formula_path(homebrew_dir, tap_repository):
-    """ Get the path for the buck forumula in the given repository """
+    """Get the path for the buck forumula in the given repository"""
     result = brew(homebrew_dir, ["formula", tap_repository + "/buck"], None, True)
     return result.stdout.decode("utf-8").strip()
 
 
 def setup_tap(homebrew_dir, tap_repository):
-    """ Make sure that `tap_repository` is tapped """
+    """Make sure that `tap_repository` is tapped"""
     logging.info("Tapping {}".format(tap_repository))
     brew(homebrew_dir, ["tap", tap_repository])
     logging.info("Tapped {}".format(tap_repository))
@@ -196,7 +196,7 @@ def build_bottle_file(
 
 
 def get_sha256(path, chunk_size=1024 * 1024):
-    """ Get the sha256 of a file """
+    """Get the sha256 of a file"""
     sha = hashlib.sha256()
     with open(path, "rb") as fin:
         data = fin.read(chunk_size)

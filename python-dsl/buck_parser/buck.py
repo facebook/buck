@@ -846,7 +846,7 @@ class UserDefinedRule(object):
     VALID_IDENTIFIER_NAMES = re.compile("^[a-zA-Z_][a-zA-Z0-9_]*$")
 
     def _validate_attributes(self, attrs):
-        """ Ensure we've got reasonable looking parameters for this rule """
+        """Ensure we've got reasonable looking parameters for this rule"""
         modified_attrs = {}
         for name, attr in attrs.items():
             if name in self.required_attrs or name in self.optional_attrs:

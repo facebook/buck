@@ -274,7 +274,7 @@ def configure_logging():
 
 
 def validate_repo_upstream(args):
-    """ Make sure we're in the right repository, not a fork """
+    """Make sure we're in the right repository, not a fork"""
     output = subprocess.check_output(
         ["git", "remote", "get-url", "origin"], encoding="utf-8"
     ).strip()
@@ -285,7 +285,7 @@ def validate_repo_upstream(args):
 
 
 def validate_environment(args):
-    """ Make sure we can build """
+    """Make sure we can build"""
 
     validate_repo_upstream(args)
     if args.build_deb:

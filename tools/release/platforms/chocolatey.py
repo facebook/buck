@@ -26,7 +26,7 @@ from releases import get_version_and_timestamp_from_release
 
 
 def validate(windows_host, docker_memory, docker_isolation, image_tag, nupkg_path):
-    """ Spin up a fresh docker image, and make sure that the nupkg installs and runs """
+    """Spin up a fresh docker image, and make sure that the nupkg installs and runs"""
     DOCKERFILE = r"""\
 FROM  mcr.microsoft.com/windows/servercore:1809
 SHELL ["powershell", "-command"]
@@ -125,7 +125,7 @@ def build_chocolatey(
 
 
 def publish_chocolatey(chocolatey_file, chocolatey_api_key, insecure_chocolatey_upload):
-    """ Publish a nupkg to chocolatey """
+    """Publish a nupkg to chocolatey"""
     url = "https://chocolatey.org/api/v2/package"
     headers = {"X-NuGet-ApiKey": chocolatey_api_key}
     verify = not insecure_chocolatey_upload
