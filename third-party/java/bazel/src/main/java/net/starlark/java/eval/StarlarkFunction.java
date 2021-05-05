@@ -31,6 +31,7 @@ import net.starlark.java.syntax.Resolver;
     doc = "The type of functions declared in Starlark.")
 public final class StarlarkFunction extends StarlarkCallable {
 
+  private final Mutability mutability;
   private final String name;
   private final boolean isTopLevel;
   private final ImmutableList<String> parameterNames;
@@ -61,6 +62,8 @@ public final class StarlarkFunction extends StarlarkCallable {
       Module module,
       Tuple defaultValues,
       Tuple freevars) {
+
+    this.mutability = thread.mutability();
 
     // Here we copy `rfn` fields to this fields
     // to release memory allocated for AST.
@@ -305,9 +308,13 @@ public final class StarlarkFunction extends StarlarkCallable {
   }
 
   @Override
+  public void checkHashable() {
+    // Functions are unconditionally hashable
+  }
+
+  @Override
   public boolean isImmutable() {
-    // Only correct because closures are not yet supported.
-    return true;
+    return mutability.isFrozen();
   }
 
   // The MANDATORY sentinel indicates a slot in the defaultValues
