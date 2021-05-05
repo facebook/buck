@@ -1,6 +1,5 @@
 package net.starlark.java.eval;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
@@ -95,8 +94,6 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     int numParamsWithoutDefault = fn.numNonStarParams - fn.defaultValues.size();
     int numPositionalParams = fn.numNonStarParams - fn.numKeywordOnlyParams;
 
-    MissingParams missing = null;
-
     ImmutableList<String> names = fn.getParameterNames();
 
     for (int paramIndex = 0; paramIndex < paramFromArg.length; ++paramIndex) {
@@ -129,19 +126,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
         }
       }
 
-      // Collect all the missing parameters to report all of them at once.
-      if (missing == null) {
-        missing = new MissingParams(fn.getName());
-      }
-      if (paramIndex < numPositionalParams) {
-        missing.addPositional(names.get(paramIndex));
-      } else {
-        missing.addNamed(names.get(paramIndex));
-      }
-    }
-
-    if (missing != null) {
-      throwOnMissingPositionalOrNamed(starStarArgs, missing);
+      throw StarlarkFunctionLinkedError.error(fn, linkSig, args, starArgs, starStarArgs);
     }
 
     // now all regular params handled, processing *args and **kwargs
@@ -163,8 +148,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     } else {
       // there's no *args
       if (starArgsPos < starArgsSize) {
-        throw new StarlarkFunctionLinkedErrorTooManyPositionals(fn, linkSig)
-            .error(args, starArgs);
+        throw StarlarkFunctionLinkedError.error(fn, linkSig, args, starArgs, starStarArgs);
       }
     }
 
@@ -183,7 +167,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
       if (haveUnboundStarStarArgs) {
         for (Map.Entry<Object, Object> e : starStarArgs.contents.entrySet()) {
           if (!(e.getKey() instanceof String)) {
-            throwIfKwargsKeysAreNotStrings(starStarArgs);
+            throw StarlarkFunctionLinkedError.error(fn, linkSig, args, starArgs, starStarArgs);
           }
           String key = (String) e.getKey();
           if (boundsKeys != null && boundsKeys.contains(key)) {
@@ -191,7 +175,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
           }
           Object prev = newKwargs.put(key, e.getValue());
           if (prev != null) {
-            throw Starlark.errorf("%s() got multiple values for keyword argument '%s'", fn.getName(), key);
+            throw StarlarkFunctionLinkedError.error(fn, linkSig, args, starArgs, starStarArgs);
           }
         }
       }
@@ -199,43 +183,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     } else {
       // there's no **kwargs
       if (starStarArgs != null && starStarArgs.size() != BoundsKeys.size(boundsKeys)) {
-        throw unexpectedKeywordArgument(starStarArgs, boundsKeys);
-      }
-    }
-  }
-
-  private EvalException unexpectedKeywordArgument(Dict<Object, Object> starStarArgs, @Nullable BoundsKeys boundsKeys)
-      throws EvalException {
-    throwIfKwargsKeysAreNotStrings(starStarArgs);
-    for (Object key : starStarArgs.keySet()) {
-      String keyString = (String) key;
-      if (boundsKeys != null) {
-        if (boundsKeys.contains(keyString)) {
-          continue;
-        }
-      }
-      if (fn().getParameterNames().contains(keyString)) {
-        return Starlark.errorf("%s() got multiple values for parameter '%s'", fn().getName(), keyString);
-      } else {
-        return Starlark.errorf("%s() got unexpected keyword argument: %s", fn().getName(), keyString);
-      }
-    }
-    throw new AssertionError();
-  }
-
-  private void throwOnMissingPositionalOrNamed(
-      Dict<Object, Object> starStarArgs,
-      MissingParams missing) throws EvalException {
-    throwIfKwargsKeysAreNotStrings(starStarArgs);
-    throw missing.error();
-  }
-
-  private void throwIfKwargsKeysAreNotStrings(@Nullable Dict<?, ?> kwargs) throws EvalException {
-    if (kwargs != null) {
-      for (Object key : kwargs.keySet()) {
-        if (!(key instanceof String)) {
-          throw Starlark.errorf("keywords must be strings, not %s", Starlark.type(key));
-        }
+        throw StarlarkFunctionLinkedError.error(fn, linkSig, args, starArgs, starStarArgs);
       }
     }
   }

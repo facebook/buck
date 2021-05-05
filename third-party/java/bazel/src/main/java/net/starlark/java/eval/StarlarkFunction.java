@@ -185,7 +185,7 @@ public final class StarlarkFunction extends StarlarkCallable {
       } else if (hasVarargs()) {
         argToStar.add(argIndex);
       } else {
-        return new StarlarkFunctionLinkedErrorTooManyPositionals(this, sig);
+        return new StarlarkFunctionLinkedError(this, sig);
       }
     }
 
@@ -198,11 +198,7 @@ public final class StarlarkFunction extends StarlarkCallable {
         if (paramFromArg[paramIndex] == Integer.MIN_VALUE) {
           paramFromArg[paramIndex] = argIndex;
         } else {
-          return new StarlarkCallableLinkedError(this, sig, String.format(
-              "%s() got multiple values for parameter '%s'",
-              getName(),
-              argName
-          ));
+          return new StarlarkFunctionLinkedError(this, sig);
         }
       } else if (hasKwargs()) {
         argToStarStar.add(argIndex);
@@ -218,14 +214,7 @@ public final class StarlarkFunction extends StarlarkCallable {
     if (unexpected != null) {
       // Give a spelling hint if there is exactly one.
       // More than that suggests the wrong function was called.
-      return new StarlarkCallableLinkedError(this, sig, String.format(
-          "%s() got unexpected keyword argument%s: %s%s",
-          getName(),
-          plural(unexpected.size()),
-          Joiner.on(", ").join(unexpected),
-          unexpected.size() == 1
-              ? SpellChecker.didYouMean(unexpected.get(0), parameterNames.subList(0, nparams))
-              : ""));
+      return new StarlarkFunctionLinkedError(this, sig);
     }
 
     return new StarlarkFunctionLinked(
