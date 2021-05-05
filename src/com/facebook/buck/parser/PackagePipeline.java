@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -56,7 +56,7 @@ public class PackagePipeline implements AutoCloseable {
    */
   private final long minimumPerfEventTimeMs;
 
-  private final PipelineNodeCache<AbsPath, Package> cache;
+  private final PipelineNodeCache<ForwardRelPath, Package> cache;
 
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
@@ -81,14 +81,16 @@ public class PackagePipeline implements AutoCloseable {
    * Given a build file at a particular path, returns the path of the package file in the same
    * directory.
    */
-  static AbsPath getPackageFileFromBuildFile(Cell cell, AbsPath buildFile) {
+  static ForwardRelPath getPackageFileFromBuildFile(Cell cell, ForwardRelPath buildFile) {
     Preconditions.checkArgument(
         buildFile.endsWith(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()),
         "Invalid build file: %s",
         buildFile);
-    AbsPath parent =
+    ForwardRelPath parent =
         Preconditions.checkNotNull(
-            buildFile.getParent(), "The build file path must have a parent: %s", buildFile);
+            buildFile.getParentButEmptyForSingleSegment(),
+            "The build file path must have a parent: %s",
+            buildFile);
     return parent.resolve(PACKAGE_FILE_NAME);
   }
 
@@ -100,15 +102,17 @@ public class PackagePipeline implements AutoCloseable {
    * @return the path of the parent package file for the given {@param packageFile} package file, if
    *     it exists, else an empty optional.
    */
-  static Optional<AbsPath> getParentPackageFile(Cell cell, AbsPath packageFile) {
-    AbsPath currentDir =
+  static Optional<ForwardRelPath> getParentPackageFile(ForwardRelPath packageFile) {
+    ForwardRelPath currentDir =
         Preconditions.checkNotNull(
-            packageFile.getParent(), "The package file path must have a parent: %s", packageFile);
-    AbsPath cellRoot = cell.getRoot();
-    if (currentDir.equals(cellRoot)) {
+            packageFile.getParentButEmptyForSingleSegment(),
+            "The package file path must have a parent: %s",
+            packageFile);
+    if (currentDir.isEmpty()) {
       return Optional.empty();
     }
-    AbsPath parentPackageFile = currentDir.getParent().resolve(PACKAGE_FILE_NAME);
+    ForwardRelPath parentPackageFile =
+        currentDir.getParentButEmptyForSingleSegment().resolve(PACKAGE_FILE_NAME);
     return Optional.of(parentPackageFile);
   }
 
@@ -116,8 +120,8 @@ public class PackagePipeline implements AutoCloseable {
    * @return a future (potentially immediate) for the {@link Package} in the package file
    *     corresponding to the {@param buildFile} provided.
    */
-  public ListenableFuture<Package> getPackageJob(Cell cell, AbsPath buildFile) {
-    AbsPath packageFile = getPackageFileFromBuildFile(cell, buildFile);
+  public ListenableFuture<Package> getPackageJob(Cell cell, ForwardRelPath buildFile) {
+    ForwardRelPath packageFile = getPackageFileFromBuildFile(cell, buildFile);
 
     if (!cell.getBuckConfig().getView(ParserConfig.class).getEnablePackageFiles()) {
       Package pkg =
@@ -129,7 +133,7 @@ public class PackagePipeline implements AutoCloseable {
     return getPackageJobInternal(cell, packageFile);
   }
 
-  private ListenableFuture<Package> getPackageJobInternal(Cell cell, AbsPath packageFile)
+  private ListenableFuture<Package> getPackageJobInternal(Cell cell, ForwardRelPath packageFile)
       throws BuildTargetException {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
@@ -153,12 +157,12 @@ public class PackagePipeline implements AutoCloseable {
   }
 
   private ListenableFuture<Optional<Package>> getParentPackageJob(
-      Cell cell, AbsPath childBuildFile) {
+      Cell cell, ForwardRelPath childBuildFile) {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();
     }
 
-    Optional<AbsPath> parentBuildFile = getParentPackageFile(cell, childBuildFile);
+    Optional<ForwardRelPath> parentBuildFile = getParentPackageFile(childBuildFile);
     if (!parentBuildFile.isPresent()) {
       // childBuildFile is at the cell root and we have no more parents
       return Futures.immediateFuture(Optional.empty());
@@ -171,7 +175,7 @@ public class PackagePipeline implements AutoCloseable {
   }
 
   private ListenableFuture<Package> computePackage(
-      Cell cell, AbsPath packageFile, PackageMetadata pkg, Optional<Package> parentPkg)
+      Cell cell, ForwardRelPath packageFile, PackageMetadata pkg, Optional<Package> parentPkg)
       throws BuildTargetException {
     if (shuttingDown()) {
       return Futures.immediateCancelledFuture();

@@ -26,6 +26,7 @@ import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.string.MoreStrings;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -77,11 +78,17 @@ public class BuildTargetRawNodeParsePipeline implements BuildTargetParsePipeline
   public ListenableFuture<RawTargetNode> getNodeJob(
       Cell cell, UnconfiguredBuildTarget buildTarget, DependencyStack dependencyStack)
       throws BuildTargetException {
+    Preconditions.checkArgument(
+        cell.getCanonicalName() == buildTarget.getCell(),
+        "cell '%s' and build target %s cells mismatch",
+        cell.getCanonicalName(),
+        buildTarget);
+
     return Futures.transformAsync(
         buildFileRawNodeParsePipeline.getFileJob(
             cell,
             cell.getBuckConfigView(ParserConfig.class)
-                .getAbsolutePathToBuildFile(cell, buildTarget, dependencyStack)),
+                .getRelativePathToBuildFile(cell, buildTarget, dependencyStack)),
         input -> {
           if (!input.getTargets().containsKey(buildTarget.getName())) {
             ParserConfig parserConfig = cell.getBuckConfigView(ParserConfig.class);

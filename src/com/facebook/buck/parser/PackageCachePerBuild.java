@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -32,7 +33,7 @@ import javax.annotation.Nullable;
  * A {@link PipelineNodeCache} compatible packageCache mapping a {@code packageFile} path to the
  * associated {@link Package}. Each {@link Cell} contains it's own PackageCache.
  */
-class PackageCachePerBuild implements PipelineNodeCache.Cache<AbsPath, Package> {
+class PackageCachePerBuild implements PipelineNodeCache.Cache<ForwardRelPath, Package> {
 
   /** Per {@link Cell} threadsafe packageCache for {@link Package}s. */
   private static class CellState {
@@ -67,25 +68,26 @@ class PackageCachePerBuild implements PipelineNodeCache.Cache<AbsPath, Package> 
   }
 
   @Override
-  public Optional<Package> lookupComputedNode(Cell cell, AbsPath packageFile, BuckEventBus eventBus)
-      throws BuildTargetException {
+  public Optional<Package> lookupComputedNode(
+      Cell cell, ForwardRelPath packageFile, BuckEventBus eventBus) throws BuildTargetException {
     CellState state = getCellState(cell);
     if (state == null) {
       return Optional.empty();
     }
-    return state.lookupPackage(packageFile);
+    AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
+    return state.lookupPackage(packageFileAbs);
   }
 
   @Override
   public Package putComputedNodeIfNotPresent(
       Cell cell,
-      AbsPath packageFile,
+      ForwardRelPath packageFile,
       Package pkg,
       boolean targetIsConfiguration,
       BuckEventBus eventBus)
       throws BuildTargetException {
     Preconditions.checkState(!targetIsConfiguration);
-
-    return getOrCreateCellState(cell).putPackageIfNotPresent(packageFile, pkg);
+    AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
+    return getOrCreateCellState(cell).putPackageIfNotPresent(packageFileAbs, pkg);
   }
 }

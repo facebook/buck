@@ -22,7 +22,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -65,26 +65,26 @@ public class PerBuildStateCacheTest {
     childCell = cells.getCell(CanonicalCellName.of(Optional.of("xplat")));
   }
 
-  Package createPackage(Cell cell, AbsPath packageFile) {
+  Package createPackage(Cell cell, ForwardRelPath packageFile) {
     return createPackage(cell, packageFile, PackageMetadata.EMPTY_SINGLETON);
   }
 
   Package createPackage(
       Cell cell,
-      AbsPath packageFile,
+      ForwardRelPath packageFile,
       Boolean inherit,
       ImmutableList<String> visibility,
       ImmutableList<String> within_view) {
     return createPackage(cell, packageFile, PackageMetadata.of(inherit, visibility, within_view));
   }
 
-  Package createPackage(Cell cell, AbsPath packageFile, PackageMetadata packageMetadata) {
+  Package createPackage(Cell cell, ForwardRelPath packageFile, PackageMetadata packageMetadata) {
     return PackageFactory.create(cell, packageFile, packageMetadata, Optional.empty());
   }
 
   @Test
   public void putPackageIfNotPresent() {
-    AbsPath packageFile = filesystem.resolve("Foo");
+    ForwardRelPath packageFile = ForwardRelPath.of("Foo");
 
     Package pkg = createPackage(cells.getRootCell(), packageFile);
 
@@ -97,7 +97,7 @@ public class PerBuildStateCacheTest {
 
   @Test
   public void lookupPackage() {
-    AbsPath packageFile = filesystem.resolve("Foo");
+    ForwardRelPath packageFile = ForwardRelPath.of("Foo");
 
     Optional<Package> lookupPackage =
         packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
@@ -114,7 +114,7 @@ public class PerBuildStateCacheTest {
 
   @Test
   public void packageInRootCellIsNotInChildCell() {
-    AbsPath packageFile = filesystem.resolve("Foo");
+    ForwardRelPath packageFile = ForwardRelPath.of("Foo");
 
     // Make sure to create two different packages
     Package pkg1 =
@@ -125,7 +125,7 @@ public class PerBuildStateCacheTest {
             ImmutableList.of("//bar/..."),
             ImmutableList.of());
 
-    AbsPath childPackageFile = childCell.getFilesystem().resolve("Foo");
+    ForwardRelPath childPackageFile = ForwardRelPath.of("Foo");
     Package pkg2 =
         createPackage(
             childCell, childPackageFile, false, ImmutableList.of("//bar/..."), ImmutableList.of());

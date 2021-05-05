@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -26,7 +26,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 public class BuildFileRawNodeParsePipeline extends GenericFileParsePipeline<BuildFileManifest> {
 
   public BuildFileRawNodeParsePipeline(
-      PipelineNodeCache<AbsPath, BuildFileManifest> cache,
+      PipelineNodeCache<ForwardRelPath, BuildFileManifest> cache,
       ProjectBuildFileParserPool projectBuildFileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,

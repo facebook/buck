@@ -17,6 +17,8 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.util.concurrent.Futures;
@@ -29,8 +31,16 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 
 class PipelineNodeCache<K, T> {
+  /** Key for {@link #jobsCache} */
+  @BuckStyleValue
+  abstract static class JobsCacheKey<K> {
+    abstract CanonicalCellName getCellName();
+
+    abstract K getKey();
+  }
+
   private final Cache<K, T> cache;
-  protected final ConcurrentMap<K, ListenableFuture<T>> jobsCache;
+  private final ConcurrentMap<JobsCacheKey<K>, ListenableFuture<T>> jobsCache;
   private final Predicate<T> targetNodeIsConfiguration;
 
   public PipelineNodeCache(Cache<K, T> cache, Predicate<T> targetNodeIsConfiguration) {
@@ -49,11 +59,13 @@ class PipelineNodeCache<K, T> {
   protected final ListenableFuture<T> getJobWithCacheLookup(
       Cell cell, K key, JobSupplier<T> jobSupplier, BuckEventBus eventBus) {
 
+    JobsCacheKey<K> jobsCacheKey = ImmutableJobsCacheKey.ofImpl(cell.getCanonicalName(), key);
+
     // We use a SettableFuture to resolve any races between threads that are trying to create the
     // job for the given key. The SettableFuture is cheap to throw away in case we didn't "win"
     // and can be easily "connected" to a future that actually does work in case we did.
     SettableFuture<T> resultFuture = SettableFuture.create();
-    ListenableFuture<T> resultFutureInCache = jobsCache.putIfAbsent(key, resultFuture);
+    ListenableFuture<T> resultFutureInCache = jobsCache.putIfAbsent(jobsCacheKey, resultFuture);
     if (resultFutureInCache != null) {
       // Another thread succeeded in putting the new value into the cache.
       return resultFutureInCache;

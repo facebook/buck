@@ -126,16 +126,18 @@ public class DaemonicParserState {
 
   /** Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}. */
   private class DaemonicRawCacheView
-      implements PipelineNodeCache.Cache<AbsPath, BuildFileManifest> {
+      implements PipelineNodeCache.Cache<ForwardRelPath, BuildFileManifest> {
 
     @Override
     public Optional<BuildFileManifest> lookupComputedNode(
-        Cell cell, AbsPath buildFile, BuckEventBus eventBus) throws BuildTargetException {
+        Cell cell, ForwardRelPath buildFile, BuckEventBus eventBus) throws BuildTargetException {
+      AbsPath buildFileAbs = cell.getRoot().resolve(buildFile);
+
       DaemonicCellState state = getCellState(cell);
       if (state == null) {
         return Optional.empty();
       }
-      return state.lookupBuildFileManifest(buildFile);
+      return state.lookupBuildFileManifest(buildFileAbs);
     }
 
     /**
@@ -148,11 +150,14 @@ public class DaemonicParserState {
     @Override
     public BuildFileManifest putComputedNodeIfNotPresent(
         Cell cell,
-        AbsPath buildFile,
+        ForwardRelPath buildFile,
         BuildFileManifest manifest,
         boolean targetIsConfiguration,
         BuckEventBus eventBus)
         throws BuildTargetException {
+
+      AbsPath buildFileAbs = cell.getRoot().resolve(buildFile);
+
       ImmutableSet.Builder<AbsPath> dependentsOfEveryNode = ImmutableSet.builder();
 
       addAllIncludes(dependentsOfEveryNode, manifest.getIncludes(), cell);
@@ -161,27 +166,30 @@ public class DaemonicParserState {
         // Add the PACKAGE file in the build file's directory, regardless of whether they currently
         // exist. If a PACKAGE file is added, or a parent PACKAGE file is modified/added we need to
         // invalidate all relevant nodes.
-        AbsPath packageFile = PackagePipeline.getPackageFileFromBuildFile(cell, buildFile);
-        dependentsOfEveryNode.add(packageFile);
+        ForwardRelPath packageFile = PackagePipeline.getPackageFileFromBuildFile(cell, buildFile);
+        dependentsOfEveryNode.add(cell.getRoot().resolve(packageFile));
       }
 
       return getOrCreateCellState(cell)
-          .putBuildFileManifestIfNotPresent(buildFile, manifest, dependentsOfEveryNode.build());
+          .putBuildFileManifestIfNotPresent(buildFileAbs, manifest, dependentsOfEveryNode.build());
     }
   }
 
   /** Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}. */
   private class DaemonicPackageCache
-      implements PipelineNodeCache.Cache<AbsPath, PackageFileManifest> {
+      implements PipelineNodeCache.Cache<ForwardRelPath, PackageFileManifest> {
 
     @Override
     public Optional<PackageFileManifest> lookupComputedNode(
-        Cell cell, AbsPath packageFile, BuckEventBus eventBus) throws BuildTargetException {
+        Cell cell, ForwardRelPath packageFile, BuckEventBus eventBus) throws BuildTargetException {
+
+      AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
+
       DaemonicCellState state = getCellState(cell);
       if (state == null) {
         return Optional.empty();
       }
-      return state.lookupPackageFileManifest(packageFile);
+      return state.lookupPackageFileManifest(packageFileAbs);
     }
 
     /**
@@ -192,21 +200,25 @@ public class DaemonicParserState {
     @Override
     public PackageFileManifest putComputedNodeIfNotPresent(
         Cell cell,
-        AbsPath packageFile,
+        ForwardRelPath packageFile,
         PackageFileManifest manifest,
         boolean targetIsConfiguration,
         BuckEventBus eventBus)
         throws BuildTargetException {
+
+      AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
+
       ImmutableSet.Builder<AbsPath> packageDependents = ImmutableSet.builder();
 
       addAllIncludes(packageDependents, manifest.getIncludes(), cell);
 
       // Package files may depend on their parent PACKAGE file.
-      Optional<AbsPath> parentPackageFile = PackagePipeline.getParentPackageFile(cell, packageFile);
-      parentPackageFile.ifPresent(path -> packageDependents.add(path));
+      Optional<ForwardRelPath> parentPackageFile =
+          PackagePipeline.getParentPackageFile(packageFile);
+      parentPackageFile.ifPresent(path -> packageDependents.add(cell.getRoot().resolve(path)));
 
       return getOrCreateCellState(cell)
-          .putPackageFileManifestIfNotPresent(packageFile, manifest, packageDependents.build());
+          .putPackageFileManifestIfNotPresent(packageFileAbs, manifest, packageDependents.build());
     }
   }
 
@@ -337,11 +349,11 @@ public class DaemonicParserState {
     return cacheType.getCacheView.apply(this);
   }
 
-  public PipelineNodeCache.Cache<AbsPath, BuildFileManifest> getRawNodeCache() {
+  public PipelineNodeCache.Cache<ForwardRelPath, BuildFileManifest> getRawNodeCache() {
     return rawNodeCache;
   }
 
-  public PipelineNodeCache.Cache<AbsPath, PackageFileManifest> getPackageFileCache() {
+  public PipelineNodeCache.Cache<ForwardRelPath, PackageFileManifest> getPackageFileCache() {
     return packageFileCache;
   }
 

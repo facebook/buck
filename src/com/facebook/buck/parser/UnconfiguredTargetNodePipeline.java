@@ -18,7 +18,8 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -53,7 +54,8 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
   private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
   private final BuckEventBus eventBus;
   private final PipelineNodeCache<UnconfiguredBuildTarget, UnconfiguredTargetNode> cache;
-  private final ConcurrentHashMap<AbsPath, ListenableFuture<ImmutableList<UnconfiguredTargetNode>>>
+  private final ConcurrentHashMap<
+          CellRelativePath, ListenableFuture<ImmutableList<UnconfiguredTargetNode>>>
       allNodeCache = new ConcurrentHashMap<>();
   private final Scope perfEventScope;
   private final SimplePerfEvent.PerfEventTitle perfEventTitle;
@@ -99,10 +101,10 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
 
   /** Get or load all raw target nodes from a build file */
   public ListenableFuture<ImmutableList<UnconfiguredTargetNode>> getAllNodesJob(
-      Cell cell, AbsPath buildFile) {
+      Cell cell, ForwardRelPath buildFile) {
     SettableFuture<ImmutableList<UnconfiguredTargetNode>> future = SettableFuture.create();
     ListenableFuture<ImmutableList<UnconfiguredTargetNode>> cachedFuture =
-        allNodeCache.putIfAbsent(buildFile, future);
+        allNodeCache.putIfAbsent(CellRelativePath.of(cell.getCanonicalName(), buildFile), future);
 
     if (cachedFuture != null) {
       return cachedFuture;
@@ -132,7 +134,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                               cell.getRoot().getPath(),
                               cell.getCanonicalName(),
                               from,
-                              buildFile.getPath()),
+                              cell.getRoot().resolve(buildFile).getPath()),
                           FlavorSet.NO_FLAVORS);
                   allNodeJobs.add(
                       cache.getJobWithCacheLookup(
@@ -163,9 +165,9 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
       Cell cell, UnconfiguredBuildTarget buildTarget, DependencyStack dependencyStack)
       throws BuildTargetException {
 
-    AbsPath buildFile =
+    ForwardRelPath buildFile =
         cell.getBuckConfigView(ParserConfig.class)
-            .getAbsolutePathToBuildFile(cell, buildTarget, dependencyStack);
+            .getRelativePathToBuildFile(cell, buildTarget, dependencyStack);
 
     return cache.getJobWithCacheLookup(
         cell,

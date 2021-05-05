@@ -386,6 +386,29 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
 
   /**
    * For use in performance-sensitive code or if you don't care if the build file actually exists,
+   * otherwise prefer {@link #getRelativePathToBuildFile(Cell, UnconfiguredBuildTarget,
+   * DependencyStack)}.
+   *
+   * @param cell the cell where the given target is defined
+   * @param target target to look up
+   * @return path which may or may not exist.
+   */
+  public ForwardRelPath getRelativePathToBuildFileUnsafe(
+      Cell cell, UnconfiguredBuildTarget target) {
+    Preconditions.checkArgument(
+        cell.getCanonicalName() == target.getCell(),
+        "cell '%s' does not match target %s",
+        cell.getCanonicalName(),
+        target);
+
+    return target
+        .getCellRelativeBasePath()
+        .getPath()
+        .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
+  }
+
+  /**
+   * For use in performance-sensitive code or if you don't care if the build file actually exists,
    * otherwise prefer {@link #getAbsolutePathToBuildFile}.
    *
    * @param cell the cell where the given target is defined
@@ -393,16 +416,25 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    * @return path which may or may not exist.
    */
   public AbsPath getAbsolutePathToBuildFileUnsafe(Cell cell, UnconfiguredBuildTarget target) {
-    Preconditions.checkArgument(
-        cell.getCanonicalName() == target.getCell(),
-        "wrong cell '%s' for target %s",
-        cell.getCanonicalName(),
-        target);
-
     ProjectFilesystem targetFilesystem = cell.getFilesystem();
-    return targetFilesystem
-        .resolve(target.getCellRelativeBasePath().getPath())
-        .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
+    return targetFilesystem.resolve(getRelativePathToBuildFileUnsafe(cell, target));
+  }
+
+  /** Return path to build file relative to the cell. */
+  public ForwardRelPath getRelativePathToBuildFile(
+      Cell cell, UnconfiguredBuildTarget target, DependencyStack dependencyStack) {
+    ForwardRelPath buildFile = getRelativePathToBuildFileUnsafe(cell, target);
+    if (!cell.getFilesystem().isFile(buildFile)) {
+      throw new MissingBuildFileException(
+          dependencyStack,
+          target.getFullyQualifiedName(),
+          target
+              .getCellRelativeBasePath()
+              .getPath()
+              .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName())
+              .toPath(cell.getFilesystem().getFileSystem()));
+    }
+    return buildFile;
   }
 
   /**
@@ -413,19 +445,8 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   public AbsPath getAbsolutePathToBuildFile(
       Cell cell, UnconfiguredBuildTarget target, DependencyStack dependencyStack)
       throws MissingBuildFileException {
-    AbsPath buildFile = getAbsolutePathToBuildFileUnsafe(cell, target);
-    if (!cell.getFilesystem().isFile(buildFile)) {
-      throw new MissingBuildFileException(
-          dependencyStack,
-          target.getFullyQualifiedName(),
-          target
-              .getCellRelativeBasePath()
-              .getPath()
-              .toPath(cell.getFilesystem().getFileSystem())
-              .resolve(
-                  cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName().getName()));
-    }
-    return buildFile;
+    ForwardRelPath relPath = getRelativePathToBuildFile(cell, target, dependencyStack);
+    return cell.getFilesystem().resolve(relPath);
   }
 
   /**
