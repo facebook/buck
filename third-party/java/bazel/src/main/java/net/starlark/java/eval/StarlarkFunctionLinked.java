@@ -89,6 +89,8 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     int starArgsSize = starArgs != null ? starArgs.size() : 0;
 
     // Subset of `starStarArgs`, keys which were used in params
+    int boundKeyCount = 0;
+    // This variable is used only if a function has `**kwargs` param.
     BoundsKeys boundsKeys = null;
 
     int numParamsWithoutDefault = fn.numNonStarParams - fn.defaultValues.size();
@@ -110,10 +112,13 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
         Object value = starStarArgs.get(name);
         if (value != null) {
           locals[paramIndex] = value;
-          if (boundsKeys == null) {
-            boundsKeys = new BoundsKeys();
+          ++boundKeyCount;
+          if (fn.hasKwargs()) {
+            if (boundsKeys == null) {
+              boundsKeys = new BoundsKeys();
+            }
+            boundsKeys.add(name);
           }
-          boundsKeys.add(name);
           continue;
         }
       }
@@ -158,12 +163,12 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
           Maps.newLinkedHashMapWithExpectedSize(
               (starStarArgs != null ? starStarArgs.size() : 0)
                   + argToStarStar.length
-                  - (boundsKeys != null ? boundsKeys.size : 0));
+                  - boundKeyCount);
       for (int i = 0; i < argToStarStar.length; ++i) {
         newKwargs.put(argToStarStarName[i], args[argToStarStar[i]]);
       }
       boolean haveUnboundStarStarArgs =
-          starStarArgs != null && (boundsKeys == null || starStarArgs.size() != boundsKeys.size);
+          starStarArgs != null && starStarArgs.size() != boundKeyCount;
       if (haveUnboundStarStarArgs) {
         for (Map.Entry<Object, Object> e : starStarArgs.contents.entrySet()) {
           if (!(e.getKey() instanceof String)) {
@@ -182,7 +187,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
       locals[fn.kwargsIndex] = Dict.wrap(mu, newKwargs);
     } else {
       // there's no **kwargs
-      if (starStarArgs != null && starStarArgs.size() != BoundsKeys.size(boundsKeys)) {
+      if (starStarArgs != null && starStarArgs.size() != boundKeyCount) {
         throw StarlarkFunctionLinkedError.error(fn, linkSig, args, starArgs, starStarArgs);
       }
     }
@@ -201,10 +206,6 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
   private static class BoundsKeys {
     private String[] keysArray = new String[16];
     private int size = 0;
-
-    private static int size(@Nullable BoundsKeys boundsKeys) {
-      return boundsKeys != null ? boundsKeys.size : 0;
-    }
 
     void add(String key) {
       if (size == keysArray.length) {
