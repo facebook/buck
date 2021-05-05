@@ -35,6 +35,8 @@ public class VersionControlBuckConfigTest {
   private static final String TRACKED_BOOKMARKS = "bookmark1, bookmark2";
   private static final ImmutableSet<String> TRACKED_BOOKMARKS_RESULT =
       ImmutableSet.of("bookmark1", "bookmark2");
+  private static final String HG_FAST_STATS_TEMPLATE =
+      "{node|short} {date|hgdate} {remotebookmarks} {bookmarks} {stables}\\n";
 
   @Test
   public void givenHgCmdInConfigThenReturnHgCmdFromConfig() {
@@ -58,6 +60,34 @@ public class VersionControlBuckConfigTest {
             .build();
     VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
     assertThat(config.getHgCmd(), is(equalTo(VersionControlBuckConfig.HG_CMD_DEFAULT)));
+  }
+
+  @Test
+  public void givenHgFastStatsTemplateInConfigThenReturnHgFastStatsTemplateFromConfig() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    VersionControlBuckConfig.VC_SECTION_KEY,
+                    ImmutableMap.of(
+                        VersionControlBuckConfig.HG_FAST_STATS_TEMPLATE_KEY,
+                        HG_FAST_STATS_TEMPLATE)))
+            .build();
+    VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
+    assertThat(config.getHgFastStatsTemplate(), is(equalTo(HG_FAST_STATS_TEMPLATE)));
+  }
+
+  @Test
+  public void givenHgFastStatsTemplateNotInConfigThenReturnDefault() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(VersionControlBuckConfig.VC_SECTION_KEY, ImmutableMap.of()))
+            .build();
+    VersionControlBuckConfig config = new VersionControlBuckConfig(buckConfig);
+    assertThat(
+        config.getHgFastStatsTemplate(),
+        is(equalTo(VersionControlBuckConfig.HG_FAST_STATS_TEMPLATE_DEFAULT)));
   }
 
   @Test

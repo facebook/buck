@@ -31,6 +31,7 @@ public class DelegatingVersionControlCmdLineInterface implements VersionControlC
   private final Path projectRoot;
   private final ProcessExecutorFactory processExecutorFactory;
   private final String hgCmd;
+  private final String hgFastStatsTemplate;
   private final ImmutableMap<String, String> environment;
   @Nullable private VersionControlCmdLineInterface delegate;
 
@@ -38,10 +39,12 @@ public class DelegatingVersionControlCmdLineInterface implements VersionControlC
       Path projectRoot,
       ProcessExecutorFactory processExecutorFactory,
       String hgCmd,
+      String hgFastStatsTemplate,
       ImmutableMap<String, String> environment) {
     this.projectRoot = projectRoot;
     this.processExecutorFactory = processExecutorFactory;
     this.hgCmd = hgCmd;
+    this.hgFastStatsTemplate = hgFastStatsTemplate;
     this.environment = environment;
   }
 
@@ -50,7 +53,8 @@ public class DelegatingVersionControlCmdLineInterface implements VersionControlC
       return delegate;
     }
     HgCmdLineInterface hgCmdLineInterface =
-        new HgCmdLineInterface(processExecutorFactory, projectRoot, hgCmd, environment);
+        new HgCmdLineInterface(
+            processExecutorFactory, projectRoot, hgCmd, hgFastStatsTemplate, environment);
 
     try {
       hgCmdLineInterface.currentRevisionId();

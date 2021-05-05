@@ -54,6 +54,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
   private static final String HG_CMD_TEMPLATE = "{hg}";
   private static final String REVISION_ID_TEMPLATE = "{revision}";
+  private static final String HG_FAST_STATS_TEMPLATE_TEMPLATE = "{hg_fast_stats_template}";
 
 
   private static final ImmutableList<String> CURRENT_REVISION_ID_COMMAND =
@@ -70,21 +71,24 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
           "--rev",
           ". + ancestor(.,present(remote/master))",
           "--template",
-          "{node|short} {date|hgdate} {remotebookmarks} {bookmarks}\\n");
+          HG_FAST_STATS_TEMPLATE_TEMPLATE);
 
   private ProcessExecutorFactory processExecutorFactory;
   private final Path projectRoot;
   private final String hgCmd;
+  private final String hgFastStatsTemplate;
   private final ImmutableMap<String, String> environment;
 
   public HgCmdLineInterface(
       ProcessExecutorFactory processExecutorFactory,
       Path projectRoot,
       String hgCmd,
+      String hgFastStatsTemplate,
       ImmutableMap<String, String> environment) {
     this.processExecutorFactory = processExecutorFactory;
     this.projectRoot = projectRoot;
     this.hgCmd = hgCmd;
+    this.hgFastStatsTemplate = hgFastStatsTemplate;
     this.environment = MoreMaps.merge(environment, HG_ENVIRONMENT_VARIABLES);
   }
 
@@ -148,7 +152,11 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   @Override
   public FastVersionControlStats fastVersionControlStats()
       throws InterruptedException, VersionControlCommandFailedException {
-    String output = executeCommand(FAST_STATS_COMMAND, false);
+    String output =
+        executeCommand(
+            replaceTemplateValue(
+                FAST_STATS_COMMAND, HG_FAST_STATS_TEMPLATE_TEMPLATE, hgFastStatsTemplate),
+            false);
     String[] lines = output.split("\n");
     switch (lines.length) {
       case 1:

@@ -184,13 +184,6 @@ public class HgCmdLineInterfaceIntegrationTest {
     }
   }
 
-  @Test
-  public void testFastVersionControlStatsHasLocalBookmarks()
-      throws InterruptedException, VersionControlCommandFailedException {
-    FastVersionControlStats stats = repoTwoCmdLine.fastVersionControlStats();
-    assertThat(stats.getBaseBookmarks(), is(equalTo(ImmutableSet.of("branch_from_master2"))));
-  }
-
   private static void run(Path directory, String... args) throws IOException, InterruptedException {
     Process proc = new ProcessBuilder().command(args).directory(directory.toFile()).start();
     proc.waitFor();
@@ -240,10 +233,12 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   private static VersionControlCmdLineInterface makeCmdLine(Path repoRootDir) {
+    VersionControlBuckConfig buckConfig = new VersionControlBuckConfig(FakeBuckConfig.empty());
     return new DelegatingVersionControlCmdLineInterface(
         repoRootDir,
         new TestProcessExecutorFactory(),
-        new VersionControlBuckConfig(FakeBuckConfig.empty()).getHgCmd(),
+        buckConfig.getHgCmd(),
+        buckConfig.getHgFastStatsTemplate(),
         ImmutableMap.of("PATH", EnvVariablesProvider.getSystemEnv().get("PATH")));
   }
 }

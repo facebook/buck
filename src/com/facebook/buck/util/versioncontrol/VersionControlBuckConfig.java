@@ -48,6 +48,14 @@ import java.util.Optional;
  *         <li>Bookmarks in list can be regular expressions.
  *         <li>Default value is ["remote/master"].
  *       </ul>
+ *   <dt>hg_fast_stats_template
+ *   <dd>
+ *       <ul>
+ *         <li>Set the log template for command sent to Mercurial for getting stats.
+ *         <li>Should start with "{node|short} {date|hgdate}"", followed by commands that produce
+ *             space separated strings and ending with "\n".
+ *         <li>Defaults to "{node|short} {date|hgdate} {remotebookmarks} {bookmarks}\\n".
+ *       </ul>
  * </dl>
  *
  * <p>Example config section:
@@ -69,6 +77,10 @@ public class VersionControlBuckConfig {
 
   static final String HG_CMD_SETTING_KEY = "hg_cmd";
   static final String HG_CMD_DEFAULT = "hg";
+
+  static final String HG_FAST_STATS_TEMPLATE_KEY = "hg_fast_stats_template";
+  static final String HG_FAST_STATS_TEMPLATE_DEFAULT =
+      "{node|short} {date|hgdate} {remotebookmarks}\\n";
 
   static final String TRACKED_BOOKMARKS_KEY = "tracked_bookmarks";
   static final ImmutableSet<String> TRACKED_BOOKMARKS_DEFAULT = ImmutableSet.of("remote/master");
@@ -98,6 +110,10 @@ public class VersionControlBuckConfig {
         .getOptionalListWithoutComments(VC_SECTION_KEY, TRACKED_BOOKMARKS_KEY)
         .map(ImmutableSet::copyOf)
         .orElse(TRACKED_BOOKMARKS_DEFAULT);
+  }
+
+  public String getHgFastStatsTemplate() {
+    return getValue(VC_SECTION_KEY, HG_FAST_STATS_TEMPLATE_KEY, HG_FAST_STATS_TEMPLATE_DEFAULT);
   }
 
   public Optional<FastVersionControlStats> getPregeneratedVersionControlStats() {

@@ -1327,6 +1327,7 @@ public final class MainRunner {
                       cells.getRootCell().getFilesystem().getRootPath().getPath(),
                       new PrintStreamProcessExecutorFactory(),
                       vcBuckConfig.getHgCmd(),
+                      vcBuckConfig.getHgFastStatsTemplate(),
                       buckConfig.getEnvironment()),
                   vcBuckConfig.getPregeneratedVersionControlStats(),
                   vcBuckConfig.getTrackedBookmarks());
