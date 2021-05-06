@@ -22,7 +22,7 @@ java_test(
         "//src/com/facebook/buck/io/namedpipes:namedpipes",
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/jvm/java:rules",
-        "//src/com/facebook/buck/jvm/java/stepsbuilder:stepsbuilder",
+        "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/env:env",

@@ -30,7 +30,6 @@ import com.facebook.buck.jvm.java.DefaultSourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.AccumulateClassNamesStep;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -40,14 +39,6 @@ import java.util.Optional;
 
 /** Common utilities for working with {@link JavaLibrary} objects. */
 public class JavaLibraryRules {
-
-  @VisibleForTesting
-  public static final String BOOTSTRAP_MAIN_CLASS =
-      "com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper";
-
-  @VisibleForTesting
-  public static final String JAVACD_MAIN_CLASS =
-      "com.facebook.buck.jvm.java.stepsbuilder.javacd.main.JavaCDWorkerToolMain";
 
   /** Utility class: do not instantiate. */
   private JavaLibraryRules() {}

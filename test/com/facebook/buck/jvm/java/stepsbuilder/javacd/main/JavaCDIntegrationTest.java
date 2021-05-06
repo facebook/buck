@@ -53,7 +53,7 @@ import com.facebook.buck.javacd.model.RelPath;
 import com.facebook.buck.javacd.model.ResolvedJavac;
 import com.facebook.buck.javacd.model.ResolvedJavacOptions;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
-import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
+import com.facebook.buck.jvm.java.JavaCDWorkerStepUtils;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestLogSink;
@@ -539,8 +539,8 @@ public class JavaCDIntegrationTest {
         "-Dfile.encoding=" + UTF_8.name(),
         "-cp",
         testBinary.toString(),
-        JavaLibraryRules.BOOTSTRAP_MAIN_CLASS,
-        JavaLibraryRules.JAVACD_MAIN_CLASS);
+        JavaCDWorkerStepUtils.BOOTSTRAP_MAIN_CLASS,
+        JavaCDWorkerStepUtils.JAVACD_MAIN_CLASS);
   }
 
   private ImmutableMap<String, String> getEnvs() {
