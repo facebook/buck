@@ -701,6 +701,7 @@ public class RealAndroidDevice implements AndroidDevice {
     if (this.isZstdCompressionEnabled) {
       try {
         doMultiInstall(filesType, installPaths, /* tryZstdCompressionIfPossible */ true);
+        return;
       } catch (Exception e) {
         LOG.warn(e, "doMultiInstall with zstd compression failed");
       }
