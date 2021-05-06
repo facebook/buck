@@ -865,7 +865,7 @@ public class AppleDescriptions {
             projectFilesystem,
             graphBuilder,
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
-            appleCxxPlatform.getMinVersion(),
+            minimumOSVersion.orElse(appleCxxPlatform.getMinVersion()),
             appleCxxPlatform.getAppleSdk().getResourcesDeviceFamily(),
             appleCxxPlatform.getAppleSdk().getResourcesUIFrameworkFamily(),
             appleCxxPlatform.getActool(),
