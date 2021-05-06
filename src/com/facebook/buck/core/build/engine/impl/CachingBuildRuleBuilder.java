@@ -1158,9 +1158,10 @@ class CachingBuildRuleBuilder {
         (BuildRulePipelinesRunner<State>) this.pipelinesRunner;
     pipelinesRunner.addRule(
         rule,
-        stateHolder ->
+        (stateHolder, isFirstStage) ->
             new RunnableWithFuture<Optional<BuildResult>>() {
-              final BuildRuleSteps<State> steps = new BuildRuleSteps<>(cacheResult, stateHolder);
+              final BuildRuleSteps<State> steps =
+                  new BuildRuleSteps<>(cacheResult, stateHolder, isFirstStage);
 
               @Override
               public ListenableFuture<Optional<BuildResult>> getFuture() {
@@ -1448,20 +1449,22 @@ class CachingBuildRuleBuilder {
     private final CacheResult cacheResult;
     private final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
     private final StepExecutionContext ruleExecutionContext;
-    private final Optional<StateHolder<State>> stateHolder;
+    private final Optional<Pair<StateHolder<State>, Boolean>> stateHolderOptional;
 
     public BuildRuleSteps(CacheResult cacheResult) {
       this(cacheResult, Optional.empty());
     }
 
-    public BuildRuleSteps(CacheResult cacheResult, StateHolder<State> stateHolder) {
-      this(cacheResult, Optional.of(stateHolder));
+    public BuildRuleSteps(
+        CacheResult cacheResult, StateHolder<State> stateHolder, boolean isFirstStage) {
+      this(cacheResult, Optional.of(new Pair<>(stateHolder, isFirstStage)));
     }
 
-    private BuildRuleSteps(CacheResult cacheResult, Optional<StateHolder<State>> stateHolder) {
+    private BuildRuleSteps(
+        CacheResult cacheResult, Optional<Pair<StateHolder<State>, Boolean>> stateHolderOptional) {
       cacheResult.getType().verifyValidFinalType();
       this.cacheResult = cacheResult;
-      this.stateHolder = stateHolder;
+      this.stateHolderOptional = stateHolderOptional;
       ContextualProcessExecutor contextualProcessExecutor =
           new ContextualProcessExecutor(
               executionContext.getProcessExecutor(), processExecutorContext);
@@ -1515,15 +1518,23 @@ class CachingBuildRuleBuilder {
 
     private List<? extends Step> getSteps() {
       try (Scope ignored = LeafEvents.scope(eventBus, "get_build_steps")) {
-        if (stateHolder.isPresent()) {
+        if (stateHolderOptional.isPresent()) {
           @SuppressWarnings("unchecked")
           SupportsPipelining<State> pipelinedRule = (SupportsPipelining<State>) rule;
           return pipelinedRule.getPipelinedBuildSteps(
-              buildRuleBuildContext, buildableContext, stateHolder.get());
+              buildRuleBuildContext, buildableContext, getInitializedStateHolder());
         }
 
         return rule.getBuildSteps(buildRuleBuildContext, buildableContext);
       }
+    }
+
+    private StateHolder<State> getInitializedStateHolder() {
+      Pair<StateHolder<State>, Boolean> pair = stateHolderOptional.get();
+      StateHolder<State> stateHolder = pair.getFirst();
+      boolean isFirst = pair.getSecond();
+      stateHolder.setFirstStage(isFirst);
+      return stateHolder;
     }
 
     private void rethrowIgnoredInterruptedException(Step step) throws InterruptedException {

@@ -419,7 +419,7 @@ public class BuildRulePipelinesRunnerTest {
     }
 
     public RunnableWithFuture<Optional<BuildResult>> newRunner(
-        StateHolder<TestPipelineState> stateHolder) {
+        StateHolder<TestPipelineState> stateHolder, boolean isFirst) {
       assertNull(pipeline);
       pipeline = stateHolder.getState();
       return new RunnableWithFuture<Optional<BuildResult>>() {

@@ -36,6 +36,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /** Constructs build rule pipelines for a single build. */
@@ -47,7 +48,7 @@ public class BuildRulePipelinesRunner<State extends RulePipelineState> {
   /** Gives the factory a way to construct a {@link RunnableWithFuture} to build the given rule. */
   public void addRule(
       SupportsPipelining<State> rule,
-      Function<StateHolder<State>, RunnableWithFuture<Optional<BuildResult>>>
+      BiFunction<StateHolder<State>, Boolean, RunnableWithFuture<Optional<BuildResult>>>
           ruleStepRunnerFactory) {
     BuildRulePipelineStage<State> pipelineStage = getOrCreateStage(rule);
 
@@ -163,6 +164,6 @@ public class BuildRulePipelinesRunner<State extends RulePipelineState> {
   }
 
   private BuildRulePipelineStage<State> getOrCreateStage(SupportsPipelining<State> rule) {
-    return rules.computeIfAbsent(rule, BuildRulePipelineStage::new);
+    return rules.computeIfAbsent(rule, ignore -> new BuildRulePipelineStage<>());
   }
 }

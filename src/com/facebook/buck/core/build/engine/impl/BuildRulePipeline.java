@@ -36,10 +36,12 @@ class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
   public BuildRulePipeline(BuildRulePipelineStage<State> rootRule, StateHolder<State> stateHolder) {
     this.rootRule = rootRule;
     this.stateHolder = stateHolder;
+    boolean isFirst = true;
     for (BuildRulePipelineStage<State> stage = rootRule;
         stage != null;
         stage = stage.getNextStage()) {
-      stage.init(stateHolder);
+      stage.init(stateHolder, isFirst);
+      isFirst = false;
     }
   }
 

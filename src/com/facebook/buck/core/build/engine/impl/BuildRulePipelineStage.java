@@ -19,8 +19,6 @@ package com.facebook.buck.core.build.engine.impl;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.StateHolder;
-import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -28,7 +26,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 /**
@@ -38,20 +36,19 @@ import javax.annotation.Nullable;
 class BuildRulePipelineStage<State extends RulePipelineState>
     implements RunnableWithFuture<Optional<BuildResult>> {
 
-  private final SupportsPipelining<State> rule;
   private final SettableFuture<Optional<BuildResult>> future;
 
   @Nullable private BuildRulePipelineStage<State> nextStage;
   @Nullable private Throwable error = null;
 
   @Nullable
-  private Function<StateHolder<State>, RunnableWithFuture<Optional<BuildResult>>>
+  private BiFunction<StateHolder<State>, Boolean, RunnableWithFuture<Optional<BuildResult>>>
       ruleStepRunnerFactory;
 
-  @Nullable private StateHolder<State> stateHolder;
+  @Nullable private RunnableWithFuture<Optional<BuildResult>> runner;
+  private boolean executed = false;
 
-  BuildRulePipelineStage(SupportsPipelining<State> rule) {
-    this.rule = rule;
+  BuildRulePipelineStage() {
     this.future = SettableFuture.create();
     Futures.addCallback(
         future,
@@ -68,14 +65,18 @@ class BuildRulePipelineStage<State extends RulePipelineState>
   }
 
   public void setRuleStepRunnerFactory(
-      Function<StateHolder<State>, RunnableWithFuture<Optional<BuildResult>>> ruleStepsFactory) {
+      BiFunction<StateHolder<State>, Boolean, RunnableWithFuture<Optional<BuildResult>>>
+          ruleStepRunnerFactory) {
     Preconditions.checkState(this.ruleStepRunnerFactory == null);
-    this.ruleStepRunnerFactory = ruleStepsFactory;
+    this.ruleStepRunnerFactory = ruleStepRunnerFactory;
   }
 
-  void init(StateHolder<State> stateHolder) {
-    Preconditions.checkState(this.stateHolder == null);
-    this.stateHolder = stateHolder;
+  public void init(StateHolder<State> stateHolder, boolean isFirst) {
+    Preconditions.checkState(runner == null);
+    Preconditions.checkNotNull(ruleStepRunnerFactory);
+
+    runner = ruleStepRunnerFactory.apply(stateHolder, isFirst);
+    ruleStepRunnerFactory = null;
   }
 
   public void setNextStage(BuildRulePipelineStage<State> nextStage) {
@@ -89,7 +90,7 @@ class BuildRulePipelineStage<State extends RulePipelineState>
   }
 
   public boolean isReady() {
-    return stateHolder != null;
+    return executed || runner != null;
   }
 
   public void waitForResult() {
@@ -115,20 +116,19 @@ class BuildRulePipelineStage<State extends RulePipelineState>
 
   @Override
   public void run() {
-    Preconditions.checkNotNull(stateHolder);
-    Preconditions.checkNotNull(ruleStepRunnerFactory);
+    Preconditions.checkState(!executed);
+    Preconditions.checkNotNull(runner);
 
-    RunnableWithFuture<Optional<BuildResult>> runner = ruleStepRunnerFactory.apply(stateHolder);
-    future.setFuture(runner.getFuture());
-    runner.run();
+    try {
+      future.setFuture(runner.getFuture());
+      runner.run();
+    } finally {
+      executed = true;
+      runner = null;
+    }
   }
 
   public void abort(Throwable error) {
     future.setException(error);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this).add("rule", rule).toString();
   }
 }
