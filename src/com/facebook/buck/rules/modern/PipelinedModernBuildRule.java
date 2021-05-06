@@ -54,7 +54,7 @@ public abstract class PipelinedModernBuildRule<
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
 
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    ModernBuildRule.getSetupStepsForBuildable(
+    ModernBuildRule.appendWithSetupStepsForBuildable(
         context,
         projectFilesystem,
         outputs,

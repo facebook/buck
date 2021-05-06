@@ -301,7 +301,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       ImmutableList<OutputPath> excludedPaths) {
     ImmutableList.Builder<Step> stepBuilder = ImmutableList.builder();
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, buildTarget);
-    getSetupStepsForBuildable(
+    appendWithSetupStepsForBuildable(
         context, filesystem, outputs, stepBuilder, outputPathResolver, excludedPaths);
 
     stepBuilder.addAll(
@@ -329,8 +329,11 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
         context.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver));
   }
 
-  /** Gets the steps for preparing the output directories of the build rule. */
-  public static void getSetupStepsForBuildable(
+  /**
+   * Appends {@code stepBuilder} with the steps for preparing the output directories of the build
+   * rule.
+   */
+  public static void appendWithSetupStepsForBuildable(
       BuildContext context,
       ProjectFilesystem filesystem,
       Iterable<Path> outputs,
