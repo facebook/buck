@@ -102,17 +102,6 @@ public final class Debug {
   }
 
   /**
-   * Returns a copy of the current stack of call frames, outermost call first.
-   *
-   * <p>This function is intended for use only when execution of {@code thread} is stopped, for
-   * example at a breakpoint. The resulting DebugFrames should not be retained after execution of
-   * the thread has resumed. Most clients should instead use {@link StarlarkThread#getCallStack}.
-   */
-  public static ImmutableList<Frame> getCallStack(StarlarkThread thread) {
-    return thread.getDebugCallStack();
-  }
-
-  /**
    * Given a requested stepping behavior, returns a predicate over the context that tells the
    * debugger when to pause. (Debugger API)
    *

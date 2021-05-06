@@ -60,9 +60,6 @@ public final class StarlarkThread {
   @Nullable private CpuProfiler profiler;
   StarlarkThread savedThread; // saved StarlarkThread, when profiling reentrant evaluation
 
-  // When true, current process has or had at least one profiler or debugger attached.
-  private boolean hasAnyProfileDebug = false;
-
   private final Map<Class<?>, Object> threadLocals = new HashMap<>();
 
   private boolean interruptible = true;
@@ -149,14 +146,9 @@ public final class StarlarkThread {
   }
 
   /** A Frame records information about an active function call. */
-  static final class Frame implements Debug.Frame {
+  static final class Frame {
     final StarlarkThread thread;
     final StarlarkCallable fn; // the called function
-
-    @Nullable
-    final Debug.Debugger dbg = Debug.debugger.get(); // the debugger, if active for this frame
-
-    Object result = Starlark.NONE; // the operand of a Starlark return statement
 
     // Current PC location. Initially fn.getLocation(); for Starlark functions,
     // it is updated at key points when it may be observed: calls, breakpoints, errors.
@@ -171,8 +163,6 @@ public final class StarlarkThread {
     // Set by StarlarkFunction.fastcall. Elements may be regular Starlark
     // values, or wrapped in StarlarkFunction.Cells if shared with a nested function.
     @Nullable Object[] locals;
-
-    @Nullable private Object profileSpan; // current span of walltime call profiler
 
     private Frame(StarlarkThread thread, StarlarkCallable fn) {
       this.thread = thread;
@@ -198,32 +188,12 @@ public final class StarlarkThread {
       }
     }
 
-    @Override
     public StarlarkCallable getFunction() {
       return fn;
     }
 
-    @Override
     public Location getLocation() {
       return loc != null ? loc : fn.getLocation();
-    }
-
-    @Override
-    public ImmutableMap<String, Object> getLocals() {
-      // TODO(adonovan): provide a more efficient API.
-      ImmutableMap.Builder<String, Object> env = ImmutableMap.builder();
-      if (fn instanceof StarlarkFunction) {
-        for (int i = 0; i < ((StarlarkFunction) fn).compiled.getLocals().size(); i++) {
-          Object local = locals[i];
-          if (local != null) {
-            if (local instanceof StarlarkFunction.Cell) {
-              local = ((StarlarkFunction.Cell) local).x;
-            }
-            env.put(((StarlarkFunction) fn).compiled.getLocals().get(i).getName(), local);
-          }
-        }
-      }
-      return env.build();
     }
 
     @Override
@@ -252,73 +222,13 @@ public final class StarlarkThread {
 
   /** Pushes a function onto the call stack. */
   void push(StarlarkCallable fn) {
-    this.hasAnyProfileDebug |= DebugProfile.hasAny();
-
     Frame fr = new Frame(this, fn);
     callstack.add(fr);
-
-    if (hasAnyProfileDebug) {
-      // Notify debug tools of the thread's first push.
-      if (callstack.size() == 1 && Debug.threadHook != null) {
-        Debug.threadHook.onPushFirst(this);
-      }
-
-      // Start wall-time call profile span.
-      CallProfiler callProfiler = StarlarkThread.callProfiler;
-      if (callProfiler != null) {
-        fr.profileSpan = callProfiler.start(fn);
-      }
-
-      // Poll for newly installed CPU profiler.
-      if (profiler == null) {
-        this.profiler = CpuProfiler.get();
-        if (profiler != null) {
-          cpuTicks.set(0);
-          // Associated current Java thread with this StarlarkThread.
-          // (Save the previous association so we can restore it later.)
-          this.savedThread = CpuProfiler.setStarlarkThread(this);
-        }
-      }
-    }
   }
 
   /** Pops a function off the call stack. */
   void pop() {
-    int last = callstack.size() - 1;
-    Frame fr = callstack.get(last);
-
-    if (hasAnyProfileDebug) {
-      if (profiler != null) {
-        int ticks = cpuTicks.getAndSet(0);
-        if (ticks > 0) {
-          profiler.addEvent(ticks, getDebugCallStack());
-        }
-
-        // If this is the final pop in this thread,
-        // unregister it from the profiler.
-        if (last == 0) {
-          // Restore the previous association (in case of reentrant evaluation).
-          CpuProfiler.setStarlarkThread(this.savedThread);
-          this.savedThread = null;
-          this.profiler = null;
-        }
-      }
-    }
-
-    callstack.remove(last); // pop
-
-    if (hasAnyProfileDebug) {
-      // End wall-time profile span.
-      CallProfiler callProfiler = StarlarkThread.callProfiler;
-      if (callProfiler != null && fr.profileSpan != null) {
-        callProfiler.end(fr.profileSpan);
-      }
-
-      // Notify debug tools of the thread's last pop.
-      if (last == 0 && Debug.threadHook != null) {
-        Debug.threadHook.onPopLast(this);
-      }
-    }
+    callstack.remove(callstack.size() - 1); // pop
   }
 
   /** Returns the mutability for values created by this thread. */
@@ -449,12 +359,6 @@ public final class StarlarkThread {
   /** Reports whether this thread is allowed to make recursive calls. */
   public boolean isRecursionAllowed() {
     return allowRecursion;
-  }
-
-  // Implementation of Debug.getCallStack.
-  // Intentionally obscured to steer most users to the simpler getCallStack.
-  ImmutableList<Debug.Frame> getDebugCallStack() {
-    return ImmutableList.<Debug.Frame>copyOf(callstack);
   }
 
   /** Returns the size of the callstack. This is needed for the debugger. */

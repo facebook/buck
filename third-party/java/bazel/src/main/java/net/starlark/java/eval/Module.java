@@ -83,22 +83,6 @@ public final class Module {
   @Nullable private Object clientData;
 
   /**
-   * Returns the module (file) of the innermost enclosing Starlark function on the call stack, or
-   * null if none of the active calls are functions defined in Starlark.
-   *
-   * <p>The name of this function is intentionally horrible to make you feel bad for using it.
-   */
-  @Nullable
-  public static Module ofInnermostEnclosingStarlarkFunction(StarlarkThread thread) {
-    for (Debug.Frame fr : thread.getDebugCallStack().reverse()) {
-      if (fr.getFunction() instanceof StarlarkFunction) {
-        return ((StarlarkFunction) fr.getFunction()).getModule();
-      }
-    }
-    return null;
-  }
-
-  /**
    * Returns a map in which each semantics-enabled FlagGuardedValue has been replaced by the value
    * it guards. Disabled FlagGuardedValues are left in place, and should be treated as unavailable.
    * The iteration order is unchanged.

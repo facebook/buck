@@ -19,7 +19,6 @@ package com.facebook.buck.core.starlark.compatible;
 import com.facebook.buck.core.model.label.Label;
 import com.google.common.base.Preconditions;
 import net.starlark.java.eval.Module;
-import net.starlark.java.eval.StarlarkThread;
 
 /** Utilities to work with {@link Module} in Buck embedding of Starlark. */
 public class BuckStarlarkModule {
@@ -28,19 +27,5 @@ public class BuckStarlarkModule {
   public static void setClientData(Module module, Label label) {
     Preconditions.checkState(module.getClientData() == null);
     module.setClientData(label);
-  }
-
-  /** Fetch Buck-specific {@link Module} data. */
-  private static Label getClientData(Module module) {
-    Label label = (Label) module.getClientData();
-    Preconditions.checkState(label != null, "label must be set for a Module");
-    return label;
-  }
-
-  /** Buck-local version of {@link Module#ofInnermostEnclosingStarlarkFunction(StarlarkThread)}. */
-  public static Label ofInnermostEnclosingStarlarkFunction(StarlarkThread thread) {
-    Module module = Module.ofInnermostEnclosingStarlarkFunction(thread);
-    Preconditions.checkState(module != null, "we are not in a function");
-    return getClientData(module);
   }
 }

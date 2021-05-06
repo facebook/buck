@@ -59,14 +59,6 @@ final class Eval {
 
   // ---- entry point ----
 
-  // Called from StarlarkFunction.fastcall.
-  static Object execFunctionBody(StarlarkThread.Frame fr, List<Statement> statements)
-      throws EvalException, InterruptedException {
-    fr.thread.checkInterrupt();
-    execStatements(fr, statements, /*indented=*/ false);
-    return fr.result;
-  }
-
   private static StarlarkFunction fn(StarlarkThread.Frame fr) {
     return (StarlarkFunction) fr.fn;
   }
@@ -224,21 +216,11 @@ final class Eval {
 
   private static TokenKind execReturn(StarlarkThread.Frame fr, ReturnStatement node)
       throws EvalException, InterruptedException {
-    Expression result = node.getResult();
-    if (result != null) {
-      fr.result = eval(fr, result);
-    }
-    return TokenKind.RETURN;
+    throw new AssertionError("dead code");
   }
 
   static TokenKind exec(StarlarkThread.Frame fr, Statement st)
       throws EvalException, InterruptedException {
-    if (fr.dbg != null) {
-      Location loc = st.getStartLocation(); // not very precise
-      fr.setLocation(loc);
-      fr.dbg.before(fr.thread, loc); // location is now redundant since it's in the thread
-    }
-
     if (++fr.thread.steps >= fr.thread.stepLimit) {
       throw new EvalException("Starlark computation cancelled: too many steps");
     }
