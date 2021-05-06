@@ -159,11 +159,6 @@ public final class StarlarkThread {
     // location (loc) should not be overrwritten.
     private boolean errorLocationSet;
 
-    // The locals of this frame, if fn is a StarlarkFunction, otherwise null.
-    // Set by StarlarkFunction.fastcall. Elements may be regular Starlark
-    // values, or wrapped in StarlarkFunction.Cells if shared with a nested function.
-    @Nullable Object[] locals;
-
     private Frame(StarlarkThread thread, StarlarkCallable fn) {
       this.thread = thread;
       this.fn = fn;

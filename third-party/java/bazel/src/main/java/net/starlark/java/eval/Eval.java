@@ -141,7 +141,7 @@ final class Eval {
     return TokenKind.PASS;
   }
 
-  static StarlarkFunction newFunction(StarlarkThread.Frame fr, Resolver.Function rfn,
+  static StarlarkFunction newFunction(StarlarkThread.Frame fr, Object[] locals, Resolver.Function rfn,
       Tuple defaults)
       throws EvalException, InterruptedException {
 
@@ -156,7 +156,7 @@ final class Eval {
           freevars[i++] = fn(fr).getFreeVar(bind.getIndex());
           break;
         case CELL:
-          freevars[i++] = fr.locals[bind.getIndex()];
+          freevars[i++] = locals[bind.getIndex()];
           break;
         default:
           throw new IllegalStateException("unexpected: " + bind);
@@ -181,7 +181,7 @@ final class Eval {
     return TokenKind.PASS;
   }
 
-  private static void execLoad(StarlarkThread.Frame fr, LoadStatement node) throws EvalException {
+  static void execLoad(StarlarkThread.Frame fr, Object[] locals, LoadStatement node) throws EvalException {
     // Has the application defined a behavior for load statements in this thread?
     StarlarkThread.Loader loader = fr.thread.getLoader();
     if (loader == null) {
@@ -210,7 +210,7 @@ final class Eval {
             SpellChecker.didYouMean(orig.getName(), module.getGlobalNamesForSpelling()));
       }
 
-      assignIdentifier(fr, binding.getLocalName(), value);
+      assignIdentifier(fr, locals, binding.getLocalName(), value);
     }
   }
 
@@ -237,15 +237,11 @@ final class Eval {
       case FOR:
         return execFor(fr, (ForStatement) st);
       case DEF:
-        DefStatement def = (DefStatement) st;
-        StarlarkFunction fn = newFunction(fr, def.getResolvedFunction(), null);
-        assignIdentifier(fr, def.getIdentifier(), fn);
-        return TokenKind.PASS;
+        throw new AssertionError("dead code");
       case IF:
         return execIf(fr, (IfStatement) st);
       case LOAD:
-        execLoad(fr, (LoadStatement) st);
-        return TokenKind.PASS;
+        throw new AssertionError("dead code");
       case RETURN:
         return execReturn(fr, (ReturnStatement) st);
     }
@@ -259,9 +255,7 @@ final class Eval {
   private static void assign(StarlarkThread.Frame fr, Expression lhs, Object value)
       throws EvalException, InterruptedException {
     if (lhs instanceof Identifier) {
-      // x = ...
-      assignIdentifier(fr, (Identifier) lhs, value);
-
+      throw new AssertionError("dead code");
     } else if (lhs instanceof IndexExpression) {
       // x[i] = ...
       Object object = eval(fr, ((IndexExpression) lhs).getObject());
@@ -290,15 +284,15 @@ final class Eval {
     }
   }
 
-  private static void assignIdentifier(StarlarkThread.Frame fr, Identifier id, Object value)
+  private static void assignIdentifier(StarlarkThread.Frame fr, Object[] locals, Identifier id, Object value)
       throws EvalException {
     Resolver.Binding bind = id.getBinding();
     switch (bind.getScope()) {
       case LOCAL:
-        fr.locals[bind.getIndex()] = value;
+        locals[bind.getIndex()] = value;
         break;
       case CELL:
-        ((StarlarkFunction.Cell) fr.locals[bind.getIndex()]).x = value;
+        ((StarlarkFunction.Cell) locals[bind.getIndex()]).x = value;
         break;
       case GLOBAL:
         fn(fr).getModule().setGlobalByIndex(bind.getIndex(), value);
@@ -343,18 +337,7 @@ final class Eval {
     Expression rhs = stmt.getRHS();
 
     if (lhs instanceof Identifier) {
-      // x op= y    (lhs must be evaluated only once)
-      Object x = eval(fr, lhs);
-      Object y = eval(fr, rhs);
-      Object z;
-      try {
-        //z = inplaceBinaryOp(fr, op, x, y);
-        if (true) throw new EvalException("dead code");
-      } catch (EvalException ex) {
-        fr.setErrorLocation(stmt.getOperatorLocation());
-        throw ex;
-      }
-      assignIdentifier(fr, (Identifier) lhs, z);
+      throw new AssertionError("dead code");
 
     } else if (lhs instanceof IndexExpression) {
       // object[index] op= y
@@ -476,7 +459,7 @@ final class Eval {
       case FLOAT_LITERAL:
         return StarlarkFloat.of(((FloatLiteral) expr).getValue());
       case LAMBDA:
-        return newFunction(fr, ((LambdaExpression) expr).getResolvedFunction(), null);
+        throw new AssertionError("dead code");
       case LIST_EXPR:
         return evalList(fr, (ListExpression) expr);
       case SLICE:
@@ -653,11 +636,8 @@ final class Eval {
     Object result;
     switch (bind.getScope()) {
       case LOCAL:
-        result = fr.locals[bind.getIndex()];
-        break;
       case CELL:
-        result = ((StarlarkFunction.Cell) fr.locals[bind.getIndex()]).x;
-        break;
+        throw new AssertionError("dead code");
       case FREE:
         result = fn(fr).getFreeVar(bind.getIndex()).x;
         break;

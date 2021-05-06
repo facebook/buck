@@ -52,25 +52,25 @@ class BcEval {
   /** Number of instructions executed in this function. */
   private int localSteps = 0;
 
-  private BcEval(StarlarkThread.Frame fr, StarlarkFunction fn) {
+  private BcEval(StarlarkThread.Frame fr, StarlarkFunction fn, Object[] locals) {
     this.fr = fr;
 
     this.fn = fn;
     this.compiled = fn.compiled;
-    this.slots = fr.locals;
+    this.slots = locals;
     this.loops = ArraysForStarlark.newObjectArray(fn.compiled.loopDepth * 2);
     this.loopInts = ArraysForStarlark.newIntArray(fn.compiled.loopDepth * 2);
     this.text = fn.compiled.text;
   }
 
   /** Public API. */
-  public static Object eval(StarlarkThread.Frame fr, StarlarkFunction fn)
+  public static Object eval(StarlarkThread.Frame fr, StarlarkFunction fn, Object[] locals)
       throws InterruptedException, EvalException {
     if (StarlarkRuntimeStats.ENABLED) {
       StarlarkRuntimeStats.enter(StarlarkRuntimeStats.WhereWeAre.BC_EVAL);
     }
     try {
-      return new BcEval(fr, fn).eval();
+      return new BcEval(fr, fn, locals).eval();
     } finally {
       if (StarlarkRuntimeStats.ENABLED) {
         StarlarkRuntimeStats.leave();
@@ -328,7 +328,7 @@ class BcEval {
   }
 
   private Object getCell(int index) throws EvalException {
-    Object value = ((StarlarkFunction.Cell) fr.locals[index]).x;
+    Object value = ((StarlarkFunction.Cell) slots[index]).x;
     if (value == null) {
       String name = fn.compiled.getLocals().get(index).getName();
       throw referencedBeforeAssignment(Resolver.Scope.FREE, name);
@@ -385,13 +385,12 @@ class BcEval {
   private void setCell() throws EvalException {
     Object value = getSlot(nextOperand());
     int cellIndex = nextOperand();
-    ((StarlarkFunction.Cell) fr.locals[cellIndex]).x = value;
+    ((StarlarkFunction.Cell) slots[cellIndex]).x = value;
   }
 
   private void loadStmt() throws EvalException, InterruptedException {
     LoadStatement statement = (LoadStatement) compiled.objects[nextOperand()];
-    TokenKind token = Eval.exec(fr, statement);
-    Preconditions.checkState(token == TokenKind.PASS);
+    Eval.execLoad(fr, slots, statement);
   }
 
   private void setIndex() throws EvalException {
@@ -418,7 +417,7 @@ class BcEval {
     Resolver.Function fn = (Resolver.Function) compiled.objects[nextOperand()];
     Tuple parameterDefaults = Tuple.wrap(nextNSlotsListSharedArray());
     int result = nextOperand();
-    StarlarkFunction starlarkFunction = Eval.newFunction(fr, fn, parameterDefaults);
+    StarlarkFunction starlarkFunction = Eval.newFunction(fr, slots, fn, parameterDefaults);
     setSlot(result, starlarkFunction);
   }
 
