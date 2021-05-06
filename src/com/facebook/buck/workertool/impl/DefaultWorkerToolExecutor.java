@@ -136,7 +136,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
                     String.format(
                         "Worker tool process: %s has been terminated. Worker id: %s",
                         startWorkerToolCommand, workerId);
-                LOG.error(errorMessage);
+                LOG.warn(errorMessage);
                 shutdownResultEventFutureIfNotDone(errorMessage);
                 closeNamedPipe();
               }
@@ -375,13 +375,19 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
       int exitCode = executionResult.getExitCode();
 
-      LOG.info(
-          "Worker tool process %s exit code: %s%n Std out: %s%n Std err: %s%nWorker id: %s",
-          startWorkerToolCommand,
-          exitCode,
-          executionResult.getStdout(),
-          executionResult.getStderr(),
-          workerId);
+      if (exitCode != 0) {
+        LOG.warn(
+            "Worker tool process %s exit code: %s%n Std out: %s%n Std err: %s%nWorker id: %s",
+            startWorkerToolCommand,
+            exitCode,
+            executionResult.getStdout(),
+            executionResult.getStderr(),
+            workerId);
+      } else {
+        LOG.debug(
+            "Worker tool process %s finished successfully. Worker id: %s",
+            startWorkerToolCommand, workerId);
+      }
       return Optional.of(exitCode);
 
     } catch (InterruptedException e) {

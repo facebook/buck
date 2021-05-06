@@ -66,7 +66,7 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
 
   /**
    * If there are available workers, returns one. Otherwise blocks until one becomes available and
-   * returns it. Borrowed worker processes must be relased by calling {@link
+   * returns it. Borrowed worker processes must be released by calling {@link
    * BorrowedWorkerProcess#close()} after using them.
    */
   public BorrowedWorkerProcess<T> borrowWorkerProcess() throws InterruptedException {
