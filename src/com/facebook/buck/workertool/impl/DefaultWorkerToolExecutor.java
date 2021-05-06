@@ -37,6 +37,7 @@ import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
+import com.facebook.buck.workertool.model.StartPipelineCommand;
 import com.facebook.buck.workertool.utils.WorkerToolConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -203,6 +204,42 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
     // TODO : msemko: add timeout/heartbeat, ... ?
     return resultEventFuture.get();
+  }
+
+  @Override
+  public ImmutableList<Future<ResultEvent>> executePipeliningCommand(
+      ImmutableList<String> actionIds, AbstractMessage pipeliningCommand)
+      throws IOException, ExecutionException, InterruptedException {
+    checkState(isAlive(), "Launched process is not alive");
+
+    StartPipelineCommand.Builder startPipeliningCommandBuilder = StartPipelineCommand.newBuilder();
+    runUnderLock(
+        () -> {
+          checkThatNoActionsAreExecuting();
+
+          ImmutableList.Builder<ExecutingAction> executingActionBuilder =
+              ImmutableList.builderWithExpectedSize(actionIds.size());
+          for (String actionId : actionIds) {
+            executingActionBuilder.add(ExecutingAction.of(actionId));
+            startPipeliningCommandBuilder.addActionId(actionId);
+          }
+          executingActions = executingActionBuilder.build();
+        });
+
+    CommandTypeMessage executeCommandTypeMessage =
+        getCommandTypeMessage(CommandTypeMessage.CommandType.START_PIPELINE_COMMAND);
+    StartPipelineCommand startPipelineCommand = startPipeliningCommandBuilder.build();
+
+    executeCommandTypeMessage.writeDelimitedTo(outputStream);
+    startPipelineCommand.writeDelimitedTo(outputStream);
+    pipeliningCommand.writeDelimitedTo(outputStream);
+
+    LOG.info(
+        "Started execution of worker tool for for pipelining actionIds: %s, worker id: %s",
+        actionIds, workerId);
+    return executingActions.stream()
+        .map(ExecutingAction::getResultEventFuture)
+        .collect(ImmutableList.toImmutableList());
   }
 
   private void checkThatNoActionsAreExecuting() {

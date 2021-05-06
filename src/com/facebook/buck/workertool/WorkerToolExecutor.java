@@ -18,9 +18,11 @@ package com.facebook.buck.workertool;
 
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.worker.WorkerProcess;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * Interface for WorkerTool executor that implements that WTv2 protocol. It executes commands by
@@ -30,5 +32,13 @@ public interface WorkerToolExecutor extends WorkerProcess {
 
   /** Send an execution command to a worker tool instance and wait till the command executed. */
   ResultEvent executeCommand(String actionId, AbstractMessage executeCommandMessage)
+      throws IOException, ExecutionException, InterruptedException;
+
+  /**
+   * Send an execution pipelining command to a worker tool instance and immediately return a list of
+   * result event's futures that represent the result.
+   */
+  ImmutableList<Future<ResultEvent>> executePipeliningCommand(
+      ImmutableList<String> actionIds, AbstractMessage executeCommandMessage)
       throws IOException, ExecutionException, InterruptedException;
 }
