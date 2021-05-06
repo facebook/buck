@@ -62,17 +62,21 @@ public abstract class PipelinedModernBuildRule<
         outputPathResolver,
         getExcludedOutputPathsFromAutomaticSetup());
 
-    PipelinedBuildable<State> buildable = getBuildable();
+    AbstractMessage pipelinedCommand = getPipelinedCommand(context);
+    stepsBuilder.addAll(getBuildable().getPipelinedBuildSteps(stateHolder, pipelinedCommand));
+    return stepsBuilder.build();
+  }
 
-    AbstractMessage pipelinedCommand =
-        buildable.getPipelinedCommand(
+  /** Returns protobuf representation of the pipelining command. */
+  public final AbstractMessage getPipelinedCommand(BuildContext context) {
+    OutputPathResolver outputPathResolver = getOutputPathResolver();
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+
+    return getBuildable()
+        .getPipelinedCommand(
             context,
             projectFilesystem,
             outputPathResolver,
             getBuildCellPathFactory(context, projectFilesystem, outputPathResolver));
-    ImmutableList<Step> steps = buildable.getPipelinedBuildSteps(stateHolder, pipelinedCommand);
-
-    stepsBuilder.addAll(steps);
-    return stepsBuilder.build();
   }
 }

@@ -21,6 +21,7 @@ java_immutables_library(
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/serialization:serialization",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/step/isolatedsteps/java:java",
         "//third-party/java/guava:guava",

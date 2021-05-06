@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -38,6 +39,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
@@ -50,14 +52,14 @@ import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
-import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JarParametersSerializer;
-import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JavaAbiInfoSerializer;
-import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacOptionsSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
@@ -75,6 +77,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -115,6 +118,16 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   @AddToRuleKey private final AbiGenerationMode abiCompatibilityMode;
   @AddToRuleKey private final boolean withDownwardApi;
 
+  @AddToRuleKey private final BaseJavaCDParams javaCDParams;
+
+  @AddToRuleKey private final Tool javaRuntimeLauncher;
+
+  @ExcludeFromRuleKey(
+      reason = "path to javacd binary is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class)
+  private final Supplier<SourcePath> javacdBinaryPathSourcePathSupplier;
+
   /** Creates {@link JarBuildStepsFactory} */
   public static <T extends CompileToJarStepFactory.ExtraParams> JarBuildStepsFactory<T> of(
       BuildTarget libraryTarget,
@@ -132,7 +145,10 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       AbiGenerationMode abiCompatibilityMode,
       ImmutableList<JavaDependencyInfo> dependencyInfos,
       boolean isRequiredForSourceOnlyAbi,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Tool javaRuntimeLauncher,
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
+      BaseJavaCDParams javaCDParams) {
     return new JarBuildStepsFactory<>(
         libraryTarget,
         configuredCompiler,
@@ -149,7 +165,10 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         abiCompatibilityMode,
         dependencyInfos,
         isRequiredForSourceOnlyAbi,
-        withDownwardApi);
+        withDownwardApi,
+        javaRuntimeLauncher,
+        javacdBinaryPathSourcePathSupplier,
+        javaCDParams);
   }
 
   /** Contains information about a Java classpath dependency. */
@@ -266,7 +285,10 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       AbiGenerationMode abiCompatibilityMode,
       ImmutableList<JavaDependencyInfo> dependencyInfos,
       boolean isRequiredForSourceOnlyAbi,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Tool javaRuntimeLauncher,
+      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
+      BaseJavaCDParams javaCDParams) {
     this.libraryTarget = libraryTarget;
     this.configuredCompiler = configuredCompiler;
     this.javac = javac;
@@ -284,6 +306,9 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     this.withDownwardApi = withDownwardApi;
     this.abiClasspath = this.dependencyInfos.getAbiClasspath();
     this.isRequiredForSourceOnlyAbi = isRequiredForSourceOnlyAbi;
+    this.javaRuntimeLauncher = javaRuntimeLauncher;
+    this.javacdBinaryPathSourcePathSupplier = javacdBinaryPathSourcePathSupplier;
+    this.javaCDParams = javaCDParams;
   }
 
   public boolean producesJar() {
@@ -719,7 +744,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             ResolvedJavacSerializer.deserialize(pipelineState.getResolvedJavac()),
             ResolvedJavacOptionsSerializer.deserialize(pipelineState.getResolvedJavacOptions()),
             BuildTargetValueSerializer.deserialize(pipelineState.getBuildTargetValue()),
-            createCompilerParameters(pipelineState),
+            JavaLibraryRules.createCompilerParameters(pipelineState),
             pipelineState.hasAbiJarParameters()
                 ? JarParametersSerializer.deserialize(pipelineState.getAbiJarParameters())
                 : null,
@@ -729,24 +754,16 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             pipelineState.getWithDownwardApi());
   }
 
-  private static CompilerParameters createCompilerParameters(PipelineState pipelineState) {
-    return CompilerParameters.builder()
-        .setClasspathEntries(
-            RelPathSerializer.toSortedSetOfRelPath(
-                pipelineState.getCompileTimeClasspathPathsList()))
-        .setSourceFilePaths(RelPathSerializer.toSortedSetOfRelPath(pipelineState.getJavaSrcsList()))
-        .setOutputPaths(CompilerOutputPathsSerializer.deserialize(pipelineState.getOutputPaths()))
-        .setShouldTrackClassUsage(pipelineState.getTrackClassUsage())
-        .setShouldTrackJavacPhaseEvents(pipelineState.getTrackJavacPhaseEvents())
-        .setAbiGenerationMode(pipelineState.getAbiGenerationMode())
-        .setAbiCompatibilityMode(pipelineState.getAbiCompatibilityMode())
-        .setSourceOnlyAbiRuleInfoFactory(
-            DefaultSourceOnlyAbiRuleInfoFactory.of(
-                JavaAbiInfoSerializer.toJavaAbiInfo(pipelineState.getFullJarInfosList()),
-                JavaAbiInfoSerializer.toJavaAbiInfo(pipelineState.getAbiJarInfosList()),
-                pipelineState.getBuildTargetValue().getFullyQualifiedName(),
-                pipelineState.getIsRequiredForSourceOnlyAbi()))
-        .build();
+  // todo: msemko would be used in the future javacd pipelining changes
+  @SuppressWarnings("unused")
+  private JavaCDParams createJavaCDParams(
+      ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
+    return JavaCDParams.of(
+        javaCDParams,
+        javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
+        () ->
+            sourcePathResolver.getRelativePath(
+                filesystem, javacdBinaryPathSourcePathSupplier.get()));
   }
 
   boolean hasAnnotationProcessing() {

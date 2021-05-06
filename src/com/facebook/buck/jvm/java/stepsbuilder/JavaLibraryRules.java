@@ -22,11 +22,15 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
+import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.DefaultSourceOnlyAbiRuleInfoFactory;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JavaAbiInfoSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.AccumulateClassNamesStep;
@@ -100,6 +104,27 @@ public class JavaLibraryRules {
                 abiJarInfos,
                 fullyQualifiedBuildTargetName,
                 isRequiredForSourceOnlyAbi))
+        .build();
+  }
+
+  /** Returns {@link CompilerParameters} created from passed pipelining state. */
+  public static CompilerParameters createCompilerParameters(PipelineState pipelineState) {
+    return CompilerParameters.builder()
+        .setClasspathEntries(
+            RelPathSerializer.toSortedSetOfRelPath(
+                pipelineState.getCompileTimeClasspathPathsList()))
+        .setSourceFilePaths(RelPathSerializer.toSortedSetOfRelPath(pipelineState.getJavaSrcsList()))
+        .setOutputPaths(CompilerOutputPathsSerializer.deserialize(pipelineState.getOutputPaths()))
+        .setShouldTrackClassUsage(pipelineState.getTrackClassUsage())
+        .setShouldTrackJavacPhaseEvents(pipelineState.getTrackJavacPhaseEvents())
+        .setAbiGenerationMode(pipelineState.getAbiGenerationMode())
+        .setAbiCompatibilityMode(pipelineState.getAbiCompatibilityMode())
+        .setSourceOnlyAbiRuleInfoFactory(
+            DefaultSourceOnlyAbiRuleInfoFactory.of(
+                JavaAbiInfoSerializer.toJavaAbiInfo(pipelineState.getFullJarInfosList()),
+                JavaAbiInfoSerializer.toJavaAbiInfo(pipelineState.getAbiJarInfosList()),
+                pipelineState.getBuildTargetValue().getFullyQualifiedName(),
+                pipelineState.getIsRequiredForSourceOnlyAbi()))
         .build();
   }
 }

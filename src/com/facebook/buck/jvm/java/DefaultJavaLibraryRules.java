@@ -715,6 +715,10 @@ public abstract class DefaultJavaLibraryRules {
 
   @Value.Lazy
   JarBuildStepsFactory<?> getJarBuildStepsFactory() {
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
+    JavacOptions javacOptions = getJavacOptions();
+
     DefaultJavaLibraryClasspaths classpaths = getClasspaths();
     return JarBuildStepsFactory.of(
         getLibraryTarget(),
@@ -725,36 +729,45 @@ public abstract class DefaultJavaLibraryRules {
         getResourcesParameters(),
         getManifestFile(),
         getPostprocessClassesCommands(),
-        getConfiguredCompilerFactory().trackClassUsage(getJavacOptions()),
-        getJavacOptions().trackJavacPhaseEvents(),
+        getConfiguredCompilerFactory().trackClassUsage(javacOptions),
+        javacOptions.trackJavacPhaseEvents(),
         getClassesToRemoveFromJar(),
         getAbiGenerationMode(),
         getAbiCompatibilityMode(),
         classpaths.getDependencyInfos(),
         getRequiredForSourceOnlyAbi(),
-        getDownwardApiConfig().isEnabledForJava());
+        getDownwardApiConfig().isEnabledForJava(),
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+        getJavacdBinarySourcePathSupplier(projectFilesystem),
+        createJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
   }
 
   @Value.Lazy
   JarBuildStepsFactory<?> getJarBuildStepsFactoryForSourceOnlyAbi() {
+    ProjectFilesystem projectFilesystem = getProjectFilesystem();
+    JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
+    JavacOptions javacOptions = getJavacOptions();
     return JarBuildStepsFactory.of(
         getLibraryTarget(),
         getConfiguredCompilerForSourceOnlyAbi(
-            getSourcePathResolver(), getProjectFilesystem().getRootPath()),
+            getSourcePathResolver(), projectFilesystem.getRootPath()),
         getJavac(),
         getSrcs(),
         getResources(),
         getResourcesParameters(),
         getManifestFile(),
         getPostprocessClassesCommands(),
-        getConfiguredCompilerFactory().trackClassUsage(getJavacOptions()),
-        getJavacOptions().trackJavacPhaseEvents(),
+        getConfiguredCompilerFactory().trackClassUsage(javacOptions),
+        javacOptions.trackJavacPhaseEvents(),
         getClassesToRemoveFromJar(),
         getAbiGenerationMode(),
         getAbiCompatibilityMode(),
         getClasspaths().getDependencyInfosForSourceOnlyAbi(),
         getRequiredForSourceOnlyAbi(),
-        getDownwardApiConfig().isEnabledForJava());
+        getDownwardApiConfig().isEnabledForJava(),
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+        getJavacdBinarySourcePathSupplier(projectFilesystem),
+        createJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
   }
 
   private ResourcesParameters getResourcesParameters() {
