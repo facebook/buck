@@ -56,7 +56,7 @@ public class BuckClasspathTest {
   // BUCK_CLASSPATH is internal variable, no need to use EnvVariablesProvider
   @SuppressWarnings("PMD.BlacklistedSystemGetenv")
   @Test(expected = ClassNotFoundException.class)
-  public void testBootstrapClasspathDoesNotHaveAccesToBuckFiles() throws Exception {
+  public void testBootstrapClasspathDoesNotHaveAccessToBuckFiles() throws Exception {
     assumeTrue(System.getenv(BuckClasspath.ENV_VAR_NAME) != null);
     URLClassLoader classLoader = createClassLoader(BuckClasspath.getBootstrapClasspath());
     classLoader.loadClass(ImmutableList.class.getName());

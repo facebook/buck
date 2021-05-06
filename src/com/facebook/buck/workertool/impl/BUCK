@@ -17,6 +17,7 @@ java_immutables_library(
         "//src/com/facebook/buck/downwardapi/protocol:protocol",
         "//src/com/facebook/buck/io/namedpipes:namedpipes",
         "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/env:env",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/workertool:workertool",
         "//src/com/facebook/buck/workertool/utils:utils",

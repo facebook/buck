@@ -53,6 +53,7 @@ import com.facebook.buck.javacd.model.RelPath;
 import com.facebook.buck.javacd.model.ResolvedJavac;
 import com.facebook.buck.javacd.model.ResolvedJavacOptions;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestLogSink;
@@ -63,12 +64,14 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.WorkerToolLauncher;
 import com.facebook.buck.workertool.impl.DefaultWorkerToolLauncher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.io.IOException;
@@ -201,7 +204,7 @@ public class JavaCDIntegrationTest {
 
     WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(executionContext);
     try (WorkerToolExecutor workerToolExecutor =
-        workerToolLauncher.launchWorker(getLaunchJavaCDCommand())) {
+        workerToolLauncher.launchWorker(getLaunchJavaCDCommand(), getEnvs())) {
       workerToolExecutor.prepareForReuse();
 
       AbsPath workingDir = temporaryFolder.newFolder("working_dir");
@@ -268,7 +271,7 @@ public class JavaCDIntegrationTest {
 
     WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(executionContext);
     try (WorkerToolExecutor workerToolExecutor =
-        workerToolLauncher.launchWorker(getLaunchJavaCDCommand())) {
+        workerToolLauncher.launchWorker(getLaunchJavaCDCommand(), getEnvs())) {
       workerToolExecutor.prepareForReuse();
 
       AbsPath workingDir = temporaryFolder.newFolder("working_dir");
@@ -533,9 +536,15 @@ public class JavaCDIntegrationTest {
   private ImmutableList<String> getLaunchJavaCDCommand() {
     return ImmutableList.of(
         JavaBuckConfig.getJavaBinCommand(),
-        "-jar",
+        "-Dfile.encoding=" + UTF_8.name(),
+        "-cp",
         testBinary.toString(),
-        "-Dfile.encoding=" + UTF_8.name());
+        JavaLibraryRules.BOOTSTRAP_MAIN_CLASS,
+        JavaLibraryRules.JAVACD_MAIN_CLASS);
+  }
+
+  private ImmutableMap<String, String> getEnvs() {
+    return ImmutableMap.of(BuckClasspath.ENV_VAR_NAME, testBinary.toString());
   }
 
   private void waitTillEventsProcessed() throws InterruptedException {

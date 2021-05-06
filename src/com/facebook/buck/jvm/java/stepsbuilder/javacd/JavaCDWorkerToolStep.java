@@ -21,10 +21,12 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
+import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
+import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.workertool.WorkerToolExecutor;
@@ -32,6 +34,7 @@ import com.facebook.buck.workertool.WorkerToolLauncher;
 import com.facebook.buck.workertool.impl.DefaultWorkerToolLauncher;
 import com.facebook.buck.workertool.impl.WorkerToolPoolFactory;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.concurrent.ExecutionException;
@@ -55,7 +58,8 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
       throws IOException, InterruptedException {
 
     AbsPath ruleCellRoot = context.getRuleCellRoot();
-    ImmutableList<String> launchJavaCDCommand = getLaunchJavaCDCommand(ruleCellRoot, javaCDParams);
+    ImmutableList<String> launchJavaCDCommand = getLaunchJavaCDCommand(javaCDParams);
+    AbsPath jarPath = getJavaCDJarPath(ruleCellRoot, javaCDParams);
 
     WorkerProcessPool<WorkerToolExecutor> workerToolPool =
         WorkerToolPoolFactory.getPool(
@@ -63,7 +67,9 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
             launchJavaCDCommand,
             () -> {
               WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
-              return workerToolLauncher.launchWorker(launchJavaCDCommand);
+              return workerToolLauncher.launchWorker(
+                  launchJavaCDCommand,
+                  ImmutableMap.of(BuckClasspath.ENV_VAR_NAME, jarPath.toString()));
             },
             javaCDParams.getWorkerToolPoolSize());
 
@@ -74,23 +80,29 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     }
   }
 
-  private ImmutableList<String> getLaunchJavaCDCommand(
-      AbsPath ruleCellRoot, JavaCDParams javaCDParams) throws IOException {
+  private ImmutableList<String> getLaunchJavaCDCommand(JavaCDParams javaCDParams) {
     ImmutableList<String> javaRuntimeLauncherCommand = javaCDParams.getJavaRuntimeLauncherCommand();
-    Supplier<RelPath> javacdBinaryPathSupplier = javaCDParams.getJavacdBinaryPathSupplier();
     ImmutableList<String> startCommandOptions = javaCDParams.getStartCommandOptions();
+
+    return ImmutableList.<String>builderWithExpectedSize(
+            javaRuntimeLauncherCommand.size() + startCommandOptions.size() + 4)
+        .addAll(javaRuntimeLauncherCommand)
+        .addAll(startCommandOptions)
+        .add("-cp")
+        .add(BuckClasspath.getBuckBootstrapClasspathFromEnvVarOrNull())
+        .add(JavaLibraryRules.BOOTSTRAP_MAIN_CLASS)
+        .add(JavaLibraryRules.JAVACD_MAIN_CLASS)
+        .build();
+  }
+
+  private AbsPath getJavaCDJarPath(AbsPath ruleCellRoot, JavaCDParams javaCDParams)
+      throws IOException {
+    Supplier<RelPath> javacdBinaryPathSupplier = javaCDParams.getJavacdBinaryPathSupplier();
     AbsPath jarPath = ruleCellRoot.resolve(javacdBinaryPathSupplier.get());
     if (!Files.exists(jarPath.getPath())) {
       throw new IOException("jar " + jarPath + " is not exist on env");
     }
-
-    return ImmutableList.<String>builderWithExpectedSize(
-            javaRuntimeLauncherCommand.size() + 2 + startCommandOptions.size())
-        .addAll(javaRuntimeLauncherCommand)
-        .add("-jar")
-        .add(jarPath.toString())
-        .addAll(startCommandOptions)
-        .build();
+    return jarPath;
   }
 
   private BorrowedWorkerProcess<WorkerToolExecutor> borrowWorkerToolWithTimeout(
@@ -125,7 +137,9 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
       if (exitCode != 0) {
         builder.setStderr(
             String.format(
-                "javacd action id: %s%n%s", context.getActionId(), resultEvent.getMessage()));
+                "javacd action id: %s%n%s",
+                context.getActionId(),
+                resultEvent.getMessage().replace("\\n", System.lineSeparator())));
       }
 
       return builder.build();

@@ -17,6 +17,7 @@
 package com.facebook.buck.workertool;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 
 /** Interface that defines a way to launch {@link WorkerToolExecutor} */
@@ -24,5 +25,6 @@ import java.io.IOException;
 public interface WorkerToolLauncher {
 
   /** Launches worker tool. */
-  WorkerToolExecutor launchWorker(ImmutableList<String> startCommand) throws IOException;
+  WorkerToolExecutor launchWorker(
+      ImmutableList<String> startCommand, ImmutableMap<String, String> envs) throws IOException;
 }

@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.WorkerToolLauncher;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 
 /** Default implementation of {@link WorkerToolLauncher} */
@@ -32,7 +33,8 @@ public class DefaultWorkerToolLauncher implements WorkerToolLauncher {
   }
 
   @Override
-  public WorkerToolExecutor launchWorker(ImmutableList<String> startCommand) throws IOException {
-    return new DefaultWorkerToolExecutor(context, startCommand);
+  public WorkerToolExecutor launchWorker(
+      ImmutableList<String> startCommand, ImmutableMap<String, String> envs) throws IOException {
+    return new DefaultWorkerToolExecutor(context, startCommand, envs);
   }
 }

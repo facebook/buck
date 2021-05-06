@@ -94,7 +94,9 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   }
 
   DefaultWorkerToolExecutor(
-      IsolatedExecutionContext context, ImmutableList<String> startWorkerToolCommand)
+      IsolatedExecutionContext context,
+      ImmutableList<String> startWorkerToolCommand,
+      ImmutableMap<String, String> envs)
       throws IOException {
     this.workerId = COUNTER.incrementAndGet();
     this.downwardApiProcessExecutor =
@@ -104,11 +106,12 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     boolean launched = false;
     try {
       this.namedPipeWriter = NAMED_PIPE_FACTORY.createAsWriter();
+
       this.launchedProcess =
           downwardApiProcessExecutor.launchProcess(
               ProcessExecutorParams.builder()
                   .addAllCommand(startWorkerToolCommand)
-                  .setEnvironment(buildEnvs(namedPipeWriter.getName()))
+                  .setEnvironment(buildEnvs(envs, namedPipeWriter.getName()))
                   .build());
       launched = true;
     } catch (IOException e) {
@@ -232,6 +235,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
           // `executingActions` has to be not empty that signals that
           // executor is waiting for a result event from a launched process.
           checkState(!executingActions.isEmpty(), "The is no action executing at the moment.");
+
           String actionId = resultEvent.getActionId();
 
           ExecutingAction executingAction =
@@ -417,8 +421,12 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     return builder.build();
   }
 
-  private ImmutableMap<String, String> buildEnvs(String namedPipeName) {
-    return ImmutableMap.of(WorkerToolConstants.ENV_COMMAND_PIPE, namedPipeName);
+  private ImmutableMap<String, String> buildEnvs(
+      ImmutableMap<String, String> envs, String namedPipeName) {
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    builder.putAll(envs);
+    builder.put(WorkerToolConstants.ENV_COMMAND_PIPE, namedPipeName);
+    return builder.build();
   }
 
   private void runUnderLock(Runnable runnable) {

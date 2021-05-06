@@ -3,6 +3,7 @@ java_binary(
     main_class = "com.facebook.buck.jvm.java.stepsbuilder.javacd.main.JavaCDWorkerToolMain",
     visibility = ["//test/..."],
     deps = [
+        "//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib",
         "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/main:main_lib",
     ],
 )
@@ -21,8 +22,10 @@ java_test(
         "//src/com/facebook/buck/io/namedpipes:namedpipes",
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/jvm/java:rules",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder:stepsbuilder",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/env:env",
         "//src/com/facebook/buck/workertool/impl:impl",
         "//test/com/facebook/buck/downwardapi/testutil:testutil",
         "//test/com/facebook/buck/event:testutil",
