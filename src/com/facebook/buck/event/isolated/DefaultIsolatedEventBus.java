@@ -222,7 +222,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
     ChromeTraceEventStatus eventStatus = convertEventType(event.getEventType());
     ChromeTraceEvent chromeTraceEvent =
         ChromeTraceEvent.newBuilder()
-            .setEventId(event.getEventKey().hashCode())
+            .setEventId(getEventId(event))
             .setCategory(event.getCategory())
             .setTitle(event.getTitle().getValue())
             .setStatus(eventStatus)

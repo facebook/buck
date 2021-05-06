@@ -16,7 +16,6 @@
 
 package com.facebook.buck.downwardapi.processexecutor.context;
 
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ExternalEvent;
 import com.facebook.buck.event.IsolatedEventBus;
@@ -24,61 +23,67 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.util.timing.Clock;
 import java.time.Instant;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
+import java.util.Map;
 
 /** Downward API execution context. */
-@BuckStyleValue
-public abstract class DownwardApiExecutionContext {
+public class DownwardApiExecutionContext {
 
-  private final ConcurrentHashMap<Integer, StepEvent.Started> stepStartedEvents =
-      new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<Integer, SimplePerfEvent.Started> chromeTraceStartedEvents =
-      new ConcurrentHashMap<>();
+  private final Instant startExecutionInstant;
+  private final IsolatedEventBus isolatedEventBus;
+  private final long invokingThreadId;
+  private final Map<Integer, SimplePerfEvent.Started> chromeTraceStartedEvents = new HashMap<>();
+  private final Map<Integer, StepEvent.Started> stepStartedEvents = new HashMap<>();
+
+  private DownwardApiExecutionContext(
+      Instant startExecutionInstant, IsolatedEventBus isolatedEventBus, long invokingThreadId) {
+    this.startExecutionInstant = startExecutionInstant;
+    this.isolatedEventBus = isolatedEventBus;
+    this.invokingThreadId = invokingThreadId;
+  }
 
   /** Returns {@code Instant} when execution started. */
-  public abstract Instant getStartExecutionInstant();
+  public Instant getStartExecutionInstant() {
+    return startExecutionInstant;
+  }
 
-  abstract IsolatedEventBus getIsolatedEventBus();
-
-  abstract long getInvokingThreadId();
-
-  public ConcurrentHashMap<Integer, SimplePerfEvent.Started> getChromeTraceStartedEvents() {
+  public Map<Integer, SimplePerfEvent.Started> getChromeTraceStartedEvents() {
     return chromeTraceStartedEvents;
   }
 
-  public ConcurrentHashMap<Integer, StepEvent.Started> getStepStartedEvents() {
+  public Map<Integer, StepEvent.Started> getStepStartedEvents() {
     return stepStartedEvents;
   }
 
   public final void postEvent(ExternalEvent event) {
-    getIsolatedEventBus().post(event, getInvokingThreadId());
+    isolatedEventBus.post(event, invokingThreadId);
   }
 
   public final void postEvent(ConsoleEvent event) {
-    getIsolatedEventBus().post(event, getInvokingThreadId());
+    isolatedEventBus.post(event, invokingThreadId);
   }
 
   public final void postEvent(StepEvent event) {
-    getIsolatedEventBus().post(event, getInvokingThreadId());
+    isolatedEventBus.post(event, invokingThreadId);
   }
 
   public final void postEvent(StepEvent event, Instant atTime) {
-    getIsolatedEventBus().post(event, atTime, getInvokingThreadId());
+    isolatedEventBus.post(event, atTime, invokingThreadId);
   }
 
   /** Posts events into buck event bus. */
   public final void postEvent(SimplePerfEvent event) {
-    getIsolatedEventBus().post(event, getInvokingThreadId());
+    isolatedEventBus.post(event, invokingThreadId);
   }
 
   /** Posts events into buck event bus that occurred at {@code atTime}. */
   public final void postEvent(SimplePerfEvent event, Instant atTime) {
-    getIsolatedEventBus().post(event, atTime, getInvokingThreadId());
+    isolatedEventBus.post(event, atTime, invokingThreadId);
   }
 
   /** Creates {@link DownwardApiExecutionContext} */
   public static DownwardApiExecutionContext of(IsolatedEventBus buckEventBus, Clock clock) {
-    return ImmutableDownwardApiExecutionContext.ofImpl(
+    return new DownwardApiExecutionContext(
         Instant.ofEpochMilli(clock.currentTimeMillis()),
         buckEventBus,
         Thread.currentThread().getId());
@@ -90,7 +95,7 @@ public abstract class DownwardApiExecutionContext {
    */
   public static DownwardApiExecutionContext from(
       DownwardApiExecutionContext context, long threadId) {
-    return ImmutableDownwardApiExecutionContext.ofImpl(
-        context.getStartExecutionInstant(), context.getIsolatedEventBus(), threadId);
+    return new DownwardApiExecutionContext(
+        context.getStartExecutionInstant(), context.isolatedEventBus, threadId);
   }
 }

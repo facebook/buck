@@ -1,6 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
-
-java_immutables_library(
+java_library(
     name = "context",
     srcs = glob(["*.java"]),
     visibility = [
