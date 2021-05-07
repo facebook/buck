@@ -24,9 +24,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
@@ -72,7 +70,6 @@ import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -94,7 +91,6 @@ public class CalculateSourceAbi
       JarBuildStepsFactory<?> jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
       BaseJavaCDParams javaCDParams) {
     super(
         buildTarget,
@@ -105,7 +101,6 @@ public class CalculateSourceAbi
             projectFilesystem,
             jarBuildStepsFactory,
             javaRuntimeLauncher,
-            javacdBinaryPathSourcePathSupplier,
             javaCDParams));
     this.ruleFinder = ruleFinder;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
@@ -132,18 +127,11 @@ public class CalculateSourceAbi
 
     @AddToRuleKey private final Tool javaRuntimeLauncher;
 
-    @ExcludeFromRuleKey(
-        reason = "path to javacd binary is not a part of a rule key",
-        serialization = DefaultFieldSerialization.class,
-        inputs = DefaultFieldInputs.class)
-    private final Supplier<SourcePath> javacdBinaryPathSourcePathSupplier;
-
     public SourceAbiBuildable(
         BuildTarget buildTarget,
         ProjectFilesystem filesystem,
         JarBuildStepsFactory<?> jarBuildStepsFactory,
         Tool javaRuntimeLauncher,
-        Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
         BaseJavaCDParams javaCDParams) {
       this.buildTarget = buildTarget;
       this.jarBuildStepsFactory = jarBuildStepsFactory;
@@ -153,7 +141,6 @@ public class CalculateSourceAbi
           CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
       this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
       this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
-      this.javacdBinaryPathSourcePathSupplier = javacdBinaryPathSourcePathSupplier;
     }
 
     @Override
@@ -164,7 +151,7 @@ public class CalculateSourceAbi
         BuildCellRelativePathFactory buildCellPathFactory) {
       SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
       AbiJarStepsBuilder stepsBuilder =
-          getJavaCompileStepsBuilderFactory(filesystem, sourcePathResolver).getAbiJarBuilder();
+          getJavaCompileStepsBuilderFactory(sourcePathResolver).getAbiJarBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
           filesystem,
@@ -270,20 +257,14 @@ public class CalculateSourceAbi
     }
 
     private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
-        ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
+        SourcePathResolverAdapter sourcePathResolver) {
       return JavaCompileStepsBuilderFactoryCreator.createFactory(
-          jarBuildStepsFactory.getConfiguredCompiler(),
-          createJavaCDParams(filesystem, sourcePathResolver));
+          jarBuildStepsFactory.getConfiguredCompiler(), createJavaCDParams(sourcePathResolver));
     }
 
-    private JavaCDParams createJavaCDParams(
-        ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
+    private JavaCDParams createJavaCDParams(SourcePathResolverAdapter sourcePathResolver) {
       return JavaCDParams.of(
-          javaCDParams,
-          javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
-          () ->
-              sourcePathResolver.getRelativePath(
-                  filesystem, javacdBinaryPathSourcePathSupplier.get()));
+          javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver));
     }
 
     public boolean supportsCompilationDaemon() {

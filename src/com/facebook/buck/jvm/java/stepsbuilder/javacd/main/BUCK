@@ -28,10 +28,3 @@ java_immutables_library(
         "//third-party/java/guava:guava",
     ],
 )
-
-java_binary(
-    name = "javacd",
-    main_class = "com.facebook.buck.jvm.java.stepsbuilder.javacd.main.JavaCDWorkerToolMain",
-    visibility = ["PUBLIC"],
-    deps = [":main_lib"],
-)

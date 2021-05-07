@@ -142,7 +142,6 @@ EXPORTED_RESOURCES = [
     Resource("buck_build_type_info"),
     Resource("native_exopackage_fake_path"),
     Resource("external_actions"),
-    Resource("javacd"),
 ]
 
 

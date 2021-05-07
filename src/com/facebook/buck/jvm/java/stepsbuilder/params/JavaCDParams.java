@@ -16,10 +16,8 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.params;
 
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 /** Params related to javacd. Used to pass into javacd worker tool step. */
@@ -34,8 +32,6 @@ public abstract class JavaCDParams {
   }
 
   public abstract ImmutableList<String> getJavaRuntimeLauncherCommand();
-
-  public abstract Supplier<RelPath> getJavacdBinaryPathSupplier();
 
   @Value.Derived
   public ImmutableList<String> getStartCommandOptions() {
@@ -54,10 +50,7 @@ public abstract class JavaCDParams {
 
   /** Creates {@link JavaCDParams} */
   public static JavaCDParams of(
-      BaseJavaCDParams baseJavaCDParams,
-      ImmutableList<String> javaRuntimeLauncherCommand,
-      Supplier<RelPath> javacdBinaryPathSupplier) {
-    return ImmutableJavaCDParams.ofImpl(
-        baseJavaCDParams, javaRuntimeLauncherCommand, javacdBinaryPathSupplier);
+      BaseJavaCDParams baseJavaCDParams, ImmutableList<String> javaRuntimeLauncherCommand) {
+    return ImmutableJavaCDParams.ofImpl(baseJavaCDParams, javaRuntimeLauncherCommand);
   }
 }

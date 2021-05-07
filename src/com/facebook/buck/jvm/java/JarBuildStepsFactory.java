@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -78,7 +77,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -123,12 +121,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
   @AddToRuleKey private final Tool javaRuntimeLauncher;
 
-  @ExcludeFromRuleKey(
-      reason = "path to javacd binary is not a part of a rule key",
-      serialization = DefaultFieldSerialization.class,
-      inputs = DefaultFieldInputs.class)
-  private final Supplier<SourcePath> javacdBinaryPathSourcePathSupplier;
-
   /** Creates {@link JarBuildStepsFactory} */
   public static <T extends CompileToJarStepFactory.ExtraParams> JarBuildStepsFactory<T> of(
       BuildTarget libraryTarget,
@@ -148,7 +140,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       boolean isRequiredForSourceOnlyAbi,
       boolean withDownwardApi,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
       BaseJavaCDParams javaCDParams) {
     return new JarBuildStepsFactory<>(
         libraryTarget,
@@ -168,7 +159,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         isRequiredForSourceOnlyAbi,
         withDownwardApi,
         javaRuntimeLauncher,
-        javacdBinaryPathSourcePathSupplier,
         javaCDParams);
   }
 
@@ -288,7 +278,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       boolean isRequiredForSourceOnlyAbi,
       boolean withDownwardApi,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
       BaseJavaCDParams javaCDParams) {
     this.libraryTarget = libraryTarget;
     this.configuredCompiler = configuredCompiler;
@@ -308,7 +297,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     this.abiClasspath = this.dependencyInfos.getAbiClasspath();
     this.isRequiredForSourceOnlyAbi = isRequiredForSourceOnlyAbi;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
-    this.javacdBinaryPathSourcePathSupplier = javacdBinaryPathSourcePathSupplier;
     this.javaCDParams = javaCDParams;
   }
 
@@ -766,18 +754,12 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
           hasAnnotationProcessing(),
           withDownwardApi,
           configuredCompiler.getSpoolMode(),
-          createJavaCDParams(projectFilesystem, context.getSourcePathResolver()));
+          createJavaCDParams(context.getSourcePathResolver()));
     };
   }
 
-  private JavaCDParams createJavaCDParams(
-      ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
-    return JavaCDParams.of(
-        javaCDParams,
-        javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
-        () ->
-            sourcePathResolver.getRelativePath(
-                filesystem, javacdBinaryPathSourcePathSupplier.get()));
+  private JavaCDParams createJavaCDParams(SourcePathResolverAdapter sourcePathResolver) {
+    return JavaCDParams.of(javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver));
   }
 
   boolean hasAnnotationProcessing() {

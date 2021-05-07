@@ -40,7 +40,6 @@ import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class AndroidPrebuiltAar extends AndroidLibrary
@@ -69,7 +68,6 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       boolean useSystemLibraryLoader,
       boolean withDownwardApi,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
       BaseJavaCDParams javaCDParams) {
     super(
         androidLibraryBuildTarget,
@@ -92,7 +90,6 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             requiredForSourceAbi,
             withDownwardApi,
             javaRuntimeLauncher,
-            javacdBinaryPathSourcePathSupplier,
             javaCDParams),
         ruleFinder,
         Optional.of(proguardConfig),
@@ -120,7 +117,6 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         false,
         false,
         javaRuntimeLauncher,
-        javacdBinaryPathSourcePathSupplier,
         javaCDParams);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;

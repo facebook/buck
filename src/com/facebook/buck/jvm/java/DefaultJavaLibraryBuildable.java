@@ -27,9 +27,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.StateHolder;
@@ -78,7 +76,6 @@ import com.google.protobuf.AbstractMessage;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** Buildable for DefaultJavaLibrary. */
@@ -104,12 +101,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   @AddToRuleKey private final Tool javaRuntimeLauncher;
 
-  @ExcludeFromRuleKey(
-      reason = "path to javacd binary is not a part of a rule key",
-      serialization = DefaultFieldSerialization.class,
-      inputs = DefaultFieldInputs.class)
-  private final Supplier<SourcePath> javacdBinaryPathSourcePathSupplier;
-
   DefaultJavaLibraryBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
@@ -118,7 +109,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
       BaseJavaCDParams javaCDParams) {
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
@@ -141,7 +131,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
     this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
-    this.javacdBinaryPathSourcePathSupplier = javacdBinaryPathSourcePathSupplier;
   }
 
   RelPath getPathToClassHashes(ProjectFilesystem filesystem) {
@@ -173,7 +162,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
     JavaCompileStepsBuilderFactory javaCompileStepsBuilderFactory =
-        getJavaCompileStepsBuilderFactory(filesystem, sourcePathResolver);
+        getJavaCompileStepsBuilderFactory(sourcePathResolver);
     LibraryJarStepsBuilder stepsBuilder = javaCompileStepsBuilderFactory.getLibraryJarBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
@@ -191,10 +180,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   }
 
   private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
-      ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
+      SourcePathResolverAdapter sourcePathResolver) {
     return JavaCompileStepsBuilderFactoryCreator.createFactory(
-        jarBuildStepsFactory.getConfiguredCompiler(),
-        createJavaCDParams(filesystem, sourcePathResolver));
+        jarBuildStepsFactory.getConfiguredCompiler(), createJavaCDParams(sourcePathResolver));
   }
 
   @Override
@@ -384,14 +372,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps
   }
 
-  private JavaCDParams createJavaCDParams(
-      ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
-    return JavaCDParams.of(
-        javaCDParams,
-        javaRuntimeLauncher.getCommandPrefix(sourcePathResolver),
-        () ->
-            sourcePathResolver.getRelativePath(
-                filesystem, javacdBinaryPathSourcePathSupplier.get()));
+  private JavaCDParams createJavaCDParams(SourcePathResolverAdapter sourcePathResolver) {
+    return JavaCDParams.of(javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver));
   }
 
   private void maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(

@@ -117,7 +117,6 @@ public class AndroidBuildConfigDescription
         javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
         DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem),
-        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(projectFilesystem),
         DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 
@@ -143,7 +142,6 @@ public class AndroidBuildConfigDescription
       boolean shouldExecuteInSeparateProcess,
       Tool javaRuntimeLauncher,
       Supplier<SourcePath> externalActionsSourcePathSupplier,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
       BaseJavaCDParams javaCDParams) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
@@ -199,7 +197,6 @@ public class AndroidBuildConfigDescription
         androidBuildConfig,
         withDownwardApi,
         javaRuntimeLauncher,
-        javacdBinaryPathSourcePathSupplier,
         javaCDParams);
   }
 

@@ -50,7 +50,6 @@ import com.google.common.collect.Iterables;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
@@ -113,7 +112,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       boolean isInterfaceMethodsDesugarEnabled,
       boolean neverMarkAsUnusedDependency,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
       BaseJavaCDParams javaCDParams) {
     super(
         buildTarget,
@@ -138,7 +136,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         isInterfaceMethodsDesugarEnabled,
         neverMarkAsUnusedDependency,
         javaRuntimeLauncher,
-        javacdBinaryPathSourcePathSupplier,
         javaCDParams);
     this.manifestFile = manifestFile;
     this.type = jvmLanguage.map(this::evalType).orElseGet(super::getType);
@@ -232,7 +229,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               isInterfaceMethodsDesugarEnabled,
               neverMarkAsUnusedDependency,
               javaRuntimeLauncher,
-              javacdBinaryPathSourcePathSupplier,
               javaCDParams) ->
               new AndroidLibrary(
                   target,
@@ -259,7 +255,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   isInterfaceMethodsDesugarEnabled,
                   neverMarkAsUnusedDependency,
                   javaRuntimeLauncher,
-                  javacdBinaryPathSourcePathSupplier,
                   javaCDParams));
       delegateBuilder.setJavacOptions(libraryJavacOptions);
       delegateBuilder.setTests(args.getTests());

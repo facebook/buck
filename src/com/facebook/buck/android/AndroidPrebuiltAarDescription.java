@@ -258,7 +258,6 @@ public class AndroidPrebuiltAarDescription
         args.isUseSystemLibraryLoader(),
         withDownwardApi,
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-        DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(projectFilesystem),
         DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 

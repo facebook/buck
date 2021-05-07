@@ -17,8 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
@@ -29,23 +27,17 @@ import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.WorkerToolLauncher;
 import com.facebook.buck.workertool.impl.DefaultWorkerToolLauncher;
 import com.facebook.buck.workertool.impl.WorkerToolPoolFactory;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 /** Collection of constants/methods used in JavaCD worker tool steps. */
 public class JavaCDWorkerStepUtils {
 
-  @VisibleForTesting
   public static final String BOOTSTRAP_MAIN_CLASS =
       "com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper";
 
-  @VisibleForTesting
   public static final String JAVACD_MAIN_CLASS =
       "com.facebook.buck.jvm.java.stepsbuilder.javacd.main.JavaCDWorkerToolMain";
 
@@ -114,36 +106,24 @@ public class JavaCDWorkerStepUtils {
                         + " seconds passed."));
   }
 
-  /** Returns {@link WorkerProcessPool} created for the passed {@code executedCommand} */
+  /** Returns {@link WorkerProcessPool} created for the passed {@code command} */
   public static WorkerProcessPool<WorkerToolExecutor> getWorkerToolPool(
       IsolatedExecutionContext context,
-      ImmutableList<String> executedCommand,
+      ImmutableList<String> startupCommand,
       JavaCDParams javaCDParams) {
     return WorkerToolPoolFactory.getPool(
         context,
-        executedCommand,
+        startupCommand,
         () -> {
           WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
           return workerToolLauncher.launchWorker(
-              executedCommand,
-              createEnvVariablesForJavaCDProcess(javaCDParams, context.getRuleCellRoot()));
+              startupCommand,
+              ImmutableMap.of(
+                  BuckClasspath.ENV_VAR_NAME,
+                  Objects.requireNonNull(
+                      BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
+                      BuckClasspath.ENV_VAR_NAME + " env variable is not set")));
         },
         javaCDParams.getWorkerToolPoolSize());
-  }
-
-  private static ImmutableMap<String, String> createEnvVariablesForJavaCDProcess(
-      JavaCDParams javaCDParams, AbsPath ruleCellRoot) throws IOException {
-    AbsPath jarPath = getJavaCDJarPath(ruleCellRoot, javaCDParams);
-    return ImmutableMap.of(BuckClasspath.ENV_VAR_NAME, jarPath.toString());
-  }
-
-  private static AbsPath getJavaCDJarPath(AbsPath ruleCellRoot, JavaCDParams javaCDParams)
-      throws IOException {
-    Supplier<RelPath> javacdBinaryPathSupplier = javaCDParams.getJavacdBinaryPathSupplier();
-    AbsPath jarPath = ruleCellRoot.resolve(javacdBinaryPathSupplier.get());
-    if (!Files.exists(jarPath.getPath())) {
-      throw new IOException("jar " + jarPath + " is not exist on env");
-    }
-    return jarPath;
   }
 }

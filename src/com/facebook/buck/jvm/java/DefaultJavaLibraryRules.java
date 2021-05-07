@@ -60,16 +60,7 @@ import org.immutables.value.Value;
 @BuckStyleValueWithBuilder
 public abstract class DefaultJavaLibraryRules {
 
-  private static final String JAVACD_PROPERTY_NAME = "buck.javacd";
   private static final String EXTERNAL_ACTIONS_PROPERTY_NAME = "buck.external_actions";
-
-  /** Returns java cd binary's JAR source path supplier. */
-  public static Supplier<SourcePath> getJavacdBinarySourcePathSupplier(
-      ProjectFilesystem projectFilesystem) {
-    return () ->
-        PathSourcePath.of(
-            projectFilesystem, getPathFromSystemProperty(projectFilesystem, JAVACD_PROPERTY_NAME));
-  }
 
   /** Returns the external action binary's JAR source path. */
   public static Supplier<SourcePath> getExternalActionsSourcePathSupplier(
@@ -115,7 +106,6 @@ public abstract class DefaultJavaLibraryRules {
         boolean isInterfaceMethodsDesugarEnabled,
         boolean neverMarkAsUnusedDependency,
         Tool javaRuntimeLauncher,
-        Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
         BaseJavaCDParams javaCDParams);
   }
 
@@ -483,7 +473,6 @@ public abstract class DefaultJavaLibraryRules {
             configuredCompilerFactory.shouldDesugarInterfaceMethods(),
             args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinarySourcePathSupplier(projectFilesystem),
             createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 
@@ -531,7 +520,6 @@ public abstract class DefaultJavaLibraryRules {
                 configuredCompilerFactory.shouldDesugarInterfaceMethods(),
                 args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
                 javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-                getJavacdBinarySourcePathSupplier(projectFilesystem),
                 createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
 
     actionGraphBuilder.addToIndex(libraryRule);
@@ -586,7 +574,6 @@ public abstract class DefaultJavaLibraryRules {
             jarBuildStepsFactory,
             graphBuilder,
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinarySourcePathSupplier(projectFilesystem),
             createJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
   }
 
@@ -612,7 +599,6 @@ public abstract class DefaultJavaLibraryRules {
             jarBuildStepsFactory,
             graphBuilder,
             javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            getJavacdBinarySourcePathSupplier(projectFilesystem),
             createJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
   }
 
@@ -715,7 +701,6 @@ public abstract class DefaultJavaLibraryRules {
 
   @Value.Lazy
   JarBuildStepsFactory<?> getJarBuildStepsFactory() {
-    ProjectFilesystem projectFilesystem = getProjectFilesystem();
     JavaBuckConfig javaBuckConfig = Objects.requireNonNull(getJavaBuckConfig());
     JavacOptions javacOptions = getJavacOptions();
 
@@ -738,7 +723,6 @@ public abstract class DefaultJavaLibraryRules {
         getRequiredForSourceOnlyAbi(),
         getDownwardApiConfig().isEnabledForJava(),
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-        getJavacdBinarySourcePathSupplier(projectFilesystem),
         createJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
   }
 
@@ -766,7 +750,6 @@ public abstract class DefaultJavaLibraryRules {
         getRequiredForSourceOnlyAbi(),
         getDownwardApiConfig().isEnabledForJava(),
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-        getJavacdBinarySourcePathSupplier(projectFilesystem),
         createJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
   }
 

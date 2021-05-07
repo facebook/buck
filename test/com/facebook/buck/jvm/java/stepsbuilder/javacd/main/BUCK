@@ -1,6 +1,5 @@
 java_binary(
     name = "javacd_bin_for_tests",
-    main_class = "com.facebook.buck.jvm.java.stepsbuilder.javacd.main.JavaCDWorkerToolMain",
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib",

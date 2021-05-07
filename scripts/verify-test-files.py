@@ -20,16 +20,13 @@ will not run with `buck test --all`
 """
 from __future__ import absolute_import, division, print_function
 
-import argparse
 import codecs
-import fnmatch
 import json
 import os
 import platform
 import subprocess
 import sys
 import tempfile
-
 
 IGNORE_PREFIXES = [
     "buck-out",

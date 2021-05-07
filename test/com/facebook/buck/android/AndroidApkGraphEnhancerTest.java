@@ -814,7 +814,6 @@ public class AndroidApkGraphEnhancerTest {
             () ->
                 ExplicitBuildTargetSourcePath.of(
                     buildTarget, Paths.get("test/external_actions.jar")),
-            () -> ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("test/javacd_test.jar")),
             BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");

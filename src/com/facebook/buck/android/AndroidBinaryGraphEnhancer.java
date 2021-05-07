@@ -486,7 +486,6 @@ public class AndroidBinaryGraphEnhancer {
                   .areExternalActionsEnabled(),
               javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
               DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem),
-              DefaultJavaLibraryRules.getJavacdBinarySourcePathSupplier(projectFilesystem),
               DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
@@ -743,7 +742,6 @@ public class AndroidBinaryGraphEnhancer {
       boolean shouldExecuteInSeparateProcess,
       Tool javaRuntimeLauncher,
       Supplier<SourcePath> externalActionsSourcePathSupplier,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
       BaseJavaCDParams javaCDParams) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
@@ -790,7 +788,6 @@ public class AndroidBinaryGraphEnhancer {
               shouldExecuteInSeparateProcess,
               javaRuntimeLauncher,
               externalActionsSourcePathSupplier,
-              javacdBinaryPathSourcePathSupplier,
               javaCDParams);
       graphBuilder.addToIndex(buildConfigJavaLibrary);
 

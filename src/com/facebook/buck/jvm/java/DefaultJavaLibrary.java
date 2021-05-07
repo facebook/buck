@@ -184,7 +184,6 @@ public class DefaultJavaLibrary
       boolean isInterfaceMethodsDesugarEnabled,
       boolean neverMarkAsUnusedDependency,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> javacdBinaryPathSourcePathSupplier,
       BaseJavaCDParams javaCDParams) {
     super(
         buildTarget,
@@ -198,7 +197,6 @@ public class DefaultJavaLibrary
             unusedDependenciesFinderFactory,
             sourceAbi,
             javaRuntimeLauncher,
-            javacdBinaryPathSourcePathSupplier,
             javaCDParams));
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =

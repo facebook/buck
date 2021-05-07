@@ -65,7 +65,6 @@ public class AndroidBuildConfigJavaLibraryTest {
             () ->
                 ExplicitBuildTargetSourcePath.of(
                     buildTarget, Paths.get("test/external_actions.jar")),
-            () -> ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("test/javacd_test.jar")),
             BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
@@ -103,7 +102,6 @@ public class AndroidBuildConfigJavaLibraryTest {
             () ->
                 ExplicitBuildTargetSourcePath.of(
                     buildTarget, Paths.get("test/external_actions.jar")),
-            () -> ExplicitBuildTargetSourcePath.of(buildTarget, Paths.get("test/javacd_test.jar")),
             BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
