@@ -37,4 +37,11 @@ public interface RulePipelineStateFactory<
    * to create a build rule pipelining state.
    */
   Function<Message, State> getStateCreatorFunction();
+
+  /**
+   * Returns a function that could be applied to an pipelining state as a protobuf message to create
+   * a compilation daemon step.
+   */
+  Function<Message, CompilationDaemonStep> getCompilationStepCreatorFunction(
+      BuildContext context, ProjectFilesystem projectFilesystem);
 }

@@ -33,6 +33,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
 import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
+import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -754,8 +755,21 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
             pipelineState.getWithDownwardApi());
   }
 
-  // todo: msemko would be used in the future javacd pipelining changes
-  @SuppressWarnings("unused")
+  @Override
+  public Function<PipelineState, CompilationDaemonStep> getCompilationStepCreatorFunction(
+      BuildContext context, ProjectFilesystem projectFilesystem) {
+    return (state) -> {
+      BaseJavacToJarStepFactory configuredCompiler =
+          (BaseJavacToJarStepFactory) getConfiguredCompiler();
+      return new JavaCDPipeliningWorkerToolStep(
+          state,
+          hasAnnotationProcessing(),
+          withDownwardApi,
+          configuredCompiler.getSpoolMode(),
+          createJavaCDParams(projectFilesystem, context.getSourcePathResolver()));
+    };
+  }
+
   private JavaCDParams createJavaCDParams(
       ProjectFilesystem filesystem, SourcePathResolverAdapter sourcePathResolver) {
     return JavaCDParams.of(

@@ -413,6 +413,7 @@ java_immutables_library(
         "JUnitJvmArgs.java",
         "JUnitStep.java",
         "JacocoConstants.java",
+        "JavaCDPipeliningWorkerToolStep.java",
         "JavaCDWorkerStepUtils.java",
         "JavaExtraParams.java",
         "JavacPipelineState.java",

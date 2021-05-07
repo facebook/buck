@@ -287,7 +287,7 @@ public class CalculateSourceAbi
     }
 
     public boolean supportsCompilationDaemon() {
-      return javaCDParams.pipeliningSupported();
+      return javaCDParams.hasJavaCDEnabled();
     }
   }
 

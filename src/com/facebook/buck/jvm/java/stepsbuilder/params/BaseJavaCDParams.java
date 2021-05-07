@@ -23,33 +23,13 @@ import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
-import org.immutables.value.Value;
 
 /** Base params related to javacd. */
 @BuckStyleValue
 public abstract class BaseJavaCDParams implements AddsToRuleKey {
 
-  // TODO: msemko implement
-  private static final boolean PIPELINING_SUPPORT_ENABLED = false;
-
   @AddToRuleKey
   public abstract boolean hasJavaCDEnabled();
-
-  @AddToRuleKey
-  @Value.Default
-  boolean pipeliningEnabled() {
-    // TODO: msemko remove this method when pipelining support is ready.
-    return PIPELINING_SUPPORT_ENABLED;
-  }
-
-  /** Returns whether the pipelining case supported by javacd */
-  @AddToRuleKey
-  @Value.Derived
-  public boolean pipeliningSupported() {
-    // TODO: msemko inline this method when pipelining support is ready. Replace with
-    // `hasJavaCDEnabled()`.
-    return hasJavaCDEnabled() && pipeliningEnabled();
-  }
 
   @ExcludeFromRuleKey(
       reason = "start javacd jvm options is not a part of a rule key",
@@ -76,10 +56,6 @@ public abstract class BaseJavaCDParams implements AddsToRuleKey {
       int workerToolPoolSize,
       int borrowFromPoolTimeoutInSeconds) {
     return ImmutableBaseJavaCDParams.ofImpl(
-        hasJavaCDEnabled,
-        PIPELINING_SUPPORT_ENABLED,
-        startCommandOptions,
-        workerToolPoolSize,
-        borrowFromPoolTimeoutInSeconds);
+        hasJavaCDEnabled, startCommandOptions, workerToolPoolSize, borrowFromPoolTimeoutInSeconds);
   }
 }

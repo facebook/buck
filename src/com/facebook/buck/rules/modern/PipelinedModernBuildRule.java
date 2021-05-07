@@ -28,6 +28,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.protobuf.AbstractMessage;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /** A ModernBuildRule that @SupportsPipelining. */
 public abstract class PipelinedModernBuildRule<
@@ -45,26 +46,35 @@ public abstract class PipelinedModernBuildRule<
   @Override
   public final ImmutableList<? extends Step> getPipelinedBuildSteps(
       BuildContext context, BuildableContext buildableContext, StateHolder<State> stateHolder) {
-    ImmutableList.Builder<Path> outputsBuilder = ImmutableList.builder();
-    recordOutputs(outputsBuilder::add);
-    ImmutableList<Path> outputs = outputsBuilder.build();
-    outputs.forEach(buildableContext::recordArtifact);
-
-    OutputPathResolver outputPathResolver = getOutputPathResolver();
-    ProjectFilesystem projectFilesystem = getProjectFilesystem();
-
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-    ModernBuildRule.appendWithSetupStepsForBuildable(
-        context,
-        projectFilesystem,
-        outputs,
-        stepsBuilder,
-        outputPathResolver,
-        getExcludedOutputPathsFromAutomaticSetup());
-
+    appendWithCommonSetupSteps(context, stepsBuilder, Optional.of(buildableContext));
     AbstractMessage pipelinedCommand = getPipelinedCommand(context);
     stepsBuilder.addAll(getBuildable().getPipelinedBuildSteps(stateHolder, pipelinedCommand));
     return stepsBuilder.build();
+  }
+
+  public final void appendWithCommonSetupSteps(
+      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
+    appendWithCommonSetupSteps(context, stepsBuilder, Optional.empty());
+  }
+
+  private void appendWithCommonSetupSteps(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepsBuilder,
+      Optional<BuildableContext> buildableContextOptional) {
+    ImmutableList.Builder<Path> outputsBuilder = ImmutableList.builder();
+    recordOutputs(outputsBuilder::add);
+    ImmutableList<Path> outputs = outputsBuilder.build();
+    buildableContextOptional.ifPresent(
+        buildableContext -> outputs.forEach(buildableContext::recordArtifact));
+
+    ModernBuildRule.appendWithSetupStepsForBuildable(
+        context,
+        getProjectFilesystem(),
+        outputs,
+        stepsBuilder,
+        getOutputPathResolver(),
+        getExcludedOutputPathsFromAutomaticSetup());
   }
 
   /** Returns protobuf representation of the pipelining command. */

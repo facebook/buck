@@ -39,6 +39,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
+import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.StateHolder;
@@ -74,6 +75,7 @@ import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
+
   public static final boolean DEBUG = false;
 
   private static final String DEPFILE_INPUT_CONTENT = "depfile input";
@@ -111,6 +113,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
   }
 
   private static class SimpleNoopRule extends NoopBuildRule {
+
     @AddToRuleKey private int value = 0;
 
     public SimpleNoopRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
@@ -199,6 +202,12 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
           @Override
           public Function<AbstractMessage, SimplePipelineState> getStateCreatorFunction() {
             return message -> new SimplePipelineState();
+          }
+
+          @Override
+          public Function<AbstractMessage, CompilationDaemonStep> getCompilationStepCreatorFunction(
+              BuildContext context, ProjectFilesystem projectFilesystem) {
+            return message -> new FakeCompilationDaemonStep();
           }
         };
     rootRule = new SimpleNoopRule(BUILD_TARGET.withFlavors(InternalFlavor.of("root")), filesystem);
@@ -517,6 +526,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
   }
 
   private static class SimplePipelineState implements RulePipelineState {
+
     @Override
     public void close() {}
   }

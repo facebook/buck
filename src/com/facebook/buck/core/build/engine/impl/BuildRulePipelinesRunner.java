@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.StateHolder;
@@ -119,13 +120,7 @@ public class BuildRulePipelinesRunner<State extends RulePipelineState> {
   private RunnableWithFuture<Optional<BuildResult>> newPipelineRunner(
       BuildContext context, SupportsPipelining<State> rootRule) {
     BuildRulePipelineStage<State> rootPipelineStage = getOrCreateStage(rootRule);
-
-    RulePipelineStateFactory<State, ?> pipelineStateFactory = rootRule.getPipelineStateFactory();
-    ProjectFilesystem projectFilesystem = rootRule.getProjectFilesystem();
-    BuildTarget buildTarget = rootRule.getBuildTarget();
-    StateHolder<State> stateHolder =
-        StateHolder.fromState(
-            createState(context, pipelineStateFactory, projectFilesystem, buildTarget));
+    StateHolder<State> stateHolder = createStateHolder(context, rootRule);
     BuildRulePipeline<State> pipeline = new BuildRulePipeline<>(rootPipelineStage, stateHolder);
     return new RunnableWithFuture<Optional<BuildResult>>() {
       @Override
@@ -143,17 +138,28 @@ public class BuildRulePipelinesRunner<State extends RulePipelineState> {
     };
   }
 
-  private State createState(
-      BuildContext context,
-      RulePipelineStateFactory<State, ? extends AbstractMessage> pipelineStateFactory,
-      ProjectFilesystem projectFilesystem,
-      BuildTarget buildTarget) {
-    AbstractMessage message =
+  private StateHolder<State> createStateHolder(
+      BuildContext context, SupportsPipelining<State> rootRule) {
+    RulePipelineStateFactory<State, ?> pipelineStateFactory = rootRule.getPipelineStateFactory();
+    ProjectFilesystem projectFilesystem = rootRule.getProjectFilesystem();
+    BuildTarget buildTarget = rootRule.getBuildTarget();
+
+    AbstractMessage pipelineStateMessage =
         pipelineStateFactory.createPipelineStateMessage(context, projectFilesystem, buildTarget);
+
+    if (rootRule.supportsCompilationDaemon()) {
+      @SuppressWarnings("unchecked")
+      Function<AbstractMessage, CompilationDaemonStep> compilationStepCreatorFunction =
+          (Function<AbstractMessage, CompilationDaemonStep>)
+              pipelineStateFactory.getCompilationStepCreatorFunction(context, projectFilesystem);
+      return StateHolder.fromCompilationStep(
+          compilationStepCreatorFunction.apply(pipelineStateMessage));
+    }
+
     @SuppressWarnings("unchecked")
     Function<AbstractMessage, State> stateCreatorFunction =
         (Function<AbstractMessage, State>) pipelineStateFactory.getStateCreatorFunction();
-    return stateCreatorFunction.apply(message);
+    return StateHolder.fromState(stateCreatorFunction.apply(pipelineStateMessage));
   }
 
   private BuildRulePipelineStage<?> getExistingStage(SupportsPipelining<?> rule) {

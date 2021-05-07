@@ -68,6 +68,7 @@ import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy.StrategyBuildResult;
+import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
@@ -85,6 +86,7 @@ import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyType;
+import com.facebook.buck.rules.modern.PipelinedModernBuildRule;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
@@ -114,6 +116,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -1473,6 +1476,29 @@ class CachingBuildRuleBuilder {
               executionContext.withProcessExecutor(contextualProcessExecutor),
               rule.getProjectFilesystem().getRootPath(),
               rule.getFullyQualifiedName());
+
+      if (stateHolderOptional.isPresent()) {
+        @SuppressWarnings("unchecked")
+        SupportsPipelining<State> pipelinedRule = (SupportsPipelining<State>) rule;
+        if (pipelinedRule.supportsCompilationDaemon()) {
+          appendCompilationStep(pipelinedRule);
+        }
+      }
+    }
+
+    private void appendCompilationStep(SupportsPipelining<State> pipelinedRule) {
+      StateHolder<State> stateHolder = getInitializedStateHolder();
+      CompilationDaemonStep compilationDaemonStep = stateHolder.getCompilationDaemonStep();
+      AbstractMessage pipelinedCommand = getPipelinedCommand(pipelinedRule);
+      compilationDaemonStep.appendStepWithCommand(pipelinedCommand);
+    }
+
+    private AbstractMessage getPipelinedCommand(SupportsPipelining<State> pipelinedRule) {
+      Preconditions.checkState(pipelinedRule instanceof PipelinedModernBuildRule);
+      @SuppressWarnings("unchecked")
+      PipelinedModernBuildRule<State, ?> pipelinedModernBuildRule =
+          (PipelinedModernBuildRule<State, ?>) pipelinedRule;
+      return pipelinedModernBuildRule.getPipelinedCommand(buildRuleBuildContext);
     }
 
     public SettableFuture<Optional<BuildResult>> getFuture() {
@@ -1516,13 +1542,17 @@ class CachingBuildRuleBuilder {
       }
     }
 
-    private List<? extends Step> getSteps() {
+    private ImmutableList<? extends Step> getSteps() {
       try (Scope ignored = LeafEvents.scope(eventBus, "get_build_steps")) {
         if (stateHolderOptional.isPresent()) {
           @SuppressWarnings("unchecked")
           SupportsPipelining<State> pipelinedRule = (SupportsPipelining<State>) rule;
+          StateHolder<State> stateHolder = getInitializedStateHolder();
+          if (pipelinedRule.supportsCompilationDaemon()) {
+            return getCompilationDaemonSteps(stateHolder, pipelinedRule);
+          }
           return pipelinedRule.getPipelinedBuildSteps(
-              buildRuleBuildContext, buildableContext, getInitializedStateHolder());
+              buildRuleBuildContext, buildableContext, stateHolder);
         }
 
         return rule.getBuildSteps(buildRuleBuildContext, buildableContext);
@@ -1535,6 +1565,25 @@ class CachingBuildRuleBuilder {
       boolean isFirst = pair.getSecond();
       stateHolder.setFirstStage(isFirst);
       return stateHolder;
+    }
+
+    private ImmutableList<Step> getCompilationDaemonSteps(
+        StateHolder<State> stateHolder, SupportsPipelining<State> pipelinedRule) {
+      ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
+      if (stateHolder.isFirstStage()) {
+        appendWithCommonSetupSteps(pipelinedRule, stepsBuilder);
+      }
+      stepsBuilder.add(stateHolder.getCompilationDaemonStep());
+      return stepsBuilder.build();
+    }
+
+    private void appendWithCommonSetupSteps(
+        SupportsPipelining<State> pipelinedRule, ImmutableList.Builder<Step> stepsBuilder) {
+      Preconditions.checkState(pipelinedRule instanceof PipelinedModernBuildRule);
+      @SuppressWarnings("unchecked")
+      PipelinedModernBuildRule<State, ?> pipelinedModernBuildRule =
+          (PipelinedModernBuildRule<State, ?>) pipelinedRule;
+      pipelinedModernBuildRule.appendWithCommonSetupSteps(buildRuleBuildContext, stepsBuilder);
     }
 
     private void rethrowIgnoredInterruptedException(Step step) throws InterruptedException {

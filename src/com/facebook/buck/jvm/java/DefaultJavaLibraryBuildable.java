@@ -518,6 +518,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   }
 
   public boolean supportsCompilationDaemon() {
-    return javaCDParams.pipeliningSupported();
+    return javaCDParams.hasJavaCDEnabled();
   }
 }

@@ -30,6 +30,7 @@ import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.StateHolder;
@@ -83,6 +84,13 @@ public class BuildRulePipelinesRunnerTest {
             @Override
             public Function<AbstractMessage, TestPipelineState> getStateCreatorFunction() {
               return message -> new TestPipelineState(context, filesystem, firstTarget);
+            }
+
+            @Override
+            public Function<AbstractMessage, CompilationDaemonStep>
+                getCompilationStepCreatorFunction(
+                    BuildContext context, ProjectFilesystem projectFilesystem) {
+              return message -> new FakeCompilationDaemonStep();
             }
           };
 
