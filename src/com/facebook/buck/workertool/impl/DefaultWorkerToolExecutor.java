@@ -165,16 +165,27 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     protected void processEvent(EventType eventType, AbstractMessage event) {
       if (eventType == EventType.RESULT_EVENT) {
         processResultEvent((ResultEvent) event);
+      } else if (eventType == EventType.PIPELINE_FINISHED_EVENT) {
+        processPipelineFinishedEvent();
       } else {
         super.processEvent(eventType, event);
       }
     }
 
     private void processResultEvent(ResultEvent resultEvent) {
-      LOG.info(
+      LOG.debug(
           "Received result event for action id: %s, worker id: %s",
           resultEvent.getActionId(), workerId);
       receiveResultEvent(resultEvent);
+    }
+
+    private void processPipelineFinishedEvent() {
+      LOG.debug(
+          "Received pipeline finished event. Actions: %s, worker id: %s",
+          executingActions.stream()
+              .map(ExecutingAction::getActionId)
+              .collect(Collectors.joining(",")),
+          workerId);
     }
   }
 
@@ -196,7 +207,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     executeCommand.writeDelimitedTo(outputStream);
     executeCommandMessage.writeDelimitedTo(outputStream);
 
-    LOG.info(
+    LOG.debug(
         "Started execution of worker tool for for actionId: %s, worker id: %s", actionId, workerId);
 
     ExecutingAction executingAction = Iterables.getOnlyElement(executingActions);
@@ -234,7 +245,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     startPipelineCommand.writeDelimitedTo(outputStream);
     pipeliningCommand.writeDelimitedTo(outputStream);
 
-    LOG.info(
+    LOG.debug(
         "Started execution of worker tool for for pipelining actionIds: %s, worker id: %s",
         actionIds, workerId);
     return executingActions.stream()

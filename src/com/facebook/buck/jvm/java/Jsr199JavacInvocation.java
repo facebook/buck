@@ -384,7 +384,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
         }
 
         if (numErrors > 0 || numWarnings > 0) {
-          context.getStdErr().printf("Errors: %d. Warnings: %d.\n", numErrors, numWarnings);
+          context.getStdErr().printf("Errors: %d. Warnings: %d.%n", numErrors, numWarnings);
         }
       }
     }

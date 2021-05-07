@@ -151,6 +151,7 @@ class PipeliningJavaCommandExecutor {
         }
       }
     }
+    StepExecutionUtils.writePipelineFinishedEvent(downwardProtocol, eventsOutputStream);
   }
 
   private static Pair<ImmutableList<IsolatedStep>, AbsPath> getAbiSteps(

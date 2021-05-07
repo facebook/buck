@@ -133,7 +133,7 @@ public class JavaCDWorkerToolMain {
               String actionId = executeCommand.getActionId();
               BuildJavaCommand buildJavaCommand =
                   BuildJavaCommand.parseDelimitedFrom(commandsInputStream);
-              LOG.info("Execute command with action id: %s received", actionId);
+              LOG.debug("Start executing command with action id: %s", actionId);
 
               BuildJavaCommandExecutor.executeBuildJavaCommand(
                   actionId,
@@ -150,7 +150,7 @@ public class JavaCDWorkerToolMain {
             case SHUTDOWN_COMMAND:
               ShutdownCommand shutdownCommand =
                   ShutdownCommand.parseDelimitedFrom(commandsInputStream);
-              LOG.info(
+              LOG.debug(
                   "Shutdown command received: %s. Stopping javacd worker tool...", shutdownCommand);
               return;
 
@@ -160,6 +160,7 @@ public class JavaCDWorkerToolMain {
               List<String> actionIds = startPipelineCommand.getActionIdList();
               PipeliningCommand pipeliningCommand =
                   PipeliningCommand.parseDelimitedFrom(commandsInputStream);
+              LOG.debug("Start executing pipelining command with action ids: %s", actionIds);
 
               PipeliningJavaCommandExecutor.executePipeliningJavaCommand(
                   actionIds,

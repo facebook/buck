@@ -21,6 +21,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downward.model.EventTypeMessage.EventType;
+import com.facebook.buck.downward.model.PipelineFinishedEvent;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.event.IsolatedEventBus;
@@ -33,6 +35,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Optional;
@@ -158,9 +161,25 @@ class StepExecutionUtils {
   private static void writeResultEvent(
       DownwardProtocol downwardProtocol, OutputStream eventsOutputStream, ResultEvent resultEvent)
       throws IOException {
+    writeEvent(EventType.RESULT_EVENT, resultEvent, eventsOutputStream, downwardProtocol);
+  }
+
+  static void writePipelineFinishedEvent(
+      DownwardProtocol downwardProtocol, OutputStream eventsOutputStream) throws IOException {
+    writeEvent(
+        EventType.PIPELINE_FINISHED_EVENT,
+        PipelineFinishedEvent.getDefaultInstance(),
+        eventsOutputStream,
+        downwardProtocol);
+  }
+
+  private static void writeEvent(
+      EventType eventType,
+      AbstractMessage event,
+      OutputStream eventsOutputStream,
+      DownwardProtocol downwardProtocol)
+      throws IOException {
     downwardProtocol.write(
-        EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.RESULT_EVENT).build(),
-        resultEvent,
-        eventsOutputStream);
+        EventTypeMessage.newBuilder().setEventType(eventType).build(), event, eventsOutputStream);
   }
 }

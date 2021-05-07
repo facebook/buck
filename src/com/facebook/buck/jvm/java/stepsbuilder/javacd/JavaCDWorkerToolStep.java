@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.jvm.java.JavaCDWorkerStepUtils;
@@ -32,6 +33,8 @@ import java.util.concurrent.ExecutionException;
 
 /** JavaCD worker tool isolated step. */
 public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
+
+  private static final Logger LOG = Logger.get(JavaCDWorkerToolStep.class);
 
   private final JavaCDParams javaCDParams;
   private final BuildJavaCommand buildJavaCommand;
@@ -67,6 +70,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
       throws IOException, InterruptedException {
     String actionId = context.getActionId();
     try {
+      LOG.debug("Starting execution of java compilation command with action id: %s", actionId);
       ResultEvent resultEvent = workerToolExecutor.executeCommand(actionId, buildJavaCommand);
       return JavaCDWorkerStepUtils.createStepExecutionResult(
           launchJavaCDCommand, resultEvent, actionId);
