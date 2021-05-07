@@ -44,23 +44,17 @@ import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.config.RawConfig;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 /** The only implementation of {@link com.facebook.buck.core.cell.CellProvider}. */
 final class CellProviderImpl implements CellProvider {
 
   private final NewCellPathResolver newCellPathResolver;
-  private final LoadingCache<CanonicalCellName, Cell> cells;
+  private final ImmutableMap<CanonicalCellName, Cell> cells;
   private final ImmutableSet<AbsPath> allRoots;
   private final ImmutableMap<AbsPath, RawConfig> pathToConfigOverrides;
   private final ProjectFilesystem rootFilesystem;
@@ -105,18 +99,6 @@ final class CellProviderImpl implements CellProvider {
     newCellPathResolver =
         CellMappingsFactory.create(rootFilesystem.getRootPath(), rootConfig.getConfig());
 
-    // The cell should only contain a subset of cell mappings of the root cell.
-    // TODO(13777679): cells in other watchman roots do not work correctly.
-    this.cells =
-        CacheBuilder.newBuilder()
-            .build(
-                new CacheLoader<CanonicalCellName, Cell>() {
-                  @Override
-                  public Cell load(CanonicalCellName cellPath) throws IOException {
-                    return loadCell(cellPath);
-                  }
-                });
-
     Cell rootCell =
         RootCellFactory.create(
             this,
@@ -125,7 +107,28 @@ final class CellProviderImpl implements CellProvider {
             toolchainProviderFactory,
             rootFilesystem,
             rootConfig);
-    cells.put(CanonicalCellName.rootCell(), rootCell);
+
+    // The cell should only contain a subset of cell mappings of the root cell.
+    // TODO(13777679): cells in other watchman roots do not work correctly.
+    this.cells =
+        newCellPathResolver.getCellToPathMap().keySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    cellName -> cellName,
+                    cellName -> {
+                      if (cellName == CanonicalCellName.rootCell()) {
+                        return rootCell;
+                      } else {
+                        try {
+                          return loadCell(cellName);
+                        } catch (IOException e) {
+                          throw new HumanReadableException(
+                              e.getCause(), "Failed to load Cell at: %s", cellName);
+                        }
+                      }
+                    }));
+
+    Preconditions.checkState(this.cells.containsKey(CanonicalCellName.rootCell()));
   }
 
   private Cell loadCell(CanonicalCellName canonicalCellName) throws IOException {
@@ -223,22 +226,9 @@ final class CellProviderImpl implements CellProvider {
 
   @Override
   public Cell getCellByCanonicalCellName(CanonicalCellName canonicalCellName) {
-    try {
-      return cells.get(canonicalCellName);
-    } catch (ExecutionException e) {
-      if (e.getCause() instanceof IOException) {
-        throw new HumanReadableException(
-            e.getCause(), "Failed to load Cell at: %s", canonicalCellName);
-      } else if (e.getCause() instanceof InterruptedException) {
-        throw new RuntimeException("Interrupted while loading Cell: " + canonicalCellName, e);
-      } else {
-        throw new IllegalStateException(
-            "Unexpected checked exception thrown from cell loader.", e.getCause());
-      }
-    } catch (UncheckedExecutionException e) {
-      Throwables.throwIfUnchecked(e.getCause());
-      throw e;
-    }
+    Cell cell = cells.get(canonicalCellName);
+    Preconditions.checkState(cell != null, "unknown cell: '%s'", canonicalCellName);
+    return cell;
   }
 
   @Override
@@ -253,13 +243,11 @@ final class CellProviderImpl implements CellProvider {
 
   @Override
   public ImmutableList<Cell> getLoadedCells() {
-    return ImmutableList.copyOf(cells.asMap().values());
+    return cells.values().asList();
   }
 
   @Override
   public ImmutableList<Cell> getAllCells() {
-    return newCellPathResolver.getCellToPathMap().keySet().stream()
-        .map(this::getCellByCanonicalCellName)
-        .collect(ImmutableList.toImmutableList());
+    return cells.values().asList();
   }
 }
