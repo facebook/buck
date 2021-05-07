@@ -16,13 +16,8 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
-import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downward.model.EventTypeMessage;
-import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
 import com.facebook.buck.event.IsolatedEventBus;
@@ -32,10 +27,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
-import com.facebook.buck.jvm.java.stepsbuilder.javacd.JavaStepsBuilder;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.facebook.buck.step.isolatedsteps.IsolatedStepsRunner;
+import com.facebook.buck.javacd.model.PipeliningCommand;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -48,11 +40,10 @@ import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import java.io.IOException;
+import com.facebook.buck.workertool.model.StartPipelineCommand;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 
 /** JavaCD main class */
 public class JavaCDWorkerToolMain {
@@ -144,10 +135,11 @@ public class JavaCDWorkerToolMain {
                   BuildJavaCommand.parseDelimitedFrom(commandsInputStream);
               LOG.info("Execute command with action id: %s received", actionId);
 
-              handleBuildJavaCommand(
+              BuildJavaCommandExecutor.executeBuildJavaCommand(
                   actionId,
                   buildJavaCommand,
                   eventsOutputStream,
+                  DOWNWARD_PROTOCOL,
                   eventBus,
                   platform,
                   processExecutor,
@@ -163,8 +155,23 @@ public class JavaCDWorkerToolMain {
               return;
 
             case START_PIPELINE_COMMAND:
-              // TODO: msemko : Implement pipelining support
-              throw new UnsupportedOperationException("Pipelining support not yet implemented!");
+              StartPipelineCommand startPipelineCommand =
+                  StartPipelineCommand.parseDelimitedFrom(commandsInputStream);
+              List<String> actionIds = startPipelineCommand.getActionIdList();
+              PipeliningCommand pipeliningCommand =
+                  PipeliningCommand.parseDelimitedFrom(commandsInputStream);
+
+              PipeliningJavaCommandExecutor.executePipeliningJavaCommand(
+                  actionIds,
+                  pipeliningCommand,
+                  eventsOutputStream,
+                  DOWNWARD_PROTOCOL,
+                  eventBus,
+                  platform,
+                  processExecutor,
+                  console,
+                  clock);
+              break;
 
             case UNKNOWN:
             case UNRECOGNIZED:
@@ -174,67 +181,5 @@ public class JavaCDWorkerToolMain {
         }
       }
     }
-  }
-
-  private static void handleBuildJavaCommand(
-      String actionId,
-      BuildJavaCommand buildJavaCommand,
-      OutputStream eventsOutputStream,
-      IsolatedEventBus eventBus,
-      Platform platform,
-      ProcessExecutor processExecutor,
-      Console console,
-      Clock clock)
-      throws IOException {
-
-    JavaStepsBuilder javaStepsBuilder = new JavaStepsBuilder(buildJavaCommand);
-    AbsPath ruleCellRoot = javaStepsBuilder.getRuleCellRoot();
-    ImmutableList<IsolatedStep> isolatedSteps = javaStepsBuilder.getSteps();
-    StepExecutionResult stepExecutionResult;
-    try (IsolatedExecutionContext executionContext =
-        IsolatedExecutionContext.of(
-            eventBus, console, platform, processExecutor, ruleCellRoot, actionId, clock)) {
-      stepExecutionResult =
-          IsolatedStepsRunner.executeWithDefaultExceptionHandling(isolatedSteps, executionContext);
-    }
-
-    ResultEvent resultEvent = getResultEvent(actionId, stepExecutionResult);
-    DOWNWARD_PROTOCOL.write(
-        EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.RESULT_EVENT).build(),
-        resultEvent,
-        eventsOutputStream);
-  }
-
-  private static ResultEvent getResultEvent(
-      String actionId, StepExecutionResult stepExecutionResult) {
-    int exitCode = stepExecutionResult.getExitCode();
-    ResultEvent.Builder resultEventBuilder =
-        ResultEvent.newBuilder().setActionId(actionId).setExitCode(exitCode);
-    if (!stepExecutionResult.isSuccess()) {
-      StringBuilder errorMessage = new StringBuilder();
-      stepExecutionResult
-          .getStderr()
-          .ifPresent(
-              stdErr ->
-                  errorMessage.append("Std err: ").append(stdErr).append(System.lineSeparator()));
-      stepExecutionResult
-          .getCause()
-          .ifPresent(
-              cause -> {
-                LOG.warn(cause, "%s failed with an exception.", actionId);
-                String error;
-                if (cause instanceof HumanReadableException) {
-                  error = ((HumanReadableException) cause).getHumanReadableErrorMessage();
-                } else {
-                  error = Throwables.getStackTraceAsString(cause);
-                }
-                errorMessage.append("Cause: ").append(error);
-              });
-      if (errorMessage.length() > 0) {
-        resultEventBuilder.setMessage(errorMessage.toString());
-      }
-    }
-
-    return resultEventBuilder.build();
   }
 }

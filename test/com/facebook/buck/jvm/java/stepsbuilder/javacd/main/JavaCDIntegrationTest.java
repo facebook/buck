@@ -121,7 +121,7 @@ public class JavaCDIntegrationTest {
 
   @Rule
   public TestLogSink javacdLogSink =
-      new TestLogSink(JavaCDIntegrationTest.class.getPackage().getName() + ".JavaCDWorkerToolMain");
+      new TestLogSink(JavaCDIntegrationTest.class.getPackage().getName() + ".StepExecutionUtils");
 
   @BeforeClass
   public static void beforeClass() throws Exception {
