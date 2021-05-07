@@ -427,12 +427,10 @@ class BcCompilerForIf {
       }
     }
 
-    BcWriter.SavedState saved = compiler.bcWriter.save();
-    Bc.Compiler.CompileExpressionResult compiled = compiler.compileExpression(expr);
-    if (compiled.value != null && Bc.Compiler.isTruthImmutable(compiled.value)) {
-      return new ConstExpr(expr, Starlark.truth(compiled.value));
+    Object compiled = compiler.tryCompileConstant(expr);
+    if (compiled != null && Bc.Compiler.isTruthImmutable(compiled)) {
+      return new ConstExpr(expr, Starlark.truth(compiled));
     }
-    saved.reset();
     // TODO(nga): This is inefficient:
     //   when expression is not const, we compile it twice,
     //   here to understand that it is not constant,

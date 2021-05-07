@@ -87,6 +87,9 @@ class BcVisitor {
       case PLUS_LIST_IN_PLACE:
         visitPlusListInPlace(parser.nextInt(), parser.nextListArg(), parser.nextInt());
         break;
+      case TYPE_IS:
+        visitTypeIs(parser.nextInt(), parser.nextInt(), parser.nextInt());
+        break;
       case PERCENT_S_ONE:
         visitPercentSOne(parser.nextInt(), parser.nextInt(), parser.nextInt(), parser.nextInt());
         break;
@@ -373,6 +376,11 @@ class BcVisitor {
   protected void visitPlusListInPlace(int lhs, int list, int out) {
     visitIn(lhs);
     visitInListArg(list);
+    visitOut(out);
+  }
+
+  protected void visitTypeIs(int inLocal, int typeString, int out) {
+    visitIn(inLocal);
     visitOut(out);
   }
 

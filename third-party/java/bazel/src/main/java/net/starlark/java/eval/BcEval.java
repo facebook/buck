@@ -149,6 +149,9 @@ class BcEval {
           case BcInstr.PLUS_LIST_IN_PLACE:
             plusListInPlace();
             break;
+          case BcInstr.TYPE_IS:
+            typeIs();
+            break;
           case BcInstr.BR:
             br();
             continue;
@@ -873,6 +876,18 @@ class BcEval {
       result = Eval.inplaceBinaryPlus(fr, x, StarlarkList.wrap(fr.thread.mutability(), rhsValues));
     }
     int resultSlot = nextOperand();
+    setSlot(resultSlot, result);
+  }
+
+  private void typeIs() throws EvalException {
+    int lhsSlot = nextOperand();
+    int typeIndex = nextOperand();
+    int resultSlot = nextOperand();
+
+    Object lhs = getLocal(lhsSlot);
+    String lhsType = Starlark.type(lhs);
+    String rhsType = compiled.strings[typeIndex];
+    boolean result = lhsType == rhsType || lhsType.equals(rhsType);
     setSlot(resultSlot, result);
   }
 

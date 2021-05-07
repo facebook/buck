@@ -147,6 +147,17 @@ class Bc {
       write(opcode, node, from, to);
     }
 
+    /** If slot is not local, copy it to a new temporary (local) slot. */
+    private int makeLocal(Node node, int slot) {
+      if (BcSlot.isLocal(slot)) {
+        return slot;
+      } else {
+        int local = bcWriter.allocSlot();
+        cp(node, slot, local);
+        return local;
+      }
+    }
+
     /**
      * Write forward condition jump instruction. Return an address to be patched when the jump
      * address is known.
@@ -154,13 +165,7 @@ class Bc {
     int writeForwardCondJump(BcInstr.Opcode opcode, Node expression, int cond) {
       Preconditions.checkState(
           opcode == BcInstr.Opcode.IF_BR_LOCAL || opcode == BcInstr.Opcode.IF_NOT_BR_LOCAL);
-      int condLocal;
-      if (!BcSlot.isLocal(cond)) {
-        condLocal = bcWriter.allocSlot();
-        cp(expression, cond, condLocal);
-      } else {
-        condLocal = cond;
-      }
+      int condLocal = makeLocal(expression, cond);
       return bcWriter.writeForwardCondJump(opcode, nodeToLocOffset(expression), condLocal);
     }
 
@@ -577,6 +582,17 @@ class Bc {
         cp(node, constResult.slot, result);
         return new CompileExpressionResult(result, constant);
       }
+    }
+
+    /**
+     * Try compile expression as a constant, return {@code null} if expresssion is not a constant.
+     */
+    @Nullable
+    Object tryCompileConstant(Expression expression) {
+      BcWriter.SavedState saved = bcWriter.save();
+      CompileExpressionResult result = compileExpression(expression);
+      saved.reset();
+      return result.value;
     }
 
     /** Compile an expression, store result in provided register. */
@@ -1258,6 +1274,82 @@ class Bc {
           result);
     }
 
+    @Nullable
+    private CompileExpressionResult tryCompileTypeIsCallConst(
+        BcWriter.SavedState saved,
+        Node expression,
+        Expression maybeTypeCallExpression,
+        CompileExpressionResult x, CompileExpressionResult y, int result) {
+      if (x.value != null) {
+        return null;
+      }
+
+      if (!(y.value instanceof String)) {
+        return null;
+      }
+
+      if (!(maybeTypeCallExpression instanceof CallExpression)) {
+        return null;
+      }
+
+      CallExpression callExpression = (CallExpression) maybeTypeCallExpression;
+      Object fn = tryCompileConstant(callExpression.getFunction());
+      if (fn != BcDesc.TYPE) {
+        return null;
+      }
+
+      if (callExpression.getArguments().size() != 1
+          || !(callExpression.getArguments().get(0) instanceof Argument.Positional)) {
+        // incorrect `type()` call, let it fail at runtime
+        return null;
+      }
+
+      // Now we know the call is `type(x) == y`
+
+      saved.reset();
+
+      int typeArgument = compileExpression(callExpression.getArguments().get(0).getValue()).slot;
+
+      return writeTypeIs(expression, typeArgument, (String) y.value, result);
+    }
+
+    private CompileExpressionResult writeTypeIs(
+        Node expression, int slot, String type, int result) {
+      int local = makeLocal(expression, slot);
+
+      int typeIndex = bcWriter.allocString(type);
+
+      return writeToOut(
+          BcInstr.Opcode.TYPE_IS,
+          expression,
+          new int[] { local, typeIndex },
+          result);
+    }
+
+    /** Compile expression to {@link BcInstr.Opcode#TYPE_IS}. */
+    @Nullable
+    private CompileExpressionResult tryCompileTypeIs(
+        BcWriter.SavedState saved,
+        BinaryOperatorExpression expression,
+        CompileExpressionResult x,
+        CompileExpressionResult y,
+        int result) {
+      if (expression.getOperator() != TokenKind.EQUALS_EQUALS) {
+        return null;
+      }
+
+      // Try compile `type(x) == y`
+      CompileExpressionResult callConst = tryCompileTypeIsCallConst(
+          saved, expression, expression.getX(), x, y, result);
+      if (callConst != null) {
+        return callConst;
+      }
+
+      // Otherwise try compile `x == type(y)`
+      return tryCompileTypeIsCallConst(
+          saved, expression, expression.getY(), y, x, result);
+    }
+
     private CompileExpressionResult compileBinaryOperatorNonShortCicrcuiting(
         BinaryOperatorExpression expression, int result) {
       BcWriter.SavedState saved = bcWriter.save();
@@ -1298,6 +1390,11 @@ class Bc {
           saved.reset();
           return compileStringPercent(expression, result, format, percent);
         }
+      }
+
+      CompileExpressionResult typeIsResult = tryCompileTypeIs(saved, expression, x, y, result);
+      if (typeIsResult != null) {
+        return typeIsResult;
       }
 
       return writeBinaryOp(expression, expression.getOperator(), x, y, result);
