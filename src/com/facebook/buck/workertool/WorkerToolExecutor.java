@@ -17,8 +17,10 @@
 package com.facebook.buck.workertool;
 
 import com.facebook.buck.downward.model.ResultEvent;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.worker.WorkerProcess;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -39,6 +41,8 @@ public interface WorkerToolExecutor extends WorkerProcess {
    * result event's futures that represent the result.
    */
   ImmutableList<Future<ResultEvent>> executePipeliningCommand(
-      ImmutableList<String> actionIds, AbstractMessage executeCommandMessage)
+      ImmutableList<String> actionIds,
+      AbstractMessage executeCommandMessage,
+      SettableFuture<Unit> pipelineFinished)
       throws IOException, ExecutionException, InterruptedException;
 }

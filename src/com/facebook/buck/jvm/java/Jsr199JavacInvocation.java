@@ -327,7 +327,9 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       // Make a new event to capture the time spent waiting for the next stage in the
       // pipeline (or for the pipeline to realize it's done)
       targetEvent =
-          new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), "Waiting for pipeline");
+          new JavacEventSinkScopedSimplePerfEvent(
+              context.getEventSink(),
+              "Waiting for pipeline: " + invokingRule.getFullyQualifiedName());
       if (!shouldCompileFullJar.get()) {
         // targetEvent will be closed in startCompiler
         throw new StopCompilation();

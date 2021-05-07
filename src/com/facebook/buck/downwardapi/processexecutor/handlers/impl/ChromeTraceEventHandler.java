@@ -23,7 +23,6 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.PerfEventTitle;
 import com.google.common.collect.ImmutableMap;
 import java.time.Instant;
-import java.util.Map;
 import java.util.Objects;
 
 /** Downward API event handler for {@code ChromeTraceEvent} */
@@ -33,8 +32,6 @@ enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
   @Override
   public void handleEvent(DownwardApiExecutionContext context, ChromeTraceEvent event) {
     Instant timestamp = EventHandlerUtils.getTimestamp(context, event.getDuration());
-    Map<Integer, SimplePerfEvent.Started> chromeTraceStartedEvents =
-        context.getChromeTraceStartedEvents();
 
     ImmutableMap<String, Object> attributes =
         ImmutableMap.<String, Object>builder().putAll(event.getDataMap()).build();
@@ -45,14 +42,14 @@ enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
       case BEGIN:
         PerfEventTitle perfEventId = PerfEventTitle.of(event.getTitle());
         started = SimplePerfEvent.started(perfEventId, event.getCategory(), attributes);
-        chromeTraceStartedEvents.put(eventId, started);
+        context.registerStartChromeEvent(eventId, started);
         context.postEvent(started, timestamp);
         break;
 
       case END:
         started =
             Objects.requireNonNull(
-                chromeTraceStartedEvents.remove(eventId),
+                context.getChromeTraceStartedEvent(eventId),
                 "Started chrome trace event for event id: " + eventId + " is not found");
         SimplePerfEvent finishedEvent = started.createFinishedEvent(attributes);
         context.postEvent(finishedEvent, timestamp);

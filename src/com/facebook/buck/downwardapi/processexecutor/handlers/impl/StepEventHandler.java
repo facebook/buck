@@ -24,7 +24,6 @@ import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutio
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.event.StepEvent.Started;
 import java.time.Instant;
-import java.util.Map;
 import java.util.Objects;
 
 /** Downward API event handler for {@code StepEvent} */
@@ -33,21 +32,20 @@ enum StepEventHandler implements EventHandler<StepEvent> {
 
   @Override
   public void handleEvent(DownwardApiExecutionContext context, StepEvent event) {
-    Map<Integer, Started> stepStartedEvents = context.getStepStartedEvents();
     Instant timestamp = EventHandlerUtils.getTimestamp(context, event.getDuration());
     int eventId = event.getEventId();
 
     switch (event.getStepStatus()) {
       case STARTED:
         Started startedEvent = started(event.getStepType(), event.getDescription());
-        stepStartedEvents.put(eventId, startedEvent);
+        context.registerStartStepEvent(eventId, startedEvent);
         context.postEvent(startedEvent, timestamp);
         break;
 
       case FINISHED:
         Started started =
             Objects.requireNonNull(
-                stepStartedEvents.remove(eventId),
+                context.getStepStartedEvent(eventId),
                 "Started step with event id: " + eventId + " is not found");
         context.postEvent(finished(started, 0), timestamp);
         break;

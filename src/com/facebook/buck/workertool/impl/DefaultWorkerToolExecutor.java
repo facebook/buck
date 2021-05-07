@@ -33,12 +33,14 @@ import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
 import com.facebook.buck.workertool.model.StartPipelineCommand;
 import com.facebook.buck.workertool.utils.WorkerToolConstants;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -55,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /** Default implementation of {@link WorkerToolExecutor} */
 class DefaultWorkerToolExecutor implements WorkerToolExecutor {
@@ -80,6 +83,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private final Future<?> waitForLaunchedProcessFuture;
 
   private ImmutableList<ExecutingAction> executingActions = ImmutableList.of();
+  @Nullable private SettableFuture<Unit> pipelineFinished;
 
   /** Holds execution action details */
   @BuckStyleValue
@@ -186,6 +190,10 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
               .map(ExecutingAction::getActionId)
               .collect(Collectors.joining(",")),
           workerId);
+
+      // signal to Step that pipeline is finished
+      Preconditions.checkNotNull(pipelineFinished);
+      pipelineFinished.set(Unit.UNIT);
     }
   }
 
@@ -219,7 +227,9 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
   @Override
   public ImmutableList<Future<ResultEvent>> executePipeliningCommand(
-      ImmutableList<String> actionIds, AbstractMessage pipeliningCommand)
+      ImmutableList<String> actionIds,
+      AbstractMessage pipeliningCommand,
+      SettableFuture<Unit> pipelineFinished)
       throws IOException, ExecutionException, InterruptedException {
     checkState(isAlive(), "Launched process is not alive");
 
@@ -235,6 +245,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
             startPipeliningCommandBuilder.addActionId(actionId);
           }
           executingActions = executingActionBuilder.build();
+          this.pipelineFinished = pipelineFinished;
         });
 
     CommandTypeMessage executeCommandTypeMessage =
@@ -270,6 +281,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
           // Set `executingActions` to an empty list that signals that new command could be
           // executed.
           executingActions = ImmutableList.of();
+          pipelineFinished = null;
         });
   }
 
@@ -491,8 +503,8 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
   @Override
   public void prepareForReuse() {
-    launchedProcess.updateThreadId();
     prepareForTheNextCommand();
+    launchedProcess.updateThreadId();
   }
 
   @Override

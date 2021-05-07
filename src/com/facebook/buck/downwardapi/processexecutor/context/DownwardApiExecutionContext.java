@@ -22,12 +22,14 @@ import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.util.timing.Clock;
+import com.google.common.base.Preconditions;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /** Downward API execution context. */
-public class DownwardApiExecutionContext {
+public final class DownwardApiExecutionContext {
 
   private final Instant startExecutionInstant;
   private final IsolatedEventBus isolatedEventBus;
@@ -47,37 +49,47 @@ public class DownwardApiExecutionContext {
     return startExecutionInstant;
   }
 
-  public Map<Integer, SimplePerfEvent.Started> getChromeTraceStartedEvents() {
-    return chromeTraceStartedEvents;
+  public void registerStartChromeEvent(Integer key, SimplePerfEvent.Started started) {
+    chromeTraceStartedEvents.put(key, started);
   }
 
-  public Map<Integer, StepEvent.Started> getStepStartedEvents() {
-    return stepStartedEvents;
+  @Nullable
+  public SimplePerfEvent.Started getChromeTraceStartedEvent(int eventId) {
+    return chromeTraceStartedEvents.remove(eventId);
   }
 
-  public final void postEvent(ExternalEvent event) {
+  public void registerStartStepEvent(Integer key, StepEvent.Started started) {
+    stepStartedEvents.put(key, started);
+  }
+
+  @Nullable
+  public StepEvent.Started getStepStartedEvent(int eventId) {
+    return stepStartedEvents.remove(eventId);
+  }
+
+  public void postEvent(ExternalEvent event) {
     isolatedEventBus.post(event, invokingThreadId);
   }
 
-  public final void postEvent(ConsoleEvent event) {
+  public void postEvent(ConsoleEvent event) {
     isolatedEventBus.post(event, invokingThreadId);
   }
 
-  public final void postEvent(StepEvent event) {
+  public void postEvent(StepEvent event) {
     isolatedEventBus.post(event, invokingThreadId);
   }
 
-  public final void postEvent(StepEvent event, Instant atTime) {
+  public void postEvent(StepEvent event, Instant atTime) {
     isolatedEventBus.post(event, atTime, invokingThreadId);
   }
 
   /** Posts events into buck event bus. */
-  public final void postEvent(SimplePerfEvent event) {
+  public void postEvent(SimplePerfEvent event) {
     isolatedEventBus.post(event, invokingThreadId);
   }
 
   /** Posts events into buck event bus that occurred at {@code atTime}. */
-  public final void postEvent(SimplePerfEvent event, Instant atTime) {
+  public void postEvent(SimplePerfEvent event, Instant atTime) {
     isolatedEventBus.post(event, atTime, invokingThreadId);
   }
 
@@ -95,6 +107,9 @@ public class DownwardApiExecutionContext {
    */
   public static DownwardApiExecutionContext from(
       DownwardApiExecutionContext context, long threadId) {
+    int eventsSize = context.chromeTraceStartedEvents.size() + context.stepStartedEvents.size();
+    Preconditions.checkState(eventsSize == 0, "There are " + eventsSize + " unprocessed events.");
+
     return new DownwardApiExecutionContext(
         context.getStartExecutionInstant(), context.isolatedEventBus, threadId);
   }

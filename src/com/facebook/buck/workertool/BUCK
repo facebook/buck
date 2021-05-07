@@ -4,6 +4,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src-gen:downward-model",
+        "//src/com/facebook/buck/util/types:types",
         "//src/com/facebook/buck/worker:worker_pool",
         "//third-party/java/guava:guava",
     ],

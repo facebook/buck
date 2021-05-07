@@ -11,5 +11,6 @@ java_library(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/timing:timing",
+        "//third-party/java/jsr:jsr305",
     ],
 )

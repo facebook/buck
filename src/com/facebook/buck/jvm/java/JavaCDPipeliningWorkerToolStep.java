@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ResultEvent;
@@ -29,12 +30,15 @@ import com.facebook.buck.javacd.model.PipeliningCommand;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -67,6 +71,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
   private ImmutableMap<String, Future<ResultEvent>> actionIdToResultEventMap = ImmutableMap.of();
   @Nullable private BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool;
+  private final SettableFuture<Unit> done = SettableFuture.create();
 
   public JavaCDPipeliningWorkerToolStep(
       PipelineState pipeliningState,
@@ -170,7 +175,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     PipeliningCommand pipeliningCommand = builder.build();
 
     ImmutableList<Future<ResultEvent>> futures =
-        workerToolExecutor.executePipeliningCommand(actionIds, pipeliningCommand);
+        workerToolExecutor.executePipeliningCommand(actionIds, pipeliningCommand, done);
 
     ImmutableMap.Builder<String, Future<ResultEvent>> mapBuilder = ImmutableMap.builder();
     for (int i = 0; i < actionIds.size(); i++) {
@@ -185,6 +190,26 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
   @Override
   public void close() {
+    if (!done.isDone()) {
+      try {
+        done.get();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        LOG.warn(
+            e,
+            "Thread that waited for pipelining command %s to finish has been interrupted",
+            actionIdToResultEventMap.keySet());
+      } catch (ExecutionException e) {
+        Throwable cause = e.getCause();
+        Throwables.throwIfUnchecked(cause);
+        throw new HumanReadableException(
+            cause,
+            "Waiting for pipelining command %s to finish has been failed. : %s",
+            actionIdToResultEventMap.keySet(),
+            cause.getMessage());
+      }
+    }
+
     if (borrowedWorkerTool != null) {
       borrowedWorkerTool.close();
       borrowedWorkerTool = null;
