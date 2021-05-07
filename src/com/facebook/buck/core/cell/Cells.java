@@ -84,9 +84,4 @@ public class Cells {
             + allRoots.stream().map(Objects::toString).collect(Collectors.joining(", "))
             + "]");
   }
-
-  /** @return all loaded {@link Cell}s. */
-  public ImmutableList<Cell> getLoadedCells() {
-    return cellProvider.getLoadedCells();
-  }
 }

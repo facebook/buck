@@ -128,7 +128,7 @@ public class CleanCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) {
-    for (Cell cell : params.getCells().getLoadedCells()) {
+    for (Cell cell : params.getCells().getAllCells()) {
       cleanCell(params, cell);
     }
     return ExitCode.SUCCESS;

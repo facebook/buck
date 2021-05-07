@@ -29,8 +29,6 @@ public interface CellProvider {
 
   CellPathResolver getRootCellCellPathResolver();
 
-  ImmutableList<Cell> getLoadedCells();
-
   /** Returns a list of all {@link Cell} objects. */
   ImmutableList<Cell> getAllCells();
 }

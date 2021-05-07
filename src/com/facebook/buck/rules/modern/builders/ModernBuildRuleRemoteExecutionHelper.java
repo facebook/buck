@@ -144,7 +144,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
   /** Gets all the canonical cell names. */
   private static ImmutableSet<CanonicalCellName> getCellNames(Cell rootCell) {
-    return rootCell.getCellProvider().getLoadedCells().stream()
+    return rootCell.getCellProvider().getAllCells().stream()
         .map(Cell::getCanonicalName)
         .collect(ImmutableSet.toImmutableSet());
   }

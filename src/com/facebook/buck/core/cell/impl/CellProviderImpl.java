@@ -242,11 +242,6 @@ final class CellProviderImpl implements CellProvider {
   }
 
   @Override
-  public ImmutableList<Cell> getLoadedCells() {
-    return cells.values().asList();
-  }
-
-  @Override
   public ImmutableList<Cell> getAllCells() {
     return cells.values().asList();
   }
