@@ -6,23 +6,31 @@ import com.google.common.base.VerifyException;
 
 /** Bytecode instruction slot operands. */
 class BcSlot {
-  /** Operand type mask. */
-  static final int MASK = 0xf0_00_00_00;
   /** Local/temporary variable. */
-  static final int LOCAL_FLAG = 0x00_00_00_00;
-  /** Global variable, index is a index in Module. */
-  static final int GLOBAL_FLAG = 0x10_00_00_00;
-  /** Cell. */
-  static final int CELL_FLAG = 0x20_00_00_00;
-  /** Free variable. */
-  static final int FREE_FLAG = 0x30_00_00_00;
+  static final int LOCAL_KIND = 0x00;
   /** Constant reference. */
-  static final int CONST_FLAG = 0x40_00_00_00;
+  static final int CONST_KIND = 0x01;
+  /** Global variable, index is a index in Module. */
+  static final int GLOBAL_KIND = 0x02;
+  /** Cell. */
+  static final int CELL_KIND = 0x03;
+  /** Free variable. */
+  static final int FREE_KIND = 0x04;
+
+  static final int INDEX_BITS = 24;
+
+  /** Operand type mask. */
+  static final int MASK = 0xff_00_00_00;
+  static final int LOCAL_FLAG = LOCAL_KIND << INDEX_BITS;
+  static final int CONST_FLAG = CONST_KIND << INDEX_BITS;
+  static final int GLOBAL_FLAG = GLOBAL_KIND << INDEX_BITS;
+  static final int CELL_FLAG = CELL_KIND << INDEX_BITS;
+  static final int FREE_FLAG = FREE_KIND << INDEX_BITS;
   /** Null marker. */
-  static final int NULL_FLAG = 0x50_00_00_00;
+  static final int NULL_FLAG = 0x05_00_00_00;
 
   /** Marker for any register, used in the compiler. */
-  static final int ANY_FLAG = 0x60_00_00_00;
+  static final int ANY_FLAG = 0xff_00_00_00;
 
   static int local(int index) {
     return index | LOCAL_FLAG;

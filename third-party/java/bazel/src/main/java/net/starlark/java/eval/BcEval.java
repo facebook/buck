@@ -271,17 +271,18 @@ class BcEval {
 
   /** Get a value from the register slot. */
   private Object getSlot(int slot) throws EvalException {
+    int kind = slot >> BcSlot.INDEX_BITS;
     int index = slot & ~BcSlot.MASK;
-    switch (slot & BcSlot.MASK) {
-      case BcSlot.LOCAL_FLAG:
+    switch (kind) {
+      case BcSlot.LOCAL_KIND:
         return getLocal(index);
-      case BcSlot.CONST_FLAG:
+      case BcSlot.CONST_KIND:
         return compiled.constSlots[index];
-      case BcSlot.GLOBAL_FLAG:
+      case BcSlot.GLOBAL_KIND:
         return getGlobal(index);
-      case BcSlot.CELL_FLAG:
+      case BcSlot.CELL_KIND:
         return getCell(index);
-      case BcSlot.FREE_FLAG:
+      case BcSlot.FREE_KIND:
         return getFree(index);
       default:
         throw new IllegalStateException("wrong slot: " + slot);
