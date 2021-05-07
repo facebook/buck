@@ -16,31 +16,61 @@
 
 package com.facebook.buck.core.rules.pipeline;
 
-import java.util.Optional;
+import com.facebook.buck.util.types.Either;
+import com.google.common.base.Preconditions;
 
-/** Holds rule pipelining state */
+/**
+ * Holds rule pipelining state.
+ *
+ * <p>State could be presented as an actual implementation of {@link RulePipelineState} interface in
+ * case pipeline rule is running in the current process, or holds could be presented as {@link
+ * CompilationDaemonStep} which interacts with compilation daemon process.
+ *
+ * <p>The rules in the pipeline share state holder through that object.
+ */
 public class StateHolder<State extends RulePipelineState> implements AutoCloseable {
 
-  private final Optional<State> state;
+  private final Either<State, CompilationDaemonStep> either;
   private boolean isFirstStage = false;
 
-  public StateHolder(Optional<State> state) {
-    this.state = state;
+  private StateHolder(State state) {
+    this.either = Either.ofLeft(state);
   }
 
-  private boolean isStateCreated() {
-    return state.isPresent();
+  private StateHolder(CompilationDaemonStep compilationDaemonStep) {
+    this.either = Either.ofRight(compilationDaemonStep);
+  }
+
+  public static <State extends RulePipelineState> StateHolder<State> fromState(State state) {
+    return new StateHolder<>(state);
+  }
+
+  public static <State extends RulePipelineState> StateHolder<State> fromCompilationStep(
+      CompilationDaemonStep compilationDaemonStep) {
+    return new StateHolder<>(compilationDaemonStep);
+  }
+
+  public boolean supportsCompilationDaemon() {
+    return either.isRight();
   }
 
   /** Returns build rule's pipelining state. */
   public State getState() {
-    return state.orElseThrow(
-        () -> new IllegalStateException("State could not be created in the current process"));
+    Preconditions.checkState(either.isLeft(), "State could not be created in the current process");
+    return either.getLeft();
+  }
+
+  /** Returns compilation daemon step. */
+  public CompilationDaemonStep getCompilationDaemonStep() {
+    Preconditions.checkState(either.isRight());
+    return either.getRight();
   }
 
   @Override
   public void close() {
-    if (isStateCreated()) {
+    if (supportsCompilationDaemon()) {
+      getCompilationDaemonStep().close();
+    } else {
       getState().close();
     }
   }

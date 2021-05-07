@@ -62,7 +62,9 @@ java_library(
     deps = [
         "//src/com/facebook/buck/core/build/engine/cache/manager:manager",
         "//src/com/facebook/buck/core/build/engine/config:config",
+        "//src/com/facebook/buck/core/rules/pipeline:pipeline",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/step/isolatedsteps/common:common",
         "//src/com/facebook/buck/util/environment:environment",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",

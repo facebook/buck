@@ -124,11 +124,8 @@ public class BuildRulePipelinesRunner<State extends RulePipelineState> {
     ProjectFilesystem projectFilesystem = rootRule.getProjectFilesystem();
     BuildTarget buildTarget = rootRule.getBuildTarget();
     StateHolder<State> stateHolder =
-        new StateHolder<>(
-            rootRule.supportsCompilationDaemon()
-                ? Optional.empty()
-                : Optional.of(
-                    createState(context, pipelineStateFactory, projectFilesystem, buildTarget)));
+        StateHolder.fromState(
+            createState(context, pipelineStateFactory, projectFilesystem, buildTarget));
     BuildRulePipeline<State> pipeline = new BuildRulePipeline<>(rootPipelineStage, stateHolder);
     return new RunnableWithFuture<Optional<BuildResult>>() {
       @Override
