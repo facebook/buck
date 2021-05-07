@@ -39,7 +39,12 @@ import java.util.List;
 class AndroidApkInstallGraphEnhancer {
   static final Flavor INSTALL_FLAVOR = InternalFlavor.of("install");
   private static final Flavor DIRECTORY_LISTING_FLAVOR = InternalFlavor.of("exo_directory_listing");
-  private static final Flavor EXO_FILE_INSTALL_FLAVOR = InternalFlavor.of("exo_file_installer");
+  private static final Flavor EXO_DEX_FILES_INSTALL_FLAVOR =
+      InternalFlavor.of("exo_dex_files_installer");
+  private static final Flavor EXO_MODULE_FILES_INSTALL_FLAVOR =
+      InternalFlavor.of("exo_module_files_installer");
+  private static final Flavor EXO_NATIVE_LIBS_INSTALL_FLAVOR =
+      InternalFlavor.of("exo_native_libs_installer");
   private static final Flavor EXO_FILE_RESOURCE_INSTALL_FLAVOR =
       InternalFlavor.of("exo_resources_installer");
 
@@ -85,18 +90,44 @@ class AndroidApkInstallGraphEnhancer {
             buildTarget.withFlavors(DIRECTORY_LISTING_FLAVOR), projectFilesystem);
     ExopackageInfo exopackageInfo = apkInfo.getExopackageInfo().get();
     ImmutableList.Builder<BuildRule> finisherDeps = ImmutableList.builder();
-    if (exopackageInfo.getDexInfo().isPresent()
-        || exopackageInfo.getNativeLibsInfo().isPresent()
-        || exopackageInfo.getModuleInfo().isPresent()) {
+    if (exopackageInfo.getDexInfo().isPresent()) {
       ExopackageInfo filteredExopackageInfo =
-          ExopackageInfo.builder()
-              .setDexInfo(exopackageInfo.getDexInfo())
-              .setNativeLibsInfo(exopackageInfo.getNativeLibsInfo())
-              .setModuleInfo(exopackageInfo.getModuleInfo())
-              .build();
+          ExopackageInfo.builder().setDexInfo(exopackageInfo.getDexInfo()).build();
       ExopackageFilesInstaller fileInstaller =
           new ExopackageFilesInstaller(
-              buildTarget.withFlavors(EXO_FILE_INSTALL_FLAVOR),
+              buildTarget.withFlavors(EXO_DEX_FILES_INSTALL_FLAVOR),
+              projectFilesystem,
+              graphBuilder,
+              directoryLister.getSourcePathToOutput(),
+              apkInfo.getManifestPath(),
+              filteredExopackageInfo,
+              adbConfig);
+      graphBuilder.addToIndex(fileInstaller);
+      finisherDeps.add(fileInstaller);
+    }
+
+    if (exopackageInfo.getNativeLibsInfo().isPresent()) {
+      ExopackageInfo filteredExopackageInfo =
+          ExopackageInfo.builder().setNativeLibsInfo(exopackageInfo.getNativeLibsInfo()).build();
+      ExopackageFilesInstaller fileInstaller =
+          new ExopackageFilesInstaller(
+              buildTarget.withFlavors(EXO_NATIVE_LIBS_INSTALL_FLAVOR),
+              projectFilesystem,
+              graphBuilder,
+              directoryLister.getSourcePathToOutput(),
+              apkInfo.getManifestPath(),
+              filteredExopackageInfo,
+              adbConfig);
+      graphBuilder.addToIndex(fileInstaller);
+      finisherDeps.add(fileInstaller);
+    }
+
+    if (exopackageInfo.getModuleInfo().isPresent()) {
+      ExopackageInfo filteredExopackageInfo =
+          ExopackageInfo.builder().setModuleInfo(exopackageInfo.getModuleInfo()).build();
+      ExopackageFilesInstaller fileInstaller =
+          new ExopackageFilesInstaller(
+              buildTarget.withFlavors(EXO_MODULE_FILES_INSTALL_FLAVOR),
               projectFilesystem,
               graphBuilder,
               directoryLister.getSourcePathToOutput(),
