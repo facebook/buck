@@ -1,7 +1,6 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -10,14 +9,11 @@ import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
-import java.util.function.Function;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.TokenKind;
 
@@ -78,16 +74,27 @@ public class StarlarkRuntimeStats {
   private static class StarlarkCallStats {
     private final AtomicInteger count = new AtomicInteger();
     private final AtomicLong steps = new AtomicLong();
+    private final AtomicLong totalDurationNanos = new AtomicLong();
 
     long avgSteps() {
       int count = this.count.get();
       return count != 0 ? steps.get() / count : 0;
     }
 
+    long avgDurationNanos() {
+      int count = this.count.get();
+      return count != 0 ? totalDurationNanos.get() / count : 0;
+    }
+
+    long totalDurationMillis() {
+      return totalDurationNanos.get() / 1_000_000;
+    }
+
     StarlarkCallStats copy() {
       StarlarkCallStats copy = new StarlarkCallStats();
       copy.count.set(count.get());
       copy.steps.set(steps.get());
+      copy.totalDurationNanos.set(totalDurationNanos.get());
       return copy;
     }
   }
@@ -140,15 +147,18 @@ public class StarlarkRuntimeStats {
     callStats.totalDurationNanos.addAndGet(durationNanos);
   }
 
-  static void recordStarlarkCall(String name, int steps) {
+  static void leaveStarlarkCall(String name, int steps) {
     if (!ENABLED) {
       return;
     }
+
+    long durationNanos = StarlarkRuntimeStats.leave();
 
     StarlarkCallStats callStats =
         stats.starlarkCalls.computeIfAbsent(name, k -> new StarlarkCallStats());
     callStats.count.addAndGet(1);
     callStats.steps.addAndGet(steps);
+    callStats.totalDurationNanos.addAndGet(durationNanos);
   }
 
   static void recordCallCached(String name, CallCachedResult result) {
@@ -287,7 +297,9 @@ public class StarlarkRuntimeStats {
     out.println("Starlark stats:");
 
     printTimeStats(out);
-    printCallStats(out);
+    printNativeCallStats(out);
+    printStarlarkCallStats(out);
+    printCallCachedStats(out);
     printInstructionStats(out);
     printBinaryOpStats(out);
   }
@@ -318,17 +330,16 @@ public class StarlarkRuntimeStats {
     out.println("Total time spent in Starlark (except parser), ms: " + (totalTimeNanos / 1_000_000));
     out.println();
     out.println("Time spent by category:");
-    printTable(
+    StarlarkRuntimeStatsTable.printTable(
         out,
         stats,
         new String[] { WhereWeAre.class.getSimpleName(), "tot_ms", "count" },
         t -> new Object[] { t.cat, t.durationNanos / 1_000_000, t.count });
   }
 
-  private void printCallStats(PrintStream out) {
-    int top = 50;
+  private static final int TOP = 50;
 
-    // Take a snapshot, otherwise we are not allowed to perform sort
+  private void printNativeCallStats(PrintStream out) {
     ImmutableList<AbstractMap.SimpleEntry<String, NativeCallStats>> nativeCalls =
         this.nativeCalls.entrySet().stream()
             .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().copy()))
@@ -336,124 +347,90 @@ public class StarlarkRuntimeStats {
     long totalNativeDurationNanos =
         nativeCalls.stream().mapToLong(c -> c.getValue().totalDurationNanos.get()).sum();
 
-    ImmutableList<AbstractMap.SimpleEntry<String, StarlarkCallStats>> starlarkCalls =
-        this.starlarkCalls.entrySet().stream()
-            .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().copy()))
-            .collect(ImmutableList.toImmutableList());
-
-    ImmutableList<AbstractMap.SimpleEntry<String, NativeCallStats>> topNativeByCount =
-        nativeCalls.stream()
-            .sorted(
-                Comparator.comparing(
-                        (AbstractMap.SimpleEntry<String, NativeCallStats> e) -> {
-                          return e.getValue().count.get();
-                        })
-                    .reversed())
-            .limit(top)
-            .collect(ImmutableList.toImmutableList());
-
-    ImmutableList<AbstractMap.SimpleEntry<String, NativeCallStats>> topNativeByDuration =
-        nativeCalls.stream()
-            .sorted(
-                Comparator.comparing(
-                        (AbstractMap.SimpleEntry<String, NativeCallStats> e) -> {
-                          return e.getValue().totalDurationNanos.get();
-                        })
-                    .reversed())
-            .limit(top)
-            .collect(ImmutableList.toImmutableList());
-
-    ImmutableList<AbstractMap.SimpleEntry<String, StarlarkCallStats>> topStarlarkByCount =
-        starlarkCalls.stream()
-            .sorted(
-                Comparator.comparing(
-                        (AbstractMap.SimpleEntry<String, StarlarkCallStats> e) -> {
-                          return e.getValue().count.get();
-                        })
-                    .reversed())
-            .limit(top)
-            .collect(ImmutableList.toImmutableList());
-
     long totalNativeCalls = nativeCalls.stream().mapToLong(e -> e.getValue().count.get()).sum();
-    long totalStarlarkCalls = starlarkCalls.stream().mapToLong(e -> e.getValue().count.get()).sum();
 
     out.println();
     out.println("Total native calls: " + totalNativeCalls);
     out.println(
         "Total time spent in native calls, ms: " + totalNativeDurationNanos / 1_000_000);
 
-    out.println();
-    out.println("Top " + top + " native calls by total duration:");
-    printTable(
-        out,
-        topNativeByDuration,
-        new String[] {
-          "name", "tot_ms", "count", "avg_ns",
-        },
-        e ->
-            new Object[] {
-              e.getKey(),
-              e.getValue().totalDurationMillis(),
-              e.getValue().count,
-              e.getValue().avgDurationNanos()
-            });
+    StarlarkRuntimeStatsTable.Column<AbstractMap.SimpleEntry<String, NativeCallStats>> name =
+        StarlarkRuntimeStatsTable.column("name", AbstractMap.SimpleEntry::getKey);
+    StarlarkRuntimeStatsTable.Column<AbstractMap.SimpleEntry<String, NativeCallStats>> count =
+        StarlarkRuntimeStatsTable.column("count", e -> e.getValue().count);
+    StarlarkRuntimeStatsTable.Column<AbstractMap.SimpleEntry<String, NativeCallStats>> totMs =
+        StarlarkRuntimeStatsTable.column("tot_ms", e -> e.getValue().totalDurationMillis());
+    StarlarkRuntimeStatsTable.Column<AbstractMap.SimpleEntry<String, NativeCallStats>> avgNs =
+        StarlarkRuntimeStatsTable.column("count", e -> e.getValue().avgDurationNanos());
 
     out.println();
-    out.println("Top " + top + " native calls by count:");
-    printTable(
+    out.println("Top " + TOP + " native calls by total duration:");
+    StarlarkRuntimeStatsTable.printTableTopBy(
         out,
-        topNativeByCount,
-        new String[] {
-          "name", "count", "tot_ms", "avg_ns",
-        },
-        e ->
-            new Object[] {
-              e.getKey(),
-              e.getValue().count,
-              e.getValue().totalDurationMillis(),
-              e.getValue().avgDurationNanos()
-            });
+        nativeCalls,
+        ImmutableList.of(name, totMs, avgNs, count),
+        TOP,
+        e -> e.getValue().totalDurationNanos.get());
 
-    ImmutableList<AbstractMap.SimpleEntry<String, StarlarkCallStats>> topStarlarkByTotalSteps =
-        starlarkCalls.stream()
-            .sorted(
-                Comparator.comparing(
-                        (AbstractMap.SimpleEntry<String, StarlarkCallStats> e) -> {
-                          return e.getValue().steps.get();
-                        })
-                    .reversed())
-            .limit(top)
+    out.println();
+    out.println("Top " + TOP + " native calls by count:");
+    StarlarkRuntimeStatsTable.printTableTopBy(
+        out,
+        nativeCalls,
+        ImmutableList.of(name, count, totMs, avgNs),
+        TOP,
+        e -> e.getValue().count.get());
+  }
+
+  private void printStarlarkCallStats(PrintStream out) {
+    ImmutableList<AbstractMap.SimpleEntry<String, StarlarkCallStats>> starlarkCalls =
+        this.starlarkCalls.entrySet().stream()
+            .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().copy()))
             .collect(ImmutableList.toImmutableList());
 
+    StarlarkRuntimeStatsTable.Column<AbstractMap.SimpleEntry<String, StarlarkCallStats>> name =
+        StarlarkRuntimeStatsTable.column("name", AbstractMap.SimpleEntry::getKey);
+    StarlarkRuntimeStatsTable.Column<AbstractMap.SimpleEntry<String, StarlarkCallStats>> stepsTot =
+        StarlarkRuntimeStatsTable.column("steps_tot", e -> e.getValue().steps);
+    StarlarkRuntimeStatsTable.Column<AbstractMap.SimpleEntry<String, StarlarkCallStats>> stepsAvg =
+        StarlarkRuntimeStatsTable.column("steps_avg", e -> e.getValue().avgSteps());
+    StarlarkRuntimeStatsTable.Column<AbstractMap.SimpleEntry<String, StarlarkCallStats>> count =
+        StarlarkRuntimeStatsTable.column("count", e -> e.getValue().count);
+    StarlarkRuntimeStatsTable.Column<AbstractMap.SimpleEntry<String, StarlarkCallStats>> totMs =
+        StarlarkRuntimeStatsTable.column("tot_ms", e -> e.getValue().totalDurationMillis());
+    StarlarkRuntimeStatsTable.Column<AbstractMap.SimpleEntry<String, StarlarkCallStats>> avgNs =
+        StarlarkRuntimeStatsTable.column("avg_ns", e -> e.getValue().avgDurationNanos());
+
+    long totalStarlarkCalls = starlarkCalls.stream().mapToLong(e -> e.getValue().count.get()).sum();
     out.println();
     out.println("Total starlark calls: " + totalStarlarkCalls);
-    out.println();
-    out.println("Top " + top + " starlark calls by total steps:");
-    printTable(
-        out,
-        topStarlarkByTotalSteps,
-        new String[] {
-          "name", "steps_tot", "steps_avg", "count",
-        },
-        e ->
-            new Object[] {
-              e.getKey(), e.getValue().steps, e.getValue().avgSteps(), e.getValue().count,
-            });
 
     out.println();
-    out.println("Top " + top + " starlark calls by count:");
-    printTable(
+    out.println("Top " + StarlarkRuntimeStats.TOP + " starlark calls by total steps:");
+    StarlarkRuntimeStatsTable.printTableTopBy(
         out,
-        topStarlarkByCount,
-        new String[] {
-          "name", "count", "steps_tot", "steps_avg",
-        },
-        e ->
-            new Object[] {
-              e.getKey(), e.getValue().count, e.getValue().steps, e.getValue().avgSteps(),
-            });
+        starlarkCalls,
+        ImmutableList.of(name, stepsTot, stepsAvg, count, totMs, avgNs),
+        StarlarkRuntimeStats.TOP,
+        e -> e.getValue().steps.get());
 
-    printCallCachedStats(out);
+    out.println();
+    out.println("Top " + StarlarkRuntimeStats.TOP + " starlark calls by total duration:");
+    StarlarkRuntimeStatsTable.printTableTopBy(
+        out,
+        starlarkCalls,
+        ImmutableList.of(name, totMs, avgNs, count, stepsTot, stepsAvg),
+        StarlarkRuntimeStats.TOP,
+        e -> e.getValue().totalDurationNanos.get());
+
+    out.println();
+    out.println("Top " + StarlarkRuntimeStats.TOP + " starlark calls by count:");
+    StarlarkRuntimeStatsTable.printTableTopBy(
+        out,
+        starlarkCalls,
+        ImmutableList.of(name, count, stepsTot, stepsAvg, totMs, avgNs),
+        StarlarkRuntimeStats.TOP,
+        e -> e.getValue().count.get());
   }
 
   private void printCallCachedStats(PrintStream out) {
@@ -472,7 +449,7 @@ public class StarlarkRuntimeStats {
 
     out.println();
     out.println(BcInstr.Opcode.CALL_CACHED + " result counts:");
-    printTable(
+    StarlarkRuntimeStatsTable.printTable(
         out,
         ImmutableList.copyOf(CallCachedResult.values()),
         new String[] { "result", "count" },
@@ -498,7 +475,7 @@ public class StarlarkRuntimeStats {
 
     out.println();
     out.println("Top " + CallCachedResult.HIT + " functions:");
-    printTable(
+    StarlarkRuntimeStatsTable.printTable(
         out,
         topHitFunctions,
         new String[] {
@@ -514,7 +491,7 @@ public class StarlarkRuntimeStats {
 
     out.println();
     out.println("Top " + CallCachedResult.SKIP + " functions:");
-    printTable(
+    StarlarkRuntimeStatsTable.printTable(
         out,
         topSkippedFunctions,
         new String[] {
@@ -547,7 +524,7 @@ public class StarlarkRuntimeStats {
     out.println("Total starlark instruction steps: " + totalStarlarkSteps);
     out.println();
     out.println("Instruction step count by opcode:");
-    printTable(out, instructionsCountByOpcode, "opcode", "count");
+    StarlarkRuntimeStatsTable.printTable(out, instructionsCountByOpcode, "opcode", "count");
   }
 
   private void printBinaryOpStats(PrintStream out) {
@@ -566,64 +543,7 @@ public class StarlarkRuntimeStats {
     out.println("Total " + BcInstr.Opcode.BINARY + " ops: " + totalBinaryOps);
     out.println();
     out.println("Binary ops by " + TokenKind.class.getSimpleName() + ":");
-    printTable(out, binaryOpCountByOp, "bin_op", "count");
+    StarlarkRuntimeStatsTable.printTable(out, binaryOpCountByOp, "bin_op", "count");
   }
 
-  private <K, V> void printTable(
-      PrintStream out,
-      ImmutableList<? extends Map.Entry<K, V>> entries,
-      String keyName,
-      String valueName) {
-    printTable(
-        out,
-        entries,
-        new String[] { keyName, valueName },
-        e -> new Object[] { e.getKey(), e.getValue() });
-  }
-
-  private <R> void printTable(
-      PrintStream printStream,
-      ImmutableList<R> rows, String[] columnNames, Function<R, Object[]> columns) {
-    int[] maxWidthByColumn = Arrays.stream(columnNames).mapToInt(String::length).toArray();
-    for (R row : rows) {
-      Object[] cells = columns.apply(row);
-      Verify.verify(cells.length == maxWidthByColumn.length);
-      for (int i = 0, cellsLength = cells.length; i < cellsLength; i++) {
-        Object cell = cells[i];
-        maxWidthByColumn[i] = Math.max(maxWidthByColumn[i], Objects.toString(cell).length());
-      }
-    }
-
-    StringBuilder out = new StringBuilder();
-    appendRow(out, maxWidthByColumn, columnNames);
-    for (R row : rows) {
-      appendRow(out, maxWidthByColumn, columns.apply(row));
-    }
-    printStream.print(out);
-  }
-
-  private static void appendRow(StringBuilder sb, int[] maxWidthByColumn, Object[] row) {
-    for (int i = 0; i < maxWidthByColumn.length; i++) {
-      int w = maxWidthByColumn[i];
-      Object value = row[i];
-      String valueStr = Objects.toString(value);
-      boolean leftPad = value instanceof Number;
-      int padSize = Math.max(0, w - valueStr.length());
-      if (i != 0) {
-        sb.append("  ");
-      }
-      if (leftPad) {
-        for (int j = 0; j < padSize; ++j) {
-          sb.append(" ");
-        }
-      }
-      sb.append(valueStr);
-      if (!leftPad && i != maxWidthByColumn.length - 1) {
-        for (int j = 0; j < padSize; ++j) {
-          sb.append(" ");
-        }
-      }
-    }
-    sb.append("\n");
-  }
 }

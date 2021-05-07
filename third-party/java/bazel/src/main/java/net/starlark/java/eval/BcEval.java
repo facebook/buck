@@ -66,14 +66,15 @@ class BcEval {
   /** Public API. */
   public static Object eval(StarlarkThread.Frame fr, StarlarkFunction fn, Object[] locals)
       throws InterruptedException, EvalException {
+    BcEval bcEval = new BcEval(fr, fn, locals);
     if (StarlarkRuntimeStats.ENABLED) {
       StarlarkRuntimeStats.enter(StarlarkRuntimeStats.WhereWeAre.BC_EVAL);
     }
     try {
-      return new BcEval(fr, fn, locals).eval();
+      return bcEval.eval();
     } finally {
       if (StarlarkRuntimeStats.ENABLED) {
-        StarlarkRuntimeStats.leave();
+        StarlarkRuntimeStats.leaveStarlarkCall(fn.getName(), bcEval.localSteps);
       }
     }
   }
@@ -240,10 +241,6 @@ class BcEval {
     } finally {
       while (loopDepth != 0) {
         popFor();
-      }
-
-      if (StarlarkRuntimeStats.ENABLED) {
-        StarlarkRuntimeStats.recordStarlarkCall(fn.getName(), localSteps);
       }
     }
     return Starlark.NONE;
