@@ -17,6 +17,7 @@ EVENT_INTERFACES = [
     "SimplePerfEvent.java",
     "ThrowableConsoleEvent.java",
     "WorkAdvanceEvent.java",
+    "WatchmanStatusEvent.java",
 ]
 
 java_immutables_library(
