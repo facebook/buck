@@ -294,7 +294,7 @@ public class EdenProjectFilesystemDelegateTest {
             "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
     EdenProjectFilesystemDelegate edenDelegateWithWatchman =
         new EdenProjectFilesystemDelegate(mount, delegate, configWithWatchman);
-    edenDelegateWithWatchman.initEdenWatchman(watchman, projectFilesystem);
+    edenDelegateWithWatchman.initEdenWatchman(watchman, projectFilesystem.getRootPath());
 
     assertEquals(
         edenDelegateWithFileSystem.computeSha1(path), edenDelegateWithWatchman.computeSha1(path));
@@ -350,7 +350,7 @@ public class EdenProjectFilesystemDelegateTest {
             "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
     EdenProjectFilesystemDelegate edenDelegateWithWatchman =
         new EdenProjectFilesystemDelegate(mount, delegate, configWithWatchman);
-    edenDelegateWithWatchman.initEdenWatchman(watchman, projectFilesystem);
+    edenDelegateWithWatchman.initEdenWatchman(watchman, projectFilesystem.getRootPath());
 
     assertFalse(edenDelegateWithWatchman.globOnPath(link).isPresent());
     assertTrue(edenDelegateWithWatchman.globOnPath(target).isPresent());

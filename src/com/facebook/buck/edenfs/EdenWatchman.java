@@ -16,7 +16,7 @@
 
 package com.facebook.buck.edenfs;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.Watchman;
@@ -25,19 +25,18 @@ import java.nio.file.Paths;
 
 /** A class wraps everything Eden needs from Watchman */
 public class EdenWatchman {
-  private final ProjectFilesystem projectFilesystem;
+
   private final Watchman watchman;
   private final Path watchmanRootPath;
 
-  public EdenWatchman(Watchman watchman, ProjectFilesystem projectFilesystem) {
+  public EdenWatchman(Watchman watchman, AbsPath cellRootPath) {
     this.watchman = watchman;
-    this.projectFilesystem = projectFilesystem;
-    ProjectWatch watch = watchman.getProjectWatches().get(projectFilesystem.getRootPath());
+    ProjectWatch watch = watchman.getProjectWatches().get(cellRootPath);
     if (watch == null) {
       String msg =
           String.format(
               "Path [%s] is not watched. The list of watched project: [%s]",
-              projectFilesystem.getRootPath(), watchman.getProjectWatches().keySet());
+              cellRootPath, watchman.getProjectWatches().keySet());
       throw new FileSystemNotWatchedException(msg);
     }
     watchmanRootPath = Paths.get(watch.getWatchRoot());
@@ -49,9 +48,5 @@ public class EdenWatchman {
 
   public Path getWatchmanRootPath() {
     return watchmanRootPath;
-  }
-
-  public ProjectFilesystem getProjectFilesystem() {
-    return projectFilesystem;
   }
 }

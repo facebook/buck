@@ -18,7 +18,6 @@ package com.facebook.buck.edenfs;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
@@ -297,8 +296,8 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     return delegate.getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
   }
 
-  public void initEdenWatchman(Watchman watchman, ProjectFilesystem projectFilesystem) {
-    this.edenWatchmanDelayInit.setWatchman(watchman, projectFilesystem);
+  public void initEdenWatchman(Watchman watchman, AbsPath cellRootPath) {
+    this.edenWatchmanDelayInit.setWatchman(watchman, cellRootPath);
   }
 
   /**
@@ -310,9 +309,9 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     private Optional<EdenWatchman> edenWatchman = Optional.empty();
 
     /** Attach watchman to the EdenFS delegate */
-    public void setWatchman(Watchman watchman, ProjectFilesystem projectFilesystem) {
+    public void setWatchman(Watchman watchman, AbsPath cellRootPath) {
       Preconditions.checkState(!edenWatchman.isPresent(), "Watchman already initialized");
-      this.edenWatchman = Optional.of(new EdenWatchman(watchman, projectFilesystem));
+      this.edenWatchman = Optional.of(new EdenWatchman(watchman, cellRootPath));
     }
 
     /** return the eden watchman wrapper if initialized. */

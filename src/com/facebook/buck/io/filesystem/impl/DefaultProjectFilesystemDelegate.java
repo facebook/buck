@@ -123,7 +123,7 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
       if (defaultProjectFilesystem.getDelegate() instanceof EdenProjectFilesystemDelegate) {
         EdenProjectFilesystemDelegate edenProjectFilesystemDelegate =
             ((EdenProjectFilesystemDelegate) defaultProjectFilesystem.getDelegate());
-        edenProjectFilesystemDelegate.initEdenWatchman(watchman, filesystem);
+        edenProjectFilesystemDelegate.initEdenWatchman(watchman, filesystem.getRootPath());
       }
     }
   }
