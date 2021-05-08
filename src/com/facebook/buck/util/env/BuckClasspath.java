@@ -34,6 +34,9 @@ import javax.annotation.Nullable;
 /** Current process classpath. Set by buckd or by launcher script. */
 public class BuckClasspath {
 
+  public static final String BOOTSTRAP_MAIN_CLASS =
+      "com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper";
+
   public static final String ENV_VAR_NAME = "BUCK_CLASSPATH";
   public static final String BOOTSTRAP_ENV_VAR_NAME = "CLASSPATH";
   public static final String TEST_ENV_VAR_NAME = "BUCK_TEST_CLASSPATH_FILE";

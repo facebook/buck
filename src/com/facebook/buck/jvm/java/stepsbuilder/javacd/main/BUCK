@@ -4,7 +4,10 @@ java_immutables_library(
     name = "main_lib",
     srcs = glob(["*.java"]),
     tests = ["//test/com/facebook/buck/jvm/java/stepsbuilder/javacd/main:main"],
-    visibility = ["PUBLIC"],
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//test/com/facebook/buck/...",
+    ],
     deps = [
         "//src-gen:downward-model",
         "//src-gen:javacd-model",

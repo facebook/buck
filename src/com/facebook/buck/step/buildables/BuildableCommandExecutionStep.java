@@ -17,8 +17,6 @@
 package com.facebook.buck.step.buildables;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
@@ -30,6 +28,7 @@ import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.env.BuckClasspath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,10 +36,9 @@ import com.google.common.collect.ImmutableSet;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 /**
  * {@link Step} that wraps a {@link BuildableCommand}. Writes the {@link BuildableCommand} into a
@@ -58,22 +56,33 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   private final BuildableCommand buildableCommand;
   private final ProjectFilesystem projectFilesystem;
   private final ImmutableList<String> javaRuntimeLauncherCommand;
-  private final Supplier<RelPath> externalActionsPathSupplier;
+  private final String mainClass;
 
   /**
    * Used for testing only. Production code should use the constructor {@link
-   * #BuildableCommandExecutionStep(BuildableCommand, ProjectFilesystem, ImmutableList, Supplier)}.
+   * #BuildableCommandExecutionStep(BuildableCommand, ProjectFilesystem, ImmutableList).
    */
   @VisibleForTesting
   public BuildableCommandExecutionStep(
       BuildableCommand buildableCommand,
       ProjectFilesystem projectFilesystem,
       ImmutableList<String> javaCommandPrefix,
-      Supplier<RelPath> externalActionsPathSupplier) {
+      String mainClass) {
     this.buildableCommand = buildableCommand;
     this.projectFilesystem = projectFilesystem;
     this.javaRuntimeLauncherCommand = javaCommandPrefix;
-    this.externalActionsPathSupplier = externalActionsPathSupplier;
+    this.mainClass = mainClass;
+  }
+
+  public BuildableCommandExecutionStep(
+      BuildableCommand buildableCommand,
+      ProjectFilesystem projectFilesystem,
+      ImmutableList<String> javaCommandPrefix) {
+    this(
+        buildableCommand,
+        projectFilesystem,
+        javaCommandPrefix,
+        "com.facebook.buck.external.main.ExternalActionsExecutableMain");
   }
 
   @Override
@@ -83,7 +92,7 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
     DownwardApiProcessExecutor downwardApiProcessExecutor = context.getDownwardApiProcessExecutor();
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
-            .addAllCommand(getCommand(context.getRuleCellRoot(), buildableCommandPath))
+            .addAllCommand(getCommand(buildableCommandPath))
             .setEnvironment(getEnvs())
             .build();
 
@@ -129,23 +138,29 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
     return buildableCommandPath;
   }
 
-  private ImmutableList<String> getCommand(AbsPath ruleCellRoot, Path buildableCommandPath)
-      throws IOException {
-    AbsPath jarPath = ruleCellRoot.resolve(externalActionsPathSupplier.get());
-    if (!Files.exists(jarPath.getPath())) {
-      throw new IOException("jar " + jarPath.toString() + " is not exist on env");
-    }
-
-    return ImmutableList.<String>builderWithExpectedSize(javaRuntimeLauncherCommand.size() + 3)
+  private ImmutableList<String> getCommand(Path buildableCommandPath) {
+    return ImmutableList.<String>builderWithExpectedSize(javaRuntimeLauncherCommand.size() + 5)
         .addAll(javaRuntimeLauncherCommand)
-        .add("-jar")
-        .add(jarPath.toString())
+        .add("-cp")
+        .add(
+            Objects.requireNonNull(
+                BuckClasspath.getBuckBootstrapClasspathFromEnvVarOrNull(),
+                BuckClasspath.BOOTSTRAP_ENV_VAR_NAME + " env variable is not set"))
+        .add(BuckClasspath.BOOTSTRAP_MAIN_CLASS)
+        .add(mainClass)
         .add(buildableCommandPath.toString())
         .build();
   }
 
   private ImmutableMap<String, String> getEnvs() {
+    String ruleCellRoot = projectFilesystem.getRootPath().toString();
+    String buckClassPath =
+        Objects.requireNonNull(
+            BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
+            BuckClasspath.ENV_VAR_NAME + " env variable is not set");
+
     return ImmutableMap.of(
-        ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT, projectFilesystem.getRootPath().toString());
+        ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT, ruleCellRoot,
+        BuckClasspath.ENV_VAR_NAME, buckClassPath);
   }
 }

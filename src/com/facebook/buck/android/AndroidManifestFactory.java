@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -57,7 +56,6 @@ public class AndroidManifestFactory {
         APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true),
         manifestFiles,
         shouldExecuteInSeparateProcess,
-        javaRuntimeLauncher,
-        DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem));
+        javaRuntimeLauncher);
   }
 }

@@ -10,6 +10,7 @@ java_library(
         "//src/com/facebook/buck/external/model:model",
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+        "//src/com/facebook/buck/util/env:env",
         "//third-party/java/jsr:jsr305",
     ],
 )

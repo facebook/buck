@@ -63,7 +63,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -811,9 +810,6 @@ public class AndroidApkGraphEnhancerTest {
             false,
             false,
             new FakeTool(),
-            () ->
-                ExplicitBuildTargetSourcePath.of(
-                    buildTarget, Paths.get("test/external_actions.jar")),
             BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");

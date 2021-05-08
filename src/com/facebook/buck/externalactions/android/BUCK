@@ -8,7 +8,9 @@ java_immutables_library(
     ],
     deps = [
         "//src-gen:buildable-command-model",
+        "//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib",
         "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//src/com/facebook/buck/external/main:external_actions_lib",
         "//src/com/facebook/buck/external/model:model",
         "//src/com/facebook/buck/externalactions/model:model",
         "//src/com/facebook/buck/externalactions/utils:utils",

@@ -21,12 +21,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.external.model.ExternalAction;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -72,7 +70,7 @@ public class BuildableWithExternalActionTest {
 
   @Test
   public void canGetStepsWithoutBuildableCommandExecutionStep() {
-    Buildable buildable = new FakeBuildable(false, "test_arg", buildTarget);
+    Buildable buildable = new FakeBuildable(false, "test_arg");
     ImmutableList<Step> steps =
         buildable.getBuildSteps(
             buildContext, projectFilesystem, outputPathResolver, buildCellRelativePathFactory);
@@ -81,7 +79,7 @@ public class BuildableWithExternalActionTest {
 
   @Test
   public void canGetStepsWithBuildableCommandExecutionStep() {
-    Buildable buildable = new FakeBuildable(true, "test_arg", buildTarget);
+    Buildable buildable = new FakeBuildable(true, "test_arg");
 
     ImmutableList<Step> steps =
         buildable.getBuildSteps(
@@ -99,13 +97,8 @@ public class BuildableWithExternalActionTest {
 
     private final String arg;
 
-    private FakeBuildable(boolean shouldUseExternalActions, String arg, BuildTarget buildTarget) {
-      super(
-          shouldUseExternalActions,
-          new FakeTool(),
-          () ->
-              ExplicitBuildTargetSourcePath.of(
-                  buildTarget, RelPath.get("test_external_actions.jar")));
+    private FakeBuildable(boolean shouldUseExternalActions, String arg) {
+      super(shouldUseExternalActions, new FakeTool());
       this.arg = arg;
     }
 

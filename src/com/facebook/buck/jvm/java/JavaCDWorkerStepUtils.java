@@ -35,9 +35,6 @@ import java.util.concurrent.TimeUnit;
 /** Collection of constants/methods used in JavaCD worker tool steps. */
 public class JavaCDWorkerStepUtils {
 
-  public static final String BOOTSTRAP_MAIN_CLASS =
-      "com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper";
-
   public static final String JAVACD_MAIN_CLASS =
       "com.facebook.buck.jvm.java.stepsbuilder.javacd.main.JavaCDWorkerToolMain";
 
@@ -84,7 +81,7 @@ public class JavaCDWorkerStepUtils {
             Objects.requireNonNull(
                 BuckClasspath.getBuckBootstrapClasspathFromEnvVarOrNull(),
                 BuckClasspath.BOOTSTRAP_ENV_VAR_NAME + " env variable is not set"))
-        .add(BOOTSTRAP_MAIN_CLASS)
+        .add(BuckClasspath.BOOTSTRAP_MAIN_CLASS)
         .add(JAVACD_MAIN_CLASS)
         .build();
   }

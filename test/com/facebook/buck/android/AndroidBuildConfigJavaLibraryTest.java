@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeTool;
@@ -35,7 +34,6 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Optional;
 import org.junit.Test;
@@ -62,9 +60,6 @@ public class AndroidBuildConfigJavaLibraryTest {
             false,
             false,
             new FakeTool(),
-            () ->
-                ExplicitBuildTargetSourcePath.of(
-                    buildTarget, Paths.get("test/external_actions.jar")),
             BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
@@ -99,9 +94,6 @@ public class AndroidBuildConfigJavaLibraryTest {
             false,
             false,
             new FakeTool(),
-            () ->
-                ExplicitBuildTargetSourcePath.of(
-                    buildTarget, Paths.get("test/external_actions.jar")),
             BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());

@@ -20,13 +20,11 @@ import static com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -47,11 +45,9 @@ import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -59,25 +55,6 @@ import org.immutables.value.Value;
 
 @BuckStyleValueWithBuilder
 public abstract class DefaultJavaLibraryRules {
-
-  private static final String EXTERNAL_ACTIONS_PROPERTY_NAME = "buck.external_actions";
-
-  /** Returns the external action binary's JAR source path. */
-  public static Supplier<SourcePath> getExternalActionsSourcePathSupplier(
-      ProjectFilesystem projectFilesystem) {
-    return () ->
-        PathSourcePath.of(
-            projectFilesystem,
-            getPathFromSystemProperty(projectFilesystem, EXTERNAL_ACTIONS_PROPERTY_NAME));
-  }
-
-  private static RelPath getPathFromSystemProperty(
-      ProjectFilesystem projectFilesystem, String propertyName) {
-    return projectFilesystem.relativize(
-        Paths.get(
-            Objects.requireNonNull(
-                System.getProperty(propertyName), propertyName + " system property is not set")));
-  }
 
   /** Default java library constructor interface */
   @FunctionalInterface

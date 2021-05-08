@@ -33,8 +33,6 @@ RESOURCES = {
     "buck_server": "bin/buck",
     "buck_build_type_info": "config/build_type/LOCAL_ANT/type.txt",
     "dx": "third-party/java/dx/etc/dx",
-    # non-existent path
-    "external_actions": "ant-out/external_actions/external_actions",
     "jacoco_agent_jar": "third-party/java/jacoco/jacocoagent.jar",
     "libjcocoa.dylib": "third-party/java/ObjCBridge/libjcocoa.dylib",
     "logging_config_file": "config/logging.properties.st",

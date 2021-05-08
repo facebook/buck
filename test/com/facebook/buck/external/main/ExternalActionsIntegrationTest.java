@@ -52,6 +52,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -67,6 +68,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.LogRecord;
@@ -288,7 +290,9 @@ public class ExternalActionsIntegrationTest {
         ProcessExecutorParams.builder()
             .setCommand(createCmd())
             // Missing ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT environment variable
-            .setEnvironment(EnvironmentSanitizer.getSanitizedEnvForTests(ImmutableMap.of()))
+            .setEnvironment(
+                EnvironmentSanitizer.getSanitizedEnvForTests(
+                    ImmutableMap.of(BuckClasspath.ENV_VAR_NAME, "TEST")))
             .build();
 
     ProcessExecutor.Result result = launchAndExecute(downwardApiProcessExecutor, params);
@@ -351,19 +355,29 @@ public class ExternalActionsIntegrationTest {
   private ImmutableList<String> createCmd() {
     return ImmutableList.of(
         JavaBuckConfig.getJavaBinCommand(),
-        "-jar",
+        "-cp",
         testBinary.toString(),
+        BuckClasspath.BOOTSTRAP_MAIN_CLASS,
+        "com.facebook.buck.external.main.ExternalActionsExecutableMain",
         buildableCommandFile.getAbsolutePath());
   }
 
   private ProcessExecutorParams createProcessExecutorParams(ImmutableList<String> command) {
+    String ruleCellRoot = temporaryFolder.getRoot().toString();
+    String buckClassPath =
+        Objects.requireNonNull(
+            BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
+            BuckClasspath.ENV_VAR_NAME + " env variable is not set");
+
     return ProcessExecutorParams.builder()
         .setCommand(command)
         .setEnvironment(
             EnvironmentSanitizer.getSanitizedEnvForTests(
                 ImmutableMap.of(
                     ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT,
-                    temporaryFolder.getRoot().toString())))
+                    ruleCellRoot,
+                    BuckClasspath.ENV_VAR_NAME,
+                    buckClassPath)))
         .build();
   }
 

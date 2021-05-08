@@ -49,7 +49,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class AndroidBuildConfigDescription
@@ -116,7 +115,6 @@ public class AndroidBuildConfigDescription
         downwardApiConfig.isEnabledForAndroid(),
         javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
         javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-        DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem),
         DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 
@@ -141,7 +139,6 @@ public class AndroidBuildConfigDescription
       boolean withDownwardApi,
       boolean shouldExecuteInSeparateProcess,
       Tool javaRuntimeLauncher,
-      Supplier<SourcePath> externalActionsSourcePathSupplier,
       BaseJavaCDParams javaCDParams) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
@@ -183,8 +180,7 @@ public class AndroidBuildConfigDescription
             valuesFile,
             useConstantExpressions,
             shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher,
-            externalActionsSourcePathSupplier);
+            javaRuntimeLauncher);
     graphBuilder.addToIndex(androidBuildConfig);
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.

@@ -13,7 +13,7 @@ java_library(
     name = "bootstrapper_lib",
     srcs = glob(["*.java"]),
     visibility = [
-        "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/main:main_lib",
+        "//src/com/facebook/buck/externalactions/android:android_external_actions",
         "//test/...",
         "//third-party/java/aosp:aosp",
         "//third-party/java/bazel:tests",

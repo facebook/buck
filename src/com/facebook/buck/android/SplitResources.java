@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.Supplier;
 
 /**
  * Implementation for the graph enhancement bit of exo-for-resources.
@@ -71,8 +70,7 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
       Tool zipalignTool,
       boolean withDownwardApi,
       boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher,
-      Supplier<SourcePath> externalActionsSourcePathSupplier) {
+      Tool javaRuntimeLauncher) {
     super(
         buildTarget,
         projectFilesystem,
@@ -87,8 +85,7 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
             Paths.get(R_TXT_FILE_NAME),
             withDownwardApi,
             shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher,
-            externalActionsSourcePathSupplier));
+            javaRuntimeLauncher));
   }
 
   SourcePath getPathToRDotTxt() {
@@ -129,9 +126,8 @@ public class SplitResources extends ModernBuildRule<SplitResources.Impl> {
         Path rDotTxtOutputPath,
         boolean withDownwardApi,
         boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher,
-        Supplier<SourcePath> externalActionsSourcePathSupplier) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher, externalActionsSourcePathSupplier);
+        Tool javaRuntimeLauncher) {
+      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
       this.buildTarget = buildTarget;
       this.exoResourcesOutputPath = new OutputPath(exoResourcesOutputPath);
       this.primaryResourcesOutputPath = new OutputPath(primaryResourcesOutputPath);

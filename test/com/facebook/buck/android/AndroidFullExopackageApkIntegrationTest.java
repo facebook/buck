@@ -22,10 +22,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Resources;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -69,13 +66,6 @@ public class AndroidFullExopackageApkIntegrationTest {
 
     if (shouldExecuteInSeparateProcess) {
       workspace.enableOutOfProcessExecution();
-      URL binary =
-          Resources.getResource("com/facebook/buck/external/main/external_actions_bin.jar");
-      Path externalBinary = tmpFolder.getRoot().getPath().resolve("external_action.jar");
-      try (FileOutputStream stream = new FileOutputStream(externalBinary.toFile())) {
-        stream.write(Resources.toByteArray(binary));
-      }
-      properties.setProperty("buck.external_actions", externalBinary.toString());
     }
 
     outputPath = workspace.buildAndReturnOutput(RESOURCES_EXOPACKAGE_TARGET);

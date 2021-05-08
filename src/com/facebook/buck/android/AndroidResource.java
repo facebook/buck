@@ -39,7 +39,6 @@ import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
-import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.rules.modern.BuildableWithExternalAction;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -115,8 +114,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
       boolean hasWhitelistedStrings,
       boolean isVerifyingXmlAttrsEnabled,
       boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher,
-      Supplier<SourcePath> externalActionsSourcePathSupplier) {
+      Tool javaRuntimeLauncher) {
     super(
         buildTarget,
         projectFilesystem,
@@ -133,8 +131,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
             isVerifyingXmlAttrsEnabled,
             rDotJavaPackageArgument,
             shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher,
-            externalActionsSourcePathSupplier));
+            javaRuntimeLauncher));
 
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
@@ -224,8 +221,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
         hasWhitelistedStrings,
         isVerifyingXmlAttrsEnabled,
         shouldExecuteInSeparateProcess,
-        javaRuntimeLauncher,
-        DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem));
+        javaRuntimeLauncher);
   }
 
   @Override
@@ -288,9 +284,8 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
         boolean isVerifyingXmlAttrsEnabled,
         @Nullable String rDotJavaPackageArgument,
         boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher,
-        Supplier<SourcePath> externalActionsSourcePathSupplier) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher, externalActionsSourcePathSupplier);
+        Tool javaRuntimeLauncher) {
+      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
       this.res = res;
       this.resSrcs = resSrcs;
       this.assets = assets;

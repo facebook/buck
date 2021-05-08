@@ -539,7 +539,7 @@ public class JavaCDIntegrationTest {
         "-Dfile.encoding=" + UTF_8.name(),
         "-cp",
         testBinary.toString(),
-        JavaCDWorkerStepUtils.BOOTSTRAP_MAIN_CLASS,
+        BuckClasspath.BOOTSTRAP_MAIN_CLASS,
         JavaCDWorkerStepUtils.JAVACD_MAIN_CLASS);
   }
 

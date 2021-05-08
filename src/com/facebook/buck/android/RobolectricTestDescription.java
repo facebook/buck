@@ -46,7 +46,6 @@ import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
@@ -279,8 +278,7 @@ public class RobolectricTestDescription
                 .filter(Objects::nonNull)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
             javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
-            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
-            DefaultJavaLibraryRules.getExternalActionsSourcePathSupplier(projectFilesystem));
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
     graphBuilder.addToIndex(binaryResources);
 
     SourcePathResolverAdapter sourcePathResolver = graphBuilder.getSourcePathResolver();

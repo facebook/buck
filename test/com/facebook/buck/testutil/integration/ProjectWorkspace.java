@@ -645,7 +645,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public void enableOutOfProcessExecution() throws IOException {
-    addBuckConfigLocalOption("buildables_v2", "enabled", true);
+    addBuckConfigLocalOption("build", "are_external_actions_enabled", true);
   }
 
   public void disableThreadLimitOverride() throws IOException {

@@ -138,9 +138,7 @@ public class AndroidBuildConfigTest {
         /* valuesFile */ Optional.empty(),
         /* useConstantExpressions */ false,
         /* shouldExecuteInSeparateProcess */ false,
-        new FakeTool(),
-        () ->
-            ExplicitBuildTargetSourcePath.of(BUILD_TARGET, Paths.get("test/external_actions.jar")));
+        new FakeTool());
   }
 
   // TODO(nickpalmer): Add another unit test that passes in a non-trivial DependencyGraph and verify
