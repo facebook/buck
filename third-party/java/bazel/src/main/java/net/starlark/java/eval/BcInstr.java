@@ -338,7 +338,7 @@ class BcInstr {
       this.operands = operands;
     }
 
-    private static Opcode[] values = values();
+    private static final Opcode[] values = values();
 
     static Opcode fromInt(int opcode) {
       return values[opcode];

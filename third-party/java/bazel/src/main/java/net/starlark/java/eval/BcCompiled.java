@@ -202,4 +202,33 @@ class BcCompiled {
     }
     return constSlots[slot & ~BcSlot.MASK];
   }
+
+  /** Check if this function body is equivalent to {@code type(x) == 'yyy'}. */
+  @Nullable
+  public String returnTypeIs() {
+    BcParser parser = new BcParser(text);
+    if (!parser.nextOpcodeIf(BcInstr.Opcode.TYPE_IS)) {
+      return null;
+    }
+    int localIndex = parser.nextInt();
+    // argument must be a first temporary, i. e. first function parameter
+    if (localIndex != 0) {
+      return null;
+    }
+
+    String type = strings[parser.nextInt()];
+
+    int result = parser.nextInt();
+
+    if (!parser.nextOpcodeIf(BcInstr.Opcode.RETURN)) {
+      return null;
+    }
+
+    int returnArg = parser.nextInt();
+    if (returnArg != result) {
+      return null;
+    }
+
+    return type;
+  }
 }

@@ -1064,6 +1064,14 @@ class Bc {
             result);
       }
 
+      if (callable instanceof StarlarkFunction && linkSig == StarlarkCallableLinkSig.positional(1)) {
+        String type = ((StarlarkFunction) callable).returnsTypeIs();
+        int argSlot = regArgsResult.singleArg();
+        if (type != null && argSlot >= 0) {
+          return writeTypeIs(callExpression, argSlot, type, result);
+        }
+      }
+
       int[] newArgs = BcWriter.args(
           new int[] { lparen, fnSlot },
           regArgsResult.opcodeArgs,
@@ -1219,6 +1227,13 @@ class Bc {
           }
         }
         return true;
+      }
+
+      int singleArg() {
+        if (opcodeArgs[0] != 1) {
+          return -1;
+        }
+        return opcodeArgs[1];
       }
     }
 

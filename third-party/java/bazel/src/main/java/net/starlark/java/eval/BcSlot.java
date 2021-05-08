@@ -56,6 +56,11 @@ class BcSlot {
     return (slot & MASK) == LOCAL_FLAG;
   }
 
+  static int localFromSlot(int slot) {
+    Preconditions.checkArgument(isLocal(slot));
+    return slot & ~LOCAL_FLAG;
+  }
+
   static void checkLocal(int slot) {
     Verify.verify(isLocal(slot));
   }

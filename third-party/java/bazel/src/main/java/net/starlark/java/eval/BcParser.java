@@ -80,6 +80,18 @@ class BcParser {
     return BcInstr.Opcode.fromInt(nextInt());
   }
 
+  /** Consume next opcode if it is equal to given opcode. */
+  boolean nextOpcodeIf(BcInstr.Opcode opcode) {
+    if (eof()) {
+      return false;
+    }
+    if (text[ip] != opcode.ordinal()) {
+      return false;
+    }
+    ip++;
+    return true;
+  }
+
   TokenKind nextTokenKind() {
     return TokenKind.values()[nextInt()];
   }

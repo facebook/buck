@@ -339,4 +339,13 @@ public final class StarlarkFunction extends StarlarkCallable {
   Object returnsConst() {
     return compiled.returnConst();
   }
+
+  @Nullable
+  String returnsTypeIs() {
+    if (parameterNames.size() != 1 || hasKwargs() || hasVarargs()) {
+      return null;
+    }
+
+    return compiled.returnTypeIs();
+  }
 }
