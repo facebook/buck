@@ -5,7 +5,6 @@ standard_java_test(
     deps = [
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io/file:file",
-        "//src/com/facebook/buck/io/filesystem/skylark:skylark",
         "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/skylark/function:function",
         "//src/com/facebook/buck/skylark/io:io",
