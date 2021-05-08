@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.io.MoreProjectFilesystems;
+import com.facebook.buck.io.filesystem.MoreProjectFilesystems;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;

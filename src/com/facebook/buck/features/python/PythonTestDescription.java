@@ -58,7 +58,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.file.WriteFile;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.NeededCoverageSpec;

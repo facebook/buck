@@ -39,7 +39,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.jvm.core.JavaLibrary;

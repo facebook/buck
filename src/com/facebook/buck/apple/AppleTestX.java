@@ -39,7 +39,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.CoercedTestRunnerSpec;
 import com.facebook.buck.core.test.rule.TestXRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;

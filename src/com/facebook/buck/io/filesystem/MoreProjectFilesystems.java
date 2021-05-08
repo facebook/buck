@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.NoSuchFileException;
@@ -28,7 +27,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-/** Common functions that are done with a {@link ProjectFilesystem}. */
+/**
+ * Common functions that are done with a {@link com.facebook.buck.io.filesystem.ProjectFilesystem}.
+ */
 public class MoreProjectFilesystems {
   /** Utility class: do not instantiate. */
   private MoreProjectFilesystems() {}
@@ -62,6 +63,7 @@ public class MoreProjectFilesystems {
     return target;
   }
 
+  /** Compare file contents. */
   public static boolean fileContentsDiffer(
       InputStream contents, Path path, ProjectFilesystem projectFilesystem) throws IOException {
     try {

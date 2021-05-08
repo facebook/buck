@@ -17,7 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

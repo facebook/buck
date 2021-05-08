@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io;
+package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
 /**
@@ -33,6 +32,7 @@ public abstract class BuildCellRelativePath {
 
   public abstract RelPath getPathRelativeToBuildCellRoot();
 
+  /** Construct from three paths. */
   public static BuildCellRelativePath fromCellRelativePath(
       Path buildCellRootPath,
       ProjectFilesystem cellProjectFilesystem,
@@ -45,6 +45,7 @@ public abstract class BuildCellRelativePath {
         buildCellRootPath.relativize(cellProjectFilesystem.resolve(cellRelativeOrAbsolutePath)));
   }
 
+  /** Construct from three paths. */
   public static BuildCellRelativePath fromCellRelativePath(
       AbsPath buildCellRootPath,
       ProjectFilesystem cellProjectFilesystem,
@@ -53,12 +54,14 @@ public abstract class BuildCellRelativePath {
         buildCellRootPath.getPath(), cellProjectFilesystem, cellRelativeOrAbsolutePath);
   }
 
+  /** Construct from three paths. */
   public static BuildCellRelativePath fromCellRelativePath(
       Path buildCellRootPath, ProjectFilesystem cellProjectFilesystem, RelPath cellRelativePath) {
     return fromCellRelativePath(
         buildCellRootPath, cellProjectFilesystem, cellRelativePath.getPath());
   }
 
+  /** Construct from three paths. */
   public static BuildCellRelativePath fromCellRelativePath(
       AbsPath buildCellRootPath,
       ProjectFilesystem cellProjectFilesystem,

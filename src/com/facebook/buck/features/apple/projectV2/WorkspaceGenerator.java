@@ -17,8 +17,8 @@
 package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.MoreProjectFilesystems;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import java.io.ByteArrayInputStream;

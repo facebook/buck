@@ -37,7 +37,7 @@ import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.AbstractTestStep;

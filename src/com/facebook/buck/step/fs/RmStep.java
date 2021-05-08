@@ -19,7 +19,7 @@ package com.facebook.buck.step.fs;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
 import com.google.common.collect.ImmutableSet;
 

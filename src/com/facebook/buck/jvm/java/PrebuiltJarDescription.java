@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;

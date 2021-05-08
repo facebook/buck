@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import java.nio.file.Path;
 
 // TODO(cjhopman): Buildable's shouldn't really need to deal with this, but it simplifies dealing
