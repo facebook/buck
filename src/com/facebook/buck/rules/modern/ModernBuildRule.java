@@ -326,7 +326,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   protected static DefaultBuildCellRelativePathFactory getBuildCellPathFactory(
       BuildContext context, ProjectFilesystem filesystem, OutputPathResolver outputPathResolver) {
     return new DefaultBuildCellRelativePathFactory(
-        context.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver));
+        context.getBuildCellRootPath().getPath(), filesystem, Optional.of(outputPathResolver));
   }
 
   /**

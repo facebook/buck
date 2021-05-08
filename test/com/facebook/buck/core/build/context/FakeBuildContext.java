@@ -27,7 +27,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.util.config.ConfigBuilder;
-import java.nio.file.Path;
 
 /**
  * Facilitates creating a fake {@link com.facebook.buck.core.build.context.BuildContext} for unit
@@ -45,13 +44,12 @@ public class FakeBuildContext {
   public static BuildContext withSourcePathResolver(SourcePathResolverAdapter pathResolver) {
 
     AbsPath rootPath = new FakeProjectFilesystem().getRootPath();
-    Path path = rootPath.getPath();
     DefaultCellPathResolver cellPathResolver =
         DefaultCellPathResolver.create(rootPath, ConfigBuilder.createFromText(""));
 
     return BuildContext.of(
         pathResolver,
-        path,
+        rootPath,
         new FakeJavaPackageFinder(),
         BuckEventBusForTests.newInstance(),
         false,
@@ -66,13 +64,12 @@ public class FakeBuildContext {
       SourcePathResolverAdapter pathResolver, ProjectFilesystem filesystem) {
 
     AbsPath rootPath = filesystem.getRootPath();
-    Path path = rootPath.getPath();
     DefaultCellPathResolver cellPathResolver =
         DefaultCellPathResolver.create(rootPath, ConfigBuilder.createFromText(""));
 
     return BuildContext.of(
         pathResolver,
-        path,
+        rootPath,
         new FakeJavaPackageFinder(),
         BuckEventBusForTests.newInstance(),
         false,
@@ -83,11 +80,10 @@ public class FakeBuildContext {
       SourcePathResolverAdapter pathResolver, BuckEventBus buckEventBus) {
 
     AbsPath rootPath = new FakeProjectFilesystem().getRootPath();
-    Path path = rootPath.getPath();
     DefaultCellPathResolver cellPathResolver =
         DefaultCellPathResolver.create(rootPath, ConfigBuilder.createFromText(""));
 
     return BuildContext.of(
-        pathResolver, path, new FakeJavaPackageFinder(), buckEventBus, false, cellPathResolver);
+        pathResolver, rootPath, new FakeJavaPackageFinder(), buckEventBus, false, cellPathResolver);
   }
 }

@@ -169,7 +169,7 @@ public class SmartDexingStepTest {
     SmartDexingStep.createDxStepForDxPseudoRule(
         androidPlatformTarget,
         steps,
-        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath),
         filesystem,
         filesToDex,
         outputPath,
@@ -212,7 +212,7 @@ public class SmartDexingStepTest {
     SmartDexingStep.createDxStepForDxPseudoRule(
         androidPlatformTarget,
         steps,
-        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath),
         filesystem,
         filesToDex,
         outputPath,
@@ -254,7 +254,7 @@ public class SmartDexingStepTest {
     SmartDexingStep.createDxStepForDxPseudoRule(
         androidPlatformTarget,
         steps,
-        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath),
         filesystem,
         filesToDex,
         outputPath,
@@ -290,7 +290,7 @@ public class SmartDexingStepTest {
     SmartDexingStep.createDxStepForDxPseudoRule(
         androidPlatformTarget,
         steps,
-        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath),
         filesystem,
         filesToDex,
         outputPath,
@@ -326,7 +326,7 @@ public class SmartDexingStepTest {
     SmartDexingStep.createDxStepForDxPseudoRule(
         androidPlatformTarget,
         steps,
-        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath),
         filesystem,
         filesToDex,
         outputPath,
@@ -366,7 +366,7 @@ public class SmartDexingStepTest {
     SmartDexingStep.createDxStepForDxPseudoRule(
         androidPlatformTarget,
         steps,
-        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath()),
+        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath),
         filesystem,
         filesToDex,
         outputPath,

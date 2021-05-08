@@ -90,8 +90,7 @@ public class AaptStepTest {
             /* proguardConfig= */ Paths.get(""),
             /* optimizedProguardConfig= */ Paths.get(""));
     AbsPath rootPath = FakeProjectFilesystem.createJavaOnlyFilesystem().getRootPath();
-    BuildContext buildContext =
-        FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath.getPath());
+    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT.withBuildCellRootPath(rootPath);
 
     return new AaptStep(
         /* workingDirectory= */ basePath,

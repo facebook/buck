@@ -189,7 +189,7 @@ public class GenruleTest {
         manifestPath.getPath());
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
-            .withBuildCellRootPath(filesystem.getRootPath().getPath());
+            .withBuildCellRootPath(filesystem.getRootPath());
     assertThat(
         pathResolver.filterInputsToCompareToOutput(genrule.getBuildable().srcs.getPaths()),
         Matchers.containsInAnyOrder(

@@ -63,7 +63,7 @@ public class BuildableWithExternalActionTest {
     outputPathResolver = new DefaultOutputPathResolver(projectFilesystem, buildTarget);
     buildCellRelativePathFactory =
         new DefaultBuildCellRelativePathFactory(
-            buildContext.getBuildCellRootPath(),
+            buildContext.getBuildCellRootPath().getPath(),
             projectFilesystem,
             Optional.of(outputPathResolver));
   }

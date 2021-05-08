@@ -19,6 +19,7 @@ package com.facebook.buck.cxx.toolchain;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -51,7 +52,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -180,7 +180,8 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
       steps.add(
           new IsolatedStep() {
 
-            private final Path symsFile = context.getBuildCellRootPath().resolve(output.getPath());
+            private final AbsPath symsFile =
+                context.getBuildCellRootPath().resolve(output.getPath());
             private final ImmutableMap<String, String> env =
                 nm.getEnvironment(context.getSourcePathResolver());
             private final ImmutableList<String> cmd =
@@ -234,7 +235,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                   BufferedWriter writer =
                       new BufferedWriter(
                           new OutputStreamWriter(
-                              Files.newOutputStream(symsFile), Charsets.UTF_8))) {
+                              Files.newOutputStream(symsFile.getPath()), Charsets.UTF_8))) {
                 Set<String> symbols = new HashSet<>();
                 String line;
                 while ((line = reader.readLine()) != null) {

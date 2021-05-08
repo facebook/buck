@@ -283,7 +283,10 @@ public class ResourcesFilter extends AbstractBuildRule
             writeFilterResourcesData(filterResourcesDataOutputStream, inResDirToOutResDirMap);
             buildableContext.recordArtifact(filterResourcesDataPath.getPath());
             addPostFilterCommandSteps(
-                cmd, context.getSourcePathResolver(), context.getBuildCellRootPath(), steps);
+                cmd,
+                context.getSourcePathResolver(),
+                context.getBuildCellRootPath().getPath(),
+                steps);
           } catch (IOException e) {
             throw new RuntimeException("Could not generate/save filter resources data json", e);
           } finally {

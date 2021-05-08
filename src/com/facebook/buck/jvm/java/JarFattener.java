@@ -120,7 +120,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
-    Path buildCellRootPath = context.getBuildCellRootPath();
+    AbsPath buildCellRootPath = context.getBuildCellRootPath();
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();

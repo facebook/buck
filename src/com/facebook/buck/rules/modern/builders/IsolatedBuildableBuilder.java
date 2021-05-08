@@ -244,7 +244,7 @@ public abstract class IsolatedBuildableBuilder {
                         "Cannot resolve SourcePath names during build when running with an isolated strategy.");
                   }
                 }),
-            canonicalProjectRoot.getPath(),
+            canonicalProjectRoot,
             javaPackageFinder,
             eventBus,
             buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries(),

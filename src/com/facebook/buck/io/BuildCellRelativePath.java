@@ -20,9 +20,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Preconditions;
 import java.nio.file.Path;
-import org.immutables.value.Value;
 
 /**
  * A path which is relative to the build cell root, i.e. the top-level cell in which the build was
@@ -33,16 +31,7 @@ import org.immutables.value.Value;
 @BuckStyleValue
 public abstract class BuildCellRelativePath {
 
-  public abstract Path getPathRelativeToBuildCellRoot();
-
-  /** Check the path is relative. */
-  @Value.Check
-  protected void check() {
-    Preconditions.checkState(
-        !getPathRelativeToBuildCellRoot().isAbsolute(),
-        "expecting cell-relative path: %s",
-        getPathRelativeToBuildCellRoot());
-  }
+  public abstract RelPath getPathRelativeToBuildCellRoot();
 
   public static BuildCellRelativePath fromCellRelativePath(
       Path buildCellRootPath,
@@ -70,12 +59,20 @@ public abstract class BuildCellRelativePath {
         buildCellRootPath, cellProjectFilesystem, cellRelativePath.getPath());
   }
 
+  public static BuildCellRelativePath fromCellRelativePath(
+      AbsPath buildCellRootPath,
+      ProjectFilesystem cellProjectFilesystem,
+      RelPath cellRelativePath) {
+    return fromCellRelativePath(
+        buildCellRootPath, cellProjectFilesystem, cellRelativePath.getPath());
+  }
+
   public static BuildCellRelativePath of(Path pathRelativeToBuildCellRoot) {
-    return ImmutableBuildCellRelativePath.ofImpl(pathRelativeToBuildCellRoot);
+    return of(RelPath.of(pathRelativeToBuildCellRoot));
   }
 
   public static BuildCellRelativePath of(RelPath pathRelativeToBuildCellRoot) {
-    return of(pathRelativeToBuildCellRoot.getPath());
+    return ImmutableBuildCellRelativePath.ofImpl(pathRelativeToBuildCellRoot);
   }
 
   @Override

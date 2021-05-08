@@ -495,7 +495,7 @@ public class AppleBundle extends AbstractBuildRule
       stepsBuilder.add(
           new AppleBundleIncrementalInfoReadStep(
               getProjectFilesystem(),
-              AbsPath.of(context.getBuildCellRootPath().resolve(getIncrementalInfoFilePath())),
+              context.getBuildCellRootPath().resolve(getIncrementalInfoFilePath()),
               incrementalInfoHolder));
     }
     return incrementalInfoHolder::getValue;

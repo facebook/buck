@@ -17,11 +17,11 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.google.common.annotations.VisibleForTesting;
-import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /** Command that runs equivalent command of {@code mkdir -p} on the specified directory. */
@@ -32,7 +32,7 @@ public abstract class MkdirStep extends DelegateStep<MkdirIsolatedStep> {
 
   @VisibleForTesting
   @Value.Derived
-  public Path getPathRelativeToBuildCellRoot() {
+  public RelPath getPathRelativeToBuildCellRoot() {
     return getPath().getPathRelativeToBuildCellRoot();
   }
 

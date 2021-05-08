@@ -90,8 +90,7 @@ public class ExportFileTest {
     AbsPath rootPath = projectFilesystem.getRootPath();
     List<Step> steps =
         exportFile.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver)
-                .withBuildCellRootPath(rootPath.getPath()),
+            FakeBuildContext.withSourcePathResolver(pathResolver).withBuildCellRootPath(rootPath),
             new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
@@ -125,8 +124,7 @@ public class ExportFileTest {
     AbsPath rootPath = projectFilesystem.getRootPath();
     List<Step> steps =
         exportFile.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver)
-                .withBuildCellRootPath(rootPath.getPath()),
+            FakeBuildContext.withSourcePathResolver(pathResolver).withBuildCellRootPath(rootPath),
             new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
@@ -163,8 +161,7 @@ public class ExportFileTest {
     AbsPath rootPath = projectFilesystem.getRootPath();
     List<Step> steps =
         exportFile.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(pathResolver)
-                .withBuildCellRootPath(rootPath.getPath()),
+            FakeBuildContext.withSourcePathResolver(pathResolver).withBuildCellRootPath(rootPath),
             new FakeBuildableContext());
 
     MoreAsserts.assertSteps(
@@ -360,7 +357,7 @@ public class ExportFileTest {
 
     exportFile.getBuildSteps(
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
+            .withBuildCellRootPath(projectFilesystem.getRootPath()),
         new FakeBuildableContext());
   }
 
@@ -386,7 +383,7 @@ public class ExportFileTest {
 
     exportFile.getBuildSteps(
         FakeBuildContext.create(graphBuilder.getSourcePathResolver(), buckEventBus)
-            .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
+            .withBuildCellRootPath(projectFilesystem.getRootPath()),
         new FakeBuildableContext());
 
     assertThat(
@@ -412,7 +409,7 @@ public class ExportFileTest {
 
     exportFile.getBuildSteps(
         FakeBuildContext.create(graphBuilder.getSourcePathResolver(), buckEventBus)
-            .withBuildCellRootPath(projectFilesystem.getRootPath().getPath()),
+            .withBuildCellRootPath(projectFilesystem.getRootPath()),
         new FakeBuildableContext());
   }
 }

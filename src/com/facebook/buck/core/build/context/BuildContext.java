@@ -17,11 +17,11 @@
 package com.facebook.buck.core.build.context;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import java.nio.file.Path;
 
 @BuckStyleValue
 public abstract class BuildContext {
@@ -29,7 +29,7 @@ public abstract class BuildContext {
   public abstract SourcePathResolverAdapter getSourcePathResolver();
 
   /** @return the absolute path of the cell in which the build was invoked. */
-  public abstract Path getBuildCellRootPath();
+  public abstract AbsPath getBuildCellRootPath();
 
   public abstract JavaPackageFinder getJavaPackageFinder();
 
@@ -41,7 +41,7 @@ public abstract class BuildContext {
 
   public static BuildContext of(
       SourcePathResolverAdapter sourcePathResolver,
-      Path buildCellRootPath,
+      AbsPath buildCellRootPath,
       JavaPackageFinder javaPackageFinder,
       BuckEventBus eventBus,
       boolean shouldDeleteTemporaries,
@@ -55,7 +55,8 @@ public abstract class BuildContext {
         cellPathResolver);
   }
 
-  public BuildContext withBuildCellRootPath(Path buildCellRootPath) {
+  /** Update field. */
+  public BuildContext withBuildCellRootPath(AbsPath buildCellRootPath) {
     if (getBuildCellRootPath().equals(buildCellRootPath)) {
       return this;
     }

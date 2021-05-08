@@ -621,7 +621,8 @@ public class GenruleBuildable implements Buildable {
             cmdExe.map(arg -> flattenArgToWindowsCmdExeCommand(arg, sourcePathResolverAdapter))),
         BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), filesystem, srcPath)
-            .getPathRelativeToBuildCellRoot(),
+            .getPathRelativeToBuildCellRoot()
+            .getPath(),
         withDownwardApi,
         programRunner) {
       @Override

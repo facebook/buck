@@ -481,7 +481,8 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
       usedDestinations.forEach(
           destination -> {
             AbsPath outputDirPath =
-                AbsPath.of(buildContext.getBuildCellRootPath())
+                buildContext
+                    .getBuildCellRootPath()
                     .resolve(outputPathResolver.resolvePath(output))
                     .resolve(directoryNameWithProcessedFilesForDestination(destination));
             ImmutableMap.Builder<RelPath, String> containerDirRelativePathToHashBuilder =

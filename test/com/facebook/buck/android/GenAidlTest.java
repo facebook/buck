@@ -132,7 +132,7 @@ public class GenAidlTest {
 
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(pathResolver)
-            .withBuildCellRootPath(stubFilesystem.getRootPath().getPath());
+            .withBuildCellRootPath(stubFilesystem.getRootPath());
     List<Step> steps = genAidlRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
     RelPath outputDirectory = BuildTargetPaths.getScratchPath(stubFilesystem, target, "__%s.aidl");

@@ -145,7 +145,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
           new WriteTestListToFileStep(
               getExecutableCommand(OutputLabel.defaultLabel())
                   .getCommandPrefix(buildContext.getSourcePathResolver()),
-              buildContext.getBuildCellRootPath(),
+              buildContext.getBuildCellRootPath().getPath(),
               ProjectFilesystemUtils.relativize(
                   getProjectFilesystem().getRootPath(), buildContext.getBuildCellRootPath()),
               getPathToTestList(),

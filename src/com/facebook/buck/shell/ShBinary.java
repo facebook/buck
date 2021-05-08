@@ -241,7 +241,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             getSymlinkStep(
                 context.getSourcePathResolver(),
                 getProjectFilesystem(),
-                context.getBuildCellRootPath()))
+                context.getBuildCellRootPath().getPath()))
         .add(
             new StringTemplateStep(
                 TEMPLATE,

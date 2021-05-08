@@ -55,7 +55,7 @@ public class CopyResourcesStepTest {
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver())
             .withJavaPackageFinder(javaPackageFinder)
-            .withBuildCellRootPath(filesystem.getRootPath().getPath());
+            .withBuildCellRootPath(filesystem.getRootPath());
 
     ImmutableList<IsolatedStep> steps =
         CopyResourcesStep.of(
@@ -118,7 +118,7 @@ public class CopyResourcesStepTest {
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver())
             .withJavaPackageFinder(javaPackageFinder)
-            .withBuildCellRootPath(filesystem.getRootPath().getPath());
+            .withBuildCellRootPath(filesystem.getRootPath());
 
     ImmutableList<IsolatedStep> steps =
         CopyResourcesStep.of(
@@ -183,7 +183,7 @@ public class CopyResourcesStepTest {
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(ruleFinder.getSourcePathResolver())
             .withJavaPackageFinder(javaPackageFinder)
-            .withBuildCellRootPath(filesystem.getRootPath().getPath());
+            .withBuildCellRootPath(filesystem.getRootPath());
 
     ImmutableList<IsolatedStep> steps =
         CopyResourcesStep.of(

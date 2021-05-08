@@ -79,7 +79,7 @@ public class AssembleDirectoriesTest {
     ImmutableList<Step> steps =
         assembleDirectories.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-                .withBuildCellRootPath(tmp.getPath()),
+                .withBuildCellRootPath(tmp),
             new FakeBuildableContext());
     for (Step step : steps) {
       assertEquals(0, step.execute(context).getExitCode());

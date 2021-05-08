@@ -77,7 +77,7 @@ public class DexProducedFromJavaLibraryTest {
 
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(filesystem.getRootPath().getPath());
+            .withBuildCellRootPath(filesystem.getRootPath());
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     RelPath dexOutput =

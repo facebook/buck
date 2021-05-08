@@ -65,7 +65,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Comparator;
@@ -171,7 +170,7 @@ public class DummyRDotJava extends AbstractBuildRule
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
-    Path buildCellRootPath = context.getBuildCellRootPath();
+    AbsPath buildCellRootPath = context.getBuildCellRootPath();
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ProjectFilesystem filesystem = getProjectFilesystem();

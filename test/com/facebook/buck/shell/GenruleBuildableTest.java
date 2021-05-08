@@ -89,7 +89,7 @@ public class GenruleBuildableTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(filesystem.getRootPath().getPath());
+            .withBuildCellRootPath(filesystem.getRootPath());
     BuildTarget target = BuildTargetFactory.newInstance("//:example");
     Path srcPath = filesystem.getBuckPaths().getGenDir().resolve("example__srcs");
     GenruleBuildable buildable =
@@ -324,7 +324,9 @@ public class GenruleBuildableTest {
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
     BuildCellRelativePathFactory buildCellRelativePathFactory =
         new DefaultBuildCellRelativePathFactory(
-            buildContext.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver));
+            buildContext.getBuildCellRootPath().getPath(),
+            filesystem,
+            Optional.of(outputPathResolver));
     ImmutableList<Step> steps =
         buildable.getBuildSteps(
             buildContext, filesystem, outputPathResolver, buildCellRelativePathFactory);
@@ -360,7 +362,9 @@ public class GenruleBuildableTest {
     OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, target);
     BuildCellRelativePathFactory buildCellRelativePathFactory =
         new DefaultBuildCellRelativePathFactory(
-            buildContext.getBuildCellRootPath(), filesystem, Optional.of(outputPathResolver));
+            buildContext.getBuildCellRootPath().getPath(),
+            filesystem,
+            Optional.of(outputPathResolver));
     ImmutableList<Step> steps =
         buildable.getBuildSteps(
             buildContext, filesystem, outputPathResolver, buildCellRelativePathFactory);
@@ -374,7 +378,7 @@ public class GenruleBuildableTest {
                     step instanceof MkdirStep
                         && ((MkdirStep) step)
                             .getPathRelativeToBuildCellRoot()
-                            .equals(targetGenrulePath.getPath()))
+                            .equals(targetGenrulePath))
             .findFirst();
     assertTrue("GenruleBuildable didn't generate correct mkdir", mkdir.isPresent());
   }
@@ -667,7 +671,7 @@ public class GenruleBuildableTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(fakeProjectFileSystem.getRootPath().getPath());
+            .withBuildCellRootPath(fakeProjectFileSystem.getRootPath());
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(fakeProjectFileSystem, target);
     RelPath srcPath =
@@ -720,7 +724,7 @@ public class GenruleBuildableTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(fakeProjectFileSystem.getRootPath().getPath());
+            .withBuildCellRootPath(fakeProjectFileSystem.getRootPath());
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(fakeProjectFileSystem, target);
     RelPath srcPath =

@@ -170,7 +170,7 @@ public class ApkGenruleTest {
             .collect(ImmutableSet.toImmutableSet()));
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(projectFilesystem.getRootPath().getPath());
+            .withBuildCellRootPath(projectFilesystem.getRootPath());
     assertThat(
         graphBuilder
             .getSourcePathResolver()

@@ -47,7 +47,7 @@ import javax.annotation.Nullable;
 /**
  * Common functions that are done with a {@link Path}. If a function is going to take a {@link
  * com.facebook.buck.io.filesystem.ProjectFilesystem}, then it should be in {@link
- * com.facebook.buck.io.MoreProjectFilesystems} instead.
+ * MoreProjectFilesystems} instead.
  */
 public class MorePaths {
 

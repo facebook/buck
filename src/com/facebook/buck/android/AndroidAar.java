@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -43,7 +44,6 @@ import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -92,7 +92,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildContext context, BuildableContext buildableContext) {
     ProjectFilesystem filesystem = getProjectFilesystem();
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
-    Path buildCellRootPath = context.getBuildCellRootPath();
+    AbsPath buildCellRootPath = context.getBuildCellRootPath();
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 

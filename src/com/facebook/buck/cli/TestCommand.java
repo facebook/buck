@@ -762,7 +762,7 @@ public class TestCommand extends BuildCommand {
           BuildContext buildContext =
               BuildContext.of(
                   actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver(),
-                  rootCell.getRoot().getPath(),
+                  rootCell.getRoot(),
                   cells
                       .getBuckConfig()
                       .getView(JavaBuckConfig.class)
