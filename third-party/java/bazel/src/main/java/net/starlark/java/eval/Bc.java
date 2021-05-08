@@ -78,6 +78,7 @@ class Bc {
     private final StarlarkThread thread;
     private final Module module;
     private final Tuple freevars;
+    private final ImmutableList<Parameter> parameters;
 
     private Compiler(StarlarkThread thread, Resolver.Function rfn, Module module, Tuple freevars) {
       Preconditions.checkArgument(rfn.getModule() == module.getResolverModule(),
@@ -90,6 +91,7 @@ class Bc {
       this.freevars = freevars;
       this.bcWriter = new BcWriter(fileLocations, module, rfn.getName(),
           rfn.getLocals(), rfn.getFreeVars());
+      this.parameters = rfn.getParameters();
     }
 
     private BcWriter.LocOffset nodeToLocOffset(Node node) {
@@ -138,8 +140,10 @@ class Bc {
       BcSlot.checkLocal(to);
       Preconditions.checkArgument((to & ~BcSlot.MASK) < bcWriter.getSlots());
 
-      // This optimizes away assignment `x = x`
-      if (from == to) {
+      // Optimizes away assignment `$x = $x`,
+      // but keep local `x = x` to make sure we throw an error if `x` is not defined.
+      // TODO(nga): drop the assignment if `x` is known to be defined
+      if (from == to && from < parameters.size()) {
         return;
       }
 

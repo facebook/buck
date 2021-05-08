@@ -173,4 +173,35 @@ public class BcTest {
         thread);
     assertEquals(true, f.compiled.returnConst());
   }
+
+  @Test
+  public void readForEffectIsNotErasedOpcodes() throws Exception {
+    String program = ""
+        + "def f(): x = x\n"
+        + "f";
+    assertEquals(ImmutableList.of(BcInstr.Opcode.CP_LOCAL), BcTestUtil.opcodes(program));
+  }
+
+  @Test
+  public void readForEffectIsNotErasedEval() throws Exception {
+    String program = ""
+        + "def f(): x = x\n"
+        + "f()";
+    try {
+      BcTestUtil.eval(program);
+      fail("expecting variable is referenced before assignment");
+    } catch (EvalException e) {
+      assertTrue(
+          e.getMessage(),
+          e.getMessage().contains("local variable 'x' is referenced before assignment"));
+    }
+  }
+
+  @Test
+  public void readForEffectIsNotNeededForParameter() throws Exception {
+    String program = ""
+        + "def f(x): x = x\n"
+        + "f";
+    assertEquals(ImmutableList.of(), BcTestUtil.opcodes(program));
+  }
 }
