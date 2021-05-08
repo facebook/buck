@@ -19,7 +19,7 @@ package com.facebook.buck.util.unarchive;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.environment.Platform;

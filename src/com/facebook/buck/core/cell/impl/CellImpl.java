@@ -28,10 +28,10 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.file.PathMatcher;
+import com.facebook.buck.io.file.RecursiveFileMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
-import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 

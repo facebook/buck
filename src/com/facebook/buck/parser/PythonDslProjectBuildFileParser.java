@@ -24,7 +24,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.WatchmanDiagnostic;
 import com.facebook.buck.io.watchman.WatchmanDiagnosticEvent;

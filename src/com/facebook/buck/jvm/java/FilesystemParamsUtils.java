@@ -18,8 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.io.filesystem.GlobPatternMatcher;
-import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.file.GlobPatternMatcher;
+import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.google.common.collect.ImmutableSet;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.filesystem;
+package com.facebook.buck.io.file;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;

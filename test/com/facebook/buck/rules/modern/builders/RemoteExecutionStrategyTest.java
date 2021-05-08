@@ -31,7 +31,7 @@ import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy.StrategyBui
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.io.filesystem.GlobPatternMatcher;
+import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;

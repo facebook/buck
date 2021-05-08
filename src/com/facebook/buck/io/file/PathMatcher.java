@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.filesystem;
+package com.facebook.buck.io.file;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;

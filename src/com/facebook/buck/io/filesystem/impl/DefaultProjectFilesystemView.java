@@ -19,7 +19,7 @@ package com.facebook.buck.io.filesystem.impl;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.util.stream.RichStream;

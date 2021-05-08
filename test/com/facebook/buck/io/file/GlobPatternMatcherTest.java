@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.filesystem;
+package com.facebook.buck.io.file;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -22,41 +22,40 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Paths;
 import java.util.EnumSet;
 import org.junit.Test;
 
-public class FileExtensionMatcherTest {
+public class GlobPatternMatcherTest {
 
   @Test
-  public void matchesPathsWithMatchingExtension() {
-    FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
-    assertTrue(matcher.matches(RelPath.get("foo.cpp")));
+  public void matchesPathsUnderProvidedBasePath() {
+    GlobPatternMatcher matcher = GlobPatternMatcher.of("foo/*");
+    assertTrue(matcher.matches(Paths.get("foo").resolve("bar")));
   }
 
   @Test
-  public void doesNotMatchPathsWithADifferentExtension() {
-    FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
-    assertFalse(matcher.matches(RelPath.get("foo.java")));
+  public void doesNotMatchPathsOutsideOfProvidedBasePath() {
+    GlobPatternMatcher matcher = GlobPatternMatcher.of("foo/*");
+    assertFalse(matcher.matches(Paths.get("not_relative_too_root")));
   }
 
   @Test
-  public void usesWatchmanQueryToMatchPathsWithExtension() {
-    FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
+  public void usesWatchmanQueryToMatchProvidedBasePath() {
+    GlobPatternMatcher matcher = GlobPatternMatcher.of("foo/*");
     assertEquals(
         matcher.toWatchmanMatchQuery(EnumSet.noneOf(Capability.class)),
-        ImmutableList.of(
-            "match", "**/*.cpp", "wholename", ImmutableMap.of("includedotfiles", true)));
+        ImmutableList.of("match", "foo/*", "wholename", ImmutableMap.of("includedotfiles", true)));
   }
 
   @Test
   public void returnsAGlobWhenAskedForPathOrGlob() {
-    FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
+    GlobPatternMatcher matcher = GlobPatternMatcher.of("foo/*");
     PathMatcher.PathOrGlob pathOrGlob = matcher.getPathOrGlob();
     assertTrue(pathOrGlob.isGlob());
-    assertThat(pathOrGlob.getValue(), equalTo("**/*.cpp"));
+    assertThat(pathOrGlob.getValue(), equalTo("foo/*"));
   }
 }

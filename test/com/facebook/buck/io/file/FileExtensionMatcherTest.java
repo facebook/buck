@@ -14,60 +14,49 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.filesystem;
+package com.facebook.buck.io.file;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.InvalidPathException;
 import java.util.EnumSet;
 import org.junit.Test;
 
-public class ExactPathMatcherTest {
+public class FileExtensionMatcherTest {
 
   @Test
-  public void matchesExplicitlyProvidedPaths() {
-    ExactPathMatcher matcher = ExactPathMatcher.of(".idea");
-    assertTrue(matcher.matches(RelPath.get(".idea")));
+  public void matchesPathsWithMatchingExtension() {
+    FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
+    assertTrue(matcher.matches(RelPath.get("foo.cpp")));
   }
 
   @Test
-  public void doesNotMatchPathsThatAreNotExactlyTheSame() {
-    ExactPathMatcher matcher = ExactPathMatcher.of(".idea");
-    assertFalse(matcher.matches(RelPath.get(".ideas")));
+  public void doesNotMatchPathsWithADifferentExtension() {
+    FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
+    assertFalse(matcher.matches(RelPath.get("foo.java")));
   }
 
   @Test
-  public void usesWatchmanQueryToMatchPathsExactlyMatchingProvidedOne() {
-    ExactPathMatcher matcher = ExactPathMatcher.of(".idea");
+  public void usesWatchmanQueryToMatchPathsWithExtension() {
+    FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
     assertEquals(
         matcher.toWatchmanMatchQuery(EnumSet.noneOf(Capability.class)),
-        ImmutableList.of("match", ".idea", "wholename", ImmutableMap.of("includedotfiles", true)));
+        ImmutableList.of(
+            "match", "**/*.cpp", "wholename", ImmutableMap.of("includedotfiles", true)));
   }
 
   @Test
   public void returnsAGlobWhenAskedForPathOrGlob() {
-    ExactPathMatcher matcher = ExactPathMatcher.of(".idea");
+    FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
     PathMatcher.PathOrGlob pathOrGlob = matcher.getPathOrGlob();
     assertTrue(pathOrGlob.isGlob());
-    assertThat(pathOrGlob.getValue(), equalTo(".idea"));
-  }
-
-  @Test
-  public void verifyPathWithAnAsteriskChar() {
-    String path = ".idea/blah/blah/bl*ah/foo/bar";
-    InvalidPathException expectedException =
-        assertThrows(InvalidPathException.class, () -> ExactPathMatcher.of(path));
-
-    assertThat(expectedException.getCause(), equalTo(null));
-    assertThat(expectedException.getMessage(), equalTo("Illegal char <*> at index 18: " + path));
+    assertThat(pathOrGlob.getValue(), equalTo("**/*.cpp"));
   }
 }

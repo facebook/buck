@@ -23,8 +23,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.io.filesystem.ExactPathMatcher;
-import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
+import com.facebook.buck.io.file.ExactPathMatcher;
+import com.facebook.buck.io.file.RecursiveFileMatcher;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;

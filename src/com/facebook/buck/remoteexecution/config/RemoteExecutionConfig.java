@@ -24,7 +24,7 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.filesystem.GlobPatternMatcher;
+import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.util.RemoteExecutionUtil;

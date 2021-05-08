@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java.stepsbuilder;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.PipelineState;

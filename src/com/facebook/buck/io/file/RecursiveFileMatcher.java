@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.filesystem;
+package com.facebook.buck.io.file;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
+import java.io.File;
 import java.util.Objects;
 import java.util.Set;
 
-/** Matcher that matches file paths with specific extension. */
-public class FileExtensionMatcher implements PathMatcher {
+/** Matcher that matches paths within {@code basePath} directory. */
+public class RecursiveFileMatcher implements PathMatcher {
 
-  private final String extension;
+  private final RelPath basePath;
 
-  private FileExtensionMatcher(String extension) {
-    this.extension = extension;
+  private RecursiveFileMatcher(RelPath basePath) {
+    this.basePath = basePath;
   }
 
   @Override
@@ -38,51 +37,52 @@ public class FileExtensionMatcher implements PathMatcher {
     if (this == other) {
       return true;
     }
-    if (!(other instanceof FileExtensionMatcher)) {
+    if (!(other instanceof RecursiveFileMatcher)) {
       return false;
     }
-    FileExtensionMatcher that = (FileExtensionMatcher) other;
-    return Objects.equals(extension, that.extension);
+    RecursiveFileMatcher that = (RecursiveFileMatcher) other;
+    return Objects.equals(basePath, that.basePath);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(extension);
+    return Objects.hash(basePath);
   }
 
   @Override
   public String toString() {
-    return String.format("%s extension=%s", super.toString(), extension);
+    return String.format("%s basePath=%s", super.toString(), basePath);
   }
 
   @Override
   public boolean matches(RelPath path) {
-    return extension.equals(Files.getFileExtension(path.toString()));
+    return path.startsWith(basePath.getPath());
   }
 
-  @Override
-  public String getGlob() {
-    return "**/*." + extension;
+  public RelPath getPath() {
+    return basePath;
   }
 
   @Override
   public ImmutableList<?> toWatchmanMatchQuery(Set<Capability> capabilities) {
-    String ignoreGlob = getGlob();
-    return ImmutableList.of(
-        "match", ignoreGlob, "wholename", ImmutableMap.of("includedotfiles", true));
+    if (capabilities.contains(Capability.DIRNAME)) {
+      return ImmutableList.of("dirname", getPath().toString());
+    }
+    return ImmutableList.of("match", getGlob(), "wholename");
   }
 
   @Override
   public PathOrGlob getPathOrGlob() {
-    return PathOrGlob.glob(getGlob());
+    return PathOrGlob.path(getPath());
   }
 
-  public String getExtension() {
-    return extension;
+  @Override
+  public String getGlob() {
+    return getPath() + File.separator + "**";
   }
 
-  /** @return The matcher for paths that have {@code extension} as an extension. */
-  public static FileExtensionMatcher of(String extension) {
-    return new FileExtensionMatcher(extension);
+  /** @return The matcher for paths that start with {@code basePath}. */
+  public static RecursiveFileMatcher of(RelPath basePath) {
+    return new RecursiveFileMatcher(basePath);
   }
 }

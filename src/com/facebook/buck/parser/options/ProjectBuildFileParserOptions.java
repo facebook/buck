@@ -22,7 +22,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
-import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.implicit.ImplicitInclude;

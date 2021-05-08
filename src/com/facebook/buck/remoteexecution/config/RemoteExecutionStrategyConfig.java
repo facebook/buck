@@ -16,7 +16,7 @@
 
 package com.facebook.buck.remoteexecution.config;
 
-import com.facebook.buck.io.filesystem.GlobPatternMatcher;
+import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.OptionalLong;

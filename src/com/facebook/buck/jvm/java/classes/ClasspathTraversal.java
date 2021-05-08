@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.classes;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.ZipFileTraversal;

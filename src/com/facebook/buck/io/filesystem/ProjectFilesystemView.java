@@ -17,6 +17,7 @@
 package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;

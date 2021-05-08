@@ -1,4 +1,6 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
     name = "file",
     srcs = glob(["*.java"]),
     visibility = [
@@ -19,6 +21,7 @@ java_library(
     exported_deps = [
         "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/core/path:path",
+        "//src/com/facebook/buck/io/watchman:capability",
         "//src/com/facebook/buck/io/windowsfs:windowsfs",
     ],
 )

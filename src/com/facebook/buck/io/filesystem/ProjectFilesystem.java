@@ -21,6 +21,7 @@ import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;

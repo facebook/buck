@@ -22,7 +22,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
-import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.watchman.WatchmanEvent.Type;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;

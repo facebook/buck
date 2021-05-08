@@ -14,48 +14,60 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.io.filesystem;
+package com.facebook.buck.io.file;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Paths;
+import java.nio.file.InvalidPathException;
 import java.util.EnumSet;
 import org.junit.Test;
 
-public class GlobPatternMatcherTest {
+public class ExactPathMatcherTest {
 
   @Test
-  public void matchesPathsUnderProvidedBasePath() {
-    GlobPatternMatcher matcher = GlobPatternMatcher.of("foo/*");
-    assertTrue(matcher.matches(Paths.get("foo").resolve("bar")));
+  public void matchesExplicitlyProvidedPaths() {
+    ExactPathMatcher matcher = ExactPathMatcher.of(".idea");
+    assertTrue(matcher.matches(RelPath.get(".idea")));
   }
 
   @Test
-  public void doesNotMatchPathsOutsideOfProvidedBasePath() {
-    GlobPatternMatcher matcher = GlobPatternMatcher.of("foo/*");
-    assertFalse(matcher.matches(Paths.get("not_relative_too_root")));
+  public void doesNotMatchPathsThatAreNotExactlyTheSame() {
+    ExactPathMatcher matcher = ExactPathMatcher.of(".idea");
+    assertFalse(matcher.matches(RelPath.get(".ideas")));
   }
 
   @Test
-  public void usesWatchmanQueryToMatchProvidedBasePath() {
-    GlobPatternMatcher matcher = GlobPatternMatcher.of("foo/*");
+  public void usesWatchmanQueryToMatchPathsExactlyMatchingProvidedOne() {
+    ExactPathMatcher matcher = ExactPathMatcher.of(".idea");
     assertEquals(
         matcher.toWatchmanMatchQuery(EnumSet.noneOf(Capability.class)),
-        ImmutableList.of("match", "foo/*", "wholename", ImmutableMap.of("includedotfiles", true)));
+        ImmutableList.of("match", ".idea", "wholename", ImmutableMap.of("includedotfiles", true)));
   }
 
   @Test
   public void returnsAGlobWhenAskedForPathOrGlob() {
-    GlobPatternMatcher matcher = GlobPatternMatcher.of("foo/*");
+    ExactPathMatcher matcher = ExactPathMatcher.of(".idea");
     PathMatcher.PathOrGlob pathOrGlob = matcher.getPathOrGlob();
     assertTrue(pathOrGlob.isGlob());
-    assertThat(pathOrGlob.getValue(), equalTo("foo/*"));
+    assertThat(pathOrGlob.getValue(), equalTo(".idea"));
+  }
+
+  @Test
+  public void verifyPathWithAnAsteriskChar() {
+    String path = ".idea/blah/blah/bl*ah/foo/bar";
+    InvalidPathException expectedException =
+        assertThrows(InvalidPathException.class, () -> ExactPathMatcher.of(path));
+
+    assertThat(expectedException.getCause(), equalTo(null));
+    assertThat(expectedException.getMessage(), equalTo("Illegal char <*> at index 18: " + path));
   }
 }
