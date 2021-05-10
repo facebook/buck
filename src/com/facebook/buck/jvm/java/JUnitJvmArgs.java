@@ -209,7 +209,7 @@ abstract class JUnitJvmArgs {
       // This is the default config used by IntelliJ. By doing this, all a user
       // needs to do is create a new "Remote" debug config. Note that we start
       // suspended, so tests will not run until the user connects.
-      args.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005");
+      args.add("-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005");
     }
 
     // User-defined VM arguments, such as -D or -X.

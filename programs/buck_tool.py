@@ -1144,7 +1144,7 @@ class BuckTool(object):
                 port = "8888"
                 java_args.append(
                     "-agentlib:jdwp=transport=dt_socket,"
-                    "server=y,suspend=" + suspend + ",quiet=y,address=" + port
+                    "server=y,suspend=" + suspend + ",quiet=y,address=*:" + port
                 )
                 if suspend == "y":
                     logging.info("Waiting for debugger on port {}...".format(port))

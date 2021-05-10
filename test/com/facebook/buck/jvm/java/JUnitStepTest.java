@@ -296,7 +296,7 @@ public class JUnitStepTest {
             buildIdArg,
             modulePathArg,
             "-Dapple.awt.UIElement=true",
-            "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005",
+            "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:5005",
             vmArg1,
             vmArg2,
             "-verbose",

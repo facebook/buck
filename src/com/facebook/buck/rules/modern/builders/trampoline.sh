@@ -44,7 +44,7 @@ export BASE_BUCK_OUT_DIR=$BASE_BUCK_OUT_DIR
 export BUCK_BUILD_ID="RE_buck_build_id"
 
 if [ "$BUCK_DEBUG_MODE" == "1" ]; then
-  export BUCK_DEBUG_ARGS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8888"
+  export BUCK_DEBUG_ARGS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:8888"
 fi
 
 cd $1
