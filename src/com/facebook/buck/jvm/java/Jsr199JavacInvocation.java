@@ -82,9 +82,13 @@ import javax.tools.StandardJavaFileManager;
 class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
   private static final Logger LOG = Logger.get(Jsr199JavacInvocation.class);
+
   private static final ListeningExecutorService THREAD_POOL =
       MoreExecutors.listeningDecorator(
           Executors.newCachedThreadPool(new NamedThreadFactory("javac")));
+
+  private static final int SUCCESS_EXIT_CODE = 0;
+  private static final int ERROR_EXIT_CODE = 1;
 
   static final String NO_JAVA_FILES_ERROR_MESSAGE =
       "No Java files provided for library compilation";
@@ -170,7 +174,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
           () ->
               javaSourceFilePaths.stream()
                   .map(Object::toString)
-                  .map(ResolvedJavac.ARGFILES_ESCAPER::apply)
+                  .map(ResolvedJavac.ARGFILES_ESCAPER)
                   .iterator(),
           pathToSrcsList.getPath());
     } catch (IOException e) {
@@ -180,7 +184,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
               e,
               "Cannot write list of .java files to compile to %s file! Terminating compilation.",
               pathToSrcsList);
-      return 1;
+      return ERROR_EXIT_CODE;
     }
 
     return getWorker().buildClasses();
@@ -225,8 +229,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
     private CompilerWorker(ListeningExecutorService executor) {
       this.executor = executor;
-
-      classUsageTracker = trackClassUsage ? new ClassUsageTracker() : null;
+      this.classUsageTracker = trackClassUsage ? new ClassUsageTracker() : null;
     }
 
     public int buildSourceOnlyAbiJar(RelPath outputJarDirPath) throws InterruptedException {
@@ -240,12 +243,13 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
     private int buildAbiJar(boolean buildSourceOnlyAbi, RelPath outputJarDirPath)
         throws InterruptedException {
       SettableFuture<Integer> abiResult = SettableFuture.create();
+      // abi is ready when compiler task finished
       Futures.addCallback(
           compilerResult,
           new FutureCallback<Integer>() {
             @Override
-            public void onSuccess(@Nullable Integer result) {
-              abiResult.set(result);
+            public void onSuccess(@Nullable Integer exitCode) {
+              abiResult.set(exitCode);
             }
 
             @Override
@@ -258,9 +262,12 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
 
       JarParameters jarParameters = Objects.requireNonNull(abiJarParameters);
       BuckJavacTaskProxy javacTask = getJavacTask(buildSourceOnlyAbi);
+      JavacEventSink eventSink = context.getEventSink();
+      // abi could be ready when compiler phase finished
       javacTask.addPostEnterCallback(
           topLevelTypes -> {
             try {
+              AbsPath ruleCellRoot = context.getRuleCellRoot();
               if (buildSuccessful()) {
                 // Only attempt to build stubs if the build is successful so far; errors can
                 // put javac into an unknown state.
@@ -272,39 +279,47 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                         javacTask.getTypes(),
                         javacTask.getMessager(),
                         jarBuilder,
-                        context.getEventSink(),
+                        eventSink,
                         abiCompatibilityMode,
                         options.contains("-parameters"));
                 stubGenerator.generate(topLevelTypes);
                 jarBuilder.createJarFile(
                     ProjectFilesystemUtils.getPathForRelativePath(
-                        context.getRuleCellRoot(), jarParameters.getJarPath()));
+                        ruleCellRoot, jarParameters.getJarPath()));
               }
 
               debugLogDiagnostics();
+              int exitCode;
               if (buildSuccessful()) {
                 if (classUsageTracker != null) {
                   new DefaultClassUsageFileWriter()
                       .writeFile(
                           classUsageTracker,
                           CompilerOutputPaths.getDepFilePath(outputJarDirPath),
-                          context.getRuleCellRoot(),
+                          ruleCellRoot,
                           context.getConfiguredBuckOut(),
                           context.getCellToPathMappings());
                 }
-                abiResult.set(0);
+                exitCode = SUCCESS_EXIT_CODE;
               } else {
                 reportDiagnosticsToUser();
-                abiResult.set(1);
+                exitCode = ERROR_EXIT_CODE;
               }
 
-              if (invokingRule.isSourceAbi()) {
+              boolean waitingForPipeline = needToWaitForPipeline();
+              // abi result is ready.
+              abiResult.set(exitCode);
+
+              if (waitingForPipeline) {
+                // Blocks till `shouldCompileFullJar` is set
                 switchToFullJarIfRequested();
               }
+
             } catch (IOException e) {
               abiResult.setException(e);
             } catch (InterruptedException | ExecutionException e) {
-              // These come from the get on shouldCompileFullJar, which should never throw
+              // These come from the `shouldCompileFullJar.get()` in the
+              // `switchToFullJarIfRequested()`, which should never throw
               throw new AssertionError(e);
             }
           });
@@ -312,7 +327,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       try {
         String threadName = startCompiler(javacTask);
         try (JavacEventSinkScopedSimplePerfEvent ignore =
-            new JavacEventSinkScopedSimplePerfEvent(context.getEventSink(), threadName)) {
+            new JavacEventSinkScopedSimplePerfEvent(eventSink, threadName)) {
           return abiResult.get();
         }
       } catch (ExecutionException e) {
@@ -321,7 +336,11 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       }
     }
 
-    private void switchToFullJarIfRequested() throws InterruptedException, ExecutionException {
+    private boolean needToWaitForPipeline() {
+      if (!invokingRule.isSourceAbi()) {
+        return false;
+      }
+
       Objects.requireNonNull(targetEvent).close();
 
       // Make a new event to capture the time spent waiting for the next stage in the
@@ -330,6 +349,10 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
           new JavacEventSinkScopedSimplePerfEvent(
               context.getEventSink(),
               "Waiting for pipeline: " + invokingRule.getFullyQualifiedName());
+      return true;
+    }
+
+    private void switchToFullJarIfRequested() throws InterruptedException, ExecutionException {
       if (!shouldCompileFullJar.get()) {
         // targetEvent will be closed in startCompiler
         throw new StopCompilation();
@@ -407,7 +430,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       if (!compilerResult.isDone()) {
         // Make sure `.get()` won't hang forever if `compilerResult` is not initialized.
         // Note, `set` is no-op is `.setFuture` is already called.
-        compilerResult.set(1);
+        compilerResult.set(ERROR_EXIT_CODE);
 
         shouldCompileFullJar.set(false);
         try {
@@ -424,97 +447,95 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
         throws ExecutionException, InterruptedException {
       if (compilerThreadName == null) {
         SettableFuture<String> threadName = SettableFuture.create();
-        compilerResult.setFuture(
-            executor.submit(
-                () -> {
-                  threadName.set(Thread.currentThread().getName());
-                  tracingBridge =
-                      new Jsr199TracingBridge(
-                          context.getEventSink(), invokingRule.getFullyQualifiedName());
-                  BuckTracing.setCurrentThreadTracingInterface(tracingBridge);
-                  targetEvent =
-                      new JavacEventSinkScopedSimplePerfEvent(
-                          context.getEventSink(), invokingRule.getFullyQualifiedName());
-                  try {
-                    boolean success = false;
-                    try {
-                      success = javacTask.call();
-                    } catch (IllegalStateException ex) {
-                      if (ex.getLocalizedMessage().equals("no source files")
-                          || ex.getLocalizedMessage().equals("error: no source files")) {
-                        success = true;
-                      }
-                    }
-                    if (javacTask instanceof FrontendOnlyJavacTaskProxy) {
-                      if (success) {
-                        return 0;
-                      } else {
-                        debugLogDiagnostics();
-                        reportDiagnosticsToUser();
-                        return 1;
-                      }
-                    }
-
-                    debugLogDiagnostics();
-
-                    if (success && buildSuccessful()) {
-                      if (classUsageTracker != null) {
-                        new DefaultClassUsageFileWriter()
-                            .writeFile(
-                                classUsageTracker,
-                                CompilerOutputPaths.getDepFilePath(
-                                    compilerOutputPathsValue
-                                        .getLibraryCompilerOutputPath()
-                                        .getOutputJarDirPath()),
-                                context.getRuleCellRoot(),
-                                context.getConfiguredBuckOut(),
-                                context.getCellToPathMappings());
-                      }
-                    } else {
-                      reportDiagnosticsToUser();
-                      return 1;
-                    }
-
-                    if (libraryJarParameters == null) {
-                      return 0;
-                    }
-
-                    return newJarBuilder(libraryJarParameters)
-                        .createJarFile(
-                            Objects.requireNonNull(
-                                ProjectFilesystemUtils.getPathForRelativePath(
-                                    context.getRuleCellRoot(), libraryJarParameters.getJarPath())));
-                  } catch (RuntimeException e) {
-                    if (e.getCause() instanceof StopCompilation) {
-                      return 0;
-                    } else if (javacTask instanceof FrontendOnlyJavacTaskProxy) {
-                      throw new HumanReadableException(
-                          e,
-                          "The compiler crashed attempting to generate a source-only ABI: %s.\n"
-                              + "Try building %s instead and fixing any errors that are emitted.\n"
-                              + "If there are none, file an issue, with the crash trace from the log.\n",
-                          invokingRule.getFullyQualifiedName(),
-                          compilerOutputPathsValue.getLibraryTargetFullyQualifiedName());
-                    } else {
-                      throw new BuckUncheckedExecutionException(
-                          e.getCause() != null ? e.getCause() : e, "When running javac");
-                    }
-                  } finally {
-                    for (AutoCloseable closeable : Lists.reverse(closeables)) {
-                      try {
-                        closeable.close();
-                      } catch (Exception e) {
-                        LOG.warn(e, "Unable to close %s; we may be leaking memory.", closeable);
-                      }
-                    }
-                    targetEvent.close();
-                  }
-                }));
-
+        compilerResult.setFuture(executor.submit(() -> runCompilerTask(javacTask, threadName)));
         compilerThreadName = threadName.get();
       }
-
       return compilerThreadName;
+    }
+
+    private int runCompilerTask(BuckJavacTaskProxy javacTask, SettableFuture<String> threadName)
+        throws IOException {
+      threadName.set(Thread.currentThread().getName());
+      JavacEventSink eventSink = context.getEventSink();
+      String fullyQualifiedName = invokingRule.getFullyQualifiedName();
+      tracingBridge = new Jsr199TracingBridge(eventSink, fullyQualifiedName);
+      BuckTracing.setCurrentThreadTracingInterface(tracingBridge);
+      targetEvent = new JavacEventSinkScopedSimplePerfEvent(eventSink, fullyQualifiedName);
+      try {
+        boolean success = false;
+        try {
+          success = javacTask.call();
+        } catch (IllegalStateException ex) {
+          if (ex.getLocalizedMessage().equals("no source files")
+              || ex.getLocalizedMessage().equals("error: no source files")) {
+            success = true;
+          }
+        }
+        if (javacTask instanceof FrontendOnlyJavacTaskProxy) {
+          if (success) {
+            return SUCCESS_EXIT_CODE;
+          } else {
+            debugLogDiagnostics();
+            reportDiagnosticsToUser();
+            return ERROR_EXIT_CODE;
+          }
+        }
+
+        debugLogDiagnostics();
+
+        AbsPath ruleCellRoot = context.getRuleCellRoot();
+        if (success && buildSuccessful()) {
+          if (classUsageTracker != null) {
+            new DefaultClassUsageFileWriter()
+                .writeFile(
+                    classUsageTracker,
+                    CompilerOutputPaths.getDepFilePath(
+                        compilerOutputPathsValue
+                            .getLibraryCompilerOutputPath()
+                            .getOutputJarDirPath()),
+                    ruleCellRoot,
+                    context.getConfiguredBuckOut(),
+                    context.getCellToPathMappings());
+          }
+        } else {
+          reportDiagnosticsToUser();
+          return ERROR_EXIT_CODE;
+        }
+
+        if (libraryJarParameters == null) {
+          return SUCCESS_EXIT_CODE;
+        }
+
+        return newJarBuilder(libraryJarParameters)
+            .createJarFile(
+                Objects.requireNonNull(
+                    ProjectFilesystemUtils.getPathForRelativePath(
+                        ruleCellRoot, libraryJarParameters.getJarPath())));
+      } catch (RuntimeException e) {
+        if (e.getCause() instanceof StopCompilation) {
+          return SUCCESS_EXIT_CODE;
+        } else if (javacTask instanceof FrontendOnlyJavacTaskProxy) {
+          throw new HumanReadableException(
+              e,
+              "The compiler crashed attempting to generate a source-only ABI: %s.\n"
+                  + "Try building %s instead and fixing any errors that are emitted.\n"
+                  + "If there are none, file an issue, with the crash trace from the log.\n",
+              fullyQualifiedName,
+              compilerOutputPathsValue.getLibraryTargetFullyQualifiedName());
+        } else {
+          throw new BuckUncheckedExecutionException(
+              e.getCause() != null ? e.getCause() : e, "When running javac");
+        }
+      } finally {
+        for (AutoCloseable closeable : Lists.reverse(closeables)) {
+          try {
+            closeable.close();
+          } catch (Exception e) {
+            LOG.warn(e, "Unable to close %s; we may be leaking memory.", closeable);
+          }
+        }
+        targetEvent.close();
+      }
     }
 
     private BuckJavacTaskProxy getJavacTask(boolean generatingSourceOnlyAbi) {
@@ -532,10 +553,11 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                   compiler.getClass().getClassLoader(), context.getClassLoaderCache());
 
           PluginLoaderJavaFileManager fileManager;
+          AbsPath ruleCellRoot = context.getRuleCellRoot();
           if (libraryJarParameters != null) {
             Path directToJarPath =
                 ProjectFilesystemUtils.getPathForRelativePath(
-                    context.getRuleCellRoot(), libraryJarParameters.getJarPath());
+                    ruleCellRoot, libraryJarParameters.getJarPath());
             inMemoryFileManager =
                 new JavaInMemoryFileManager(
                     standardFileManager,
@@ -553,8 +575,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
           Iterable<? extends JavaFileObject> compilationUnits;
           try {
             compilationUnits =
-                createCompilationUnits(
-                    fileManager, context.getRuleCellRoot()::resolve, javaSourceFilePaths);
+                createCompilationUnits(fileManager, ruleCellRoot::resolve, javaSourceFilePaths);
             compilationUnits.forEach(this::addCloseable);
           } catch (IOException e) {
             LOG.warn(e, "Error building compilation units");
@@ -613,9 +634,9 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                     getDiagnosticKindForSourceOnlyAbiCompatibility(abiGenerationMode));
           }
 
+          JavacEventSink eventSink = context.getEventSink();
           phaseEventLogger =
-              new JavacPhaseEventLogger(
-                  invokingRule.getFullyQualifiedName(), context.getEventSink());
+              new JavacPhaseEventLogger(invokingRule.getFullyQualifiedName(), eventSink);
           TranslatingJavacPhaseTracer tracer = new TranslatingJavacPhaseTracer(phaseEventLogger);
           // TranslatingJavacPhaseTracer is AutoCloseable so that it can detect the end of tracing
           // in some unusual situations
@@ -630,7 +651,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
           // may choke with novel errors that don't occur on the command line.
           AnnotationProcessorFactory processorFactory =
               new AnnotationProcessorFactory(
-                  context.getEventSink(),
+                  eventSink,
                   compiler.getClass().getClassLoader(),
                   context.getClassLoaderCache(),
                   invokingRule.getFullyQualifiedName());
