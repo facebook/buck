@@ -190,6 +190,15 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
   @Override
   public void close() {
+    try {
+      waitWhileExecutionIsDone();
+    } finally {
+      closeWorkerTool();
+      actionIdToResultEventMap = ImmutableMap.of();
+    }
+  }
+
+  private void waitWhileExecutionIsDone() {
     if (!done.isDone()) {
       try {
         done.get();
@@ -209,11 +218,12 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
             cause.getMessage());
       }
     }
+  }
 
+  private void closeWorkerTool() {
     if (borrowedWorkerTool != null) {
       borrowedWorkerTool.close();
       borrowedWorkerTool = null;
     }
-    actionIdToResultEventMap = ImmutableMap.of();
   }
 }

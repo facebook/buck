@@ -372,11 +372,15 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private void shutdownResultEventFutureIfNotDone(String errorMessage) {
     runUnderLock(
         () -> {
+          Exception exception = new IllegalStateException(errorMessage);
           for (ExecutingAction executingAction : executingActions) {
             SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
             if (resultEventFuture != null && !resultEventFuture.isDone()) {
-              resultEventFuture.setException(new IllegalStateException(errorMessage));
+              resultEventFuture.setException(exception);
             }
+          }
+          if (pipelineFinished != null) {
+            pipelineFinished.setException(exception);
           }
         });
   }
