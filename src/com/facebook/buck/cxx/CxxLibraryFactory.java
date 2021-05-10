@@ -209,28 +209,17 @@ public class CxxLibraryFactory {
       return new CxxDiagnosticAggregationRule(
           buildTarget, projectFilesystem, graphBuilder, extractionRuleInputs);
     } else if (buildTarget.getFlavors().contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)) {
-      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> configuredDelegate =
-          delegate.requireDelegate(buildTarget, platform.get(), graphBuilder);
-      ImmutableList<NativeLinkableGroup> delegateNativeLinkableGroups =
-          configuredDelegate
-              .flatMap(d -> d.getNativeLinkableExportedDeps())
-              .orElse(ImmutableList.of());
-      ImmutableList<NativeLinkable> allNativeLinkables =
-          RichStream.from(cxxDeps.get(graphBuilder, platform.get()))
-              .filter(NativeLinkableGroup.class)
-              .concat(RichStream.from(delegateNativeLinkableGroups))
-              .map(g -> g.getNativeLinkable(platform.get(), graphBuilder))
-              .toImmutableList();
       ImmutableList<BuildTarget> targets =
-          ImmutableList.copyOf(
-              Collections2.transform(
-                  CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
-                      graphBuilder,
-                      linkableDepType.orElse(Linker.LinkableDepType.STATIC),
-                      makeLinkableListFilter(args, targetGraph),
-                      allNativeLinkables,
-                      blacklist),
-                  linkable -> linkable.getBuildTarget()));
+          getFilteredLinkableTargets(
+              targetGraph,
+              buildTarget,
+              graphBuilder,
+              args,
+              linkableDepType,
+              blacklist,
+              delegate,
+              platform,
+              cxxDeps);
       return new CxxLinkGroupMapDatabase(buildTarget, projectFilesystem, graphBuilder, targets);
     } else if (buildTarget
         .getFlavors()
@@ -489,6 +478,41 @@ public class CxxLibraryFactory {
             args.getResources()
                 .toNameMap(buildTarget, graphBuilder.getSourcePathResolver(), "resources")),
         delegate);
+  }
+
+  private ImmutableList<BuildTarget> getFilteredLinkableTargets(
+      TargetGraph targetGraph,
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CxxLibraryDescriptionArg args,
+      Optional<Linker.LinkableDepType> linkableDepType,
+      ImmutableSet<BuildTarget> blacklist,
+      CxxLibraryDescriptionDelegate delegate,
+      Optional<CxxPlatform> platform,
+      CxxDeps cxxDeps) {
+    Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> configuredDelegate =
+        delegate.requireDelegate(buildTarget, platform.get(), graphBuilder);
+    ImmutableList<NativeLinkableGroup> delegateNativeLinkableGroups =
+        configuredDelegate
+            .flatMap(d -> d.getNativeLinkableExportedDeps())
+            .orElse(ImmutableList.of());
+    ImmutableList<NativeLinkable> allNativeLinkables =
+        RichStream.from(cxxDeps.get(graphBuilder, platform.get()))
+            .filter(NativeLinkableGroup.class)
+            .concat(RichStream.from(delegateNativeLinkableGroups))
+            .map(g -> g.getNativeLinkable(platform.get(), graphBuilder))
+            .toImmutableList();
+    ImmutableList<BuildTarget> targets =
+        ImmutableList.copyOf(
+            Collections2.transform(
+                CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
+                    graphBuilder,
+                    linkableDepType.orElse(Linker.LinkableDepType.STATIC),
+                    makeLinkableListFilter(args, targetGraph),
+                    allNativeLinkables,
+                    blacklist),
+                linkable -> linkable.getBuildTarget()));
+    return targets;
   }
 
   private Optional<LinkableListFilter> makeLinkableListFilter(

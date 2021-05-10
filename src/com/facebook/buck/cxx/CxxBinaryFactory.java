@@ -106,22 +106,8 @@ public class CxxBinaryFactory {
     }
 
     if (flavors.contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)) {
-      CxxDeps cxxDeps = CxxDeps.builder().addDeps(args.getCxxDeps()).addDeps(extraCxxDeps).build();
-      ImmutableList<NativeLinkable> allNativeLinkables =
-          RichStream.from(cxxDeps.get(graphBuilder, cxxPlatform))
-              .filter(NativeLinkableGroup.class)
-              .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
-              .toImmutableList();
       ImmutableList<BuildTarget> targets =
-          ImmutableList.copyOf(
-              Collections2.transform(
-                  CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
-                      graphBuilder,
-                      args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
-                      LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph),
-                      allNativeLinkables,
-                      ImmutableSet.of()),
-                  linkable -> linkable.getBuildTarget()));
+          getFilteredLinkableTargets(targetGraph, graphBuilder, args, extraCxxDeps, cxxPlatform);
       return new CxxLinkGroupMapDatabase(target, projectFilesystem, graphBuilder, targets);
     }
 
@@ -247,6 +233,31 @@ public class CxxBinaryFactory {
                 args.getCxxDeps().get(graphBuilder, cxxPlatform), CxxResourcesProvider.class)),
         cxxBuckConfig.shouldCacheBinaries(),
         cxxLinkAndCompileRules.isStandalone);
+  }
+
+  private ImmutableList<BuildTarget> getFilteredLinkableTargets(
+      TargetGraph targetGraph,
+      ActionGraphBuilder graphBuilder,
+      CxxBinaryDescriptionArg args,
+      ImmutableSortedSet<BuildTarget> extraCxxDeps,
+      CxxPlatform cxxPlatform) {
+    CxxDeps cxxDeps = CxxDeps.builder().addDeps(args.getCxxDeps()).addDeps(extraCxxDeps).build();
+    ImmutableList<NativeLinkable> allNativeLinkables =
+        RichStream.from(cxxDeps.get(graphBuilder, cxxPlatform))
+            .filter(NativeLinkableGroup.class)
+            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+            .toImmutableList();
+    ImmutableList<BuildTarget> targets =
+        ImmutableList.copyOf(
+            Collections2.transform(
+                CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
+                    graphBuilder,
+                    args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+                    LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph),
+                    allNativeLinkables,
+                    ImmutableSet.of()),
+                linkable -> linkable.getBuildTarget()));
+    return targets;
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider(
