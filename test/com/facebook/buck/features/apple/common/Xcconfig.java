@@ -45,7 +45,7 @@ public class Xcconfig {
         continue;
       }
 
-      String[] split = line.split("=");
+      String[] split = line.split(" = ");
       if (split.length < 2) {
         throw new ParseException("The input value is not a valid xcconfig format.", 0);
       }

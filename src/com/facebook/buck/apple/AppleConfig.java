@@ -122,6 +122,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String ENABLE_ALL_WATCH_SIMULATOR_FLAVORS =
       "enable_all_watch_simulator_flavors";
 
+  private static final String PROJECT_GENERATOR_SWIFT_LABELS = "project_generator_swift_labels";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -679,6 +681,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getEnableAllWatchSimulatorFlavors() {
     return delegate.getBooleanValue(APPLE_SECTION, ENABLE_ALL_WATCH_SIMULATOR_FLAVORS, false);
+  }
+
+  public ImmutableList<String> getProjectGeneratorSwiftLabels() {
+    return delegate.getListWithoutComments(APPLE_SECTION, PROJECT_GENERATOR_SWIFT_LABELS);
   }
 
   @BuckStyleValue

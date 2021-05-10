@@ -266,4 +266,9 @@ public class AppleLibraryBuilder
     getArgForPopulating().setLinkWhole(Optional.of(linkWhole));
     return this;
   }
+
+  public AppleLibraryBuilder setLabels(Iterable<String> labels) {
+    getArgForPopulating().setLabels(labels);
+    return this;
+  }
 }

@@ -17,6 +17,7 @@
 package com.facebook.buck.features.apple.projectV2;
 
 import static com.facebook.buck.apple.AppleBundleDescription.WATCH_OS_FLAVOR;
+import static com.facebook.buck.apple.AppleDescriptions.SWIFT_COMPILE_FLAVOR;
 import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR;
 import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.getExpectedBuildPhasesByType;
@@ -82,6 +83,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UserFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -525,6 +527,115 @@ public class ProjectGeneratorTest {
             "$(inherited)",
             "$BUILT_PRODUCTS_DIR",
             projectFilesystem.resolve(symlinkPath).toString());
+    assertEquals(Optional.of(expectedIncludes), config.getKey("SWIFT_INCLUDE_PATHS"));
+  }
+
+  @Test
+  public void testModularLibraryHasCorrectSwiftIncludePathsWithIndexingFix()
+      throws IOException, ParseException, InterruptedException {
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of(
+            "apple",
+            ImmutableMap.of(
+                "enable_project_v2_swift_indexing_fix",
+                "true",
+                "force_dsym_mode_in_build_with_buck",
+                "false",
+                "project_generator_swift_labels",
+                "contains_swift",
+                AppleConfig.BUILD_SCRIPT,
+                AppleProjectHelper.getBuildScriptPath(projectFilesystem).toString()));
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder().setFilesystem(projectFilesystem).setSections(sections).build();
+    appleConfig = buckConfig.getView(AppleConfig.class);
+
+    BuildTarget libraryWithSwiftSrcsTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget libraryWithGenruleSrcsTarget =
+        BuildTargetFactory.newInstance("//foo", "genrulelib");
+    BuildTarget appBundleTarget = BuildTargetFactory.newInstance("//product", "app");
+    BuildTarget appBinaryTarget = BuildTargetFactory.newInstance("//product", "binary");
+
+    String configName = "Default";
+
+    TargetNode<?> libraryWithSwiftSrcsNode =
+        AppleLibraryBuilder.createBuilder(libraryWithSwiftSrcsTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("some.swift"))))
+            .setHeaders(
+                ImmutableSortedSet.of(
+                    FakeSourcePath.of("HeaderGroup1/foo.h"),
+                    FakeSourcePath.of("HeaderGroup2/baz.h")))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("HeaderGroup1/bar.h")))
+            .setConfigs(ImmutableSortedMap.of(configName, ImmutableMap.of()))
+            .setModular(true)
+            .build();
+
+    TargetNode<?> libraryWithGenruleSrcsNode =
+        AppleLibraryBuilder.createBuilder(libraryWithGenruleSrcsTarget)
+            .setSrcs(ImmutableSortedSet.of())
+            .setHeaders(ImmutableSortedSet.of())
+            .setExportedHeaders(ImmutableSortedSet.of())
+            .setConfigs(ImmutableSortedMap.of(configName, ImmutableMap.of()))
+            .setModular(true)
+            .setLabels(ImmutableList.of("contains_swift"))
+            .build();
+
+    TargetNode<?> appBinaryNode =
+        AppleLibraryBuilder.createBuilder(appBinaryTarget)
+            .setSrcs(ImmutableSortedSet.of())
+            .setDeps(
+                ImmutableSortedSet.of(libraryWithSwiftSrcsTarget, libraryWithGenruleSrcsTarget))
+            .setConfigs(ImmutableSortedMap.of(configName, ImmutableMap.of()))
+            .build();
+
+    TargetNode<?> appBundleNode =
+        AppleBundleBuilder.createBuilder(appBundleTarget)
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setBinary(appBinaryTarget)
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(
+            ImmutableSet.of(
+                libraryWithSwiftSrcsNode, libraryWithGenruleSrcsNode, appBinaryNode, appBundleNode),
+            ImmutableSet.of(appBinaryNode, appBundleNode),
+            appBundleTarget,
+            ProjectGeneratorOptions.builder().build(),
+            ImmutableSet.of(),
+            Optional.empty());
+
+    projectGenerator.createXcodeProject(
+        xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
+
+    FakeProjectFilesystem appBinaryFileSystem =
+        (FakeProjectFilesystem) appBinaryNode.getFilesystem();
+    RelPath expectedXcConfigPath =
+        BuildConfiguration.getXcconfigPath(appBinaryFileSystem, appBinaryTarget, "Debug");
+    String xccConfigContents =
+        this.projectFilesystem.readFileIfItExists(expectedXcConfigPath).get();
+    Xcconfig config = Xcconfig.fromString(xccConfigContents);
+    assertTrue(config.containsKey("SWIFT_INCLUDE_PATHS"));
+
+    RelPath libraryWithGenruleSrcsOutputPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(),
+            libraryWithGenruleSrcsTarget.withAppendedFlavors(
+                SWIFT_COMPILE_FLAVOR, DEFAULT_PLATFORM.getFlavor()),
+            "%s");
+
+    RelPath libraryWithSwiftSrcsOutputPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(),
+            libraryWithSwiftSrcsTarget.withAppendedFlavors(
+                SWIFT_COMPILE_FLAVOR, DEFAULT_PLATFORM.getFlavor()),
+            "%s");
+
+    ImmutableList<String> expectedIncludes =
+        ImmutableList.of(
+            "$(inherited)",
+            "$BUILT_PRODUCTS_DIR",
+            projectFilesystem.resolve(libraryWithGenruleSrcsOutputPath).toString(),
+            projectFilesystem.resolve(libraryWithSwiftSrcsOutputPath).toString());
     assertEquals(Optional.of(expectedIncludes), config.getKey("SWIFT_INCLUDE_PATHS"));
   }
 

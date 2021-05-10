@@ -92,6 +92,7 @@ class HeaderSearchPaths {
   private final PathRelativizer pathRelativizer;
   private final SwiftAttributeParser swiftAttributeParser;
   private final AppleConfig appleConfig;
+  private final ImmutableSet<String> swiftLabels;
 
   private final ProjectFilesystem projectFilesystem;
 
@@ -120,6 +121,7 @@ class HeaderSearchPaths {
     this.pathRelativizer = pathRelativizer;
     this.swiftAttributeParser = swiftAttributeParser;
     this.appleConfig = appleConfig;
+    this.swiftLabels = ImmutableSet.copyOf(appleConfig.getProjectGeneratorSwiftLabels());
 
     this.projectFilesystem = projectCell.getFilesystem();
   }
@@ -618,8 +620,7 @@ class HeaderSearchPaths {
     // but to do it right, it's likely that we'll need to add that. When that happens, we can also
     // update this "if" statement. If, long-term, we move towards using modules for all Objective-C
     // code, the merged header map will no longer work at all.
-    if (appleConfig.getEnableProjectV2SwiftIndexingFix()
-        && AppleDescriptions.targetNodeContainsSwiftSourceCode(targetNode)) {
+    if (appleConfig.getEnableProjectV2SwiftIndexingFix() && targetNodeContainsSwift(targetNode)) {
       visitRecursiveHeaderSymlinkTrees(
           targetNode,
           (nativeNode, headerVisibility) -> {
@@ -703,7 +704,7 @@ class HeaderSearchPaths {
           if (enableIndexingFix
               && nativeNode != targetNode
               && headerVisibility.equals(HeaderVisibility.PUBLIC)
-              && AppleDescriptions.targetNodeContainsSwiftSourceCode(nativeNode)) {
+              && targetNodeContainsSwift(nativeNode)) {
             BuildTarget flavoredSwiftCompileTarget =
                 NodeHelper.getSwiftModuleTarget(nativeNode, defaultPlatformFlavor);
 
@@ -714,6 +715,19 @@ class HeaderSearchPaths {
           }
         });
     return builder.build();
+  }
+
+  private boolean targetNodeContainsSwift(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
+    // Codegen libraries will have empty srcs so we cannot only rely on target inputs.
+    // We first check for any of the labels specified in apple.project_generator_swift_labels
+    // to know if this target is specified as Swift in the build rules.
+    for (String label : targetNode.getConstructorArg().getLabels()) {
+      if (swiftLabels.contains(label)) {
+        return true;
+      }
+    }
+    return AppleDescriptions.targetNodeContainsSwiftSourceCode(targetNode);
   }
 
   /** Adds the set of headers defined by headerVisibility to the merged header maps. */
