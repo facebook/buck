@@ -97,6 +97,7 @@ RULES_SRCS = [
     "ApkGenruleDescription.java",
     "AssembleDirectories.java",
     "CopyNativeLibraries.java",
+    "CreateReDexedApkFromAAB.java",
     "DefaultAndroidLibraryCompilerFactory.java",
     "DexProducedFromJavaLibrary.java",
     "DexWithClasses.java",

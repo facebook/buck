@@ -10,6 +10,7 @@ java_library(
     exported_deps = [
         ":prebuilt",
         "//third-party/java/aapt2-proto:aapt2-proto",
+        "//third-party/java/dagger:dagger",
         "//third-party/java/guava:guava",
         "//third-party/java/protobuf:protobuf",
         "//third-party/java/protobuf:protobuf-util",

@@ -78,7 +78,8 @@ public class AndroidBundleDescription
           AndroidBinaryResourcesGraphEnhancer.AAPT2_LINK_FLAVOR,
           AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR,
           AndroidBinaryGraphEnhancer.PROGUARD_TEXT_OUTPUT_FLAVOR,
-          AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR);
+          AndroidBinaryResourcesGraphEnhancer.GENERATE_STRING_RESOURCES_FLAVOR,
+          AndroidBinaryGraphEnhancer.EXTRACT_AND_REDEX_AAB);
 
   private final JavaBuckConfig javaBuckConfig;
   private final JavaCDBuckConfig javaCDBuckConfig;

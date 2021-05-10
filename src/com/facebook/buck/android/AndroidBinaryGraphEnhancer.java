@@ -94,7 +94,8 @@ import java.util.stream.Collectors;
 public class AndroidBinaryGraphEnhancer {
 
   static final Flavor D8_FLAVOR = InternalFlavor.of("d8");
-  static final Flavor DEX_MERGE_SPLIT_FLAVOR = InternalFlavor.of("split_dex_merge");
+  static final Flavor EXTRACT_AND_REDEX_AAB = InternalFlavor.of("extract_and_redex_aab");
+  private static final Flavor DEX_MERGE_SPLIT_FLAVOR = InternalFlavor.of("split_dex_merge");
   private static final Flavor DEX_MERGE_SINGLE_FLAVOR = InternalFlavor.of("single_dex_merge");
   private static final Flavor TRIM_UBER_R_DOT_JAVA_FLAVOR =
       InternalFlavor.of("trim_uber_r_dot_java");
