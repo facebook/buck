@@ -1,0 +1,38 @@
+apple_library(
+    name = "A",
+    srcs = ["A/A.c"],
+    compiler_flags = ["-g"],
+    exported_headers = ["A/A.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    visibility = ["//Apps/..."],
+    deps = [
+        ":B",
+    ],
+)
+
+apple_library(
+    name = "B",
+    srcs = ["B/B.c"],
+    compiler_flags = ["-g"],
+    exported_headers = ["B/B.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    visibility = ["//Apps/..."],
+    deps = [
+        ":C",
+    ],
+)
+
+apple_library(
+    name = "C",
+    srcs = ["C/C.c"],
+    compiler_flags = ["-g"],
+    exported_headers = ["C/C.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    visibility = ["//Apps/..."],
+)
