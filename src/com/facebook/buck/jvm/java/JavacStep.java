@@ -138,38 +138,39 @@ public class JavacStep extends IsolatedStep {
   @Override
   public final StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
-    int declaredDepsBuildResult;
-    String firstOrderStdout;
-    String firstOrderStderr;
-    Optional<String> returnedStderr;
+
+    StepExecutionResult.Builder builder = StepExecutionResult.builder();
+
     try {
       ResolvedJavac.Invocation invocation =
           state.getJavacInvocation(
               compilerOutputPathsValue, context, cellToPathMappings, configuredBuckOut);
+
+      int exitCode;
       if (invokingRule.isSourceAbi()) {
-        declaredDepsBuildResult = invocation.buildSourceAbiJar();
+        exitCode = invocation.buildSourceAbiJar();
       } else if (invokingRule.isSourceOnlyAbi()) {
-        declaredDepsBuildResult = invocation.buildSourceOnlyAbiJar();
+        exitCode = invocation.buildSourceOnlyAbiJar();
       } else {
-        declaredDepsBuildResult = invocation.buildClasses();
+        exitCode = invocation.buildClasses();
       }
-      firstOrderStdout = state.getStdoutContents();
-      firstOrderStderr = state.getStderrContents();
+      builder.setExitCode(exitCode);
+
+      if (exitCode != StepExecutionResults.SUCCESS_EXIT_CODE) {
+        builder.setStderr(
+            processBuildFailure(
+                context.getIsolatedEventBus(),
+                state.getStdoutContents(),
+                state.getStderrContents()));
+      }
+
     } finally {
       if (ownsPipelineObject) {
         state.close();
       }
     }
-    if (declaredDepsBuildResult != StepExecutionResults.SUCCESS_EXIT_CODE) {
-      returnedStderr =
-          processBuildFailure(context.getIsolatedEventBus(), firstOrderStdout, firstOrderStderr);
-    } else {
-      returnedStderr = Optional.empty();
-    }
-    return StepExecutionResult.builder()
-        .setExitCode(declaredDepsBuildResult)
-        .setStderr(returnedStderr)
-        .build();
+
+    return builder.build();
   }
 
   private Optional<String> processBuildFailure(

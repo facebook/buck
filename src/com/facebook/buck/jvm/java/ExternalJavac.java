@@ -168,7 +168,6 @@ public class ExternalJavac implements Javac {
           }
 
           // Run the command
-          int exitCode = -1;
           try {
             ProcessExecutorParams params =
                 ProcessExecutorParams.builder()
@@ -177,13 +176,12 @@ public class ExternalJavac implements Javac {
                     .setDirectory(context.getRuleCellRoot().getPath())
                     .build();
             ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
-            exitCode = result.getExitCode();
+            return result.getExitCode();
           } catch (IOException e) {
             e.printStackTrace(context.getStdErr());
-            return exitCode;
           }
 
-          return exitCode;
+          return -1;
         }
 
         @Override
