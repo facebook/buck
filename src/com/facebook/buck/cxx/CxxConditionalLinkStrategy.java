@@ -26,6 +26,7 @@ import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
 /**
  * {@link CxxConditionalLinkStrategy} provides the necessary details to be able to implement a
@@ -62,6 +63,7 @@ public interface CxxConditionalLinkStrategy extends AddsToRuleKey {
    * @param filelistPath Path to the filelist given to the linker.
    * @param skipLinkingPath If path exists, indicates that linking should be skipped.
    * @param linkedExecutablePath The path to the executable being linked.
+   * @param focusedTargetsPath
    */
   ImmutableList<Step> createConditionalLinkCheckSteps(
       ProjectFilesystem filesystem,
@@ -72,7 +74,8 @@ public interface CxxConditionalLinkStrategy extends AddsToRuleKey {
       AbsPath skipLinkingPath,
       RelPath linkedExecutablePath,
       ImmutableMap<String, String> environment,
-      ImmutableList<String> linkerCommandPrefix);
+      ImmutableList<String> linkerCommandPrefix,
+      Optional<AbsPath> focusedTargetsPath);
 
   /**
    * Creates list of steps which write information needed to determine whether linking can be
@@ -83,6 +86,7 @@ public interface CxxConditionalLinkStrategy extends AddsToRuleKey {
    * @param filelistPath Path to the filelist given to the linker.
    * @param skipLinkingPath If path exists, indicates that linking should be skipped.
    * @param linkedExecutablePath The path to the executable being linked.
+   * @param focusedTargetsPath
    */
   ImmutableList<Step> createConditionalLinkWriteSteps(
       ProjectFilesystem filesystem,
@@ -93,5 +97,6 @@ public interface CxxConditionalLinkStrategy extends AddsToRuleKey {
       AbsPath skipLinkingPath,
       RelPath linkedExecutablePath,
       ImmutableMap<String, String> environment,
-      ImmutableList<String> linkerCommandPrefix);
+      ImmutableList<String> linkerCommandPrefix,
+      Optional<AbsPath> focusedTargetsPath);
 }

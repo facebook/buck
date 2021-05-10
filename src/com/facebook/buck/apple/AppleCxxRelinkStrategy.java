@@ -30,6 +30,7 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 
 /** Defines the conditional relinking strategy for Apple platforms (Mach-O executables). */
 public class AppleCxxRelinkStrategy implements CxxConditionalLinkStrategy, AddsToRuleKey {
@@ -75,7 +76,8 @@ public class AppleCxxRelinkStrategy implements CxxConditionalLinkStrategy, AddsT
       AbsPath skipLinkingPath,
       RelPath linkedExecutablePath,
       ImmutableMap<String, String> environment,
-      ImmutableList<String> linkerCommandPrefix) {
+      ImmutableList<String> linkerCommandPrefix,
+      Optional<AbsPath> focusedTargetsPath) {
     return ImmutableList.of(
         new AppleMachoCxxConditionalLinkCheck(
             filesystem,
@@ -88,7 +90,8 @@ public class AppleCxxRelinkStrategy implements CxxConditionalLinkStrategy, AddsT
             linkedExecutablePath,
             environment,
             linkerCommandPrefix,
-            fallback));
+            fallback,
+            focusedTargetsPath));
   }
 
   @Override
@@ -101,7 +104,8 @@ public class AppleCxxRelinkStrategy implements CxxConditionalLinkStrategy, AddsT
       AbsPath skipLinkingPath,
       RelPath linkedExecutablePath,
       ImmutableMap<String, String> environment,
-      ImmutableList<String> linkerCommandPrefix) {
+      ImmutableList<String> linkerCommandPrefix,
+      Optional<AbsPath> focusedTargetsPath) {
     return ImmutableList.of(
         new AppleMachoConditionalLinkWriteInfo(
             filesystem,
@@ -115,6 +119,7 @@ public class AppleCxxRelinkStrategy implements CxxConditionalLinkStrategy, AddsT
             linkedExecutablePath,
             environment,
             linkerCommandPrefix,
-            fallback));
+            fallback,
+            focusedTargetsPath));
   }
 }

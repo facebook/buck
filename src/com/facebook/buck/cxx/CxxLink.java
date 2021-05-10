@@ -355,6 +355,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       ImmutableMap<String, String> env = linker.getEnvironment(context.getSourcePathResolver());
       ImmutableList<String> commandPrefix =
           linker.getCommandPrefix(context.getSourcePathResolver());
+      Optional<AbsPath> focusedTargetsPath =
+          filteredFocusedTargets.map(context.getSourcePathResolver()::getAbsolutePath);
 
       AbsPath skipLinkingPath = scratchDir.resolve("relink.skip-linking");
       ImmutableList<Step> relinkCheckSteps = ImmutableList.of();
@@ -370,7 +372,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                 skipLinkingPath,
                 outputPath,
                 env,
-                commandPrefix);
+                commandPrefix,
+                focusedTargetsPath);
         relinkWriteSteps =
             linkStrategy.createConditionalLinkWriteSteps(
                 filesystem,
@@ -381,7 +384,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                 skipLinkingPath,
                 outputPath,
                 env,
-                commandPrefix);
+                commandPrefix,
+                focusedTargetsPath);
       }
 
       Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths =
@@ -393,8 +397,6 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
           };
 
       ImmutableSortedMap<Path, Path> cellRootMap = getCellRootMap(relativeCellRoots, filesystem);
-      Optional<AbsPath> focusedTargetsPath =
-          filteredFocusedTargets.map(context.getSourcePathResolver()::getAbsolutePath);
       ImmutableList<FileScrubber> fileScrubbers;
       if (focusedTargetsPath.isPresent()) {
         ImmutableMap<String, AbsPath> targetToOutputPathMap =

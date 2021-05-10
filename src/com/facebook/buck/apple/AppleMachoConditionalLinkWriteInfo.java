@@ -33,6 +33,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.facebook.buck.util.types.Pair;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -69,6 +70,7 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> commandPrefix;
   private final boolean fallback;
+  private final Optional<AbsPath> focusedTargetsPath;
 
   AppleMachoConditionalLinkWriteInfo(
       ProjectFilesystem filesystem,
@@ -82,7 +84,8 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
       RelPath linkedExecutablePath,
       ImmutableMap<String, String> environment,
       ImmutableList<String> commandPrefix,
-      boolean fallback) {
+      boolean fallback,
+      Optional<AbsPath> focusedTargetsPath) {
     super("apple-conditional-link-write-info");
     Preconditions.checkArgument(commandPrefix.size() > 0);
     this.sourcePaths = sourceToHashPaths;
@@ -97,6 +100,7 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
     this.environment = environment;
     this.commandPrefix = commandPrefix;
     this.fallback = fallback;
+    this.focusedTargetsPath = focusedTargetsPath;
   }
 
   @Override
@@ -146,6 +150,16 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
     Optional<ImmutableMap<String, ImmutableList<String>>> maybeCandidateSymbols =
         computeCandidateBoundSymbols(allBindSymbolNames, dylibPaths, filesystem);
 
+    ImmutableList<String> focusedTargets;
+    if (focusedTargetsPath.isPresent()) {
+      focusedTargets =
+          ObjectMappers.READER.readValue(
+              ObjectMappers.createParser(focusedTargetsPath.get().getPath()),
+              new TypeReference<ImmutableList<String>>() {});
+    } else {
+      focusedTargets = ImmutableList.of();
+    }
+
     return maybeCandidateSymbols.map(
         candidateSymbols -> {
           ImmutableList<String> dylibs =
@@ -161,7 +175,8 @@ public class AppleMachoConditionalLinkWriteInfo extends AbstractExecutionStep {
               dylibs,
               candidateSymbols,
               environment,
-              commandPrefix);
+              commandPrefix,
+              focusedTargets);
         });
   }
 

@@ -27,6 +27,7 @@ import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
 /**
  * This strategy behaves as a nop / default: everything will always be linked, as if there's no
@@ -59,7 +60,8 @@ public class CxxConditionalLinkStrategyAlwaysLink
       AbsPath skipLinkingPath,
       RelPath linkedExecutablePath,
       ImmutableMap<String, String> environment,
-      ImmutableList<String> linkerCommandPrefix) {
+      ImmutableList<String> linkerCommandPrefix,
+      Optional<AbsPath> focusedTargetsPath) {
     return ImmutableList.of();
   }
 
@@ -73,7 +75,8 @@ public class CxxConditionalLinkStrategyAlwaysLink
       AbsPath skipLinkingPath,
       RelPath linkedExecutablePath,
       ImmutableMap<String, String> environment,
-      ImmutableList<String> linkerCommandPrefix) {
+      ImmutableList<String> linkerCommandPrefix,
+      Optional<AbsPath> focusedTargetsPath) {
     return ImmutableList.of();
   }
 }

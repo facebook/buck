@@ -29,6 +29,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -60,6 +61,7 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
   private final ImmutableMap<String, String> environment;
   private final ImmutableList<String> commandPrefix;
   private final boolean fallback;
+  private final Optional<AbsPath> focusedTargetsPath;
 
   AppleMachoCxxConditionalLinkCheck(
       ProjectFilesystem filesystem,
@@ -72,7 +74,8 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
       RelPath linkedExecutablePath,
       ImmutableMap<String, String> environment,
       ImmutableList<String> commandPrefix,
-      boolean fallback) {
+      boolean fallback,
+      Optional<AbsPath> focusedTargetsPath) {
     super("apple-conditional-link-check");
     Preconditions.checkArgument(commandPrefix.size() > 0);
     this.filesystem = filesystem;
@@ -86,6 +89,7 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
     this.environment = environment;
     this.commandPrefix = commandPrefix;
     this.fallback = fallback;
+    this.focusedTargetsPath = focusedTargetsPath;
   }
 
   private Optional<String> getLinkedExecutableUUID() throws IOException {
@@ -364,6 +368,12 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
       return StepExecutionResults.SUCCESS;
     }
 
+    // If the focused targets don't match, relink the dylibs.
+    // The focused targets lists are already sorted and can be compared directly.
+    if (!getFocusedTargets().equals(relinkInfo.getFocusedTargets())) {
+      return StepExecutionResults.SUCCESS;
+    }
+
     ImmutableSet<String> previousDylibPathsSet = ImmutableSet.copyOf(relinkInfo.getDylibs());
     ImmutableMap<String, String> previousFilePathHashes = relinkInfo.getLinkerInputFileToHash();
     ImmutableMap.Builder<String, String> currentFilePathHashes = ImmutableMap.builder();
@@ -430,6 +440,16 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
     return StepExecutionResults.SUCCESS;
   }
 
+  private ImmutableList<String> getFocusedTargets() throws IOException {
+    if (focusedTargetsPath.isPresent()) {
+      return ObjectMappers.READER.readValue(
+          ObjectMappers.createParser(focusedTargetsPath.get().getPath()),
+          new TypeReference<ImmutableList<String>>() {});
+    } else {
+      return ImmutableList.of();
+    }
+  }
+
   private ImmutableMap<SourcePath, SourcePath> deduplicateSourcePaths(
       ImmutableMap<SourcePath, SourcePath> sourcePaths) {
     Set<RelPath> inputFilePaths = new HashSet<>();
@@ -463,7 +483,8 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
         relinkInfo.getDylibs(),
         relinkInfo.getCandidateBoundSymbols(),
         relinkInfo.getLinkerEnvironment(),
-        relinkInfo.getLinkerCommandPrefix());
+        relinkInfo.getLinkerCommandPrefix(),
+        relinkInfo.getFocusedTargets());
   }
 
   private static boolean boundSymbolSetsAreEqual(

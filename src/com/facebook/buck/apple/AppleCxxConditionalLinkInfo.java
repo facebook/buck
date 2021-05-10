@@ -65,6 +65,8 @@ public interface AppleCxxConditionalLinkInfo {
    */
   ImmutableList<String> getLinkerCommandPrefix();
 
+  ImmutableList<String> getFocusedTargets();
+
   /** Factory method for AppleCxxRelinkInfo */
   static AppleCxxConditionalLinkInfo of(
       String executableUUID,
@@ -75,7 +77,8 @@ public interface AppleCxxConditionalLinkInfo {
       ImmutableList<String> dylibs,
       ImmutableMap<String, ImmutableList<String>> candidateBoundSymbols,
       ImmutableMap<String, String> linkerEnvironment,
-      ImmutableList<String> linkerCommandPrefix) {
+      ImmutableList<String> linkerCommandPrefix,
+      ImmutableList<String> focusedTargets) {
     return ImmutableAppleCxxConditionalLinkInfo.ofImpl(
         CURRENT_VERSION,
         executableUUID,
@@ -86,6 +89,7 @@ public interface AppleCxxConditionalLinkInfo {
         dylibs,
         candidateBoundSymbols,
         linkerEnvironment,
-        linkerCommandPrefix);
+        linkerCommandPrefix,
+        focusedTargets);
   }
 }
