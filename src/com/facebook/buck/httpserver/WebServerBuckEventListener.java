@@ -16,7 +16,10 @@
 
 package com.facebook.buck.httpserver;
 
+import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.CacheResultType;
+import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
+import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.test.event.IndividualTestEvent;
@@ -76,6 +79,12 @@ public class WebServerBuckEventListener implements BuckEventListener {
 
   @GuardedBy("this")
   private int numberOfParsedRules = 0;
+
+  @GuardedBy("this")
+  private int numberOfDownloadedCacheRules = 0;
+
+  @GuardedBy("this")
+  private int numberOfDownloadFailedCacheRules = 0;
 
   @GuardedBy("this")
   private int numberOfParsedFiles = 0;
@@ -253,7 +262,54 @@ public class WebServerBuckEventListener implements BuckEventListener {
     if (finished.getCacheResult().getType() != CacheResultType.LOCAL_KEY_UNCHANGED_HIT) {
       numberOfUpdatedRules++;
     }
+    processBuildRuleSuccessType(finished);
     scheduleBuildStatusEvent();
+  }
+
+  private synchronized void processBuildRuleSuccessType(BuildRuleEvent.Finished finished) {
+    if (finished.getSuccessType().get() != null) {
+      BuildRuleSuccessType ruleSuccessType = finished.getSuccessType().get();
+      switch (ruleSuccessType) {
+        case FETCHED_FROM_CACHE:
+        case FETCHED_FROM_CACHE_INPUT_BASED:
+        case FETCHED_FROM_CACHE_MANIFEST_BASED:
+          numberOfDownloadedCacheRules++;
+          break;
+        case BUILT_LOCALLY:
+        case MATCHING_DEP_FILE_RULE_KEY:
+        case MATCHING_INPUT_BASED_RULE_KEY:
+        case MATCHING_RULE_KEY:
+          // We are only interested in rules that have cache information and were eligible for
+          // being downloaded from cache
+          CacheResult cacheResult = finished.getCacheResult();
+          boolean isCacheable =
+              ((finished.getUploadToCacheResultType() == UploadToCacheResultType.CACHEABLE)
+                  || (finished.getUploadToCacheResultType()
+                      == UploadToCacheResultType.CACHEABLE_READONLY_CACHE));
+          if (!(cacheResult.getType().isSuccess()) && isCacheable) {
+            // Rule's cache was not processed with success and it was eligible to be downloaded from
+            // cache, let's dive into the possible reasons for error
+            switch (cacheResult.getType()) {
+              case ERROR:
+              case SOFT_ERROR:
+              case MISS:
+                numberOfDownloadFailedCacheRules++;
+                break;
+              case CONTAINS:
+              case SKIPPED:
+              case HIT:
+              case LOCAL_KEY_UNCHANGED_HIT:
+              case IGNORED:
+                throw new IllegalStateException(
+                    "Unexpected cache result type value cacheable result: "
+                        + cacheResult.getType());
+            }
+          }
+          break;
+        default:
+          throw new IllegalStateException("Unexpected success type value: " + ruleSuccessType);
+      }
+    }
   }
 
   private synchronized void resetBuildState(BuildState newBuildState) {
@@ -298,6 +354,8 @@ public class WebServerBuckEventListener implements BuckEventListener {
               numberOfFinishedRules,
               numberOfUpdatedRules,
               numberOfParsedRules,
+              numberOfDownloadedCacheRules,
+              numberOfDownloadFailedCacheRules,
               numberOfParsedFiles);
     } // avoid holding lock while calling tellClients()
     streamingWebSocketServlet.tellClients(event);
@@ -323,6 +381,8 @@ public class WebServerBuckEventListener implements BuckEventListener {
     public final int finishedRulesCount;
     public final int updatedRulesCount;
     public final int parsedRulesCount;
+    public final int downloadedRulesCount;
+    public final int downloadFailedRulesCount;
     public final int parsedFilesCount;
 
     public BuildStatusEvent(
@@ -332,6 +392,8 @@ public class WebServerBuckEventListener implements BuckEventListener {
         int finishedRulesCount,
         int updatedRulesCount,
         int parsedRulesCount,
+        int downloadedRulesCount,
+        int downloadFailedRulesCount,
         int parsedFilesCount) {
       this.timestamp = timestamp;
       this.state = state;
@@ -339,6 +401,8 @@ public class WebServerBuckEventListener implements BuckEventListener {
       this.finishedRulesCount = finishedRulesCount;
       this.updatedRulesCount = updatedRulesCount;
       this.parsedRulesCount = parsedRulesCount;
+      this.downloadedRulesCount = downloadedRulesCount;
+      this.downloadFailedRulesCount = downloadFailedRulesCount;
       this.parsedFilesCount = parsedFilesCount;
     }
 
