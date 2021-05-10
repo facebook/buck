@@ -221,6 +221,33 @@ public class CxxLibraryFactory {
               platform,
               cxxDeps);
       return new CxxLinkGroupMapDatabase(buildTarget, projectFilesystem, graphBuilder, targets);
+    } else if (buildTarget.getFlavors().contains(CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS)) {
+      ImmutableList<BuildTarget> targets =
+          getFilteredLinkableTargets(
+              targetGraph,
+              buildTarget,
+              graphBuilder,
+              args,
+              linkableDepType,
+              blacklist,
+              delegate,
+              platform,
+              cxxDeps);
+      Optional<SourcePath> focusedListTargetPath =
+          args.getFocusedListTarget()
+              .map(graphBuilder::requireRule)
+              .map(BuildRule::getSourcePathToOutput);
+      return new CxxFocusedDebugTargets(
+          buildTarget, projectFilesystem, graphBuilder, focusedListTargetPath, targets);
+    } else if (buildTarget
+        .getFlavors()
+        .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
+      return CxxDescriptionEnhancer.createUberCompilationDatabase(
+          platform.isPresent()
+              ? buildTarget
+              : buildTarget.withAppendedFlavors(args.getDefaultPlatform().orElse(defaultCxxFlavor)),
+          projectFilesystem,
+          graphBuilder);
     } else if (buildTarget
         .getFlavors()
         .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {

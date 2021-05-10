@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -106,9 +107,23 @@ public class CxxBinaryFactory {
     }
 
     if (flavors.contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)) {
-      ImmutableList<BuildTarget> targets =
+      ImmutableList<BuildTarget> filteredLinkableTargets =
           getFilteredLinkableTargets(targetGraph, graphBuilder, args, extraCxxDeps, cxxPlatform);
-      return new CxxLinkGroupMapDatabase(target, projectFilesystem, graphBuilder, targets);
+      return new CxxLinkGroupMapDatabase(
+          target, projectFilesystem, graphBuilder, filteredLinkableTargets);
+    }
+
+    if (flavors.contains(CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS)) {
+      ImmutableList<BuildTarget> filteredLinkableTargets =
+          getFilteredLinkableTargets(targetGraph, graphBuilder, args, extraCxxDeps, cxxPlatform);
+
+      Optional<SourcePath> focusedListTargetPath =
+          args.getFocusedListTarget()
+              .map(graphBuilder::requireRule)
+              .map(BuildRule::getSourcePathToOutput);
+
+      return new CxxFocusedDebugTargets(
+          target, projectFilesystem, graphBuilder, focusedListTargetPath, filteredLinkableTargets);
     }
 
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {

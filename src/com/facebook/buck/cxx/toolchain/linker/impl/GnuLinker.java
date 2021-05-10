@@ -75,7 +75,10 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers(
-      ImmutableMap<Path, Path> cellRootMap, Optional<ImmutableSet<AbsPath>> focusedTargetsPaths) {
+      ImmutableMap<Path, Path> cellRootMap,
+      Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths,
+      Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap,
+      Optional<AbsPath> focusedTargetsPath) {
     return ImmutableList.of();
   }
 

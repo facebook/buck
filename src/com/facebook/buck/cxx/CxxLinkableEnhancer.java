@@ -194,7 +194,8 @@ public class CxxLinkableEnhancer {
         CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY,
         cxxBuckConfig.getLinkScheduleInfo(),
         cxxBuckConfig.getLinkerMapEnabled(),
-        cxxBuckConfig.shouldCacheLinks());
+        cxxBuckConfig.shouldCacheLinks(),
+        cxxBuckConfig.getFocusedDebuggingEnabled());
   }
 
   /** Creates a {@link CxxLink} rule which supports an optional relinking strategy. */
@@ -216,7 +217,8 @@ public class CxxLinkableEnhancer {
       CxxDebugSymbolLinkStrategyFactory debugSymbolLinkStrategyFactory,
       Optional<RuleScheduleInfo> linkScheduleInfo,
       boolean useLinkerMaps,
-      boolean cacheLinks) {
+      boolean cacheLinks,
+      boolean useFocusedDebugging) {
 
     Linker linker = cxxPlatform.getLd().resolve(ruleResolver, target.getTargetConfiguration());
 
@@ -278,6 +280,19 @@ public class CxxLinkableEnhancer {
     CxxDebugSymbolLinkStrategy debugStrategy =
         debugSymbolLinkStrategyFactory.createStrategy(cellPathResolver, ldArgs);
 
+    Optional<SourcePath> filteredFocusedTargets;
+
+    if (useFocusedDebugging) {
+      filteredFocusedTargets =
+          Optional.ofNullable(
+              graphBuilder
+                  .requireRule(
+                      target.withAppendedFlavors(CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS))
+                  .getSourcePathToOutput());
+    } else {
+      filteredFocusedTargets = Optional.empty();
+    }
+
     return new CxxLink(
         target,
         projectFilesystem,
@@ -294,6 +309,7 @@ public class CxxLinkableEnhancer {
         linkOptions.getThinLto(),
         linkOptions.getFatLto(),
         downwardApiConfig.isEnabledForCxx(),
+        filteredFocusedTargets,
         linkStrategy,
         debugStrategy);
   }
@@ -546,7 +562,8 @@ public class CxxLinkableEnhancer {
         debugSymbolLinkStrategyFactory,
         cxxBuckConfig.getLinkScheduleInfo(),
         cxxBuckConfig.getLinkerMapEnabled(),
-        cxxBuckConfig.shouldCacheLinks());
+        cxxBuckConfig.shouldCacheLinks(),
+        cxxBuckConfig.getFocusedDebuggingEnabled());
   }
 
   private static void addSharedLibrariesLinkerArgs(
@@ -633,7 +650,8 @@ public class CxxLinkableEnhancer {
         CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY,
         linkScheduleInfo,
         useLinkerMaps,
-        cacheLinks);
+        cacheLinks,
+        false);
   }
 
   /**

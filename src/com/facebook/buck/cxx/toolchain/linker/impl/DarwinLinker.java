@@ -95,7 +95,10 @@ public class DarwinLinker extends DelegatingTool
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers(
-      ImmutableMap<Path, Path> cellRootMap, Optional<ImmutableSet<AbsPath>> focusedTargetsPaths) {
+      ImmutableMap<Path, Path> cellRootMap,
+      Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths,
+      Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap,
+      Optional<AbsPath> focusedTargetsPath) {
     if (cacheLinks) {
       FileScrubber uuidScrubber = new LcUuidContentsScrubber(scrubConcurrently);
       if (usePathNormalizationArgs) {
@@ -103,11 +106,20 @@ public class DarwinLinker extends DelegatingTool
         return ImmutableList.of(uuidScrubber);
       }
       return ImmutableList.of(new OsoSymbolsContentsScrubber(cellRootMap), uuidScrubber);
-    } else if (focusedTargetsPaths.isPresent()) {
-      return getFocusedDebugSymbolScrubbers(focusedTargetsPaths.get());
+    } else if (focusedBuildOutputPaths.isPresent()) {
+      return getFocusedDebugSymbolScrubbers(focusedBuildOutputPaths.get());
+    } else if (focusedTargetsPath.isPresent()) {
+      return getFocusedDebugSymbolScrubbers(focusedTargetsPath, targetToOutputPathMap);
     } else {
       return ImmutableList.of();
     }
+  }
+
+  private ImmutableList<FileScrubber> getFocusedDebugSymbolScrubbers(
+      Optional<AbsPath> focusedTargetsPath,
+      Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap) {
+    return ImmutableList.of(
+        new OsoSymbolsContentsScrubber(focusedTargetsPath, targetToOutputPathMap));
   }
 
   /**

@@ -53,6 +53,7 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxDiagnosticsEnhancer;
+import com.facebook.buck.cxx.CxxFocusedDebugTargets;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
@@ -137,6 +138,7 @@ public class AppleLibraryDescription
           CxxDescriptionEnhancer.STATIC_FLAVOR,
           CxxDescriptionEnhancer.SHARED_FLAVOR,
           AppleDescriptions.FRAMEWORK_FLAVOR,
+          CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS,
           AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
           AppleDebugFormat.DWARF.getFlavor(),
           AppleDebugFormat.NONE.getFlavor(),
@@ -439,6 +441,7 @@ public class AppleLibraryDescription
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
+
     if (type.isPresent() && type.get().getValue().equals(Type.FRAMEWORK)) {
       return createFrameworkBundleBuildRule(
           targetGraph, buildTarget, context.getProjectFilesystem(), params, graphBuilder, args);

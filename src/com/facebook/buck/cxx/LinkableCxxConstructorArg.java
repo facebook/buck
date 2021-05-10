@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -37,6 +38,8 @@ public interface LinkableCxxConstructorArg extends CxxConstructorArg {
    * same group would be linked into the executable.
    */
   Optional<String> getLinkGroup();
+
+  Optional<BuildTarget> getFocusedListTarget();
 
   @Value.Default
   default boolean getThinLto() {

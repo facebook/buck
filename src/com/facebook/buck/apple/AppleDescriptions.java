@@ -66,6 +66,7 @@ import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxDiagnosticsEnhancer;
+import com.facebook.buck.cxx.CxxFocusedDebugTargets;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxLinkGroupMapDatabase;
@@ -133,12 +134,14 @@ public class AppleDescriptions {
   public static final Flavor INCLUDE_FRAMEWORKS_FLAVOR = InternalFlavor.of("include-frameworks");
   public static final Flavor NO_INCLUDE_FRAMEWORKS_FLAVOR =
       InternalFlavor.of("no-include-frameworks");
+
   public static final FlavorDomain<Boolean> INCLUDE_FRAMEWORKS =
       new FlavorDomain<>(
           "Include frameworks",
           ImmutableMap.of(
               INCLUDE_FRAMEWORKS_FLAVOR, Boolean.TRUE,
               NO_INCLUDE_FRAMEWORKS_FLAVOR, Boolean.FALSE));
+
   private static final ImmutableSet<Flavor> BUNDLE_SPECIFIC_FLAVORS =
       ImmutableSet.of(INCLUDE_FRAMEWORKS_FLAVOR, NO_INCLUDE_FRAMEWORKS_FLAVOR);
 
@@ -2010,6 +2013,7 @@ public class AppleDescriptions {
     return flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)
         || flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
         || flavors.contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)
+        || flavors.contains(CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS)
         || flavors.contains(CxxDiagnosticsEnhancer.DIAGNOSTIC_AGGREGATION_FLAVOR)
         || flavors.contains(CxxDescriptionEnhancer.STATIC_FLAVOR)
         || flavors.contains(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)

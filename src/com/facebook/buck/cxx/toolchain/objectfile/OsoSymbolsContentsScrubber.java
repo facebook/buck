@@ -16,7 +16,11 @@
 
 package com.facebook.buck.cxx.toolchain.objectfile;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.FileContentsScrubber;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -25,21 +29,45 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
 
   private final Optional<ImmutableMap<Path, Path>> cellRootMap;
   private final Optional<ImmutableSet<Path>> exemptPaths;
+  private final Optional<AbsPath> exemptTargetsListPath;
+  private final Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap;
 
   public OsoSymbolsContentsScrubber(ImmutableMap<Path, Path> cellRootMap) {
-    this.cellRootMap = Optional.of(cellRootMap);
-    this.exemptPaths = Optional.empty();
+    this(Optional.of(cellRootMap), Optional.empty(), Optional.empty(), Optional.empty());
   }
 
   public OsoSymbolsContentsScrubber(ImmutableSet<Path> exemptPaths) {
-    this.cellRootMap = Optional.empty();
-    this.exemptPaths = Optional.of(exemptPaths);
+    this(Optional.empty(), Optional.of(exemptPaths), Optional.empty(), Optional.empty());
+  }
+
+  public OsoSymbolsContentsScrubber(
+      Optional<AbsPath> focusedTargetsPath,
+      Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap) {
+    this(Optional.empty(), Optional.empty(), focusedTargetsPath, targetToOutputPathMap);
+  }
+
+  private OsoSymbolsContentsScrubber(
+      Optional<ImmutableMap<Path, Path>> cellRootMap,
+      Optional<ImmutableSet<Path>> exemptPaths,
+      Optional<AbsPath> exemptTargetsListPath,
+      Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap) {
+    if (exemptTargetsListPath.isPresent()) {
+      Preconditions.checkArgument(targetToOutputPathMap.isPresent());
+    }
+
+    this.cellRootMap = cellRootMap;
+    this.exemptPaths = exemptPaths;
+    this.exemptTargetsListPath = exemptTargetsListPath;
+    this.targetToOutputPathMap = targetToOutputPathMap;
   }
 
   @Override
@@ -48,9 +76,34 @@ public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
       return;
     }
     try {
-      Machos.relativizeOsoSymbols(file, cellRootMap, exemptPaths);
+      Machos.relativizeOsoSymbols(file, cellRootMap, getExemptPaths());
     } catch (Machos.MachoException e) {
       throw new ScrubException(e.getMessage());
+    }
+  }
+
+  private Optional<ImmutableSet<Path>> getExemptPaths() throws IOException {
+    if (this.exemptPaths.isPresent()) {
+      return this.exemptPaths;
+    } else if (this.exemptTargetsListPath.isPresent()) {
+      List<String> exemptTargets =
+          ObjectMappers.READER.readValue(
+              ObjectMappers.createParser(exemptTargetsListPath.get().getPath()),
+              new TypeReference<List<String>>() {});
+
+      Set<Path> exemptPathsFromTargets =
+          exemptTargets.stream()
+              .map(this.targetToOutputPathMap.get()::get)
+              .map(AbsPath::getPath)
+              .collect(Collectors.toSet());
+
+      if (!exemptPathsFromTargets.isEmpty()) {
+        return Optional.of(ImmutableSet.copyOf(exemptPathsFromTargets));
+      } else {
+        return Optional.of(ImmutableSet.of());
+      }
+    } else {
+      return Optional.empty();
     }
   }
 

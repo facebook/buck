@@ -66,6 +66,7 @@ public class CxxBinaryFlavored implements Flavored {
                 CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
                 CxxDescriptionEnhancer.INCREMENTAL_THINLTO,
                 CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE,
+                CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS,
                 CxxCompilationDatabase.COMPILATION_DATABASE,
                 CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
                 CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor(),

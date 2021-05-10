@@ -60,6 +60,7 @@ public class CxxLibraryFlavored implements Flavored {
         || flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)
         || flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
         || flavors.contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)
+        || flavors.contains(CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS)
         || flavors.contains(CxxDiagnosticsEnhancer.DIAGNOSTIC_AGGREGATION_FLAVOR)
         || CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)
         || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
