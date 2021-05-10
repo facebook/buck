@@ -157,6 +157,7 @@
     <include name="commons-logging/commons-logging-1.2.jar" />
     <include name="concurrent-locks/concurrent-locks-1.0.0.jar" />
     <include name="d8/d8.jar" />
+    <include name="dagger/dagger-2.28.3.jar" />
     <include name="dex-method-counts/build/jar/dex-method-counts.jar" />
     <include name="dd-plist/dd-plist.jar" />
     <include name="eclipse/org.eclipse.core.contenttype_3.7.0.v20180426-1644.jar"/>

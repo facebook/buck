@@ -1,0 +1,14 @@
+prebuilt_jar(
+    name = "prebuilt",
+    binary_jar = "dagger-2.28.3.jar",
+    source_jar = "dagger-2.28.3-sources.jar",
+)
+
+java_library(
+    name = "dagger",
+    srcs = [],
+    visibility = ["PUBLIC"],
+    exported_deps = [
+        ":prebuilt",
+    ],
+)
