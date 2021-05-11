@@ -644,6 +644,21 @@ abstract class AbstractBuildCommand extends AbstractCommand {
     }
     AbsPath absolutePathWithoutHash = AbsPath.of(maybeAbsolutePathWithoutHash.get());
     MostFiles.deleteRecursivelyIfExists(absolutePathWithoutHash);
+
+    // If any of the components of the path we want to write exist as files, directory creation will
+    // fail. Delete any such files (as long as they are within buck-out, we don't want to delete
+    // random stuff on the machine).
+    AbsPath expectedRoot =
+        rule.getProjectFilesystem()
+            .resolve(rule.getProjectFilesystem().getBuckPaths().getBuckOut());
+    AbsPath parent = absolutePathWithoutHash.getParent();
+    while (parent.startsWith(expectedRoot)) {
+      if (Files.exists(parent.getPath()) && !Files.isDirectory(parent.getPath())) {
+        Files.delete(parent.getPath());
+      }
+      parent = parent.getParent();
+    }
+
     Files.createDirectories(absolutePathWithoutHash.getParent().getPath());
 
     // Support rule-specific output linking.
