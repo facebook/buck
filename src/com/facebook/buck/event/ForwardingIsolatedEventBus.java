@@ -118,4 +118,7 @@ public class ForwardingIsolatedEventBus implements IsolatedEventBus {
   public void close() throws IOException {
     buckEventBus.close();
   }
+
+  @Override
+  public void waitTillAllEventsProcessed() {}
 }

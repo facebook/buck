@@ -33,6 +33,7 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.event.utils.EventBusUtils;
 import com.facebook.buck.util.timing.Clock;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.protobuf.AbstractMessage;
@@ -40,6 +41,8 @@ import com.google.protobuf.Duration;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.time.Instant;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Event bus that writes directly to its associated output stream. Only handles events associated
@@ -54,23 +57,39 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   private final Clock clock;
   private final long startExecutionEpochMillis;
   private final DownwardProtocol downwardProtocol;
+  private final Phaser phaser;
+  private final boolean measureWaitedTime;
 
   public DefaultIsolatedEventBus(
       BuildId buildId, OutputStream outputStream, Clock clock, DownwardProtocol downwardProtocol) {
     this(buildId, outputStream, clock, clock.currentTimeMillis(), downwardProtocol);
   }
 
+  @VisibleForTesting
   public DefaultIsolatedEventBus(
       BuildId buildId,
       OutputStream outputStream,
       Clock clock,
       long startExecutionEpochMillis,
       DownwardProtocol downwardProtocol) {
+    this(buildId, outputStream, clock, startExecutionEpochMillis, downwardProtocol, false);
+  }
+
+  @VisibleForTesting
+  DefaultIsolatedEventBus(
+      BuildId buildId,
+      OutputStream outputStream,
+      Clock clock,
+      long startExecutionEpochMillis,
+      DownwardProtocol downwardProtocol,
+      boolean measureWaitedTime) {
     this.buildId = buildId;
     this.outputStream = outputStream;
     this.clock = clock;
     this.startExecutionEpochMillis = startExecutionEpochMillis;
     this.downwardProtocol = downwardProtocol;
+    this.phaser = new Phaser();
+    this.measureWaitedTime = measureWaitedTime;
   }
 
   @Override
@@ -263,10 +282,43 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   }
 
   private void writeToNamedPipe(EventTypeMessage eventType, AbstractMessage payload) {
+    phaser.register();
     try {
-      downwardProtocol.write(eventType, payload, outputStream);
+      writeIntoStream(eventType, payload);
     } catch (IOException e) {
       LOG.error(e, "Failed to write buck event %s of type", payload, eventType.getEventType());
+    } finally {
+      phaser.arriveAndDeregister();
     }
+  }
+
+  @VisibleForTesting
+  void writeIntoStream(EventTypeMessage eventType, AbstractMessage payload) throws IOException {
+    // events processing could be blocked here waiting for an opportunity to write into the same
+    // output stream.
+    downwardProtocol.write(eventType, payload, outputStream);
+  }
+
+  @Override
+  public void waitTillAllEventsProcessed() {
+    int phase = phaser.getPhase();
+
+    if (!measureWaitedTime) {
+      awaitTillProcessed(phase);
+    } else {
+      long startTime = System.nanoTime();
+      awaitTillProcessed(phase);
+      long runTimeInMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
+      LOG.info("Waited for " + runTimeInMillis + " ms");
+    }
+  }
+
+  private void awaitTillProcessed(int phase) {
+    phaser.awaitAdvance(phase);
+  }
+
+  @VisibleForTesting
+  int getUnprocessedEventsCount() {
+    return phaser.getRegisteredParties();
   }
 }

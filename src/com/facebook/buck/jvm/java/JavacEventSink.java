@@ -69,4 +69,6 @@ public interface JavacEventSink {
 
   /** @param uniqueKey Unique key. This should match in both Start and Stop method calls. */
   void stopSimplePerfEvent(long uniqueKey);
+
+  void waitTillAllEventsProcessed();
 }

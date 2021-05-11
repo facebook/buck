@@ -189,4 +189,9 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
               "perfEventScopes is out of sync: missing a 'start' call with key '%d'", uniqueKey));
     }
   }
+
+  @Override
+  public void waitTillAllEventsProcessed() {
+    eventBus.waitTillAllEventsProcessed();
+  }
 }

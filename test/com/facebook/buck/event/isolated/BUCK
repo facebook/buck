@@ -4,6 +4,7 @@ standard_java_test(
     name = "isolated",
     deps = [
         "//src-gen:downward-model",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/downwardapi/protocol:protocol",
         "//src/com/facebook/buck/downwardapi/utils:utils",
         "//src/com/facebook/buck/event:event",

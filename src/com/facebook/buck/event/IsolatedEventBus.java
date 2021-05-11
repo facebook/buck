@@ -97,4 +97,7 @@ public interface IsolatedEventBus extends Closeable {
    * to another posted event.
    */
   void timestamp(SimplePerfEvent event, long threadId);
+
+  /** Waits till all events processed. */
+  void waitTillAllEventsProcessed();
 }
