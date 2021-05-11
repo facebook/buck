@@ -56,6 +56,10 @@ class BcCompiled {
    * <p>Key is a beginning of an instruction.
    */
   final BcInstrToLoc instrToLoc;
+  @Nullable
+  private final Object returnsConst;
+  @Nullable
+  private final String returnsTypeIs;
 
   BcCompiled(
       String name,
@@ -69,7 +73,11 @@ class BcCompiled {
       int slotCount,
       Object[] constSlots,
       int loopDepth,
-      BcInstrToLoc instrToLoc) {
+      BcInstrToLoc instrToLoc,
+      @Nullable
+      Object returnsConst,
+      @Nullable
+      String returnsTypeIs) {
     this.name = name;
     this.fileLocations = fileLocations;
     this.locals = locals;
@@ -82,6 +90,8 @@ class BcCompiled {
     this.constSlots = constSlots;
     this.loopDepth = loopDepth;
     this.instrToLoc = instrToLoc;
+    this.returnsConst = returnsConst;
+    this.returnsTypeIs = returnsTypeIs;
 
     if (Bc.ASSERTIONS) {
       new BcVisitor(this).visit();
@@ -106,7 +116,7 @@ class BcCompiled {
             getLocalNames(),
             module.getResolverModule().getGlobalNamesSlow(),
             getFreeVarNames()),
-        Arrays.asList(strings), Arrays.asList(constSlots));
+        Arrays.asList(strings), Arrays.asList(constSlots), Arrays.asList(objects));
   }
 
   private ImmutableList<String> getFreeVarNames() {
@@ -123,20 +133,20 @@ class BcCompiled {
             getLocalNames(),
             module.getResolverModule().getGlobalNamesSlow(),
             getFreeVarNames()),
-        Arrays.asList(strings), Arrays.asList(constSlots));
+        Arrays.asList(strings), Arrays.asList(constSlots), Arrays.asList(objects));
   }
 
   @VisibleForTesting
   static String toStringImpl(String name, int[] text,
       BcInstrOperand.OpcodePrinterFunctionContext fnCtx,
-      List<String> strings, List<Object> constants) {
+      List<String> strings, List<Object> constants, List<Object> objects) {
     return "def " + name + "; " + String
-        .join("; ", toStringInstructionsImpl(text, fnCtx, strings, constants));
+        .join("; ", toStringInstructionsImpl(text, fnCtx, strings, constants, objects));
   }
 
   private static ImmutableList<String> toStringInstructionsImpl(int[] text,
       BcInstrOperand.OpcodePrinterFunctionContext fnCtx,
-      List<String> strings, List<Object> constants) {
+      List<String> strings, List<Object> constants, List<Object> objects) {
     ImmutableList.Builder<String> ret = ImmutableList.builder();
     BcParser parser = new BcParser(text);
     while (!parser.eof()) {
@@ -146,7 +156,7 @@ class BcCompiled {
       sb.append(opcode);
       String argsString =
           opcode.operands.toStringAndCount(
-              parser, strings, constants, fnCtx);
+              parser, strings, constants, objects, fnCtx);
 
       sb.append(" ").append(argsString);
       ret.add(sb.toString());
@@ -190,45 +200,12 @@ class BcCompiled {
 
   @Nullable
   public Object returnConst() {
-    if (text.length == 0) {
-      return Starlark.NONE;
-    }
-    if (text[0] != BcInstr.RETURN) {
-      return null;
-    }
-    int slot = text[1];
-    if ((slot & BcSlot.MASK) != BcSlot.CONST_FLAG) {
-      return null;
-    }
-    return constSlots[slot & ~BcSlot.MASK];
+    return returnsConst;
   }
 
   /** Check if this function body is equivalent to {@code type(x) == 'yyy'}. */
   @Nullable
   public String returnTypeIs() {
-    BcParser parser = new BcParser(text);
-    if (!parser.nextOpcodeIf(BcInstr.Opcode.TYPE_IS)) {
-      return null;
-    }
-    int localIndex = parser.nextInt();
-    // argument must be a first temporary, i. e. first function parameter
-    if (localIndex != 0) {
-      return null;
-    }
-
-    String type = strings[parser.nextInt()];
-
-    int result = parser.nextInt();
-
-    if (!parser.nextOpcodeIf(BcInstr.Opcode.RETURN)) {
-      return null;
-    }
-
-    int returnArg = parser.nextInt();
-    if (returnArg != result) {
-      return null;
-    }
-
-    return type;
+    return returnsTypeIs;
   }
 }

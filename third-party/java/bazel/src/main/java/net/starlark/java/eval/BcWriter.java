@@ -2,10 +2,15 @@ package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import net.starlark.java.syntax.FileLocations;
 import net.starlark.java.syntax.Resolver;
 
@@ -30,8 +35,9 @@ class BcWriter {
   /** Current instruction pointer. */
   private int ip = 0;
 
-  /** Number of currently allocated registers. */
-  private int slots;
+  /** Slots available for reuse. */
+  private ArrayDeque<Integer> freeSlots = new ArrayDeque<>();
+
   /** Total number of registers needed to execute this function. */
   private int maxSlots;
 
@@ -58,10 +64,9 @@ class BcWriter {
     this.name = name;
     this.nlocals = locals.size();
 
-    this.slots = nlocals;
     this.locals = locals;
     this.freeVars = freeVars;
-    this.maxSlots = slots;
+    this.maxSlots = nlocals;
     this.instrToLoc = new BcInstrToLoc.Builder(fileLocations);
   }
 
@@ -69,23 +74,23 @@ class BcWriter {
     return ip;
   }
 
-  int getSlots() {
-    return slots;
-  }
-
-  /** Allocate a register. */
+  /** Allocate a register. Return a pair of generation/slot number. */
   int allocSlot() {
-    int r = slots++;
-    maxSlots = Math.max(slots, maxSlots);
-    return r;
+    Integer slot = freeSlots.pollFirst();
+    if (slot != null) {
+      return slot;
+    } else {
+      return maxSlots++;
+    }
   }
 
-  /**
-   * Deallocate all registers (except constant registers); done after each statement; since
-   * registered are not shared between statements, only local variables are.
-   */
-  void decallocateAllSlots() {
-    slots = nlocals;
+  void releaseSlot(int slot) {
+    Preconditions.checkArgument(slot >= nlocals);
+    freeSlots.addLast(slot);
+  }
+
+  void assertAllSlotsReleased() {
+    Preconditions.checkState(nlocals + freeSlots.size() == maxSlots, "not all slots released");
   }
 
   /**
@@ -107,17 +112,18 @@ class BcWriter {
   }
 
   /** Allocate constant slot. */
-  int allowConstSlot(Object value) {
-    return this.constSlots.index(value) | BcSlot.CONST_FLAG;
+  int allocConstSlot(Object value) {
+    return BcSlot.constValue(this.constSlots.index(value));
   }
 
-  void writeThrowException(LocOffset locOffset, String message) {
+  /** Write an instruction which throws eval exception at evaluation. */
+  void writeEvalException(LocOffset locOffset, String message) {
     write(BcInstr.Opcode.EVAL_EXCEPTION, locOffset, allocString(message));
   }
 
   void writeContinue(LocOffset locOffset) {
     if (fors.isEmpty()) {
-      writeThrowException(locOffset, "continue statement must be inside a for loop");
+      writeEvalException(locOffset, "continue statement must be inside a for loop");
     } else {
       write(
           BcInstr.Opcode.CONTINUE,
@@ -131,7 +137,7 @@ class BcWriter {
 
   void writeBreak(LocOffset locOffset) {
     if (fors.isEmpty()) {
-      writeThrowException(locOffset, "break statement must be inside a for loop");
+      writeEvalException(locOffset, "break statement must be inside a for loop");
     } else {
       write(BcInstr.Opcode.BREAK, locOffset, BcWriter.FORWARD_JUMP_ADDR);
       currentFor().endsToPatch.add(ip - 1);
@@ -151,9 +157,7 @@ class BcWriter {
   }
 
   void writeForClose() {
-    for (int endsToPatch : currentFor().endsToPatch) {
-      patchForwardJump(endsToPatch);
-    }
+    patchForwardJumps(currentFor().endsToPatch);
     fors.remove(fors.size() - 1);
   }
 
@@ -165,35 +169,16 @@ class BcWriter {
     return Arrays.copyOf(text, ip);
   }
 
-  /** Saved writer state. */
-  class SavedState {
-    private final int savedSlotCount = slots;
-    private final int savedIp = ip;
-    private final int constCount = constSlots.values.size();
-    private final int stringCount = strings.values.size();
-    private final int objectCount = objects.size();
+  enum JumpCond {
+    IF(BcInstr.Opcode.IF_BR_LOCAL),
+    IF_NOT(BcInstr.Opcode.IF_NOT_BR_LOCAL),
+    ;
 
-    private SavedState() {
+    final BcInstr.Opcode opcode;
+
+    JumpCond(BcInstr.Opcode opcode) {
+      this.opcode = opcode;
     }
-
-    /** Restore previous compiler state. */
-    void reset() {
-      Preconditions.checkState(slots >= savedSlotCount);
-      Preconditions.checkState(ip >= savedIp);
-
-      slots = savedSlotCount;
-      instrToLoc.reset(savedIp);
-      ip = savedIp;
-      constSlots.reset(constCount);
-      strings.reset(stringCount);
-      while (objects.size() != objectCount) {
-        objects.remove(objects.size() - 1);
-      }
-    }
-  }
-
-  SavedState save() {
-    return new SavedState();
   }
 
   /** Store values indexed by an integer. */
@@ -244,14 +229,6 @@ class BcWriter {
             values.add(s);
             return r;
           });
-    }
-
-    public void reset(int constCount) {
-      while (values.size() != constCount) {
-        Object last = makeKey(values.get(values.size() - 1));
-        values.remove(values.size() - 1);
-        Preconditions.checkState(index.remove(last) != null);
-      }
     }
 
     public T[] toArray(T[] emptyArray) {
@@ -308,10 +285,6 @@ class BcWriter {
     }
   }
 
-  static int[] args(int arg0, int[] args1) {
-    return args(new int[] { arg0 }, args1);
-  }
-
   static int[] args(int[] args0, int[] args1, int[] args2) {
     IntArrayBuilder args = new IntArrayBuilder(
         args0.length + args1.length + args2.length);
@@ -325,10 +298,8 @@ class BcWriter {
    * Write forward condition jump instruction. Return an address to be patched when the jump
    * address is known.
    */
-  int writeForwardCondJump(BcInstr.Opcode opcode, LocOffset locOffset, int cond) {
-    Preconditions.checkState(
-        opcode == BcInstr.Opcode.IF_BR_LOCAL || opcode == BcInstr.Opcode.IF_NOT_BR_LOCAL);
-    write(opcode, locOffset, cond, FORWARD_JUMP_ADDR);
+  int writeForwardCondJump(JumpCond jumpCond, LocOffset locOffset, int cond) {
+    write(jumpCond.opcode, locOffset, cond, FORWARD_JUMP_ADDR);
     return ip - 1;
   }
 
@@ -368,7 +339,7 @@ class BcWriter {
      * Pointers to the pointers to the end of the for statement body; patched in the end of the for
      * compilation.
      */
-    private ArrayList<Integer> endsToPatch = new ArrayList<>();
+    private final IntArrayBuilder endsToPatch = new IntArrayBuilder();
 
     private CurrentFor(int bodyIp, int nextValueSlot) {
       this.bodyIp = bodyIp;
@@ -381,7 +352,7 @@ class BcWriter {
     return fors.get(fors.size() - 1);
   }
 
-  BcCompiled finish() {
+  BcCompiled finish(@Nullable Object returnsConst, @Nullable String returnsTypeIs) {
     return new BcCompiled(
         name,
         fileLocations,
@@ -394,7 +365,9 @@ class BcWriter {
         maxSlots,
         constSlots.toArray(ArraysForStarlark.EMPTY_OBJECT_ARRAY),
         maxLoopDepth,
-        instrToLoc.build());
+        instrToLoc.build(),
+        returnsConst,
+        returnsTypeIs);
   }
 
   private ImmutableList<String> getFreeVarNames() {
@@ -416,6 +389,7 @@ class BcWriter {
             module.getResolverModule().getGlobalNamesSlow(),
             getFreeVarNames()),
         strings.values,
-        constSlots.values);
+        constSlots.values,
+        objects);
   }
 }

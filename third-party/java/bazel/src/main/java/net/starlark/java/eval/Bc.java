@@ -6,7 +6,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
-import net.starlark.java.annot.FnPurity;
 import net.starlark.java.syntax.Argument;
 import net.starlark.java.syntax.AssignmentStatement;
 import net.starlark.java.syntax.BinaryOperatorExpression;
@@ -73,28 +72,28 @@ class Bc {
    * The compiler implementation.
    */
   static class Compiler {
-    final BcWriter bcWriter;
+
     private final FileLocations fileLocations;
-    private final StarlarkThread thread;
+    final StarlarkThread thread;
     private final Module module;
     private final Tuple freevars;
     private final ImmutableList<Parameter> parameters;
+    private final Resolver.Function rfn;
 
     private Compiler(StarlarkThread thread, Resolver.Function rfn, Module module, Tuple freevars) {
       Preconditions.checkArgument(rfn.getModule() == module.getResolverModule(),
           "must compile function with the same module used to resolve function,"
               + " otherwise global indices won't match");
 
+      this.rfn = rfn;
       this.fileLocations = rfn.getFileLocations();
       this.thread = thread;
       this.module = module;
       this.freevars = freevars;
-      this.bcWriter = new BcWriter(fileLocations, module, rfn.getName(),
-          rfn.getLocals(), rfn.getFreeVars());
       this.parameters = rfn.getParameters();
     }
 
-    private BcWriter.LocOffset nodeToLocOffset(Node node) {
+    BcWriter.LocOffset nodeToLocOffset(Node node) {
       Preconditions.checkState(node.getLocs() == fileLocations,
           "node does not share the same file locations as the rest of the function");
       if (node instanceof BinaryOperatorExpression) {
@@ -112,87 +111,37 @@ class Bc {
       }
     }
 
-    /** Write complete opcode with validation. */
-    private void write(BcInstr.Opcode opcode, Node node, int... args) {
-      BcWriter.LocOffset locOffset = nodeToLocOffset(node);
-      bcWriter.write(opcode, locOffset, args);
-    }
-
-    /** Write complete opcode, allocating out slot if it is {@link BcSlot#ANY_FLAG}. */
-    private CompileExpressionResult writeToOut(BcInstr.Opcode opcode, Node node, int[] args, int out) {
-      if (out == BcSlot.ANY_FLAG) {
-        out = bcWriter.allocSlot();
-      } else {
-        BcSlot.checkLocal(out);
-      }
-      write(opcode, node, BcWriter.args(args, out));
-      return new CompileExpressionResult(out, null);
-    }
-
-    private void cp(Node node, int from, int to) {
-      // Sanity check preconditions
-
-      BcSlot.checkValidSourceSlot(from);
-      if ((from & BcSlot.MASK) == BcSlot.LOCAL_FLAG) {
-        Preconditions.checkArgument((from & ~BcSlot.MASK) < bcWriter.getSlots());
-      }
-
-      BcSlot.checkLocal(to);
-      Preconditions.checkArgument((to & ~BcSlot.MASK) < bcWriter.getSlots());
-
+    private void cp(BcIr ir, Node node, BcIrSlot from, BcIrSlot.AnyLocal to) {
       // Optimizes away assignment `$x = $x`,
       // but keep local `x = x` to make sure we throw an error if `x` is not defined.
       // TODO(nga): drop the assignment if `x` is known to be defined
-      if (from == to && from < parameters.size()) {
+      if (from instanceof BcIrSlot.Local && to instanceof BcIrSlot.Local) {
+        if (((BcIrSlot.Local) from).index == ((BcIrSlot.Local) to).index) {
+          // parameters are known to be defined
+          if (((BcIrSlot.Local) from).index < parameters.size()) {
+            return;
+          }
+        }
+      }
+      // Slots are always assigned
+      if (from instanceof BcIrSlot.LazyLocal && from == to) {
         return;
       }
 
-      BcInstr.Opcode opcode = BcSlot.isLocal(from) ? BcInstr.Opcode.CP_LOCAL :  BcInstr.Opcode.CP;
-      write(opcode, node, from, to);
-    }
-
-    /** If slot is not local, copy it to a new temporary (local) slot. */
-    private int makeLocal(Node node, int slot) {
-      if (BcSlot.isLocal(slot)) {
-        return slot;
-      } else {
-        int local = bcWriter.allocSlot();
-        cp(node, slot, local);
-        return local;
-      }
-    }
-
-    /**
-     * Write forward condition jump instruction. Return an address to be patched when the jump
-     * address is known.
-     */
-    int writeForwardCondJump(BcInstr.Opcode opcode, Node expression, int cond) {
-      Preconditions.checkState(
-          opcode == BcInstr.Opcode.IF_BR_LOCAL || opcode == BcInstr.Opcode.IF_NOT_BR_LOCAL);
-      int condLocal = makeLocal(expression, cond);
-      return bcWriter.writeForwardCondJump(opcode, nodeToLocOffset(expression), condLocal);
-    }
-
-    /**
-     * Write unconditional forward jump. Return an address to be patched when the jump address is
-     * known.
-     */
-    int writeForwardJump(Node expression) {
-      BcWriter.LocOffset locOffset = nodeToLocOffset(expression);
-      return bcWriter.writeForwardJump(locOffset);
+      ir.add(new BcIrInstr.Cp(
+          nodeToLocOffset(node),
+          from,
+          to));
     }
 
     /** Compile. */
-    void compileStatements(List<Statement> statements, boolean postAssignHook) {
+    void compileStatements(BcIr ir, List<Statement> statements, boolean postAssignHook) {
       for (Statement statement : statements) {
-        compileStatement(statement, postAssignHook);
+        compileStatement(ir, statement, postAssignHook);
       }
     }
 
-    private void compileStatement(Statement statement, boolean postAssignHook) {
-      // No registers are shared across statements.
-      // We could implement precise register tracking, but there is no need for that at the moment.
-      bcWriter.decallocateAllSlots();
+    private void compileStatement(BcIr ir, Statement statement, boolean postAssignHook) {
 
       if (statement instanceof ExpressionStatement) {
         // Likely doc comment, skip it
@@ -200,45 +149,48 @@ class Bc {
           return;
         }
 
-        // Do not assign it anywhere
-        compileExpression(((ExpressionStatement) statement).getExpression());
+        compileExpressionForEffect(ir, ((ExpressionStatement) statement).getExpression());
       } else if (statement instanceof AssignmentStatement) {
-        compileAssignment((AssignmentStatement) statement, postAssignHook);
+        compileAssignment(ir, (AssignmentStatement) statement, postAssignHook);
       } else if (statement instanceof ReturnStatement) {
-        ReturnStatement returnStatement = (ReturnStatement) statement;
-        if (returnStatement.getResult() == null) {
-          write(BcInstr.Opcode.RETURN, returnStatement, BcSlot.NULL_FLAG);
-        } else {
-          int result = compileExpression(returnStatement.getResult()).slot;
-          write(BcInstr.Opcode.RETURN, returnStatement, result);
-        }
+        compileReturn(ir, (ReturnStatement) statement);
       } else if (statement instanceof IfStatement) {
-        compileIfStatement((IfStatement) statement);
+        compileIfStatement(ir, (IfStatement) statement);
       } else if (statement instanceof ForStatement) {
-        compileForStatement((ForStatement) statement);
+        compileForStatement(ir, (ForStatement) statement);
       } else if (statement instanceof FlowStatement) {
-        compileFlowStatement((FlowStatement) statement);
+        compileFlowStatement(ir, (FlowStatement) statement);
       } else if (statement instanceof LoadStatement) {
-        compileLoadStatement((LoadStatement) statement);
+        compileLoadStatement(ir, (LoadStatement) statement);
       } else if (statement instanceof DefStatement) {
-        compileDefStatement((DefStatement) statement);
+        compileDefStatement(ir, (DefStatement) statement);
       } else {
         throw new RuntimeException("not impl: " + statement.getClass().getSimpleName());
       }
     }
 
-    private void compileLoadStatement(LoadStatement loadStatement) {
-      write(BcInstr.Opcode.LOAD_STMT, loadStatement, bcWriter.allocObject(loadStatement));
+    private void compileReturn(BcIr ir, ReturnStatement statement) {
+      BcIrSlot value;
+      if (statement.getResult() == null) {
+        value = BcIrSlot.Const.NONE;
+      } else {
+        value = compileExpression(ir, statement.getResult()).slot;
+      }
+      ir.add(new BcIrInstr.Return(nodeToLocOffset(statement), value));
     }
 
-    private void compileDefStatement(DefStatement def) {
-      int result = bcWriter.allocSlot();
-      compileNewFunction(def.getResolvedFunction(), def, result);
-      compileSet(result, def.getIdentifier(), true);
+    private void compileLoadStatement(BcIr ir, LoadStatement loadStatement) {
+      ir.add(new BcIrInstr.LoadStmt(nodeToLocOffset(loadStatement), loadStatement));
+    }
+
+    private void compileDefStatement(BcIr ir, DefStatement def) {
+      BcIrSlot.LazyLocal result = ir.allocSlot("def");
+      compileNewFunction(ir, def.getResolvedFunction(), def, result);
+      compileSet(ir, result, def.getIdentifier(), true);
     }
 
     /** Common code to compile def and lambda. */
-    private void compileNewFunction(Resolver.Function rfn, Node node, int result) {
+    private void compileNewFunction(BcIr ir, Resolver.Function rfn, Node node, BcIrSlot.AnyLocal result) {
       // Evaluate default value expressions of optional parameters.
       // We use MANDATORY to indicate a required parameter
       // (not null, because defaults must be a legal tuple value, as
@@ -257,37 +209,35 @@ class Bc {
         }
       }
 
-      int[] args = new int[3 + ndefaults];
-      int i = 0;
-      args[i++] = bcWriter.allocObject(rfn);
-      args[i++] = ndefaults;
+      ImmutableList.Builder<BcIrSlot> defaults = ImmutableList.builder();
 
       for (int p = 0; p < ndefaults; ++p) {
         Parameter parameter = parameters.get(nparams - ndefaults + p);
         if (parameter.getDefaultValue() != null) {
-          args[i++] = compileExpression(parameter.getDefaultValue()).slot;
+          defaults.add(compileExpression(ir, parameter.getDefaultValue()).slot);
         } else {
-          args[i++] = compileConstant(StarlarkFunction.MANDATORY).slot;
+          defaults.add(BcIrSlot.Const.MANDATORY);
         }
       }
 
-      args[i++] = result;
-      Preconditions.checkState(i == args.length);
-
-      write(BcInstr.Opcode.NEW_FUNCTION, node, args);
+      ir.add(new BcIrInstr.NewFunction(
+          nodeToLocOffset(node),
+          rfn,
+          defaults.build(),
+          result));
     }
 
-    private void compileIfStatement(IfStatement ifStatement) {
-      new BcCompilerForIf(this).compileIfStatement(ifStatement);
+    private void compileIfStatement(BcIr ir, IfStatement ifStatement) {
+      new BcCompilerForIf(this).compileIfStatement(ir, ifStatement);
     }
 
-    private void compileFlowStatement(FlowStatement flowStatement) {
+    private void compileFlowStatement(BcIr ir, FlowStatement flowStatement) {
       switch (flowStatement.getKind()) {
         case BREAK:
-          compileBreak(flowStatement);
+          compileBreak(ir, flowStatement);
           break;
         case CONTINUE:
-          compileContinue(flowStatement);
+          compileContinue(ir, flowStatement);
           break;
         case PASS:
           // nop
@@ -297,177 +247,179 @@ class Bc {
       }
     }
 
-    private void compileContinue(Node node) {
-      BcWriter.LocOffset locOffset = nodeToLocOffset(node);
-      bcWriter.writeContinue(locOffset);
+    private void compileContinue(BcIr ir, Node node) {
+      ir.add(new BcIrInstr.Continue(nodeToLocOffset(node)));
     }
 
-    private void compileBreak(Node node) {
-      BcWriter.LocOffset locOffset = nodeToLocOffset(node);
-      bcWriter.writeBreak(locOffset);
+    private void compileBreak(BcIr ir, Node node) {
+      ir.add(new BcIrInstr.Break(nodeToLocOffset(node)));
     }
 
     /** Callback invoked to compile the loop body. */
     private interface ForBody {
-      void compile();
+      void compile(BcIr ir);
     }
 
     /** Generic compile for loop routine, used in for statement and in loop comprehension. */
-    private void compileFor(Expression vars, Expression collection, ForBody body) {
-      CompileExpressionResult iterable = compileExpression(collection);
+    private void compileFor(BcIr ir, Expression vars, Expression collection, ForBody body) {
+      CompileExpressionResult iterable = compileExpression(ir, collection);
 
       // Most common loops are single var loops, we don't need to use temporary variables.
       boolean assignStraightToLocal = vars instanceof Identifier
           && ((Identifier) vars).getBinding().getScope() == Resolver.Scope.LOCAL;
 
       // Register where we are storing the next iterator value.
-      // This register is update by FOR_INIT and CONTINUE instructions.
-      int nextValueSlot = assignStraightToLocal ?
-          localIdentSlot((Identifier) vars) : bcWriter.allocSlot();
+      // This register is updated by FOR_INIT and CONTINUE instructions.
+      BcIrSlot.AnyLocal nextValueSlot = assignStraightToLocal ?
+          localIdentSlot((Identifier) vars) : ir.allocSlot("item");
 
-      bcWriter.writeForInit(nodeToLocOffset(collection), iterable.slot, nextValueSlot);
+      ir.add(new BcIrInstr.ForInit(
+          nodeToLocOffset(collection),
+          iterable.slot,
+          nextValueSlot));
 
       if (!assignStraightToLocal) {
-        compileAssignment(nextValueSlot, vars, false);
+        compileAssignment(ir, nextValueSlot, vars, false);
       }
 
-      body.compile();
+      body.compile(ir);
 
       // We use usual CONTINUE statement in the end of the loop.
       // Note: CONTINUE does unnecessary goto e in the end of iteration.
-      compileContinue(collection);
+      compileContinue(ir, collection);
 
-      bcWriter.writeForClose();
+      ir.add(BcIrInstr.ForClose.FOR_CLOSE);
     }
 
-    private void compileForStatement(ForStatement forStatement) {
+    private void compileForStatement(BcIr ir, ForStatement forStatement) {
       compileFor(
+          ir,
           forStatement.getVars(),
           forStatement.getCollection(),
-          () -> compileStatements(forStatement.getBody(), false));
+          ir1 -> compileStatements(ir1, forStatement.getBody(), false));
     }
 
     private void compileAssignment(
-        AssignmentStatement assignmentStatement, boolean postAssignHook) {
+        BcIr ir, AssignmentStatement assignmentStatement, boolean postAssignHook) {
       if (assignmentStatement.isAugmented()) {
-        compileAgumentedAssignment(assignmentStatement);
+        compileAgumentedAssignment(ir, assignmentStatement);
       } else {
-        compileAssignmentRegular(assignmentStatement, postAssignHook);
+        compileAssignmentRegular(ir, assignmentStatement, postAssignHook);
       }
     }
 
     private void compileAssignmentRegular(
-        AssignmentStatement assignmentStatement, boolean postAssignHook) {
+        BcIr ir, AssignmentStatement assignmentStatement, boolean postAssignHook) {
       Preconditions.checkState(!assignmentStatement.isAugmented());
 
       Expression lhs = assignmentStatement.getLHS();
       if (lhs instanceof Identifier) {
         Identifier lhsIdent = (Identifier) lhs;
         if (lhsIdent.getBinding().getScope() == Resolver.Scope.LOCAL) {
-          compileExpressionTo(assignmentStatement.getRHS(), localIdentSlot(lhsIdent));
+          compileExpressionTo(ir, assignmentStatement.getRHS(), localIdentSlot(lhsIdent));
           return;
         }
       }
 
-      int rhs = compileExpression(assignmentStatement.getRHS()).slot;
-      compileAssignment(rhs, lhs, postAssignHook);
+      BcIrSlot rhs = compileExpression(ir, assignmentStatement.getRHS()).slot;
+      compileAssignment(ir, rhs, lhs, postAssignHook);
     }
 
-    private void compileAssignment(int rhs, Expression lhs, boolean postAssignHook) {
+    private void compileAssignment(BcIr ir, BcIrSlot rhs, Expression lhs, boolean postAssignHook) {
       if (lhs instanceof Identifier) {
-        compileSet(rhs, (Identifier) lhs, postAssignHook);
+        compileSet(ir, rhs, (Identifier) lhs, postAssignHook);
       } else if (lhs instanceof ListExpression) {
-        compileAssignmentToList(rhs, (ListExpression) lhs, postAssignHook);
+        compileAssignmentToList(ir, rhs, (ListExpression) lhs, postAssignHook);
       } else if (lhs instanceof IndexExpression) {
         IndexExpression indexExpression = (IndexExpression) lhs;
-        int object = compileExpression(indexExpression.getObject()).slot;
-        int key = compileExpression(indexExpression.getKey()).slot;
-        write(BcInstr.Opcode.SET_INDEX, lhs, object, key, rhs);
+        BcIrSlot object = compileExpression(ir, indexExpression.getObject()).slot;
+        BcIrSlot key = compileExpression(ir, indexExpression.getKey()).slot;
+        ir.add(new BcIrInstr.SetIndex(
+            nodeToLocOffset(indexExpression),
+            object,
+            key,
+            rhs));
       } else {
-        compileThrowException(lhs, String.format("cannot assign to '%s'", lhs));
+        compileThrowException(ir, lhs, String.format("cannot assign to '%s'", lhs));
       }
     }
 
-    private void compileAssignmentToList(int rhs, ListExpression list, boolean postAssignHook) {
-      int[] args = new int[2 + list.getElements().size()];
-      args[0] = rhs;
-      args[1] = list.getElements().size();
-
-      IntArrayBuilder postUnpackAssignmentSlots = new IntArrayBuilder();
+    private void compileAssignmentToList(BcIr ir, BcIrSlot rhs, ListExpression list, boolean postAssignHook) {
+      ArrayList<BcIrSlot.AnyLocal> postUnpackAssignmentSlots = new ArrayList<>();
       ArrayList<Expression> postUnpackAssignmentExprs = new ArrayList<>();
 
-      int i = 2;
+      ImmutableList.Builder<BcIrSlot.AnyLocal> lhs = ImmutableList.builder();
       for (Expression element : list.getElements()) {
         if (element instanceof Identifier
             && ((Identifier) element).getBinding().getScope() == Resolver.Scope.LOCAL) {
-          args[i++] = localIdentSlot((Identifier) element);
+          lhs.add(localIdentSlot((Identifier) element));
         } else {
-          int slot = bcWriter.allocSlot();
+          BcIrSlot.LazyLocal slot = ir.allocSlot("unpack");
           postUnpackAssignmentSlots.add(slot);
           postUnpackAssignmentExprs.add(element);
-          args[i++] = slot;
+          lhs.add(slot);
         }
       }
 
-      Preconditions.checkState(i == args.length);
-
-      write(BcInstr.Opcode.UNPACK, list, args);
+      ir.add(new BcIrInstr.Unpack(
+          nodeToLocOffset(list),
+          rhs,
+          lhs.build()));
 
       Preconditions.checkState(
           postUnpackAssignmentSlots.size() == postUnpackAssignmentExprs.size());
 
       for (int j = 0; j < postUnpackAssignmentSlots.size(); ++j) {
         compileAssignment(
+            ir,
             postUnpackAssignmentSlots.get(j),
             postUnpackAssignmentExprs.get(j),
             postAssignHook);
       }
     }
 
-    private void compileSet(int rhs, Identifier identifier, boolean postAssignHook) {
+    private void compileSet(BcIr ir, BcIrSlot rhs, Identifier identifier, boolean postAssignHook) {
       Resolver.Binding binding = identifier.getBinding();
       switch (binding.getScope()) {
         case LOCAL:
-          cp(identifier, rhs, binding.getIndex());
-          return;
+          cp(ir, identifier, rhs, new BcIrSlot.Local(binding.getIndex()));
+          break;
         case GLOBAL:
-          write(
-              BcInstr.Opcode.SET_GLOBAL,
-              identifier,
+          ir.add(new BcIrInstr.SetGlobal(
+              nodeToLocOffset(identifier),
               rhs,
               binding.getIndex(),
-              bcWriter.allocString(identifier.getName()),
-              postAssignHook ? 1 : 0);
-          return;
+              identifier.getName(),
+              postAssignHook
+          ));
+          break;
         case CELL:
-          write(
-              BcInstr.Opcode.SET_CELL,
-              identifier,
+          ir.add(new BcIrInstr.SetCell(
+              nodeToLocOffset(identifier),
               rhs,
-              binding.getIndex());
-          return;
+              binding.getIndex()
+          ));
+          break;
         default:
           throw new IllegalStateException();
       }
-
     }
 
-    private void compileThrowException(Node node, String message) {
-      // All incorrect AST should be resolved by the resolver,
-      // compile code to throw exception as a stopgap.
-      BcWriter.LocOffset locOffset = nodeToLocOffset(node);
-      bcWriter.writeThrowException(locOffset, message);
+    private void compileThrowException(BcIr ir, Node node, String message) {
+      ir.add(new BcIrInstr.EvalException(nodeToLocOffset(node), message));
     }
 
-    private void compileAgumentedAssignmentToIdentifier(AssignmentStatement assignmentStatement) {
+    private void compileAgumentedAssignmentToIdentifier(BcIr ir, AssignmentStatement assignmentStatement) {
       Identifier lhs = (Identifier) assignmentStatement.getLHS();
 
       AugmentedAssignmentRhs rhs = compileAugmentedAssignmentRhs(
+          ir,
           assignmentStatement.getOperator(),
           assignmentStatement.getRHS());
 
       if (lhs.getBinding().getScope() == Resolver.Scope.LOCAL) {
         writeBinaryInPlace(
+            ir,
             assignmentStatement,
             localIdentSlot(lhs),
             rhs,
@@ -475,97 +427,123 @@ class Bc {
         );
       } else {
         CompileExpressionResult value = compileGet(lhs);
-        int temp = bcWriter.allocSlot();
+        BcIrSlot.LazyLocal temp = ir.allocSlot("aug");
         writeBinaryInPlace(
+            ir,
             assignmentStatement,
             value.slot,
             rhs,
             temp);
-        compileSet(temp, lhs, false);
+        compileSet(ir, temp, lhs, false);
       }
     }
 
     /** Result of compilation of {@code x (op)= y} rhs. */
     private static class AugmentedAssignmentRhs {
       /** When operator is {@code +=} and RHS is {@code [...]}. */
-      @Nullable private final CompileExpressionListResult listResult;
+      @Nullable private final BcIrListArg listResult;
       /** All other values. */
       @Nullable
       private final CompileExpressionResult defaultResult;
 
-      public AugmentedAssignmentRhs(
-          CompileExpressionListResult listResult) {
+      public AugmentedAssignmentRhs(BcIrListArg listResult) {
         this.listResult = listResult;
         this.defaultResult = null;
       }
 
-      public AugmentedAssignmentRhs(
-          CompileExpressionResult defaultResult) {
+      public AugmentedAssignmentRhs(CompileExpressionResult defaultResult) {
         this.defaultResult = defaultResult;
         this.listResult = null;
       }
     }
 
-    private AugmentedAssignmentRhs compileAugmentedAssignmentRhs(TokenKind op, Expression rhs) {
+    private AugmentedAssignmentRhs compileAugmentedAssignmentRhs(
+        BcIr ir, TokenKind op, Expression rhs) {
       if (op == TokenKind.PLUS
           && rhs instanceof ListExpression
           && !((ListExpression) rhs).isTuple()) {
         return new AugmentedAssignmentRhs(
-            compileExpressionList(((ListExpression) rhs).getElements()));
+            compileExpressionList(ir, ((ListExpression) rhs).getElements()));
       } else {
-        return new AugmentedAssignmentRhs(compileExpression(rhs));
+        return new AugmentedAssignmentRhs(compileExpression(ir, rhs));
       }
     }
 
     private void writeBinaryInPlace(
-        AssignmentStatement assignmentStatement, int lhs, AugmentedAssignmentRhs rhs, int result) {
+        BcIr ir,
+        AssignmentStatement assignmentStatement,
+        BcIrSlot lhs,
+        AugmentedAssignmentRhs rhs,
+        BcIrSlot.AnyLocal result) {
       if (assignmentStatement.getOperator() == TokenKind.PLUS) {
         // The only operator supporting binary in place is plus for lists
         if (rhs.listResult != null) {
-          writeToOut(
-              BcInstr.Opcode.PLUS_LIST_IN_PLACE,
-              assignmentStatement,
-              BcWriter.args(lhs, rhs.listResult.opcodeArgs),
-              result);
+          ir.add(new BcIrInstr.PlusListInPlace(
+              nodeToLocOffset(assignmentStatement),
+              lhs,
+              rhs.listResult,
+              result));
         } else {
           Preconditions.checkState(rhs.defaultResult != null);
-          BcInstr.Opcode opcode;
-          if (rhs.defaultResult.value instanceof String) {
-            opcode = BcInstr.Opcode.PLUS_STRING_IN_PLACE;
+          BcIrInstr.BinOpOp binOpOp;
+          if (rhs.defaultResult.value() instanceof String) {
+            binOpOp = BcIrInstr.BinOpOp.PLUS_STRING_IN_PLACE;
           } else {
-            opcode = BcInstr.Opcode.PLUS_IN_PLACE;
+            binOpOp = BcIrInstr.BinOpOp.PLUS_IN_PLACE;
           }
-          write(opcode, assignmentStatement, lhs, rhs.defaultResult.slot, result);
+          ir.add(new BcIrInstr.BinOp(
+              nodeToLocOffset(assignmentStatement),
+              binOpOp,
+              lhs,
+              rhs.defaultResult.slot,
+              result));
         }
       } else {
         // Otherwise inplace is equivalent to `lhs = lhs + rhs`.
-        writeBinaryOp(assignmentStatement, assignmentStatement.getOperator(),
-            new CompileExpressionResult(lhs, null), rhs.defaultResult, result);
+        writeBinaryOp(ir, assignmentStatement,
+            assignmentStatement.getOperator(),
+            new CompileExpressionResult(lhs), rhs.defaultResult, result);
       }
     }
 
-    private void compileAgumentedAssignment(AssignmentStatement assignmentStatement) {
+    private void compileAgumentedAssignment(BcIr ir, AssignmentStatement assignmentStatement) {
       Preconditions.checkState(assignmentStatement.getOperator() != null);
       if (assignmentStatement.getLHS() instanceof Identifier) {
-        compileAgumentedAssignmentToIdentifier(assignmentStatement);
+        compileAgumentedAssignmentToIdentifier(ir, assignmentStatement);
       } else if (assignmentStatement.getLHS() instanceof IndexExpression) {
         IndexExpression indexExpression = (IndexExpression) assignmentStatement.getLHS();
 
-        int object = compileExpression(indexExpression.getObject()).slot;
-        int key = compileExpression(indexExpression.getKey()).slot;
+        BcIrSlot object = compileExpression(ir, indexExpression.getObject()).slot;
+        BcIrSlot key = compileExpression(ir, indexExpression.getKey()).slot;
+
+        object.incRef();
+        key.incRef();
+
         AugmentedAssignmentRhs rhs = compileAugmentedAssignmentRhs(
+            ir,
             assignmentStatement.getOperator(),
             assignmentStatement.getRHS());
-        int temp = bcWriter.allocSlot();
-        write(BcInstr.Opcode.INDEX, assignmentStatement, object, key, temp);
-        writeBinaryInPlace(assignmentStatement, temp, rhs, temp);
-        write(BcInstr.Opcode.SET_INDEX, assignmentStatement, object, key, temp);
+        BcIrSlot.LazyLocal temp = ir.allocSlot("aug");
+        ir.add(new BcIrInstr.Index(
+            nodeToLocOffset(assignmentStatement),
+            object,
+            key,
+            temp));
+        temp.incRef();
+        temp.incRef();
+        writeBinaryInPlace(ir, assignmentStatement, temp, rhs, temp);
+        ir.add(new BcIrInstr.SetIndex(
+            nodeToLocOffset(assignmentStatement),
+            object,
+            key,
+            temp));
       } else if (assignmentStatement.getLHS() instanceof ListExpression) {
-        compileThrowException(
+        compileThrowException(ir,
             assignmentStatement.getLHS(),
             "cannot perform augmented assignment on a list or tuple expression");
       } else {
         compileThrowException(
+            ir,
             assignmentStatement.getLHS(),
             String.format("cannot assign to '%s'", assignmentStatement.getLHS()));
       }
@@ -573,125 +551,136 @@ class Bc {
 
     /** Compile a constant, return a register containing the constant. */
     private CompileExpressionResult compileConstant(Object constant) {
-      Starlark.checkValid(constant);
-      int slot = bcWriter.allowConstSlot(constant);
-      return new CompileExpressionResult(slot, constant);
+      return new CompileExpressionResult(new BcIrSlot.Const(constant));
     }
 
-    private CompileExpressionResult compileConstantTo(Node node, Object constant, int result) {
+    CompileExpressionResult compileConstantTo(BcIr ir, Node node, Object constant, BcIrLocalOrAny result) {
       CompileExpressionResult constResult = compileConstant(constant);
-      if (result == BcSlot.ANY_FLAG) {
+      if (result == BcIrLocalOrAny.Any.ANY) {
         return constResult;
       } else {
-        cp(node, constResult.slot, result);
-        return new CompileExpressionResult(result, constant);
+        BcIrSlot.AnyLocal local = ((BcIrLocalOrAny.Local) result).local;
+        cp(ir, node, constResult.slot, local);
+        return new CompileExpressionResult(local);
       }
     }
 
-    /**
-     * Try compile expression as a constant, return {@code null} if expresssion is not a constant.
-     */
-    @Nullable
-    Object tryCompileConstant(Expression expression) {
-      BcWriter.SavedState saved = bcWriter.save();
-      CompileExpressionResult result = compileExpression(expression);
-      saved.reset();
-      return result.value;
+    private void compileExpressionTo(BcIr ir, Expression expression, BcIrSlot.AnyLocal result) {
+      compileExpressionTo(ir, expression, new BcIrLocalOrAny.Local(result));
     }
 
     /** Compile an expression, store result in provided register. */
-    private CompileExpressionResult compileExpressionTo(Expression expression, int result) {
+    private CompileExpressionResult compileExpressionTo(BcIr ir, Expression expression, BcIrLocalOrAny result) {
       if (expression instanceof SliceExpression) {
-        return compileSliceExpression((SliceExpression) expression, result);
+        return compileSliceExpression(ir, (SliceExpression) expression, result);
       } else if (expression instanceof Comprehension) {
-        return compileComprehension((Comprehension) expression, result);
+        return compileComprehension(ir, (Comprehension) expression, result);
       } else if (expression instanceof ListExpression) {
-        return compileList((ListExpression) expression, result);
+        return compileList(ir, (ListExpression) expression, result);
       } else if (expression instanceof DictExpression) {
-        return compileDict((DictExpression) expression, result);
+        return compileDict(ir, (DictExpression) expression, result);
       } else if (expression instanceof CallExpression) {
-        return compileCall((CallExpression) expression, result);
+        return new BcCompilerForCall(this).compileCall(ir, (CallExpression) expression, result);
       } else if (expression instanceof ConditionalExpression) {
-        return compileConditional((ConditionalExpression) expression, result);
+        return compileConditional(ir, (ConditionalExpression) expression, result);
       } else if (expression instanceof DotExpression) {
-        return compileDot((DotExpression) expression, result);
+        return compileDot(ir, (DotExpression) expression, result);
       } else if (expression instanceof IndexExpression) {
-        return compileIndex((IndexExpression) expression, result);
+        return compileIndex(ir, (IndexExpression) expression, result);
       } else if (expression instanceof UnaryOperatorExpression) {
-        return compileUnaryOperator((UnaryOperatorExpression) expression, result);
+        return compileUnaryOperator(ir, (UnaryOperatorExpression) expression, result);
       } else if (expression instanceof BinaryOperatorExpression) {
-        return compileBinaryOperator((BinaryOperatorExpression) expression, result);
+        return compileBinaryOperator(ir, (BinaryOperatorExpression) expression, result);
       } else if (expression instanceof LambdaExpression) {
-        return compileLambda((LambdaExpression) expression, result);
+        return compileLambda(ir, (LambdaExpression) expression, result);
       } else if (expression instanceof Identifier
           || expression instanceof StringLiteral
           || expression instanceof IntLiteral
           || expression instanceof FloatLiteral) {
-        CompileExpressionResult exprResult = compileExpression(expression);
-        if (result != BcSlot.ANY_FLAG) {
-          cp(expression, exprResult.slot, result);
+        CompileExpressionResult exprResult = compileExpression(ir, expression);
+        if (result != BcIrLocalOrAny.Any.ANY) {
+          BcIrSlot.AnyLocal local = ((BcIrLocalOrAny.Local) result).local;
+          cp(ir, expression, exprResult.slot, local);
+          return new CompileExpressionResult(local);
         } else {
-          result = exprResult.slot;
+          return new CompileExpressionResult(exprResult.slot);
         }
-        return new CompileExpressionResult(result, exprResult.value);
       } else {
         throw new RuntimeException("not impl: " + expression.getClass().getSimpleName());
       }
     }
 
-    private CompileExpressionResult compileLambda(LambdaExpression lambda, int result) {
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
-      compileNewFunction(lambda.getResolvedFunction(), lambda, result);
-      return new CompileExpressionResult(result, null);
+    private CompileExpressionResult compileLambda(BcIr ir,
+        LambdaExpression lambda, BcIrLocalOrAny result) {
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "lambda");
+      compileNewFunction(ir, lambda.getResolvedFunction(), lambda, resultLocal);
+      return new CompileExpressionResult(resultLocal);
     }
 
     private CompileExpressionResult compileIntLiteral(IntLiteral intLiteral) {
-      StarlarkInt starlarkInt = intLiteralValueAsStarlarInt(intLiteral);
+      StarlarkInt starlarkInt = intLiteralValueAsStarlarkInt(intLiteral);
       return compileConstant(starlarkInt);
     }
 
-    private StarlarkInt intLiteralValueAsStarlarInt(IntLiteral intLiteral) {
+    private StarlarkInt intLiteralValueAsStarlarkInt(IntLiteral intLiteral) {
       Number value = intLiteral.getValue();
-      StarlarkInt starlarkInt;
       if (value instanceof Integer) {
-        starlarkInt = StarlarkInt.of((Integer) value);
+        return StarlarkInt.of((Integer) value);
       } else if (value instanceof Long) {
-        starlarkInt = StarlarkInt.of((Long) value);
+        return StarlarkInt.of((Long) value);
       } else if (value instanceof BigInteger) {
-        starlarkInt = StarlarkInt.of((BigInteger) value);
+        return StarlarkInt.of((BigInteger) value);
       } else {
         throw new IllegalStateException();
       }
-      return starlarkInt;
     }
 
     static class CompileExpressionResult {
-      final int slot;
-      @Nullable
-      final Object value;
+      final BcIrSlot slot;
 
-      private CompileExpressionResult(int slot, @Nullable Object value) {
-        BcSlot.checkValidSourceSlot(slot);
+      CompileExpressionResult(BcIrSlot slot) {
         this.slot = slot;
-        this.value = value;
-        if (Bc.ASSERTIONS) {
-          if (value != null) {
-            Starlark.checkValid(value);
-          }
+      }
+
+      @Nullable
+      Object value() {
+        return slot instanceof BcIrSlot.Const ? ((BcIrSlot.Const) slot).value : null;
+      }
+
+      @Nullable
+      Object valueImmutable() {
+        Object value = value();
+        if (value != null && Starlark.isImmutable(value)) {
+          return value;
+        } else {
+          return null;
         }
       }
 
       @Override
       public String toString() {
         return "CompileExpressionResult{"
-            + "slot=" + BcSlot.slotToString(slot) + ", value=" + value + '}';
+            + "slot=" + slot + '}';
+      }
+    }
+
+    /** Compile expression result with IR to produce that result. */
+    static class CompileExpressionResultWithIr {
+      final BcIr ir;
+      final CompileExpressionResult result;
+
+      public CompileExpressionResultWithIr(BcIr ir, CompileExpressionResult result) {
+        if (result.value() != null) {
+          Preconditions.checkArgument(ir.size() == 0,
+              "if expression produced constant, it should produce no IR");
+        }
+        this.ir = ir;
+        this.result = result;
       }
     }
 
     /** Compile an expression and return a register containing the result. */
-    CompileExpressionResult compileExpression(Expression expression) {
+    CompileExpressionResult compileExpression(BcIr ir, Expression expression) {
       if (expression instanceof Identifier) {
         return compileGet((Identifier) expression);
       } else if (expression instanceof StringLiteral) {
@@ -701,26 +690,89 @@ class Bc {
       } else if (expression instanceof FloatLiteral) {
         return compileConstant(StarlarkFloat.of(((FloatLiteral) expression).getValue()));
       } else {
-        return compileExpressionTo(expression, BcSlot.ANY_FLAG);
+        int savedSize = ir.size();
+        CompileExpressionResult compileExpressionResult = compileExpressionTo(
+            ir, expression, BcIrLocalOrAny.Any.ANY);
+        if (compileExpressionResult.value() != null) {
+          // If expression evaluated to constant, it should produce no bytecode
+          ir.assertUnchanged(savedSize);
+        }
+        return compileExpressionResult;
       }
     }
 
-    private CompileExpressionResult compileIndex(IndexExpression expression, int result) {
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
-      int object = compileExpression(expression.getObject()).slot;
-      int key = compileExpression(expression.getKey()).slot;
-      write(BcInstr.Opcode.INDEX, expression, object, key, result);
-      return new CompileExpressionResult(result, null);
+    /** Compile expression discarding the result. */
+    private void compileExpressionForEffect(BcIr ir, Expression expression) {
+      CompileExpressionResult result = compileExpressionTo(ir, expression, BcIrLocalOrAny.Any.ANY);
+      result.slot.decRef();
     }
 
-    private CompileExpressionResult compileDot(DotExpression dotExpression, int result) {
-      BcWriter.SavedState saved = bcWriter.save();
+    /** Compile expression and return an IR and result slot. */
+    CompileExpressionResultWithIr compileExpression(Expression expression) {
+      BcIr ir = new BcIr();
+      CompileExpressionResult result = compileExpression(ir, expression);
+      return new CompileExpressionResultWithIr(ir, result);
+    }
 
-      CompileExpressionResult object = compileExpression(dotExpression.getObject());
+    /** Compile expression or return null slot for null expression. */
+    BcIrSlotOrNull compileExpressionOrNull(BcIr ir, @Nullable Expression expression) {
+      if (expression != null) {
+        return new BcIrSlotOrNull.Slot(compileExpression(ir, expression).slot);
+      } else {
+        return BcIrSlotOrNull.Null.NULL;
+      }
+    }
 
-      if (object.value != null) {
+    static class SlotOrNullWithIr {
+      final BcIr ir;
+      final BcIrSlotOrNull slot;
+
+      SlotOrNullWithIr(BcIr ir, BcIrSlotOrNull slot) {
+        if (slot == BcIrSlotOrNull.Null.NULL) {
+          Preconditions.checkArgument(ir.size() == 0);
+        }
+        this.ir = ir;
+        this.slot = slot;
+      }
+    }
+
+    SlotOrNullWithIr compileExpressionOrNull(@Nullable Expression expression) {
+      BcIr ir = new BcIr();
+      BcIrSlotOrNull slot = compileExpressionOrNull(ir, expression);
+      return new SlotOrNullWithIr(ir, slot);
+    }
+
+    /**
+     * Try compile expression as a constant, return {@code null} if expresssion is not a constant.
+     */
+    @Nullable
+    Object tryCompileConstant(Expression expression) {
+      BcIr ir = new BcIr();
+      CompileExpressionResult result = compileExpression(ir, expression);
+      return result.value();
+    }
+
+    private CompileExpressionResult compileIndex(
+        BcIr ir, IndexExpression expression, BcIrLocalOrAny result) {
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "index");
+
+      BcIrSlot object = compileExpression(ir, expression.getObject()).slot;
+      BcIrSlot key = compileExpression(ir, expression.getKey()).slot;
+
+      ir.add(new BcIrInstr.Index(
+          nodeToLocOffset(expression),
+          object,
+          key,
+          resultLocal));
+
+      return new CompileExpressionResult(resultLocal);
+    }
+
+    private CompileExpressionResult compileDot(BcIr ir,
+        DotExpression dotExpression, BcIrLocalOrAny result) {
+      CompileExpressionResult object = compileExpression(ir, dotExpression.getObject());
+
+      if (object.value() != null) {
         try {
           // This code is correct because for all known objects
           // `getattr` produces the same instance for given `attr`.
@@ -729,47 +781,52 @@ class Bc {
           Object attrValue =
               Starlark.getattr(
                   thread,
-                  object.value,
+                  object.value(),
                   dotExpression.getField().getName(),
                   null);
           if (attrValue != null) {
-            saved.reset();
-            return compileConstantTo(dotExpression, attrValue, result);
+            return compileConstantTo(ir, dotExpression, attrValue, result);
           }
         } catch (EvalException | InterruptedException e) {
           // ignore
         }
       }
 
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
-      write(
-          BcInstr.Opcode.DOT,
-          dotExpression,
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "dot");
+
+      ir.add(new BcIrInstr.Dot(
+          nodeToLocOffset(dotExpression),
           object.slot,
-          bcWriter.allocString(dotExpression.getField().getName()),
-          result);
-      return new CompileExpressionResult(result, null);
+          dotExpression.getField().getName(),
+          resultLocal));
+
+      return new CompileExpressionResult(resultLocal);
     }
 
-    private CompileExpressionResult compileSliceExpression(SliceExpression slice, int result) {
-      int object = compileExpression(slice.getObject()).slot;
+    private CompileExpressionResult compileSliceExpression(BcIr ir,
+        SliceExpression slice, BcIrLocalOrAny result) {
+      BcIrSlot object = compileExpression(ir, slice.getObject()).slot;
 
-      int start = slice.getStart() != null ? compileExpression(slice.getStart()).slot : BcSlot.NULL_FLAG;
-      int stop = slice.getStop() != null ? compileExpression(slice.getStop()).slot : BcSlot.NULL_FLAG;
-      int step = slice.getStep() != null ? compileExpression(slice.getStep()).slot : BcSlot.NULL_FLAG;
+      BcIrSlotOrNull start = compileExpressionOrNull(ir, slice.getStart());
+      BcIrSlotOrNull stop = compileExpressionOrNull(ir, slice.getStop());
+      BcIrSlotOrNull step = compileExpressionOrNull(ir, slice.getStep());
 
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
-      write(BcInstr.Opcode.SLICE, slice, object, start, stop, step, result);
-      return new CompileExpressionResult(result, null);
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "slice");
+
+      ir.add(new BcIrInstr.Slice(
+          nodeToLocOffset(slice),
+          object,
+          start,
+          stop,
+          step,
+          resultLocal));
+
+      return new CompileExpressionResult(resultLocal);
     }
 
-    private int localIdentSlot(Identifier identifier) {
+    private BcIrSlot.Local localIdentSlot(Identifier identifier) {
       Preconditions.checkArgument(identifier.getBinding().getScope() == Resolver.Scope.LOCAL);
-      return BcSlot.local(identifier.getBinding().getIndex());
+      return new BcIrSlot.Local(identifier.getBinding().getIndex());
     }
 
     private CompileExpressionResult compileGet(Identifier identifier) {
@@ -779,7 +836,7 @@ class Bc {
       }
       switch (binding.getScope()) {
         case LOCAL:
-          return new CompileExpressionResult(localIdentSlot(identifier), null);
+          return new CompileExpressionResult(localIdentSlot(identifier));
         case GLOBAL:
           int globalVarIndex = binding.getIndex();
           if (!binding.isFirstReassignable()) {
@@ -788,7 +845,7 @@ class Bc {
               return compileConstant(globalValue);
             }
           }
-          return new CompileExpressionResult(BcSlot.global(globalVarIndex), null);
+          return new CompileExpressionResult(new BcIrSlot.Global(globalVarIndex));
         case FREE:
           if (!binding.isFirstReassignable()) {
             StarlarkFunction.Cell cell = (StarlarkFunction.Cell) freevars.get(binding.getIndex());
@@ -796,14 +853,9 @@ class Bc {
               return compileConstant(cell.x);
             }
           }
-          return new CompileExpressionResult(
-              binding.getIndex() | BcSlot.FREE_FLAG,
-              null);
+          return new CompileExpressionResult(new BcIrSlot.Free(binding.getIndex()));
         case CELL:
-          return new CompileExpressionResult(
-              binding.getIndex() | BcSlot.CELL_FLAG,
-              null
-          );
+          return new CompileExpressionResult(new BcIrSlot.Cell(binding.getIndex()));
         case UNIVERSAL:
           return compileConstant(Starlark.UNIVERSE_OBJECTS.valueByIndex(binding.getIndex()));
         case PREDECLARED:
@@ -813,99 +865,127 @@ class Bc {
       }
     }
 
-    private CompileExpressionResult compileComprehension(Comprehension comprehension, int result) {
+    private CompileExpressionResult compileComprehension(
+        BcIr ir, Comprehension comprehension, BcIrLocalOrAny result) {
       // Must explicitly use temporary variable, because comprehension expression
       // may reference to the same slot we are about to write.
-      int temp = bcWriter.allocSlot();
+      BcIrSlot.LazyLocal temp = ir.allocSlot("compr");
       if (comprehension.isDict()) {
-        write(BcInstr.Opcode.DICT, comprehension.getBody(), 0, temp);
+        ir.add(new BcIrInstr.Dict(
+            nodeToLocOffset(comprehension),
+            ImmutableList.of(),
+            temp));
       } else {
-        write(BcInstr.Opcode.LIST, comprehension.getBody(), 0, temp);
+        ir.add(new BcIrInstr.List(
+            nodeToLocOffset(comprehension),
+            BcIrListArg.Slots.EMPTY,
+            temp));
       }
 
       // The Lambda class serves as a recursive lambda closure.
       class Lambda {
         // execClauses(index) recursively compiles the clauses starting at index,
         // and finally compiles the body and adds its value to the result.
-        private void compileClauses(int index) {
+        private void compileClauses(BcIr ir, int index) {
           // recursive case: one or more clauses
           if (index != comprehension.getClauses().size()) {
             Comprehension.Clause clause = comprehension.getClauses().get(index);
             if (clause instanceof Comprehension.For) {
               compileFor(
+                  ir,
                   ((Comprehension.For) clause).getVars(),
                   ((Comprehension.For) clause).getIterable(),
-                  () -> compileClauses(index + 1));
+                  ir1 -> compileClauses(ir1, index + 1));
             } else if (clause instanceof Comprehension.If) {
-              CompileExpressionResult cond = compileExpression(((Comprehension.If) clause).getCondition());
+              CompileExpressionResult cond = compileExpression(ir, ((Comprehension.If) clause).getCondition());
               // TODO: optimize if cond != null
-              int end = writeForwardCondJump(BcInstr.Opcode.IF_NOT_BR_LOCAL, clause, cond.slot);
-              compileClauses(index + 1);
-              bcWriter.patchForwardJump(end);
+              BcIrInstr.JumpLabel end = ir.ifBr(nodeToLocOffset(clause), cond.slot, BcWriter.JumpCond.IF_NOT);
+              compileClauses(ir, index + 1);
+              ir.add(end);
             } else {
               throw new IllegalStateException("unknown compr clause: " + clause);
             }
           } else {
+            temp.incRef();
             if (comprehension.isDict()) {
               DictExpression.Entry entry = (DictExpression.Entry) comprehension.getBody();
-              int key = compileExpression(entry.getKey()).slot;
-              int value = compileExpression(entry.getValue()).slot;
-              write(BcInstr.Opcode.SET_INDEX, entry, temp, key, value);
+              BcIrSlot key = compileExpression(ir, entry.getKey()).slot;
+              BcIrSlot value = compileExpression(ir, entry.getValue()).slot;
+              ir.add(new BcIrInstr.SetIndex(
+                  nodeToLocOffset(entry),
+                  temp,
+                  key,
+                  value));
             } else {
-              int value = compileExpression((Expression) comprehension.getBody()).slot;
-              write(BcInstr.Opcode.LIST_APPEND, comprehension.getBody(), temp, value);
+              BcIrSlot value = compileExpression(ir, (Expression) comprehension.getBody()).slot;
+              ir.add(new BcIrInstr.ListAppend(
+                  nodeToLocOffset(comprehension),
+                  temp,
+                  value));
             }
           }
         }
       }
 
-      new Lambda().compileClauses(0);
-      if (result == BcSlot.ANY_FLAG) {
-        return new CompileExpressionResult(temp, null);
+      new Lambda().compileClauses(ir, 0);
+      if (result == BcIrLocalOrAny.Any.ANY) {
+        return new CompileExpressionResult(temp);
       } else {
-        cp(comprehension, temp, result);
-        return new CompileExpressionResult(result, null);
+        BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "compr_r");
+        cp(ir, comprehension, temp, resultLocal);
+        return new CompileExpressionResult(resultLocal);
       }
     }
 
-    private CompileExpressionResult compileDict(DictExpression dictExpression, int result) {
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
+    private CompileExpressionResult compileDict(BcIr ir,
+        DictExpression dictExpression, BcIrLocalOrAny result) {
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "dict");
 
-      int[] args = new int[1 + dictExpression.getEntries().size() * 2 + 1];
-      int i = 0;
-      args[i++] = dictExpression.getEntries().size();
+      ImmutableList.Builder<BcIrSlot> args = ImmutableList
+          .builderWithExpectedSize(dictExpression.getEntries().size() * 2);
       for (DictExpression.Entry entry : dictExpression.getEntries()) {
-        args[i++] = compileExpression(entry.getKey()).slot;
-        args[i++] = compileExpression(entry.getValue()).slot;
+        args.add(compileExpression(ir, entry.getKey()).slot);
+        args.add(compileExpression(ir, entry.getValue()).slot);
       }
-      args[i++] = result;
-      Preconditions.checkState(i == args.length);
 
-      write(BcInstr.Opcode.DICT, dictExpression, args);
+      ir.add(new BcIrInstr.Dict(
+          nodeToLocOffset(dictExpression),
+          args.build(),
+          resultLocal));
 
-      return new CompileExpressionResult(result, null);
+      return new CompileExpressionResult(resultLocal);
     }
 
-    private CompileExpressionResult compileList(ListExpression listExpression, int result) {
-      BcWriter.SavedState saved = bcWriter.save();
+    private CompileExpressionResult compileList(BcIr ir,
+        ListExpression listExpression, BcIrLocalOrAny result) {
 
-      CompileExpressionListResult elements = compileExpressionList(
-          listExpression.getElements());
+      int savedSize = ir.size();
 
-      if (elements.constants != null) {
+      BcIrListArg elements = compileExpressionList(
+          ir, listExpression.getElements());
+
+      if (elements.data() != null) {
         if (listExpression.isTuple()) {
-          saved.reset();
-          return compileConstantTo(listExpression, Tuple.wrap(elements.constants), result);
+          ir.assertUnchanged(savedSize);
+          return compileConstantTo(ir, listExpression, Tuple.wrap(elements.data()), result);
         }
       }
 
-      return writeToOut(
-          listExpression.isTuple() ? BcInstr.Opcode.TUPLE : BcInstr.Opcode.LIST,
-          listExpression,
-          elements.opcodeArgs,
-          result);
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "list");
+
+      if (listExpression.isTuple()) {
+        ir.add(new BcIrInstr.Tuple(
+            nodeToLocOffset(listExpression),
+            elements,
+            resultLocal));
+      } else {
+        ir.add(new BcIrInstr.List(
+            nodeToLocOffset(listExpression),
+            elements,
+            resultLocal));
+      }
+
+      return new CompileExpressionResult(resultLocal);
     }
 
     /**
@@ -926,353 +1006,164 @@ class Bc {
       return false;
     }
 
-    private CompileExpressionResult compileConditional(ConditionalExpression conditionalExpression, int result) {
-      BcWriter.SavedState saved = bcWriter.save();
+    private CompileExpressionResult compileConditional(BcIr ir,
+        ConditionalExpression conditionalExpression, BcIrLocalOrAny result) {
+      int savedSize = ir.size();
 
       CompileExpressionResult cond = compileExpression(
-          conditionalExpression.getCondition());
-      if (cond.value != null && isTruthImmutable(cond.value)) {
-        saved.reset();
-        if (Starlark.truth(cond.value)) {
-          return compileExpressionTo(conditionalExpression.getThenCase(), result);
+          ir, conditionalExpression.getCondition());
+      if (cond.value() != null && isTruthImmutable(cond.value())) {
+        ir.assertUnchanged(savedSize);
+        if (Starlark.truth(cond.value())) {
+          return compileExpressionTo(ir, conditionalExpression.getThenCase(), result);
         } else {
-          return compileExpressionTo(conditionalExpression.getElseCase(), result);
+          return compileExpressionTo(ir, conditionalExpression.getElseCase(), result);
         }
       }
 
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "cond");
+      resultLocal.incRef();
 
-      int thenAddr = writeForwardCondJump(BcInstr.Opcode.IF_NOT_BR_LOCAL, conditionalExpression,
-          cond.slot);
-      compileExpressionTo(conditionalExpression.getThenCase(), result);
-      int end = writeForwardJump(conditionalExpression);
-      bcWriter.patchForwardJump(thenAddr);
-      compileExpressionTo(conditionalExpression.getElseCase(), result);
-      bcWriter.patchForwardJump(end);
+      BcIrInstr.JumpLabel thenTarget = ir.ifBr(
+          nodeToLocOffset(conditionalExpression), cond.slot, BcWriter.JumpCond.IF_NOT);
+      compileExpressionTo(ir, conditionalExpression.getThenCase(), resultLocal);
+      BcIrInstr.JumpLabel endTarget = ir.br(nodeToLocOffset(conditionalExpression));
+      ir.add(thenTarget);
+      compileExpressionTo(ir, conditionalExpression.getElseCase(), resultLocal);
+      ir.add(endTarget);
 
-      return new CompileExpressionResult(result, null);
+      return new CompileExpressionResult(resultLocal);
     }
 
-    private CompileExpressionResult compileCallCached(
-        CallExpression callExpression, StarlarkFunction callable,
-        StarlarkCallableLinkSig linkSig, Object[] argObjects,
-        int result
-    ) {
-      Preconditions.checkState(!linkSig.hasStars());
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
+    private CompileExpressionResult compileUnaryOperator(BcIr ir,
+        UnaryOperatorExpression expression, BcIrLocalOrAny result) {
+      int savedSize = ir.size();
+
+      CompileExpressionResult value = compileExpression(ir, expression.getX());
+
+      if (expression.getOperator() == TokenKind.NOT && value.value() != null && isTruthImmutable(value.value())) {
+        ir.assertUnchanged(savedSize);
+        return compileConstantTo(ir, expression, !Starlark.truth(value.value()), result);
       }
-      int callCached = bcWriter.allocObject(new BcCallCached(callable, linkSig, argObjects));
-      return writeToOut(
-          BcInstr.Opcode.CALL_CACHED,
-          callExpression,
-          new int[] { callCached },
-          result);
+
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "un");
+
+      BcIrInstr.UnOpOp unOpOp = BcIrInstr.UnOpOp.fromToken(expression.getOperator());
+
+      BcIrInstr.UnOp unOp = new BcIrInstr.UnOp(
+          nodeToLocOffset(expression), unOpOp, value.slot, resultLocal);
+
+      ir.add(unOp);
+
+      return new CompileExpressionResult(resultLocal);
     }
 
-    private CompileExpressionResult compileCallLinked(
-        StarlarkCallable callable, StarlarkCallableLinkSig linkSig,
-        CallExpression callExpression, int result) {
-      BcWriter.SavedState saved = bcWriter.save();
-
-      Argument.Star star = null;
-      Argument.StarStar starStar = null;
-      int p = callExpression.getArguments().size();
-      if (p > 0 && callExpression.getArguments().get(p - 1) instanceof Argument.StarStar) {
-        starStar = (Argument.StarStar) callExpression.getArguments().get(--p);
-      }
-      if (p > 0 && callExpression.getArguments().get(p - 1) instanceof Argument.Star) {
-        star = (Argument.Star) callExpression.getArguments().get(--p);
-      }
-      ImmutableList<Expression> regArgs = callExpression
-          .getArguments()
-          .subList(0, p)
-          .stream()
-          .map(Argument::getValue)
-          .collect(ImmutableList.toImmutableList());
-
-      StarlarkCallableLinked fn = callable.linkCall(linkSig);
-
-      int lparen = bcWriter.allocObject(BcCallLocs.forExpression(callExpression));
-      int fnSlot = bcWriter.allocObject(fn);
-
-      CompileExpressionListResult regArgsResult = compileExpressionList(regArgs);
-
-      int starSlot;
-      int starStarSlot;
-      if (star != null) {
-        starSlot = compileExpression(star.getValue()).slot;
-      } else {
-        starSlot = BcSlot.NULL_FLAG;
-      }
-      if (starStar != null) {
-        starStarSlot = compileExpression(starStar.getValue()).slot;
-      } else {
-        starStarSlot = BcSlot.NULL_FLAG;
-      }
-
-      boolean functionIsSpeculativeSafe = callable instanceof BuiltinFunction
-          && ((BuiltinFunction) callable).purity() == FnPurity.SPEC_SAFE;
-      if (functionIsSpeculativeSafe
-          && !linkSig.hasStars()
-          && regArgsResult.constants != null
-          && regArgsResult.allConstantsImmutable()) {
-        try {
-          Object specCallResult = callable
-              .linkAndCall(linkSig, thread, regArgsResult.constants, null, null);
-          if (Starlark.isImmutable(specCallResult)) {
-            saved.reset();
-            return compileConstantTo(callExpression, specCallResult, result);
-          }
-        } catch (EvalException | InterruptedException e) {
-          // ignore
-        }
-      }
-
-      // Only inline no-argument calls to no-parameter functions, otherwise
-      // it's quite hard to correctly detect that function call won't fail at runtime.
-      // Consider this example:
-      // ```
-      // def bar(a):
-      //   # This function could be inlinable as constant
-      //   return None
-      // def foo():
-      //   # If this call inlined as constant,
-      //   # we need to report `x` accessed before initialization
-      //   bar(x)
-      //   x = 1
-      // ```
-      if (callable instanceof StarlarkFunction && linkSig == StarlarkCallableLinkSig.positional(0)) {
-        Object constResult = ((StarlarkFunction) callable).returnsConst();
-        if (constResult != null && ((StarlarkFunction) callable).getParameterNames().isEmpty()) {
-          saved.reset();
-          return compileConstantTo(callExpression, constResult, result);
-        }
-      }
-
-      if (regArgsResult.allConstantsImmutable() && !linkSig.hasStars()
-          && callable instanceof StarlarkFunction && callable.isImmutable())
-      {
-        saved.reset();
-        return compileCallCached(
-            callExpression,
-            (StarlarkFunction) callable,
-            linkSig,
-            regArgsResult.constants,
-            result);
-      }
-
-      if (callable instanceof StarlarkFunction && linkSig == StarlarkCallableLinkSig.positional(1)) {
-        String type = ((StarlarkFunction) callable).returnsTypeIs();
-        int argSlot = regArgsResult.singleArg();
-        if (type != null && argSlot >= 0) {
-          return writeTypeIs(callExpression, argSlot, type, result);
-        }
-      }
-
-      int[] newArgs = BcWriter.args(
-          new int[] { lparen, fnSlot },
-          regArgsResult.opcodeArgs,
-          new int[] { starSlot, starStarSlot });
-      return writeToOut(BcInstr.Opcode.CALL_LINKED, callExpression, newArgs, result);
-    }
-
-    private CompileExpressionResult compileCall(CallExpression callExpression, int result) {
-      BcWriter.SavedState saved = bcWriter.save();
-
-      ArrayList<String> argNames = new ArrayList<>();
-      ArrayList<Expression> regArgs = new ArrayList<>();
-      Argument.Star star = null;
-      Argument.StarStar starStar = null;
-      for (Argument argument : callExpression.getArguments()) {
-        if (argument instanceof Argument.Positional) {
-          regArgs.add(argument.getValue());
-        } else if (argument instanceof Argument.Keyword) {
-          argNames.add(argument.getName());
-          regArgs.add(argument.getValue());
-        } else if (argument instanceof Argument.Star) {
-          Preconditions.checkState(star == null);
-          star = (Argument.Star) argument;
-        } else if (argument instanceof Argument.StarStar) {
-          Preconditions.checkState(starStar == null);
-          starStar = (Argument.StarStar) argument;
-        } else {
-          throw new IllegalStateException();
-        }
-      }
-
-      CompileExpressionResult function = compileExpression(callExpression.getFunction());
-
-      StarlarkCallableLinkSig linkSig = StarlarkCallableLinkSig.of(
-          regArgs.size() - argNames.size(),
-          argNames.toArray(ArraysForStarlark.EMPTY_STRING_ARRAY),
-          star != null,
-          starStar != null);
-
-      if (function.value instanceof StarlarkCallable) {
-        saved.reset();
-        return compileCallLinked((StarlarkCallable) function.value, linkSig, callExpression, result);
-      }
-
-      int lparen = bcWriter.allocObject(BcCallLocs.forExpression(callExpression));
-      int fn = function.slot;
-      int sig = bcWriter.allocObject(new BcDynCallSite(linkSig));
-
-      int[] regArgsOpcodes = compileExpressionList(regArgs).opcodeArgs;
-
-      int starSlot;
-      int starStarSlot;
-      if (star != null) {
-        starSlot = compileExpression(star.getValue()).slot;
-      } else {
-        starSlot = BcSlot.NULL_FLAG;
-      }
-      if (starStar != null) {
-        starStarSlot = compileExpression(starStar.getValue()).slot;
-      } else {
-        starStarSlot = BcSlot.NULL_FLAG;
-      }
-
-      int[] newArgs = BcWriter.args(
-          new int[] { lparen, fn, sig },
-          regArgsOpcodes,
-          new int[] { starSlot, starStarSlot });
-
-      return writeToOut(BcInstr.Opcode.CALL, callExpression, newArgs, result);
-    }
-
-    private CompileExpressionResult compileUnaryOperator(UnaryOperatorExpression expression, int result) {
-      BcWriter.SavedState saved = bcWriter.save();
-
-      CompileExpressionResult value = compileExpression(expression.getX());
-
-      if (expression.getOperator() == TokenKind.NOT && value.value != null && isTruthImmutable(value.value)) {
-        saved.reset();
-        return compileConstantTo(expression, !Starlark.truth(value.value), result);
-      }
-
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
-      if (expression.getOperator() == TokenKind.NOT) {
-        write(BcInstr.Opcode.NOT, expression, value.slot, result);
-      } else {
-        write(
-            BcInstr.Opcode.UNARY,
-            expression,
-            value.slot,
-            expression.getOperator().ordinal(),
-            result);
-      }
-      return new CompileExpressionResult(result, null);
-    }
-
-    private CompileExpressionResult compileBinaryOperator(BinaryOperatorExpression expression, int result) {
+    private CompileExpressionResult compileBinaryOperator(BcIr ir,
+        BinaryOperatorExpression expression, BcIrLocalOrAny result) {
       switch (expression.getOperator()) {
         case AND:
         case OR:
-          {
-            BcInstr.Opcode opcode =
-                expression.getOperator() == TokenKind.AND
-                    ? BcInstr.Opcode.IF_NOT_BR_LOCAL
-                    : BcInstr.Opcode.IF_BR_LOCAL;
-
-            BcWriter.SavedState saved = bcWriter.save();
-            CompileExpressionResult lhs = compileExpression(expression.getX());
-            if (lhs.value != null && isTruthImmutable(lhs.value)) {
-              saved.reset();
-              if (Starlark.truth(lhs.value) != (expression.getOperator() == TokenKind.AND)) {
-                return compileConstantTo(expression, lhs.value, result);
-              } else {
-                return compileExpressionTo(expression.getY(), result);
-              }
-            }
-
-            if (result == BcSlot.ANY_FLAG) {
-              result = bcWriter.allocSlot();
-            }
-
-            int elseMark = writeForwardCondJump(opcode, expression, lhs.slot);
-            compileExpressionTo(expression.getY(), result);
-            int end = writeForwardJump(expression);
-            bcWriter.patchForwardJump(elseMark);
-            cp(expression, lhs.slot, result);
-            bcWriter.patchForwardJump(end);
-            return new CompileExpressionResult(result, null);
-          }
+          return compileAndOr(ir, expression, result);
         default:
-          return compileBinaryOperatorNonShortCicrcuiting(expression, result);
+          return compileBinaryOperatorNonShortCicrcuiting(
+              ir, expression, result);
       }
     }
 
-    private static class CompileExpressionListResult {
-      private final int[] opcodeArgs;
-      @Nullable
-      private final Object[] constants;
-
-      CompileExpressionListResult(int[] opcodeArgs, @Nullable Object[] constants) {
-        this.opcodeArgs = opcodeArgs;
-        this.constants = constants;
+    private CompileExpressionResult compileAndOr(
+        BcIr ir, BinaryOperatorExpression expression, BcIrLocalOrAny result) {
+      BcWriter.JumpCond jumpCond;
+      switch (expression.getOperator()) {
+        case AND:
+          jumpCond = BcWriter.JumpCond.IF_NOT;
+          break;
+        case OR:
+          jumpCond = BcWriter.JumpCond.IF;
+          break;
+        default:
+          throw new IllegalArgumentException();
       }
 
-      boolean allConstantsImmutable() {
-        if (constants == null) {
-          return false;
+      int savedSize = ir.size();
+      CompileExpressionResult lhs = compileExpression(ir, expression.getX());
+      if (lhs.value() != null && isTruthImmutable(lhs.value())) {
+        ir.assertUnchanged(savedSize);
+        if (Starlark.truth(lhs.value()) != (expression.getOperator() == TokenKind.AND)) {
+          return compileConstantTo(ir, expression, lhs.value(), result);
+        } else {
+          return compileExpressionTo(ir, expression.getY(), result);
         }
-        for (Object constant : constants) {
-          if (!Starlark.isImmutable(constant)) {
-            return false;
-          }
-        }
-        return true;
       }
 
-      int singleArg() {
-        if (opcodeArgs[0] != 1) {
-          return -1;
-        }
-        return opcodeArgs[1];
-      }
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "and_or");
+
+      lhs.slot.incRef();
+
+      BcIrInstr.JumpLabel elseTarget = ir.ifBr(
+          nodeToLocOffset(expression),
+          lhs.slot,
+          jumpCond);
+      compileExpressionTo(ir, expression.getY(), resultLocal);
+      BcIrInstr.JumpLabel endTarget = ir.br(nodeToLocOffset(expression));
+      ir.add(elseTarget);
+      resultLocal.incRef();
+      cp(ir, expression, lhs.slot, resultLocal);
+      ir.add(endTarget);
+      return new CompileExpressionResult(resultLocal);
     }
 
-    private CompileExpressionListResult compileExpressionList(List<Expression> expressions) {
+    BcIrListArg compileExpressionList(BcIr ir, List<Expression> expressions) {
       if (expressions.isEmpty()) {
-        return new CompileExpressionListResult(
-            new int[] { 0 },
-            ArraysForStarlark.EMPTY_OBJECT_ARRAY);
+        return BcIrListArg.Slots.EMPTY;
       }
 
-      BcWriter.SavedState saved = bcWriter.save();
+      int initialSize = ir.size();
 
-      int[] opcodeArgs = new int[1 + expressions.size()];
-      opcodeArgs[0] = expressions.size();
+      ImmutableList.Builder<BcIrSlot> slots = ImmutableList
+          .builderWithExpectedSize(expressions.size());
+
       Object[] constants = new Object[expressions.size()];
       for (int i = 0; i < expressions.size(); i++) {
         Expression elemExpr = expressions.get(i);
-        CompileExpressionResult elem = compileExpression(elemExpr);
-        if (constants != null && elem.value != null) {
-          constants[i] = elem.value;
+        CompileExpressionResult elem = compileExpression(ir, elemExpr);
+        if (constants != null && elem.value() != null) {
+          constants[i] = elem.value();
         } else {
           constants = null;
         }
-        opcodeArgs[i + 1] = elem.slot;
+        slots.add(elem.slot);
       }
       if (constants != null) {
-        saved.reset();
-        int objectIndex = bcWriter.allocObject(constants);
-        return new CompileExpressionListResult(
-            new int[] { BcSlot.objectIndexToNegativeSize(objectIndex) },
-            constants);
+        Preconditions.checkState(ir.size() == initialSize);
+        return new BcIrListArg.ListData(constants);
       }
-      return new CompileExpressionListResult(opcodeArgs, null);
+      return new BcIrListArg.Slots(slots.build());
+    }
+
+    static class ListArgWithIr {
+      final BcIr ir;
+      final BcIrListArg listArg;
+
+      public ListArgWithIr(BcIr ir, BcIrListArg listArg) {
+        if (listArg.data() != null) {
+          Preconditions.checkArgument(
+              ir.size() == 0, "must produce no bytecode for constants");
+        }
+        this.listArg = listArg;
+        this.ir = ir;
+      }
+    }
+
+    ListArgWithIr compileExpressionList(List<Expression> expressions) {
+      BcIr ir = new BcIr();
+      BcIrListArg listArg = compileExpressionList(ir, expressions);
+      return new ListArgWithIr(ir, listArg);
     }
 
     /** Compile expression {@code x + [...]}. */
     @Nullable
     private CompileExpressionResult tryCompilePlusList(
-        BinaryOperatorExpression expression, int result) {
+        BcIr ir, BinaryOperatorExpression expression, BcIrLocalOrAny result) {
       if (expression.getOperator() != TokenKind.PLUS) {
         return null;
       }
@@ -1281,29 +1172,72 @@ class Bc {
         return null;
       }
 
-      CompileExpressionResult lhs = compileExpression(expression.getX());
+      CompileExpressionResult lhs = compileExpression(ir, expression.getX());
 
-      int[] rhs = compileExpressionList(
-          ((ListExpression) expression.getY()).getElements()).opcodeArgs;
+      BcIrListArg rhs = compileExpressionList(
+          ir, ((ListExpression) expression.getY()).getElements());
 
-      return writeToOut(
-          BcInstr.Opcode.PLUS_LIST,
-          expression,
-          BcWriter.args(lhs.slot, rhs),
-          result);
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "plus_list");
+
+      ir.add(new BcIrInstr.PlusList(
+          nodeToLocOffset(expression),
+          lhs.slot,
+          rhs,
+          resultLocal));
+
+      return new CompileExpressionResult(resultLocal);
+    }
+
+    CompileExpressionResult writeTypeIs(
+        BcIr ir, Node expression, BcIrSlot slot, String type, BcIrLocalOrAny result) {
+      BcIrSlot.AnyLocal local = ir.makeLocal(nodeToLocOffset(expression), slot, "type_is_v");
+
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "type_is");
+
+      ir.add(new BcIrInstr.TypeIs(
+          nodeToLocOffset(expression),
+          local,
+          type,
+          resultLocal));
+
+      return new CompileExpressionResult(resultLocal);
+    }
+
+    /** Compile expression to {@link BcInstr.Opcode#TYPE_IS}. */
+    @Nullable
+    private CompileExpressionResult tryCompileTypeIs(
+        BcIr ir,
+        BinaryOperatorExpression expression,
+        CompileExpressionResult x,
+        CompileExpressionResult y,
+        BcIrLocalOrAny result) {
+      if (expression.getOperator() != TokenKind.EQUALS_EQUALS) {
+        return null;
+      }
+
+      // Try compile `type(x) == y`
+      CompileExpressionResult callConst = tryCompileTypeIsCallConst(
+          ir, expression, expression.getX(), x, y, result);
+      if (callConst != null) {
+        return callConst;
+      }
+
+      // Otherwise try compile `x == type(y)`
+      return tryCompileTypeIsCallConst(
+          ir, expression, expression.getY(), y, x, result);
     }
 
     @Nullable
     private CompileExpressionResult tryCompileTypeIsCallConst(
-        BcWriter.SavedState saved,
+        BcIr ir,
         Node expression,
         Expression maybeTypeCallExpression,
-        CompileExpressionResult x, CompileExpressionResult y, int result) {
-      if (x.value != null) {
+        CompileExpressionResult x, CompileExpressionResult y, BcIrLocalOrAny result) {
+      if (x.value() != null) {
         return null;
       }
 
-      if (!(y.value instanceof String)) {
+      if (!(y.value() instanceof String)) {
         return null;
       }
 
@@ -1325,180 +1259,151 @@ class Bc {
 
       // Now we know the call is `type(x) == y`
 
-      saved.reset();
+      BcIrSlot typeArgument = compileExpression(ir, callExpression.getArguments().get(0).getValue()).slot;
 
-      int typeArgument = compileExpression(callExpression.getArguments().get(0).getValue()).slot;
-
-      return writeTypeIs(expression, typeArgument, (String) y.value, result);
-    }
-
-    private CompileExpressionResult writeTypeIs(
-        Node expression, int slot, String type, int result) {
-      int local = makeLocal(expression, slot);
-
-      int typeIndex = bcWriter.allocString(type);
-
-      return writeToOut(
-          BcInstr.Opcode.TYPE_IS,
-          expression,
-          new int[] { local, typeIndex },
-          result);
-    }
-
-    /** Compile expression to {@link BcInstr.Opcode#TYPE_IS}. */
-    @Nullable
-    private CompileExpressionResult tryCompileTypeIs(
-        BcWriter.SavedState saved,
-        BinaryOperatorExpression expression,
-        CompileExpressionResult x,
-        CompileExpressionResult y,
-        int result) {
-      if (expression.getOperator() != TokenKind.EQUALS_EQUALS) {
-        return null;
-      }
-
-      // Try compile `type(x) == y`
-      CompileExpressionResult callConst = tryCompileTypeIsCallConst(
-          saved, expression, expression.getX(), x, y, result);
-      if (callConst != null) {
-        return callConst;
-      }
-
-      // Otherwise try compile `x == type(y)`
-      return tryCompileTypeIsCallConst(
-          saved, expression, expression.getY(), y, x, result);
+      return writeTypeIs(ir, expression, typeArgument, (String) y.value(), result);
     }
 
     private CompileExpressionResult compileBinaryOperatorNonShortCicrcuiting(
-        BinaryOperatorExpression expression, int result) {
-      BcWriter.SavedState saved = bcWriter.save();
+        BcIr ir, BinaryOperatorExpression expression, BcIrLocalOrAny result) {
+      int savedSize = ir.size();
 
-      CompileExpressionResult plusList = tryCompilePlusList(expression, result);
+      CompileExpressionResult plusList = tryCompilePlusList(ir, expression, result);
       if (plusList != null) {
         return plusList;
       }
 
-      CompileExpressionResult x = compileExpression(expression.getX());
-      CompileExpressionResult y = compileExpression(expression.getY());
+      BcIr localIr = new BcIr();
+      CompileExpressionResult x = compileExpression(localIr, expression.getX());
+      CompileExpressionResult y = compileExpression(localIr, expression.getY());
 
-      if (x.value != null
-          && y.value != null
-          && Starlark.isImmutable(x.value)
-          && Starlark.isImmutable(y.value)) {
+      if (x.valueImmutable() != null
+          && y.valueImmutable() != null) {
         try {
           Object constResult = EvalUtils.binaryOp(
               expression.getOperator(),
-              x.value, y.value, thread.getSemantics(), thread.mutability());
+              x.valueImmutable(), y.valueImmutable(), thread.getSemantics(), thread.mutability());
           // For example, `[] + []` returns new list
           // so we cannot compile it to constant if result is mutable.
           if (Starlark.isImmutable(constResult)) {
-            saved.reset();
-            return compileConstantTo(expression, constResult, result);
+            ir.assertUnchanged(savedSize);
+            return compileConstantTo(ir, expression, constResult, result);
           }
         } catch (EvalException e) {
           // ignore
         }
       }
 
-      if (x.value instanceof String
+      if (x.value() instanceof String
           && expression.getOperator() == TokenKind.PERCENT) {
-        String format = (String) x.value;
+        String format = (String) x.value();
         int percent = BcStrFormat.indexOfSinglePercentS(format);
         // Check that format string has only one `%s` and no other `%`
         if (percent >= 0) {
-          saved.reset();
-          return compileStringPercent(expression, result, format, percent);
+          // discard local IR because we are going to compile RHS again
+          return compileStringPercent(ir, expression, format, percent, result);
         }
       }
 
-      CompileExpressionResult typeIsResult = tryCompileTypeIs(saved, expression, x, y, result);
+      CompileExpressionResult typeIsResult = tryCompileTypeIs(ir, expression, x, y, result);
       if (typeIsResult != null) {
         return typeIsResult;
       }
 
-      return writeBinaryOp(expression, expression.getOperator(), x, y, result);
+      ir.addAll(localIr);
+
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "bin");
+
+      writeBinaryOp(ir, expression, expression.getOperator(), x, y, resultLocal);
+      return new CompileExpressionResult(resultLocal);
     }
 
-    private CompileExpressionResult writeBinaryOp(Node expression,
-        TokenKind operator, CompileExpressionResult x, CompileExpressionResult y, int result) {
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
-
+    private void writeBinaryOp(BcIr ir, Node expression,
+        TokenKind operator, CompileExpressionResult x, CompileExpressionResult y, BcIrSlot.AnyLocal result) {
       switch (operator) {
-        case EQUALS_EQUALS:
-          write(BcInstr.Opcode.EQ, expression, x.slot, y.slot, result);
-          return new CompileExpressionResult(result, null);
-        case NOT_EQUALS:
-          write(BcInstr.Opcode.NOT_EQ, expression, x.slot, y.slot, result);
-          return new CompileExpressionResult(result, null);
-        case IN:
-          write(BcInstr.Opcode.IN, expression, x.slot, y.slot, result);
-          return new CompileExpressionResult(result, null);
-        case NOT_IN:
-          write(BcInstr.Opcode.NOT_IN, expression, x.slot, y.slot, result);
-          return new CompileExpressionResult(result, null);
         case PLUS:
-          return writePlus(expression, x, y, result);
+          writePlus(ir, expression, x, y, result);
+          break;
         default:
-          write(
-              BcInstr.Opcode.BINARY,
-              expression,
+          BcIrInstr.BinOpOp binOpOp = BcIrInstr.BinOpOp.fromToken(operator);
+          ir.add(new BcIrInstr.BinOp(
+              nodeToLocOffset(expression),
+              binOpOp,
               x.slot,
               y.slot,
-              operator.ordinal(),
-              result);
-          return new CompileExpressionResult(result, null);
+              result));
       }
     }
 
-    private CompileExpressionResult compileStringPercent(BinaryOperatorExpression expression,
-        int result, String format, int percent) {
+    private CompileExpressionResult compileStringPercent(
+        BcIr ir,
+        BinaryOperatorExpression expression, String format, int percent, BcIrLocalOrAny result) {
       // compile again after reset
       CompileExpressionResult y;
-      BcInstr.Opcode opcode;
+      boolean tuple;
       if (expression.getY() instanceof ListExpression
           && ((ListExpression) expression.getY()).isTuple()
           && ((ListExpression) expression.getY()).getElements().size() == 1) {
-        y = compileExpression(((ListExpression) expression.getY()).getElements().get(0));
-        opcode = BcInstr.Opcode.PERCENT_S_ONE_TUPLE;
+        y = compileExpression(ir, ((ListExpression) expression.getY()).getElements().get(0));
+        tuple = true;
       } else {
-        y = compileExpression(expression.getY());
-        opcode = BcInstr.Opcode.PERCENT_S_ONE;
+        y = compileExpression(ir, expression.getY());
+        tuple = false;
       }
-      if (result == BcSlot.ANY_FLAG) {
-        result = bcWriter.allocSlot();
-      }
-      write(opcode, expression, bcWriter.allocString(format), percent, y.slot, result);
-      return new CompileExpressionResult(result, null);
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "str_percent");
+      ir.add(new BcIrInstr.PercentSOne(
+          nodeToLocOffset(expression),
+          format,
+          percent,
+          y.slot,
+          tuple,
+          resultLocal));
+      return new CompileExpressionResult(resultLocal);
     }
 
-    private CompileExpressionResult writePlus(Node node,
-        CompileExpressionResult x, CompileExpressionResult y, int result) {
-      BcInstr.Opcode opcode;
-      if (x.value instanceof String || y.value instanceof String) {
-        opcode = BcInstr.Opcode.PLUS_STRING;
+    private void writePlus(BcIr ir, Node node,
+        CompileExpressionResult x, CompileExpressionResult y, BcIrSlot.AnyLocal result) {
+
+      BcIrInstr.BinOpOp binOpOp;
+      if (x.value() instanceof String || y.value() instanceof String) {
+        binOpOp = BcIrInstr.BinOpOp.PLUS_STRING;
       } else {
-        opcode = BcInstr.Opcode.PLUS;
+        binOpOp = BcIrInstr.BinOpOp.PLUS;
       }
-      write(opcode, node, x.slot, y.slot, result);
-      return new CompileExpressionResult(result, null);
+      ir.add(new BcIrInstr.BinOp(
+          nodeToLocOffset(node),
+          binOpOp,
+          x.slot,
+          y.slot,
+          result));
     }
 
-    BcCompiled finish() {
-      return bcWriter.finish();
+    private BcCompiled compile() {
+      BcIr ir = new BcIr();
+      compileStatements(ir, rfn.getBody(), rfn.isToplevel());
+
+      Object returnsConst = ir.returnsConst();
+      String returnsTypeIs = ir.returnsTypeIsOfParam0();
+
+      BcWriter bcWriter = new BcWriter(
+          rfn.getFileLocations(),
+          module,
+          rfn.getName(),
+          rfn.getLocals(),
+          rfn.getFreeVars());
+      ir.write(bcWriter);
+      return bcWriter.finish(returnsConst, returnsTypeIs);
     }
   }
 
-  public static BcCompiled compileFunction(StarlarkThread thread, Resolver.Function rfn, Module module,
-      Tuple freevars) {
+  public static BcCompiled compileFunction(
+      StarlarkThread thread, Resolver.Function rfn, Module module, Tuple freevars) {
     if (StarlarkRuntimeStats.ENABLED) {
       StarlarkRuntimeStats.enter(StarlarkRuntimeStats.WhereWeAre.BC_COMPILE);
     }
     try {
       Compiler compiler = new Compiler(thread, rfn, module, freevars);
-      compiler.compileStatements(rfn.getBody(), rfn.isToplevel());
-      return compiler.finish();
+      return compiler.compile();
     } finally {
       if (StarlarkRuntimeStats.ENABLED) {
         StarlarkRuntimeStats.leave();

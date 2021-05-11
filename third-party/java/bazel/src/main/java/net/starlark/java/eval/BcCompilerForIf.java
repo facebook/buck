@@ -2,6 +2,7 @@ package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
+import java.util.ArrayList;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.BinaryOperatorExpression;
 import net.starlark.java.syntax.Expression;
@@ -19,7 +20,7 @@ class BcCompilerForIf {
   }
 
   /** Compile expression just for side effects. */
-  private void compileForEffect(BoolExpr cond) {
+  private void compileForEffect(BcIr ir, BoolExpr cond) {
     Preconditions.checkState(cond.maybeConst != null,
         "Can only compile const expressions: %s", cond);
     cond.match(
@@ -38,12 +39,12 @@ class BcCompilerForIf {
           public void binOp(BinOpExpr binOpExpr) {
             Boolean lhsConst = binOpExpr.lhs.maybeConst;
             if (lhsConst != null) {
-              compileForEffect(binOpExpr.lhs);
+              compileForEffect(ir, binOpExpr.lhs);
               // `lhs` is const. So we need to compile `rhs` for effect only if either:
               // * `(lhs === True) AND ...`
               // * `(lhs === False) OR ...`
               if (lhsConst == (binOpExpr.binOp == BinOp.AND)) {
-                compileForEffect(binOpExpr.rhs);
+                compileForEffect(ir, binOpExpr.rhs);
               }
             } else {
               // Compile AND expression like:
@@ -56,18 +57,18 @@ class BcCompilerForIf {
               // if not lhs:
               //   rhs
               // ```
-              IntArrayBuilder thenAddrs = new IntArrayBuilder();
-              IntArrayBuilder elseAddrs = new IntArrayBuilder();
-              compileCond(binOpExpr.lhs, binOpExpr.binOp != BinOp.AND, elseAddrs, thenAddrs);
-              compiler.bcWriter.patchForwardJumps(thenAddrs);
-              compileForEffect(binOpExpr.rhs);
-              compiler.bcWriter.patchForwardJumps(elseAddrs);
+              ArrayList<BcIrInstr.JumpLabel> thenAddrs = new ArrayList<>();
+              ArrayList<BcIrInstr.JumpLabel> elseAddrs = new ArrayList<>();
+              compileCond(ir, binOpExpr.lhs, binOpExpr.binOp != BinOp.AND, elseAddrs, thenAddrs);
+              ir.addJumpLabels(thenAddrs);
+              compileForEffect(ir, binOpExpr.rhs);
+              ir.addJumpLabels(elseAddrs);
             }
           }
 
           @Override
           public void not(NotExpr notExpr) {
-            compileForEffect(notExpr.arg);
+            compileForEffect(ir, notExpr.arg);
           }
         });
   }
@@ -100,17 +101,18 @@ class BcCompilerForIf {
   // Local variables are never used, but `BR` instructions are rarely used
   // for certain complicated cases when evaluating conditions with side effects.
   private void compileCond(
+      BcIr ir,
       BoolExpr cond,
       boolean elseJumpCond,
-      IntArrayBuilder elseJumps,
-      IntArrayBuilder thenJumps) {
+      ArrayList<BcIrInstr.JumpLabel> elseJumps,
+      ArrayList<BcIrInstr.JumpLabel> thenJumps) {
     Preconditions.checkState(cond.maybeConst == null,
         "Can only compile non-const expressions: %s", cond);
     cond.match(
         new BoolExprMatcher() {
           @Override
           public void not(NotExpr notExpr) {
-            compileCond(((NotExpr) cond).arg, !elseJumpCond, elseJumps, thenJumps);
+            compileCond(ir, ((NotExpr) cond).arg, !elseJumpCond, elseJumps, thenJumps);
           }
 
           @Override
@@ -122,11 +124,11 @@ class BcCompilerForIf {
             // Avoid unnecessary jumps in generated code when `binOpExpr`
             // is equivalent to `lhs`.
             if (xConst != null && !binOpExpr.lhs.hasEffects) {
-              compileCond(binOpExpr.rhs, elseJumpCond, elseJumps, thenJumps);
+              compileCond(ir, binOpExpr.rhs, elseJumpCond, elseJumps, thenJumps);
               return;
             }
             if (yConst != null && !binOpExpr.rhs.hasEffects) {
-              compileCond(binOpExpr.lhs, elseJumpCond, elseJumps, thenJumps);
+              compileCond(ir, binOpExpr.lhs, elseJumpCond, elseJumps, thenJumps);
               return;
             }
 
@@ -144,18 +146,18 @@ class BcCompilerForIf {
 
               if (xConst != null) {
                 Verify.verify(xConst != elseJumpCond);
-                compileForEffect(binOpExpr.lhs);
+                compileForEffect(ir, binOpExpr.lhs);
               } else {
-                IntArrayBuilder xSkip = new IntArrayBuilder();
-                compileCond(binOpExpr.lhs, elseJumpCond, elseJumps, xSkip);
-                compiler.bcWriter.patchForwardJumps(xSkip);
+                ArrayList<BcIrInstr.JumpLabel> xSkip = new ArrayList<>();
+                compileCond(ir, binOpExpr.lhs, elseJumpCond, elseJumps, xSkip);
+                ir.addJumpLabels(xSkip);
               }
 
               if (yConst != null) {
                 Verify.verify(yConst != elseJumpCond);
-                compileForEffect(binOpExpr.rhs);
+                compileForEffect(ir, binOpExpr.rhs);
               } else {
-                compileCond(binOpExpr.rhs, elseJumpCond, elseJumps, thenJumps);
+                compileCond(ir, binOpExpr.rhs, elseJumpCond, elseJumps, thenJumps);
               }
             } else {
 
@@ -167,16 +169,16 @@ class BcCompilerForIf {
 
               if (xConst != null) {
                 Verify.verify(xConst == elseJumpCond);
-                compileForEffect(binOpExpr.lhs);
+                compileForEffect(ir, binOpExpr.lhs);
               } else {
-                IntArrayBuilder xSkip = new IntArrayBuilder();
-                compileCond(binOpExpr.lhs, !elseJumpCond, thenJumps, xSkip);
-                compiler.bcWriter.patchForwardJumps(xSkip);
+                ArrayList<BcIrInstr.JumpLabel> xSkip = new ArrayList<>();
+                compileCond(ir, binOpExpr.lhs, !elseJumpCond, thenJumps, xSkip);
+                ir.addJumpLabels(xSkip);
               }
 
               if (yConst != null) {
                 Verify.verify(yConst == elseJumpCond);
-                compileForEffect(binOpExpr.rhs);
+                compileForEffect(ir, binOpExpr.rhs);
                 // This is a tricky part: we compile expression like:
                 // ```
                 // if x or y: ... else: ...
@@ -188,9 +190,9 @@ class BcCompilerForIf {
                 // * `y` has side effects
                 // Thus we need to evaluate `y` for side effects,
                 // but also unconditionally jump to else.
-                elseJumps.add(compiler.writeForwardJump(binOpExpr.expr));
+                elseJumps.add(ir.br(compiler.nodeToLocOffset(binOpExpr.expr)));
               } else {
-                compileCond(binOpExpr.rhs, elseJumpCond, elseJumps, thenJumps);
+                compileCond(ir, binOpExpr.rhs, elseJumpCond, elseJumps, thenJumps);
               }
             }
           }
@@ -202,48 +204,50 @@ class BcCompilerForIf {
 
           @Override
           public void other(OtherExpr otherExpr) {
-            Bc.Compiler.CompileExpressionResult condCompiled =
-                compiler.compileExpression(otherExpr.expr);
-            BcInstr.Opcode opcode =
-                elseJumpCond ? BcInstr.Opcode.IF_BR_LOCAL : BcInstr.Opcode.IF_NOT_BR_LOCAL;
-            int jumpTarget =
-                compiler.writeForwardCondJump(opcode, otherExpr.expr, condCompiled.slot);
-            elseJumps.add(jumpTarget);
+            ir.addAll(otherExpr.result.ir);
+            BcWriter.JumpCond jumpCond =
+                elseJumpCond ? BcWriter.JumpCond.IF : BcWriter.JumpCond.IF_NOT;
+            BcIrInstr.JumpLabel jumpLabel =
+                ir.ifBr(
+                    compiler.nodeToLocOffset(otherExpr.expr),
+                    otherExpr.result.result.slot,
+                    jumpCond);
+            elseJumps.add(jumpLabel);
           }
         });
   }
 
-  void compileIfStatement(IfStatement ifStatement) {
+  void compileIfStatement(BcIr ir, IfStatement ifStatement) {
     BoolExpr cond = convert(ifStatement.getCondition());
 
     Boolean condConst = cond.maybeConst;
     if (condConst != null) {
-      compileForEffect(cond);
+      compileForEffect(ir, cond);
       if (condConst) {
-        compiler.compileStatements(ifStatement.getThenBlock(), false);
+        compiler.compileStatements(ir, ifStatement.getThenBlock(), false);
       } else {
         if (ifStatement.getElseBlock() != null) {
-          compiler.compileStatements(ifStatement.getElseBlock(), false);
+          compiler.compileStatements(ir, ifStatement.getElseBlock(), false);
         }
       }
       return;
     }
 
-    IntArrayBuilder elseAddrs = new IntArrayBuilder();
-    IntArrayBuilder thenAddrs = new IntArrayBuilder();
+    ArrayList<BcIrInstr.JumpLabel> elseAddrs = new ArrayList<>();
+    ArrayList<BcIrInstr.JumpLabel> thenAddrs = new ArrayList<>();
     // If cond == false, jump to elseAddr, otherwise jump to then addr or just fall through.
-    compileCond(cond, false, elseAddrs, thenAddrs);
+    compileCond(ir, cond, false, elseAddrs, thenAddrs);
 
-    compiler.bcWriter.patchForwardJumps(thenAddrs);
-    compiler.compileStatements(ifStatement.getThenBlock(), false);
+    ir.addJumpLabels(thenAddrs);
+    compiler.compileStatements(ir, ifStatement.getThenBlock(), false);
     if (ifStatement.getElseBlock() != null) {
       // TODO(nga): no need to jump if the last instruction is return
-      int end = compiler.writeForwardJump(ifStatement);
-      compiler.bcWriter.patchForwardJumps(elseAddrs);
-      compiler.compileStatements(ifStatement.getElseBlock(), false);
-      compiler.bcWriter.patchForwardJump(end);
+      BcIrInstr.JumpLabel end = ir.br(compiler.nodeToLocOffset(ifStatement));
+      ir.addJumpLabels(elseAddrs);
+      compiler.compileStatements(ir, ifStatement.getElseBlock(), false);
+      ir.add(end);
     } else {
-      compiler.bcWriter.patchForwardJumps(elseAddrs);
+      ir.addJumpLabels(elseAddrs);
     }
   }
 
@@ -307,11 +311,11 @@ class BcCompilerForIf {
 
   /** Any other expression we know nothing about. */
   private static class OtherExpr extends BoolExpr {
-    private final Expression expr;
+    private final Bc.Compiler.CompileExpressionResultWithIr result;
 
-    private OtherExpr(Expression expr) {
+    private OtherExpr(Expression expr, Bc.Compiler.CompileExpressionResultWithIr result) {
       super(expr, /* maybeConst */ null, /* hasEffects */ true);
-      this.expr = expr;
+      this.result = result;
     }
 
     @Override
@@ -427,14 +431,10 @@ class BcCompilerForIf {
       }
     }
 
-    Object compiled = compiler.tryCompileConstant(expr);
-    if (compiled != null && Bc.Compiler.isTruthImmutable(compiled)) {
-      return new ConstExpr(expr, Starlark.truth(compiled));
+    Bc.Compiler.CompileExpressionResultWithIr result = compiler.compileExpression(expr);
+    if (result.result.value() != null && Bc.Compiler.isTruthImmutable(result.result.value())) {
+      return new ConstExpr(expr, Starlark.truth(result.result.value()));
     }
-    // TODO(nga): This is inefficient:
-    //   when expression is not const, we compile it twice,
-    //   here to understand that it is not constant,
-    //   and once again when we actually compile the condition.
-    return new OtherExpr(expr);
+    return new OtherExpr(expr, result);
   }
 }

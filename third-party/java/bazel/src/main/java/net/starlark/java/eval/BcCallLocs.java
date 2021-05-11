@@ -41,4 +41,9 @@ class BcCallLocs {
     Preconditions.checkState(starStarOffset >= 0);
     return fileLocations.getLocation(starStarOffset);
   }
+
+  @Override
+  public String toString() {
+    return BcCallLocs.class.getSimpleName();
+  }
 }

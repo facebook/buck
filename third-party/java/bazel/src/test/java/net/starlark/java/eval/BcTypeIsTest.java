@@ -7,11 +7,22 @@ import org.junit.Test;
 
 public class BcTypeIsTest {
   @Test
-  public void typeIsOpcodes() throws Exception {
+  public void typeIsStringOpcodes() throws Exception {
     String program = "" //
         + "def is_string(x):\n"
         + "  return type(x) == type('')\n"
         + "is_string";
+    assertEquals(
+        ImmutableList.of(BcInstr.Opcode.TYPE_IS, BcInstr.Opcode.RETURN),
+        BcTestUtil.opcodes(program));
+  }
+
+  @Test
+  public void typeIsTupleOpcodes() throws Exception {
+    String program = "" //
+        + "def is_tuple(x):\n"
+        + "  return type(x) == type(())\n"
+        + "is_tuple";
     assertEquals(
         ImmutableList.of(BcInstr.Opcode.TYPE_IS, BcInstr.Opcode.RETURN),
         BcTestUtil.opcodes(program));

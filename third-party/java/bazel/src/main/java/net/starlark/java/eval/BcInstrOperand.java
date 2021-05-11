@@ -109,10 +109,13 @@ class BcInstrOperand {
 
     /** Get both instruction count for this operand and the string representation. */
     String toStringAndCount(
-        BcParser parser, List<String> strings,
-        List<Object> constantRegs, OpcodePrinterFunctionContext fnCtx) {
+        BcParser parser,
+        List<String> strings,
+        List<Object> constantRegs,
+        List<Object> objects,
+        OpcodePrinterFunctionContext fnCtx) {
       OpcodePrinter printer =
-          new OpcodePrinter(parser, strings, constantRegs, fnCtx);
+          new OpcodePrinter(parser, strings, constantRegs, objects, fnCtx);
       print(printer);
       return printer.sb.toString();
     }
@@ -175,12 +178,14 @@ class BcInstrOperand {
     private final BcParser parser;
     private final List<String> strings;
     private final List<Object> constantRegs;
+    private final List<Object> objects;
     private final OpcodePrinterFunctionContext fnCtx;
     private StringBuilder sb = new StringBuilder();
 
     private OpcodePrinter(BcParser parser, List<String> strings, List<Object> constantRegs,
-        OpcodePrinterFunctionContext fnCtx) {
+        List<Object> objects, OpcodePrinterFunctionContext fnCtx) {
       this.parser = parser;
+      this.objects = objects;
       this.fnCtx = fnCtx;
       this.strings = strings;
       this.constantRegs = constantRegs;
@@ -307,8 +312,6 @@ class BcInstrOperand {
         case BcSlot.NULL_FLAG:
           valueToPrint = "=null";
           break;
-        case BcSlot.ANY_FLAG:
-          throw new IllegalStateException("any must not appear in bytecode");
         default:
           throw new IllegalStateException("wrong slot");
       }
@@ -378,7 +381,9 @@ class BcInstrOperand {
   static class ObjectArg extends OneWordOperand {
     @Override
     public void print(OpcodePrinter visitor) {
-      visitor.append("o" + visitor.parser.nextInt());
+      int objectIndex = visitor.parser.nextInt();
+      Object o = objectIndex < visitor.objects.size() ? visitor.objects.get(objectIndex) : "invalid";
+      visitor.append("o" + objectIndex + "=" + o);
     }
 
     static class Decoded extends Operands.Decoded {

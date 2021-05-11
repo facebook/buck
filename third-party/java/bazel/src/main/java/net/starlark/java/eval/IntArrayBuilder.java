@@ -78,4 +78,8 @@ class IntArrayBuilder {
     r.append("]");
     return r.toString();
   }
+
+  public void clear() {
+    size = 0;
+  }
 }

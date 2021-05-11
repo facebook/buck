@@ -29,9 +29,6 @@ class BcSlot {
   /** Null marker. */
   static final int NULL_FLAG = 0x05_00_00_00;
 
-  /** Marker for any register, used in the compiler. */
-  static final int ANY_FLAG = 0xff_00_00_00;
-
   static int local(int index) {
     return index | LOCAL_FLAG;
   }
@@ -61,6 +58,10 @@ class BcSlot {
     return slot & ~LOCAL_FLAG;
   }
 
+  static void checkIndex(int index) {
+    Preconditions.checkState((index & MASK) == 0);
+  }
+
   static void checkLocal(int slot) {
     Verify.verify(isLocal(slot));
   }
@@ -86,7 +87,6 @@ class BcSlot {
       case FREE_FLAG: return "FREE:" + index;
       case CELL_FLAG: return "CELL:" + index;
       case CONST_FLAG: return "CONST:" + index;
-      case ANY_FLAG: return "ANY:" + index;
       default: return "INCORRECT:" + slot;
     }
   }

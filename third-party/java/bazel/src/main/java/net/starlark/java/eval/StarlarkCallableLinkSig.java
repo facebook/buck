@@ -87,6 +87,18 @@ public class StarlarkCallableLinkSig {
 
   @Override
   public String toString() {
-    return numPositionals + " " + String.join(",", namedNames) + (hasStar ? " *" : "") + (hasStarStar ? " **" : "");
+    StringBuilder sb = new StringBuilder();
+    sb.append(numPositionals);
+    if (namedNames.length != 0) {
+      sb.append(" ");
+      sb.append(String.join(",", namedNames));
+    }
+    if (hasStar) {
+      sb.append(" *");
+    }
+    if (hasStarStar) {
+      sb.append(" **");
+    }
+    return sb.toString();
   }
 }

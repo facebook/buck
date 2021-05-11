@@ -122,19 +122,7 @@ final class StringModule extends StarlarkValue {
     if (iend < istart) {
       iend = istart; // => empty result
     }
-    return pack(istart, iend); // = str.substring(start, end)
-  }
-
-  private static long pack(int lo, int hi) {
-    return (((long) hi) << 32) | (lo & 0xffffffffL);
-  }
-
-  private static int lo(long x) {
-    return (int) x;
-  }
-
-  private static int hi(long x) {
-    return (int) (x >>> 32);
+    return IntPair.pack(istart, iend); // = str.substring(start, end)
   }
 
   @StarlarkMethod(
@@ -545,11 +533,11 @@ final class StringModule extends StarlarkValue {
     // Unfortunately Java forces us to allocate here, even though
     // String has a private indexOf method that accepts indices.
     // Fortunately the common case is self[0:n].
-    String substr = self.substring(lo(indices), hi(indices));
+    String substr = self.substring(IntPair.lo(indices), IntPair.hi(indices));
     int subpos = forward ? substr.indexOf(sub) : substr.lastIndexOf(sub);
     return subpos < 0
         ? subpos //
-        : subpos + lo(indices);
+        : subpos + IntPair.lo(indices);
   }
 
   private static final Pattern SPLIT_LINES_PATTERN =
@@ -890,12 +878,12 @@ final class StringModule extends StarlarkValue {
   public int count(String self, String sub, Object start, Object end) throws EvalException {
     long indices = substringIndices(self, start, end);
     if (sub.isEmpty()) {
-      return hi(indices) - lo(indices) + 1; // str.length() + 1
+      return IntPair.hi(indices) - IntPair.lo(indices) + 1; // str.length() + 1
     }
     // Unfortunately Java forces us to allocate here, even though
     // String has a private indexOf method that accepts indices.
     // Fortunately the common case is self[0:n].
-    String str = self.substring(lo(indices), hi(indices));
+    String str = self.substring(IntPair.lo(indices), IntPair.hi(indices));
     int count = 0;
     int index = 0;
     while ((index = str.indexOf(sub, index)) >= 0) {
@@ -959,10 +947,10 @@ final class StringModule extends StarlarkValue {
   public boolean endsWith(String self, Object sub, Object start, Object end) throws EvalException {
     long indices = substringIndices(self, start, end);
     if (sub instanceof String) {
-      return substringEndsWith(self, lo(indices), hi(indices), (String) sub);
+      return substringEndsWith(self, IntPair.lo(indices), IntPair.hi(indices), (String) sub);
     }
     for (String s : Sequence.cast(sub, String.class, "sub")) {
-      if (substringEndsWith(self, lo(indices), hi(indices), s)) {
+      if (substringEndsWith(self, IntPair.lo(indices), IntPair.hi(indices), s)) {
         return true;
       }
     }
@@ -1043,10 +1031,10 @@ final class StringModule extends StarlarkValue {
       throws EvalException {
     long indices = substringIndices(self, start, end);
     if (sub instanceof String) {
-      return substringStartsWith(self, lo(indices), hi(indices), (String) sub);
+      return substringStartsWith(self, IntPair.lo(indices), IntPair.hi(indices), (String) sub);
     }
     for (String s : Sequence.cast(sub, String.class, "sub")) {
-      if (substringStartsWith(self, lo(indices), hi(indices), s)) {
+      if (substringStartsWith(self, IntPair.lo(indices), IntPair.hi(indices), s)) {
         return true;
       }
     }

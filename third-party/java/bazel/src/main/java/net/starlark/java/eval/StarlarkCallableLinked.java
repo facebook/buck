@@ -32,4 +32,9 @@ public abstract class StarlarkCallableLinked {
   public String getName() {
     return orig.getName();
   }
+
+  @Override
+  public String toString() {
+    return orig.toString() + "(" + linkSig + ")";
+  }
 }
