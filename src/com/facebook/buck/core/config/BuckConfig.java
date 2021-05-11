@@ -35,6 +35,7 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.facebook.infer.annotation.PropagatesNullable;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -56,7 +57,7 @@ public class BuckConfig {
 
   private final Config config;
 
-  private final ProjectFilesystem projectFilesystem;
+  private final BuckConfigProjectFilesystem projectFilesystem;
 
   private final Platform platform;
 
@@ -72,9 +73,28 @@ public class BuckConfig {
 
   private ImmutableMap<String, ImmutableSet<String>> nonSerializableREConfigFields;
 
+  @VisibleForTesting
   public BuckConfig(
       Config config,
       ProjectFilesystem projectFilesystem,
+      Architecture architecture,
+      Platform platform,
+      ImmutableMap<String, String> environment,
+      UnconfiguredBuildTargetViewFactory buildTargetParser,
+      CellNameResolver cellNameResolver) {
+    this(
+        config,
+        new BuckConfigProjectFilesystem(projectFilesystem),
+        architecture,
+        platform,
+        environment,
+        buildTargetParser,
+        cellNameResolver);
+  }
+
+  public BuckConfig(
+      Config config,
+      BuckConfigProjectFilesystem projectFilesystem,
       Architecture architecture,
       Platform platform,
       ImmutableMap<String, String> environment,
@@ -214,9 +234,9 @@ public class BuckConfig {
 
     Stream<Path> paths = rawPaths.get().stream().map(this::getPathFromVfs);
     if (resolve) {
-      paths = paths.map(projectFilesystem::getPathForRelativePath);
+      paths = paths.map(getFilesystem()::getPathForRelativePath);
     }
-    paths = paths.filter(projectFilesystem::exists);
+    paths = paths.filter(getFilesystem()::exists);
 
     return Optional.of(paths.collect(ImmutableList.toImmutableList()));
   }
@@ -328,7 +348,7 @@ public class BuckConfig {
     } catch (BuildTargetParseException e) {
       return Optional.of(
           PathSourcePath.of(
-              projectFilesystem,
+              getFilesystem(),
               checkPathExists(
                   value.get(), String.format("Overridden %s:%s path not found", section, field))));
     }
@@ -348,9 +368,9 @@ public class BuckConfig {
       return null;
     }
     if (path.isAbsolute()) {
-      return PathSourcePath.of(projectFilesystem, path);
+      return PathSourcePath.of(getFilesystem(), path);
     }
-    return PathSourcePath.of(projectFilesystem, checkPathExists(path.toString(), errorMessage));
+    return PathSourcePath.of(getFilesystem(), checkPathExists(path.toString(), errorMessage));
   }
 
   public Path resolvePathThatMayBeOutsideTheProjectFilesystem(@PropagatesNullable Path path) {
@@ -366,7 +386,7 @@ public class BuckConfig {
     }
 
     Path expandedPath = MorePaths.expandHomeDir(path);
-    return projectFilesystem.resolve(expandedPath);
+    return getFilesystem().resolve(expandedPath);
   }
 
   public String getLocalhost() {
@@ -504,11 +524,11 @@ public class BuckConfig {
    * for those times where we're using (eg) JimFs for our testing.
    */
   private Path getPathFromVfs(String path) {
-    return projectFilesystem.getPath(path);
+    return getFilesystem().getPath(path);
   }
 
   private Path getPathFromVfs(Path path) {
-    return projectFilesystem.getPath(path.toString());
+    return getFilesystem().getPath(path.toString());
   }
 
   private Path convertPathWithError(String pathString, boolean isCellRootRelative, String error) {
@@ -518,12 +538,12 @@ public class BuckConfig {
   }
 
   public Path checkPathExistsAndResolve(String pathString, String errorMsg) {
-    return projectFilesystem.getPathForRelativePath(checkPathExists(pathString, errorMsg));
+    return getFilesystem().getPathForRelativePath(checkPathExists(pathString, errorMsg));
   }
 
   private Path checkPathExists(String pathString, String errorMsg) {
     Path path = getPathFromVfs(pathString);
-    if (projectFilesystem.exists(path)) {
+    if (getFilesystem().exists(path)) {
       return path;
     }
     throw new HumanReadableException(String.format("%s: %s", errorMsg, path));
@@ -578,6 +598,6 @@ public class BuckConfig {
   }
 
   public ProjectFilesystem getFilesystem() {
-    return projectFilesystem;
+    return projectFilesystem.getProjectFilesystem();
   }
 }

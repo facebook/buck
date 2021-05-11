@@ -36,6 +36,7 @@ import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfigProjectFilesystem;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
@@ -697,9 +698,10 @@ public final class MainRunner {
 
       Config currentConfig = setupDefaultConfig(rootCellMapping, command);
       Config config;
-      ProjectFilesystem filesystem;
       DefaultCellPathResolver cellPathResolver;
       BuckConfig buckConfig;
+
+      BuckConfigProjectFilesystem buckConfigProjectFilesystem;
 
       boolean reusePreviousConfig =
           isReuseCurrentConfigPropertySet(command)
@@ -712,24 +714,19 @@ public final class MainRunner {
                 .orElseThrow(
                     () -> new IllegalStateException("Daemon is present but config is missing."));
         config = buckConfig.getConfig();
-        filesystem = buckConfig.getFilesystem();
-        cellPathResolver = DefaultCellPathResolver.create(filesystem.getRootPath(), config);
+        buckConfigProjectFilesystem = null;
+        cellPathResolver = DefaultCellPathResolver.create(canonicalRootPath, config);
 
         Map<String, ConfigChange> configDiff = ConfigDifference.compare(config, currentConfig);
         UIMessagesFormatter.reusedConfigWarning(configDiff).ifPresent(this::printWarnMessage);
       } else {
         config = currentConfig;
-        filesystem =
-            projectFilesystemFactory.createProjectFilesystem(
-                CanonicalCellName.rootCell(),
-                canonicalRootPath,
-                config,
-                BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
-        cellPathResolver = DefaultCellPathResolver.create(filesystem.getRootPath(), config);
+        cellPathResolver = DefaultCellPathResolver.create(canonicalRootPath, config);
+        buckConfigProjectFilesystem = new BuckConfigProjectFilesystem();
         buckConfig =
             new BuckConfig(
                 config,
-                filesystem,
+                buckConfigProjectFilesystem,
                 architecture,
                 platform,
                 clientEnvironment,
@@ -742,7 +739,7 @@ public final class MainRunner {
       CliConfig cliConfig = buckConfig.getView(CliConfig.class);
       // if we are reusing previous configuration then no need to warn about config override
       if (!reusePreviousConfig) {
-        warnAboutConfigFileOverrides(filesystem.getRootPath(), cliConfig);
+        warnAboutConfigFileOverrides(canonicalRootPath, cliConfig);
       }
 
       ImmutableSet<AbsPath> projectWatchList =
@@ -767,8 +764,6 @@ public final class MainRunner {
       RuleKeyConfiguration ruleKeyConfiguration =
           ConfigRuleKeyConfigurationFactory.create(buckConfig);
 
-          previousBuckCoreKey(command, filesystem, buckConfig, ruleKeyConfiguration);
-
       ProcessExecutor processExecutor = new DefaultProcessExecutor(printConsole);
 
       SandboxExecutionStrategyFactory sandboxExecutionStrategyFactory =
@@ -788,6 +783,21 @@ public final class MainRunner {
               new EventBusEventConsole(buildEventBus),
               clock);
       closeAtFinally.add(watchman);
+
+      ProjectFilesystem filesystem;
+      if (buckConfigProjectFilesystem != null) {
+        filesystem =
+            projectFilesystemFactory.createProjectFilesystem(
+                CanonicalCellName.rootCell(),
+                canonicalRootPath,
+                config,
+                BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
+        buckConfigProjectFilesystem.initFilesystem(filesystem);
+      } else {
+        filesystem = buckConfig.getFilesystem();
+      }
+
+          previousBuckCoreKey(command, filesystem, buckConfig, ruleKeyConfiguration);
 
       ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
