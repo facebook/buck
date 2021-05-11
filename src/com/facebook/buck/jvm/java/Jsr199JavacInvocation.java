@@ -329,6 +329,9 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
         try (JavacEventSinkScopedSimplePerfEvent ignore =
             new JavacEventSinkScopedSimplePerfEvent(eventSink, threadName)) {
           return abiResult.get();
+        } finally {
+          // wait till all events processed
+          eventSink.waitTillAllEventsProcessed();
         }
       } catch (ExecutionException e) {
         Throwables.throwIfUnchecked(e.getCause());
