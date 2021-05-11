@@ -22,7 +22,7 @@ from xplat.build_infra.buck_e2e.repo_workspace import (
 
 
 # TODO: Add decorator to run this with and without buckd
-@buck_test(data="testdata/cxx")
+@buck_test(data_dir="testdata/cxx")
 async def test_should_build_and_run_successfully(repo: BuckRepo):
     result = await repo.build(
         "//simple_successful_helloworld:simple_successful_helloworld", "--show-output"
@@ -36,7 +36,7 @@ async def test_should_build_and_run_successfully(repo: BuckRepo):
     assert process.returncode == 0
 
 
-@buck_test(data="testdata/cxx")
+@buck_test(data_dir="testdata/cxx")
 async def test_successful_env_empty_file(repo: BuckRepo):
     await expect_failure(
         repo.build("//simple_parse_error_helloworld:simple_parse_error_helloworld"),
@@ -44,7 +44,7 @@ async def test_successful_env_empty_file(repo: BuckRepo):
     )
 
 
-@buck_test(data="testdata/cxx")
+@buck_test(data_dir="testdata/cxx")
 async def test_should_not_build_successfully(repo: BuckRepo):
     await expect_failure(
         repo.build("//simple_failed_helloworld:simple_failed_helloworld")
