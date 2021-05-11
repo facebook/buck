@@ -83,6 +83,19 @@ if native_libs_preload is not None:
         for l in native_libs_preload.split(":")
     )
 
+# Allow users to decorate the main module. In normal Python invocations this
+# can be done by prefixing the arguments with `-m decoratingmodule`. It's not
+# that easy for par files. The startup script below sets up `sys.path` from
+# within the Python interpreter. Enable decorating the main module after
+# `sys.path` has been setup by setting the PAR_MAIN_OVERRIDE environment
+# variable.
+decorate_main_module = os.environ.pop("PAR_MAIN_OVERRIDE", None)
+if decorate_main_module:
+    # Pass the original main module as environment variable for the process.
+    # Allowing the decorating module to pick it up.
+    os.environ["PAR_MAIN_ORIGINAL"] = main_module
+    main_module = decorate_main_module
+
 module_call = "runpy._run_module_as_main({main_module!r}, False)".format(
     main_module=main_module
 )
