@@ -20,10 +20,13 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Path;
+import java.util.Map;
 
 public interface ClassUsageFileWriter {
+
   void writeFile(
-      ClassUsageTracker tracker,
+      ImmutableMap<Path, Map<Path, Integer>> classUsageMap,
       RelPath relativePath,
       AbsPath rootPath,
       RelPath configuredBuckOut,

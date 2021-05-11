@@ -35,12 +35,11 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
 
   @Override
   public void writeFile(
-      ClassUsageTracker tracker,
+      ImmutableMap<Path, Map<Path, Integer>> classUsageMap,
       RelPath relativePath,
       AbsPath rootPath,
       RelPath configuredBuckOut,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
-    ImmutableMap<Path, Map<Path, Integer>> classUsageMap = tracker.getClassUsageMap();
     try {
       AbsPath parent = rootPath.resolve(relativePath).getParent();
       Path parentRelativePath = rootPath.relativize(parent).getPath();

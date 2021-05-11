@@ -76,7 +76,7 @@ public class DefaultClassUsageFileWriterTest {
     }
     filesystem.createParentDirs(outputOne);
     writerOne.writeFile(
-        trackerOne,
+        trackerOne.getClassUsageMap(),
         filesystem.relativize(outputOne),
         filesystem.getRootPath(),
         filesystem.getBuckPaths().getConfiguredBuckOut(),
@@ -94,7 +94,7 @@ public class DefaultClassUsageFileWriterTest {
     }
     filesystem.createParentDirs(outputTwo);
     writerTwo.writeFile(
-        trackerTwo,
+        trackerTwo.getClassUsageMap(),
         filesystem.relativize(outputTwo),
         filesystem.getRootPath(),
         filesystem.getBuckPaths().getConfiguredBuckOut(),
@@ -136,7 +136,7 @@ public class DefaultClassUsageFileWriterTest {
     }
     homeFs.createParentDirs(outputOne);
     writer.writeFile(
-        trackerOne,
+        trackerOne.getClassUsageMap(),
         homeFs.relativize(outputOne),
         rootPath,
         homeFs.getBuckPaths().getConfiguredBuckOut(),
