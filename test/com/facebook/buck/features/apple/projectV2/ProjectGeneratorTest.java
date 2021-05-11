@@ -101,8 +101,6 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.HeaderMode;
-import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.features.apple.common.Xcconfig;
@@ -453,92 +451,10 @@ public class ProjectGeneratorTest {
   @Test
   public void testModularLibraryHasCorrectSwiftIncludePaths()
       throws IOException, ParseException, InterruptedException {
-    BuildTarget frameworkBundleTarget = BuildTargetFactory.newInstance("//foo", "framework");
-    BuildTarget frameworkLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
-    BuildTarget appBundleTarget = BuildTargetFactory.newInstance("//product", "app");
-    BuildTarget appBinaryTarget = BuildTargetFactory.newInstance("//product", "binary");
-
-    String configName = "Default";
-
-    TargetNode<?> frameworkLibNode =
-        AppleLibraryBuilder.createBuilder(frameworkLibTarget)
-            .setSrcs(ImmutableSortedSet.of())
-            .setHeaders(
-                ImmutableSortedSet.of(
-                    FakeSourcePath.of("HeaderGroup1/foo.h"),
-                    FakeSourcePath.of("HeaderGroup2/baz.h")))
-            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("HeaderGroup1/bar.h")))
-            .setConfigs(ImmutableSortedMap.of(configName, ImmutableMap.of()))
-            .setModular(true)
-            .build();
-
-    TargetNode<?> frameworkBundleNode =
-        AppleBundleBuilder.createBuilder(frameworkBundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.FRAMEWORK))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(frameworkLibTarget)
-            .build();
-
-    TargetNode<?> appBinaryNode =
-        AppleLibraryBuilder.createBuilder(appBinaryTarget)
-            .setSrcs(ImmutableSortedSet.of())
-            .setDeps(ImmutableSortedSet.of(frameworkBundleTarget))
-            .setConfigs(ImmutableSortedMap.of(configName, ImmutableMap.of()))
-            .build();
-
-    TargetNode<?> appBundleNode =
-        AppleBundleBuilder.createBuilder(appBundleTarget)
-            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setBinary(appBinaryTarget)
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(frameworkLibNode, frameworkBundleNode, appBinaryNode, appBundleNode),
-            ImmutableSet.of(frameworkBundleNode, appBinaryNode, appBundleNode),
-            appBundleTarget,
-            ProjectGeneratorOptions.builder().build(),
-            ImmutableSet.of(),
-            Optional.empty());
-
-    projectGenerator.createXcodeProject(
-        xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
-
-    FakeProjectFilesystem appBinaryFileSystem =
-        (FakeProjectFilesystem) appBinaryNode.getFilesystem();
-    RelPath expectedXcConfigPath =
-        BuildConfiguration.getXcconfigPath(appBinaryFileSystem, appBinaryTarget, "Debug");
-    String xccConfigContents =
-        this.projectFilesystem.readFileIfItExists(expectedXcConfigPath).get();
-    Xcconfig config = Xcconfig.fromString(xccConfigContents);
-    assertTrue(config.containsKey("SWIFT_INCLUDE_PATHS"));
-
-    RelPath symlinkPath =
-        CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-            projectFilesystem,
-            NodeHelper.getModularMapTarget(
-                frameworkLibNode,
-                HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
-                DEFAULT_PLATFORM.getFlavor()),
-            HeaderVisibility.PUBLIC);
-    ImmutableList<String> expectedIncludes =
-        ImmutableList.of(
-            "$(inherited)",
-            "$BUILT_PRODUCTS_DIR",
-            projectFilesystem.resolve(symlinkPath).toString());
-    assertEquals(Optional.of(expectedIncludes), config.getKey("SWIFT_INCLUDE_PATHS"));
-  }
-
-  @Test
-  public void testModularLibraryHasCorrectSwiftIncludePathsWithIndexingFix()
-      throws IOException, ParseException, InterruptedException {
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of(
             "apple",
             ImmutableMap.of(
-                "enable_project_v2_swift_indexing_fix",
-                "true",
                 "force_dsym_mode_in_build_with_buck",
                 "false",
                 "project_generator_swift_labels",

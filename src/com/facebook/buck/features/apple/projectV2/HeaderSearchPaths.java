@@ -91,7 +91,6 @@ class HeaderSearchPaths {
   private final ProjectSourcePathResolver projectSourcePathResolver;
   private final PathRelativizer pathRelativizer;
   private final SwiftAttributeParser swiftAttributeParser;
-  private final AppleConfig appleConfig;
   private final ImmutableSet<String> swiftLabels;
 
   private final ProjectFilesystem projectFilesystem;
@@ -120,7 +119,6 @@ class HeaderSearchPaths {
     this.projectSourcePathResolver = projectSourcePathResolver;
     this.pathRelativizer = pathRelativizer;
     this.swiftAttributeParser = swiftAttributeParser;
-    this.appleConfig = appleConfig;
     this.swiftLabels = ImmutableSet.copyOf(appleConfig.getProjectGeneratorSwiftLabels());
 
     this.projectFilesystem = projectCell.getFilesystem();
@@ -208,10 +206,7 @@ class HeaderSearchPaths {
 
     // Write the resulting header maps.
     writeHeaderMap(MergedHeaderMap.INCLUDING_MODULAR_LIBRARIES, includingModularHeaderMapBuilder);
-
-    if (appleConfig.getEnableProjectV2SwiftIndexingFix()) {
-      writeHeaderMap(MergedHeaderMap.EXCLUDING_MODULAR_LIBRARIES, excludingModularHeaderMapBuilder);
-    }
+    writeHeaderMap(MergedHeaderMap.EXCLUDING_MODULAR_LIBRARIES, excludingModularHeaderMapBuilder);
 
     return sourcePathsToBuildBuilder.build();
   }
@@ -620,7 +615,7 @@ class HeaderSearchPaths {
     // but to do it right, it's likely that we'll need to add that. When that happens, we can also
     // update this "if" statement. If, long-term, we move towards using modules for all Objective-C
     // code, the merged header map will no longer work at all.
-    if (appleConfig.getEnableProjectV2SwiftIndexingFix() && targetNodeContainsSwift(targetNode)) {
+    if (targetNodeContainsSwift(targetNode)) {
       visitRecursiveHeaderSymlinkTrees(
           targetNode,
           (nativeNode, headerVisibility) -> {
@@ -674,35 +669,16 @@ class HeaderSearchPaths {
   private ImmutableSet<Path> collectRecursiveSwiftIncludePaths(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-    final boolean enableIndexingFix = appleConfig.getEnableProjectV2SwiftIndexingFix();
     Flavor defaultPlatformFlavor =
         targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
 
     visitRecursiveHeaderSymlinkTrees(
         targetNode,
         (nativeNode, headerVisibility) -> {
-          // This is duplicated from collectRecursiveHeaderSearchPaths and is here only to maintain
-          // the behavior from before the indexing fix change was made. Once that has been tested
-          // and can be rolled out, this first if statement can be removed entirely.
-          if (!enableIndexingFix
-              && nativeNode != targetNode
-              && headerVisibility.equals(HeaderVisibility.PUBLIC)
-              && NodeHelper.isModularAppleLibrary(nativeNode)) {
-            BuildTarget flavoredModuleMapTarget =
-                NodeHelper.getModularMapTarget(
-                    nativeNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, defaultPlatformFlavor);
-
-            RelPath symlinkTreePath =
-                CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
-                    projectFilesystem, flavoredModuleMapTarget, headerVisibility);
-            builder.add(projectFilesystem.resolve(symlinkTreePath).getPath());
-          }
-
           // Objective-C code/modulemap files are added to HEADER_SEARCH_PATHS, which Xcode also
           // passes to the Swift compiler, so we do not need to duplicate that work here. However,
           // we do need to add the paths to .swiftmodule files for dependencies.
-          if (enableIndexingFix
-              && nativeNode != targetNode
+          if (nativeNode != targetNode
               && headerVisibility.equals(HeaderVisibility.PUBLIC)
               && targetNodeContainsSwift(nativeNode)) {
             BuildTarget flavoredSwiftCompileTarget =
