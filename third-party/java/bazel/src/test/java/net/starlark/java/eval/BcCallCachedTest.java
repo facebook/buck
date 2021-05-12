@@ -2,6 +2,7 @@ package net.starlark.java.eval;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -193,5 +194,39 @@ public class BcCallCachedTest {
     assertEquals("int", Starlark.call(thread, f, Tuple.of(), Dict.empty()));
     // We assert that call was not cached: `not_pure` was called twice
     assertEquals(2, sideEffects.called);
+  }
+
+  public static class ThrowOnSecondInvocation extends StarlarkValue {
+    private int called = 0;
+
+    @StarlarkMethod(name = "t", documented = false, purity = FnPurity.DEFAULT)
+    public void pure() throws EvalException {
+      if (++called == 2) {
+        throw Starlark.errorf("test");
+      }
+    }
+  }
+
+  @Test
+  public void stackTrace() throws Exception {
+    String program =
+        "" //
+            + "def f(): t.t()\n"
+            + "f";
+    StarlarkFunction f =
+        BcTestUtil.makeFrozenFunction(program, ImmutableMap.of("t", new ThrowOnSecondInvocation()));
+
+    try {
+      String program1 = "[f() for x in range(2)]";
+      BcTestUtil.eval(program1, ImmutableMap.of("f", f));
+      fail("expecting to throw");
+    } catch (EvalException e) {
+      assertEquals(
+          "Traceback (most recent call last):\n"
+              + "\tFile \"f.star\", line 1, column 20, in <toplevel>\n"
+              + "\tFile \"f.star\", line 1, column 13, in f\n"
+              + "Error in t: test",
+          e.getMessageWithStack());
+    }
   }
 }

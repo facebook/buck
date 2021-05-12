@@ -46,7 +46,7 @@ class BcCallCached {
             fn.getName(),
             StarlarkRuntimeStats.CallCachedResult.SKIP);
       }
-      return fn.callLinked(thread, args, null, null);
+      return BcCall.callLinked(thread, fn, args, null, null);
     }
 
     boolean savedExternalSideEffects = thread.pushSideEffect();
