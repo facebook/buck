@@ -156,4 +156,5 @@ Make sure it is on PATH or JAVA_HOME is set."
             """
             ).format(java_path)
             raise BuckToolException(message)
+    logging.debug("Using java_path=%s", java_path)
     return java_path
