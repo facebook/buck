@@ -27,7 +27,13 @@ class BcInstr {
   public static final int BR = UNARY + 1;
   public static final int IF_BR_LOCAL = BR + 1;
   public static final int IF_NOT_BR_LOCAL = IF_BR_LOCAL + 1;
-  public static final int BINARY = IF_NOT_BR_LOCAL + 1;
+  public static final int IF_TYPE_IS_BR = IF_NOT_BR_LOCAL + 1;
+  public static final int IF_NOT_TYPE_IS = IF_TYPE_IS_BR + 1;
+  public static final int IF_EQ_BR = IF_NOT_TYPE_IS + 1;
+  public static final int IF_NOT_EQ_BR = IF_EQ_BR + 1;
+  public static final int IF_IN_BR = IF_NOT_EQ_BR + 1;
+  public static final int IF_NOT_IN_BR = IF_IN_BR + 1;
+  public static final int BINARY = IF_NOT_IN_BR + 1;
   public static final int PERCENT_S_ONE = BINARY + 1;
   public static final int PERCENT_S_ONE_TUPLE = PERCENT_S_ONE + 1;
   public static final int PLUS_IN_PLACE = PERCENT_S_ONE_TUPLE + 1;
@@ -104,11 +110,47 @@ class BcInstr {
     UNARY(
         BcInstr.UNARY, BcInstrOperand.IN_SLOT, BcInstrOperand.TOKEN_KIND, BcInstrOperand.OUT_SLOT),
     /** Goto. */
-    BR(BcInstr.BR, BcInstrOperand.addr("j")),
+    BR(BcInstr.BR, BcInstrOperand.ADDR),
     /** Goto if. */
-    IF_BR_LOCAL(BcInstr.IF_BR_LOCAL, BcInstrOperand.IN_LOCAL, BcInstrOperand.addr("t")),
+    IF_BR_LOCAL(BcInstr.IF_BR_LOCAL, BcInstrOperand.IN_LOCAL, BcInstrOperand.ADDR),
     /** Goto if not. */
-    IF_NOT_BR_LOCAL(BcInstr.IF_NOT_BR_LOCAL, BcInstrOperand.IN_LOCAL, BcInstrOperand.addr("f")),
+    IF_NOT_BR_LOCAL(BcInstr.IF_NOT_BR_LOCAL, BcInstrOperand.IN_LOCAL, BcInstrOperand.ADDR),
+    /** Goto if type is. */
+    IF_TYPE_IS_BR(
+        BcInstr.IF_TYPE_IS_BR,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.STRING,
+        BcInstrOperand.ADDR),
+    /** Goto if type is not. */
+    IF_NOT_TYPE_IS_BR(
+        BcInstr.IF_NOT_TYPE_IS,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.STRING,
+        BcInstrOperand.ADDR),
+    /** Goto if equal. */
+    IF_EQ_BR(
+        BcInstr.IF_EQ_BR,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.ADDR),
+    /** Goto if not equal. */
+    IF_NOT_EQ_BR(
+        BcInstr.IF_NOT_EQ_BR,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.ADDR),
+    /** Goto if in. */
+    IF_IN_BR(
+        BcInstr.IF_IN_BR,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.ADDR),
+    /** Goto if not in. */
+    IF_NOT_IN_BR(
+        BcInstr.IF_NOT_IN_BR,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.ADDR),
     /** {@code a3 = a0 (a2) a1}. */
     BINARY(
         BcInstr.BINARY,
@@ -263,7 +305,7 @@ class BcInstr {
         BcInstrOperand.IN_SLOT,
         // Next value register
         BcInstrOperand.OUT_SLOT,
-        BcInstrOperand.addr("e")),
+        BcInstrOperand.ADDR),
     /**
      * Continue the loop:
      *
@@ -279,14 +321,14 @@ class BcInstr {
         // Iterator next value.
         BcInstrOperand.OUT_SLOT,
         // Beginning of the loop
-        BcInstrOperand.addr("b"),
+        BcInstrOperand.ADDR,
         // End of the loop
-        BcInstrOperand.addr("e")),
+        BcInstrOperand.ADDR),
     /**
      * Exit the loop: unlock the iterable, pop it from the loop stack and goto a label after the
      * loop.
      */
-    BREAK(BcInstr.BREAK, BcInstrOperand.addr("e")),
+    BREAK(BcInstr.BREAK, BcInstrOperand.ADDR),
     /** List constructor. */
     LIST(
         BcInstr.LIST,

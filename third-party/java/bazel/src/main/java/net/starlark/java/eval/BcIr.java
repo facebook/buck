@@ -83,12 +83,17 @@ class BcIr {
     return jumpLabel;
   }
 
+  /** Add conditional forward jump instructions. */
+  BcIrInstr.JumpLabel ifBr(BcWriter.LocOffset locOffset, BcIrIfCond ifCond) {
+    BcIrInstr.JumpLabel jumpLabel = new BcIrInstr.JumpLabel(Friend.FRIEND);
+    add(new BcIrInstr.IfBr(locOffset, ifCond, jumpLabel));
+    return jumpLabel;
+  }
+
   /** Add conditional forward jump instruction. */
   BcIrInstr.JumpLabel ifBr(
       BcWriter.LocOffset locOffset, BcIrSlot.AnyLocal cond, BcWriter.JumpCond jumpCond) {
-    BcIrInstr.JumpLabel jumpLabel = new BcIrInstr.JumpLabel(Friend.FRIEND);
-    add(new BcIrInstr.IfBr(locOffset, cond, jumpCond, jumpLabel));
-    return jumpLabel;
+    return ifBr(locOffset, new BcIrIfCond.Local(cond, jumpCond));
   }
 
   /** Add conditional forward jump instructions. */
@@ -128,6 +133,34 @@ class BcIr {
   private <I extends BcIrInstr> I getOrNull(int i, Class<I> instrType) {
     BcIrInstr instr = getOrNull(i);
     return instrType.isInstance(instr) ? (I) instr : null;
+  }
+
+  /** Get instruction by index from back, or null if index exceeds instruction count. */
+  @Nullable
+  private BcIrInstr getFromBackOrNull(int i) {
+    Preconditions.checkArgument(i >= 0);
+    return i < instructions.size() ? instructions.get(instructions.size() - 1 - i) : null;
+  }
+
+  /**
+   * Get instruction by index from back, or null if index exceeds instruction count or is of
+   * different type.
+   */
+  @Nullable
+  @SuppressWarnings("unchecked")
+  private <I extends BcIrInstr> I getFromBackOrNull(int i, Class<I> instrType) {
+    BcIrInstr instr = getFromBackOrNull(i);
+    return instrType.isInstance(instr) ? (I) instr : null;
+  }
+
+  /** Last instruction. */
+  @Nullable
+  public BcIrInstr last() {
+    if (isEmpty()) {
+      return null;
+    } else {
+      return instructions.get(size() - 1);
+    }
   }
 
   /** Instruction count is zero. */
@@ -185,6 +218,33 @@ class BcIr {
     }
 
     return typeIs.type;
+  }
+
+  static class PopTypeIs {
+    final BcIrSlot value;
+    final String type;
+
+    PopTypeIs(BcIrSlot value, String type) {
+      this.value = value;
+      this.type = type;
+    }
+  }
+
+  /**
+   * Pop {@link BcIrInstr.TypeIs} instruction from IR, or return null if the last instruction is
+   * not.
+   */
+  @Nullable
+  PopTypeIs popTypeIs(BcIrSlot typeIsResultSlot) {
+    BcIrInstr.AllocSlot allocSlot = getFromBackOrNull(1, BcIrInstr.AllocSlot.class);
+    BcIrInstr.TypeIs typeIs = getFromBackOrNull(0, BcIrInstr.TypeIs.class);
+    if (allocSlot == null || typeIs == null) {
+      return null;
+    }
+    Preconditions.checkState(typeIsResultSlot == typeIs.result);
+    Preconditions.checkState(allocSlot.lazyLocal == typeIs.result);
+    instructions.subList(instructions.size() - 2, instructions.size()).clear();
+    return new PopTypeIs(typeIs.expr, typeIs.type);
   }
 
   @Override

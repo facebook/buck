@@ -21,8 +21,8 @@ class BcCompilerForIf {
 
   /** Compile expression just for side effects. */
   private void compileForEffect(BcIr ir, BoolExpr cond) {
-    Preconditions.checkState(cond.maybeConst != null,
-        "Can only compile const expressions: %s", cond);
+    Preconditions.checkState(
+        cond.maybeConst != null, "Can only compile const expressions: %s", cond);
     cond.match(
         new BoolExprMatcher() {
           @Override
@@ -106,8 +106,8 @@ class BcCompilerForIf {
       boolean elseJumpCond,
       ArrayList<BcIrInstr.JumpLabel> elseJumps,
       ArrayList<BcIrInstr.JumpLabel> thenJumps) {
-    Preconditions.checkState(cond.maybeConst == null,
-        "Can only compile non-const expressions: %s", cond);
+    Preconditions.checkState(
+        cond.maybeConst == null, "Can only compile non-const expressions: %s", cond);
     cond.match(
         new BoolExprMatcher() {
           @Override
@@ -204,30 +204,108 @@ class BcCompilerForIf {
 
           @Override
           public void other(OtherExpr otherExpr) {
-            ir.addAll(otherExpr.result.ir);
-            BcWriter.JumpCond jumpCond =
-                elseJumpCond ? BcWriter.JumpCond.IF : BcWriter.JumpCond.IF_NOT;
-            BcIrInstr.JumpLabel jumpLabel =
-                ir.ifBr(
-                    compiler.nodeToLocOffset(otherExpr.expr),
-                    otherExpr.result.result.slot,
-                    jumpCond);
-            elseJumps.add(jumpLabel);
+            writeOtherCond(ir, otherExpr, elseJumpCond, elseJumps);
           }
         });
   }
 
+  /** Write condition which is not logical expression. */
+  private void writeOtherCond(
+      BcIr ir,
+      OtherExpr otherExpr,
+      boolean elseJumpCond,
+      ArrayList<BcIrInstr.JumpLabel> elseJumps) {
+    // Try compile condition as type is br
+    BcIr.PopTypeIs popTypeIs = otherExpr.result.ir.popTypeIs(otherExpr.result.result.slot);
+    if (popTypeIs != null) {
+      writeOtherCondTypeIs(ir, otherExpr, popTypeIs, elseJumpCond, elseJumps);
+      return;
+    }
+
+    // Try compile condition as bin op br
+    if (otherExpr.expr instanceof BinaryOperatorExpression) {
+      BinaryOperatorExpression binaryOperatorExpression = (BinaryOperatorExpression) otherExpr.expr;
+      BcWriter.JumpBindCond jumpBindCond =
+          BcWriter.JumpBindCond.fromBinOpToken(binaryOperatorExpression.getOperator());
+      if (jumpBindCond != null) {
+        writeOtherCondBinOp(ir, binaryOperatorExpression, elseJumpCond, jumpBindCond, elseJumps);
+        return;
+      }
+    }
+
+    // Write default conditional jump
+    writeOtherCondDefault(ir, otherExpr, elseJumpCond, elseJumps);
+  }
+
+  private void writeOtherCondTypeIs(
+      BcIr ir,
+      OtherExpr otherExpr,
+      BcIr.PopTypeIs popTypeIs,
+      boolean elseJumpCond,
+      ArrayList<BcIrInstr.JumpLabel> elseJumps) {
+    ir.addAll(otherExpr.result.ir);
+    BcWriter.JumpCond jumpCond = elseJumpCond ? BcWriter.JumpCond.IF : BcWriter.JumpCond.IF_NOT;
+    BcIrIfCond.TypeIs ifCond = new BcIrIfCond.TypeIs(popTypeIs.value, popTypeIs.type, jumpCond);
+    BcIrInstr.JumpLabel jumpLabel = ir.ifBr(compiler.nodeToLocOffset(otherExpr.expr), ifCond);
+    elseJumps.add(jumpLabel);
+  }
+
+  private void writeOtherCondBinOp(
+      BcIr ir,
+      BinaryOperatorExpression binaryOperatorExpression,
+      boolean elseJumpCond,
+      BcWriter.JumpBindCond cond,
+      ArrayList<BcIrInstr.JumpLabel> elseJumps) {
+    BcIrSlot x = compiler.compileExpression(ir, binaryOperatorExpression.getX()).slot;
+    BcIrSlot y = compiler.compileExpression(ir, binaryOperatorExpression.getY()).slot;
+    BcWriter.JumpBindCond jumpBindCond = elseJumpCond ? cond : cond.not();
+    BcIrIfCond.Bin ifCond = new BcIrIfCond.Bin(x, y, jumpBindCond);
+    BcIrInstr.JumpLabel jumpLabel =
+        ir.ifBr(compiler.nodeToLocOffset(binaryOperatorExpression), ifCond);
+    elseJumps.add(jumpLabel);
+  }
+
+  private void writeOtherCondDefault(
+      BcIr ir,
+      OtherExpr otherExpr,
+      boolean elseJumpCond,
+      ArrayList<BcIrInstr.JumpLabel> elseJumps) {
+    ir.addAll(otherExpr.result.ir);
+    BcWriter.LocOffset locOffset = compiler.nodeToLocOffset(otherExpr.expr);
+    BcWriter.JumpCond jumpCond = elseJumpCond ? BcWriter.JumpCond.IF : BcWriter.JumpCond.IF_NOT;
+    BcIrInstr.JumpLabel jumpLabel = ir.ifBr(locOffset, otherExpr.result.result.slot, jumpCond);
+    elseJumps.add(jumpLabel);
+  }
+
   void compileIfStatement(BcIr ir, IfStatement ifStatement) {
-    BoolExpr cond = convert(ifStatement.getCondition());
+    compileIfElse(
+        ir,
+        ifStatement.getCondition(),
+        ir1 -> compiler.compileStatements(ir1, ifStatement.getThenBlock(), false),
+        ifStatement.getElseBlock() != null
+            ? ir1 -> compiler.compileStatements(ir1, ifStatement.getElseBlock(), false)
+            : null);
+  }
+
+  interface Block {
+    void compileBlock(BcIr ir);
+  }
+
+  void compileIf(BcIr ir, Expression condExpr, Block thenBlock) {
+    compileIfElse(ir, condExpr, thenBlock, null);
+  }
+
+  void compileIfElse(BcIr ir, Expression condExpr, Block thenBlock, @Nullable Block elseBlock) {
+    BoolExpr cond = convert(condExpr);
 
     Boolean condConst = cond.maybeConst;
     if (condConst != null) {
       compileForEffect(ir, cond);
       if (condConst) {
-        compiler.compileStatements(ir, ifStatement.getThenBlock(), false);
+        thenBlock.compileBlock(ir);
       } else {
-        if (ifStatement.getElseBlock() != null) {
-          compiler.compileStatements(ir, ifStatement.getElseBlock(), false);
+        if (elseBlock != null) {
+          elseBlock.compileBlock(ir);
         }
       }
       return;
@@ -239,12 +317,12 @@ class BcCompilerForIf {
     compileCond(ir, cond, false, elseAddrs, thenAddrs);
 
     ir.addJumpLabels(thenAddrs);
-    compiler.compileStatements(ir, ifStatement.getThenBlock(), false);
-    if (ifStatement.getElseBlock() != null) {
+    thenBlock.compileBlock(ir);
+    if (elseBlock != null) {
       // TODO(nga): no need to jump if the last instruction is return
-      BcIrInstr.JumpLabel end = ir.br(compiler.nodeToLocOffset(ifStatement));
+      BcIrInstr.JumpLabel end = ir.br(compiler.nodeToLocOffset(condExpr));
       ir.addJumpLabels(elseAddrs);
-      compiler.compileStatements(ir, ifStatement.getElseBlock(), false);
+      elseBlock.compileBlock(ir);
       ir.add(end);
     } else {
       ir.addJumpLabels(elseAddrs);
@@ -262,18 +340,16 @@ class BcCompilerForIf {
     public abstract void not(NotExpr notExpr);
   }
 
-  private static abstract class BoolExpr {
+  private abstract static class BoolExpr {
     /** AST expression for this expression. */
     final Expression expr;
     /**
      * Whether this expression evaluates to constant (yes, no, unknown).
      *
-     * Note const expression may still have side effects which need to be evaluated.
-     * For example, this expression: {@code True or print(1)} is const {@code true},
-     * but still has side effects.
+     * <p>Note const expression may still have side effects which need to be evaluated. For example,
+     * this expression: {@code True or print(1)} is const {@code true}, but still has side effects.
      */
-    @Nullable
-    final Boolean maybeConst;
+    @Nullable final Boolean maybeConst;
     /** Evaluation of this code has side effects. */
     final boolean hasEffects;
 

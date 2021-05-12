@@ -2,6 +2,7 @@ package net.starlark.java.eval;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Random;
 import net.starlark.java.annot.StarlarkBuiltin;
@@ -314,5 +315,65 @@ public class BcCompilerForIfTest {
         + "    return 'f'\n"
         + "test";
     doTestProgram(testExpr, program);
+  }
+
+  @Test
+  public void eqOpcodes() throws Exception {
+    String program = "" //
+        + "def f(x):\n"
+        + "  if x == 1:\n"
+        + "    return 2\n"
+        + "f";
+    assertEquals(
+        ImmutableList.of(BcInstr.Opcode.IF_NOT_EQ_BR, BcInstr.Opcode.RETURN),
+        BcTestUtil.opcodes(program));
+  }
+
+  @Test
+  public void inOpcodes() throws Exception {
+    String program = "" //
+        + "def f(x):\n"
+        + "  if 1 not in x:\n"
+        + "    return 2\n"
+        + "f";
+    assertEquals(
+        ImmutableList.of(BcInstr.Opcode.IF_IN_BR, BcInstr.Opcode.RETURN),
+        BcTestUtil.opcodes(program));
+  }
+
+  @Test
+  public void typeIsOpcodes() throws Exception {
+    String program = "" //
+        + "def f(x):\n"
+        + "  if type(x) == 'list':\n"
+        + "    return 1\n"
+        + "f";
+    assertEquals(
+        ImmutableList.of(BcInstr.Opcode.IF_NOT_TYPE_IS_BR, BcInstr.Opcode.RETURN),
+        BcTestUtil.opcodes(program));
+  }
+
+  @Test
+  public void notTypeIsOpcodes() throws Exception {
+    String program = "" //
+        + "def f(x):\n"
+        + "  if not type(x) == 'list':\n"
+        + "    return 1\n"
+        + "f";
+    assertEquals(
+        ImmutableList.of(BcInstr.Opcode.IF_TYPE_IS_BR, BcInstr.Opcode.RETURN),
+        BcTestUtil.opcodes(program));
+  }
+
+  @Test
+  public void typeIsEval() throws Exception {
+    String program = "" //
+        + "def f(x):\n"
+        + "  if type(x) == 'list':\n"
+        + "    return 1\n"
+        + "f([])";
+    assertEquals(
+        StarlarkInt.of(1),
+        BcTestUtil.eval(program));
   }
 }

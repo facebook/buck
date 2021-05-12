@@ -165,6 +165,24 @@ class BcEval {
           case BcInstr.IF_NOT_BR_LOCAL:
             ifNotBrLocal();
             continue;
+          case BcInstr.IF_TYPE_IS_BR:
+            ifTypeIsBr();
+            continue;
+          case BcInstr.IF_NOT_TYPE_IS:
+            ifNotTypeIsBr();
+            continue;
+          case BcInstr.IF_EQ_BR:
+            ifEqBr();
+            continue;
+          case BcInstr.IF_NOT_EQ_BR:
+            ifNotEqBr();
+            continue;
+          case BcInstr.IF_IN_BR:
+            ifInBr();
+            continue;
+          case BcInstr.IF_NOT_IN_BR:
+            ifNotInBr();
+            continue;
           case BcInstr.DOT:
             dot();
             break;
@@ -427,32 +445,84 @@ class BcEval {
 
   private void br() {
     int dest = nextOperand();
-    validateInstructionDecodedCorrectly();
-    ip = dest;
+    goTo(dest);
+  }
+
+  /** If condition is true, set the instruction pointer to a given value. */
+  private void goToIf(boolean cond, int dest) {
+    if (cond) {
+      goTo(dest);
+    } else {
+      validateInstructionDecodedCorrectly();
+    }
   }
 
   private void ifBrLocal() throws EvalException {
     int condSlot = nextOperand();
     int dest = nextOperand();
     Object cond = getLocal(condSlot);
-    if (Starlark.truth(cond)) {
-      validateInstructionDecodedCorrectly();
-      ip = dest;
-    } else {
-      validateInstructionDecodedCorrectly();
-    }
+    goToIf(Starlark.truth(cond), dest);
   }
 
   private void ifNotBrLocal() throws EvalException {
     int condSlot = nextOperand();
     int dest = nextOperand();
     Object cond = getLocal(condSlot);
-    if (!Starlark.truth(cond)) {
-      validateInstructionDecodedCorrectly();
-      ip = dest;
-    } else {
-      validateInstructionDecodedCorrectly();
-    }
+    goToIf(!Starlark.truth(cond), dest);
+  }
+
+  private void ifTypeIsBr() throws EvalException {
+    int valueSlot = nextOperand();
+    int stringIndex = nextOperand();
+    int dest = nextOperand();
+    Object value = getSlot(valueSlot);
+    String type = compiled.strings[stringIndex];
+    goToIf(EvalUtils.typeIs(value, type), dest);
+  }
+
+  private void ifNotTypeIsBr() throws EvalException {
+    int valueSlot = nextOperand();
+    int stringIndex = nextOperand();
+    int dest = nextOperand();
+    Object value = getSlot(valueSlot);
+    String type = compiled.strings[stringIndex];
+    goToIf(!EvalUtils.typeIs(value, type), dest);
+  }
+
+  private void ifEqBr() throws EvalException {
+    int aSlot = nextOperand();
+    int bSlot = nextOperand();
+    int dest = nextOperand();
+    Object a = getSlot(aSlot);
+    Object b = getSlot(bSlot);
+    goToIf(EvalUtils.equal(a, b), dest);
+  }
+
+  private void ifNotEqBr() throws EvalException {
+    int aSlot = nextOperand();
+    int bSlot = nextOperand();
+    int dest = nextOperand();
+    Object a = getSlot(aSlot);
+    Object b = getSlot(bSlot);
+    goToIf(!EvalUtils.equal(a, b), dest);
+  }
+
+  private void ifInBr() throws EvalException {
+    int aSlot = nextOperand();
+    int bSlot = nextOperand();
+    int dest = nextOperand();
+    Object a = getSlot(aSlot);
+    Object b = getSlot(bSlot);
+    goToIf(EvalUtils.binaryIn(a, b, thread.getSemantics()), dest);
+  }
+
+  private void ifNotInBr() throws EvalException {
+    int aSlot = nextOperand();
+    int bSlot = nextOperand();
+    int dest = nextOperand();
+    Object a = getSlot(aSlot);
+    Object b = getSlot(bSlot);
+    goToIf(!EvalUtils.binaryIn(a, b, thread.getSemantics()), dest);
   }
 
   /** Set the instruction pointer. */
@@ -889,9 +959,9 @@ class BcEval {
     int resultSlot = nextOperand();
 
     Object lhs = getLocal(lhsSlot);
-    String lhsType = Starlark.type(lhs);
-    String rhsType = compiled.strings[typeIndex];
-    boolean result = lhsType == rhsType || lhsType.equals(rhsType);
+    String type = compiled.strings[typeIndex];
+
+    boolean result = EvalUtils.typeIs(lhs, type);
     setSlot(resultSlot, result);
   }
 
@@ -899,14 +969,14 @@ class BcEval {
   private void eq() throws EvalException {
     Object lhs = getSlot(nextOperand());
     Object rhs = getSlot(nextOperand());
-    setSlot(nextOperand(), lhs == rhs || lhs.equals(rhs));
+    setSlot(nextOperand(), EvalUtils.equal(lhs, rhs));
   }
 
   /** Equality. */
   private void notEq() throws EvalException {
     Object lhs = getSlot(nextOperand());
     Object rhs = getSlot(nextOperand());
-    setSlot(nextOperand(), lhs != rhs && !lhs.equals(rhs));
+    setSlot(nextOperand(), !EvalUtils.equal(lhs, rhs));
   }
 
   /** a + b. */

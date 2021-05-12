@@ -489,4 +489,15 @@ final class EvalUtils {
       throw Starlark.errorf("cannot set .%s field of %s value", field, Starlark.type(x));
     }
   }
+
+  /** Compare objects for equality. */
+  static boolean equal(Object a, Object b) {
+    return a == b || a.equals(b);
+  }
+
+  /** Check if object type is equal to given string. */
+  static boolean typeIs(Object lhs, String rhs) {
+    String lhsType = Starlark.type(lhs);
+    return lhsType == rhs || lhsType.equals(rhs);
+  }
 }

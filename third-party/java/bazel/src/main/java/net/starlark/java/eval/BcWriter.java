@@ -13,6 +13,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.FileLocations;
 import net.starlark.java.syntax.Resolver;
+import net.starlark.java.syntax.TokenKind;
 
 /** Utility to build bytecode. */
 class BcWriter {
@@ -181,6 +182,41 @@ class BcWriter {
     }
   }
 
+  enum JumpBindCond {
+    EQ(BcInstr.Opcode.IF_EQ_BR, TokenKind.EQUALS_EQUALS),
+    NOT_EQ(BcInstr.Opcode.IF_NOT_EQ_BR, TokenKind.NOT_EQUALS),
+    IN(BcInstr.Opcode.IF_IN_BR, TokenKind.IN),
+    NOT_IN(BcInstr.Opcode.IF_NOT_IN_BR, TokenKind.NOT_IN),
+    ;
+    final BcInstr.Opcode opcode;
+    final TokenKind tokenKind;
+
+    JumpBindCond(BcInstr.Opcode opcode, TokenKind tokenKind) {
+      this.opcode = opcode;
+      this.tokenKind = tokenKind;
+    }
+
+    @Nullable
+    static JumpBindCond fromBinOpToken(TokenKind tokenKind) {
+      for (JumpBindCond cond : values()) {
+        if (cond.tokenKind == tokenKind) {
+          return cond;
+        }
+      }
+      return null;
+    }
+
+    JumpBindCond not() {
+      switch (this) {
+        case EQ: return NOT_EQ;
+        case NOT_EQ: return EQ;
+        case IN: return NOT_IN;
+        case NOT_IN: return IN;
+        default: throw new AssertionError("unreachable");
+      }
+    }
+  }
+
   /** Store values indexed by an integer. */
   private static class IndexedList<T> {
     private ArrayList<T> values = new ArrayList<>();
@@ -300,6 +336,32 @@ class BcWriter {
    */
   int writeForwardCondJump(JumpCond jumpCond, LocOffset locOffset, int cond) {
     write(jumpCond.opcode, locOffset, cond, FORWARD_JUMP_ADDR);
+    return ip - 1;
+  }
+
+  static BcInstr.Opcode typeIsJumpOpcode(JumpCond jumpCond) {
+    switch (jumpCond) {
+      case IF: return BcInstr.Opcode.IF_TYPE_IS_BR;
+      case IF_NOT: return BcInstr.Opcode.IF_NOT_TYPE_IS_BR;
+      default: throw new AssertionError("unreachable");
+    }
+  }
+
+  /**
+   * Write forward condition jump instruction. Return an address to be patched when the jump
+   * address is known.
+   */
+  int writeForwardTypeIsJump(JumpCond jumpCond, LocOffset locOffset, int expr, String type) {
+    write(typeIsJumpOpcode(jumpCond), locOffset, expr, allocString(type), FORWARD_JUMP_ADDR);
+    return ip - 1;
+  }
+
+  /**
+   * Write forward condition jump instruction. Return an address to be patched when the jump
+   * address is known.
+   */
+  int writeForwardBinCondJump(JumpBindCond jumpBindCond, LocOffset locOffset, int a, int b) {
+    write(jumpBindCond.opcode, locOffset, a, b, FORWARD_JUMP_ADDR);
     return ip - 1;
   }
 

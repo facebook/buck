@@ -31,11 +31,8 @@ class BcIrWriteContext {
   }
 
   void writeForwardCondJump(
-      BcWriter.LocOffset locOffset,
-      BcWriter.JumpCond jumpCond,
-      BcIrSlot.AnyLocal cond,
-      BcIrInstr.JumpLabel jumpLabel) {
-    int patchAddr = writer.writeForwardCondJump(jumpCond, locOffset, cond.encode(this));
+      BcWriter.LocOffset locOffset, BcIrIfCond cond, BcIrInstr.JumpLabel jumpLabel) {
+    int patchAddr = cond.write(this, locOffset);
     forwardJumpAddrsToPatch.computeIfAbsent(jumpLabel, k -> new IntArrayBuilder()).add(patchAddr);
   }
 

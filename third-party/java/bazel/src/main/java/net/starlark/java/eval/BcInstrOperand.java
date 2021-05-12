@@ -56,6 +56,9 @@ class BcInstrOperand {
   /** Either length-delimited slots or an object array. */
   static final Operands IN_LIST = new ListOperand();
 
+  /** Operand is a fixed number storing the instruction pointer. */
+  static final Operands ADDR = new AddrArg();
+
   private BcInstrOperand() {}
 
   /** Fixed of operands, e. g. a pair of operands used to describe a dict key and value. */
@@ -66,11 +69,6 @@ class BcInstrOperand {
   /** Length-delimited operands, e. g. list constructor arguments. */
   static Operands lengthDelimited(Operands element) {
     return new LengthDelimited(element);
-  }
-
-  /** Operand is a fixed number storing the instruction pointer. */
-  static Operands addr(String label) {
-    return new AddrArg(label);
   }
 
   /**
@@ -353,19 +351,15 @@ class BcInstrOperand {
   }
 
   static class AddrArg extends OneWordOperand {
-    private final String label;
-
-    private AddrArg(String label) {
-      this.label = label;
-    }
+    private AddrArg() {}
 
     @Override
     public void print(OpcodePrinter visitor) {
-      visitor.append(label + "=&" + visitor.parser.nextInt());
+      visitor.append("@" + visitor.parser.nextInt());
     }
 
     static class Decoded extends Operands.Decoded {
-      private final int addr;
+      final int addr;
 
       public Decoded(int addr) {
         this.addr = addr;

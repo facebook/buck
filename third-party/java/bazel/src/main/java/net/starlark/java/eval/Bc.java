@@ -897,11 +897,11 @@ class Bc {
                   ((Comprehension.For) clause).getIterable(),
                   ir1 -> compileClauses(ir1, index + 1));
             } else if (clause instanceof Comprehension.If) {
-              CompileExpressionResult cond = compileExpression(ir, ((Comprehension.If) clause).getCondition());
-              // TODO: optimize if cond != null
-              BcIrInstr.JumpLabel end = ir.ifBr(nodeToLocOffset(clause), cond.slot, BcWriter.JumpCond.IF_NOT);
-              compileClauses(ir, index + 1);
-              ir.add(end);
+              new BcCompilerForIf(Compiler.this)
+                  .compileIf(
+                      ir,
+                      ((Comprehension.If) clause).getCondition(),
+                      ir1 -> compileClauses(ir1, index + 1));
             } else {
               throw new IllegalStateException("unknown compr clause: " + clause);
             }
@@ -1006,15 +1006,11 @@ class Bc {
       return false;
     }
 
-    private CompileExpressionResult compileConditional(BcIr ir,
-        ConditionalExpression conditionalExpression, BcIrLocalOrAny result) {
-      int savedSize = ir.size();
-
-      CompileExpressionResult cond = compileExpression(
-          ir, conditionalExpression.getCondition());
-      if (cond.value() != null && isTruthImmutable(cond.value())) {
-        ir.assertUnchanged(savedSize);
-        if (Starlark.truth(cond.value())) {
+    private CompileExpressionResult compileConditional(
+        BcIr ir, ConditionalExpression conditionalExpression, BcIrLocalOrAny result) {
+      CompileExpressionResultWithIr cond = compileExpression(conditionalExpression.getCondition());
+      if (cond.result.value() != null && isTruthImmutable(cond.result.value())) {
+        if (Starlark.truth(cond.result.value())) {
           return compileExpressionTo(ir, conditionalExpression.getThenCase(), result);
         } else {
           return compileExpressionTo(ir, conditionalExpression.getElseCase(), result);
@@ -1022,15 +1018,15 @@ class Bc {
       }
 
       BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "cond");
+      // Inc ref count because the slot is referenced twice: in then and in else
       resultLocal.incRef();
 
-      BcIrInstr.JumpLabel thenTarget = ir.ifBr(
-          nodeToLocOffset(conditionalExpression), cond.slot, BcWriter.JumpCond.IF_NOT);
-      compileExpressionTo(ir, conditionalExpression.getThenCase(), resultLocal);
-      BcIrInstr.JumpLabel endTarget = ir.br(nodeToLocOffset(conditionalExpression));
-      ir.add(thenTarget);
-      compileExpressionTo(ir, conditionalExpression.getElseCase(), resultLocal);
-      ir.add(endTarget);
+      new BcCompilerForIf(this)
+          .compileIfElse(
+              ir,
+              conditionalExpression.getCondition(),
+              ir1 -> compileExpressionTo(ir1, conditionalExpression.getThenCase(), resultLocal),
+              ir1 -> compileExpressionTo(ir1, conditionalExpression.getElseCase(), resultLocal));
 
       return new CompileExpressionResult(resultLocal);
     }

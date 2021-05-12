@@ -537,29 +537,23 @@ abstract class BcIrInstr {
   /** Conditional forward jump. */
   static class IfBr extends BcIrInstr implements Flow {
     final BcWriter.LocOffset locOffset;
-    final BcIrSlot.AnyLocal cond;
-    final BcWriter.JumpCond jumpCond;
+    final BcIrIfCond cond;
     final JumpLabel jumpLabel;
 
-    IfBr(
-        BcWriter.LocOffset locOffset,
-        BcIrSlot.AnyLocal cond,
-        BcWriter.JumpCond jumpCond,
-        JumpLabel jumpLabel) {
+    IfBr(BcWriter.LocOffset locOffset, BcIrIfCond cond, JumpLabel jumpLabel) {
       this.locOffset = locOffset;
       this.cond = cond;
-      this.jumpCond = jumpCond;
       this.jumpLabel = jumpLabel;
     }
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {jumpCond.opcode, cond, jumpLabel};
+      return new Object[] {IfBr.class.getSimpleName(), "(" + cond + ")", jumpLabel};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
-      writeContext.writeForwardCondJump(locOffset, jumpCond, cond, jumpLabel);
+      writeContext.writeForwardCondJump(locOffset, cond, jumpLabel);
     }
   }
 
