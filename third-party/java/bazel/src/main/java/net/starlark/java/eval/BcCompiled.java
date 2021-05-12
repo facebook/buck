@@ -92,10 +92,6 @@ class BcCompiled {
     this.instrToLoc = instrToLoc;
     this.returnsConst = returnsConst;
     this.returnsTypeIs = returnsTypeIs;
-
-    if (Bc.ASSERTIONS) {
-      new BcVisitor(this).visit();
-    }
   }
 
   public ImmutableList<Resolver.Binding> getLocals() {
