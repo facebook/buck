@@ -46,8 +46,12 @@ class BcInstr {
   public static final int INDEX = DOT + 1;
   public static final int SLICE = INDEX + 1;
   public static final int CALL = SLICE + 1;
-  public static final int CALL_LINKED = CALL + 1;
-  public static final int CALL_CACHED = CALL_LINKED + 1;
+  public static final int CALL_1 = CALL + 1;
+  public static final int CALL_2 = CALL_1 + 1;
+  public static final int CALL_LINKED = CALL_2 + 1;
+  public static final int CALL_LINKED_1 = CALL_LINKED + 1;
+  public static final int CALL_LINKED_2 = CALL_LINKED_1 + 1;
+  public static final int CALL_CACHED = CALL_LINKED_2 + 1;
   public static final int RETURN = CALL_CACHED + 1;
   public static final int NEW_FUNCTION = RETURN + 1;
   public static final int FOR_INIT = NEW_FUNCTION + 1;
@@ -240,8 +244,6 @@ class BcInstr {
     /** Generic call invocation. */
     CALL(
         BcInstr.CALL,
-        // BcCallLocs
-        BcInstrOperand.OBJECT,
         // Function
         BcInstrOperand.IN_SLOT,
         // BcDynCallSite
@@ -251,6 +253,28 @@ class BcInstr {
         // *args
         BcInstrOperand.IN_SLOT,
         // **kwargs
+        BcInstrOperand.IN_SLOT,
+        // Where to store result
+        BcInstrOperand.OUT_SLOT),
+    CALL_1(
+        BcInstr.CALL_1,
+        // Function
+        BcInstrOperand.IN_SLOT,
+        // BcDynCallSite
+        BcInstrOperand.OBJECT,
+        // arg0
+        BcInstrOperand.IN_SLOT,
+        // Where to store result
+        BcInstrOperand.OUT_SLOT),
+    CALL_2(
+        BcInstr.CALL_2,
+        // Function
+        BcInstrOperand.IN_SLOT,
+        // BcDynCallSite
+        BcInstrOperand.OBJECT,
+        // arg0
+        BcInstrOperand.IN_SLOT,
+        // arg1
         BcInstrOperand.IN_SLOT,
         // Where to store result
         BcInstrOperand.OUT_SLOT),
@@ -265,6 +289,30 @@ class BcInstr {
         // *args
         BcInstrOperand.IN_SLOT,
         // **kwargs
+        BcInstrOperand.IN_SLOT,
+        // Where to store result
+        BcInstrOperand.OUT_SLOT
+    ),
+    CALL_LINKED_1(
+        BcInstr.CALL_LINKED_1,
+        // BcCallLocs
+        BcInstrOperand.OBJECT,
+        // StarlarkCallableLinked
+        BcInstrOperand.OBJECT,
+        // arg0
+        BcInstrOperand.IN_SLOT,
+        // Where to store result
+        BcInstrOperand.OUT_SLOT
+    ),
+    CALL_LINKED_2(
+        BcInstr.CALL_LINKED_2,
+        // BcCallLocs
+        BcInstrOperand.OBJECT,
+        // StarlarkCallableLinked
+        BcInstrOperand.OBJECT,
+        // arg0
+        BcInstrOperand.IN_SLOT,
+        // arg1
         BcInstrOperand.IN_SLOT,
         // Where to store result
         BcInstrOperand.OUT_SLOT

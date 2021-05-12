@@ -859,6 +859,8 @@ abstract class BcIrInstr {
         BcIrSlotOrNull starArg,
         BcIrSlotOrNull starStarArg,
         BcIrSlot.AnyLocal result) {
+      Preconditions.checkArgument(linkSig.fixedArgCount() == listArg.size());
+
       this.locOffset = locOffset;
       this.callLocs = callLocs;
       this.fn = fn;
@@ -876,21 +878,39 @@ abstract class BcIrInstr {
 
     @Override
     void write(BcIrWriteContext writeContext) {
-      int[] args =
-          BcWriter.args(
-              new int[] {
-                writeContext.writer.allocObject(callLocs),
-                fn.encode(writeContext),
-                writeContext.writer.allocObject(new BcDynCallSite(linkSig)),
-              },
-              listArg.encode(writeContext),
-              new int[] {
-                starArg.encode(writeContext),
-                starStarArg.encode(writeContext),
-                result.encode(writeContext),
-              });
+      if (linkSig == StarlarkCallableLinkSig.positional(1)) {
+        writeContext.writer.write(
+            BcInstr.Opcode.CALL_1,
+            locOffset,
+            fn.encode(writeContext),
+            writeContext.writer.allocObject(new BcDynCallSite(callLocs, linkSig)),
+            listArg.arg(0).encode(writeContext),
+            result.encode(writeContext));
+      } else if (linkSig == StarlarkCallableLinkSig.positional(2)) {
+        writeContext.writer.write(
+            BcInstr.Opcode.CALL_2,
+            locOffset,
+            fn.encode(writeContext),
+            writeContext.writer.allocObject(new BcDynCallSite(callLocs, linkSig)),
+            listArg.arg(0).encode(writeContext),
+            listArg.arg(1).encode(writeContext),
+            result.encode(writeContext));
+      } else {
+        int[] args =
+            BcWriter.args(
+                new int[] {
+                  fn.encode(writeContext),
+                  writeContext.writer.allocObject(new BcDynCallSite(callLocs, linkSig)),
+                },
+                listArg.encode(writeContext),
+                new int[] {
+                  starArg.encode(writeContext),
+                  starStarArg.encode(writeContext),
+                  result.encode(writeContext),
+                });
 
-      writeContext.writer.write(BcInstr.Opcode.CALL, locOffset, args);
+        writeContext.writer.write(BcInstr.Opcode.CALL, locOffset, args);
+      }
     }
   }
 
@@ -927,18 +947,37 @@ abstract class BcIrInstr {
 
     @Override
     void write(BcIrWriteContext writeContext) {
-      int[] newArgs =
-          BcWriter.args(
-              new int[] {
-                writeContext.writer.allocObject(callLocs), writeContext.writer.allocObject(fn)
-              },
-              listArg.encode(writeContext),
-              new int[] {
-                starArg.encode(writeContext),
-                starStarArg.encode(writeContext),
-                result.encode(writeContext),
-              });
-      writeContext.writer.write(BcInstr.Opcode.CALL_LINKED, locOffset, newArgs);
+      if (fn.linkSig == StarlarkCallableLinkSig.positional(1)) {
+        writeContext.writer.write(
+            BcInstr.Opcode.CALL_LINKED_1,
+            locOffset,
+            writeContext.writer.allocObject(callLocs),
+            writeContext.writer.allocObject(fn),
+            listArg.arg(0).encode(writeContext),
+            result.encode(writeContext));
+      } else if (fn.linkSig == StarlarkCallableLinkSig.positional(2)) {
+        writeContext.writer.write(
+            BcInstr.Opcode.CALL_LINKED_2,
+            locOffset,
+            writeContext.writer.allocObject(callLocs),
+            writeContext.writer.allocObject(fn),
+            listArg.arg(0).encode(writeContext),
+            listArg.arg(1).encode(writeContext),
+            result.encode(writeContext));
+      } else {
+        int[] newArgs =
+            BcWriter.args(
+                new int[] {
+                  writeContext.writer.allocObject(callLocs), writeContext.writer.allocObject(fn)
+                },
+                listArg.encode(writeContext),
+                new int[] {
+                  starArg.encode(writeContext),
+                  starStarArg.encode(writeContext),
+                  result.encode(writeContext),
+                });
+        writeContext.writer.write(BcInstr.Opcode.CALL_LINKED, locOffset, newArgs);
+      }
     }
   }
 

@@ -30,6 +30,11 @@ public class StarlarkCallableLinkSig {
     return hasStar || hasStarStar;
   }
 
+  /** Number of fixed arguments. */
+  int fixedArgCount() {
+    return numPositionals + namedNames.length;
+  }
+
   private static final Interner<StarlarkCallableLinkSig> interner = Interners.newWeakInterner();
 
   private static StarlarkCallableLinkSig[] initPosOnly() {

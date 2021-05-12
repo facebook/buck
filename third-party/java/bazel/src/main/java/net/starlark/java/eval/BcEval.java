@@ -195,8 +195,20 @@ class BcEval {
           case BcInstr.CALL:
             call();
             break;
+          case BcInstr.CALL_1:
+            call1();
+            break;
+          case BcInstr.CALL_2:
+            call2();
+            break;
           case BcInstr.CALL_LINKED:
             callLinked();
+            break;
+          case BcInstr.CALL_LINKED_1:
+            callLinked1();
+            break;
+          case BcInstr.CALL_LINKED_2:
+            callLinked2();
             break;
           case BcInstr.CALL_CACHED:
             callCached();
@@ -745,15 +757,22 @@ class BcEval {
     setSlot(nextOperand(), Starlark.slice(thread.mutability(), object, start, stop, step));
   }
 
+  private StarlarkCallable nextCallable() throws EvalException {
+    return BcCall.callable(getSlot(nextOperand()));
+  }
+
+  private BcDynCallSite nextDynCallSite() {
+    BcDynCallSite callSite = (BcDynCallSite) compiled.objects[nextOperand()];
+    fr.setLocation(callSite.lparenLocation);
+    return callSite;
+  }
+
   /** Call operator. */
   private void call() throws EvalException, InterruptedException {
     thread.checkInterrupt();
 
-    BcCallLocs locs = (BcCallLocs) compiled.objects[nextOperand()];
-    fr.setLocation(locs.getLparentLocation());
-
-    StarlarkCallable fn = BcCall.callable(getSlot(nextOperand()));
-    BcDynCallSite callSite = (BcDynCallSite) compiled.objects[nextOperand()];
+    StarlarkCallable fn = nextCallable();
+    BcDynCallSite callSite = nextDynCallSite();
     Object[] args = nextNSlotsListSharedArray();
     Object star = getSlotOrNull(nextOperand());
     Object starStar = getSlotOrNull(nextOperand());
@@ -761,7 +780,7 @@ class BcEval {
     if (star != null) {
       if (!(star instanceof Sequence)) {
         throw new EvalException(
-            locs.starLocation(compiled.getFileLocations()),
+            callSite.callLocs.starLocation(compiled.getFileLocations()),
             "argument after * must be an iterable, not " + Starlark.type(star));
       }
     }
@@ -769,7 +788,7 @@ class BcEval {
     if (starStar != null) {
       if (!(starStar instanceof Dict)) {
         throw new EvalException(
-            locs.starStarLocation(compiled.getFileLocations()),
+            callSite.callLocs.starStarLocation(compiled.getFileLocations()),
             "argument after ** must be a dict, not " + Starlark.type(starStar));
       }
     }
@@ -779,14 +798,47 @@ class BcEval {
     setSlot(nextOperand(), result);
   }
 
+  private void call1() throws EvalException, InterruptedException {
+    thread.checkInterrupt();
+
+    StarlarkCallable fn = nextCallable();
+    BcDynCallSite callSite = nextDynCallSite();
+
+    Object arg0 = getSlot(nextOperand());
+    Object result = BcCall.linkAndCall1Cs(thread, fn, callSite, arg0);
+
+    setSlot(nextOperand(), result);
+  }
+
+  private void call2() throws InterruptedException, EvalException {
+    thread.checkInterrupt();
+
+    StarlarkCallable fn = nextCallable();
+    BcDynCallSite callSite = nextDynCallSite();
+
+    Object arg0 = getSlot(nextOperand());
+    Object arg1 = getSlot(nextOperand());
+    Object result = BcCall.linkAndCall2Cs(thread, fn, callSite, arg0, arg1);
+
+    setSlot(nextOperand(), result);
+  }
+
+  private BcCallLocs nextCallLocs() {
+    BcCallLocs locs = (BcCallLocs) compiled.objects[nextOperand()];
+    fr.setLocation(locs.getLparentLocation());
+    return locs;
+  }
+
+  private StarlarkCallableLinked nextCallableLinked() {
+    return (StarlarkCallableLinked) compiled.objects[nextOperand()];
+  }
+
   /** Call after successful link at compile time. */
   private void callLinked() throws EvalException, InterruptedException {
     thread.checkInterrupt();
 
-    BcCallLocs locs = (BcCallLocs) compiled.objects[nextOperand()];
-    fr.setLocation(locs.getLparentLocation());
-
-    StarlarkCallableLinked fn = (StarlarkCallableLinked) compiled.objects[nextOperand()];
+    BcCallLocs locs = nextCallLocs();
+    StarlarkCallableLinked fn = nextCallableLinked();
 
     Object[] args = nextNSlotsListSharedArray();
 
@@ -805,6 +857,33 @@ class BcEval {
     }
 
     Object result = BcCall.callLinked(thread, fn, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+    setSlot(nextOperand(), result);
+  }
+
+  private void callLinked1() throws InterruptedException, EvalException {
+    thread.checkInterrupt();
+
+    nextCallLocs();
+    StarlarkCallableLinked fn = nextCallableLinked();
+
+    Object arg0 = getSlot(nextOperand());
+
+    Object result = BcCall.callLinked1(thread, fn, arg0);
+    setSlot(nextOperand(), result);
+  }
+
+  private void callLinked2() throws InterruptedException, EvalException {
+    thread.checkInterrupt();
+
+    nextCallLocs();
+    StarlarkCallableLinked fn = nextCallableLinked();
+
+    int arg0Slot = nextOperand();
+    int arg1Slot = nextOperand();
+    Object arg0 = getSlot(arg0Slot);
+    Object arg1 = getSlot(arg1Slot);
+
+    Object result = BcCall.callLinked2(thread, fn, arg0, arg1);
     setSlot(nextOperand(), result);
   }
 

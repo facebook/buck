@@ -74,6 +74,21 @@ class BcCall {
     }
   }
 
+  static Object callLinked1(
+      StarlarkThread thread,
+      StarlarkCallableLinked fn,
+      Object arg0) throws EvalException, InterruptedException {
+    return callLinked(thread, fn, new Object[] { arg0 }, null, null);
+  }
+
+  static Object callLinked2(
+      StarlarkThread thread,
+      StarlarkCallableLinked fn,
+      Object arg0,
+      Object arg1) throws EvalException, InterruptedException {
+    return callLinked(thread, fn, new Object[] { arg0, arg1 }, null, null);
+  }
+
   static Object linkAndCall(
       StarlarkThread thread,
       StarlarkCallable fn,
@@ -109,4 +124,24 @@ class BcCall {
       thread.pop();
     }
   }
+
+  static Object linkAndCall1Cs(
+      StarlarkThread thread,
+      StarlarkCallable fn,
+      BcDynCallSite callSite,
+      Object arg0)
+      throws EvalException, InterruptedException {
+    return linkAndCallCs(thread, fn, callSite, new Object[] { arg0 }, null, null);
+  }
+
+  static Object linkAndCall2Cs(
+      StarlarkThread thread,
+      StarlarkCallable fn,
+      BcDynCallSite callSite,
+      Object arg0,
+      Object arg1)
+      throws EvalException, InterruptedException {
+    return linkAndCallCs(thread, fn, callSite, new Object[] { arg0, arg1 }, null, null);
+  }
+
 }

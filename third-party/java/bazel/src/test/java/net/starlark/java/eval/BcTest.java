@@ -153,7 +153,7 @@ public class BcTest {
         thread);
     ImmutableList<BcInstr.Decoded> instructions = f.compiled.instructions();
     assertEquals("" + f.compiled, 2, instructions.size());
-    assertEquals(BcInstr.Opcode.CALL_LINKED, instructions.get(0).opcode);
+    assertEquals(BcInstr.Opcode.CALL_LINKED_1, instructions.get(0).opcode);
     StarlarkCallableLinked format = (StarlarkCallableLinked) f.compiled.objects[instructions.get(0).getArgObject(1)];
     assertEquals("format", format.orig.getName());
   }

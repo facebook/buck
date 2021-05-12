@@ -51,7 +51,7 @@ public class BcCallCachedTest {
         thread);
     ImmutableList<BcInstr.Decoded> instructions = f.compiled.instructions();
     // We are calling `g` with `CALL_LINKED`, not `CALL_CACHED`
-    assertEquals(BcInstr.Opcode.CALL_LINKED, instructions.get(0).opcode);
+    assertEquals(BcInstr.Opcode.CALL_LINKED_1, instructions.get(0).opcode);
   }
 
   @Test

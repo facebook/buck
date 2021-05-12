@@ -1,12 +1,17 @@
 package net.starlark.java.eval;
 
 import javax.annotation.Nullable;
+import net.starlark.java.syntax.Location;
 
 /** Call site for {@link BcInstr.Opcode#CALL} instruction. */
 class BcDynCallSite {
+  final BcCallLocs callLocs;
+  final Location lparenLocation;
   private final StarlarkCallableLinkSig linkSig;
 
-  BcDynCallSite(StarlarkCallableLinkSig linkSig) {
+  BcDynCallSite(BcCallLocs callLocs, StarlarkCallableLinkSig linkSig) {
+    this.callLocs = callLocs;
+    this.lparenLocation = callLocs.getLparentLocation();
     this.linkSig = linkSig;
   }
 

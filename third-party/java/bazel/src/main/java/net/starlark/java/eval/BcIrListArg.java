@@ -22,9 +22,14 @@ abstract class BcIrListArg {
   @Nullable
   abstract Object[] data();
 
+  abstract int size();
+
   /** Single list item, null if empty or more than one. */
   @Nullable
-  public abstract BcIrSlot singleArg();
+  abstract BcIrSlot singleArg();
+
+  /** Arg i as slot. */
+  abstract BcIrSlot arg(int i);
 
   /** List of slots. */
   static class Slots extends BcIrListArg {
@@ -57,6 +62,11 @@ abstract class BcIrListArg {
       return slots.isEmpty() ? ArraysForStarlark.EMPTY_OBJECT_ARRAY : null;
     }
 
+    @Override
+    int size() {
+      return slots.size();
+    }
+
     @Nullable
     @Override
     public BcIrSlot singleArg() {
@@ -65,6 +75,11 @@ abstract class BcIrListArg {
       } else {
         return null;
       }
+    }
+
+    @Override
+    public BcIrSlot arg(int i) {
+      return slots.get(i);
     }
 
     @Override
@@ -103,14 +118,24 @@ abstract class BcIrListArg {
       return data;
     }
 
+    @Override
+    int size() {
+      return data.length;
+    }
+
     @Nullable
     @Override
-    public BcIrSlot singleArg() {
+    BcIrSlot singleArg() {
       if (data.length == 1) {
         return new BcIrSlot.Const(data[0]);
       } else {
         return null;
       }
+    }
+
+    @Override
+    BcIrSlot arg(int i) {
+      return new BcIrSlot.Const(data[i]);
     }
 
     @Override
