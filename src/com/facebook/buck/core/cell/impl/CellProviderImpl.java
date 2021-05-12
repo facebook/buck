@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.cell.impl;
 
-import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
@@ -58,13 +57,7 @@ final class CellProviderImpl implements CellProvider {
   private final ImmutableMap<CanonicalCellName, Cell> cells;
   private final ImmutableSet<AbsPath> allRoots;
   private final ImmutableMap<AbsPath, RawConfig> pathToConfigOverrides;
-  private final ProjectFilesystem rootFilesystem;
-  private final BuckConfig rootConfig;
   private final CellPathResolver rootCellCellPathResolver;
-  private final ToolchainProviderFactory toolchainProviderFactory;
-  private final ProjectFilesystemFactory projectFilesystemFactory;
-  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
-  private final Watchman watchman;
 
   /**
    * Create a cell provider with a specific cell loader, and optionally a special factory function
@@ -82,13 +75,7 @@ final class CellProviderImpl implements CellProvider {
       ProjectFilesystemFactory projectFilesystemFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       Watchman watchman) {
-    this.rootFilesystem = rootFilesystem;
-    this.rootConfig = rootConfig;
     this.rootCellCellPathResolver = rootCellCellPathResolver;
-    this.toolchainProviderFactory = toolchainProviderFactory;
-    this.projectFilesystemFactory = projectFilesystemFactory;
-    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
-    this.watchman = watchman;
 
     ImmutableMap<CellName, AbsPath> cellPathMapping = rootCellCellPathResolver.getPathMapping();
 
@@ -123,7 +110,18 @@ final class CellProviderImpl implements CellProvider {
                         return rootCell;
                       } else {
                         try {
-                          return loadCell(cellName);
+                          return loadCell(
+                              cellName,
+                              newCellPathResolver,
+                              allRoots,
+                              pathToConfigOverrides,
+                              rootCellCellPathResolver,
+                              rootFilesystem,
+                              projectFilesystemFactory,
+                              watchman,
+                              rootConfig,
+                              unconfiguredBuildTargetFactory,
+                              toolchainProviderFactory);
                         } catch (IOException e) {
                           throw new HumanReadableException(
                               e.getCause(), "Failed to load Cell at: %s", cellName);
@@ -131,10 +129,22 @@ final class CellProviderImpl implements CellProvider {
                       }
                     }));
 
-    Preconditions.checkState(this.cells.containsKey(CanonicalCellName.rootCell()));
+    Preconditions.checkState(cells.containsKey(CanonicalCellName.rootCell()));
   }
 
-  private Cell loadCell(CanonicalCellName canonicalCellName) throws IOException {
+  private static Cell loadCell(
+      CanonicalCellName canonicalCellName,
+      NewCellPathResolver newCellPathResolver,
+      ImmutableSet<AbsPath> allRoots,
+      ImmutableMap<AbsPath, RawConfig> pathToConfigOverrides,
+      CellPathResolver rootCellCellPathResolver,
+      ProjectFilesystem rootFilesystem,
+      ProjectFilesystemFactory projectFilesystemFactory,
+      Watchman watchman,
+      BuckConfig rootConfig,
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+      ToolchainProviderFactory toolchainProviderFactory)
+      throws IOException {
     AbsPath cellPath = newCellPathResolver.getCellPath(canonicalCellName);
     AbsPath normalizedCellPath = cellPath.toRealPath().normalize();
 
@@ -181,7 +191,6 @@ final class CellProviderImpl implements CellProvider {
             rootCellCellPathResolver, cellNameResolver, cellMapping.keySet(), cellPath);
 
     Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo = Optional.empty();
-    rootConfig.getView(BuildBuckConfig.class);
     if (canonicalCellName.getLegacyName().isPresent()) {
       embeddedCellBuckOutInfo =
           Optional.of(
