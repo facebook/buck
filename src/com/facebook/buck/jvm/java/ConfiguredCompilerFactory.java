@@ -49,6 +49,11 @@ public abstract class ConfiguredCompilerFactory {
     return false;
   }
 
+  @Nullable
+  public JavaBuckConfig.UnusedDependenciesConfig getUnusedDependenciesAction() {
+    return JavaBuckConfig.UnusedDependenciesConfig.IGNORE;
+  }
+
   public boolean shouldDesugarInterfaceMethods() {
     return false;
   }

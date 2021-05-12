@@ -64,6 +64,11 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   @Override
+  public JavaBuckConfig.UnusedDependenciesConfig getUnusedDependenciesAction() {
+    return javaBuckConfig.getUnusedDependenciesAction();
+  }
+
+  @Override
   public boolean shouldDesugarInterfaceMethods() {
     return javaBuckConfig.shouldDesugarInterfaceMethods();
   }

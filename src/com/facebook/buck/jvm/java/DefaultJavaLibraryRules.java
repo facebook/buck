@@ -742,12 +742,10 @@ public abstract class DefaultJavaLibraryRules {
    * available. 5. Default to ignore.
    */
   private static UnusedDependenciesAction getUnusedDependenciesAction(
-      @Nullable JavaBuckConfig javaBuckConfig, @Nullable JavaLibraryDescription.CoreArg args) {
+      @Nullable UnusedDependenciesConfig configAction,
+      @Nullable JavaLibraryDescription.CoreArg args) {
     UnusedDependenciesAction localAction =
         args == null ? null : args.getOnUnusedDependencies().orElse(null);
-
-    UnusedDependenciesConfig configAction =
-        javaBuckConfig == null ? null : javaBuckConfig.getUnusedDependenciesAction();
 
     if (configAction == UnusedDependenciesConfig.IGNORE_ALWAYS) {
       return UnusedDependenciesAction.IGNORE;
@@ -803,7 +801,8 @@ public abstract class DefaultJavaLibraryRules {
           initialParams,
           graphBuilder,
           configuredCompilerFactory,
-          getUnusedDependenciesAction(javaBuckConfig, args),
+          getUnusedDependenciesAction(
+              configuredCompilerFactory.getUnusedDependenciesAction(), args),
           javaBuckConfig,
           javaCDBuckConfig,
           cellPathResolver,

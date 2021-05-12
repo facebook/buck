@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -195,6 +196,29 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    */
   SourcePath getPathToAnnotationProcessingJar() {
     return getPathToJar("kotlin-annotation-processing");
+  }
+
+  /**
+   * Determine whether dep-based rule keys are used for Kotlin.
+   *
+   * @return true to use dep-based rule keys, false otherwise
+   */
+  boolean trackClassUsage() {
+    return delegate.getBoolean(SECTION, "track_class_usage").orElse(false);
+  }
+
+  /**
+   * Get the action to perform when unused dependencies are detected. This can be set in .buckconfig
+   * via "unused_dependencies_action" property; possible values are "ignore", "warn", "fail",
+   * "ignore_always", "warn_if_fail". Default is "ignore".
+   *
+   * @return the action to perform when unused dependencies are detected
+   */
+  public JavaBuckConfig.UnusedDependenciesConfig getUnusedDependenciesAction() {
+    return delegate
+        .getEnum(
+            SECTION, "unused_dependencies_action", JavaBuckConfig.UnusedDependenciesConfig.class)
+        .orElse(JavaBuckConfig.UnusedDependenciesConfig.IGNORE);
   }
 
   /**

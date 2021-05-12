@@ -29,6 +29,7 @@ import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -133,6 +134,16 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   @Override
   public boolean shouldGenerateSourceAbi() {
     return AbiGenerationModeUtils.isSourceAbi(kotlinBuckConfig.getAbiGenerationMode());
+  }
+
+  @Override
+  public boolean trackClassUsage(JavacOptions javacOptions) {
+    return kotlinBuckConfig.trackClassUsage();
+  }
+
+  @Override
+  public JavaBuckConfig.UnusedDependenciesConfig getUnusedDependenciesAction() {
+    return kotlinBuckConfig.getUnusedDependenciesAction();
   }
 
   private static ImmutableList<SourcePath> getFriendSourcePaths(
