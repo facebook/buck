@@ -111,9 +111,11 @@ public class BuckGlobalStateLifecycleManager {
   }
 
   public synchronized Optional<BuckConfig> getBuckConfig() {
-    return Optional.ofNullable(buckGlobalState)
-        .map(BuckGlobalState::getCells)
-        .map(Cells::getBuckConfig);
+    return getCells().map(Cells::getBuckConfig);
+  }
+
+  public synchronized Optional<Cells> getCells() {
+    return Optional.ofNullable(buckGlobalState).map(BuckGlobalState::getCells);
   }
 
   /** Get or create Daemon. */

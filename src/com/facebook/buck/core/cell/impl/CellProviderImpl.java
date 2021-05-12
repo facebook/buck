@@ -74,7 +74,8 @@ final class CellProviderImpl implements CellProvider {
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      Watchman watchman) {
+      Watchman watchman,
+      Optional<ImmutableMap<CanonicalCellName, Config>> reusePreviousConfigs) {
     this.rootCellCellPathResolver = rootCellCellPathResolver;
 
     ImmutableMap<CellName, AbsPath> cellPathMapping = rootCellCellPathResolver.getPathMapping();
@@ -86,6 +87,12 @@ final class CellProviderImpl implements CellProvider {
     }
 
     allRoots = ImmutableSet.copyOf(cellPathMapping.values());
+
+    if (reusePreviousConfigs.isPresent()) {
+      Preconditions.checkState(
+          rootConfig.getConfig() == reusePreviousConfigs.get().get(CanonicalCellName.rootCell()),
+          "Buckconfig is a different object that was passed in reusePreviousConfigs");
+    }
 
     newCellPathResolver =
         CellMappingsFactory.create(rootFilesystem.getRootPath(), rootConfig.getConfig());
@@ -121,7 +128,8 @@ final class CellProviderImpl implements CellProvider {
                               watchman,
                               rootConfig,
                               unconfiguredBuildTargetFactory,
-                              toolchainProviderFactory);
+                              toolchainProviderFactory,
+                              reusePreviousConfigs);
                         } catch (IOException e) {
                           throw new HumanReadableException(
                               e.getCause(), "Failed to load Cell at: %s", cellName);
@@ -143,7 +151,8 @@ final class CellProviderImpl implements CellProvider {
       Watchman watchman,
       BuckConfig rootConfig,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      ToolchainProviderFactory toolchainProviderFactory)
+      ToolchainProviderFactory toolchainProviderFactory,
+      Optional<ImmutableMap<CanonicalCellName, Config>> reusePreviousConfigs)
       throws IOException {
     AbsPath cellPath = newCellPathResolver.getCellPath(canonicalCellName);
     AbsPath normalizedCellPath = cellPath.toRealPath().normalize();
@@ -154,10 +163,18 @@ final class CellProviderImpl implements CellProvider {
         normalizedCellPath,
         allRoots);
 
-    RawConfig configOverrides =
-        Optional.ofNullable(pathToConfigOverrides.get(normalizedCellPath))
-            .orElse(RawConfig.of(ImmutableMap.of()));
-    Config config = Configs.createDefaultConfig(normalizedCellPath.getPath(), configOverrides);
+    Config config;
+
+    if (reusePreviousConfigs.isPresent()) {
+      config = reusePreviousConfigs.get().get(canonicalCellName);
+      Preconditions.checkState(
+          config != null, "no mapping for cell '%s' in config overrides map", canonicalCellName);
+    } else {
+      RawConfig configOverrides =
+          Optional.ofNullable(pathToConfigOverrides.get(normalizedCellPath))
+              .orElse(RawConfig.of(ImmutableMap.of()));
+      config = Configs.createDefaultConfig(normalizedCellPath.getPath(), configOverrides);
+    }
 
     ImmutableMap<String, AbsPath> cellMapping =
         DefaultCellPathResolver.getCellPathsFromConfigRepositoriesSection(

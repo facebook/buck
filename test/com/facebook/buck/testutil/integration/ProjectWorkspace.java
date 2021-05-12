@@ -109,6 +109,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -718,7 +719,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
         toolchainProviderFactory,
         new DefaultProjectFilesystemFactory(),
         new ParsingUnconfiguredBuildTargetViewFactory(),
-        new WatchmanFactory.NullWatchman("ProjectWorkspace"));
+        new WatchmanFactory.NullWatchman("ProjectWorkspace"),
+        Optional.empty());
   }
 
   public BuildTarget newBuildTarget(String fullyQualifiedName) {

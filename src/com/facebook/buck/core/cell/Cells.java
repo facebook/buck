@@ -19,7 +19,9 @@ package com.facebook.buck.core.cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.util.config.Config;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -83,5 +85,12 @@ public class Cells {
             + "'; known roots = ["
             + allRoots.stream().map(Objects::toString).collect(Collectors.joining(", "))
             + "]");
+  }
+
+  public ImmutableMap<CanonicalCellName, Config> getConfigByCell() {
+    return getAllCells().stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                Cell::getCanonicalName, c -> c.getBuckConfig().getConfig()));
   }
 }

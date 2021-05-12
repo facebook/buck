@@ -18,12 +18,16 @@ package com.facebook.buck.core.cell.impl;
 
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.util.config.Config;
+import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
 /** Creates a {@link CellProvider} to be used in a local (non-distributed) build. */
 public class LocalCellProviderFactory {
@@ -37,7 +41,8 @@ public class LocalCellProviderFactory {
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      Watchman watchman) {
+      Watchman watchman,
+      Optional<ImmutableMap<CanonicalCellName, Config>> reusePreviousConfigs) {
 
     return new CellProviderImpl(
         rootFilesystem,
@@ -47,6 +52,7 @@ public class LocalCellProviderFactory {
         toolchainProviderFactory,
         projectFilesystemFactory,
         unconfiguredBuildTargetFactory,
-        watchman);
+        watchman,
+        reusePreviousConfigs);
   }
 }

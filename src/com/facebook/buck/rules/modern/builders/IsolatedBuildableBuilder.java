@@ -194,7 +194,8 @@ public abstract class IsolatedBuildableBuilder {
             toolchainProviderFactory,
             projectFilesystemFactory,
             buildTargetFactory,
-            new WatchmanFactory.NullWatchman("IsolatedBuildableBuilder"));
+            new WatchmanFactory.NullWatchman("IsolatedBuildableBuilder"),
+            Optional.empty());
 
     this.filesystemFunction =
         (cellName) -> {

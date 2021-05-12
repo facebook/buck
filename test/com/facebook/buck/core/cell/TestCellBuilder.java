@@ -38,6 +38,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import org.pf4j.PluginManager;
 
@@ -117,7 +118,8 @@ public class TestCellBuilder {
             toolchainProviderFactory,
             new DefaultProjectFilesystemFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
-            new WatchmanFactory.NullWatchman("TestCellBuilder")));
+            new WatchmanFactory.NullWatchman("TestCellBuilder"),
+            Optional.empty()));
   }
 
   public static CellPathResolver createCellRoots(@Nullable ProjectFilesystem filesystem) {

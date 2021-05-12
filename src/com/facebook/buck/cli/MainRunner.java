@@ -700,6 +700,7 @@ public final class MainRunner {
       Config config;
       DefaultCellPathResolver cellPathResolver;
       BuckConfig buckConfig;
+      Optional<Cells> cellsFromPreviousRun;
 
       BuckConfigProjectFilesystem buckConfigProjectFilesystem;
 
@@ -708,11 +709,13 @@ public final class MainRunner {
               && buckGlobalStateLifecycleManager.hasStoredBuckGlobalState();
       if (reusePreviousConfig) {
         printWarnMessage(UIMessagesFormatter.reuseConfigPropertyProvidedMessage());
-        buckConfig =
+        Cells cells =
             buckGlobalStateLifecycleManager
-                .getBuckConfig()
+                .getCells()
                 .orElseThrow(
                     () -> new IllegalStateException("Daemon is present but config is missing."));
+        buckConfig = cells.getBuckConfig();
+        cellsFromPreviousRun = Optional.of(cells);
         config = buckConfig.getConfig();
         buckConfigProjectFilesystem = null;
         cellPathResolver = DefaultCellPathResolver.create(canonicalRootPath, config);
@@ -732,6 +735,7 @@ public final class MainRunner {
                 clientEnvironment,
                 buildTargetFactory,
                 cellPathResolver.getCellNameResolver());
+        cellsFromPreviousRun = Optional.empty();
       }
 
       // Set so that we can use some settings when we print out messages to users
@@ -832,7 +836,8 @@ public final class MainRunner {
                   toolchainProviderFactory,
                   projectFilesystemFactory,
                   buildTargetFactory,
-                  watchman));
+                  watchman,
+                  cellsFromPreviousRun.map(Cells::getConfigByCell)));
 
       TargetConfigurationSerializer targetConfigurationSerializer =
           new JsonTargetConfigurationSerializer(
