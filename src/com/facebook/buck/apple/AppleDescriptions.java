@@ -1333,6 +1333,7 @@ public class AppleDescriptions {
                         graphBuilder,
                         collectedResources.getResourceFiles(),
                         collectedResources.getResourceVariantFiles(),
+                        collectedResources.getNamedResourceVariantFiles(),
                         ibtoolFlagsUnwrapped,
                         AppleBundleSupport.isLegacyWatchApp(unwrappedExtension, unwrappedBinary),
                         appleCxxPlatform.getIbtool(),

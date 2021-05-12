@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -101,7 +102,9 @@ public class AppleResourceDescription
                         appleResource.getCodesignOnCopy()))
             .collect(Collectors.toCollection(supplier)));
     ImmutableSet<SourcePath> variants = appleResource.getVariants();
-    if (!variants.isEmpty() && destination != AppleResourceBundleDestination.RESOURCES) {
+    ImmutableMap<String, ImmutableSet<SourcePath>> namedVariants = appleResource.getNamedVariants();
+    if ((!variants.isEmpty() || !namedVariants.isEmpty())
+        && destination != AppleResourceBundleDestination.RESOURCES) {
       throw new HumanReadableException(
           String.format(
               ("Resource \"%s\" contains localization variants, but destination \"%s\" is "
@@ -110,6 +113,7 @@ public class AppleResourceDescription
               destination));
     }
     builder.addAllResourceVariantFiles(variants);
+    builder.putAllNamedResourceVariantFiles(namedVariants);
   }
 
   @RuleArg
@@ -121,6 +125,8 @@ public class AppleResourceDescription
     ImmutableSet<SourcePath> getFiles();
 
     ImmutableSet<SourcePath> getVariants();
+
+    ImmutableMap<String, ImmutableSet<SourcePath>> getNamedVariants();
 
     ImmutableSet<BuildTarget> getResourcesFromDeps();
 

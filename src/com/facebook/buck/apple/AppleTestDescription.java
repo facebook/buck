@@ -589,6 +589,7 @@ public class AppleTestDescription
                         graphBuilder,
                         collectedResources.getResourceFiles(),
                         collectedResources.getResourceVariantFiles(),
+                        collectedResources.getNamedResourceVariantFiles(),
                         ImmutableList.of(),
                         false,
                         appleCxxPlatform.getIbtool(),

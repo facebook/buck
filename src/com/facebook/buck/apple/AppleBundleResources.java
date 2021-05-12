@@ -20,7 +20,9 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Supplier;
@@ -54,12 +56,15 @@ public abstract class AppleBundleResources implements AddsToRuleKey {
   @AddToRuleKey
   public abstract ImmutableSet<SourcePath> getResourceVariantFiles();
 
+  @AddToRuleKey
+  public abstract ImmutableMap<String, ImmutableSet<SourcePath>> getNamedResourceVariantFiles();
+
   /** All kinds of destinations that are used by paths in this object. */
   public SortedSet<AppleBundleDestination> getAllDestinations() {
     Stream<AppleBundleDestination> result =
         getResourcesWithDestinationStream()
             .map(SourcePathWithAppleBundleDestination::getDestination);
-    if (!getResourceVariantFiles().isEmpty()) {
+    if (!getResourceVariantFiles().isEmpty() || !getNamedResourceVariantFiles().isEmpty()) {
       result = Stream.concat(result, Stream.of(AppleBundleDestination.RESOURCES));
     }
     Supplier<SortedSet<AppleBundleDestination>> supplier = TreeSet::new;
@@ -71,7 +76,9 @@ public abstract class AppleBundleResources implements AddsToRuleKey {
     return Stream.concat(
             getResourcesWithDestinationStream()
                 .map(SourcePathWithAppleBundleDestination::getSourcePath),
-            getResourceVariantFiles().stream())
+            Stream.concat(
+                getResourceVariantFiles().stream(),
+                getNamedResourceVariantFiles().values().stream().flatMap(Collection::stream)))
         .collect(Collectors.toSet());
   }
 

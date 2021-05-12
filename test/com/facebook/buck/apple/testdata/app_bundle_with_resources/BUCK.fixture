@@ -5,11 +5,13 @@ apple_resource(
     variants = [
         "aa.lproj/Localizable.strings",
         "bb.lproj/Localizable.strings",
-        "cc.lproj/Localizable.strings",
         "Strings/xx.lproj/Localizable.strings",
         "Strings/yy.lproj/Localizable.strings",
         "Strings/zz.lproj/Localizable.strings",
     ],
+    named_variants = {
+        "cc.lproj": ["cc.lproj/Localizable.strings"],
+    },
 )
 
 apple_bundle(

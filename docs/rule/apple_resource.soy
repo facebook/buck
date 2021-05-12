@@ -74,6 +74,16 @@ an <a href="{ROOT}rule/apple_bundle.html"><code>apple_bundle()</code> rule</a>.
 {/call}
 
 {call buck.arg}
+  {param name: 'named_variants' /}
+  {{param default : '{}' /}}
+  {param desc}
+  Mapping from a variant name to the list of resource file paths which should be placed in an application bundle. Those files
+  will be placed in a directory with name equal to the corresponding key in this mapping. Keys should end with <code>.lproj</code> suffix.
+  (e.g. <code>Base.lproj</code>, <code>en.lproj</code>).
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'resources_from_deps' /}
   {param default : '[]' /}
   {param desc}

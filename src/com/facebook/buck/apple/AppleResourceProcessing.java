@@ -296,7 +296,8 @@ public class AppleResourceProcessing {
       Optional<Supplier<Map<RelPath, String>>> newContentHashesSupplier) {
     Set<AppleBundleDestination> destinationsForAllProcessedResources = new HashSet<>();
     {
-      if (!resources.getResourceVariantFiles().isEmpty()) {
+      if (!resources.getResourceVariantFiles().isEmpty()
+          || !resources.getNamedResourceVariantFiles().isEmpty()) {
         destinationsForAllProcessedResources.add(AppleBundleDestination.RESOURCES);
       }
       destinationsForAllProcessedResources.addAll(

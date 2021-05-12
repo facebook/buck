@@ -53,6 +53,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.io.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
@@ -81,6 +82,7 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
       SourcePathRuleFinder ruleFinder,
       ImmutableSet<SourcePathWithAppleBundleDestination> resourceFilesMaybeNeedProcessing,
       ImmutableSet<SourcePath> variantFiles,
+      ImmutableMap<String, ImmutableSet<SourcePath>> namedVariantFiles,
       ImmutableList<String> ibtoolFlags,
       boolean isLegacyWatchApp,
       Tool ibtool,
@@ -98,6 +100,7 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
         new Impl(
             resourceFilesMaybeNeedProcessing,
             variantFiles,
+            namedVariantFiles,
             ibtoolFlags,
             isLegacyWatchApp,
             ibtool,
@@ -153,6 +156,7 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
     @AddToRuleKey private final ImmutableSet<SourcePath> variantFiles;
     @AddToRuleKey private final OutputPath output;
     @AddToRuleKey private final Optional<OutputPath> contentHashesOutput;
+    @AddToRuleKey private final ImmutableMap<String, ImmutableSet<SourcePath>> namedVariantFiles;
     @AddToRuleKey private final ImmutableList<String> ibtoolFlags;
     @AddToRuleKey private final boolean isLegacyWatchApp;
     @AddToRuleKey private final Tool ibtool;
@@ -166,6 +170,7 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
     public Impl(
         ImmutableSet<SourcePathWithAppleBundleDestination> resourceFilesMaybeNeedProcessing,
         ImmutableSet<SourcePath> variantFiles,
+        ImmutableMap<String, ImmutableSet<SourcePath>> namedVariantFiles,
         ImmutableList<String> ibtoolFlags,
         boolean isLegacyWatchApp,
         Tool ibtool,
@@ -178,6 +183,7 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
         boolean incrementalBundlingEnabled) {
       this.resourceFilesMaybeNeedProcessing = resourceFilesMaybeNeedProcessing;
       this.variantFiles = variantFiles;
+      this.namedVariantFiles = namedVariantFiles;
       this.ibtoolFlags = ibtoolFlags;
       this.isLegacyWatchApp = isLegacyWatchApp;
       this.ibtool = ibtool;
@@ -242,6 +248,19 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
         }
         variantSourceFilesWithDirectoryNameBuilder.add(
             new Pair<>(path, rawVariantDirectory.getFileName()));
+      }
+
+      for (ImmutableMap.Entry<String, ImmutableSet<SourcePath>> entry :
+          namedVariantFiles.entrySet()) {
+        if (!entry.getKey().endsWith(".lproj")) {
+          throw new HumanReadableException(
+              "Keys for named variant files have to end with '.lproj' suffix, "
+                  + "but '%s' is not.",
+              entry.getKey());
+        }
+        Path directoryName = Paths.get(entry.getKey());
+        variantSourceFilesWithDirectoryNameBuilder.addAll(
+            entry.getValue().stream().map(s -> new Pair<>(s, directoryName)).iterator());
       }
 
       ImmutableList<Pair<SourcePath, Path>> variantSourceFilesWithDirectoryName =
