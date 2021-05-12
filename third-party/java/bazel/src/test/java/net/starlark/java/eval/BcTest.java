@@ -205,4 +205,16 @@ public class BcTest {
         + "f";
     assertEquals(ImmutableList.of(), BcTestUtil.opcodes(program));
   }
+
+  @Test
+  public void doNotCompileAfterReturn() throws Exception {
+    String program = "" //
+        + "def f(x):\n"
+        + "  if True:\n"
+        + "    return 1\n"
+        + "  print('never')\n"
+        + "f";
+    // Print call is not compiled
+    assertEquals(ImmutableList.of(BcInstr.Opcode.RETURN), BcTestUtil.opcodes(program));
+  }
 }

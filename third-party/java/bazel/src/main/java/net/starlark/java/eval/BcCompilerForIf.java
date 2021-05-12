@@ -277,8 +277,8 @@ class BcCompilerForIf {
     elseJumps.add(jumpLabel);
   }
 
-  void compileIfStatement(BcIr ir, IfStatement ifStatement) {
-    compileIfElse(
+  Bc.Compiler.StmtFlow compileIfStatement(BcIr ir, IfStatement ifStatement) {
+    return compileIfElse(
         ir,
         ifStatement.getCondition(),
         ir1 -> compiler.compileStatements(ir1, ifStatement.getThenBlock(), false),
@@ -288,27 +288,29 @@ class BcCompilerForIf {
   }
 
   interface Block {
-    void compileBlock(BcIr ir);
+    Bc.Compiler.StmtFlow compileBlock(BcIr ir);
   }
 
   void compileIf(BcIr ir, Expression condExpr, Block thenBlock) {
     compileIfElse(ir, condExpr, thenBlock, null);
   }
 
-  void compileIfElse(BcIr ir, Expression condExpr, Block thenBlock, @Nullable Block elseBlock) {
+  Bc.Compiler.StmtFlow compileIfElse(
+      BcIr ir, Expression condExpr, Block thenBlock, @Nullable Block elseBlock) {
     BoolExpr cond = convert(condExpr);
 
     Boolean condConst = cond.maybeConst;
     if (condConst != null) {
       compileForEffect(ir, cond);
       if (condConst) {
-        thenBlock.compileBlock(ir);
+        return thenBlock.compileBlock(ir);
       } else {
         if (elseBlock != null) {
-          elseBlock.compileBlock(ir);
+          return elseBlock.compileBlock(ir);
+        } else {
+          return Bc.Compiler.StmtFlow.GO_ON;
         }
       }
-      return;
     }
 
     ArrayList<BcIrInstr.JumpLabel> elseAddrs = new ArrayList<>();
@@ -317,15 +319,17 @@ class BcCompilerForIf {
     compileCond(ir, cond, false, elseAddrs, thenAddrs);
 
     ir.addJumpLabels(thenAddrs);
-    thenBlock.compileBlock(ir);
+    Bc.Compiler.StmtFlow thenFlow = thenBlock.compileBlock(ir);
     if (elseBlock != null) {
       // TODO(nga): no need to jump if the last instruction is return
       BcIrInstr.JumpLabel end = ir.br(compiler.nodeToLocOffset(condExpr));
       ir.addJumpLabels(elseAddrs);
-      elseBlock.compileBlock(ir);
+      Bc.Compiler.StmtFlow elseFlow = elseBlock.compileBlock(ir);
       ir.add(end);
+      return thenFlow == elseFlow ? thenFlow : Bc.Compiler.StmtFlow.GO_ON;
     } else {
       ir.addJumpLabels(elseAddrs);
+      return Bc.Compiler.StmtFlow.GO_ON;
     }
   }
 

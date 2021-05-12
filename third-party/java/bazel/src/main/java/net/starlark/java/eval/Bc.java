@@ -134,36 +134,51 @@ class Bc {
           to));
     }
 
-    /** Compile. */
-    void compileStatements(BcIr ir, List<Statement> statements, boolean postAssignHook) {
-      for (Statement statement : statements) {
-        compileStatement(ir, statement, postAssignHook);
-      }
+    /** When compiling statements, does it reach the end of returns/breaks/continues early? */
+    enum StmtFlow {
+      EARLY_EXIT,
+      GO_ON,
     }
 
-    private void compileStatement(BcIr ir, Statement statement, boolean postAssignHook) {
+    /** Compile. */
+    StmtFlow compileStatements(BcIr ir, List<Statement> statements, boolean postAssignHook) {
+      for (Statement statement : statements) {
+        if (compileStatement(ir, statement, postAssignHook) == StmtFlow.EARLY_EXIT) {
+          return StmtFlow.EARLY_EXIT;
+        }
+      }
+      return StmtFlow.GO_ON;
+    }
+
+    private StmtFlow compileStatement(BcIr ir, Statement statement, boolean postAssignHook) {
 
       if (statement instanceof ExpressionStatement) {
         // Likely doc comment, skip it
         if (((ExpressionStatement) statement).getExpression() instanceof StringLiteral) {
-          return;
+          return StmtFlow.GO_ON;
         }
 
         compileExpressionForEffect(ir, ((ExpressionStatement) statement).getExpression());
+        return StmtFlow.GO_ON;
       } else if (statement instanceof AssignmentStatement) {
         compileAssignment(ir, (AssignmentStatement) statement, postAssignHook);
+        return StmtFlow.GO_ON;
       } else if (statement instanceof ReturnStatement) {
         compileReturn(ir, (ReturnStatement) statement);
+        return StmtFlow.EARLY_EXIT;
       } else if (statement instanceof IfStatement) {
-        compileIfStatement(ir, (IfStatement) statement);
+        return compileIfStatement(ir, (IfStatement) statement);
       } else if (statement instanceof ForStatement) {
         compileForStatement(ir, (ForStatement) statement);
+        return StmtFlow.GO_ON;
       } else if (statement instanceof FlowStatement) {
-        compileFlowStatement(ir, (FlowStatement) statement);
+        return compileFlowStatement(ir, (FlowStatement) statement);
       } else if (statement instanceof LoadStatement) {
         compileLoadStatement(ir, (LoadStatement) statement);
+        return StmtFlow.GO_ON;
       } else if (statement instanceof DefStatement) {
         compileDefStatement(ir, (DefStatement) statement);
+        return StmtFlow.GO_ON;
       } else {
         throw new RuntimeException("not impl: " + statement.getClass().getSimpleName());
       }
@@ -227,21 +242,20 @@ class Bc {
           result));
     }
 
-    private void compileIfStatement(BcIr ir, IfStatement ifStatement) {
-      new BcCompilerForIf(this).compileIfStatement(ir, ifStatement);
+    private StmtFlow compileIfStatement(BcIr ir, IfStatement ifStatement) {
+      return new BcCompilerForIf(this).compileIfStatement(ir, ifStatement);
     }
 
-    private void compileFlowStatement(BcIr ir, FlowStatement flowStatement) {
+    private StmtFlow compileFlowStatement(BcIr ir, FlowStatement flowStatement) {
       switch (flowStatement.getKind()) {
         case BREAK:
           compileBreak(ir, flowStatement);
-          break;
+          return StmtFlow.EARLY_EXIT;
         case CONTINUE:
           compileContinue(ir, flowStatement);
-          break;
+          return StmtFlow.EARLY_EXIT;
         case PASS:
-          // nop
-          break;
+          return StmtFlow.GO_ON;
         default:
           throw new IllegalStateException("unknown flow statement: " + flowStatement.getKind());
       }
@@ -901,7 +915,10 @@ class Bc {
                   .compileIf(
                       ir,
                       ((Comprehension.If) clause).getCondition(),
-                      ir1 -> compileClauses(ir1, index + 1));
+                      ir1 -> {
+                        compileClauses(ir1, index + 1);
+                        return StmtFlow.GO_ON;
+                      });
             } else {
               throw new IllegalStateException("unknown compr clause: " + clause);
             }
@@ -1025,8 +1042,14 @@ class Bc {
           .compileIfElse(
               ir,
               conditionalExpression.getCondition(),
-              ir1 -> compileExpressionTo(ir1, conditionalExpression.getThenCase(), resultLocal),
-              ir1 -> compileExpressionTo(ir1, conditionalExpression.getElseCase(), resultLocal));
+              ir1 -> {
+                compileExpressionTo(ir1, conditionalExpression.getThenCase(), resultLocal);
+                return StmtFlow.GO_ON;
+              },
+              ir1 -> {
+                compileExpressionTo(ir1, conditionalExpression.getElseCase(), resultLocal);
+                return StmtFlow.GO_ON;
+              });
 
       return new CompileExpressionResult(resultLocal);
     }
