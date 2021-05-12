@@ -625,10 +625,9 @@ class MethodLibrary {
         @Param(name = "x", doc = "The object to check."),
         @Param(name = "name", doc = "The name of the attribute.")
       },
-      useStarlarkThread = true,
       purity = FnPurity.PURE)
-  public boolean hasattr(Object obj, String name, StarlarkThread thread) throws EvalException {
-    return Starlark.hasattr(thread.getSemantics(), obj, name);
+  public boolean hasattr(Object obj, String name) throws EvalException {
+    return Starlark.hasattr(obj, name);
   }
 
   @StarlarkMethod(
@@ -670,7 +669,7 @@ class MethodLibrary {
       useStarlarkThread = true,
       purity = FnPurity.PURE)
   public StarlarkList<?> dir(Object object, StarlarkThread thread) throws EvalException {
-    return Starlark.dir(thread.mutability(), thread.getSemantics(), object);
+    return Starlark.dir(thread.mutability(), object);
   }
 
   @StarlarkMethod(

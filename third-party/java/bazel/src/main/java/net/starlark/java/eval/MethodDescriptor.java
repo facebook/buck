@@ -15,12 +15,8 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.errorprone.annotations.CheckReturnValue;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import javax.annotation.Nullable;
 import net.starlark.java.annot.FnPurity;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.StarlarkMethod;
@@ -46,11 +42,12 @@ final class MethodDescriptor {
   private final boolean selfCall;
   private final boolean allowReturnNones;
   private final boolean useStarlarkThread;
-  private final boolean useStarlarkSemantics;
   /** Can reuse fastcall positional arguments if parameter count matches. */
   private final boolean canReusePositionalWithoutChecks;
   private final MethodDescriptorGenerated generated;
   private final FnPurity purity;
+  /** Size of array to be passed to {@link #call(Object, Object[], StarlarkThread)}. */
+  private final int argsSize;
 
   private MethodDescriptor(
       Method method,
@@ -66,7 +63,6 @@ final class MethodDescriptor {
       boolean allowReturnNones,
       boolean trustReturnsValid,
       boolean useStarlarkThread,
-      boolean useStarlarkSemantics,
       MethodDescriptorGenerated generated) {
     this.method = method;
     this.annotation = annotation;
@@ -80,21 +76,18 @@ final class MethodDescriptor {
     this.selfCall = selfCall;
     this.allowReturnNones = allowReturnNones;
     this.useStarlarkThread = useStarlarkThread;
-    this.useStarlarkSemantics = useStarlarkSemantics;
     this.generated = generated;
     this.purity = annotation.purity();
 
-    if (extraKeywords || extraPositionals || useStarlarkSemantics) {
+    if (extraKeywords || extraPositionals) {
       this.canReusePositionalWithoutChecks = false;
-    } else if (!Arrays.stream(parameters).allMatch(MethodDescriptor::paramCanBeUsedAsPositionalWithoutChecks)) {
+    } else if (!Arrays.stream(parameters).allMatch(ParamDescriptor::isPositional)) {
       this.canReusePositionalWithoutChecks = false;
     } else {
       this.canReusePositionalWithoutChecks = true;
     }
-  }
 
-  private static boolean paramCanBeUsedAsPositionalWithoutChecks(ParamDescriptor param) {
-    return param.isPositional() && param.disabledByFlag() == null;
+    this.argsSize = parameters.length + (extraPositionals ? 1 : 0) + (extraKeywords ? 1 : 0);
   }
 
   /** Returns the StarlarkMethod annotation corresponding to this method. */
@@ -104,16 +97,12 @@ final class MethodDescriptor {
 
   /** @return Starlark method descriptor for provided Java method and signature annotation. */
   static MethodDescriptor of(
-      Method method, StarlarkMethod annotation, StarlarkSemantics semantics,
-      MethodDescriptorGenerated generated) {
-    // This happens when the interface is public but the implementation classes
-    // have reduced visibility.
-    method.setAccessible(true);
+      Method method, StarlarkMethod annotation, MethodDescriptorGenerated generated) {
 
     Class<?>[] paramClasses = method.getParameterTypes();
     Param[] paramAnnots = annotation.parameters();
     ParamDescriptor[] params = new ParamDescriptor[paramAnnots.length];
-    Arrays.setAll(params, i -> ParamDescriptor.of(paramAnnots[i], paramClasses[i], semantics));
+    Arrays.setAll(params, i -> ParamDescriptor.of(paramAnnots[i], paramClasses[i]));
 
     return new MethodDescriptor(
         method,
@@ -129,7 +118,6 @@ final class MethodDescriptor {
         annotation.allowReturnNones(),
         annotation.trustReturnsValid(),
         annotation.useStarlarkThread(),
-        annotation.useStarlarkSemantics(),
         generated);
   }
 
@@ -139,8 +127,7 @@ final class MethodDescriptor {
     if (!structField) {
       throw new IllegalStateException("not a struct field: " + name);
     }
-    Object[] args = useStarlarkSemantics ? new Object[] {semantics} : ArraysForStarlark.EMPTY_OBJECT_ARRAY;
-    return call(obj, args, thread);
+    return call(obj, ArraysForStarlark.EMPTY_OBJECT_ARRAY, thread);
   }
 
   /**
@@ -152,7 +139,6 @@ final class MethodDescriptor {
    */
   Object call(Object obj, Object[] args, StarlarkThread thread)
       throws EvalException, InterruptedException {
-    Preconditions.checkNotNull(obj);
     try {
       return generated.invoke(obj, args, thread);
     } catch (EvalException | InterruptedException | RuntimeException | Error e) {
@@ -162,12 +148,6 @@ final class MethodDescriptor {
       // All other checked exceptions (e.g. LabelSyntaxException) are reported to Starlark.
       throw new EvalException(e);
     }
-  }
-
-  @CheckReturnValue // don't forget to throw it
-  private NullPointerException methodInvocationReturnedNull(Object[] args) {
-    return new NullPointerException(
-        "method invocation returned null: " + getName() + Tuple.of(args));
   }
 
   /** @see StarlarkMethod#name() */
@@ -189,11 +169,6 @@ final class MethodDescriptor {
     return useStarlarkThread;
   }
 
-  /** @see StarlarkMethod#useStarlarkSemantics() */
-  boolean isUseStarlarkSemantics() {
-    return useStarlarkSemantics;
-  }
-
   /** @return {@code true} if this method accepts extra arguments ({@code *args}) */
   boolean acceptsExtraArgs() {
     return extraPositionals;
@@ -207,6 +182,11 @@ final class MethodDescriptor {
   /** @see StarlarkMethod#parameters() */
   ParamDescriptor[] getParameters() {
     return parameters;
+  }
+
+  /** Size of array passable to {@link #call(Object, Object[], StarlarkThread)}. */
+  int getArgsSize() {
+    return argsSize;
   }
 
   /** Returns the index of the named parameter or -1 if not found. */
@@ -236,16 +216,6 @@ final class MethodDescriptor {
 
   public FnPurity getPurity() {
     return purity;
-  }
-
-  /** Descriptor behavior depends on semantics. */
-  boolean isSemanticsDependent() {
-    // Note `disableWithFlag` and `enableOnlyWithFlag` are not used anywhere
-    // in method descriptor itself, but these are used to determine
-    // whether include or exclude method in the list of object methods.
-    return !annotation.disableWithFlag().isEmpty()
-        || !annotation.enableOnlyWithFlag().isEmpty()
-        || Arrays.stream(parameters).anyMatch(ParamDescriptor::isSemanticsDependent);
   }
 
   boolean isCanReusePositionalWithoutChecks() {

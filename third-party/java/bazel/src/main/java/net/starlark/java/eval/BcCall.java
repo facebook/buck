@@ -29,7 +29,7 @@ class BcCall {
 
   static Object fastcall(StarlarkThread thread, Object fn, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
-    StarlarkCallable callable = callable(thread, fn);
+    StarlarkCallable callable = callable(fn);
 
     thread.push(callable);
     try {
@@ -41,14 +41,14 @@ class BcCall {
     }
   }
 
-  static StarlarkCallable callable(StarlarkThread thread, Object fn) throws EvalException {
+  static StarlarkCallable callable(Object fn) throws EvalException {
     StarlarkCallable callable;
     if (fn instanceof StarlarkCallable) {
       callable = (StarlarkCallable) fn;
     } else {
       // @StarlarkMethod(selfCall)?
       MethodDescriptor desc =
-          CallUtils.getSelfCallMethodDescriptor(thread.getSemantics(), fn.getClass());
+          CallUtils.getSelfCallMethodDescriptor(fn.getClass());
       if (desc == null) {
         throw Starlark.errorf("'%s' object is not callable", Starlark.type(fn));
       }

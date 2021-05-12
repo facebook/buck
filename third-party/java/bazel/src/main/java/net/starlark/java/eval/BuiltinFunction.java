@@ -40,17 +40,7 @@ public final class BuiltinFunction extends StarlarkCallable {
 
   private final Object obj;
   private final String methodName;
-  @Nullable private final MethodDescriptor desc;
-
-  /**
-   * Constructs a BuiltinFunction for a StarlarkMethod-annotated method of the given name (as seen
-   * by Starlark, not Java).
-   */
-  BuiltinFunction(Object obj, String methodName) {
-    this.obj = obj;
-    this.methodName = methodName;
-    this.desc = null; // computed later
-  }
+  private final MethodDescriptor desc;
 
   /**
    * Constructs a BuiltinFunction for a StarlarkMethod-annotated method (not field) of the given
@@ -123,9 +113,7 @@ public final class BuiltinFunction extends StarlarkCallable {
         thread.recordSideEffect();
       }
 
-      MethodDescriptor desc = getMethodDescriptor(thread.getSemantics());
-
-      Object[] vector = getArgumentVector(thread, desc, linkSig, args, starArgs, starStarArgs);
+      Object[] vector = getArgumentVector(thread, linkSig, args, starArgs, starStarArgs);
 
       return desc.call(obj, vector, thread);
     } finally {
@@ -135,22 +123,11 @@ public final class BuiltinFunction extends StarlarkCallable {
     }
   }
 
-  private MethodDescriptor getMethodDescriptor(StarlarkSemantics semantics) {
-    MethodDescriptor desc = this.desc;
-    if (desc == null) {
-      desc = CallUtils.getAnnotatedMethods(semantics, obj.getClass()).get(methodName);
-      Preconditions.checkArgument(
-          !desc.isStructField(),
-          "BuiltinFunction constructed for MethodDescriptor(structField=True)");
-    }
-    return desc;
-  }
-
   /**
    * Returns the StarlarkMethod annotation of this Starlark-callable Java method.
    */
   public StarlarkMethod getAnnotation() {
-    return getMethodDescriptor(StarlarkSemantics.DEFAULT).getAnnotation();
+    return this.desc.getAnnotation();
   }
 
   @Override
@@ -182,7 +159,6 @@ public final class BuiltinFunction extends StarlarkCallable {
    * StarlarkMethod-annotated Java method.
    *
    * @param thread the Starlark thread for the call
-   * @param desc descriptor for the StarlarkMethod-annotated method
    * @param linkSig
    * @return the array of arguments which may be passed to {@link MethodDescriptor#call}
    * @throws EvalException if the given set of arguments are invalid for the given method. For
@@ -191,7 +167,6 @@ public final class BuiltinFunction extends StarlarkCallable {
    */
   private Object[] getArgumentVector(
       StarlarkThread thread,
-      MethodDescriptor desc, // intentionally shadows this.desc
       StarlarkCallableLinkSig linkSig, Object[] args,
       @Nullable Sequence<?> starArgs,
       @Nullable Dict<?, ?> starStarArgs)
@@ -206,8 +181,6 @@ public final class BuiltinFunction extends StarlarkCallable {
     // The static checks ensure that positional parameters appear before named,
     // and mandatory positionals appear before optional.
     // No additional memory allocation occurs in the common (success) case.
-    // Flag-disabled parameters are skipped during argument matching, as if they do not exist. They
-    // are instead assigned their flag-disabled values.
 
     ParamDescriptor[] parameters = desc.getParameters();
 
@@ -219,14 +192,7 @@ public final class BuiltinFunction extends StarlarkCallable {
     int numPositionals = linkSig.numPositionals + (starArgs != null ? starArgs.size() : 0);
 
     // Allocate argument vector.
-    int n = parameters.length;
-    if (desc.acceptsExtraArgs()) {
-      n++;
-    }
-    if (desc.acceptsExtraKwargs()) {
-      n++;
-    }
-    Object[] vector = new Object[n];
+    Object[] vector = new Object[desc.getArgsSize()];
 
     // positional arguments
     int paramIndex = 0;
@@ -235,13 +201,6 @@ public final class BuiltinFunction extends StarlarkCallable {
       ParamDescriptor param = parameters[paramIndex];
       if (!param.isPositional()) {
         break;
-      }
-
-      // disabled?
-      if (param.disabledByFlag() != null) {
-        // Skip disabled parameter as if not present at all.
-        // The default value will be filled in below.
-        continue;
       }
 
       Object value =
@@ -372,24 +331,6 @@ public final class BuiltinFunction extends StarlarkCallable {
       return;
     }
 
-    // disabled?
-    String flag = param.disabledByFlag();
-    if (flag != null) {
-      // spill to **kwargs
-      if (kwargs == null) {
-        throw Starlark.errorf(
-            "in call to %s(), parameter '%s' is %s",
-            methodName, param.getName(), disabled(flag, thread.getSemantics()));
-      }
-
-      // duplicate named argument?
-      if (kwargs.put(name, value) != null) {
-        throw Starlark.errorf(
-            "%s() got multiple values for keyword argument '%s'", methodName, name);
-      }
-      return;
-    }
-
     // duplicate?
     if (vector[index] != null) {
       throw Starlark.errorf("%s() got multiple values for argument '%s'", methodName, name);
@@ -400,23 +341,6 @@ public final class BuiltinFunction extends StarlarkCallable {
 
   private static String plural(int n) {
     return n == 1 ? "" : "s";
-  }
-
-  // Returns a phrase meaning "disabled" appropriate to the specified flag.
-  private static String disabled(String flag, StarlarkSemantics semantics) {
-    // If the flag is True, it must be a deprecation flag. Otherwise it's an experimental flag.
-    // TODO(adonovan): is that assumption sound?
-    if (semantics.getBool(flag)) {
-      return String.format(
-          "deprecated and will be removed soon. It may be temporarily re-enabled by setting"
-              + " --%s=false",
-          flag.substring(1)); // remove [+-] prefix
-    } else {
-      return String.format(
-          "experimental and thus unavailable with the current flags. It may be enabled by setting"
-              + " --%s",
-          flag.substring(1)); // remove [+-] prefix
-    }
   }
 
   public FnPurity purity() {

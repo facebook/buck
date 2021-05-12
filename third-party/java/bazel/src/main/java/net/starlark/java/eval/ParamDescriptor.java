@@ -14,8 +14,6 @@
 
 package net.starlark.java.eval;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,7 +22,6 @@ import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.syntax.FileOptions;
 import net.starlark.java.syntax.ParserInput;
-import net.starlark.java.syntax.ResolverModule;
 import net.starlark.java.syntax.SyntaxError;
 
 /** A value class for storing {@link Param} metadata to avoid using Java proxies. */
@@ -35,23 +32,13 @@ final class ParamDescriptor {
   private final boolean named;
   private final boolean positional;
   private final List<Class<?>> allowedClasses; // non-empty
-  private final boolean allowedClassesContainObject;
-  // The semantics flag responsible for disabling this parameter, or null if enabled.
-  // It is an error for Starlark code to supply a value to a disabled parameter.
-  @Nullable private final String disabledByFlag;
-  // Behavior of this parameter is semantics-dependent.
-  // Or in another words, when !semanticsDependent, values of the remaining fields
-  // are the same regardless of semantics.
-  private final boolean semanticsDependent;
 
   private ParamDescriptor(
       String name,
       String defaultExpr,
       boolean named,
       boolean positional,
-      List<Class<?>> allowedClasses,
-      @Nullable String disabledByFlag,
-      boolean semanticsDependent) {
+      List<Class<?>> allowedClasses) {
     this.name = name;
     // TODO(adonovan): apply the same validation logic to the default value
     // as we do to caller-supplied values (see BuiltinFunction.checkParamValue).
@@ -59,34 +46,14 @@ final class ParamDescriptor {
     this.named = named;
     this.positional = positional;
     this.allowedClasses = allowedClasses;
-    this.allowedClassesContainObject = allowedClasses.contains(Object.class);
-    this.disabledByFlag = disabledByFlag;
-    this.semanticsDependent = semanticsDependent;
   }
 
   /**
    * Returns a {@link ParamDescriptor} representing the given raw {@link Param} annotation and the
    * given semantics.
    */
-  static ParamDescriptor of(Param param, Class<?> paramClass, StarlarkSemantics starlarkSemantics) {
-    boolean semanticsDependent = !param.enableOnlyWithFlag().isEmpty() || !param.disableWithFlag().isEmpty();
-    if (!semanticsDependent) {
-      // Reset semantics to null to assert that it is it not used
-      // when param behavior is semantics-independent.
-      starlarkSemantics = null;
-    }
-
+  static ParamDescriptor of(Param param, Class<?> paramClass) {
     String defaultExpr = param.defaultValue();
-    String disabledByFlag = null;
-    if (starlarkSemantics != null && !starlarkSemantics.isFeatureEnabledBasedOnTogglingFlags(
-        param.enableOnlyWithFlag(), param.disableWithFlag())) {
-      defaultExpr = param.valueWhenDisabled();
-      disabledByFlag =
-          !param.enableOnlyWithFlag().isEmpty()
-              ? param.enableOnlyWithFlag()
-              : param.disableWithFlag();
-      Preconditions.checkState(!disabledByFlag.isEmpty());
-    }
 
     // Compute set of allowed classes.
     ParamType[] allowedTypes = param.allowedTypes();
@@ -106,9 +73,8 @@ final class ParamDescriptor {
         defaultExpr,
         param.named(),
         param.positional(),
-        allowedClasses,
-        disabledByFlag,
-        semanticsDependent);
+        allowedClasses
+    );
   }
 
   /** @see Param#name() */
@@ -150,17 +116,6 @@ final class ParamDescriptor {
   @Nullable
   Object getDefaultValue() {
     return defaultValue;
-  }
-
-  /** Returns the flag responsible for disabling this parameter, or null if it is enabled. */
-  @Nullable
-  String disabledByFlag() {
-    return disabledByFlag;
-  }
-
-  /** Descriptor behavior depends on semantics. */
-  boolean isSemanticsDependent() {
-    return semanticsDependent;
   }
 
   // A memoization of evalDefault, keyed by expression.

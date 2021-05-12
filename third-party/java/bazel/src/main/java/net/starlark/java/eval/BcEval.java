@@ -679,7 +679,7 @@ class BcEval {
     BcCallLocs locs = (BcCallLocs) compiled.objects[nextOperand()];
     fr.setLocation(locs.getLparentLocation());
 
-    StarlarkCallable fn = BcCall.callable(fr.thread, getSlot(nextOperand()));
+    StarlarkCallable fn = BcCall.callable(getSlot(nextOperand()));
     BcDynCallSite callSite = (BcDynCallSite) compiled.objects[nextOperand()];
     Object[] args = nextNSlotsListSharedArray();
     Object star = getSlotOrNull(nextOperand());

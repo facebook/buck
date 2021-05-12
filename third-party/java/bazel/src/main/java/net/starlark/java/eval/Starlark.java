@@ -638,10 +638,10 @@ public final class Starlark {
    * Reports whether the value {@code x} has a field or method of the given name, as if by the
    * Starlark expression {@code hasattr(x, name)}.
    */
-  public static boolean hasattr(StarlarkSemantics semantics, Object x, String name)
+  public static boolean hasattr(Object x, String name)
       throws EvalException {
     return (x instanceof Structure && ((Structure) x).getValue(name) != null)
-        || CallUtils.getAnnotatedMethods(semantics, x.getClass()).containsKey(name);
+        || CallUtils.getAnnotatedMethods(x.getClass()).containsKey(name);
   }
 
   /**
@@ -657,7 +657,7 @@ public final class Starlark {
       throws EvalException, InterruptedException {
     StarlarkSemantics semantics = thread.getSemantics();
     // StarlarkMethod-annotated field or method?
-    MethodDescriptor method = CallUtils.getAnnotatedMethods(semantics, x.getClass()).get(name);
+    MethodDescriptor method = CallUtils.getAnnotatedMethods(x.getClass()).get(name);
     if (method != null) {
       if (method.isStructField()) {
         return method.callField(x, semantics, thread);
@@ -694,28 +694,17 @@ public final class Starlark {
    * Returns a new sorted list containing the names of the Starlark-accessible fields and methods of
    * the specified value, as if by the Starlark expression {@code dir(x)}.
    */
-  public static StarlarkList<String> dir(Mutability mu, StarlarkSemantics semantics, Object x) {
+  public static StarlarkList<String> dir(Mutability mu, Object x) {
     // Order the fields alphabetically.
     Set<String> fields = new TreeSet<>();
     if (x instanceof Structure) {
       fields.addAll(((Structure) x).getFieldNames());
     }
-    fields.addAll(CallUtils.getAnnotatedMethods(semantics, x.getClass()).keySet());
+    fields.addAll(CallUtils.getAnnotatedMethods(x.getClass()).keySet());
     return StarlarkList.copyOfUnchecked(mu, fields);
   }
 
   // --- methods related to StarlarkMethod-annotated classes ---
-
-  /**
-   * Returns the value of the named field of Starlark value {@code x}, as defined by a Java method
-   * with a {@code StarlarkMethod(structField=true)} annotation.
-   *
-   * <p>Most callers should use {@link #getattr} instead.
-   */
-  public static Object getAnnotatedField(StarlarkSemantics semantics, Object x, String name)
-      throws EvalException, InterruptedException {
-    return CallUtils.getAnnotatedField(semantics, x, name);
-  }
 
   /**
    * Returns the names of the fields of Starlark value {@code x}, as defined by Java methods with
@@ -723,8 +712,8 @@ public final class Starlark {
    *
    * <p>Most callers should use {@link #dir} instead.
    */
-  public static ImmutableSet<String> getAnnotatedFieldNames(StarlarkSemantics semantics, Object x) {
-    return CallUtils.getAnnotatedFieldNames(semantics, x);
+  public static ImmutableSet<String> getAnnotatedFieldNames(Object x) {
+    return CallUtils.getAnnotatedFieldNames(x);
   }
 
   /**
@@ -739,7 +728,7 @@ public final class Starlark {
   public static ImmutableMap<Method, StarlarkMethod> getMethodAnnotations(Class<?> clazz) {
     ImmutableMap.Builder<Method, StarlarkMethod> result = ImmutableMap.builder();
     for (MethodDescriptor desc :
-        CallUtils.getAnnotatedMethods(StarlarkSemantics.DEFAULT, clazz).values()) {
+        CallUtils.getAnnotatedMethods(clazz).values()) {
       result.put(desc.getMethod(), desc.getAnnotation());
     }
     return result.build();
@@ -751,13 +740,8 @@ public final class Starlark {
    * null if no such method exists.
    */
   @Nullable
-  public static Method getSelfCallMethod(StarlarkSemantics semantics, Class<?> clazz) {
-    return CallUtils.getSelfCallMethod(semantics, clazz);
-  }
-
-  /** Equivalent to {@code addMethods(env, v, StarlarkSemantics.DEFAULT)}. */
-  public static void addMethods(ImmutableMap.Builder<String, Object> env, Object v) {
-    addMethods(env, v, StarlarkSemantics.DEFAULT);
+  public static Method getSelfCallMethod(Class<?> clazz) {
+    return CallUtils.getSelfCallMethod(clazz);
   }
 
   /**
@@ -768,12 +752,11 @@ public final class Starlark {
    * @throws IllegalArgumentException if any method annotation's {@link StarlarkMethod#structField}
    *     flag is true.
    */
-  public static void addMethods(
-      ImmutableMap.Builder<String, Object> env, Object v, StarlarkSemantics semantics) {
+  public static void addMethods(ImmutableMap.Builder<String, Object> env, Object v) {
     Class<?> cls = v.getClass();
     // TODO(adonovan): rather than silently skip the selfCall method, reject it.
     for (Map.Entry<String, MethodDescriptor> e :
-        CallUtils.getAnnotatedMethods(semantics, cls).entrySet()) {
+        CallUtils.getAnnotatedMethods(cls).entrySet()) {
       String name = e.getKey();
       MethodDescriptor desc = e.getValue();
 
@@ -784,21 +767,7 @@ public final class Starlark {
             String.format("addMethods(%s): method %s has structField=true", cls.getName(), name));
       }
 
-      BuiltinFunction builtinFunction;
-      if (!desc.isSemanticsDependent()) {
-        builtinFunction = new BuiltinFunction(v, name, desc);
-      } else {
-        // We use the 2-arg (desc=null) BuiltinFunction constructor instead of passing
-        // the descriptor that CallUtils.getAnnotatedMethod would return,
-        // because most calls to addMethods implicitly pass StarlarkSemantics.DEFAULT,
-        // which is probably the wrong semantics for the later call.
-        //
-        // The effect is that the default semantics determine which method names are
-        // statically available in the environment, but the thread's semantics determine
-        // the dynamic behavior of the method call; this includes a run-time check for
-        // whether the method was disabled by the semantics.
-        builtinFunction = new BuiltinFunction(v, name);
-      }
+      BuiltinFunction builtinFunction = new BuiltinFunction(v, name, desc);
       env.put(name, builtinFunction);
     }
   }

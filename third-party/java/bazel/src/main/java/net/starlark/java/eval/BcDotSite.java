@@ -21,7 +21,7 @@ class BcDotSite {
     Cache cache = this.cache;
     if (cache == null || cache.selfClass != self.getClass()) {
       MethodDescriptor method =
-          CallUtils.getAnnotatedMethods(thread.getSemantics(), self.getClass()).get(name);
+          CallUtils.getAnnotatedMethods(self.getClass()).get(name);
 
       cache = this.cache = new Cache(self.getClass(), method);
     }
@@ -57,7 +57,7 @@ class BcDotSite {
         Starlark.type(self),
         name,
         SpellChecker.didYouMean(
-            name, Starlark.dir(thread.mutability(), thread.getSemantics(), self)));
+            name, Starlark.dir(thread.mutability(), self)));
   }
 
   private static class Cache {

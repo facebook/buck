@@ -137,15 +137,6 @@ public class GoldenCase extends StarlarkValue {
   }
 
   @StarlarkMethod(
-      name = "struct_field_method_with_semantics",
-      documented = false,
-      structField = true,
-      useStarlarkSemantics = true)
-  public String structFieldMethodWithSemantics(StarlarkSemantics starlarkSemantics) {
-    return "dragon";
-  }
-
-  @StarlarkMethod(
       name = "method_with_list_and_dict",
       documented = false,
       parameters = {

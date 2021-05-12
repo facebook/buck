@@ -156,17 +156,6 @@ public final class StarlarkEvaluationTest {
       return "a";
     }
 
-    @StarlarkMethod(
-        name = "struct_field_with_extra",
-        documented = false,
-        structField = true,
-        useStarlarkSemantics = true)
-    public String structFieldWithExtra(StarlarkSemantics sem) {
-      return "struct_field_with_extra("
-        + (sem != null)
-        + ")";
-    }
-
     @StarlarkMethod(name = "struct_field_callable", documented = false, structField = true)
     public Object structFieldCallable() {
       return getattr(StarlarkEvaluationTest.this, "foobar");
@@ -349,7 +338,7 @@ public final class StarlarkEvaluationTest {
     public Structure proxyMethodsObject(StarlarkThread thread)
         throws EvalException, InterruptedException {
       ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
-      for (String name : Starlark.dir(thread.mutability(), thread.getSemantics(), this)) {
+      for (String name : Starlark.dir(thread.mutability(), this)) {
         if (name.equals("interrupted_struct_field")) {
           continue; // skip, because getattr would be interrupted
         }
@@ -1236,14 +1225,6 @@ public final class StarlarkEvaluationTest {
   }
 
   @Test
-  public void testStructFieldWithExtraInterpreterParams() throws Exception {
-    ev.new Scenario()
-        .update("mock", new Mock())
-        .setUp("v = mock.struct_field_with_extra")
-        .testLookup("v", "struct_field_with_extra(true)");
-  }
-
-  @Test
   public void testJavaFunctionWithParamsAndExtraInterpreterParams() throws Exception {
     ev.new Scenario()
         .update("mock", new Mock())
@@ -1899,7 +1880,6 @@ public final class StarlarkEvaluationTest {
             "string_list_dict",
             "struct_field",
             "struct_field_callable",
-            "struct_field_with_extra",
             "value_of",
             "voidfunc",
             "with_args_and_kwargs",

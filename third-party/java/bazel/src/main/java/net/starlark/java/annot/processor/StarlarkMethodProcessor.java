@@ -444,35 +444,9 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     }
     if (annot.structField()) {
       checkStructFieldAnnotation(method, annot);
-    } else if (annot.useStarlarkSemantics()) {
-      errorf(
-          method,
-          "a StarlarkMethod-annotated method with structField=false may not also specify"
-              + " useStarlarkSemantics. (Instead, set useStarlarkThread and call"
-              + " getSemantics().)");
     }
     if (annot.selfCall() && !classesWithSelfcall.add(cls)) {
       errorf(method, "Containing class has more than one selfCall method defined.");
-    }
-
-    boolean hasFlag = false;
-    if (!annot.enableOnlyWithFlag().isEmpty()) {
-      if (!hasPlusMinusPrefix(annot.enableOnlyWithFlag())) {
-        errorf(method, "enableOnlyWithFlag name must have a + or - prefix");
-      }
-      hasFlag = true;
-    }
-    if (!annot.disableWithFlag().isEmpty()) {
-      if (!hasPlusMinusPrefix(annot.disableWithFlag())) {
-        errorf(method, "disableWithFlag name must have a + or - prefix");
-      }
-      if (hasFlag) {
-        errorf(
-            method,
-            "Only one of StarlarkMethod.enableOnlyWithFlag and StarlarkMethod.disableWithFlag"
-                + " may be specified.");
-      }
-      hasFlag = true;
     }
 
     if (annot.allowReturnNones() != (method.getAnnotation(Nullable.class) != null)) {
@@ -672,36 +646,6 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
       }
     }
 
-    // Check sense of flag-controlled parameters.
-    boolean hasFlag = false;
-    if (!paramAnnot.enableOnlyWithFlag().isEmpty()) {
-      if (!hasPlusMinusPrefix(paramAnnot.enableOnlyWithFlag())) {
-        errorf(param, "enableOnlyWithFlag name must have a + or - prefix");
-      }
-      hasFlag = true;
-    }
-    if (!paramAnnot.disableWithFlag().isEmpty()) {
-      if (!hasPlusMinusPrefix(paramAnnot.disableWithFlag())) {
-        errorf(param, "disableWithFlag name must have a + or - prefix");
-      }
-      if (hasFlag) {
-        errorf(
-            param,
-            "Parameter '%s' has enableOnlyWithFlag and disableWithFlag set. At most one may be set",
-            paramAnnot.name());
-      }
-      hasFlag = true;
-    }
-    if (hasFlag == paramAnnot.valueWhenDisabled().isEmpty()) {
-      errorf(
-          param,
-          hasFlag
-              ? "Parameter '%s' may be disabled by semantic flag, thus valueWhenDisabled must be"
-                  + " set"
-              : "Parameter '%s' has valueWhenDisabled set, but is always enabled",
-          paramAnnot.name());
-    }
-
     // Ensure positional arguments are documented.
     if (!paramAnnot.documented() && paramAnnot.positional()) {
       errorf(
@@ -726,15 +670,6 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
   }
 
   private void checkSpecialParams(ExecutableElement method, StarlarkMethod annot) {
-    if (!annot.extraPositionals().enableOnlyWithFlag().isEmpty()
-        || !annot.extraPositionals().disableWithFlag().isEmpty()) {
-      errorf(method, "The extraPositionals parameter may not be toggled by semantic flag");
-    }
-    if (!annot.extraKeywords().enableOnlyWithFlag().isEmpty()
-        || !annot.extraKeywords().disableWithFlag().isEmpty()) {
-      errorf(method, "The extraKeywords parameter may not be toggled by semantic flag");
-    }
-
     List<? extends VariableElement> params = method.getParameters();
     int index = annot.parameters().length;
 
@@ -797,18 +732,6 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
       }
     }
 
-    if (annot.useStarlarkSemantics()) {
-      VariableElement param = params.get(index++);
-      TypeMirror semanticsType = getType("net.starlark.java.eval.StarlarkSemantics");
-      if (!types.isSameType(semanticsType, param.asType())) {
-        errorf(
-            param,
-            "for useStarlarkSemantics special parameter '%s', got type %s, want StarlarkSemantics",
-            param.getSimpleName(),
-            param.asType());
-      }
-    }
-
     // surplus parameters?
     if (index < params.size()) {
       errorf(
@@ -827,7 +750,6 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     n += annot.extraPositionals().name().isEmpty() ? 0 : 1;
     n += annot.extraKeywords().name().isEmpty() ? 0 : 1;
     n += annot.useStarlarkThread() ? 1 : 0;
-    n += annot.useStarlarkSemantics() ? 1 : 0;
     return n;
   }
 

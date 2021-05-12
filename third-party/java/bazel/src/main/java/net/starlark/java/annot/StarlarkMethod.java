@@ -196,18 +196,4 @@ public @interface StarlarkMethod {
    * StarlarkThread} parameter provides access to the semantics, and more.
    */
   boolean useStarlarkSemantics() default false;
-
-  /**
-   * If non-empty, the annotated method will only be callable if the given semantic flag is true.
-   * Note that at most one of {@link #enableOnlyWithFlag} and {@link #disableWithFlag} can be
-   * non-empty.
-   */
-  String enableOnlyWithFlag() default "";
-
-  /**
-   * If non-empty, the annotated method will only be callable if the given semantic flag is false.
-   * Note that at most one of {@link #enableOnlyWithFlag} and {@link #disableWithFlag} can be
-   * non-empty.
-   */
-  String disableWithFlag() default "";
 }

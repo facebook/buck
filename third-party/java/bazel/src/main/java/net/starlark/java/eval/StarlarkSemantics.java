@@ -143,32 +143,6 @@ public final class StarlarkSemantics {
     }
   }
 
-  /**
-   * Returns true if a feature attached to the given toggling flags should be enabled.
-   *
-   * <ul>
-   *   <li>If both parameters are empty, this indicates the feature is not controlled by flags, and
-   *       should thus be enabled.
-   *   <li>If the {@code enablingFlag} parameter is non-empty, this returns true if and only if that
-   *       flag is true. (This represents a feature that is only on if a given flag is *on*).
-   *   <li>If the {@code disablingFlag} parameter is non-empty, this returns true if and only if
-   *       that flag is false. (This represents a feature that is only on if a given flag is *off*).
-   *   <li>It is illegal to pass both parameters as non-empty.
-   * </ul>
-   */
-  boolean isFeatureEnabledBasedOnTogglingFlags(String enablingFlag, String disablingFlag) {
-    Preconditions.checkArgument(
-        enablingFlag.isEmpty() || disablingFlag.isEmpty(),
-        "at least one of 'enablingFlag' or 'disablingFlag' must be empty");
-    if (!enablingFlag.isEmpty()) {
-      return this.getBool(enablingFlag);
-    } else if (!disablingFlag.isEmpty()) {
-      return !this.getBool(disablingFlag);
-    } else {
-      return true;
-    }
-  }
-
   @Override
   public int hashCode() {
     return hashCode;
