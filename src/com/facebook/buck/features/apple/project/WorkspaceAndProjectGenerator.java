@@ -120,6 +120,8 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSortedSet.naturalOrder();
   private final ImmutableList.Builder<CopyInXcode> filesToCopyInXcodeBuilder =
       ImmutableList.builder();
+  private final ImmutableSet.Builder<PostBuildCopySpec> filesToCopyAfterDependenciesAreBuilt =
+      ImmutableSet.builder();
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final AppleConfig appleConfig;
@@ -199,6 +201,10 @@ public class WorkspaceAndProjectGenerator {
 
   public ImmutableSet<BuildTarget> getRequiredBuildTargets() {
     return requiredBuildTargetsBuilder.build();
+  }
+
+  public ImmutableSet<PostBuildCopySpec> getFilesToCopyAfterDependenciesAreBuilt() {
+    return filesToCopyAfterDependenciesAreBuilt.build();
   }
 
   private ImmutableSet<Path> getXcconfigPaths() {
@@ -503,7 +509,10 @@ public class WorkspaceAndProjectGenerator {
                           result.getXcconfigPaths(),
                           result.getFilesToCopyInXcode(),
                           result.getBuildTargetToGeneratedTargetMap(),
-                          result.getGeneratedProjectToPbxTargets());
+                          result.getGeneratedProjectToPbxTargets(),
+                          result.getPostBuildCopySpecs().stream()
+                              .map(p -> p.resolveAgainst(relativeTargetCell))
+                              .collect(ImmutableSet.toImmutableSet()));
                   return result;
                 }));
       }
@@ -547,6 +556,7 @@ public class WorkspaceAndProjectGenerator {
     for (PBXTarget target : result.getBuildTargetToGeneratedTargetMap().values()) {
       targetToProjectPathMapBuilder.put(target, result.getProjectPath());
     }
+    filesToCopyAfterDependenciesAreBuilt.addAll(result.getPostBuildCopySpecs());
   }
 
   private GenerationResult generateProjectForDirectory(
@@ -628,7 +638,8 @@ public class WorkspaceAndProjectGenerator {
         generator.getXcconfigPaths(),
         generator.getFilesToCopyInXcode(),
         buildTargetToGeneratedTargetMap,
-        generatedProjectToGeneratedTargets);
+        generatedProjectToGeneratedTargets,
+        generator.getCopiedVariants());
   }
 
   private void generateCombinedProject(
@@ -679,7 +690,8 @@ public class WorkspaceAndProjectGenerator {
             generator.getXcconfigPaths(),
             generator.getFilesToCopyInXcode(),
             generator.getBuildTargetToGeneratedTargetMap(),
-            generator.getGeneratedProjectToGeneratedTargets());
+            generator.getGeneratedProjectToGeneratedTargets(),
+            generator.getCopiedVariants());
     workspaceGenerator.addFilePath(result.getProjectPath(), Optional.empty());
     processGenerationResult(
         generatedProjectToPbxTargetsBuilder,

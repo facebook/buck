@@ -63,6 +63,7 @@ import com.facebook.buck.features.apple.common.PathOutputPresenter;
 import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.features.halide.HalideBuckConfig;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -112,6 +113,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.annotation.concurrent.ThreadSafe;
 import org.pf4j.PluginManager;
 
@@ -412,6 +414,17 @@ public class XCodeProjectCommandHelper {
           result.inputTarget.getFullyQualifiedName(), result.outputRelativePath);
     }
 
+    ProjectFilesystem rootFilesystem = cells.getRootCell().getFilesystem();
+
+    for (PostBuildCopySpec sourceWithTarget :
+        results.stream()
+            .map(Result::getFilesToCopyAfterDependenciesAreBuilt)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList())) {
+      rootFilesystem.createParentDirs(sourceWithTarget.getTo());
+      rootFilesystem.copyFile(sourceWithTarget.getFrom(), sourceWithTarget.getTo());
+    }
+
     return exitCode;
   }
 
@@ -420,12 +433,17 @@ public class XCodeProjectCommandHelper {
     private final BuildTarget inputTarget;
     private final Path outputRelativePath;
     private final ImmutableSet<BuildTarget> buildTargets;
+    private final ImmutableSet<PostBuildCopySpec> filesToCopyAfterDependenciesAreBuilt;
 
     public Result(
-        BuildTarget inputTarget, Path outputRelativePath, ImmutableSet<BuildTarget> buildTargets) {
+        BuildTarget inputTarget,
+        Path outputRelativePath,
+        ImmutableSet<BuildTarget> buildTargets,
+        ImmutableSet<PostBuildCopySpec> filesToCopyAfterDependenciesAreBuilt) {
       this.inputTarget = inputTarget;
       this.outputRelativePath = outputRelativePath;
       this.buildTargets = buildTargets;
+      this.filesToCopyAfterDependenciesAreBuilt = filesToCopyAfterDependenciesAreBuilt;
     }
 
     public BuildTarget getInputTarget() {
@@ -438,6 +456,10 @@ public class XCodeProjectCommandHelper {
 
     public ImmutableSet<BuildTarget> getBuildTargets() {
       return buildTargets;
+    }
+
+    public ImmutableSet<PostBuildCopySpec> getFilesToCopyAfterDependenciesAreBuilt() {
+      return filesToCopyAfterDependenciesAreBuilt;
     }
   }
 
@@ -546,7 +568,11 @@ public class XCodeProjectCommandHelper {
       RelPath relativePath = cell.getFilesystem().relativize(absolutePath);
 
       generationResultsBuilder.add(
-          new Result(inputTarget, relativePath.getPath(), requiredBuildTargetsForWorkspace));
+          new Result(
+              inputTarget,
+              relativePath.getPath(),
+              requiredBuildTargetsForWorkspace,
+              generator.getFilesToCopyAfterDependenciesAreBuilt()));
     }
 
     return generationResultsBuilder.build();

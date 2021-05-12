@@ -326,6 +326,19 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testGeneratingProjectWithVariantResourceBuildsGenrule() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "target_using_variant_resource", temporaryFolder);
+    workspace.setUp();
+
+    workspace.runBuckCommand("project", "//app:TestApp");
+
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//app:GenResource");
+  }
+
+  @Test
   public void testBuckProjectBuckConfigWithoutTestsGenerate() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

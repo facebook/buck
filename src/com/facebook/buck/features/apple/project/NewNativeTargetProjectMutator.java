@@ -111,6 +111,8 @@ class NewNativeTargetProjectMutator {
 
   private final PathRelativizer pathRelativizer;
   private final Function<SourcePath, Path> sourcePathResolver;
+  private final Path copiedVariantsDir;
+  private final ImmutableSet.Builder<PostBuildCopySpec> copiedVariantsBuilder;
 
   private ProductType productType = ProductTypes.BUNDLE;
   private Path productOutputPath = Paths.get("");
@@ -142,9 +144,14 @@ class NewNativeTargetProjectMutator {
   private Optional<PBXBuildPhase> swiftDependenciesBuildPhase = Optional.empty();
 
   public NewNativeTargetProjectMutator(
-      PathRelativizer pathRelativizer, Function<SourcePath, Path> sourcePathResolver) {
+      PathRelativizer pathRelativizer,
+      Function<SourcePath, Path> sourcePathResolver,
+      Path copiedVariantsDir,
+      ImmutableSet.Builder<PostBuildCopySpec> copiedVariantsBuilder) {
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
+    this.copiedVariantsDir = copiedVariantsDir;
+    this.copiedVariantsBuilder = copiedVariantsBuilder;
   }
 
   /**
@@ -724,6 +731,21 @@ class NewNativeTargetProjectMutator {
       arg.getFiles().stream().map(sourcePathResolver).forEach(resourceFilesBuilder::add);
       arg.getDirs().stream().map(sourcePathResolver).forEach(resourceDirsBuilder::add);
       arg.getVariants().stream().map(sourcePathResolver).forEach(variantResourceFilesBuilder::add);
+      for (ImmutableMap.Entry<String, ImmutableSet<SourcePath>> entry :
+          arg.getNamedVariants().entrySet()) {
+        String locale = entry.getKey();
+        ImmutableSet<PostBuildCopySpec> namedVariants =
+            entry.getValue().stream()
+                .map(sourcePathResolver)
+                .map(
+                    p ->
+                        new PostBuildCopySpec(
+                            p, copiedVariantsDir.resolve(locale).resolve(p.getFileName())))
+                .collect(ImmutableSet.toImmutableSet());
+        copiedVariantsBuilder.addAll(namedVariants);
+        variantResourceFilesBuilder.addAll(
+            namedVariants.stream().map(PostBuildCopySpec::getTo).iterator());
+      }
     }
 
     for (AppleAssetCatalogDescriptionArg arg : assetCatalogArgs) {

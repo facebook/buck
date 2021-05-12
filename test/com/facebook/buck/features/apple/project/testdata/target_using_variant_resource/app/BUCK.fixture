@@ -1,0 +1,28 @@
+genrule(
+    name = "GenResource",
+    srcs = [],
+    out = "test.txt",
+    cmd = "echo Hello > $OUT",
+)
+
+apple_resource(
+    name = "TestResources",
+    dirs = [],
+    variants = ["aa.lproj/static.txt"],
+    named_variants = {"bb.lproj": [":GenResource"]},
+)
+
+apple_binary(
+    name = "TestAppBinary",
+    srcs = [],
+    frameworks = [],
+    deps = [":TestResources"],
+)
+
+apple_bundle(
+    name = "TestApp",
+    binary = ":TestAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [":TestAppBinary"],
+)

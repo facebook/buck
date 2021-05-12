@@ -61,6 +61,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -447,6 +448,8 @@ class XcodeNativeTargetProjectWriter {
     ImmutableSet.Builder<Path> resourceFiles = ImmutableSet.builder();
     ImmutableSet.Builder<Path> resourceDirs = ImmutableSet.builder();
     ImmutableSet.Builder<Path> variantResourceFiles = ImmutableSet.builder();
+    ImmutableMap.Builder<String, ImmutableSet<Path>> namedVariantResourceFiles =
+        ImmutableMap.builder();
 
     collectResourcePathsFromConstructorArgs(
         directResources,
@@ -454,13 +457,15 @@ class XcodeNativeTargetProjectWriter {
         ImmutableSet.of(),
         resourceFiles,
         resourceDirs,
-        variantResourceFiles);
+        variantResourceFiles,
+        namedVariantResourceFiles);
 
     addResourcesFileReference(
         projectFileWriter,
         resourceFiles.build(),
         resourceDirs.build(),
-        variantResourceFiles.build());
+        variantResourceFiles.build(),
+        namedVariantResourceFiles.build());
   }
 
   private void addWrapperResources(
@@ -468,6 +473,8 @@ class XcodeNativeTargetProjectWriter {
     ImmutableSet.Builder<Path> resourceFiles = ImmutableSet.builder();
     ImmutableSet.Builder<Path> resourceDirs = ImmutableSet.builder();
     ImmutableSet.Builder<Path> variantResourceFiles = ImmutableSet.builder();
+    ImmutableMap.Builder<String, ImmutableSet<Path>> namedVariantResourceFiles =
+        ImmutableMap.builder();
 
     collectResourcePathsFromConstructorArgs(
         ImmutableSet.of(),
@@ -475,13 +482,15 @@ class XcodeNativeTargetProjectWriter {
         wrapperResources,
         resourceFiles,
         resourceDirs,
-        variantResourceFiles);
+        variantResourceFiles,
+        namedVariantResourceFiles);
 
     addResourcesFileReference(
         projectFileWriter,
         resourceFiles.build(),
         resourceDirs.build(),
-        variantResourceFiles.build());
+        variantResourceFiles.build(),
+        namedVariantResourceFiles.build());
   }
 
   private void collectResourcePathsFromConstructorArgs(
@@ -490,7 +499,8 @@ class XcodeNativeTargetProjectWriter {
       Set<AppleWrapperResourceArg> resourcePathArgs,
       ImmutableSet.Builder<Path> resourceFilesBuilder,
       ImmutableSet.Builder<Path> resourceDirsBuilder,
-      ImmutableSet.Builder<Path> variantResourceFilesBuilder) {
+      ImmutableSet.Builder<Path> variantResourceFilesBuilder,
+      ImmutableMap.Builder<String, ImmutableSet<Path>> namedVariantResourceFilesBuilder) {
     resourceArgs.stream()
         .filter(not(projectExcludeResolver::excludeBuildRuleArg))
         .forEach(
@@ -500,6 +510,15 @@ class XcodeNativeTargetProjectWriter {
               arg.getVariants().stream()
                   .map(sourcePathResolver)
                   .forEach(variantResourceFilesBuilder::add);
+              arg.getNamedVariants().entrySet().stream()
+                  .collect(
+                      ImmutableMap.toImmutableMap(
+                          Map.Entry::getKey,
+                          vs ->
+                              vs.getValue().stream()
+                                  .map(sourcePathResolver)
+                                  .collect(ImmutableSet.toImmutableSet())))
+                  .forEach(namedVariantResourceFilesBuilder::put);
             });
 
     assetCatalogArgs.stream()
@@ -525,7 +544,8 @@ class XcodeNativeTargetProjectWriter {
       ProjectFileWriter projectFileWriter,
       ImmutableSet<Path> resourceFiles,
       ImmutableSet<Path> resourceDirs,
-      ImmutableSet<Path> variantResourceFiles) {
+      ImmutableSet<Path> variantResourceFiles,
+      ImmutableMap<String, ImmutableSet<Path>> namedVariantResourceFiles) {
     if (resourceFiles.isEmpty() && resourceDirs.isEmpty() && variantResourceFiles.isEmpty()) {
       return;
     }
@@ -549,6 +569,12 @@ class XcodeNativeTargetProjectWriter {
       }
       projectFileWriter.writeFilePath(variantFilePath, Optional.empty());
     }
+
+    // We don't care about file not being inside *.lproj directory as Buck is going
+    // bundle everything properly in the end.
+    namedVariantResourceFiles.entrySet().stream()
+        .flatMap(k -> k.getValue().stream())
+        .forEach(p -> projectFileWriter.writeFilePath(p, Optional.empty()));
   }
 
   /**

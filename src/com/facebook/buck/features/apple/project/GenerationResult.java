@@ -37,7 +37,8 @@ abstract class GenerationResult {
       ImmutableSet<Path> xcconfigPaths,
       ImmutableList<CopyInXcode> filesToCopyInXcode,
       ImmutableMap<BuildTarget, PBXTarget> buildTargetToGeneratedTargetMap,
-      ImmutableSetMultimap<PBXProject, PBXTarget> generatedProjectToPbxTargets) {
+      ImmutableSetMultimap<PBXProject, PBXTarget> generatedProjectToPbxTargets,
+      ImmutableSet<PostBuildCopySpec> copiedVariants) {
     return ImmutableGenerationResult.ofImpl(
         resolve,
         projectGenerated,
@@ -45,7 +46,8 @@ abstract class GenerationResult {
         xcconfigPaths,
         filesToCopyInXcode,
         buildTargetToGeneratedTargetMap,
-        generatedProjectToPbxTargets);
+        generatedProjectToPbxTargets,
+        copiedVariants);
   }
 
   public abstract Path getProjectPath();
@@ -61,4 +63,6 @@ abstract class GenerationResult {
   public abstract ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap();
 
   public abstract ImmutableSetMultimap<PBXProject, PBXTarget> getGeneratedProjectToPbxTargets();
+
+  public abstract ImmutableSet<PostBuildCopySpec> getPostBuildCopySpecs();
 }

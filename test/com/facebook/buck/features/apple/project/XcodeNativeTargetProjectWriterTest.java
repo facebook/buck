@@ -109,7 +109,9 @@ public class XcodeNativeTargetProjectWriterTest {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath());
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath(),
+            Paths.get("copiedVariantsDir"),
+            ImmutableSet.builder());
     mutator
         .setTargetName("TestTarget")
         .setProduct(ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
@@ -124,7 +126,9 @@ public class XcodeNativeTargetProjectWriterTest {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath());
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath(),
+            Paths.get("copiedVariantsDir"),
+            ImmutableSet.builder());
     mutator
         .setTargetName("TestTarget")
         .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
@@ -142,7 +146,9 @@ public class XcodeNativeTargetProjectWriterTest {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
             pathRelativizer,
-            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath());
+            sourcePath -> sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath).getPath(),
+            Paths.get("copiedVariantsDir"),
+            ImmutableSet.builder());
     NewNativeTargetProjectMutator.Result result =
         mutator
             .setTargetName("TestTarget")
@@ -542,7 +548,10 @@ public class XcodeNativeTargetProjectWriterTest {
       SourcePathResolverAdapter pathResolver, PathRelativizer relativizer) {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
-            relativizer, sourcePath -> pathResolver.getCellUnsafeRelPath(sourcePath).getPath());
+            relativizer,
+            sourcePath -> pathResolver.getCellUnsafeRelPath(sourcePath).getPath(),
+            Paths.get("copiedVariantsDir"),
+            ImmutableSet.builder());
     mutator
         .setTargetName("TestTarget")
         .setProduct(

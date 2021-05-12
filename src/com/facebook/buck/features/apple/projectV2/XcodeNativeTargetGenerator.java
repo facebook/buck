@@ -601,6 +601,17 @@ public class XcodeNativeTargetGenerator {
                               requiredBuildTargetsBuilder,
                               targetGraph,
                               actionGraphBuilder));
+              arg.getNamedVariants().entrySet().stream()
+                  .flatMap(e -> e.getValue().stream())
+                  .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
+                  .filter(Optional::isPresent)
+                  .forEach(
+                      sourcePath ->
+                          Utils.addRequiredBuildTargetFromSourcePath(
+                              sourcePath.get(),
+                              requiredBuildTargetsBuilder,
+                              targetGraph,
+                              actionGraphBuilder));
             });
 
     nativeTargetAttributes.directAssetCatalogs().stream()

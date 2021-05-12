@@ -302,6 +302,8 @@ public class ProjectGenerator {
   private final ImmutableList.Builder<SourcePath> genruleFiles = ImmutableList.builder();
   private final ImmutableSet.Builder<SourcePath> filesAddedBuilder = ImmutableSet.builder();
   private final Set<BuildTarget> generatedTargets = new HashSet<>();
+  private final ImmutableSet.Builder<PostBuildCopySpec> copiedVariantsBuilder =
+      ImmutableSet.builder();
   /**
    * Mapping from an apple_library target to the associated apple_bundle which names it as its
    * 'binary'
@@ -465,6 +467,10 @@ public class ProjectGenerator {
     return filesToCopyInXcodeBuilder.build();
   }
 
+  public ImmutableSet<PostBuildCopySpec> getCopiedVariants() {
+    return copiedVariantsBuilder.build();
+  }
+
   // Returns true if we ran the project generation and we decided to eventually generate
   // the project.
   public boolean isProjectGenerated() {
@@ -607,6 +613,8 @@ public class ProjectGenerator {
     }
     generatedTargets.add(targetWithoutSpecificFlavors);
 
+    Path copiedVariantsDir = outputDirectory.resolve(projectName + "_copied_variants");
+
     Optional<PBXTarget> result = Optional.empty();
     if (targetNode.getDescription() instanceof AppleLibraryDescription) {
       result =
@@ -614,7 +622,9 @@ public class ProjectGenerator {
               generateAppleLibraryTarget(
                   project,
                   (TargetNode<AppleNativeTargetDescriptionArg>) targetNode,
-                  Optional.empty()));
+                  Optional.empty(),
+                  copiedVariantsDir,
+                  copiedVariantsBuilder));
     } else if (targetNode.getDescription() instanceof CxxLibraryDescription) {
       result =
           Optional.of(
@@ -623,12 +633,17 @@ public class ProjectGenerator {
                   (TargetNode<CxxLibraryDescription.CommonArg>) targetNode,
                   ImmutableSet.of(),
                   ImmutableSet.of(),
-                  Optional.empty()));
+                  Optional.empty(),
+                  copiedVariantsDir,
+                  copiedVariantsBuilder));
     } else if (targetNode.getDescription() instanceof AppleBinaryDescription) {
       result =
           Optional.of(
               generateAppleBinaryTarget(
-                  project, (TargetNode<AppleNativeTargetDescriptionArg>) targetNode));
+                  project,
+                  (TargetNode<AppleNativeTargetDescriptionArg>) targetNode,
+                  copiedVariantsDir,
+                  copiedVariantsBuilder));
     } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
       TargetNode<AppleBundleDescriptionArg> bundleTargetNode =
           (TargetNode<AppleBundleDescriptionArg>) targetNode;
@@ -639,10 +654,16 @@ public class ProjectGenerator {
                   bundleTargetNode,
                   (TargetNode<AppleNativeTargetDescriptionArg>)
                       targetGraph.get(getBundleBinaryTarget(bundleTargetNode)),
-                  Optional.empty()));
+                  Optional.empty(),
+                  copiedVariantsDir,
+                  copiedVariantsBuilder));
     } else if (targetNode.getDescription() instanceof AppleTestDescription) {
       result =
-          Optional.of(generateAppleTestTarget((TargetNode<AppleTestDescriptionArg>) targetNode));
+          Optional.of(
+              generateAppleTestTarget(
+                  (TargetNode<AppleTestDescriptionArg>) targetNode,
+                  copiedVariantsDir,
+                  copiedVariantsBuilder));
     } else if (targetNode.getDescription() instanceof AppleResourceDescription) {
       checkAppleResourceTargetNodeReferencingValidContents(
           (TargetNode<AppleResourceDescriptionArg>) targetNode);
@@ -653,7 +674,9 @@ public class ProjectGenerator {
 
       // The generated target just runs a shell script that invokes the "compiler" with the
       // correct target architecture.
-      result = generateHalideLibraryTarget(project, halideTargetNode);
+      result =
+          generateHalideLibraryTarget(
+              project, halideTargetNode, copiedVariantsDir, copiedVariantsBuilder);
 
       // Make sure the compiler gets built at project time, since we'll need
       // it to generate the shader code during the Xcode build.
@@ -694,7 +717,11 @@ public class ProjectGenerator {
   }
 
   private Optional<PBXTarget> generateHalideLibraryTarget(
-      PBXProject project, TargetNode<HalideLibraryDescriptionArg> targetNode) throws IOException {
+      PBXProject project,
+      TargetNode<HalideLibraryDescriptionArg> targetNode,
+      Path copiedVariantsDir,
+      ImmutableSet.Builder<PostBuildCopySpec> copiedVariantsBuilder)
+      throws IOException {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     boolean isFocusedOnTarget = focusModules.isFocusedOn(buildTarget);
     String productName = getProductNameForBuildTargetNode(targetNode);
@@ -707,7 +734,10 @@ public class ProjectGenerator {
 
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
-            pathRelativizer, sourcePath -> resolveSourcePath(sourcePath).getPath());
+            pathRelativizer,
+            sourcePath -> resolveSourcePath(sourcePath).getPath(),
+            copiedVariantsDir,
+            copiedVariantsBuilder);
     mutator
         .setTargetName(getXcodeTargetName(buildTarget))
         .setProduct(ProductTypes.STATIC_LIBRARY, productName, outputPath)
@@ -757,7 +787,10 @@ public class ProjectGenerator {
     return Optional.of(target);
   }
 
-  private PBXTarget generateAppleTestTarget(TargetNode<AppleTestDescriptionArg> testTargetNode)
+  private PBXTarget generateAppleTestTarget(
+      TargetNode<AppleTestDescriptionArg> testTargetNode,
+      Path copiedVariantsDir,
+      ImmutableSet.Builder<PostBuildCopySpec> copiedVariantsBuilder)
       throws IOException {
     AppleTestDescriptionArg args = testTargetNode.getConstructorArg();
     Optional<BuildTarget> testTargetApp = extractTestTargetForTestDescriptionArg(args);
@@ -773,7 +806,13 @@ public class ProjectGenerator {
                             testHostBundleTarget, testHostBundleNode.getDescription().getClass());
                       });
             });
-    return generateAppleBundleTarget(project, testTargetNode, testTargetNode, testHostBundle);
+    return generateAppleBundleTarget(
+        project,
+        testTargetNode,
+        testTargetNode,
+        testHostBundle,
+        copiedVariantsDir,
+        copiedVariantsBuilder);
   }
 
   private Optional<BuildTarget> extractTestTargetForTestDescriptionArg(
@@ -812,7 +851,9 @@ public class ProjectGenerator {
       PBXProject project,
       TargetNode<? extends HasAppleBundleFields> targetNode,
       TargetNode<? extends AppleNativeTargetDescriptionArg> binaryNode,
-      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
+      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode,
+      Path copiedVariantsDir,
+      ImmutableSet.Builder<PostBuildCopySpec> copiedVariantsBuilder)
       throws IOException {
     RelPath infoPlistPath =
         Objects.requireNonNull(resolveSourcePath(targetNode.getConstructorArg().getInfoPlist()));
@@ -875,7 +916,9 @@ public class ProjectGenerator {
                 ImmutableList.of(targetNode),
                 mode),
             Optional.of(copyFilesBuildPhases),
-            bundleLoaderNode);
+            bundleLoaderNode,
+            copiedVariantsDir,
+            copiedVariantsBuilder);
 
     if (bundleLoaderNode.isPresent()) {
       LOG.debug(
@@ -966,7 +1009,10 @@ public class ProjectGenerator {
   }
 
   private PBXNativeTarget generateAppleBinaryTarget(
-      PBXProject project, TargetNode<AppleNativeTargetDescriptionArg> targetNode)
+      PBXProject project,
+      TargetNode<AppleNativeTargetDescriptionArg> targetNode,
+      Path copiedVariantsDir,
+      ImmutableSet.Builder<PostBuildCopySpec> copiedVariantsBuilder)
       throws IOException {
     PBXNativeTarget target =
         generateBinaryTarget(
@@ -983,7 +1029,9 @@ public class ProjectGenerator {
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
             ImmutableSet.of(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            copiedVariantsDir,
+            copiedVariantsBuilder);
     LOG.debug(
         "Generated Apple binary target %s", targetNode.getBuildTarget().getFullyQualifiedName());
     return target;
@@ -992,7 +1040,9 @@ public class ProjectGenerator {
   private PBXNativeTarget generateAppleLibraryTarget(
       PBXProject project,
       TargetNode<? extends AppleNativeTargetDescriptionArg> targetNode,
-      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
+      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode,
+      Path copiedVariantsDir,
+      ImmutableSet.Builder<PostBuildCopySpec> copiedVariantsBuilder)
       throws IOException {
     PBXNativeTarget target =
         generateCxxLibraryTarget(
@@ -1000,7 +1050,9 @@ public class ProjectGenerator {
             targetNode,
             AppleResources.collectDirectResources(targetGraph, targetNode),
             AppleBuildRules.collectDirectAssetCatalogs(targetGraph, targetNode),
-            bundleLoaderNode);
+            bundleLoaderNode,
+            copiedVariantsDir,
+            copiedVariantsBuilder);
     LOG.debug(
         "Generated iOS library target %s", targetNode.getBuildTarget().getFullyQualifiedName());
     return target;
@@ -1008,10 +1060,12 @@ public class ProjectGenerator {
 
   private PBXNativeTarget generateCxxLibraryTarget(
       PBXProject project,
-      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
+      TargetNode<? extends CommonArg> targetNode,
       ImmutableSet<AppleResourceDescriptionArg> directResources,
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
-      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
+      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode,
+      Path copiedVariantsDir,
+      ImmutableSet.Builder<PostBuildCopySpec> copiedVariantsBuilder)
       throws IOException {
     boolean isShared =
         targetNode.getBuildTarget().getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
@@ -1032,7 +1086,9 @@ public class ProjectGenerator {
             directAssetCatalogs,
             ImmutableSet.of(),
             Optional.empty(),
-            bundleLoaderNode);
+            bundleLoaderNode,
+            copiedVariantsDir,
+            copiedVariantsBuilder);
     LOG.debug(
         "Generated Cxx library target %s", targetNode.getBuildTarget().getFullyQualifiedName());
     return target;
@@ -1278,7 +1334,7 @@ public class ProjectGenerator {
   private PBXNativeTarget generateBinaryTarget(
       PBXProject project,
       Optional<? extends TargetNode<? extends HasAppleBundleFields>> bundle,
-      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
+      TargetNode<? extends CommonArg> targetNode,
       ProductType productType,
       String productOutputFormat,
       Optional<Path> infoPlistOptional,
@@ -1289,7 +1345,9 @@ public class ProjectGenerator {
       ImmutableSet<AppleAssetCatalogDescriptionArg> directAssetCatalogs,
       ImmutableSet<AppleWrapperResourceArg> wrapperResources,
       Optional<Iterable<PBXBuildPhase>> copyFilesPhases,
-      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode)
+      Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode,
+      Path copiedVariantsDir,
+      ImmutableSet.Builder<PostBuildCopySpec> copiedVariantsBuilder)
       throws IOException {
 
     LOG.debug("Generating binary target for node %s", targetNode);
@@ -1302,7 +1360,10 @@ public class ProjectGenerator {
     CxxLibraryDescription.CommonArg arg = targetNode.getConstructorArg();
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(
-            pathRelativizer, sourcePath -> resolveSourcePath(sourcePath).getPath());
+            pathRelativizer,
+            sourcePath -> resolveSourcePath(sourcePath).getPath(),
+            copiedVariantsDir,
+            copiedVariantsBuilder);
 
     // Both exported headers and exported platform headers will be put into the symlink tree
     // exported platform headers will be excluded and then included by platform
