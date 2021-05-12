@@ -75,6 +75,7 @@ java_immutables_library(
         "//third-party/java/netty-handler:netty-handler",
         "//third-party/java/netty-tcnative:netty-tcnative",
         "//third-party/java/remote-apis:remote-apis",
+        "//src/com/facebook/buck/io/watchman:watchman",
     ],
 )
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.filesystem.impl;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.edenfs.EdenClientPool;
 import com.facebook.buck.edenfs.EdenMount;
@@ -23,6 +24,7 @@ import com.facebook.buck.edenfs.EdenProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.util.config.Config;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -43,13 +45,15 @@ public final class ProjectFilesystemDelegateFactory {
   }
 
   /** Must always create a new delegate for the specified {@code root}. */
-  public static ProjectFilesystemDelegatePair newInstance(Path root, Config config) {
+  public static ProjectFilesystemDelegatePair newInstance(
+      Path root, Config config, Watchman watchman) {
     return new ProjectFilesystemDelegatePair(
-        getGeneralDelegate(root, config),
+        getGeneralDelegate(root, config, watchman),
         new DefaultProjectFilesystemDelegate(root, getSHA1LoggingThresholdMicroseconds(config)));
   }
 
-  private static ProjectFilesystemDelegate getGeneralDelegate(Path root, Config config) {
+  private static ProjectFilesystemDelegate getGeneralDelegate(
+      Path root, Config config, Watchman watchman) {
     Optional<EdenClientPool> pool = EdenClientPool.tryToCreateEdenClientPool(root);
 
     if (pool.isPresent()) {
@@ -60,7 +64,9 @@ public final class ProjectFilesystemDelegateFactory {
             mount.get(),
             new DefaultProjectFilesystemDelegate(
                 mount.get().getProjectRoot(), getSHA1LoggingThresholdMicroseconds(config)),
-            config);
+            config,
+            watchman,
+            AbsPath.of(root));
       } else {
         LOG.error("Failed to find Eden client for %s.", root);
       }

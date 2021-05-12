@@ -46,6 +46,7 @@ import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.ToolType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.StepExecutionResults;
@@ -69,7 +70,12 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
   private static ProjectFilesystem createFakeFilesystem(
       CanonicalCellName cellName, AbsPath fakeRoot) {
-    return new DefaultProjectFilesystemFactory().createProjectFilesystem(cellName, fakeRoot, true);
+    return new DefaultProjectFilesystemFactory()
+        .createProjectFilesystem(
+            cellName,
+            fakeRoot,
+            true,
+            new WatchmanFactory.NullWatchman("CxxCollectAndLogInferDependenciesStepTest"));
   }
 
   private CxxInferCaptureRule createCaptureRule(

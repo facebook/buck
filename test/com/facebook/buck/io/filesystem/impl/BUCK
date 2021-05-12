@@ -14,6 +14,7 @@ java_library(
     ],
     deps = [
         "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/io/windowsfs:windowsfs",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
@@ -41,6 +42,7 @@ java_test(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/sha1:sha1",
@@ -63,6 +65,7 @@ java_test(
 standard_java_benchmark(
     name = "benchmark_lib",
     deps = [
+        "//src/com/facebook/buck/io/watchman:watchman",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
     ],

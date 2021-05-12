@@ -23,6 +23,7 @@ import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -204,7 +205,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
           projectFilesystemFactory.createOrThrow(
               CanonicalCellName.unsafeNotACell(),
               AbsPath.of(root),
-              false /* doesn't matter here, since filesystem here is not even a cell */);
+              false /* doesn't matter here, since filesystem here is not even a cell */,
+              new WatchmanFactory.NullWatchman("DefaultFileHashCache"));
       // A cache which caches hashes of absolute paths which my be accessed by certain
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
       // multiple times in a single run.

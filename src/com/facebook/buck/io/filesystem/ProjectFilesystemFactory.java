@@ -18,6 +18,7 @@ package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.util.config.Config;
 import java.util.Optional;
 
@@ -27,17 +28,25 @@ public interface ProjectFilesystemFactory {
       AbsPath root,
       Config config,
       Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
-      boolean buckOutIncludeTargetConfigHash);
+      boolean buckOutIncludeTargetConfigHash,
+      Watchman watchman);
 
   ProjectFilesystem createProjectFilesystem(
       CanonicalCellName cellName,
       AbsPath root,
       Config config,
-      boolean buckOutIncludeTargetConfigHash);
+      boolean buckOutIncludeTargetConfigHash,
+      Watchman watchman);
 
   ProjectFilesystem createProjectFilesystem(
-      CanonicalCellName cellName, AbsPath root, boolean buckOutIncludeTargetCofigHash);
+      CanonicalCellName cellName,
+      AbsPath root,
+      boolean buckOutIncludeTargetCofigHash,
+      Watchman watchman);
 
   ProjectFilesystem createOrThrow(
-      CanonicalCellName cellName, AbsPath path, boolean buckOutIncludeTargetCofigHash);
+      CanonicalCellName cellName,
+      AbsPath path,
+      boolean buckOutIncludeTargetCofigHash,
+      Watchman watchman);
 }

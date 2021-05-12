@@ -28,6 +28,7 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RecursivePathSetting;
@@ -56,7 +57,8 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       AbsPath root,
       Config config,
       Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
-      boolean buckOutIncludeTargetConfigHash) {
+      boolean buckOutIncludeTargetConfigHash,
+      Watchman watchman) {
     BuckPaths buckPaths =
         getConfiguredBuckPaths(
             cellName,
@@ -65,7 +67,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
             embeddedCellBuckOutInfo,
             buckOutIncludeTargetConfigHash);
     ProjectFilesystemDelegatePair delegatePair =
-        ProjectFilesystemDelegateFactory.newInstance(root.getPath(), config);
+        ProjectFilesystemDelegateFactory.newInstance(root.getPath(), config, watchman);
     return new DefaultProjectFilesystem(
         root,
         extractIgnorePaths(root.getPath(), config, buckPaths, embeddedCellBuckOutInfo),
@@ -79,16 +81,20 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       CanonicalCellName cellName,
       AbsPath root,
       Config config,
-      boolean buckOutIncludeTargetConfigHash) {
+      boolean buckOutIncludeTargetConfigHash,
+      Watchman watchman) {
     return createProjectFilesystem(
-        cellName, root, config, Optional.empty(), buckOutIncludeTargetConfigHash);
+        cellName, root, config, Optional.empty(), buckOutIncludeTargetConfigHash, watchman);
   }
 
   @Override
   public DefaultProjectFilesystem createProjectFilesystem(
-      CanonicalCellName cellName, AbsPath root, boolean buckOutIncludeTargetCofigHash) {
+      CanonicalCellName cellName,
+      AbsPath root,
+      boolean buckOutIncludeTargetCofigHash,
+      Watchman watchman) {
     final Config config = new Config();
-    return createProjectFilesystem(cellName, root, config, buckOutIncludeTargetCofigHash);
+    return createProjectFilesystem(cellName, root, config, buckOutIncludeTargetCofigHash, watchman);
   }
 
   private static ImmutableSet<PathMatcher> extractIgnorePaths(
@@ -232,7 +238,10 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
   @Override
   public DefaultProjectFilesystem createOrThrow(
-      CanonicalCellName cellName, AbsPath path, boolean buckOutIncludeTargetCofigHash) {
+      CanonicalCellName cellName,
+      AbsPath path,
+      boolean buckOutIncludeTargetCofigHash,
+      Watchman watchman) {
     try {
       // toRealPath() is necessary to resolve symlinks, allowing us to later
       // check whether files are inside or outside of the project without issue.
@@ -243,7 +252,8 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
             cellName.getName(), normalizedRealPath.toString(), path.toString());
       }
 
-      return createProjectFilesystem(cellName, normalizedRealPath, buckOutIncludeTargetCofigHash);
+      return createProjectFilesystem(
+          cellName, normalizedRealPath, buckOutIncludeTargetCofigHash, watchman);
     } catch (IOException e) {
       throw new HumanReadableException(
           String.format(

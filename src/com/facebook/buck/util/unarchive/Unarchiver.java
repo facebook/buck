@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -203,7 +204,10 @@ public abstract class Unarchiver {
     return extractArchive(
             archiveFile,
             projectFilesystemFactory.createProjectFilesystem(
-                CanonicalCellName.unsafeNotACell(), AbsPath.of(destination), false),
+                CanonicalCellName.unsafeNotACell(),
+                AbsPath.of(destination),
+                false,
+                new WatchmanFactory.NullWatchman("Unarchiver")),
             destination.getFileSystem().getPath(""),
             stripPrefix,
             entriesToExclude,

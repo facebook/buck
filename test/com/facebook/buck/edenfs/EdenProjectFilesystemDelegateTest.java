@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
@@ -105,7 +106,8 @@ public class EdenProjectFilesystemDelegateTest {
     expect(mount.getSha1(path)).andReturn(DUMMY_SHA1);
     replay(mount);
 
-    EdenProjectFilesystemDelegate edenDelegate = new EdenProjectFilesystemDelegate(mount, delegate);
+    EdenProjectFilesystemDelegate edenDelegate =
+        new EdenProjectFilesystemDelegate(mount, delegate, AbsPath.of(root));
     assertEquals(DUMMY_SHA1, edenDelegate.computeSha1(path));
 
     verify(mount);
@@ -134,7 +136,8 @@ public class EdenProjectFilesystemDelegateTest {
     expect(mount.getSha1(fs.getPath("target"))).andReturn(DUMMY_SHA1);
     replay(mount);
 
-    EdenProjectFilesystemDelegate edenDelegate = new EdenProjectFilesystemDelegate(mount, delegate);
+    EdenProjectFilesystemDelegate edenDelegate =
+        new EdenProjectFilesystemDelegate(mount, delegate, AbsPath.of(root));
     assertEquals(DUMMY_SHA1, edenDelegate.computeSha1(link));
 
     verify(mount);
@@ -164,7 +167,8 @@ public class EdenProjectFilesystemDelegateTest {
     expect(mount.getSha1(fs.getPath("link"))).andThrow(new EdenError());
     replay(mount);
 
-    EdenProjectFilesystemDelegate edenDelegate = new EdenProjectFilesystemDelegate(mount, delegate);
+    EdenProjectFilesystemDelegate edenDelegate =
+        new EdenProjectFilesystemDelegate(mount, delegate, AbsPath.of(root));
     assertEquals(
         "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of the target of "
             + "the symlink even though the target is outside of the EdenFS root.",
@@ -189,7 +193,8 @@ public class EdenProjectFilesystemDelegateTest {
     expect(mount.getPathRelativeToProjectRoot(target)).andReturn(Optional.empty());
     replay(mount);
 
-    EdenProjectFilesystemDelegate edenDelegate = new EdenProjectFilesystemDelegate(mount, delegate);
+    EdenProjectFilesystemDelegate edenDelegate =
+        new EdenProjectFilesystemDelegate(mount, delegate, AbsPath.of(root));
     assertEquals(
         "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of a file that is "
             + "outside of the EdenFS root.",
@@ -217,7 +222,12 @@ public class EdenProjectFilesystemDelegateTest {
     EdenMount mount = createMock(EdenMount.class);
     Config config = ConfigBuilder.createFromText("[eden]", "use_xattr = true");
     EdenProjectFilesystemDelegate edenDelegate =
-        new EdenProjectFilesystemDelegate(mount, delegate, config);
+        new EdenProjectFilesystemDelegate(
+            mount,
+            delegate,
+            config,
+            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            AbsPath.of(root));
     assertEquals(DUMMY_SHA1, edenDelegate.computeSha1(path));
   }
 
@@ -242,7 +252,12 @@ public class EdenProjectFilesystemDelegateTest {
     EdenMount mount = createMock(EdenMount.class);
     Config config = ConfigBuilder.createFromText("[eden]", "use_xattr = true");
     EdenProjectFilesystemDelegate edenDelegate =
-        new EdenProjectFilesystemDelegate(mount, delegate, config);
+        new EdenProjectFilesystemDelegate(
+            mount,
+            delegate,
+            config,
+            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            AbsPath.of(root));
     assertEquals(
         "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of the contents",
         Sha1HashCode.fromHashCode(Hashing.sha1().hashBytes(bytes)),
@@ -265,7 +280,12 @@ public class EdenProjectFilesystemDelegateTest {
     EdenMount mount = createMock(EdenMount.class);
     Config config = ConfigBuilder.createFromText("[eden]", "use_xattr = true");
     EdenProjectFilesystemDelegate edenDelegate =
-        new EdenProjectFilesystemDelegate(mount, delegate, config);
+        new EdenProjectFilesystemDelegate(
+            mount,
+            delegate,
+            config,
+            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            AbsPath.of(root));
     assertEquals(
         "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of a file that is "
             + "outside of the EdenFS root.",
@@ -287,14 +307,19 @@ public class EdenProjectFilesystemDelegateTest {
         ConfigBuilder.createFromText(
             "[eden]", "use_xattr = true", "[eden]", "use_watchman_content_sha1 = false");
     EdenProjectFilesystemDelegate edenDelegateWithFileSystem =
-        new EdenProjectFilesystemDelegate(mount, delegate, configWithFileSystem);
+        new EdenProjectFilesystemDelegate(
+            mount,
+            delegate,
+            configWithFileSystem,
+            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            AbsPath.of(tmp.getRoot().getPath()));
 
     Config configWithWatchman =
         ConfigBuilder.createFromText(
             "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
     EdenProjectFilesystemDelegate edenDelegateWithWatchman =
-        new EdenProjectFilesystemDelegate(mount, delegate, configWithWatchman);
-    edenDelegateWithWatchman.initEdenWatchman(watchman, projectFilesystem.getRootPath());
+        new EdenProjectFilesystemDelegate(
+            mount, delegate, configWithWatchman, watchman, projectFilesystem.getRootPath());
 
     assertEquals(
         edenDelegateWithFileSystem.computeSha1(path), edenDelegateWithWatchman.computeSha1(path));
@@ -322,7 +347,12 @@ public class EdenProjectFilesystemDelegateTest {
     thrown.expectMessage("Watchman is not set. Please turn off eden.use_watchman_content_sha1");
 
     EdenProjectFilesystemDelegate edenDelegate =
-        new EdenProjectFilesystemDelegate(mount, delegate, configWithWatchman);
+        new EdenProjectFilesystemDelegate(
+            mount,
+            delegate,
+            configWithWatchman,
+            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            AbsPath.of(root));
     edenDelegate.computeSha1(path);
   }
 
@@ -343,14 +373,19 @@ public class EdenProjectFilesystemDelegateTest {
         ConfigBuilder.createFromText(
             "[eden]", "use_xattr = true", "[eden]", "use_watchman_content_sha1 = false");
     EdenProjectFilesystemDelegate edenDelegateWithFileSystem =
-        new EdenProjectFilesystemDelegate(mount, delegate, configWithFileSystem);
+        new EdenProjectFilesystemDelegate(
+            mount,
+            delegate,
+            configWithFileSystem,
+            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            tmp.getRoot());
 
     Config configWithWatchman =
         ConfigBuilder.createFromText(
             "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
     EdenProjectFilesystemDelegate edenDelegateWithWatchman =
-        new EdenProjectFilesystemDelegate(mount, delegate, configWithWatchman);
-    edenDelegateWithWatchman.initEdenWatchman(watchman, projectFilesystem.getRootPath());
+        new EdenProjectFilesystemDelegate(
+            mount, delegate, configWithWatchman, watchman, projectFilesystem.getRootPath());
 
     assertFalse(edenDelegateWithWatchman.globOnPath(link).isPresent());
     assertTrue(edenDelegateWithWatchman.globOnPath(target).isPresent());

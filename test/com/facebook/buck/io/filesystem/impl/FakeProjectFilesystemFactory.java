@@ -21,6 +21,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.util.config.Config;
 import java.util.Optional;
 
@@ -32,7 +33,8 @@ public class FakeProjectFilesystemFactory implements ProjectFilesystemFactory {
       AbsPath root,
       Config config,
       Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
-      boolean buckOutIncludeTargetConfigHash) {
+      boolean buckOutIncludeTargetConfigHash,
+      Watchman watchman) {
     return new FakeProjectFilesystem(root);
   }
 
@@ -41,19 +43,26 @@ public class FakeProjectFilesystemFactory implements ProjectFilesystemFactory {
       CanonicalCellName cellName,
       AbsPath root,
       Config config,
-      boolean buckOutIncludeTargetConfigHash) {
+      boolean buckOutIncludeTargetConfigHash,
+      Watchman watchman) {
     return new FakeProjectFilesystem(root);
   }
 
   @Override
   public ProjectFilesystem createProjectFilesystem(
-      CanonicalCellName cellName, AbsPath root, boolean buckOutIncludeTargetCofigHash) {
+      CanonicalCellName cellName,
+      AbsPath root,
+      boolean buckOutIncludeTargetCofigHash,
+      Watchman watchman) {
     return new FakeProjectFilesystem(root);
   }
 
   @Override
   public ProjectFilesystem createOrThrow(
-      CanonicalCellName cellName, AbsPath path, boolean buckOutIncludeTargetCofigHash) {
+      CanonicalCellName cellName,
+      AbsPath path,
+      boolean buckOutIncludeTargetCofigHash,
+      Watchman watchman) {
     return new FakeProjectFilesystem(path);
   }
 }

@@ -791,7 +791,8 @@ public final class MainRunner {
                 CanonicalCellName.rootCell(),
                 canonicalRootPath,
                 config,
-                BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
+                BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config),
+                watchman);
         buckConfigProjectFilesystem.initFilesystem(filesystem);
       } else {
         filesystem = buckConfig.getFilesystem();
@@ -830,7 +831,8 @@ public final class MainRunner {
                   rootCellCellPathResolver,
                   toolchainProviderFactory,
                   projectFilesystemFactory,
-                  buildTargetFactory));
+                  buildTargetFactory,
+                  watchman));
 
       TargetConfigurationSerializer targetConfigurationSerializer =
           new JsonTargetConfigurationSerializer(
@@ -883,7 +885,8 @@ public final class MainRunner {
           projectFilesystemFactory.createOrThrow(
               CanonicalCellName.rootCell(),
               cells.getRootCell().getFilesystem().getRootPath(),
-              BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
+              BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config),
+              watchman);
       BuildBuckConfig buildBuckConfig =
           cells.getRootCell().getBuckConfig().getView(BuildBuckConfig.class);
       allCaches.addAll(buckGlobalState.getFileHashCaches());

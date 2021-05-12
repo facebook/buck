@@ -36,6 +36,7 @@ import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.CreateSymlinksForTests;
@@ -688,13 +689,15 @@ public class DefaultProjectFilesystemTest {
             CanonicalCellName.rootCell(),
             rootPath,
             config,
-            BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config)),
+            BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config),
+            new WatchmanFactory.NullWatchman("DefaultProjectFilesystemTest")),
         equalTo(
             projectFilesystemFactory.createProjectFilesystem(
                 CanonicalCellName.rootCell(),
                 rootPath,
                 config,
-                BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config))));
+                BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config),
+                new WatchmanFactory.NullWatchman("DefaultProjectFilesystemTest"))));
   }
 
   @Test
@@ -707,7 +710,8 @@ public class DefaultProjectFilesystemTest {
             .createProjectFilesystem(
                 CanonicalCellName.rootCell(),
                 AbsPath.of(root),
-                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH,
+                new WatchmanFactory.NullWatchman("DefaultProjectFilesystemTest"));
     assertEquals(vfs, projectFilesystem.getPath("bar").getFileSystem());
     assertEquals(vfs.getPath("bar"), projectFilesystem.getPath("bar"));
   }

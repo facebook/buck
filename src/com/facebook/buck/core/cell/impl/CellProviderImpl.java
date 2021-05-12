@@ -38,6 +38,7 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.impl.ConfigRuleKeyConfigurationFactory;
 import com.facebook.buck.util.config.Config;
@@ -63,6 +64,7 @@ final class CellProviderImpl implements CellProvider {
   private final ToolchainProviderFactory toolchainProviderFactory;
   private final ProjectFilesystemFactory projectFilesystemFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
+  private final Watchman watchman;
 
   /**
    * Create a cell provider with a specific cell loader, and optionally a special factory function
@@ -78,13 +80,15 @@ final class CellProviderImpl implements CellProvider {
       DefaultCellPathResolver rootCellCellPathResolver,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory,
-      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+      Watchman watchman) {
     this.rootFilesystem = rootFilesystem;
     this.rootConfig = rootConfig;
     this.rootCellCellPathResolver = rootCellCellPathResolver;
     this.toolchainProviderFactory = toolchainProviderFactory;
     this.projectFilesystemFactory = projectFilesystemFactory;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
+    this.watchman = watchman;
 
     ImmutableMap<CellName, AbsPath> cellPathMapping = rootCellCellPathResolver.getPathMapping();
 
@@ -193,7 +197,8 @@ final class CellProviderImpl implements CellProvider {
             normalizedCellPath,
             config,
             embeddedCellBuckOutInfo,
-            BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(rootConfig.getConfig()));
+            BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(rootConfig.getConfig()),
+            watchman);
 
     BuckConfig buckConfig =
         new BuckConfig(

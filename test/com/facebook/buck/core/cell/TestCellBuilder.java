@@ -30,6 +30,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -115,7 +116,8 @@ public class TestCellBuilder {
             rootCellCellPathResolver,
             toolchainProviderFactory,
             new DefaultProjectFilesystemFactory(),
-            new ParsingUnconfiguredBuildTargetViewFactory()));
+            new ParsingUnconfiguredBuildTargetViewFactory(),
+            new WatchmanFactory.NullWatchman("TestCellBuilder")));
   }
 
   public static CellPathResolver createCellRoots(@Nullable ProjectFilesystem filesystem) {

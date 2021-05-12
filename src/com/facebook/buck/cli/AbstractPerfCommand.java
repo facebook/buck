@@ -37,6 +37,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Statistics;
@@ -250,7 +251,8 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                           AbsPath root,
                           Config config,
                           Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
-                          boolean buckOutIncludeTargetConfigHash) {
+                          boolean buckOutIncludeTargetConfigHash,
+                          Watchman watchman) {
                         return createHashFakingFilesystem(
                             new DefaultProjectFilesystemFactory()
                                 .createProjectFilesystem(
@@ -258,7 +260,8 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                                     root,
                                     config,
                                     embeddedCellBuckOutInfo,
-                                    buckOutIncludeTargetConfigHash));
+                                    buckOutIncludeTargetConfigHash,
+                                    watchman));
                       }
 
                       @Override
@@ -266,32 +269,36 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                           CanonicalCellName cellName,
                           AbsPath root,
                           Config config,
-                          boolean buckOutIncludeTargetConfigHash) {
+                          boolean buckOutIncludeTargetConfigHash,
+                          Watchman watchman) {
                         return createProjectFilesystem(
                             cellName,
                             root,
                             config,
                             Optional.empty(),
-                            buckOutIncludeTargetConfigHash);
+                            buckOutIncludeTargetConfigHash,
+                            params.getWatchman());
                       }
 
                       @Override
                       public ProjectFilesystem createProjectFilesystem(
                           CanonicalCellName cellName,
                           AbsPath root,
-                          boolean buckOutIncludeTargetCofigHash) {
+                          boolean buckOutIncludeTargetCofigHash,
+                          Watchman watchman) {
                         final Config config = new Config();
                         return createProjectFilesystem(
-                            cellName, root, config, buckOutIncludeTargetCofigHash);
+                            cellName, root, config, buckOutIncludeTargetCofigHash, watchman);
                       }
 
                       @Override
                       public ProjectFilesystem createOrThrow(
                           CanonicalCellName cellName,
                           AbsPath path,
-                          boolean buckOutIncludeTargetCofigHash) {
+                          boolean buckOutIncludeTargetCofigHash,
+                          Watchman watchman) {
                         return createProjectFilesystem(
-                            cellName, path, buckOutIncludeTargetCofigHash);
+                            cellName, path, buckOutIncludeTargetCofigHash, watchman);
                       }
                     },
                     cacheMode,

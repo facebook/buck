@@ -26,6 +26,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -56,7 +57,8 @@ public class GenerateManifestStepTest {
             .createProjectFilesystem(
                 CanonicalCellName.rootCell(),
                 tmpFolder.getRoot(),
-                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH,
+                new WatchmanFactory.NullWatchman("GenerateManifestStepTest"));
 
     RelPath expectedOutputPath = RelPath.get("AndroidManifest.expected.xml");
     RelPath skeletonPath = RelPath.get("AndroidManifestSkeleton.xml");
@@ -100,7 +102,8 @@ public class GenerateManifestStepTest {
             .createProjectFilesystem(
                 CanonicalCellName.rootCell(),
                 tmpFolder.getRoot(),
-                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH,
+                new WatchmanFactory.NullWatchman("GenerateManifestStepTest"));
 
     RelPath expectedOutputPath = RelPath.get("ModuleManifest.expected.xml");
     RelPath skeletonPath = RelPath.get("ModuleManifestSkeleton.xml");

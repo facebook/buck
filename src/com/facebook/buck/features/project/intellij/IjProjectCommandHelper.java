@@ -45,6 +45,7 @@ import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
@@ -233,7 +234,8 @@ public class IjProjectCommandHelper {
               this.cells.getRootCell().getCanonicalName(),
               outputPath,
               BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(
-                  rootCell.getBuckConfig().getConfig()));
+                  rootCell.getBuckConfig().getConfig()),
+              new WatchmanFactory.NullWatchman("IjProjectCommandHelper"));
     } else {
       return cells.getRootCell().getFilesystem();
     }

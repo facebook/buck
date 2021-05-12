@@ -23,6 +23,7 @@ import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetVi
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.Watchman;
 
 /** Creates a {@link CellProvider} to be used in a local (non-distributed) build. */
 public class LocalCellProviderFactory {
@@ -35,7 +36,8 @@ public class LocalCellProviderFactory {
       DefaultCellPathResolver rootCellCellPathResolver,
       ToolchainProviderFactory toolchainProviderFactory,
       ProjectFilesystemFactory projectFilesystemFactory,
-      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
+      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
+      Watchman watchman) {
 
     return new CellProviderImpl(
         rootFilesystem,
@@ -44,6 +46,7 @@ public class LocalCellProviderFactory {
         rootCellCellPathResolver,
         toolchainProviderFactory,
         projectFilesystemFactory,
-        unconfiguredBuildTargetFactory);
+        unconfiguredBuildTargetFactory,
+        watchman);
   }
 }

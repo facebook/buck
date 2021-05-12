@@ -18,6 +18,7 @@ java_test(
         "//src/com/facebook/buck/doctor:doctor",
         "//src/com/facebook/buck/doctor/config:config",
         "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",

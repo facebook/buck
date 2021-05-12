@@ -19,8 +19,11 @@ package com.facebook.buck.edenfs;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
+import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
+import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.skylark.io.impl.WatchmanGlobber;
 import com.facebook.buck.util.config.Config;
@@ -28,7 +31,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -88,8 +90,8 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   private final boolean disableSha1FastPath;
 
   private final Sha1Hasher sha1Hasher;
-
-  private final EdenWatchmanDelayInit edenWatchmanDelayInit = new EdenWatchmanDelayInit();
+  private final Watchman watchman;
+  private final AbsPath rootPath;
 
   @VisibleForTesting
   static Sha1Hasher getSha1HasherFromConfig(Config config) {
@@ -116,28 +118,55 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   }
 
   public EdenProjectFilesystemDelegate(
-      EdenMount mount, ProjectFilesystemDelegate delegate, Config config) {
+      EdenMount mount,
+      ProjectFilesystemDelegate delegate,
+      Config config,
+      Watchman watchman,
+      AbsPath rootPath) {
     this(
         mount,
         delegate,
         config.getBooleanValue("eden", BUCKCONFIG_DISABLE_SHA1_FAST_PATH, false),
-        getSha1HasherFromConfig(config));
+        getSha1HasherFromConfig(config),
+        watchman,
+        rootPath);
   }
 
   @VisibleForTesting
-  EdenProjectFilesystemDelegate(EdenMount mount, ProjectFilesystemDelegate delegate) {
-    this(mount, delegate, /* disableSha1FastPath */ false, Sha1Hasher.EDEN_THRIFT);
+  EdenProjectFilesystemDelegate(
+      EdenMount mount, ProjectFilesystemDelegate delegate, AbsPath rootPath) {
+    this(
+        mount,
+        delegate, /* disableSha1FastPath */
+        false,
+        Sha1Hasher.EDEN_THRIFT,
+        new WatchmanFactory.NullWatchman("test"),
+        rootPath);
   }
 
   private EdenProjectFilesystemDelegate(
       EdenMount mount,
       ProjectFilesystemDelegate delegate,
       boolean disableSha1FastPath,
-      Sha1Hasher sha1Hasher) {
+      Sha1Hasher sha1Hasher,
+      Watchman watchman,
+      AbsPath rootPath) {
     this.mount = mount;
     this.delegate = delegate;
     this.disableSha1FastPath = disableSha1FastPath;
     this.sha1Hasher = sha1Hasher;
+    this.watchman = watchman;
+    this.rootPath = rootPath;
+    if (!(watchman instanceof WatchmanFactory.NullWatchman)) {
+      ProjectWatch watch = watchman.getProjectWatches().get(rootPath);
+      if (watch == null) {
+        String msg =
+            String.format(
+                "Path [%s] is not watched. The list of watched project: [%s]",
+                rootPath, watchman.getProjectWatches().keySet());
+        throw new FileSystemNotWatchedException(msg);
+      }
+    }
   }
 
   @Override
@@ -253,15 +282,22 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     return glob(fileToHash);
   }
 
+  private Watchman realWatchman() {
+    if (watchman instanceof WatchmanFactory.NullWatchman) {
+      throw new IllegalStateException(
+          String.format(
+              "Watchman is not set. Please turn off eden.%s",
+              BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1));
+    }
+    return watchman;
+  }
+
   @SuppressWarnings("unchecked")
   private Optional<Sha1HashCode> glob(AbsPath path)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
-    EdenWatchman edenWatchman = edenWatchmanDelayInit.getEdenWatchman();
-    Watchman watchman = edenWatchman.getWatchman();
-    Path watchRootPath = edenWatchman.getWatchmanRootPath();
-    WatchmanClient watchmanClient = watchman.getPooledClient();
-    WatchmanGlobber globber = WatchmanGlobber.create(watchmanClient, "", watchRootPath.toString());
-    String pathString = watchRootPath.relativize(path.getPath()).toString();
+    WatchmanClient watchmanClient = realWatchman().getPooledClient();
+    WatchmanGlobber globber = WatchmanGlobber.create(watchmanClient, "", rootPath.toString());
+    String pathString = rootPath.relativize(path.getPath()).toString();
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> ret =
         globber.runWithExtraFields(
             Collections.singleton(pathString),
@@ -294,34 +330,5 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   @Override
   public AbsPath getPathForRelativePath(Path pathRelativeToProjectRootOrJustAbsolute) {
     return delegate.getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
-  }
-
-  public void initEdenWatchman(Watchman watchman, AbsPath cellRootPath) {
-    this.edenWatchmanDelayInit.setWatchman(watchman, cellRootPath);
-  }
-
-  /**
-   * EdenProjectFilesystemDelegate is created when a filesystem is created, and watchman needs the
-   * created filesystem. So this class is used to pass the created filesystem to watchman to avoid
-   * the chicken-and-egg scenario.
-   */
-  private static class EdenWatchmanDelayInit {
-    private Optional<EdenWatchman> edenWatchman = Optional.empty();
-
-    /** Attach watchman to the EdenFS delegate */
-    public void setWatchman(Watchman watchman, AbsPath cellRootPath) {
-      Preconditions.checkState(!edenWatchman.isPresent(), "Watchman already initialized");
-      this.edenWatchman = Optional.of(new EdenWatchman(watchman, cellRootPath));
-    }
-
-    /** return the eden watchman wrapper if initialized. */
-    public EdenWatchman getEdenWatchman() {
-      Preconditions.checkState(
-          edenWatchman.isPresent(),
-          String.format(
-              "Watchman is not set. Please turn off eden.%s",
-              BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1));
-      return edenWatchman.get();
-    }
   }
 }
