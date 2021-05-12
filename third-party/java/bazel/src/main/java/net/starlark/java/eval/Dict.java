@@ -15,12 +15,10 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -97,26 +95,26 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
 
   // TODO(adonovan): for dicts that are born frozen, use ImmutableMap, which is also
   // insertion-ordered and has smaller Entries (singly linked, no hash).
-  final LinkedHashMap<K, V> contents;
+  final DictMap<K, V> contents;
   private int iteratorCount; // number of active iterators (unused once frozen)
 
   /** Final except for {@link #unsafeShallowFreeze}; must not be modified any other way. */
   private Mutability mutability;
 
-  private Dict(@Nullable Mutability mutability, LinkedHashMap<K, V> contents) {
+  private Dict(@Nullable Mutability mutability, DictMap<K, V> contents) {
     this.mutability = mutability == null ? Mutability.IMMUTABLE : mutability;
     this.contents = contents;
   }
 
   private Dict(@Nullable Mutability mutability) {
-    this(mutability, new LinkedHashMap<>());
+    this(mutability, new DictMap<>());
   }
 
   /**
    * Takes ownership of the supplied LinkedHashMap and returns a new Dict that wraps it. The caller
    * must not subsequently modify the map, but the Dict may do so.
    */
-  static <K, V> Dict<K, V> wrap(@Nullable Mutability mutability, LinkedHashMap<K, V> contents) {
+  static <K, V> Dict<K, V> wrap(@Nullable Mutability mutability, DictMap<K, V> contents) {
     return new Dict<>(mutability, contents);
   }
 
@@ -156,12 +154,12 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
 
   @Override
   public boolean equals(Object o) {
-    return contents.equals(o);
+    return o instanceof Dict<?, ?> && contents.equals(((Dict<?, ?>) o).contents);
   }
 
   @Override
   public Iterator<K> iterator() {
-    return contents.keySet().iterator();
+    return contents.keysIterator();
   }
 
   @StarlarkMethod(
@@ -212,9 +210,10 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
       },
       trustReturnsValid = true,
       purity = FnPurity.PURE)
+  @SuppressWarnings("unchecked")
   public Object pop(Object key, Object defaultValue) throws EvalException {
     checkMutable();
-    Object value = contents.remove(key);
+    Object value = contents.remove((K) key);
     if (value != null) {
       return value;
     }
@@ -243,10 +242,8 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
 
     checkMutable();
 
-    Iterator<Entry<K, V>> iterator = contents.entrySet().iterator();
-    Entry<K, V> entry = iterator.next();
-    iterator.remove();
-    return Tuple.pair(entry.getKey(), entry.getValue());
+    DictMap.Node<K, V> first = contents.removeFirst();
+    return Tuple.pair(first.key, first.getValue());
   }
 
   @StarlarkMethod(
@@ -270,8 +267,7 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
     checkMutable();
     Starlark.checkHashable(key);
 
-    V prev = contents.putIfAbsent(key, defaultValue); // see class doc comment
-    return prev != null ? prev : defaultValue;
+    return contents.putDefault(key, defaultValue);
   }
 
   @StarlarkMethod(
@@ -348,7 +344,7 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
       useStarlarkThread = true,
       purity = FnPurity.PURE)
   public StarlarkList<?> values0(StarlarkThread thread) throws EvalException {
-    return StarlarkList.copyOfUnchecked(thread.mutability(), contents.values());
+    return StarlarkList.wrap(thread.mutability(), contents.valuesToArray());
   }
 
   @StarlarkMethod(
@@ -361,10 +357,10 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
       useStarlarkThread = true,
       purity = FnPurity.PURE)
   public StarlarkList<?> items(StarlarkThread thread) throws EvalException {
-    Object[] array = new Object[size()];
-    int i = 0;
-    for (Map.Entry<?, ?> e : contents.entrySet()) {
-      array[i++] = Tuple.pair(e.getKey(), e.getValue());
+    Object[] array = contents.nodesToArray();
+    for (int i = 0; i < array.length; i++) {
+      DictMap.Node<?, ?> node = (DictMap.Node<?, ?>) array[i];
+      array[i] = Tuple.wrap(new Object[] { node.key, node.getValue() });
     }
     return StarlarkList.wrap(thread.mutability(), array);
   }
@@ -378,12 +374,7 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
       useStarlarkThread = true,
       purity = FnPurity.PURE)
   public StarlarkList<?> keys(StarlarkThread thread) throws EvalException {
-    Object[] array = new Object[size()];
-    int i = 0;
-    for (K e : contents.keySet()) {
-      array[i++] = e;
-    }
-    return StarlarkList.wrap(thread.mutability(), array);
+    return StarlarkList.wrap(thread.mutability(), contents.keysToArray());
   }
 
   private static final Dict<?, ?> EMPTY = of(Mutability.IMMUTABLE);
@@ -398,6 +389,36 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
   /** Returns a new empty dict with the specified mutability. */
   public static <K, V> Dict<K, V> of(@Nullable Mutability mu) {
     return new Dict<>(mu);
+  }
+
+  public static <K, V> Dict<K, V> immutableOf(K k0, V v0) throws EvalException {
+    return Dict.<K, V>builder()
+        .put(k0, v0)
+        .buildImmutable();
+  }
+
+  public static <K, V> Dict<K, V> immutableOf(K k0, V v0, K k1, V v1) throws EvalException {
+    return Dict.<K, V>builder()
+        .put(k0, v0)
+        .put(k1, v1)
+        .buildImmutable();
+  }
+
+  public static <K, V> Dict<K, V> immutableOf(K k0, V v0, K k1, V v1, K k2, V v2) throws EvalException {
+    return Dict.<K, V>builder()
+        .put(k0, v0)
+        .put(k1, v1)
+        .put(k2, v2)
+        .buildImmutable();
+  }
+
+  public static <K, V> Dict<K, V> immutableOf(K k0, V v0, K k1, V v1, K k2, V v2, K k3, V v3) throws EvalException {
+    return Dict.<K, V>builder()
+        .put(k0, v0)
+        .put(k1, v1)
+        .put(k2, v2)
+        .put(k3, v3)
+        .buildImmutable();
   }
 
   /** Returns a new dict with the specified mutability containing the entries of {@code m}. */
@@ -458,7 +479,7 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
      */
     public Dict<K, V> build(@Nullable Mutability mu) {
       int n = items.size() / 2;
-      LinkedHashMap<K, V> map = Maps.newLinkedHashMapWithExpectedSize(n);
+      DictMap<K, V> map = new DictMap<>(n);
       for (int i = 0; i < n; i++) {
         @SuppressWarnings("unchecked")
         K k = (K) items.get(2 * i); // safe
@@ -590,26 +611,28 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
 
   @Override
   public boolean containsKey(Object key) {
-    return contents.containsKey(key);
+    return key != null && contents.containsKey((K) key);
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public boolean containsValue(Object value) {
-    return contents.containsValue(value);
+    return value != null && contents.containsValue((V) value);
   }
 
   @Override
   public Set<Map.Entry<K, V>> entrySet() {
-    return Collections.unmodifiableMap(contents).entrySet();
+    return contents.entrySet();
   }
 
-  public LinkedHashMap<K, V> contentsUnsafe() {
+  public DictMap<K, V> contentsUnsafe() {
     return contents;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public V get(Object key) {
-    return contents.get(key);
+    return key != null ? contents.get((K) key) : null;
   }
 
   @Override
@@ -619,7 +642,7 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
 
   @Override
   public Set<K> keySet() {
-    return Collections.unmodifiableMap(contents).keySet();
+    return contents.keySet();
   }
 
   @Override
@@ -629,7 +652,7 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
 
   @Override
   public Collection<V> values() {
-    return Collections.unmodifiableMap(contents).values();
+    return contents.values();
   }
 
   // disallowed java.util.Map update operations

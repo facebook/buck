@@ -1595,7 +1595,7 @@ public final class StarlarkEvaluationTest {
   public void testDictAssignmentAsLValue() throws Exception {
     ev.new Scenario()
         .setUp("def func():", "  d = {'a' : 1}", "  d['b'] = 2", "  return d", "d = func()")
-        .testLookup("d", ImmutableMap.of("a", StarlarkInt.of(1), "b", StarlarkInt.of(2)));
+        .testLookup("d", Dict.immutableOf("a", StarlarkInt.of(1), "b", StarlarkInt.of(2)));
   }
 
   @Test
@@ -1610,7 +1610,7 @@ public final class StarlarkEvaluationTest {
             "e = func()")
         .testLookup(
             "e",
-            ImmutableMap.of("d", ImmutableMap.of("a", StarlarkInt.of(1), "b", StarlarkInt.of(2))));
+            Dict.immutableOf("d", Dict.immutableOf("a", StarlarkInt.of(1), "b", StarlarkInt.of(2))));
   }
 
   @Test
@@ -1646,7 +1646,7 @@ public final class StarlarkEvaluationTest {
             "def func():", "  d = {'a' : 1}", "  d['b'], d['c'] = 2, 3", "  return d", "d = func()")
         .testLookup(
             "d",
-            ImmutableMap.of(
+            Dict.immutableOf(
                 "a", StarlarkInt.of(1), "b", StarlarkInt.of(2), "c", StarlarkInt.of(3)));
   }
 
@@ -1654,7 +1654,7 @@ public final class StarlarkEvaluationTest {
   public void testDictItemPlusEqual() throws Exception {
     ev.new Scenario()
         .setUp("def func():", "  d = {'a' : 2}", "  d['a'] += 3", "  return d", "d = func()")
-        .testLookup("d", ImmutableMap.of("a", StarlarkInt.of(5)));
+        .testLookup("d", Dict.immutableOf("a", StarlarkInt.of(5)));
   }
 
   @Test

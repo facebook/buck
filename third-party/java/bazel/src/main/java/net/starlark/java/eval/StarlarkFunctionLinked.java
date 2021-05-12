@@ -1,19 +1,16 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /** Linked version of {@link StarlarkFunction}. */
 class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
+  private final String[] paramNames;
+  private final int[] paramNameDictHashes;
   /**
    * Mapping of call args to function params.
    *
-   * Array index is a param index, and array value is an arg index.
+   * <p>Array index is a param index, and array value is an arg index.
    */
   private final int[] paramFromArg;
   /** Spill positional arg to *args param. This is a list of arg indices. */
@@ -22,15 +19,26 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
   private final int[] argToStarStar;
   /** Spill named arg to **kwargs param. This is a list of param names. */
   private final String[] argToStarStarName;
+  /** {@link DictMap} compatible hashed for names. */
+  private final int[] argToStarStarNameDictHashes;
 
   StarlarkFunctionLinked(
-      StarlarkFunction fn, int[] paramFromArg, int[] argToStar,
-      int[] argToStarStar, String[] argToStarStarName, StarlarkCallableLinkSig linkSig) {
+      StarlarkFunction fn,
+      int[] paramFromArg,
+      int[] argToStar,
+      int[] argToStarStar,
+      String[] argToStarStarName,
+      StarlarkCallableLinkSig linkSig) {
     super(linkSig, fn);
+
+    this.paramNames = fn.getParameterNamesArray();
+    this.paramNameDictHashes = fn.getParameterNamesDictHashes();
+
     this.paramFromArg = paramFromArg;
     this.argToStar = argToStar;
     this.argToStarStar = argToStarStar;
     this.argToStarStarName = argToStarStarName;
+    this.argToStarStarNameDictHashes = DictHash.hashes(argToStarStarName);
     if (Bc.ASSERTIONS) {
       assertions();
     }
@@ -44,11 +52,12 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     Preconditions.checkArgument(argToStarStar.length == argToStarStarName.length);
 
     if (argToStar.length != 0) {
-      Preconditions.checkState(fn().hasVarargs(),
-          "argToStar array can be non-empty only when function accept varargs");
+      Preconditions.checkState(
+          fn().hasVarargs(), "argToStar array can be non-empty only when function accept varargs");
     }
     if (argToStarStar.length != 0) {
-      Preconditions.checkState(fn().hasKwargs(),
+      Preconditions.checkState(
+          fn().hasKwargs(),
           "argToStarStar array can be non-empty only when function accepts kwargs");
     }
 
@@ -57,17 +66,18 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     boolean[] regularArgsHandled = new boolean[nRegularArgs];
     for (int arg : paramFromArg) {
       if (arg >= 0) {
-        Preconditions.checkState(!regularArgsHandled[arg],
-            "Duplicate argument: %s", arg);
+        Preconditions.checkState(!regularArgsHandled[arg], "Duplicate argument: %s", arg);
         regularArgsHandled[arg] = true;
       }
     }
     for (int arg : argToStar) {
-      Preconditions.checkState(!regularArgsHandled[arg], "Argument handled more than once: %s", arg);
+      Preconditions.checkState(
+          !regularArgsHandled[arg], "Argument handled more than once: %s", arg);
       regularArgsHandled[arg] = true;
     }
     for (int arg : argToStarStar) {
-      Preconditions.checkState(!regularArgsHandled[arg], "Argument handled more than once: %s", arg);
+      Preconditions.checkState(
+          !regularArgsHandled[arg], "Argument handled more than once: %s", arg);
       regularArgsHandled[arg] = true;
     }
     for (int i = 0; i < regularArgsHandled.length; i++) {
@@ -78,11 +88,12 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
 
   @Override
   protected void processArgs(
-      Mutability mu, Object[] args,
-      @Nullable Sequence<?> starArgs, @Nullable Dict<Object, Object> starStarArgs,
+      Mutability mu,
+      Object[] args,
+      @Nullable Sequence<?> starArgs,
+      @Nullable Dict<Object, Object> starStarArgs,
       Object[] locals)
-      throws EvalException
-  {
+      throws EvalException {
     StarlarkFunction fn = fn();
 
     int starArgsPos = 0;
@@ -91,12 +102,10 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     // Subset of `starStarArgs`, keys which were used in params
     int boundKeyCount = 0;
     // This variable is used only if a function has `**kwargs` param.
-    BoundsKeys boundsKeys = null;
+    BoundKeys boundKeys = null;
 
     int numParamsWithoutDefault = fn.numNonStarParams - fn.defaultValues.size();
     int numPositionalParams = fn.numNonStarParams - fn.numKeywordOnlyParams;
-
-    ImmutableList<String> names = fn.getParameterNames();
 
     for (int paramIndex = 0; paramIndex < paramFromArg.length; ++paramIndex) {
       if (paramFromArg[paramIndex] >= 0) {
@@ -108,18 +117,19 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
         continue;
       }
       if (starStarArgs != null) {
-        String name = names.get(paramIndex);
-        Object value = starStarArgs.get(name);
-        if (value != null) {
-          locals[paramIndex] = value;
+        String key = paramNames[paramIndex];
+        int keyHash = paramNameDictHashes[paramIndex];
+        DictMap.Node<?, ?> node = starStarArgs.contents.getNode(key, keyHash);
+        if (node != null) {
+          locals[paramIndex] = node.getValue();
           ++boundKeyCount;
           if (fn.hasKwargs()) {
-            if (boundsKeys == null) {
+            if (boundKeys == null) {
               int boundKeyCountUpperBound =
                   Math.min(starStarArgs.size(), paramFromArg.length - paramIndex);
-              boundsKeys = new BoundsKeys(boundKeyCountUpperBound);
+              boundKeys = new BoundKeys(boundKeyCountUpperBound);
             }
-            boundsKeys.add(name);
+            boundKeys.add(node);
           }
           continue;
         }
@@ -161,31 +171,44 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
 
     if (fn.kwargsIndex >= 0) {
       // there's **kwargs
-      LinkedHashMap<String, Object> newKwargs =
-          Maps.newLinkedHashMapWithExpectedSize(
-              (starStarArgs != null ? starStarArgs.size() : 0)
-                  + argToStarStar.length
-                  - boundKeyCount);
+
+      // Only check for collision if there's **kwargs param,
+      // otherwise duplicates will be handled when populating named parameters.
+      if (StarlarkCallableUtils.hasKeywordCollision(linkSig, starStarArgs) != null) {
+        throw StarlarkFunctionLinkedError.error(fn, linkSig, args, starArgs, starStarArgs);
+      }
+
+      // Exact size of the `kwargs`
+      int kwargsSize =
+          argToStarStar.length + (starStarArgs != null ? starStarArgs.size() : 0) - boundKeyCount;
+      DictMap<String, Object> newKwargs = new DictMap<>(kwargsSize);
       for (int i = 0; i < argToStarStar.length; ++i) {
-        newKwargs.put(argToStarStarName[i], args[argToStarStar[i]]);
+        String key = argToStarStarName[i];
+        int keyHash = argToStarStarNameDictHashes[i];
+        Object value = args[argToStarStar[i]];
+
+        // We checked above that keys are unique, so we can skip eviction here.
+        newKwargs.putNoEvictNoResize(key, keyHash, value);
       }
       boolean haveUnboundStarStarArgs =
           starStarArgs != null && starStarArgs.size() != boundKeyCount;
       if (haveUnboundStarStarArgs) {
-        for (Map.Entry<Object, Object> e : starStarArgs.contents.entrySet()) {
-          if (!(e.getKey() instanceof String)) {
+        DictMap.Node<Object, Object> node = starStarArgs.contents.getFirst();
+        while (node != null) {
+          if (!(node.key instanceof String)) {
             throw StarlarkFunctionLinkedError.error(fn, linkSig, args, starArgs, starStarArgs);
           }
-          String key = (String) e.getKey();
-          if (boundsKeys != null && boundsKeys.contains(key)) {
+          String key = (String) node.key;
+          if (boundKeys != null && boundKeys.contains(node)) {
+            node = node.getNext();
             continue;
           }
-          Object prev = newKwargs.put(key, e.getValue());
-          if (prev != null) {
-            throw StarlarkFunctionLinkedError.error(fn, linkSig, args, starArgs, starStarArgs);
-          }
+          // We checked above that keys are unique, so we can skip eviction here.
+          newKwargs.putNoEvictNoResize(key, node.keyHash, node.getValue());
+          node = node.getNext();
         }
       }
+      Preconditions.checkState(newKwargs.size() == kwargsSize);
       locals[fn.kwargsIndex] = Dict.wrap(mu, newKwargs);
     } else {
       // there's no **kwargs
@@ -196,42 +219,28 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
   }
 
   /**
-   * We store removed keys in linear set, because the most common cases are these:
-   * <ul>
-   *   <li>the number of bound parameters is small, so linear search is fast</li>
-   *   <li>there's no **args parameter, so don't need to compare contents at all</li>
-   * </ul>
-   *
-   * Consequently, this won't work well when we have many named parameters,
-   * and also non-empty dict assigned to **kwargs parameter.
-  */
-  private static class BoundsKeys {
-    private final String[] keysArray;
+   * We store removed entries in linear set because the number of bound parameters is usually small,
+   * and we use this structure only when there's no {@code **kwargs} parameter.
+   */
+  private static class BoundKeys {
+    private final DictMap.Node<?, ?>[] nodes;
     private int size = 0;
 
-    BoundsKeys(int capacity) {
-      keysArray = new String[capacity];
+    BoundKeys(int capacity) {
+      nodes = new DictMap.Node<?, ?>[capacity];
     }
 
-    void add(String key) {
-      keysArray[size++] = key;
+    void add(DictMap.Node<?, ?> node) {
+      nodes[size++] = node;
     }
 
-    boolean contains(String key) {
+    boolean contains(DictMap.Node<?, ?> node) {
       for (int i = 0; i < size; ++i) {
-        // Identity comparison is much cheaper than equals, try it first.
-        // Note parameter names and arg names interned by the parser.
-        if (keysArray[i] == key) {
-          return true;
-        }
-      }
-      for (int i = 0; i < size; ++i) {
-        if (keysArray[i].equals(key)) {
+        if (nodes[i] == node) {
           return true;
         }
       }
       return false;
     }
   }
-
 }

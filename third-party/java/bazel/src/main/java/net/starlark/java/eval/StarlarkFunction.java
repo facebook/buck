@@ -13,14 +13,12 @@
 // limitations under the License.
 package net.starlark.java.eval;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.StarlarkBuiltin;
-import net.starlark.java.spelling.SpellChecker;
 import net.starlark.java.syntax.Location;
 import net.starlark.java.syntax.Resolver;
 
@@ -118,6 +116,30 @@ public final class StarlarkFunction extends StarlarkCallable {
    */
   public ImmutableList<String> getParameterNames() {
     return parameterNames;
+  }
+
+  private volatile String[] parameterNamesArray;
+  private volatile int[] parameterNamesDictHashes;
+
+  /** Get parameter names as an array. */
+  String[] getParameterNamesArray() {
+    String[] parameterNamesArray = this.parameterNamesArray;
+    if (parameterNamesArray == null) {
+      return this.parameterNamesArray =
+          getParameterNames().toArray(ArraysForStarlark.EMPTY_STRING_ARRAY);
+    } else {
+      return parameterNamesArray;
+    }
+  }
+
+  /** {@link DictMap} hashes of {@link #getParameterNamesArray()}. */
+  int[] getParameterNamesDictHashes() {
+    int[] parameterNamesDictHashes = this.parameterNamesDictHashes;
+    if (parameterNamesDictHashes == null) {
+      return this.parameterNamesDictHashes = DictHash.hashes(getParameterNamesArray());
+    } else {
+      return parameterNamesDictHashes;
+    }
   }
 
   /**

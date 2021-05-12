@@ -711,12 +711,12 @@ class BcEval {
     if (size == 0) {
       result = Dict.of(thread.mutability());
     } else {
-      LinkedHashMap<Object, Object> lhm = Maps.newLinkedHashMapWithExpectedSize(size);
+      DictMap<Object, Object> lhm = new DictMap<>(size);
       for (int j = 0; j != size; ++j) {
         Object key = getSlot(nextOperand());
         Starlark.checkHashable(key);
         Object value = getSlot(nextOperand());
-        Object prev = lhm.put(key, value);
+        Object prev = lhm.putNoResize(key, value);
         if (prev != null) {
           throw new EvalException(
               "dictionary expression has duplicate key: " + Starlark.repr(key));

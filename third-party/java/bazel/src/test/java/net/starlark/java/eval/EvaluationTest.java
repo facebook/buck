@@ -458,21 +458,21 @@ public final class EvaluationTest {
   @Test
   public void testDictComprehensions() throws Exception {
     ev.new Scenario()
-        .testExpression("{a : a for a in []}", Collections.emptyMap())
+        .testExpression("{a : a for a in []}", Dict.empty())
         .testExpression(
             "{b : b for b in [1, 2]}",
-            ImmutableMap.of(
+            Dict.immutableOf(
                 StarlarkInt.of(1), StarlarkInt.of(1), StarlarkInt.of(2), StarlarkInt.of(2)))
         .testExpression(
-            "{c : 'v_' + c for c in ['a', 'b']}", ImmutableMap.of("a", "v_a", "b", "v_b"))
+            "{c : 'v_' + c for c in ['a', 'b']}", Dict.immutableOf("a", "v_a", "b", "v_b"))
         .testExpression(
-            "{'k_' + d : d for d in ['a', 'b']}", ImmutableMap.of("k_a", "a", "k_b", "b"))
+            "{'k_' + d : d for d in ['a', 'b']}", Dict.immutableOf("k_a", "a", "k_b", "b"))
         .testExpression(
             "{'k_' + e : 'v_' + e for e in ['a', 'b']}",
-            ImmutableMap.of("k_a", "v_a", "k_b", "v_b"))
+            Dict.immutableOf("k_a", "v_a", "k_b", "v_b"))
         .testExpression(
             "{x+y : x*y for x, y in [[2, 3]]}",
-            ImmutableMap.of(StarlarkInt.of(5), StarlarkInt.of(6)));
+            Dict.immutableOf(StarlarkInt.of(5), StarlarkInt.of(6)));
   }
 
   @Test
@@ -485,7 +485,7 @@ public final class EvaluationTest {
     ev.new Scenario()
         .testExpression(
             "{x : x * y for x in range(1, 10) if x % 2 == 0 for y in range(1, 10) if y == x}",
-            ImmutableMap.of(
+            Dict.immutableOf(
                 StarlarkInt.of(2),
                 StarlarkInt.of(4),
                 StarlarkInt.of(4),
@@ -501,10 +501,10 @@ public final class EvaluationTest {
     ev.new Scenario()
         .testExpression(
             "{x : x for x in [1, 2, 1]}",
-            ImmutableMap.of(
+            Dict.immutableOf(
                 StarlarkInt.of(1), StarlarkInt.of(1), StarlarkInt.of(2), StarlarkInt.of(2)))
         .testExpression(
-            "{y : y for y in ['ab', 'c', 'a' + 'b']}", ImmutableMap.of("ab", "ab", "c", "c"));
+            "{y : y for y in ['ab', 'c', 'a' + 'b']}", Dict.immutableOf("ab", "ab", "c", "c"));
   }
 
   @Test

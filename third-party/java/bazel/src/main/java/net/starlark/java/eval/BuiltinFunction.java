@@ -14,16 +14,11 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.FnPurity;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;
-import net.starlark.java.spelling.SpellChecker;
 
 /**
  * A BuiltinFunction is a callable Starlark value that reflectively invokes a {@link
@@ -40,7 +35,7 @@ public final class BuiltinFunction extends StarlarkCallable {
 
   private final Object obj;
   private final String methodName;
-  private final MethodDescriptor desc;
+  final MethodDescriptor desc;
 
   /**
    * Constructs a BuiltinFunction for a StarlarkMethod-annotated method (not field) of the given
@@ -65,8 +60,11 @@ public final class BuiltinFunction extends StarlarkCallable {
     }
 
     @Override
-    public Object callLinked(StarlarkThread thread, Object[] args,
-        @Nullable Sequence<?> starArgs, @Nullable Dict<?, ?> starStarArgs)
+    public Object callLinked(
+        StarlarkThread thread,
+        Object[] args,
+        @Nullable Sequence<?> starArgs,
+        @Nullable Dict<?, ?> starStarArgs)
         throws EvalException, InterruptedException {
       BuiltinFunction builtinFunction = (BuiltinFunction) orig;
       return builtinFunction.linkAndCall(linkSig, thread, args, starArgs, starStarArgs);
@@ -79,8 +77,12 @@ public final class BuiltinFunction extends StarlarkCallable {
     // fast track
     if (named.length == 0) {
       return linkAndCall(
-          StarlarkCallableLinkSig.of(positional.length, ArraysForStarlark.EMPTY_STRING_ARRAY, false, false),
-          thread, positional, null, null);
+          StarlarkCallableLinkSig.of(
+              positional.length, ArraysForStarlark.EMPTY_STRING_ARRAY, false, false),
+          thread,
+          positional,
+          null,
+          null);
     }
 
     String[] names = ArraysForStarlark.newStringArray(named.length >> 1);
@@ -92,7 +94,10 @@ public final class BuiltinFunction extends StarlarkCallable {
     }
     return linkAndCall(
         StarlarkCallableLinkSig.of(positional.length, names, false, false),
-        thread, args, null, null);
+        thread,
+        args,
+        null,
+        null);
   }
 
   @Override
@@ -101,9 +106,14 @@ public final class BuiltinFunction extends StarlarkCallable {
   }
 
   @Override
-  public Object linkAndCall(StarlarkCallableLinkSig linkSig,
-      StarlarkThread thread, Object[] args, @Nullable Sequence<?> starArgs,
-      @Nullable Dict<?, ?> starStarArgs) throws InterruptedException, EvalException {
+  @SuppressWarnings("unchecked")
+  public Object linkAndCall(
+      StarlarkCallableLinkSig linkSig,
+      StarlarkThread thread,
+      Object[] args,
+      @Nullable Sequence<?> starArgs,
+      @Nullable Dict<?, ?> starStarArgs)
+      throws InterruptedException, EvalException {
     if (StarlarkRuntimeStats.ENABLED) {
       StarlarkRuntimeStats.enter(StarlarkRuntimeStats.WhereWeAre.NATIVE_CALL);
     }
@@ -113,7 +123,8 @@ public final class BuiltinFunction extends StarlarkCallable {
         thread.recordSideEffect();
       }
 
-      Object[] vector = getArgumentVector(thread, linkSig, args, starArgs, starStarArgs);
+      Object[] vector =
+          getArgumentVector(thread, linkSig, args, starArgs, (Dict<Object, Object>) starStarArgs);
 
       return desc.call(obj, vector, thread);
     } finally {
@@ -123,9 +134,7 @@ public final class BuiltinFunction extends StarlarkCallable {
     }
   }
 
-  /**
-   * Returns the StarlarkMethod annotation of this Starlark-callable Java method.
-   */
+  /** Returns the StarlarkMethod annotation of this Starlark-callable Java method. */
   public StarlarkMethod getAnnotation() {
     return this.desc.getAnnotation();
   }
@@ -167,9 +176,10 @@ public final class BuiltinFunction extends StarlarkCallable {
    */
   private Object[] getArgumentVector(
       StarlarkThread thread,
-      StarlarkCallableLinkSig linkSig, Object[] args,
+      StarlarkCallableLinkSig linkSig,
+      Object[] args,
       @Nullable Sequence<?> starArgs,
-      @Nullable Dict<?, ?> starStarArgs)
+      @Nullable Dict<Object, Object> starStarArgs)
       throws EvalException {
 
     // Overview of steps:
@@ -185,7 +195,11 @@ public final class BuiltinFunction extends StarlarkCallable {
     ParamDescriptor[] parameters = desc.getParameters();
 
     // fast track
-    if (desc.isCanReusePositionalWithoutChecks() && linkSig.namedNames.length == 0 && args.length == parameters.length && starArgs == null && starStarArgs == null) {
+    if (desc.isCanReusePositionalWithoutChecks()
+        && linkSig.namedNames.length == 0
+        && args.length == parameters.length
+        && starArgs == null
+        && starStarArgs == null) {
       return args;
     }
 
@@ -216,62 +230,63 @@ public final class BuiltinFunction extends StarlarkCallable {
       Object[] varargsArray = ArraysForStarlark.newObjectArray(numPositionals - argIndex);
       int i = 0;
       while (argIndex < numPositionals) {
-        varargsArray[i++] = argIndex < linkSig.numPositionals
-            ? args[argIndex] : starArgs.get(argIndex - linkSig.numPositionals);
+        varargsArray[i++] =
+            argIndex < linkSig.numPositionals
+                ? args[argIndex]
+                : starArgs.get(argIndex - linkSig.numPositionals);
         ++argIndex;
       }
       Preconditions.checkState(i == varargsArray.length);
       varargs = Tuple.wrap(varargsArray);
     } else if (argIndex < numPositionals) {
-      if (argIndex == 0) {
-        throw Starlark.errorf("%s() got unexpected positional argument", methodName);
-      } else {
-        throw Starlark.errorf(
-            "%s() accepts no more than %d positional argument%s but got %d",
-            methodName, argIndex, plural(argIndex), numPositionals);
-      }
+      throw BuiltinFunctionLinkedError.error(this, linkSig, args, starArgs, starStarArgs);
     }
 
     // named arguments
-    LinkedHashMap<String, Object> kwargs = desc.acceptsExtraKwargs() ? new LinkedHashMap<>() : null;
+
+    DictMap<String, Object> kwargs;
+    if (desc.acceptsExtraKwargs()) {
+      // Only check for collision if there's **kwargs param,
+      // otherwise duplicates will be handled when populating named parameters.
+      if (StarlarkCallableUtils.hasKeywordCollision(linkSig, starStarArgs) != null) {
+        throw BuiltinFunctionLinkedError.error(this, linkSig, args, starArgs, starStarArgs);
+      }
+
+      int kwargsCap = linkSig.namedNames.length + (starStarArgs != null ? starStarArgs.size() : 0);
+      kwargs = new DictMap<>(kwargsCap);
+    } else {
+      kwargs = null;
+    }
     for (int i = 0; i < linkSig.namedNames.length; ++i) {
-      String name = linkSig.namedNames[i];
+      String key = linkSig.namedNames[i];
+      int keyHash = linkSig.namedNameDictHashes[i];
       Object value = args[linkSig.numPositionals + i];
-      handleNamedArg(thread, desc, vector, kwargs, name, value);
+      handleNamedArg(vector, linkSig, args, starArgs, starStarArgs, kwargs, key, keyHash, value);
     }
     if (starStarArgs != null) {
-      for (Map.Entry<?, ?> entry : starStarArgs.contents.entrySet()) {
-        if (!(entry.getKey() instanceof String)) {
-          throw new EvalException("TODO: better message");
+      DictMap.Node<?, ?> node = starStarArgs.contents.getFirst();
+      while (node != null) {
+        if (!(node.key instanceof String)) {
+          throw BuiltinFunctionLinkedError.error(this, linkSig, args, starArgs, starStarArgs);
         }
-        String name = (String) entry.getKey();
-        Object value = entry.getValue();
-        handleNamedArg(thread, desc, vector, kwargs, name, value);
+        String key = (String) node.key;
+        int keyHash = node.keyHash;
+        Object value = node.getValue();
+        handleNamedArg(vector, linkSig, args, starArgs, starStarArgs, kwargs, key, keyHash, value);
+        node = node.getNext();
       }
     }
 
     // Set default values for missing parameters,
     // and report any that are still missing.
-    MissingParams missing = null;
     for (int i = 0; i < parameters.length; i++) {
       if (vector[i] == null) {
         ParamDescriptor param = parameters[i];
         vector[i] = param.getDefaultValue();
         if (vector[i] == null) {
-          if (missing == null) {
-            missing = new MissingParams(getName());
-          }
-          if (param.isPositional()) {
-            missing.addPositional(param.getName());
-          } else {
-            missing.addNamed(param.getName());
-          }
+          throw BuiltinFunctionLinkedError.error(this, linkSig, args, starArgs, starStarArgs);
         }
       }
-    }
-
-    if (missing != null) {
-      throw missing.error();
     }
 
     // special parameters
@@ -286,61 +301,39 @@ public final class BuiltinFunction extends StarlarkCallable {
     return vector;
   }
 
-  private void handleNamedArg(StarlarkThread thread, MethodDescriptor desc,
-      final Object[] vector, final LinkedHashMap<String, Object> kwargs, final String name, final Object value)
+  private void handleNamedArg(
+      Object[] vector,
+      StarlarkCallableLinkSig linkSig,
+      Object[] args,
+      @Nullable Sequence<?> starArgs,
+      @Nullable Dict<Object, Object> starStarArgs,
+      @Nullable DictMap<String, Object> kwargs,
+      String key,
+      int keyHash,
+      Object value)
       throws EvalException {
-    ParamDescriptor[] parameters = desc.getParameters();;
+    ParamDescriptor[] parameters = desc.getParameters();
 
     // look up parameter
-    int index = desc.getParameterIndex(name);
+    int index = desc.getParameterIndex(key);
     // unknown parameter?
-    if (index < 0) {
-      // spill to **kwargs
-      if (kwargs == null) {
-        List<String> allNames =
-            Arrays.stream(parameters)
-                .map(ParamDescriptor::getName)
-                .collect(ImmutableList.toImmutableList());
-        throw Starlark.errorf(
-            "%s() got unexpected keyword argument '%s'%s",
-            methodName, name, SpellChecker.didYouMean(name, allNames));
-      }
-
-      // duplicate named argument?
-      if (kwargs.put(name, value) != null) {
-        throw Starlark.errorf(
-            "%s() got multiple values for keyword argument '%s'", methodName, name);
-      }
-      return;
-    }
-    ParamDescriptor param = parameters[index];
-
     // positional-only param?
-    if (!param.isNamed()) {
+    if (index < 0 || !parameters[index].isNamed()) {
       // spill to **kwargs
       if (kwargs == null) {
-        throw Starlark.errorf(
-            "%s() got named argument for positional-only parameter '%s'", methodName, name);
+        throw BuiltinFunctionLinkedError.error(this, linkSig, args, starArgs, starStarArgs);
       }
 
-      // duplicate named argument?
-      if (kwargs.put(name, value) != null) {
-        throw Starlark.errorf(
-            "%s() got multiple values for keyword argument '%s'", methodName, name);
-      }
+      kwargs.putNoEvictNoResize(key, keyHash, value);
       return;
     }
 
     // duplicate?
     if (vector[index] != null) {
-      throw Starlark.errorf("%s() got multiple values for argument '%s'", methodName, name);
+      throw BuiltinFunctionLinkedError.error(this, linkSig, args, starArgs, starStarArgs);
     }
 
     vector[index] = value;
-  }
-
-  private static String plural(int n) {
-    return n == 1 ? "" : "s";
   }
 
   public FnPurity purity() {

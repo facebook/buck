@@ -10,6 +10,8 @@ public class StarlarkCallableLinkSig {
 
   final int numPositionals;
   final String[] namedNames;
+  // `DictMap` hashes of `namedNames`
+  final int[] namedNameDictHashes;
   final boolean hasStar;
   final boolean hasStarStar;
 
@@ -20,6 +22,7 @@ public class StarlarkCallableLinkSig {
       boolean hasStarStar) {
     this.numPositionals = numPositionals;
     this.namedNames = namedNames;
+    this.namedNameDictHashes = DictHash.hashes(namedNames);
     this.hasStar = hasStar;
     this.hasStarStar = hasStarStar;
     this.hashCode = Objects.hash(numPositionals, Arrays.hashCode(namedNames), hasStar, hasStarStar);
@@ -33,6 +36,18 @@ public class StarlarkCallableLinkSig {
   /** Number of fixed arguments. */
   int fixedArgCount() {
     return numPositionals + namedNames.length;
+  }
+
+  private volatile DictMap<String, NoneType> namedNamesSet;
+
+  /** {@link #namedNames} as set. */
+  DictMap<String, NoneType> namedNamesSet() {
+    DictMap<String, NoneType> namedNamesSet = this.namedNamesSet;
+    if (namedNamesSet == null) {
+      return this.namedNamesSet = DictMap.makeSetFromUniqueKeys(namedNames, namedNameDictHashes);
+    } else {
+      return namedNamesSet;
+    }
   }
 
   private static final Interner<StarlarkCallableLinkSig> interner = Interners.newWeakInterner();

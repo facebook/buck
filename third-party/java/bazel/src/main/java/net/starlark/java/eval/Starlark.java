@@ -243,7 +243,7 @@ public final class Starlark {
       // not a subclass, so calling toArray() is not enough.
       return ((Sequence<?>) x).toArray();
     } else if (x instanceof Dict) {
-      return ((Dict<?, ?>) x).keySet().toArray();
+      return ((Dict<?, ?>) x).contents.keysToArray();
     } else {
       return Iterables.toArray(toIterable(x), Object.class);
     }

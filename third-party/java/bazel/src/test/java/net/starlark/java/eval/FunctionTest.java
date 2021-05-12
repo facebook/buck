@@ -445,6 +445,14 @@ public final class FunctionTest {
   }
 
   @Test
+  public void testKwargsCollisionWithNamedWhenHasKwargs() throws Exception {
+    ev.checkEvalError(
+        "func() got multiple values for parameter 'b'",
+        "def func(a, b, **kwargs): return a + b",
+        "func('a', b = 'b', **{'b': 'foo'})");
+  }
+
+  @Test
   public void testDefaultArguments2() throws Exception {
     ev.exec(
         "a = 2",

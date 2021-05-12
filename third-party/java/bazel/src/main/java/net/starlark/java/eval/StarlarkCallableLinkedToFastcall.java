@@ -53,10 +53,12 @@ class StarlarkCallableLinkedToFastcall extends StarlarkCallableLinked {
       ++i;
     }
     if (starStarArgs != null) {
-      for (Map.Entry<?, ?> entry : starStarArgs.contents.entrySet()) {
-        fastcallNamed[i * 2] = entry.getKey();
-        fastcallNamed[i * 2 + 1] = entry.getValue();
+      DictMap.Node<?, ?> node = starStarArgs.contents.getFirst();
+      while (node != null) {
+        fastcallNamed[i * 2] = node.key;
+        fastcallNamed[i * 2 + 1] = node.getValue();
         ++i;
+        node = node.getNext();
       }
     }
     Verify.verify(i == fastcallNNamed, "Named arguments populated incorrectly");

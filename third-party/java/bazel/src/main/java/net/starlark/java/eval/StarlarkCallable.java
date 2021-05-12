@@ -78,9 +78,9 @@ public abstract class StarlarkCallable extends StarlarkValue {
    */
   public Object fastcall(StarlarkThread thread, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
-    LinkedHashMap<String, Object> kwargs = Maps.newLinkedHashMapWithExpectedSize(named.length >> 1);
+    DictMap<String, Object> kwargs = new DictMap<>(named.length >> 1);
     for (int i = 0; i < named.length; i += 2) {
-      if (kwargs.put((String) named[i], named[i + 1]) != null) {
+      if (kwargs.putNoResize((String) named[i], named[i + 1]) != null) {
         throw Starlark.errorf("%s got multiple values for parameter '%s'", this, named[i]);
       }
     }

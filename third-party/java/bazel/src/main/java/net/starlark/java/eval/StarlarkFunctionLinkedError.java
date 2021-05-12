@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import javax.annotation.Nullable;
 import net.starlark.java.spelling.SpellChecker;
 
@@ -18,37 +17,26 @@ class StarlarkFunctionLinkedError extends StarlarkFunctionLinkedBase {
   }
 
   @Override
-  protected void processArgs(Mutability mu, Object[] args,
+  protected void processArgs(
+      Mutability mu,
+      Object[] args,
       @Nullable Sequence<?> starArgs,
-      @Nullable Dict<Object, Object> starStarArgs, Object[] locals) throws EvalException {
+      @Nullable Dict<Object, Object> starStarArgs,
+      Object[] locals)
+      throws EvalException {
     throw error(args, starArgs, starStarArgs);
   }
 
   /** Compute the error. */
-  private EvalException error(Object[] args,
-       @Nullable Sequence<?> starArgs,
-       @Nullable Dict<Object, Object> starStarArgs) {
+  private EvalException error(
+      Object[] args, @Nullable Sequence<?> starArgs, @Nullable Dict<Object, Object> starStarArgs)
+      throws EvalException {
 
-    ArrayList<Object> positional = new ArrayList<>();
-    positional.addAll(Arrays.asList(args).subList(0, linkSig.numPositionals));
-    if (starArgs != null) {
-      positional.addAll(starArgs.asList());
-    }
+    StarlarkCallableUtils.FoldedArgs foldedArgs =
+        StarlarkCallableUtils.foldArgs(linkSig, args, starArgs, starStarArgs);
 
-    ArrayList<Object> named = new ArrayList<>();
-    for (int i = 0; i < linkSig.namedNames.length; ++i) {
-      named.add(linkSig.namedNames[i]);
-      named.add(args[linkSig.numPositionals + i]);
-    }
-    if (starStarArgs != null) {
-      for (Map.Entry<Object, Object> entry : starStarArgs.entrySet()) {
-        if (!(entry.getKey() instanceof String)) {
-          return Starlark.errorf("keywords must be strings, not %s", Starlark.type(entry.getKey()));
-        }
-        named.add(entry.getKey());
-        named.add(entry.getValue());
-      }
-    }
+    ImmutableList<Object> positional = foldedArgs.positional;
+    ImmutableList<Object> named = foldedArgs.named;
 
     ImmutableList<String> names = fn().getParameterNames();
 
@@ -85,7 +73,8 @@ class StarlarkFunctionLinkedError extends StarlarkFunctionLinkedBase {
 
     // Bind surplus positional arguments to *args parameter.
     if (fn().hasVarargs()) {
-      arguments[nparams] = Tuple.wrap(Arrays.copyOfRange(positional.toArray(), n, positional.size()));
+      arguments[nparams] =
+          Tuple.wrap(Arrays.copyOfRange(positional.toArray(), n, positional.size()));
     }
 
     List<String> unexpected = null;
@@ -100,11 +89,12 @@ class StarlarkFunctionLinkedError extends StarlarkFunctionLinkedBase {
     for (int i = 0; i != named.size(); i += 2) {
       String keyword = (String) named.get(i);
       Object value = named.get(i + 1);
-      int pos = names.indexOf(keyword); // the list should be short, so linear scan is OK.
+      int pos = names.indexOf(keyword);
       if (0 <= pos && pos < nparams) {
         // keyword is the name of a named parameter
         if (arguments[pos] != null) {
-          return Starlark.errorf("%s() got multiple values for parameter '%s'", fn().getName(), keyword);
+          return Starlark.errorf(
+              "%s() got multiple values for parameter '%s'", fn().getName(), keyword);
         }
         arguments[pos] = value;
 
@@ -169,19 +159,23 @@ class StarlarkFunctionLinkedError extends StarlarkFunctionLinkedBase {
       return missing.error();
     }
 
-    throw new AssertionError(String.format(
-        "this code is meant to be called when there's linked errors, but no error found;"
-            + " fn: %s, linkSig: %s, starArgs: %s, named starStarArgs: %s",
+    throw new AssertionError(
+        String.format(
+            "this code is meant to be called when there's linked errors, but no error found;"
+                + " fn: %s, linkSig: %s, starArgs: %s, named starStarArgs: %s",
             fn().getName(),
             linkSig,
             starArgs != null ? starArgs.size() : 0,
             starStarArgs != null ? starStarArgs.keySet() : Collections.emptySet()));
   }
 
-  static EvalException error(StarlarkFunction fn, StarlarkCallableLinkSig linkSig,
+  static EvalException error(
+      StarlarkFunction fn,
+      StarlarkCallableLinkSig linkSig,
       Object[] args,
       @Nullable Sequence<?> starArgs,
-      @Nullable Dict<Object, Object> starStarArgs) {
+      @Nullable Dict<Object, Object> starStarArgs)
+      throws EvalException {
     return new StarlarkFunctionLinkedError(fn, linkSig).error(args, starArgs, starStarArgs);
   }
 }
