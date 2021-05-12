@@ -797,7 +797,7 @@ class Bc {
       ir.add(new BcIrInstr.Dot(
           nodeToLocOffset(dotExpression),
           object.slot,
-          dotExpression.getField().getName(),
+          new BcDotSite(dotExpression.getField().getName()),
           resultLocal));
 
       return new CompileExpressionResult(resultLocal);

@@ -770,9 +770,7 @@ public final class Starlark {
       return defaultValue;
     }
 
-    throw Starlark.errorf(
-        "'%s' value has no field or method '%s'%s",
-        Starlark.type(x), name, SpellChecker.didYouMean(name, dir(thread.mutability(), semantics, x)));
+    throw BcDotSite.error(thread, x, name);
   }
 
   /**

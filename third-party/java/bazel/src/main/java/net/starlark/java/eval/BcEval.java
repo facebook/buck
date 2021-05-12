@@ -644,10 +644,14 @@ class BcEval {
 
   /** Dot operator. */
   private void dot() throws EvalException, InterruptedException {
-    Object object = getSlot(nextOperand());
-    String name = compiled.strings[nextOperand()];
-    Object result = Starlark.getattr(fr.thread, object, name, null);
-    setSlot(nextOperand(), result);
+    int selfSlot = nextOperand();
+    int siteIndex = nextOperand();
+    int resultSlot = nextOperand();
+
+    Object self = getSlot(selfSlot);
+    BcDotSite site = (BcDotSite) compiled.objects[siteIndex];
+    Object result = site.getattr(fr.thread, self);
+    setSlot(resultSlot, result);
   }
 
   /** Index operator. */

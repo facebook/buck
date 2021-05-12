@@ -184,7 +184,7 @@ class BcInstr {
         BcInstrOperand.NUMBER
     ),
     /** {@code a2 = a0.a1} */
-    DOT(BcInstr.DOT, BcInstrOperand.IN_SLOT, BcInstrOperand.STRING, BcInstrOperand.OUT_SLOT),
+    DOT(BcInstr.DOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OBJECT, BcInstrOperand.OUT_SLOT),
     /** {@code a2 = a0[a1]} */
     INDEX(BcInstr.INDEX, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
     /** {@code a4 = a0[a1:a2:a3]} */

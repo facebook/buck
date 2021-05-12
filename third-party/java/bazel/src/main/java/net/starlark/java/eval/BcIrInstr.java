@@ -26,9 +26,7 @@ abstract class BcIrInstr {
   /** To string for an instruction is space-separated arguments. */
   protected abstract Object[] argsForToString();
 
-  /**
-   * Serialize this instruction.
-   */
+  /** Serialize this instruction. */
   abstract void write(BcIrWriteContext writeContext);
 
   static class Cp extends BcIrInstr {
@@ -270,11 +268,11 @@ abstract class BcIrInstr {
   static class Dot extends BcIrInstr {
     final BcWriter.LocOffset locOffset;
     final BcIrSlot object;
-    final String field;
+    final BcDotSite field;
     final BcIrSlot.AnyLocal result;
 
     public Dot(
-        BcWriter.LocOffset locOffset, BcIrSlot object, String field, BcIrSlot.AnyLocal result) {
+        BcWriter.LocOffset locOffset, BcIrSlot object, BcDotSite field, BcIrSlot.AnyLocal result) {
       this.locOffset = locOffset;
       this.object = object;
       this.field = field;
@@ -292,7 +290,7 @@ abstract class BcIrInstr {
           BcInstr.Opcode.DOT,
           locOffset,
           object.encode(writeContext),
-          writeContext.writer.allocString(field),
+          writeContext.writer.allocObject(field),
           result.encode(writeContext));
     }
   }
@@ -563,7 +561,6 @@ abstract class BcIrInstr {
     void write(BcIrWriteContext writeContext) {
       writeContext.writeForwardCondJump(locOffset, jumpCond, cond, jumpLabel);
     }
-
   }
 
   /** Jump label. Patches previously written jumps on serialization. Generates no bytecode. */
@@ -581,7 +578,6 @@ abstract class BcIrInstr {
     void write(BcIrWriteContext writeContext) {
       writeContext.patchForwardJump(this);
     }
-
   }
 
   /** For loop initialization routine. */
