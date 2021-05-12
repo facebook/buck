@@ -46,6 +46,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -226,6 +227,9 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
             }
           });
 
+      ImmutableList.Builder<Pair<SourcePath, Path>> variantSourceFilesWithDirectoryNameBuilder =
+          ImmutableList.builder();
+
       for (SourcePath path : variantFiles) {
         RelPath rawVariantFilePath =
             buildContext.getSourcePathResolver().getCellUnsafeRelPath(path);
@@ -236,15 +240,26 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
                   + "but '%s' is not.",
               rawVariantFilePath);
         }
+        variantSourceFilesWithDirectoryNameBuilder.add(
+            new Pair<>(path, rawVariantDirectory.getFileName()));
+      }
 
+      ImmutableList<Pair<SourcePath, Path>> variantSourceFilesWithDirectoryName =
+          variantSourceFilesWithDirectoryNameBuilder.build();
+      if (!variantSourceFilesWithDirectoryName.isEmpty()) {
         usedDestinations.add(AppleBundleDestination.RESOURCES);
+      }
 
+      for (Pair<SourcePath, Path> variantSourceFileWithDirectoryName :
+          variantSourceFilesWithDirectoryName) {
+        SourcePath sourcePath = variantSourceFileWithDirectoryName.getFirst();
+        Path variantDirectory = variantSourceFileWithDirectoryName.getSecond();
         RelPath outputDirPath =
             outputPathResolver
                 .resolvePath(output)
                 .resolve(
                     directoryNameWithProcessedFilesForDestination(AppleBundleDestination.RESOURCES))
-                .resolve(RelPath.of(rawVariantDirectory.getFileName()));
+                .resolve(RelPath.of(variantDirectory));
 
         processStepsBuilder.add(
             MkdirStep.of(
@@ -256,13 +271,13 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
             filesystem,
             buildContext.getSourcePathResolver(),
             outputPathResolver,
-            SourcePathWithAppleBundleDestination.of(path, AppleBundleDestination.RESOURCES),
+            SourcePathWithAppleBundleDestination.of(sourcePath, AppleBundleDestination.RESOURCES),
             Optional.of(outputDirPath),
             cellPath)) {
           // Not processable, just copy
-          RelPath destinationPath =
-              outputDirPath.resolveRel(rawVariantFilePath.getFileName().toString());
-          processStepsBuilder.add(CopyStep.forFile(rawVariantFilePath, destinationPath));
+          RelPath fromPath = buildContext.getSourcePathResolver().getCellUnsafeRelPath(sourcePath);
+          RelPath toPath = outputDirPath.resolveRel(fromPath.getFileName().toString());
+          processStepsBuilder.add(CopyStep.forFile(fromPath, toPath));
         }
       }
 
