@@ -70,6 +70,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
           .setProvisioningProfileName("tvOS")
           .setArchitectures(ImmutableList.of("arm64"))
           .setMinVersionFlagPrefix("-mtvos-version-min=")
+          .setSwiftName("tvos")
           .build();
   public static final ApplePlatform APPLETVSIMULATOR =
       ImmutableApplePlatform.builder()

@@ -448,6 +448,15 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testBuildAppleLibraryThatHasSwiftBuildsForAppleTVOS() throws Exception {
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVOS));
+
+    UserFlavor tvosFlavor = UserFlavor.of("appletvos-arm64", "buck boilerplate");
+    testBuildAppleLibraryThatHasSwiftWithLocalConfig(tvosFlavor, ImmutableMap.of());
+  }
+
+  @Test
   public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
