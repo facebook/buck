@@ -45,7 +45,7 @@ public class Cells {
   }
 
   public Cell getCell(CanonicalCellName cellName) {
-    return rootCell.getCell(cellName);
+    return cellProvider.getCellByCanonicalCellName(cellName);
   }
 
   /** Returns a list of all cells. */

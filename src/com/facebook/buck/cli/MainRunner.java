@@ -1396,7 +1396,7 @@ public final class MainRunner {
               getTargetSpecResolver(
                   parserConfig,
                   watchman,
-                  cells.getRootCell(),
+                  cells,
                   buckGlobalState,
                   buildEventBus,
                   depsAwareExecutorSupplier);
@@ -1411,7 +1411,7 @@ public final class MainRunner {
                   filesystem,
                   buckConfig,
                   watchman,
-                  cells.getRootCell(),
+                  cells,
                   buckGlobalState,
                   buildEventBus,
                   executors,
@@ -1705,7 +1705,7 @@ public final class MainRunner {
   private TargetSpecResolver getTargetSpecResolver(
       ParserConfig parserConfig,
       Watchman watchman,
-      Cell rootCell,
+      Cells cells,
       BuckGlobalState buckGlobalState,
       DefaultBuckEventBus buildEventBus,
       CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
@@ -1717,12 +1717,12 @@ public final class MainRunner {
         return TargetSpecResolver.createWithFileSystemCrawler(
             buildEventBus,
             depsAwareExecutorSupplier.get(),
-            rootCell.getCellProvider(),
+            cells.getCellProvider(),
             buckGlobalState.getDirectoryListCaches(),
             buckGlobalState.getFileTreeCaches());
       case WATCHMAN:
         return TargetSpecResolver.createWithWatchmanCrawler(
-            buildEventBus, watchman, depsAwareExecutorSupplier.get(), rootCell.getCellProvider());
+            buildEventBus, watchman, depsAwareExecutorSupplier.get(), cells.getCellProvider());
     }
     throw new IllegalStateException("Unexpected build file search method: " + searchMethod);
   }
@@ -1948,7 +1948,7 @@ public final class MainRunner {
       ProjectFilesystem filesystem,
       BuckConfig buckConfig,
       Watchman watchman,
-      Cell rootCell,
+      Cells cells,
       BuckGlobalState buckGlobalState,
       BuckEventBus buildEventBus,
       ImmutableMap<ExecutorPool, ListeningExecutorService> executors,
@@ -1981,7 +1981,7 @@ public final class MainRunner {
       }
     }
 
-    ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
+    ParserConfig parserConfig = cells.getBuckConfig().getView(ParserConfig.class);
     TypeCoercerFactory typeCoercerFactory = buckGlobalState.getTypeCoercerFactory();
     Optional<RuleKeyCacheRecycler<RuleKey>> defaultRuleKeyFactoryCacheRecycler = Optional.empty();
 
@@ -2022,7 +2022,7 @@ public final class MainRunner {
             buildEventBus,
             ActionGraphFactory.create(
                 buildEventBus,
-                rootCell.getCellProvider(),
+                cells.getCellProvider(),
                 executors,
                 depsAwareExecutorSupplier,
                 buckConfig),

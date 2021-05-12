@@ -26,6 +26,7 @@ import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
@@ -80,6 +81,7 @@ class HeaderSearchPaths {
 
   private static final Logger LOG = Logger.get(HeaderSearchPaths.class);
 
+  private final Cells cells;
   private final Cell projectCell;
   private final CxxBuckConfig cxxBuckConfig;
   private final CxxPlatform cxxPlatform;
@@ -96,6 +98,7 @@ class HeaderSearchPaths {
   private final ProjectFilesystem projectFilesystem;
 
   HeaderSearchPaths(
+      Cells cells,
       Cell projectCell,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
@@ -108,6 +111,7 @@ class HeaderSearchPaths {
       PathRelativizer pathRelativizer,
       SwiftAttributeParser swiftAttributeParser,
       AppleConfig appleConfig) {
+    this.cells = cells;
     this.projectCell = projectCell;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
@@ -910,7 +914,7 @@ class HeaderSearchPaths {
 
   private ProjectFilesystem getFilesystemForTarget(Optional<BuildTarget> target) {
     if (target.isPresent()) {
-      Cell cell = projectCell.getCellProvider().getCellByCanonicalCellName(target.get().getCell());
+      Cell cell = cells.getCellProvider().getCellByCanonicalCellName(target.get().getCell());
       return cell.getFilesystem();
     } else {
       return projectFilesystem;

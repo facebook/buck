@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -27,25 +28,25 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class CellManager {
 
-  private final Cell rootCell;
-  private final ConcurrentHashMap<CanonicalCellName, Unit> cells = new ConcurrentHashMap<>();
+  private final Cells cells;
+  private final ConcurrentHashMap<CanonicalCellName, Unit> cellsMap = new ConcurrentHashMap<>();
   private final SymlinkCache symlinkCache;
 
-  public CellManager(Cell rootCell, SymlinkCache symlinkCache) {
-    this.rootCell = rootCell;
+  public CellManager(Cells cells, SymlinkCache symlinkCache) {
+    this.cells = cells;
     this.symlinkCache = symlinkCache;
-    symlinkCache.registerCell(rootCell);
+    symlinkCache.registerCell(cells.getRootCell());
   }
 
   void register(Cell cell) {
-    if (!cells.containsKey(cell.getCanonicalName())) {
-      cells.put(cell.getCanonicalName(), Unit.UNIT);
+    if (!cellsMap.containsKey(cell.getCanonicalName())) {
+      cellsMap.put(cell.getCanonicalName(), Unit.UNIT);
       symlinkCache.registerCell(cell);
     }
   }
 
   Cell getCell(CanonicalCellName cellName) {
-    Cell cell = rootCell.getCell(cellName);
+    Cell cell = cells.getCell(cellName);
     register(cell);
     return cell;
   }

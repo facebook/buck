@@ -1008,7 +1008,7 @@ public class GenruleTest {
             eventBus,
             new GrpcProtocol(),
             ruleFinder,
-            root.getRootCell(),
+            root,
             new FileHashCache() {
               @Override
               public HashCode get(Path path) {

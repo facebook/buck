@@ -133,8 +133,7 @@ public class ConfiguredQueryEnvironmentTest {
             buildTargetViewFactory,
             UnconfiguredTargetConfiguration.INSTANCE);
     Parser parser =
-        TestParserFactory.create(
-            depsAwareExecutor.get(), cells.getRootCell(), perBuildStateFactory, eventBus);
+        TestParserFactory.create(depsAwareExecutor.get(), cells, perBuildStateFactory, eventBus);
     parserState =
         perBuildStateFactory.create(
             ParsingContext.builder(cells, executor)
@@ -156,10 +155,7 @@ public class ConfiguredQueryEnvironmentTest {
             MoreExecutors.newDirectExecutorService());
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
-            targetUniverse,
-            cells.getRootCell(),
-            cells.getRootCell().getRoot().getPath(),
-            FakeBuckConfig.empty());
+            targetUniverse, cells, cells.getRootCell().getRoot().getPath(), FakeBuckConfig.empty());
     OwnersReport.Builder ownersReportBuilder =
         OwnersReport.builderForConfigured(
             cells.getRootCell(), cells.getRootCell().getRoot().getPath(), targetUniverse);

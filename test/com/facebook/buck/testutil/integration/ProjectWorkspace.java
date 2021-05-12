@@ -32,6 +32,7 @@ import com.facebook.buck.cli.MainRunner;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
@@ -682,6 +683,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
   public Cell asCell() throws IOException {
     CellProvider cellProvider = asCellProvider();
     return cellProvider.getCellByCanonicalCellName(CanonicalCellName.rootCell());
+  }
+
+  public Cells asCells() throws IOException {
+    return new Cells(asCellProvider());
   }
 
   public CellProvider asCellProvider() throws IOException {

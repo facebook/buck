@@ -573,7 +573,7 @@ public class TestCommand extends BuildCommand {
                   .buildTargetGraphWithoutTopLevelConfigurationTargets(
                       parsingContext,
                       parseArgumentsAsTargetNodeSpecs(
-                          cells.getRootCell(),
+                          cells,
                           params.getClientWorkingDir(),
                           getArguments(),
                           params.getBuckConfig()),
@@ -682,7 +682,7 @@ public class TestCommand extends BuildCommand {
                         params.getBuckConfig().getView(ModernBuildRuleConfig.class),
                         params.getBuckConfig().getView(RemoteExecutionConfig.class),
                         actionGraphAndBuilder.getActionGraphBuilder(),
-                        rootCell,
+                        cells,
                         cellPathResolver,
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         params.getBuckEventBus(),

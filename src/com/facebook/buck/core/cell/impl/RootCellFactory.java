@@ -18,7 +18,6 @@ package com.facebook.buck.core.cell.impl;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
@@ -39,7 +38,6 @@ import com.google.common.base.Preconditions;
 public class RootCellFactory {
 
   static Cell create(
-      CellProvider cellProvider,
       NewCellPathResolver newCellPathResolver,
       CellPathResolver rootCellCellPathResolver,
       ToolchainProviderFactory toolchainProviderFactory,
@@ -57,7 +55,6 @@ public class RootCellFactory {
         CanonicalCellName.rootCell(),
         rootFilesystem,
         rootConfig,
-        cellProvider,
         toolchainProvider,
         rootCellCellPathResolver,
         newCellPathResolver,

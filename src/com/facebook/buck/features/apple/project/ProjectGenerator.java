@@ -76,6 +76,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -251,6 +252,7 @@ public class ProjectGenerator {
   private final TargetGraph targetGraph;
   private final AppleDependenciesCache dependenciesCache;
   private final ProjectGenerationStateCache projGenerationStateCache;
+  private final Cells cells;
   private final Cell projectCell;
   private final ProjectFilesystem projectFilesystem;
   private final Path outputDirectory;
@@ -312,6 +314,7 @@ public class ProjectGenerator {
       AppleDependenciesCache dependenciesCache,
       ProjectGenerationStateCache projGenerationStateCache,
       Set<BuildTarget> initialTargets,
+      Cells cells,
       Cell cell,
       Path outputDirectory,
       String projectName,
@@ -336,6 +339,7 @@ public class ProjectGenerator {
     this.dependenciesCache = dependenciesCache;
     this.projGenerationStateCache = projGenerationStateCache;
     this.initialTargets = ImmutableSet.copyOf(initialTargets);
+    this.cells = cells;
     this.projectCell = cell;
     this.projectFilesystem = cell.getFilesystem();
     this.outputDirectory = outputDirectory;
@@ -1074,7 +1078,7 @@ public class ProjectGenerator {
             TargetGraph.EMPTY,
             ConfigurationRuleRegistryFactory.createRegistry(TargetGraph.EMPTY),
             new DefaultTargetNodeToBuildRuleTransformer(),
-            projectCell.getCellProvider());
+            cells.getCellProvider());
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
@@ -3050,7 +3054,7 @@ public class ProjectGenerator {
     // Writes the resulting header map.
     Path mergedHeaderMapRoot = getPathToMergedHeaderMap();
     Path headerMapLocation = getHeaderMapLocationFromSymlinkTreeRoot(mergedHeaderMapRoot);
-    Cell workspaceCell = projectCell.getCell(workspaceTarget.get().getCell());
+    Cell workspaceCell = cells.getCell(workspaceTarget.get().getCell());
     workspaceCell.getFilesystem().mkdirs(mergedHeaderMapRoot);
     workspaceCell
         .getFilesystem()
@@ -3713,7 +3717,7 @@ public class ProjectGenerator {
           getHeaderMapLocationFromSymlinkTreeRoot(
               getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
 
-      Cell workspaceCell = projectCell.getCell(workspaceTarget.get().getCell());
+      Cell workspaceCell = cells.getCell(workspaceTarget.get().getCell());
       Path absolutePath = workspaceCell.getFilesystem().resolve(getPathToMergedHeaderMap());
       builder.add(getHeaderMapLocationFromSymlinkTreeRoot(absolutePath));
 
@@ -4828,7 +4832,7 @@ public class ProjectGenerator {
 
   private ProjectFilesystem getFilesystemForTarget(Optional<BuildTarget> target) {
     if (target.isPresent()) {
-      Cell cell = projectCell.getCellProvider().getCellByCanonicalCellName(target.get().getCell());
+      Cell cell = cells.getCellProvider().getCellByCanonicalCellName(target.get().getCell());
       return cell.getFilesystem();
     } else {
       return projectFilesystem;

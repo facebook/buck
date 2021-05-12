@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
@@ -41,23 +41,20 @@ class TargetPatternEvaluator extends AbstractQueryPatternEvaluator<ConfiguredQue
 
   private final TargetUniverse targetUniverse;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
-  private final Cell rootCell;
+  private final Cells cells;
 
   public TargetPatternEvaluator(
       TargetUniverse targetUniverse,
-      Cell rootCell,
+      Cells cells,
       Path absoluteClientWorkingDir,
       BuckConfig buckConfig) {
-    super(rootCell, buckConfig);
+    super(cells.getRootCell(), buckConfig);
 
     this.targetUniverse = targetUniverse;
-    this.rootCell = rootCell;
+    this.cells = cells;
     this.targetNodeSpecParser =
         new CommandLineTargetNodeSpecParser(
-            rootCell,
-            absoluteClientWorkingDir,
-            buckConfig,
-            new BuildTargetMatcherTargetNodeParser());
+            cells, absoluteClientWorkingDir, buckConfig, new BuildTargetMatcherTargetNodeParser());
   }
 
   /** Attempts to parse and load the given collection of patterns. */
@@ -80,7 +77,7 @@ class TargetPatternEvaluator extends AbstractQueryPatternEvaluator<ConfiguredQue
     // The returned list of nodes maintains the spec list ordering.
     List<TargetNodeSpec> specs = new ArrayList<>();
     for (String pattern : patterns) {
-      specs.addAll(targetNodeSpecParser.parse(rootCell, pattern));
+      specs.addAll(targetNodeSpecParser.parse(cells, pattern));
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
         targetUniverse.resolveTargetSpecs(specs);

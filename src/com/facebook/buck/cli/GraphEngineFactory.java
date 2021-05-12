@@ -161,12 +161,12 @@ public class GraphEngineFactory {
         (targetConfiguration, dependencyStack) -> EmptyPlatform.INSTANCE;
     UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory =
         new UnconfiguredTargetNodeToTargetNodeFactory(
+            cells,
             params.getTypeCoercerFactory(),
             params.getKnownRuleTypesProvider(),
             new DefaultConstructorArgMarshaller(),
             new TargetNodeFactory(
-                params.getTypeCoercerFactory(),
-                new DefaultCellNameResolverProvider(new Cells(cell.getCellProvider()))),
+                params.getTypeCoercerFactory(), new DefaultCellNameResolverProvider(cells)),
             // TODO: replace with ThrowingPackageBoundaryChecker
             new NoopPackageBoundaryChecker(),
             // TODO: replace with ThrowingCellBoundaryChecker

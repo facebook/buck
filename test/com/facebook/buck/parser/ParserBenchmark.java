@@ -112,7 +112,7 @@ public class ParserBenchmark {
 
     cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
-    parser = TestParserFactory.create(executor, cells.getRootCell());
+    parser = TestParserFactory.create(executor, cells);
   }
 
   @After

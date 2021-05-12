@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
@@ -56,6 +57,7 @@ import java.util.function.Function;
 public class UnconfiguredTargetNodeToTargetNodeFactory
     implements ParserTargetNodeFromUnconfiguredTargetNodeFactory {
 
+  private final Cells cells;
   private final TypeCoercerFactory typeCoercerFactory;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final ConstructorArgMarshaller marshaller;
@@ -72,6 +74,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
   private final Optional<ConfigurationRuleRegistry> configurationRuleRegistry;
 
   public UnconfiguredTargetNodeToTargetNodeFactory(
+      Cells cells,
       TypeCoercerFactory typeCoercerFactory,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ConstructorArgMarshaller marshaller,
@@ -85,6 +88,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
       HostTargetConfigurationResolver hostTargetConfigurationResolver,
       BuckConfig buckConfig,
       Optional<ConfigurationRuleRegistry> configurationRuleRegistry) {
+    this.cells = cells;
     this.typeCoercerFactory = typeCoercerFactory;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
@@ -114,7 +118,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = unconfiguredTargetNode.getRuleType();
     RuleDescriptor<?> description = knownRuleTypes.getDescriptorByName(ruleType.getName());
-    Cell targetCell = cell.getCell(target.getCell());
+    Cell targetCell = cells.getCell(target.getCell());
 
     SelectableConfigurationContext configurationContext =
         SelectableConfigurationContext.of(

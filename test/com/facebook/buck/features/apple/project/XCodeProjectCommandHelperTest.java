@@ -498,6 +498,7 @@ public class XCodeProjectCommandHelperTest {
     XCodeProjectCommandHelper.generateWorkspacesForTargets(
         BuckEventBusForTests.newInstance(),
         BuckPluginManagerFactory.createPluginManager(),
+        cell,
         cell.getRootCell(),
         FakeBuckConfig.empty(),
         TestRuleKeyConfigurationFactory.create(),

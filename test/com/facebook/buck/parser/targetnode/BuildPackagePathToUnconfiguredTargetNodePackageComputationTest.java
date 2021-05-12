@@ -67,17 +67,18 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
 
   @Test
   public void canParseDeps() {
-    Cells cell = new TestCellBuilder().build();
+    Cells cells = new TestCellBuilder().build();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     TargetPlatformResolver targetPlatformResolver =
         (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory =
         new UnconfiguredTargetNodeToTargetNodeFactory(
+            cells,
             typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
             new DefaultConstructorArgMarshaller(),
-            new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cell)),
+            new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cells)),
             new NoopPackageBoundaryChecker(),
             new NoopCellBoundaryChecker(),
             (file, targetNode) -> {},
@@ -85,7 +86,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
-            cell.getRootCell().getBuckConfig(),
+            cells.getRootCell().getBuckConfig(),
             Optional.empty());
 
     ImmutableMap<String, Object> rawAttributes1 =
@@ -96,7 +97,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             ImmutableList.of(UnconfiguredBuildTargetParser.parse("//:target2")));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         UnconfiguredBuildTarget.of(
-            cell.getRootCell().getCanonicalName(),
+            cells.getRootCell().getCanonicalName(),
             BaseName.of("//"),
             "target1",
             FlavorSet.NO_FLAVORS);
@@ -114,7 +115,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
     ImmutableMap<String, Object> rawAttributes2 = ImmutableMap.of("name", "target2");
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         UnconfiguredBuildTarget.of(
-            cell.getRootCell().getCanonicalName(),
+            cells.getRootCell().getCanonicalName(),
             BaseName.of("//"),
             "target2",
             FlavorSet.NO_FLAVORS);
@@ -153,7 +154,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
 
     BuildPackagePathToUnconfiguredTargetNodePackageComputation transformer =
         BuildPackagePathToUnconfiguredTargetNodePackageComputation.of(
-            unconfiguredTargetNodeToTargetNodeFactory, cell, cell.getRootCell(), false);
+            unconfiguredTargetNodeToTargetNodeFactory, cells, cells.getRootCell(), false);
     UnconfiguredTargetNodeWithDepsPackage unconfiguredTargetNodeWithDepsPackage =
         transformer.transform(
             ImmutableBuildPackagePathToUnconfiguredTargetNodePackageKey.of(Paths.get("")),

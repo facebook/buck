@@ -4443,6 +4443,7 @@ public class ProjectGeneratorTest {
             targetGraph,
             cache,
             projStateCache,
+            projectCell,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
             projectCell.getRootCell(),
             "BUCK",
@@ -4573,6 +4574,7 @@ public class ProjectGeneratorTest {
             targetGraph,
             cache,
             projStateCache,
+            projectCell,
             ImmutableSet.of(lib1Target, testTarget), /* lib3Target not included on purpose */
             projectCell.getRootCell(),
             "BUCK",
@@ -4735,6 +4737,7 @@ public class ProjectGeneratorTest {
         targetGraph,
         cache,
         projStateCache,
+        projectCell,
         initialBuildTargets,
         projectCell.getRootCell(),
         "BUCK",

@@ -135,7 +135,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
             params.getBuckEventBus(),
             protocol,
             state.graphBuilder,
-            cells.getRootCell(),
+            cells,
             new FileHashCache() {
               @Override
               public HashCode get(Path path) {

@@ -141,7 +141,7 @@ public class BuildCommandTest {
         new BuildCommand() {
           @Override
           ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-              Cell owningCell,
+              Cells cells,
               Path absoluteClientWorkingDir,
               Iterable<String> targetsAsArgs,
               BuckConfig config) {
@@ -174,7 +174,7 @@ public class BuildCommandTest {
         new BuildCommand() {
           @Override
           ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-              Cell owningCell,
+              Cells cells,
               Path absoluteClientWorkingDir,
               Iterable<String> targetsAsArgs,
               BuckConfig config) {
@@ -213,7 +213,7 @@ public class BuildCommandTest {
         new BuildCommand() {
           @Override
           ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-              Cell owningCell,
+              Cells cells,
               Path absoluteClientWorkingDir,
               Iterable<String> targetsAsArgs,
               BuckConfig config) {
@@ -253,7 +253,7 @@ public class BuildCommandTest {
         new BuildCommand() {
           @Override
           ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-              Cell owningCell,
+              Cells cells,
               Path absoluteClientWorkingDir,
               Iterable<String> targetsAsArgs,
               BuckConfig config) {
@@ -754,7 +754,7 @@ public class BuildCommandTest {
   private CommandRunnerParams createTestParams(ImmutableSet<String> buildTargetNames) {
     CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
         CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
-    Cells cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
+    Cells cells = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -763,7 +763,7 @@ public class BuildCommandTest {
 
     return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         console,
-        cell,
+        cells,
         artifactCache,
         eventBus,
         FakeBuckConfig.empty(),
@@ -773,7 +773,7 @@ public class BuildCommandTest {
         pluginManager,
         knownRuleTypesProvider,
         new TestParser(
-            TestParserFactory.create(executor.get(), cell.getRootCell(), knownRuleTypesProvider),
+            TestParserFactory.create(executor.get(), cells, knownRuleTypesProvider),
             TargetGraphCreationResult.of(
                 TargetGraph.EMPTY,
                 buildTargetNames.stream()

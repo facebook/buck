@@ -19,8 +19,8 @@ package com.facebook.buck.rules.modern.builders;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
@@ -62,7 +62,7 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
   private final Deserializer deserializer;
 
   ReconstructingStrategy(
-      SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, Cell rootCell) {
+      SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, Cells cells) {
     dataMap = new ConcurrentHashMap<>();
     id = new AtomicInteger();
     delegate =
@@ -77,14 +77,14 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
             name -> {
               CellNameResolver cellNameResolver = cellResolver.getCellNameResolver();
               CanonicalCellName canonicalCellName = cellNameResolver.getName(name);
-              return rootCell
+              return cells
                   .getCellProvider()
                   .getCellByCanonicalCellName(canonicalCellName)
                   .getFilesystem();
             },
             Class::forName,
             ruleFinder::getSourcePathResolver,
-            rootCell.getToolchainProvider());
+            cells.getRootCell().getToolchainProvider());
   }
 
   DataProvider getProvider(HashCode hash) {

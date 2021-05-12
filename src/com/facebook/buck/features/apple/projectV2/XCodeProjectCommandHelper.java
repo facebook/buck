@@ -415,7 +415,7 @@ public class XCodeProjectCommandHelper {
         generateWorkspacesForTargets(
             buckEventBus,
             pluginManager,
-            cells.getRootCell(),
+            cells,
             buckConfig,
             ruleKeyConfiguration,
             executorService,
@@ -487,7 +487,7 @@ public class XCodeProjectCommandHelper {
   static ImmutableList<Result> generateWorkspacesForTargets(
       BuckEventBus buckEventBus,
       PluginManager pluginManager,
-      Cell cell,
+      Cells cells,
       BuckConfig buckConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
       ListeningExecutorService executorService,
@@ -535,7 +535,9 @@ public class XCodeProjectCommandHelper {
       SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(buckConfig);
 
       CxxPlatformsProvider cxxPlatformsProvider =
-          cell.getToolchainProvider()
+          cells
+              .getRootCell()
+              .getToolchainProvider()
               .getByName(
                   CxxPlatformsProvider.DEFAULT_NAME,
                   inputTarget.getTargetConfiguration(),
@@ -544,10 +546,11 @@ public class XCodeProjectCommandHelper {
       CxxPlatform defaultCxxPlatform =
           LegacyToolchainProvider.getLegacyTotallyUnsafe(
               cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform());
-      Cell workspaceCell = cell.getCell(inputTarget.getCell());
+      Cell workspaceCell = cells.getCell(inputTarget.getCell());
       WorkspaceAndProjectGenerator generator =
           new WorkspaceAndProjectGenerator(
               xcodeDescriptions,
+              cells,
               workspaceCell,
               targetGraphCreationResult.getTargetGraph(),
               workspaceArgs,
@@ -579,7 +582,7 @@ public class XCodeProjectCommandHelper {
           inputTarget, requiredBuildTargetsForWorkspace);
 
       Path absolutePath = workspaceCell.getFilesystem().resolve(result.workspacePath);
-      RelPath relativePath = cell.getFilesystem().relativize(absolutePath);
+      RelPath relativePath = cells.getRootCell().getFilesystem().relativize(absolutePath);
 
       generationResultsBuilder.add(
           new Result(

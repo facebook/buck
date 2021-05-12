@@ -101,7 +101,7 @@ public class UninstallCommand extends AbstractCommand {
                   createParsingContext(params.getCells(), pool.getListeningExecutorService())
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCells().getRootCell(),
+                      params.getCells(),
                       params.getClientWorkingDir(),
                       getArguments(),
                       params.getBuckConfig()),

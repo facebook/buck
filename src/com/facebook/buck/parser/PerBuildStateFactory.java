@@ -136,7 +136,7 @@ public class PerBuildStateFactory {
     Cells cells = parsingContext.getCells();
     ListeningExecutorService executorService = parsingContext.getExecutor();
     SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
-    CellManager cellManager = new CellManager(cells.getRootCell(), symlinkCache);
+    CellManager cellManager = new CellManager(cells, symlinkCache);
 
     TargetNodeListener<TargetNode<?>> symlinkCheckers = cellManager::registerInputsUnderSymlinks;
     ParserConfig parserConfig = cells.getRootCell().getBuckConfig().getView(ParserConfig.class);
@@ -255,6 +255,7 @@ public class PerBuildStateFactory {
 
     ParserTargetNodeFromUnconfiguredTargetNodeFactory nonResolvingRawTargetNodeToTargetNodeFactory =
         new UnconfiguredTargetNodeToTargetNodeFactory(
+            cells,
             typeCoercerFactory,
             knownRuleTypesProvider,
             marshaller,
@@ -277,6 +278,7 @@ public class PerBuildStateFactory {
         new UnconfiguredTargetNodeToTargetNodeParsePipeline(
             daemonicParserState.getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
             MoreExecutors.newDirectExecutorService(),
+            cells,
             unconfiguredTargetNodePipeline,
             targetConfigurationDetector,
             eventBus,
@@ -301,6 +303,7 @@ public class PerBuildStateFactory {
 
     UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory =
         new UnconfiguredTargetNodeToTargetNodeFactory(
+            cells,
             typeCoercerFactory,
             knownRuleTypesProvider,
             marshaller,
@@ -326,6 +329,7 @@ public class PerBuildStateFactory {
         new UnconfiguredTargetNodeToTargetNodeParsePipeline(
             daemonicParserState.getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
             configuredPipelineExecutor,
+            cells,
             unconfiguredTargetNodePipeline,
             targetConfigurationDetector,
             eventBus,

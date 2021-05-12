@@ -91,16 +91,16 @@ public class TargetNodeSpecTest {
     AbsPath nestedCellPath = defaultCellPath.resolve("nestedcell-dir");
     rootFileSystem.mkdirs(nestedCellPath);
 
-    Cells defaultCell =
+    Cells cells =
         getDefaultCell(
             currentCellFileSystem,
             ImmutableMap.of(
                 "mycell", myCellPath.getPath(), "nestedcell", nestedCellPath.getPath()));
 
-    TargetNodeSpec spec = parseTargetNodeSpec(defaultCell.getRootCell(), pattern);
+    TargetNodeSpec spec = parseTargetNodeSpec(cells.getRootCell(), pattern);
     Assert.assertEquals(
-        BuildTargetPatternParser.parse(pattern, defaultCell.getRootCell().getCellNameResolver()),
-        spec.getBuildTargetPattern(getCellOfTargetNodeSpec(defaultCell.getRootCell(), spec)));
+        BuildTargetPatternParser.parse(pattern, cells.getRootCell().getCellNameResolver()),
+        spec.getBuildTargetPattern(getCellOfTargetNodeSpec(cells, spec)));
   }
 
   @SuppressWarnings("unused")
@@ -159,7 +159,7 @@ public class TargetNodeSpecTest {
     return new TestCellBuilder().setBuckConfig(cellConfig).setFilesystem(rootFileSystem).build();
   }
 
-  private Cell getCellOfTargetNodeSpec(Cell currentCell, TargetNodeSpec spec) {
+  private Cell getCellOfTargetNodeSpec(Cells currentCell, TargetNodeSpec spec) {
     return currentCell
         .getCellProvider()
         .getCellByCanonicalCellName(

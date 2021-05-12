@@ -18,7 +18,6 @@ package com.facebook.buck.core.cell.impl;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
@@ -76,20 +75,11 @@ abstract class CellImpl implements Cell {
 
   @Override
   @Value.Auxiliary
-  public abstract CellProvider getCellProvider();
-
-  @Override
-  @Value.Auxiliary
   public abstract ToolchainProvider getToolchainProvider();
 
   @Override
   public AbsPath getRoot() {
     return getFilesystem().getRootPath();
-  }
-
-  @Override
-  public Cell getCell(CanonicalCellName cellName) {
-    return getCellProvider().getCellByCanonicalCellName(cellName);
   }
 
   @Override

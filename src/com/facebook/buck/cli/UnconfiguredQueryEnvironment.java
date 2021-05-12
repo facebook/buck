@@ -122,7 +122,7 @@ public class UnconfiguredQueryEnvironment
         UnconfiguredQueryTargetEvaluator.from(
             parser,
             perBuildState,
-            params.getCells().getRootCell(),
+            params.getCells(),
             params.getClientWorkingDir(),
             params.getBuckConfig());
     UnconfiguredTargetGraph targetGraph =

@@ -74,7 +74,7 @@ public class IntraCellIntegrationTest {
     // We don't need to do a build. It's enough to just parse these things.
     Cells cells = new Cells(workspace.asCellProvider());
 
-    Parser parser = TestParserFactory.create(executor.get(), cells.getRootCell());
+    Parser parser = TestParserFactory.create(executor.get(), cells);
 
     // This parses cleanly
     parser.buildTargetGraph(
@@ -102,10 +102,12 @@ public class IntraCellIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "intracell/visibility", tmp);
     workspace.setUp();
     Cell cell = workspace.asCell();
+    Cells cells = workspace.asCells();
     assertEquals(
         cell.getFilesystem().getBuckPaths().getGenDir().toString(),
         MorePaths.pathWithPlatformSeparators("buck-out/gen"));
-    Cell childCell = cell.getCell(BuildTargetFactory.newInstance("child//:child-target").getCell());
+    Cell childCell =
+        cells.getCell(BuildTargetFactory.newInstance("child//:child-target").getCell());
     assertEquals(
         childCell.getFilesystem().getBuckPaths().getGenDir().toString(),
         MorePaths.pathWithPlatformSeparators("../buck-out/cells/child/gen"));

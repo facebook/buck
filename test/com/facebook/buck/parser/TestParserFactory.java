@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -35,23 +35,23 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import org.pf4j.PluginManager;
 
 public class TestParserFactory {
-  public static Parser create(DepsAwareExecutor<? super ComputeResult, ?> executor, Cell cell) {
+  public static Parser create(DepsAwareExecutor<? super ComputeResult, ?> executor, Cells cells) {
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
-    return create(executor, cell, knownRuleTypesProvider);
+    return create(executor, cells, knownRuleTypesProvider);
   }
 
   public static Parser create(
       DepsAwareExecutor<? super ComputeResult, ?> executor,
-      Cell cell,
+      Cells cells,
       KnownRuleTypesProvider knownRuleTypesProvider,
       BuckEventBus eventBus) {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
+    ParserConfig parserConfig = cells.getRootCell().getBuckConfig().getView(ParserConfig.class);
     return create(
         executor,
-        cell,
+        cells,
         new PerBuildStateFactory(
             typeCoercerFactory,
             new DefaultConstructorArgMarshaller(),
@@ -66,21 +66,21 @@ public class TestParserFactory {
 
   public static Parser create(
       DepsAwareExecutor<? super ComputeResult, ?> executor,
-      Cell cell,
+      Cells cells,
       KnownRuleTypesProvider knownRuleTypesProvider) {
-    return create(executor, cell, knownRuleTypesProvider, BuckEventBusForTests.newInstance());
+    return create(executor, cells, knownRuleTypesProvider, BuckEventBusForTests.newInstance());
   }
 
   public static Parser create(
       DepsAwareExecutor<? super ComputeResult, ?> executor,
-      Cell cell,
+      Cells cells,
       PerBuildStateFactory perBuildStateFactory) {
-    return create(executor, cell, perBuildStateFactory, BuckEventBusForTests.newInstance());
+    return create(executor, cells, perBuildStateFactory, BuckEventBusForTests.newInstance());
   }
 
   public static Parser create(
       DepsAwareExecutor<? super ComputeResult, ?> executor,
-      Cell cell,
+      Cells cell,
       PerBuildStateFactory perBuildStateFactory,
       BuckEventBus eventBus) {
 

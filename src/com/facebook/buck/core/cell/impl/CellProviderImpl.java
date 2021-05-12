@@ -105,7 +105,6 @@ final class CellProviderImpl implements CellProvider {
 
     Cell rootCell =
         RootCellFactory.create(
-            this,
             newCellPathResolver,
             rootCellCellPathResolver,
             toolchainProviderFactory,
@@ -222,7 +221,6 @@ final class CellProviderImpl implements CellProvider {
         canonicalCellName,
         cellFilesystem,
         buckConfig,
-        CellProviderImpl.this,
         toolchainProvider,
         cellPathResolver,
         newCellPathResolver,

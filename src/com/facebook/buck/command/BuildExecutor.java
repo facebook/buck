@@ -159,7 +159,7 @@ public class BuildExecutor {
             args.getBuckConfig().getView(ModernBuildRuleConfig.class),
             args.getBuckConfig().getView(RemoteExecutionConfig.class),
             actionGraphAndBuilder.getActionGraphBuilder(),
-            args.getCells().getRootCell(),
+            args.getCells(),
             args.getCells().getRootCell().getCellPathResolver(),
             cachingBuildEngineDelegate.getFileHashCache(),
             args.getBuckEventBus(),

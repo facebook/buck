@@ -146,6 +146,7 @@ public class XcodeNativeTargetGeneratorTest {
 
     HeaderSearchPaths headerSearchPaths =
         new HeaderSearchPaths(
+            cells,
             projectCell,
             cxxBuckConfig,
             cxxPlatform,
@@ -161,6 +162,7 @@ public class XcodeNativeTargetGeneratorTest {
 
     FlagParser flagParser =
         new FlagParser(
+            cells,
             projectCell,
             appleConfig,
             swiftBuckConfig,

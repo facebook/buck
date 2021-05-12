@@ -283,8 +283,7 @@ public class TargetSpecResolver implements AutoCloseable {
     // when returning results.
     ImmutableList<TargetNodeSpec> orderedSpecs = ImmutableList.copyOf(specs);
 
-    Multimap<AbsPath, Integer> perBuildFileSpecs =
-        groupSpecsByBuildFile(cells.getRootCell(), orderedSpecs);
+    Multimap<AbsPath, Integer> perBuildFileSpecs = groupSpecsByBuildFile(cells, orderedSpecs);
 
     // Kick off parse futures for each build file.
     ArrayList<ListenableFuture<Map.Entry<Integer, ImmutableSet<T>>>> targetFutures =
@@ -322,13 +321,13 @@ public class TargetSpecResolver implements AutoCloseable {
   // Resolve all the build files from all the target specs.  We store these into a multi-map which
   // maps the path to the build file to the index of it's spec file in the ordered spec list.
   private Multimap<AbsPath, Integer> groupSpecsByBuildFile(
-      Cell rootCell, ImmutableList<TargetNodeSpec> orderedSpecs) {
+      Cells cells, ImmutableList<TargetNodeSpec> orderedSpecs) {
 
     Multimap<AbsPath, Integer> perBuildFileSpecs = LinkedHashMultimap.create();
     for (int index = 0; index < orderedSpecs.size(); index++) {
       TargetNodeSpec spec = orderedSpecs.get(index);
       CanonicalCellName cellName = spec.getBuildFileSpec().getCellRelativeBaseName().getCellName();
-      Cell cell = rootCell.getCellProvider().getCellByCanonicalCellName(cellName);
+      Cell cell = cells.getCellProvider().getCellByCanonicalCellName(cellName);
       try (SimplePerfEvent.Scope perfEventScope =
           SimplePerfEvent.scope(
               eventBus.isolated(),

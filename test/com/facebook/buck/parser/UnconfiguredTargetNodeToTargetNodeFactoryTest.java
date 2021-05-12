@@ -75,7 +75,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c")
             .configure(targetConfiguration);
     Path basepath = Paths.get("a").resolve("b");
-    Cells cell =
+    Cells cells =
         new TestCellBuilder()
             .setFilesystem(
                 new FakeProjectFilesystem(
@@ -131,10 +131,11 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
         (configuration, dependencyStack) -> TestSelectables.platform();
     UnconfiguredTargetNodeToTargetNodeFactory factory =
         new UnconfiguredTargetNodeToTargetNodeFactory(
+            cells,
             typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
             new DefaultConstructorArgMarshaller(),
-            new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cell)),
+            new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cells)),
             new NoopPackageBoundaryChecker(),
             new NoopCellBoundaryChecker(),
             (file, targetNode) -> {},
@@ -147,13 +148,13 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
-            cell.getRootCell().getBuckConfig(),
+            cells.getRootCell().getBuckConfig(),
             Optional.empty());
 
     TargetNode<?> targetNode =
         factory
             .createTargetNode(
-                cell.getRootCell(),
+                cells.getRootCell(),
                 AbsPath.of(Paths.get("a/b/BUCK").toAbsolutePath()),
                 buildTarget,
                 DependencyStack.root(),
@@ -165,8 +166,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
     JavaLibraryDescriptionArg arg = (JavaLibraryDescriptionArg) targetNode.getConstructorArg();
     assertEquals(
         ImmutableSortedSet.of(
-            PathSourcePath.of(cell.getRootCell().getFilesystem(), basepath.resolve("src1")),
-            PathSourcePath.of(cell.getRootCell().getFilesystem(), basepath.resolve("src2"))),
+            PathSourcePath.of(cells.getRootCell().getFilesystem(), basepath.resolve("src1")),
+            PathSourcePath.of(cells.getRootCell().getFilesystem(), basepath.resolve("src2"))),
         arg.getSrcs());
     assertEquals(
         ImmutableSet.of(targetPlatform, selectableTarget), targetNode.getConfigurationDeps());

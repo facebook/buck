@@ -31,6 +31,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -84,6 +85,7 @@ public class WorkspaceAndProjectGenerator {
   private static final Logger LOG = Logger.get(WorkspaceAndProjectGenerator.class);
 
   private final XCodeDescriptions xcodeDescriptions;
+  private final Cells cells;
   private final Cell rootCell;
   private final TargetGraph projectGraph;
   private final AppleDependenciesCache dependenciesCache;
@@ -133,6 +135,7 @@ public class WorkspaceAndProjectGenerator {
 
   public WorkspaceAndProjectGenerator(
       XCodeDescriptions xcodeDescriptions,
+      Cells cells,
       Cell cell,
       TargetGraph projectGraph,
       XcodeWorkspaceConfigDescriptionArg workspaceArguments,
@@ -153,6 +156,7 @@ public class WorkspaceAndProjectGenerator {
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle,
       boolean buildModularDependencyHeaders) {
     this.xcodeDescriptions = xcodeDescriptions;
+    this.cells = cells;
     this.rootCell = cell;
     this.projectGraph = projectGraph;
     this.dependenciesCache = new AppleDependenciesCache(projectGraph);
@@ -462,6 +466,7 @@ public class WorkspaceAndProjectGenerator {
             projectGraph,
             dependenciesCache,
             projGenerationStateCache,
+            cells,
             rules,
             projectCell,
             buildFileName,

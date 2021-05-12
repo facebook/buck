@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -105,17 +106,17 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
     // node is already in the map and `ImmutableMap.Builder` has no `get` method.
     Map<BuildTarget, TargetNode<?>> targetToNodeIndex = new ConcurrentHashMap<>();
 
-    Cell rootCell = params.getCells().getRootCell();
+    Cells cells = params.getCells();
     Parser parser = params.getParser();
     CommandLineTargetNodeSpecParser specParser =
         new CommandLineTargetNodeSpecParser(
-            rootCell,
+            params.getCells(),
             params.getClientWorkingDir(),
             params.getBuckConfig(),
             new BuildTargetMatcherTargetNodeParser());
     ImmutableSet<TargetNodeSpec> universeSpecs =
         targets.stream()
-            .flatMap(arg -> specParser.parse(rootCell, arg).stream())
+            .flatMap(arg -> specParser.parse(cells, arg).stream())
             .collect(ImmutableSet.toImmutableSet());
     ImmutableSet<BuildTarget> rootTargets;
     try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "resolving_target_specs")) {

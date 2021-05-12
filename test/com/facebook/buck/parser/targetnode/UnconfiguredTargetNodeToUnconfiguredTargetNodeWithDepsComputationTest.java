@@ -57,17 +57,18 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
 
   @Test
   public void canParseDeps() {
-    Cells cell = new TestCellBuilder().build();
+    Cells cells = new TestCellBuilder().build();
 
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     TargetPlatformResolver targetPlatformResolver =
         (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory =
         new UnconfiguredTargetNodeToTargetNodeFactory(
+            cells,
             typeCoercerFactory,
             TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager()),
             new DefaultConstructorArgMarshaller(),
-            new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cell)),
+            new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cells)),
             new NoopPackageBoundaryChecker(),
             new NoopCellBoundaryChecker(),
             (file, targetNode) -> {},
@@ -75,7 +76,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
             new ConstantHostTargetConfigurationResolver(UnconfiguredTargetConfiguration.INSTANCE),
-            cell.getRootCell().getBuckConfig(),
+            cells.getRootCell().getBuckConfig(),
             Optional.empty());
 
     ImmutableMap<String, Object> rawAttributes1 =
@@ -86,7 +87,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
             ImmutableList.of(UnconfiguredBuildTargetParser.parse("//:target2")));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         UnconfiguredBuildTarget.of(
-            cell.getRootCell().getCanonicalName(),
+            cells.getRootCell().getCanonicalName(),
             BaseName.of("//"),
             "target1",
             FlavorSet.NO_FLAVORS);
@@ -103,7 +104,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
 
     UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation computation =
         UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation.of(
-            unconfiguredTargetNodeToTargetNodeFactory, cell.getRootCell());
+            unconfiguredTargetNodeToTargetNodeFactory, cells.getRootCell());
     UnconfiguredTargetNodeWithDeps rawTargetNode =
         computation.transform(
             ImmutableUnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey.ofImpl(

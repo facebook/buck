@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
@@ -143,8 +144,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   }
 
   /** Gets all the canonical cell names. */
-  private static ImmutableSet<CanonicalCellName> getCellNames(Cell rootCell) {
-    return rootCell.getCellProvider().getAllCells().stream()
+  private static ImmutableSet<CanonicalCellName> getCellNames(Cells cells) {
+    return cells.getCellProvider().getAllCells().stream()
         .map(Cell::getCanonicalName)
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -216,22 +217,22 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       BuckEventBus eventBus,
       Protocol protocol,
       SourcePathRuleFinder ruleFinder,
-      Cell rootCell,
+      Cells cells,
       FileHashLoader fileHasher,
       ImmutableSet<GlobPatternMatcher> ignorePaths,
       ConsoleParams consoleParams,
       boolean sanitizeBuckConfig) {
     this.consoleParams = consoleParams;
     this.ignorePaths = ignorePaths;
-    ImmutableSet<CanonicalCellName> cellNames = getCellNames(rootCell);
-    this.cellResolver = rootCell.getCellPathResolver();
+    ImmutableSet<CanonicalCellName> cellNames = getCellNames(cells);
+    this.cellResolver = cells.getRootCell().getCellPathResolver();
     this.cellPathPrefix = getCellPathPrefix(cellResolver, cellNames);
 
     this.eventBus = eventBus;
     this.protocol = protocol;
 
     this.pathResolver = ruleFinder.getSourcePathResolver();
-    this.projectRoot = cellPathPrefix.relativize(rootCell.getRoot().getPath());
+    this.projectRoot = cellPathPrefix.relativize(cells.getRootCell().getRoot().getPath());
 
     this.hasher = protocol.getHashFunction();
     this.fileHasher = fileHasher;
@@ -302,7 +303,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
               for (CanonicalCellName cellName : cellNames) {
                 RelPath configPath = getPrefixRelativeCellPath(cellName).resolveRel(".buckconfig");
                 BuckConfig buckConfig =
-                    rootCell.getCellProvider().getCellByCanonicalCellName(cellName).getBuckConfig();
+                    cells.getCellProvider().getCellByCanonicalCellName(cellName).getBuckConfig();
                 byte[] bytes = serializeConfig(buckConfig, sanitizeBuckConfig);
                 Digest digest = protocol.computeDigest(bytes);
                 filesBuilder.add(

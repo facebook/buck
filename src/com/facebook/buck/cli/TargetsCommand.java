@@ -690,10 +690,7 @@ public class TargetsCommand extends AbstractCommand {
                       params.getCells().getRootCell().getCanonicalName(), ForwardRelPath.of("")))));
     }
     return parseArgumentsAsTargetNodeSpecs(
-        params.getCells().getRootCell(),
-        params.getClientWorkingDir(),
-        arguments,
-        params.getBuckConfig());
+        params.getCells(), params.getClientWorkingDir(), arguments, params.getBuckConfig());
   }
 
   private TargetGraphCreationResult buildTargetGraphAndTargetsForShowRules(
@@ -851,7 +848,7 @@ public class TargetsCommand extends AbstractCommand {
               .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext,
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCells().getRootCell(),
+                      params.getCells(),
                       params.getClientWorkingDir(),
                       arguments,
                       params.getBuckConfig()),

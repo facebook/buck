@@ -23,6 +23,7 @@ import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -82,6 +83,7 @@ class FlagParser {
   private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_SWIFTFLAGS = ImmutableList.of();
 
+  private final Cells cells;
   private final Cell projectCell;
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
@@ -97,6 +99,7 @@ class FlagParser {
   private final ImmutableMap<Flavor, CxxBuckConfig> platformCxxBuckConfigs;
 
   FlagParser(
+      Cells cells,
       Cell projectCell,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig,
@@ -108,6 +111,7 @@ class FlagParser {
       AppleDependenciesCache dependenciesCache,
       SourcePathResolverAdapter defaultPathResolver,
       HeaderSearchPaths headerSearchPaths) {
+    this.cells = cells;
     this.projectCell = projectCell;
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
@@ -398,7 +402,7 @@ class FlagParser {
             TargetGraph.EMPTY,
             ConfigurationRuleRegistryFactory.createRegistry(TargetGraph.EMPTY),
             new DefaultTargetNodeToBuildRuleTransformer(),
-            projectCell.getCellProvider());
+            cells.getCellProvider());
     ImmutableList.Builder<String> result = new ImmutableList.Builder<>();
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(

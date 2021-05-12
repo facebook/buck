@@ -219,7 +219,7 @@ public class InterCellIntegrationTest {
             .getProjectFileSystem()
             .resolve(
                 primary
-                    .asCell()
+                    .asCells()
                     .getCell(CanonicalCellName.unsafeOf(Optional.of("secondary")))
                     .getFilesystem()
                     .getBuckPaths()
@@ -238,7 +238,7 @@ public class InterCellIntegrationTest {
             .getProjectFileSystem()
             .resolve(
                 primary
-                    .asCell()
+                    .asCells()
                     .getCell(CanonicalCellName.unsafeOf(Optional.of("secondary")))
                     .getFilesystem()
                     .getBuckPaths()
@@ -401,7 +401,7 @@ public class InterCellIntegrationTest {
     registerCell(secondary, "primary", primary);
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
-    Parser parser = TestParserFactory.create(executor.get(), primary.asCell());
+    Parser parser = TestParserFactory.create(executor.get(), new Cells(primary.asCellProvider()));
 
     Cells primaryCell = new Cells(primary.asCellProvider());
     BuildTarget namedTarget = BuildTargetFactory.newInstance(targetName);

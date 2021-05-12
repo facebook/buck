@@ -109,7 +109,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
                               .getDefaultFlavorsMode())
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCells().getRootCell(),
+                      params.getCells(),
                       params.getClientWorkingDir(),
                       targetSpecs,
                       params.getBuckConfig()),

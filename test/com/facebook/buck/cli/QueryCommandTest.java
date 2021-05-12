@@ -145,7 +145,7 @@ public class QueryCommandTest {
             targetConfigurationFactory,
             new TargetPatternEvaluator(
                 targetUniverse,
-                params.getCells().getRootCell(),
+                params.getCells(),
                 params.getClientWorkingDir(),
                 params.getBuckConfig()),
             eventBus,

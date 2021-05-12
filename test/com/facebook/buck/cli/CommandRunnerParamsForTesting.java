@@ -105,7 +105,7 @@ public class CommandRunnerParamsForTesting {
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
-    Parser parser = TestParserFactory.create(executor, cells.getRootCell(), knownRuleTypesProvider);
+    Parser parser = TestParserFactory.create(executor, cells, knownRuleTypesProvider);
     return createCommandRunnerParamsForTesting(
         console,
         cells,
@@ -234,16 +234,15 @@ public class CommandRunnerParamsForTesting {
       if (toolchainProvider != null) {
         cellBuilder.setToolchainProvider(toolchainProvider);
       }
-      Cells cell = cellBuilder.build();
+      Cells cells = cellBuilder.build();
       PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
       KnownRuleTypesProvider knownRuleTypesProvider =
           TestKnownRuleTypesProvider.create(pluginManager);
-      Parser parser =
-          TestParserFactory.create(executor, cell.getRootCell(), knownRuleTypesProvider);
+      Parser parser = TestParserFactory.create(executor, cells, knownRuleTypesProvider);
 
       return createCommandRunnerParamsForTesting(
           console,
-          cell,
+          cells,
           artifactCache,
           eventBus,
           config,

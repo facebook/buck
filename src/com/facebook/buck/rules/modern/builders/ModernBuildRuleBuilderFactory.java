@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.BuildRule;
@@ -53,7 +53,7 @@ public class ModernBuildRuleBuilderFactory {
       ModernBuildRuleStrategyConfig config,
       RemoteExecutionConfig remoteExecutionConfig,
       BuildRuleResolver resolver,
-      Cell rootCell,
+      Cells cells,
       CellPathResolver cellResolver,
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
@@ -68,7 +68,7 @@ public class ModernBuildRuleBuilderFactory {
       strategy = config.getBuildStrategy(remoteExecutionAutoEnabled, forceDisableRemoteExecution);
       WorkerRequirementsProvider workerRequirementsProvider =
           new FileBasedWorkerRequirementsProvider(
-              rootCell.getFilesystem(),
+              cells.getRootCell().getFilesystem(),
               remoteExecutionConfig.getStrategyConfig().getWorkerRequirementsFilename(),
               remoteExecutionConfig.getStrategyConfig().tryLargerWorkerOnOom(),
               WORKER_REQUIREMENTS_PROVIDER_DEFAULT_MAX_CACHE_SIZE);
@@ -76,7 +76,7 @@ public class ModernBuildRuleBuilderFactory {
         case NONE:
           return Optional.empty();
         case DEBUG_RECONSTRUCT:
-          return Optional.of(createReconstructing(resolver, cellResolver, rootCell));
+          return Optional.of(createReconstructing(resolver, cellResolver, cells));
         case DEBUG_PASSTHROUGH:
           return Optional.of(createPassthrough());
         case HYBRID_LOCAL:
@@ -85,7 +85,7 @@ public class ModernBuildRuleBuilderFactory {
                   config.getHybridLocalConfig(),
                   remoteExecutionConfig,
                   resolver,
-                  rootCell,
+                  cells,
                   cellResolver,
                   hashLoader,
                   eventBus,
@@ -101,7 +101,7 @@ public class ModernBuildRuleBuilderFactory {
                   remoteExecutionConfig,
                   remoteExecutionFactory.create(eventBus, metadataProvider),
                   resolver,
-                  rootCell,
+                  cells,
                   hashLoader,
                   metadataProvider,
                   workerRequirementsProvider,
@@ -117,7 +117,7 @@ public class ModernBuildRuleBuilderFactory {
       HybridLocalBuildStrategyConfig hybridLocalConfig,
       RemoteExecutionConfig remoteExecutionConfig,
       BuildRuleResolver resolver,
-      Cell rootCell,
+      Cells cells,
       CellPathResolver cellResolver,
       FileHashLoader hashLoader,
       BuckEventBus eventBus,
@@ -131,7 +131,7 @@ public class ModernBuildRuleBuilderFactory {
                 hybridLocalConfig.getDelegateConfig(),
                 remoteExecutionConfig,
                 resolver,
-                rootCell,
+                cells,
                 cellResolver,
                 hashLoader,
                 eventBus,
@@ -169,7 +169,7 @@ public class ModernBuildRuleBuilderFactory {
    * deserialized version.
    */
   public static BuildRuleStrategy createReconstructing(
-      SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, Cell rootCell) {
-    return new ReconstructingStrategy(ruleFinder, cellResolver, rootCell);
+      SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, Cells cells) {
+    return new ReconstructingStrategy(ruleFinder, cellResolver, cells);
   }
 }

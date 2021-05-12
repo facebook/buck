@@ -29,6 +29,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -83,6 +84,7 @@ public class ProjectGenerator {
   private final TargetGraph targetGraph;
   private final AppleDependenciesCache dependenciesCache;
   private final ProjectGenerationStateCache projGenerationStateCache;
+  private final Cells cells;
   private final Cell projectCell;
   private final ProjectFilesystem projectFilesystem;
   private final ImmutableSet<BuildTarget> projectTargets;
@@ -120,6 +122,7 @@ public class ProjectGenerator {
       TargetGraph targetGraph,
       AppleDependenciesCache dependenciesCache,
       ProjectGenerationStateCache projGenerationStateCache,
+      Cells cells,
       Set<BuildTarget> projectTargets,
       Cell cell,
       String buildFileName,
@@ -141,6 +144,7 @@ public class ProjectGenerator {
     this.targetGraph = targetGraph;
     this.dependenciesCache = dependenciesCache;
     this.projGenerationStateCache = projGenerationStateCache;
+    this.cells = cells;
     this.projectTargets = ImmutableSet.copyOf(projectTargets);
     this.projectCell = cell;
     this.projectFilesystem = cell.getFilesystem();
@@ -240,6 +244,7 @@ public class ProjectGenerator {
               xcodeProjectWriteOptions.sourceRoot(), projectSourcePathResolver::resolveSourcePath);
       HeaderSearchPaths headerSearchPaths =
           new HeaderSearchPaths(
+              cells,
               projectCell,
               cxxBuckConfig,
               defaultCxxPlatform,
@@ -255,6 +260,7 @@ public class ProjectGenerator {
 
       FlagParser flagParser =
           new FlagParser(
+              cells,
               projectCell,
               appleConfig,
               swiftBuckConfig,

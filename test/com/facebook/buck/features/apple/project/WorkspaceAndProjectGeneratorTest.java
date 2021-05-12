@@ -46,6 +46,7 @@ import com.facebook.buck.apple.xcode.XCScheme.LaunchAction.WatchInterface;
 import com.facebook.buck.apple.xcode.XCScheme.SchemePrePostAction;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -121,13 +122,15 @@ public class WorkspaceAndProjectGeneratorTest {
   private TargetNode<XcodeWorkspaceConfigDescriptionArg> workspaceWithExtraSchemeNode;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
+  private Cells cells;
 
   @Before
   public void setUp() throws IOException {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     xcodeDescriptions =
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
-    rootCell = (new TestCellBuilder()).build().getRootCell();
+    cells = (new TestCellBuilder()).build();
+    rootCell = cells.getRootCell();
     ProjectFilesystem projectFilesystem = rootCell.getFilesystem();
     BuckConfig fakeBuckConfig = FakeBuckConfig.empty();
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
@@ -246,6 +249,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -305,6 +309,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -359,6 +364,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -409,6 +415,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -547,6 +554,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -598,6 +606,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -740,6 +749,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             workspaceWithExtraSchemeNode.getConstructorArg(),
@@ -848,6 +858,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -950,6 +961,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             arg,
@@ -1032,6 +1044,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -1091,6 +1104,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -1155,6 +1169,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             rootCell,
             targetGraph,
             workspaceNode.getConstructorArg(),

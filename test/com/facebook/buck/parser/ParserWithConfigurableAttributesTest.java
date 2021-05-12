@@ -45,7 +45,6 @@ import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatformsProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleDeveloperDirectoryProviderFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleSdkLocationFactory;
 import com.facebook.buck.apple.toolchain.impl.AppleToolchainProviderFactory;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
@@ -348,9 +347,7 @@ public class ParserWithConfigurableAttributesTest {
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser =
-        TestParserFactory.create(
-            executor.get(), cells.getRootCell(), knownRuleTypesProvider, eventBus);
+    parser = TestParserFactory.create(executor.get(), cells, knownRuleTypesProvider, eventBus);
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -380,7 +377,7 @@ public class ParserWithConfigurableAttributesTest {
 
     TargetGraph targetGraph =
         parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-    ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cells.getRootCell());
+    ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cells);
     BuildRule fooRule = graphBuilder.requireRule(fooTarget);
     assertNotNull(fooRule);
     BuildRule barRule = graphBuilder.requireRule(barTarget);
@@ -1690,14 +1687,13 @@ public class ParserWithConfigurableAttributesTest {
                     ParserConfig.BUILDFILE_SECTION_NAME,
                     ImmutableMap.of(ParserConfig.INCLUDES_PROPERTY_NAME, "//bar.py")))
             .build();
-    Cells newCell =
+    Cells newCells =
         new TestCellBuilder().setFilesystem(newFilesystem).setBuckConfig(newConfig).build();
 
     Parser newParser =
-        TestParserFactory.create(
-            executor.get(), newCell.getRootCell(), knownRuleTypesProvider, eventBus);
+        TestParserFactory.create(executor.get(), newCells, knownRuleTypesProvider, eventBus);
 
-    filterAllTargetsInProject(newParser, parsingContext.withCells(newCell));
+    filterAllTargetsInProject(newParser, parsingContext.withCells(newCells));
 
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
   }
@@ -1771,7 +1767,7 @@ public class ParserWithConfigurableAttributesTest {
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    parser = TestParserFactory.create(executor.get(), cells.getRootCell(), knownRuleTypesProvider);
+    parser = TestParserFactory.create(executor.get(), cells, knownRuleTypesProvider);
     AbsPath testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile.getPath(), "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1882,7 +1878,7 @@ public class ParserWithConfigurableAttributesTest {
     HashCode libKey = hashes.get(fooLibTarget);
     HashCode lib2Key = hashes.get(fooLib2Target);
 
-    parser = TestParserFactory.create(executor.get(), cells.getRootCell(), knownRuleTypesProvider);
+    parser = TestParserFactory.create(executor.get(), cells, knownRuleTypesProvider);
     Files.write(
         testFooBuckFile.getPath(),
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\njava_library("
@@ -1941,8 +1937,7 @@ public class ParserWithConfigurableAttributesTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder =
-          buildActionGraph(eventBus, targetGraph, cells.getRootCell());
+      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cells);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
       assertEquals(
@@ -1959,8 +1954,7 @@ public class ParserWithConfigurableAttributesTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder =
-          buildActionGraph(eventBus, targetGraph, cells.getRootCell());
+      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cells);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
       assertEquals(
@@ -1996,8 +1990,7 @@ public class ParserWithConfigurableAttributesTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder =
-          buildActionGraph(eventBus, targetGraph, cells.getRootCell());
+      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cells);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
 
@@ -2017,8 +2010,7 @@ public class ParserWithConfigurableAttributesTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder =
-          buildActionGraph(eventBus, targetGraph, cells.getRootCell());
+      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cells);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
       assertEquals(
@@ -2442,11 +2434,11 @@ public class ParserWithConfigurableAttributesTest {
   }
 
   private ActionGraphBuilder buildActionGraph(
-      BuckEventBus eventBus, TargetGraph targetGraph, Cell cell) {
+      BuckEventBus eventBus, TargetGraph targetGraph, Cells cells) {
     return Objects.requireNonNull(
             new ActionGraphProviderBuilder()
                 .withEventBus(eventBus)
-                .withCellProvider(cell.getCellProvider())
+                .withCellProvider(cells.getCellProvider())
                 .build()
                 .getFreshActionGraph(TestTargetGraphCreationResultFactory.create(targetGraph)))
         .getActionGraphBuilder();

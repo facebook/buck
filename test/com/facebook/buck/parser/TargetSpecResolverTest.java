@@ -84,7 +84,7 @@ public class TargetSpecResolverTest {
   private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
   private Path cellRoot;
-  private Cells cell;
+  private Cells cells;
   private BuckEventBus eventBus;
   private PerBuildStateFactory perBuildStateFactory;
   private TypeCoercerFactory typeCoercerFactory;
@@ -102,14 +102,14 @@ public class TargetSpecResolverTest {
 
     cellRoot = tmp.getRoot().getPath();
     filesystem = TestProjectFilesystems.createProjectFilesystem(cellRoot);
-    cell = new TestCellBuilder().setFilesystem(filesystem).build();
+    cells = new TestCellBuilder().setFilesystem(filesystem).build();
     eventBus = BuckEventBusForTests.newInstance();
     typeCoercerFactory = new DefaultTypeCoercerFactory();
     constructorArgMarshaller = new DefaultConstructorArgMarshaller();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
-    ParserConfig parserConfig = cell.getRootCell().getBuckConfig().getView(ParserConfig.class);
+    ParserConfig parserConfig = cells.getRootCell().getBuckConfig().getView(ParserConfig.class);
     ExecutableFinder executableFinder = new ExecutableFinder();
     parserPythonInterpreterProvider =
         new ParserPythonInterpreterProvider(parserConfig, executableFinder);
@@ -125,8 +125,8 @@ public class TargetSpecResolverTest {
             UnconfiguredTargetConfiguration.INSTANCE);
 
     targetNodeTargetSpecResolver =
-        TestTargetSpecResolverFactory.create(executor.get(), cell.getCellProvider(), eventBus);
-    parser = TestParserFactory.create(executor.get(), cell.getRootCell(), perBuildStateFactory);
+        TestTargetSpecResolverFactory.create(executor.get(), cells.getCellProvider(), eventBus);
+    parser = TestParserFactory.create(executor.get(), cells, perBuildStateFactory);
     flavorEnhancer = (target, targetNode, targetType) -> target;
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
   }
@@ -146,7 +146,7 @@ public class TargetSpecResolverTest {
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
                         CellRelativePath.of(
-                            cell.getRootCell().getCanonicalName(), ForwardRelPath.of(""))))));
+                            cells.getRootCell().getCanonicalName(), ForwardRelPath.of(""))))));
 
     ImmutableSet<BuildTarget> expectedTargets =
         ImmutableSet.of(
@@ -175,11 +175,11 @@ public class TargetSpecResolverTest {
             TargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(
                     CellRelativePath.of(
-                        cell.getRootCell().getCanonicalName(), ForwardRelPath.of("bar")))),
+                        cells.getRootCell().getCanonicalName(), ForwardRelPath.of("bar")))),
             TargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(
                     CellRelativePath.of(
-                        cell.getRootCell().getCanonicalName(), ForwardRelPath.of("foo"))))));
+                        cells.getRootCell().getCanonicalName(), ForwardRelPath.of("foo"))))));
   }
 
   @Test
@@ -200,11 +200,11 @@ public class TargetSpecResolverTest {
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
                         CellRelativePath.of(
-                            cell.getRootCell().getCanonicalName(), ForwardRelPath.of("bar")))),
+                            cells.getRootCell().getCanonicalName(), ForwardRelPath.of("bar")))),
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
                         CellRelativePath.of(
-                            cell.getRootCell().getCanonicalName(), ForwardRelPath.of("foo"))))));
+                            cells.getRootCell().getCanonicalName(), ForwardRelPath.of("foo"))))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(bar), ImmutableSet.of(foo))));
 
     targets =
@@ -213,11 +213,11 @@ public class TargetSpecResolverTest {
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
                         CellRelativePath.of(
-                            cell.getRootCell().getCanonicalName(), ForwardRelPath.of("foo")))),
+                            cells.getRootCell().getCanonicalName(), ForwardRelPath.of("foo")))),
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
                         CellRelativePath.of(
-                            cell.getRootCell().getCanonicalName(), ForwardRelPath.of("bar"))))));
+                            cells.getRootCell().getCanonicalName(), ForwardRelPath.of("bar"))))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
   }
 
@@ -234,7 +234,7 @@ public class TargetSpecResolverTest {
                 TargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(
                         CellRelativePath.of(
-                            cell.getRootCell().getCanonicalName(),
+                            cells.getRootCell().getCanonicalName(),
                             ForwardRelPath.ofRelPath(buckout))))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of())));
   }
@@ -243,8 +243,8 @@ public class TargetSpecResolverTest {
       throws InterruptedException {
     PerBuildState state =
         perBuildStateFactory.create(
-            ParsingContext.builder(cell, executorService).build(), parser.getPermState());
+            ParsingContext.builder(cells, executorService).build(), parser.getPermState());
     return targetNodeTargetSpecResolver.resolveTargetSpecs(
-        cell, specs, Optional.empty(), flavorEnhancer, state, TargetNodeSpec::filter);
+        cells, specs, Optional.empty(), flavorEnhancer, state, TargetNodeSpec::filter);
   }
 }

@@ -155,7 +155,7 @@ public class ActionGraphProviderBuilder {
             : this.ruleKeyConfiguration;
     CellProvider cellProvider =
         this.cellProvider == null
-            ? new TestCellBuilder().build().getRootCell().getCellProvider()
+            ? new TestCellBuilder().build().getCellProvider()
             : this.cellProvider;
     RuleAnalysisComputationMode ruleAnalysisComputationMode =
         this.ruleAnalysisComputationMode == null

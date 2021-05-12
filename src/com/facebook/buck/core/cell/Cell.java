@@ -49,13 +49,9 @@ public interface Cell {
   /** See {@link BuckConfig#getView(Class)} */
   <T extends ConfigView<BuckConfig>> T getBuckConfigView(Class<T> cls);
 
-  CellProvider getCellProvider();
-
   ToolchainProvider getToolchainProvider();
 
   AbsPath getRoot();
-
-  Cell getCell(CanonicalCellName cellName);
 
   CellPathResolver getCellPathResolver();
 

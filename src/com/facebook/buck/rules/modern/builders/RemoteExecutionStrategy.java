@@ -22,7 +22,7 @@ import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -140,7 +140,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       RemoteExecutionConfig remoteExecutionConfig,
       RemoteExecutionClients clients,
       SourcePathRuleFinder ruleFinder,
-      Cell rootCell,
+      Cells cells,
       FileHashLoader fileHasher,
       MetadataProvider metadataProvider,
       WorkerRequirementsProvider workerRequirementsProvider,
@@ -156,7 +156,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 eventBus,
                 clients.getProtocol(),
                 ruleFinder,
-                rootCell,
+                cells,
                 fileHasher,
                 strategyConfig.getIgnorePaths(),
                 consoleParams,

@@ -162,7 +162,7 @@ public class ConfiguredQueryEnvironment
         params.getTargetConfigurationFactory(),
         new TargetPatternEvaluator(
             targetUniverse,
-            params.getCells().getRootCell(),
+            params.getCells(),
             params.getClientWorkingDir(),
             params.getBuckConfig()),
         params.getBuckEventBus(),

@@ -486,7 +486,7 @@ public class XCodeProjectCommandHelperTest {
     TargetGraphCreationResult targetGraphCreationResult =
         TestTargetGraphCreationResultFactory.create(targetGraph, passedInTargetsSet);
 
-    Cells cell =
+    Cells cells =
         new TestCellBuilder()
             .setFilesystem(new FakeProjectFilesystem(SettableFakeClock.DO_NOT_CARE))
             .build();
@@ -494,8 +494,8 @@ public class XCodeProjectCommandHelperTest {
     return XCodeProjectCommandHelper.generateWorkspacesForTargets(
         BuckEventBusForTests.newInstance(),
         BuckPluginManagerFactory.createPluginManager(),
-        cell.getRootCell(),
-        AppleProjectHelper.createDefaultBuckConfig(cell.getRootCell().getFilesystem()),
+        cells,
+        AppleProjectHelper.createDefaultBuckConfig(cells.getRootCell().getFilesystem()),
         TestRuleKeyConfigurationFactory.create(),
         MoreExecutors.newDirectExecutorService(),
         targetGraphCreationResult,

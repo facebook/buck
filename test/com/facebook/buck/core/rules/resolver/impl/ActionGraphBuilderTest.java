@@ -90,7 +90,7 @@ public class ActionGraphBuilderTest {
                 graph,
                 ConfigurationRuleRegistryFactory.createRegistry(TargetGraph.EMPTY),
                 transformer,
-                new TestCellBuilder().build().getRootCell().getCellProvider());
+                new TestCellBuilder().build().getCellProvider());
   }
 
   @After

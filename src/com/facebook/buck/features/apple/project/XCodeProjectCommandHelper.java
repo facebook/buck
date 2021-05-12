@@ -380,6 +380,7 @@ public class XCodeProjectCommandHelper {
         generateWorkspacesForTargets(
             buckEventBus,
             pluginManager,
+            cells,
             cells.getRootCell(),
             buckConfig,
             ruleKeyConfiguration,
@@ -444,6 +445,7 @@ public class XCodeProjectCommandHelper {
   static ImmutableList<Result> generateWorkspacesForTargets(
       BuckEventBus buckEventBus,
       PluginManager pluginManager,
+      Cells cells,
       Cell cell,
       BuckConfig buckConfig,
       RuleKeyConfiguration ruleKeyConfiguration,
@@ -458,7 +460,7 @@ public class XCodeProjectCommandHelper {
       throws IOException, InterruptedException {
 
     LazyActionGraph lazyActionGraph =
-        new LazyActionGraph(targetGraphCreationResult.getTargetGraph(), cell.getCellProvider());
+        new LazyActionGraph(targetGraphCreationResult.getTargetGraph(), cells.getCellProvider());
 
     XCodeDescriptions xcodeDescriptions = XCodeDescriptionsFactory.create(pluginManager);
 
@@ -505,10 +507,11 @@ public class XCodeProjectCommandHelper {
       CxxPlatform defaultCxxPlatform =
           LegacyToolchainProvider.getLegacyTotallyUnsafe(
               cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform());
-      Cell workspaceCell = cell.getCell(inputTarget.getCell());
+      Cell workspaceCell = cells.getCell(inputTarget.getCell());
       WorkspaceAndProjectGenerator generator =
           new WorkspaceAndProjectGenerator(
               xcodeDescriptions,
+              cells,
               workspaceCell,
               targetGraphCreationResult.getTargetGraph(),
               workspaceArgs,

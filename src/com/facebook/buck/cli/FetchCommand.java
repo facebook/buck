@@ -85,7 +85,7 @@ public class FetchCommand extends BuildCommand {
                         .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     parseArgumentsAsTargetNodeSpecs(
-                        params.getCells().getRootCell(),
+                        params.getCells(),
                         params.getClientWorkingDir(),
                         getArguments(),
                         params.getBuckConfig()),
@@ -99,7 +99,7 @@ public class FetchCommand extends BuildCommand {
                         params.getBuckEventBus(),
                         ActionGraphFactory.create(
                             params.getBuckEventBus(),
-                            params.getCells().getRootCell().getCellProvider(),
+                            params.getCells().getCellProvider(),
                             params.getExecutors(),
                             params.getDepsAwareExecutorSupplier(),
                             params.getBuckConfig()),

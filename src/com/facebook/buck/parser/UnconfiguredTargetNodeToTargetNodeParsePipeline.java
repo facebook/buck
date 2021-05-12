@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
@@ -65,6 +66,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       Logger.get(UnconfiguredTargetNodeToTargetNodeParsePipeline.class);
 
   protected final ListeningExecutorService executorService;
+  private final Cells cells;
   private final boolean speculativeDepsTraversal;
   private final UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline;
   private final ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory;
@@ -91,6 +93,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   public UnconfiguredTargetNodeToTargetNodeParsePipeline(
       Cache<BuildTarget, TargetNodeMaybeIncompatible> cache,
       ListeningExecutorService executorService,
+      Cells cells,
       UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline,
       TargetConfigurationDetector targetConfigurationDetector,
       BuckEventBus eventBus,
@@ -99,6 +102,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory,
       boolean requireTargetPlatform) {
     this.executorService = executorService;
+    this.cells = cells;
     this.unconfiguredTargetNodePipeline = unconfiguredTargetNodePipeline;
     this.targetConfigurationDetector = targetConfigurationDetector;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
@@ -148,7 +152,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
       executorService.submit(
           () -> {
             for (BuildTarget depTarget : targetNode.get().getParseDepsFastWithDuplicates()) {
-              Cell depCell = cell.getCell(depTarget.getCell());
+              Cell depCell = cells.getCell(depTarget.getCell());
               try {
                 if (depTarget.isFlavored()) {
                   BuildTarget depTargetWithoutFlavors = depTarget.withoutFlavors();

@@ -251,6 +251,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -289,6 +290,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -322,6 +324,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -406,6 +409,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -546,6 +550,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceWithExtraSchemeNode.getConstructorArg(),
@@ -635,6 +640,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -701,6 +707,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -754,6 +761,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -824,6 +832,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             arg,
@@ -904,6 +913,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -962,6 +972,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -1024,6 +1035,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -1109,6 +1121,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),
@@ -1189,6 +1202,7 @@ public class WorkspaceAndProjectGeneratorTest {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
+            cells,
             cells.getRootCell(),
             targetGraph,
             workspaceNode.getConstructorArg(),

@@ -69,7 +69,7 @@ public class CommandLineTargetNodeSpecParserTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot(), config.getConfig());
     cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     return new CommandLineTargetNodeSpecParser(
-        cells.getRootCell(),
+        cells,
         filesystem.getRootPath().resolve(relativeWorkingDir).normalize().getPath(),
         config,
         new BuildTargetMatcherTargetNodeParser());
@@ -118,21 +118,21 @@ public class CommandLineTargetNodeSpecParserTest {
         ImmutableSet.of(
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing"))),
-        parser.parse(cell.getRootCell(), "foo"));
+        parser.parse(cell, "foo"));
     assertEquals(
         ImmutableSet.of(
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing")),
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//some/other:thing"))),
-        parser.parse(cell.getRootCell(), "bar"));
+        parser.parse(cell, "bar"));
     assertEquals(
         ImmutableSet.of(
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing#fl")),
             BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance("//some/other:thing#fl"))),
-        parser.parse(cell.getRootCell(), "bar#fl"));
+        parser.parse(cell, "bar#fl"));
   }
 
   @Test
@@ -146,7 +146,7 @@ public class CommandLineTargetNodeSpecParserTest {
   }
 
   private TargetNodeSpec parseOne(Cells cell, String arg) {
-    return Iterables.getOnlyElement(parser.parse(cell.getRootCell(), arg));
+    return Iterables.getOnlyElement(parser.parse(cell, arg));
   }
 
   @Test
@@ -169,7 +169,7 @@ public class CommandLineTargetNodeSpecParserTest {
     Cells cell = createCell(null);
     exception.expectMessage("does_not_exist/... references non-existent directory does_not_exist");
     exception.expect(HumanReadableException.class);
-    parser.parse(cell.getRootCell(), "does_not_exist/...");
+    parser.parse(cell, "does_not_exist/...");
   }
 
   @Test
@@ -177,14 +177,14 @@ public class CommandLineTargetNodeSpecParserTest {
     Cells cell = createCell(null);
     exception.expectMessage("does_not_exist: references non-existent directory does_not_exist");
     exception.expect(HumanReadableException.class);
-    parser.parse(cell.getRootCell(), "does_not_exist:");
+    parser.parse(cell, "does_not_exist:");
   }
 
   @Test
   public void cannotReferenceNonExistentDirectoryWithImplicitTargetName() {
     exception.expectMessage("does_not_exist references non-existent directory does_not_exist");
     exception.expect(HumanReadableException.class);
-    parser.parse(createCell(null).getRootCell(), "does_not_exist");
+    parser.parse(createCell(null), "does_not_exist");
   }
 
   private Cells createCell(@Nullable ProjectFilesystem filesystem) {

@@ -662,6 +662,7 @@ public class ParsePipelineTest {
                   coercerFactory));
       ParserTargetNodeFromUnconfiguredTargetNodeFactory rawTargetNodeToTargetNodeFactory =
           new UnconfiguredTargetNodeToTargetNodeFactory(
+              cells,
               coercerFactory,
               knownRuleTypesProvider,
               constructorArgMarshaller,
@@ -679,6 +680,7 @@ public class ParsePipelineTest {
           new UnconfiguredTargetNodeToTargetNodeParsePipeline(
               this.daemonicParserState.getTargetNodeCache(),
               this.executorService,
+              cells,
               unconfiguredTargetNodePipeline,
               TargetConfigurationDetectorFactory.empty(),
               this.eventBus,

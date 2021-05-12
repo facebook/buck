@@ -301,9 +301,9 @@ public class OwnersReportTest {
   public void verifyThatRequestedFilesThatDoNotExistOnDiskAreReported() {
     String input = "java/some_file";
 
-    Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    Parser parser = TestParserFactory.create(executor.get(), cell.getRootCell());
-    PerBuildState perBuildState = TestPerBuildStateFactory.create(parser, cell.getRootCell());
+    Cells cells = new TestCellBuilder().setFilesystem(filesystem).build();
+    Parser parser = TestParserFactory.create(executor.get(), cells);
+    PerBuildState perBuildState = TestPerBuildStateFactory.create(parser, cells);
     LegacyQueryUniverse targetUniverse =
         new LegacyQueryUniverse(
             parser,
@@ -314,8 +314,8 @@ public class OwnersReportTest {
             MoreExecutors.newDirectExecutorService());
     OwnersReport report =
         OwnersReport.builderForConfigured(
-                cell.getRootCell(), cell.getRootCell().getRoot().getPath(), targetUniverse)
-            .build(getBuildFileTrees(cell), ImmutableSet.of(input));
+                cells.getRootCell(), cells.getRootCell().getRoot().getPath(), targetUniverse)
+            .build(getBuildFileTrees(cells), ImmutableSet.of(input));
 
     assertEquals(1, report.nonExistentInputs.size());
     assertTrue(report.nonExistentInputs.contains(MorePaths.pathWithPlatformSeparators(input)));
@@ -342,9 +342,9 @@ public class OwnersReportTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//dir1:owner1");
 
-    Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    Parser parser = TestParserFactory.create(executor.get(), cell.getRootCell());
-    PerBuildState perBuildState = TestPerBuildStateFactory.create(parser, cell.getRootCell());
+    Cells cells = new TestCellBuilder().setFilesystem(filesystem).build();
+    Parser parser = TestParserFactory.create(executor.get(), cells);
+    PerBuildState perBuildState = TestPerBuildStateFactory.create(parser, cells);
     LegacyQueryUniverse targetUniverse =
         new LegacyQueryUniverse(
             parser,
@@ -355,8 +355,8 @@ public class OwnersReportTest {
             MoreExecutors.newDirectExecutorService());
 
     OwnersReport<TargetNode<?>> report =
-        OwnersReport.builderForConfigured(cell.getRootCell(), workingDir, targetUniverse)
-            .build(getBuildFileTrees(cell), inputs);
+        OwnersReport.builderForConfigured(cells.getRootCell(), workingDir, targetUniverse)
+            .build(getBuildFileTrees(cells), inputs);
 
     assertTrue(report.nonFileInputs.isEmpty());
     assertTrue(report.nonExistentInputs.isEmpty());

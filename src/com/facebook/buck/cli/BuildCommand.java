@@ -63,7 +63,7 @@ public class BuildCommand extends AbstractBuildCommand {
       specs =
           targetNodeSpecEnhancer.apply(
               parseArgumentsAsTargetNodeSpecs(
-                  params.getCells().getRootCell(),
+                  params.getCells(),
                   params.getClientWorkingDir(),
                   getArguments(),
                   params.getBuckConfig()));

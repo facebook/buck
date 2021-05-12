@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
@@ -51,20 +51,20 @@ public class UnconfiguredQueryTargetEvaluator
 
   private final Parser parser;
   private final PerBuildState perBuildState;
-  private final Cell rootCell;
+  private final Cells cells;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
 
   public UnconfiguredQueryTargetEvaluator(
       Parser parser,
       PerBuildState perBuildState,
-      Cell rootCell,
+      Cells cells,
       BuckConfig buckConfig,
       CommandLineTargetNodeSpecParser targetNodeSpecParser) {
-    super(rootCell, buckConfig);
+    super(cells.getRootCell(), buckConfig);
 
     this.parser = parser;
     this.perBuildState = perBuildState;
-    this.rootCell = rootCell;
+    this.cells = cells;
     this.targetNodeSpecParser = targetNodeSpecParser;
   }
 
@@ -72,17 +72,14 @@ public class UnconfiguredQueryTargetEvaluator
   public static UnconfiguredQueryTargetEvaluator from(
       Parser parser,
       PerBuildState perBuildState,
-      Cell rootCell,
+      Cells cells,
       Path absoluteClientWorkingDir,
       BuckConfig buckConfig) {
     CommandLineTargetNodeSpecParser targetNodeSpecParser =
         new CommandLineTargetNodeSpecParser(
-            rootCell,
-            absoluteClientWorkingDir,
-            buckConfig,
-            new BuildTargetMatcherTargetNodeParser());
+            cells, absoluteClientWorkingDir, buckConfig, new BuildTargetMatcherTargetNodeParser());
     return new UnconfiguredQueryTargetEvaluator(
-        parser, perBuildState, rootCell, buckConfig, targetNodeSpecParser);
+        parser, perBuildState, cells, buckConfig, targetNodeSpecParser);
   }
 
   @Override
@@ -114,7 +111,7 @@ public class UnconfiguredQueryTargetEvaluator
     // The returned list of nodes maintains the spec list ordering.
     List<TargetNodeSpec> specs = new ArrayList<>();
     for (String pattern : patterns) {
-      specs.addAll(targetNodeSpecParser.parse(rootCell, pattern));
+      specs.addAll(targetNodeSpecParser.parse(cells, pattern));
     }
     ImmutableList<ImmutableSet<UnflavoredBuildTarget>> buildTargets =
         parser.resolveTargetSpecsUnconfigured(perBuildState, specs);

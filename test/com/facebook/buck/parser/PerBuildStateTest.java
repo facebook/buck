@@ -69,7 +69,7 @@ public class PerBuildStateTest {
   private final int threads;
   private final boolean parallelParsing;
   private AbsPath cellRoot;
-  private Cells cell;
+  private Cells cells;
   private PerBuildState perBuildState;
 
   public PerBuildStateTest(int threads, boolean parallelParsing) {
@@ -116,18 +116,15 @@ public class PerBuildStateTest {
                     .build())
             .build();
 
-    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
     Parser parser =
         TestParserFactory.create(
-            executor.get(),
-            cell.getRootCell(),
-            knownRuleTypesProvider,
-            BuckEventBusForTests.newInstance());
+            executor.get(), cells, knownRuleTypesProvider, BuckEventBusForTests.newInstance());
 
-    perBuildState = TestPerBuildStateFactory.create(parser, cell.getRootCell());
+    perBuildState = TestPerBuildStateFactory.create(parser, cells);
   }
 
   @Test
@@ -150,7 +147,7 @@ public class PerBuildStateTest {
 
     // Now, try to load the entire build file and get all TargetNodes.
     ImmutableList<TargetNodeMaybeIncompatible> targetNodes =
-        perBuildState.getAllTargetNodes(cell.getRootCell(), testFooBuckFile, Optional.empty());
+        perBuildState.getAllTargetNodes(cells.getRootCell(), testFooBuckFile, Optional.empty());
     assertThat(targetNodes.size(), equalTo(2));
     assertThat(
         targetNodes.stream()

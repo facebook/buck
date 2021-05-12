@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -46,11 +47,12 @@ public class CommandLineTargetNodeSpecParser {
   private final boolean shouldRelativize;
 
   public CommandLineTargetNodeSpecParser(
-      Cell rootCell,
+      Cells cells,
       Path absoluteClientWorkingDirectory,
       BuckConfig config,
       BuildTargetMatcherTargetNodeParser parser) {
-    this.rootRelativePackage = getRootRelativePackagePath(rootCell, absoluteClientWorkingDirectory);
+    this.rootRelativePackage =
+        getRootRelativePackagePath(cells.getRootCell(), absoluteClientWorkingDirectory);
     this.config = config;
     this.parser = parser;
     this.shouldRelativize =
@@ -154,19 +156,22 @@ public class CommandLineTargetNodeSpecParser {
    * but others, especially those that require filesystem interactions, are too expensive to carry
    * for every single build target.
    */
-  private void validateTargetSpec(TargetNodeSpec spec, String arg, Cell owningCell) {
+  private void validateTargetSpec(TargetNodeSpec spec, String arg, Cells cells) {
     CanonicalCellName cellName = spec.getBuildFileSpec().getCellRelativeBaseName().getCellName();
     ForwardRelPath basePath = spec.getBuildFileSpec().getCellRelativeBaseName().getPath();
-    Path basePathPath = basePath.toPath(owningCell.getFilesystem().getFileSystem());
-    Cell realCell = owningCell.getCellProvider().getCellByCanonicalCellName(cellName);
+    Path basePathPath = basePath.toPath(cells.getRootCell().getFilesystem().getFileSystem());
+    Cell realCell = cells.getCellProvider().getCellByCanonicalCellName(cellName);
     if (!realCell.getFilesystem().exists(basePathPath)) {
       // If someone passes in bar:baz while in subdir foo, and foo/bar does not exist, BUT <root
       // cell>/bar does, tell the user to fix their usage. We do not want to support too many
       // extraneous build target patterns, so hard error, but at least try to help users along.
-      if (!rootRelativePackage.isEmpty() && owningCell.equals(realCell) && !arg.contains("//")) {
+      if (!rootRelativePackage.isEmpty()
+          && cells.getRootCell().equals(realCell)
+          && !arg.contains("//")) {
         Path rootRelativePackagePath = Paths.get(rootRelativePackage);
         if (basePathPath.startsWith(rootRelativePackagePath)
-            && owningCell
+            && cells
+                .getRootCell()
                 .getFilesystem()
                 .exists(rootRelativePackagePath.relativize(basePathPath))) {
           Path rootBasePath = rootRelativePackagePath.relativize(basePathPath);
@@ -182,7 +187,7 @@ public class CommandLineTargetNodeSpecParser {
               basePath,
               rootRelativePackage,
               rootBasePath,
-              owningCell.getRoot(),
+              cells.getRootCell().getRoot(),
               arg,
               arg);
         }
@@ -194,10 +199,10 @@ public class CommandLineTargetNodeSpecParser {
   /**
    * Parse command line argument provided by user into a set of {@link TargetNodeSpec}s
    *
-   * @param owningCell Cell that owns the resolution of a spec
+   * @param cells Cell that owns the resolution of a spec
    * @param arg Unresolved command line argument, can be alias or target name or recursive spec
    */
-  public ImmutableSet<TargetNodeSpec> parse(Cell owningCell, String arg) {
+  public ImmutableSet<TargetNodeSpec> parse(Cells cells, String arg) {
     ImmutableSet<String> resolvedArgs =
         AliasConfig.from(config).getBuildTargetForAliasAsString(arg);
     if (resolvedArgs.isEmpty()) {
@@ -206,8 +211,8 @@ public class CommandLineTargetNodeSpecParser {
     ImmutableSet.Builder<TargetNodeSpec> specs = new ImmutableSet.Builder<>();
     for (String resolvedArg : resolvedArgs) {
       String buildTarget = normalizeBuildTargetString(resolvedArg);
-      TargetNodeSpec spec = parser.parse(buildTarget, owningCell.getCellNameResolver());
-      validateTargetSpec(spec, resolvedArg, owningCell);
+      TargetNodeSpec spec = parser.parse(buildTarget, cells.getRootCell().getCellNameResolver());
+      validateTargetSpec(spec, resolvedArg, cells);
       specs.add(spec);
     }
     return specs.build();
