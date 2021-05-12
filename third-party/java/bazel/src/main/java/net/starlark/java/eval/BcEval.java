@@ -679,7 +679,7 @@ class BcEval {
     BcCallLocs locs = (BcCallLocs) compiled.objects[nextOperand()];
     fr.setLocation(locs.getLparentLocation());
 
-    StarlarkCallable fn = Starlark.callable(fr.thread, getSlot(nextOperand()));
+    StarlarkCallable fn = BcCall.callable(fr.thread, getSlot(nextOperand()));
     BcDynCallSite callSite = (BcDynCallSite) compiled.objects[nextOperand()];
     Object[] args = nextNSlotsListSharedArray();
     Object star = getSlotOrNull(nextOperand());
@@ -701,7 +701,7 @@ class BcEval {
       }
     }
 
-    Object result = Starlark.linkAndCallCs(fr.thread, fn, callSite, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+    Object result = BcCall.linkAndCallCs(fr.thread, fn, callSite, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
 
     setSlot(nextOperand(), result);
   }
@@ -731,7 +731,7 @@ class BcEval {
           String.format("argument after ** must be a dict, not %s", Starlark.type(starStar)));
     }
 
-    Object result = Starlark.callLinked(fr.thread, fn, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+    Object result = BcCall.callLinked(fr.thread, fn, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
     setSlot(nextOperand(), result);
   }
 

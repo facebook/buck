@@ -51,7 +51,7 @@ class BcCallCached {
 
     boolean savedExternalSideEffects = thread.pushSideEffect();
     try {
-      Object result = Starlark.callLinked(thread, fn, args, null, null);
+      Object result = BcCall.callLinked(thread, fn, args, null, null);
       StarlarkRuntimeStats.CallCachedResult callCachedResult;
       if (thread.wasSideEffect()) {
         cannotCache = true;

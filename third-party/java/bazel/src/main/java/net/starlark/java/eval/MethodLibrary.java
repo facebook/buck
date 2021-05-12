@@ -174,7 +174,8 @@ class MethodLibrary {
     // decorate
     for (int i = 0; i < array.length; i++) {
       Object v = array[i];
-      Object k = Starlark.linkAndCall(thread, keyfn, StarlarkCallableLinkSig.positional(1), new Object[] {v}, null, null);
+      Object k = BcCall
+          .linkAndCall(thread, keyfn, StarlarkCallableLinkSig.positional(1), new Object[] {v}, null, null);
       array[i] = new Object[] {k, v};
     }
 
