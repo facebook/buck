@@ -267,7 +267,7 @@ public class WebServerBuckEventListener implements BuckEventListener {
   }
 
   private synchronized void processBuildRuleSuccessType(BuildRuleEvent.Finished finished) {
-    if (finished.getSuccessType().get() != null) {
+    if (finished.getSuccessType().isPresent()) {
       BuildRuleSuccessType ruleSuccessType = finished.getSuccessType().get();
       switch (ruleSuccessType) {
         case FETCHED_FROM_CACHE:
