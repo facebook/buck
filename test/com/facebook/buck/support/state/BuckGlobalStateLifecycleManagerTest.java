@@ -29,12 +29,16 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
@@ -45,12 +49,16 @@ import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
+import com.facebook.buck.core.toolchain.impl.EmptyToolchainProviderFactory;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.FakeWatchmanClient;
 import com.facebook.buck.io.watchman.FakeWatchmanFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager.LifecycleStatus;
@@ -58,6 +66,10 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.util.config.RawConfig;
+import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.FakeClock;
@@ -71,6 +83,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.function.Supplier;
 import net.starlark.java.eval.EvalException;
 import org.junit.Before;
@@ -879,5 +892,68 @@ public class BuckGlobalStateLifecycleManagerTest {
     assertEquals(buckStateResultFirstRun.getFirst(), buckStateResultSecondRun.getFirst());
     assertEquals(LifecycleStatus.NEW, buckStateResultFirstRun.getSecond());
     assertEquals(LifecycleStatus.REUSED, buckStateResultSecondRun.getSecond());
+  }
+
+  private LifecycleStatus getBuckGlobalState() throws Exception {
+    Config config =
+        Configs.createDefaultConfig(
+            tmp.getRoot().getPath(),
+            Configs.getRepoConfigurationFiles(tmp.getRoot().getPath()),
+            RawConfig.of());
+
+    DefaultCellPathResolver cellPathResolver =
+        DefaultCellPathResolver.create(tmp.getRoot(), config);
+
+    Cells cells =
+        new Cells(
+            LocalCellProviderFactory.create(
+                filesystem,
+                new BuckConfig(
+                    config,
+                    filesystem,
+                    Architecture.AARCH64,
+                    Platform.FREEBSD,
+                    ImmutableMap.of(),
+                    unconfiguredBuildTargetFactory,
+                    cellPathResolver.getCellNameResolver()),
+                CellConfig.EMPTY_INSTANCE,
+                cellPathResolver,
+                new EmptyToolchainProviderFactory(),
+                new DefaultProjectFilesystemFactory(),
+                unconfiguredBuildTargetFactory,
+                new WatchmanFactory.NullWatchman("BuckGlobalStateLifecycleManagerTest"),
+                Optional.empty()));
+
+    return buckGlobalStateLifecycleManager
+        .getBuckGlobalState(
+            cells,
+            knownRuleTypesProviderFactory,
+            watchman,
+            Console.createNullConsole(),
+            clock,
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer)
+        .getSecond();
+  }
+
+  @Test
+  public void globalStateInvalidatedIfSecondCellBuckconfigChanges() throws Exception {
+    AbsPath secondCellRoot = tmp.getRoot().resolve("second");
+
+    Files.createDirectory(secondCellRoot.getPath());
+
+    MostFiles.write(
+        tmp.getRoot().resolve(".buckconfig"), "[repositories]\nroot = .\nsecond = second\n");
+
+    LifecycleStatus rrr = getBuckGlobalState();
+    assertEquals(LifecycleStatus.NEW, rrr);
+
+    LifecycleStatus rrr2 = getBuckGlobalState();
+    assertEquals(LifecycleStatus.REUSED, rrr2);
+
+    MostFiles.write(secondCellRoot.resolve(".buckconfig"), "[some]\nvalue = banana\n");
+
+    LifecycleStatus rrr3 = getBuckGlobalState();
+    assertEquals(LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED, rrr3);
   }
 }
