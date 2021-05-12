@@ -7,7 +7,7 @@ max_line_length = 100
 indent_size = 4
 tab_width = 4
 
-[*.java]
+[{*.java,*.kt}]
 indent_size = 2
 continuation_indent_size = 4
 tab_width = 2

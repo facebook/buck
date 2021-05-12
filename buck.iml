@@ -176,5 +176,6 @@
     <orderEntry type="module" module-name="buck" />
     <orderEntry type="library" name="compile-testing" level="project" />
     <orderEntry type="library" name="starlark-annot-processor" level="project" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>
