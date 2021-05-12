@@ -20,8 +20,10 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
@@ -85,7 +87,8 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       addJarSetupSteps(jarParameters, steps);
     }
 
-    // Only run javac if there are .java files to compile or we need to shovel the manifest file
+    // Only run javac if there are .java or .kt files to compile or we need to shovel the manifest
+    // file
     // into the built jar.
     if (!compilerParameters.getSourceFilePaths().isEmpty()) {
       recordDepFileIfNecessary(
@@ -151,7 +154,8 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
     if (compilerParameters.shouldTrackClassUsage()) {
       CompilerOutputPaths outputPath =
           compilerOutputPathsValue.getByType(buildTargetValue.getType());
-      RelPath depFilePath = CompilerOutputPaths.getDepFilePath(outputPath.getOutputJarDirPath());
+      RelPath depFilePath =
+          CompilerOutputPaths.getJavaDepFilePath(outputPath.getOutputJarDirPath());
       buildableContext.recordArtifact(depFilePath.getPath());
     }
   }
@@ -316,6 +320,12 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       return (Class<T>) JavaExtraParams.class;
     }
     return (Class<T>) BuildContextAwareExtraParams.class;
+  }
+
+  public ImmutableList<RelPath> getDepFilePaths(
+      @SuppressWarnings("unused") ProjectFilesystem filesystem,
+      @SuppressWarnings("unused") BuildTarget buildTarget) {
+    return ImmutableList.of();
   }
 
   /**

@@ -22,6 +22,7 @@ import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.ImmutableList;
@@ -29,6 +30,7 @@ import com.google.common.collect.Lists;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -90,6 +92,15 @@ public class ObjectMappersTest {
     String data = "\"\"";
     ForwardRelPath path = ObjectMappers.READER.forType(ForwardRelPath.class).readValue(data);
     assertEquals(ForwardRelPath.of(""), path);
+  }
+
+  @Test
+  public void canDeserializePathKeys() throws Exception {
+    String data = "{\"/a/b\":123}";
+    Map<Path, Integer> map =
+        ObjectMappers.READER.forType(new TypeReference<Map<Path, Integer>>() {}).readValue(data);
+    assertEquals(map.size(), 1);
+    assertEquals((int) map.get(Paths.get("/a/b")), 123);
   }
 
   public static class TestObject {

@@ -17,9 +17,14 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 /** Factory that creates Java related compile build steps. */
@@ -43,6 +48,14 @@ public class JavacToJarStepFactory extends BaseJavacToJarStepFactory {
   @Override
   protected Optional<String> getBootClasspath() {
     return getBuildTimeOptions().getBootclasspath();
+  }
+
+  @Override
+  public ImmutableList<RelPath> getDepFilePaths(
+      ProjectFilesystem filesystem, BuildTarget buildTarget) {
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    RelPath outputPath = CompilerOutputPaths.of(buildTarget, buckPaths).getOutputJarDirPath();
+    return ImmutableList.of(CompilerOutputPaths.getJavaDepFilePath(outputPath));
   }
 
   @VisibleForTesting

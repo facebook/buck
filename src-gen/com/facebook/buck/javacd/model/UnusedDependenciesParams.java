@@ -20,6 +20,7 @@ private static final long serialVersionUID = 0L;
   private UnusedDependenciesParams() {
     deps_ = java.util.Collections.emptyList();
     providedDeps_ = java.util.Collections.emptyList();
+    depFile_ = java.util.Collections.emptyList();
     unusedDependenciesAction_ = 0;
     exportedDeps_ = com.google.protobuf.LazyStringArrayList.EMPTY;
     buildozerPath_ = "";
@@ -68,16 +69,12 @@ private static final long serialVersionUID = 0L;
             break;
           }
           case 26: {
-            com.facebook.buck.javacd.model.RelPath.Builder subBuilder = null;
-            if (depFile_ != null) {
-              subBuilder = depFile_.toBuilder();
+            if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+              depFile_ = new java.util.ArrayList<com.facebook.buck.javacd.model.RelPath>();
+              mutable_bitField0_ |= 0x00000004;
             }
-            depFile_ = input.readMessage(com.facebook.buck.javacd.model.RelPath.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom(depFile_);
-              depFile_ = subBuilder.buildPartial();
-            }
-
+            depFile_.add(
+                input.readMessage(com.facebook.buck.javacd.model.RelPath.parser(), extensionRegistry));
             break;
           }
           case 32: {
@@ -131,6 +128,9 @@ private static final long serialVersionUID = 0L;
       }
       if (((mutable_bitField0_ & 0x00000002) != 0)) {
         providedDeps_ = java.util.Collections.unmodifiableList(providedDeps_);
+      }
+      if (((mutable_bitField0_ & 0x00000004) != 0)) {
+        depFile_ = java.util.Collections.unmodifiableList(depFile_);
       }
       if (((mutable_bitField0_ & 0x00000010) != 0)) {
         exportedDeps_ = exportedDeps_.getUnmodifiableView();
@@ -2259,24 +2259,38 @@ private static final long serialVersionUID = 0L;
   }
 
   public static final int DEPFILE_FIELD_NUMBER = 3;
-  private com.facebook.buck.javacd.model.RelPath depFile_;
+  private java.util.List<com.facebook.buck.javacd.model.RelPath> depFile_;
   /**
-   * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
    */
-  public boolean hasDepFile() {
-    return depFile_ != null;
+  public java.util.List<com.facebook.buck.javacd.model.RelPath> getDepFileList() {
+    return depFile_;
   }
   /**
-   * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
    */
-  public com.facebook.buck.javacd.model.RelPath getDepFile() {
-    return depFile_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : depFile_;
+  public java.util.List<? extends com.facebook.buck.javacd.model.RelPathOrBuilder> 
+      getDepFileOrBuilderList() {
+    return depFile_;
   }
   /**
-   * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
    */
-  public com.facebook.buck.javacd.model.RelPathOrBuilder getDepFileOrBuilder() {
-    return getDepFile();
+  public int getDepFileCount() {
+    return depFile_.size();
+  }
+  /**
+   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   */
+  public com.facebook.buck.javacd.model.RelPath getDepFile(int index) {
+    return depFile_.get(index);
+  }
+  /**
+   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   */
+  public com.facebook.buck.javacd.model.RelPathOrBuilder getDepFileOrBuilder(
+      int index) {
+    return depFile_.get(index);
   }
 
   public static final int UNUSEDDEPENDENCIESACTION_FIELD_NUMBER = 4;
@@ -2397,8 +2411,8 @@ private static final long serialVersionUID = 0L;
     for (int i = 0; i < providedDeps_.size(); i++) {
       output.writeMessage(2, providedDeps_.get(i));
     }
-    if (depFile_ != null) {
-      output.writeMessage(3, getDepFile());
+    for (int i = 0; i < depFile_.size(); i++) {
+      output.writeMessage(3, depFile_.get(i));
     }
     if (unusedDependenciesAction_ != com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction.UNKNOWN.getNumber()) {
       output.writeEnum(4, unusedDependenciesAction_);
@@ -2432,9 +2446,9 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(2, providedDeps_.get(i));
     }
-    if (depFile_ != null) {
+    for (int i = 0; i < depFile_.size(); i++) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(3, getDepFile());
+        .computeMessageSize(3, depFile_.get(i));
     }
     if (unusedDependenciesAction_ != com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction.UNKNOWN.getNumber()) {
       size += com.google.protobuf.CodedOutputStream
@@ -2478,11 +2492,8 @@ private static final long serialVersionUID = 0L;
         .equals(other.getDepsList())) return false;
     if (!getProvidedDepsList()
         .equals(other.getProvidedDepsList())) return false;
-    if (hasDepFile() != other.hasDepFile()) return false;
-    if (hasDepFile()) {
-      if (!getDepFile()
-          .equals(other.getDepFile())) return false;
-    }
+    if (!getDepFileList()
+        .equals(other.getDepFileList())) return false;
     if (unusedDependenciesAction_ != other.unusedDependenciesAction_) return false;
     if (!getExportedDepsList()
         .equals(other.getExportedDepsList())) return false;
@@ -2511,9 +2522,9 @@ private static final long serialVersionUID = 0L;
       hash = (37 * hash) + PROVIDEDDEPS_FIELD_NUMBER;
       hash = (53 * hash) + getProvidedDepsList().hashCode();
     }
-    if (hasDepFile()) {
+    if (getDepFileCount() > 0) {
       hash = (37 * hash) + DEPFILE_FIELD_NUMBER;
-      hash = (53 * hash) + getDepFile().hashCode();
+      hash = (53 * hash) + getDepFileList().hashCode();
     }
     hash = (37 * hash) + UNUSEDDEPENDENCIESACTION_FIELD_NUMBER;
     hash = (53 * hash) + unusedDependenciesAction_;
@@ -2659,6 +2670,7 @@ private static final long serialVersionUID = 0L;
               .alwaysUseFieldBuilders) {
         getDepsFieldBuilder();
         getProvidedDepsFieldBuilder();
+        getDepFileFieldBuilder();
       }
     }
     @java.lang.Override
@@ -2677,10 +2689,10 @@ private static final long serialVersionUID = 0L;
         providedDepsBuilder_.clear();
       }
       if (depFileBuilder_ == null) {
-        depFile_ = null;
+        depFile_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000004);
       } else {
-        depFile_ = null;
-        depFileBuilder_ = null;
+        depFileBuilder_.clear();
       }
       unusedDependenciesAction_ = 0;
 
@@ -2739,6 +2751,10 @@ private static final long serialVersionUID = 0L;
         result.providedDeps_ = providedDepsBuilder_.build();
       }
       if (depFileBuilder_ == null) {
+        if (((bitField0_ & 0x00000004) != 0)) {
+          depFile_ = java.util.Collections.unmodifiableList(depFile_);
+          bitField0_ = (bitField0_ & ~0x00000004);
+        }
         result.depFile_ = depFile_;
       } else {
         result.depFile_ = depFileBuilder_.build();
@@ -2853,8 +2869,31 @@ private static final long serialVersionUID = 0L;
           }
         }
       }
-      if (other.hasDepFile()) {
-        mergeDepFile(other.getDepFile());
+      if (depFileBuilder_ == null) {
+        if (!other.depFile_.isEmpty()) {
+          if (depFile_.isEmpty()) {
+            depFile_ = other.depFile_;
+            bitField0_ = (bitField0_ & ~0x00000004);
+          } else {
+            ensureDepFileIsMutable();
+            depFile_.addAll(other.depFile_);
+          }
+          onChanged();
+        }
+      } else {
+        if (!other.depFile_.isEmpty()) {
+          if (depFileBuilder_.isEmpty()) {
+            depFileBuilder_.dispose();
+            depFileBuilder_ = null;
+            depFile_ = other.depFile_;
+            bitField0_ = (bitField0_ & ~0x00000004);
+            depFileBuilder_ = 
+              com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                 getDepFileFieldBuilder() : null;
+          } else {
+            depFileBuilder_.addAllMessages(other.depFile_);
+          }
+        }
       }
       if (other.unusedDependenciesAction_ != 0) {
         setUnusedDependenciesActionValue(other.getUnusedDependenciesActionValue());
@@ -3389,116 +3428,239 @@ private static final long serialVersionUID = 0L;
       return providedDepsBuilder_;
     }
 
-    private com.facebook.buck.javacd.model.RelPath depFile_;
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> depFileBuilder_;
-    /**
-     * <code>.javacd.api.v1.RelPath depFile = 3;</code>
-     */
-    public boolean hasDepFile() {
-      return depFileBuilder_ != null || depFile_ != null;
+    private java.util.List<com.facebook.buck.javacd.model.RelPath> depFile_ =
+      java.util.Collections.emptyList();
+    private void ensureDepFileIsMutable() {
+      if (!((bitField0_ & 0x00000004) != 0)) {
+        depFile_ = new java.util.ArrayList<com.facebook.buck.javacd.model.RelPath>(depFile_);
+        bitField0_ |= 0x00000004;
+       }
     }
+
+    private com.google.protobuf.RepeatedFieldBuilderV3<
+        com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> depFileBuilder_;
+
     /**
-     * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
      */
-    public com.facebook.buck.javacd.model.RelPath getDepFile() {
+    public java.util.List<com.facebook.buck.javacd.model.RelPath> getDepFileList() {
       if (depFileBuilder_ == null) {
-        return depFile_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : depFile_;
+        return java.util.Collections.unmodifiableList(depFile_);
       } else {
-        return depFileBuilder_.getMessage();
+        return depFileBuilder_.getMessageList();
       }
     }
     /**
-     * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
      */
-    public Builder setDepFile(com.facebook.buck.javacd.model.RelPath value) {
+    public int getDepFileCount() {
+      if (depFileBuilder_ == null) {
+        return depFile_.size();
+      } else {
+        return depFileBuilder_.getCount();
+      }
+    }
+    /**
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     */
+    public com.facebook.buck.javacd.model.RelPath getDepFile(int index) {
+      if (depFileBuilder_ == null) {
+        return depFile_.get(index);
+      } else {
+        return depFileBuilder_.getMessage(index);
+      }
+    }
+    /**
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     */
+    public Builder setDepFile(
+        int index, com.facebook.buck.javacd.model.RelPath value) {
       if (depFileBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
         }
-        depFile_ = value;
+        ensureDepFileIsMutable();
+        depFile_.set(index, value);
         onChanged();
       } else {
-        depFileBuilder_.setMessage(value);
+        depFileBuilder_.setMessage(index, value);
       }
-
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
      */
     public Builder setDepFile(
+        int index, com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
+      if (depFileBuilder_ == null) {
+        ensureDepFileIsMutable();
+        depFile_.set(index, builderForValue.build());
+        onChanged();
+      } else {
+        depFileBuilder_.setMessage(index, builderForValue.build());
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     */
+    public Builder addDepFile(com.facebook.buck.javacd.model.RelPath value) {
+      if (depFileBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureDepFileIsMutable();
+        depFile_.add(value);
+        onChanged();
+      } else {
+        depFileBuilder_.addMessage(value);
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     */
+    public Builder addDepFile(
+        int index, com.facebook.buck.javacd.model.RelPath value) {
+      if (depFileBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        ensureDepFileIsMutable();
+        depFile_.add(index, value);
+        onChanged();
+      } else {
+        depFileBuilder_.addMessage(index, value);
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     */
+    public Builder addDepFile(
         com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
       if (depFileBuilder_ == null) {
-        depFile_ = builderForValue.build();
+        ensureDepFileIsMutable();
+        depFile_.add(builderForValue.build());
         onChanged();
       } else {
-        depFileBuilder_.setMessage(builderForValue.build());
+        depFileBuilder_.addMessage(builderForValue.build());
       }
-
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
      */
-    public Builder mergeDepFile(com.facebook.buck.javacd.model.RelPath value) {
+    public Builder addDepFile(
+        int index, com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
       if (depFileBuilder_ == null) {
-        if (depFile_ != null) {
-          depFile_ =
-            com.facebook.buck.javacd.model.RelPath.newBuilder(depFile_).mergeFrom(value).buildPartial();
-        } else {
-          depFile_ = value;
-        }
+        ensureDepFileIsMutable();
+        depFile_.add(index, builderForValue.build());
         onChanged();
       } else {
-        depFileBuilder_.mergeFrom(value);
+        depFileBuilder_.addMessage(index, builderForValue.build());
       }
-
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     */
+    public Builder addAllDepFile(
+        java.lang.Iterable<? extends com.facebook.buck.javacd.model.RelPath> values) {
+      if (depFileBuilder_ == null) {
+        ensureDepFileIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, depFile_);
+        onChanged();
+      } else {
+        depFileBuilder_.addAllMessages(values);
+      }
+      return this;
+    }
+    /**
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
      */
     public Builder clearDepFile() {
       if (depFileBuilder_ == null) {
-        depFile_ = null;
+        depFile_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000004);
         onChanged();
       } else {
-        depFile_ = null;
-        depFileBuilder_ = null;
+        depFileBuilder_.clear();
       }
-
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
      */
-    public com.facebook.buck.javacd.model.RelPath.Builder getDepFileBuilder() {
-      
-      onChanged();
-      return getDepFileFieldBuilder().getBuilder();
+    public Builder removeDepFile(int index) {
+      if (depFileBuilder_ == null) {
+        ensureDepFileIsMutable();
+        depFile_.remove(index);
+        onChanged();
+      } else {
+        depFileBuilder_.remove(index);
+      }
+      return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
      */
-    public com.facebook.buck.javacd.model.RelPathOrBuilder getDepFileOrBuilder() {
-      if (depFileBuilder_ != null) {
-        return depFileBuilder_.getMessageOrBuilder();
-      } else {
-        return depFile_ == null ?
-            com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : depFile_;
+    public com.facebook.buck.javacd.model.RelPath.Builder getDepFileBuilder(
+        int index) {
+      return getDepFileFieldBuilder().getBuilder(index);
+    }
+    /**
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     */
+    public com.facebook.buck.javacd.model.RelPathOrBuilder getDepFileOrBuilder(
+        int index) {
+      if (depFileBuilder_ == null) {
+        return depFile_.get(index);  } else {
+        return depFileBuilder_.getMessageOrBuilder(index);
       }
     }
     /**
-     * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
      */
-    private com.google.protobuf.SingleFieldBuilderV3<
+    public java.util.List<? extends com.facebook.buck.javacd.model.RelPathOrBuilder> 
+         getDepFileOrBuilderList() {
+      if (depFileBuilder_ != null) {
+        return depFileBuilder_.getMessageOrBuilderList();
+      } else {
+        return java.util.Collections.unmodifiableList(depFile_);
+      }
+    }
+    /**
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     */
+    public com.facebook.buck.javacd.model.RelPath.Builder addDepFileBuilder() {
+      return getDepFileFieldBuilder().addBuilder(
+          com.facebook.buck.javacd.model.RelPath.getDefaultInstance());
+    }
+    /**
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     */
+    public com.facebook.buck.javacd.model.RelPath.Builder addDepFileBuilder(
+        int index) {
+      return getDepFileFieldBuilder().addBuilder(
+          index, com.facebook.buck.javacd.model.RelPath.getDefaultInstance());
+    }
+    /**
+     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     */
+    public java.util.List<com.facebook.buck.javacd.model.RelPath.Builder> 
+         getDepFileBuilderList() {
+      return getDepFileFieldBuilder().getBuilderList();
+    }
+    private com.google.protobuf.RepeatedFieldBuilderV3<
         com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> 
         getDepFileFieldBuilder() {
       if (depFileBuilder_ == null) {
-        depFileBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+        depFileBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
             com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder>(
-                getDepFile(),
+                depFile_,
+                ((bitField0_ & 0x00000004) != 0),
                 getParentForChildren(),
                 isClean());
         depFile_ = null;

@@ -32,6 +32,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.core.type.WritableTypeId;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -226,7 +227,7 @@ public class ObjectMappers {
     pathModule.addSerializer(AbsPath.class, new PathSerializer<>(AbsPath.class));
     pathModule.addSerializer(RelPath.class, new PathSerializer<>(RelPath.class));
 
-    /** Deserialized for Path-like objects. */
+    /** Deserializer for Path-like objects. */
     class PathDeserializer<P> extends FromStringDeserializer<P> {
 
       private final Function<String, P> get;
@@ -250,8 +251,18 @@ public class ObjectMappers {
       }
     }
 
+    /** Class to deserialize {@link Path} when it's present as a key in a map. */
+    class PathKeyDeserializer extends KeyDeserializer {
+
+      @Override
+      public Path deserializeKey(String key, DeserializationContext context) {
+        return Paths.get(key);
+      }
+    }
+
     pathModule.addDeserializer(
         Path.class, new PathDeserializer<>(Path.class, Paths::get, () -> Paths.get("")));
+    pathModule.addKeyDeserializer(Path.class, new PathKeyDeserializer());
     pathModule.addDeserializer(
         AbsPath.class, new PathDeserializer<>(AbsPath.class, AbsPath::get, () -> AbsPath.get("")));
     pathModule.addDeserializer(

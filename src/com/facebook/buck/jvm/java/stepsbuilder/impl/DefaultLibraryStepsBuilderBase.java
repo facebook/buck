@@ -23,6 +23,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
 import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
@@ -50,7 +51,9 @@ public class DefaultLibraryStepsBuilderBase<T extends CompileToJarStepFactory.Ex
             buildozerPath.isEmpty() ? Optional.empty() : Optional.of(buildozerPath),
             unusedDependenciesParams.getOnlyPrintCommands(),
             cellToPathMappings,
-            RelPath.get(unusedDependenciesParams.getDepFile().getPath()),
+            unusedDependenciesParams.getDepFileList().stream()
+                .map(path -> RelPath.get(path.getPath()))
+                .collect(ImmutableList.toImmutableList()),
             unusedDependenciesParams.getDoUltralightChecking()));
   }
 

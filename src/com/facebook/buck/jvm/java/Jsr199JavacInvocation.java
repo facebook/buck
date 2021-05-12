@@ -295,7 +295,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                   new DefaultClassUsageFileWriter()
                       .writeFile(
                           classUsageTracker.getClassUsageMap(),
-                          CompilerOutputPaths.getDepFilePath(outputJarDirPath),
+                          CompilerOutputPaths.getJavaDepFilePath(outputJarDirPath),
                           ruleCellRoot,
                           context.getConfiguredBuckOut(),
                           context.getCellToPathMappings());
@@ -492,7 +492,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
             new DefaultClassUsageFileWriter()
                 .writeFile(
                     classUsageTracker.getClassUsageMap(),
-                    CompilerOutputPaths.getDepFilePath(
+                    CompilerOutputPaths.getJavaDepFilePath(
                         compilerOutputPathsValue
                             .getLibraryCompilerOutputPath()
                             .getOutputJarDirPath()),

@@ -265,7 +265,9 @@ class PipeliningJavaCommandExecutor {
               buildozerPath.isEmpty() ? Optional.empty() : Optional.of(buildozerPath),
               unusedDependenciesParams.getOnlyPrintCommands(),
               cellToPathMappings,
-              RelPath.get(unusedDependenciesParams.getDepFile().getPath()),
+              unusedDependenciesParams.getDepFileList().stream()
+                  .map(path -> RelPath.get(path.getPath()))
+                  .collect(ImmutableList.toImmutableList()),
               unusedDependenciesParams.getDoUltralightChecking()));
     }
 

@@ -218,16 +218,12 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     UnusedDependenciesParams unusedDependenciesParams = null;
     if (unusedDependenciesFinderFactory.isPresent()) {
-      RelPath depFile =
-          CompilerOutputPaths.getDepFilePath(
-              CompilerOutputPaths.of(buildTarget, buckPaths).getOutputJarDirPath());
-
       UnusedDependenciesFinderFactory factory = unusedDependenciesFinderFactory.get();
       unusedDependenciesParams =
           createUnusedDependenciesParams(
               factory.convert(factory.deps, sourcePathResolver, rootPath),
               factory.convert(factory.providedDeps, sourcePathResolver, rootPath),
-              depFile,
+              jarBuildStepsFactory.getConfiguredCompiler().getDepFilePaths(filesystem, buildTarget),
               factory);
     }
 
@@ -358,7 +354,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
               buildozerPath.isEmpty() ? Optional.empty() : Optional.of(buildozerPath),
               unusedDependenciesParams.getOnlyPrintCommands(),
               cellToPathMappings,
-              RelPath.get(unusedDependenciesParams.getDepFile().getPath()),
+              unusedDependenciesParams.getDepFileList().stream()
+                  .map(path -> RelPath.get(path.getPath()))
+                  .collect(ImmutableList.toImmutableList()),
               unusedDependenciesParams.getDoUltralightChecking()));
     }
 
@@ -392,16 +390,11 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings =
           CellPathResolverUtils.getCellToPathMappings(rootPath, cellPathResolver);
 
-      BuckPaths buckPaths = filesystem.getBuckPaths();
-
-      RelPath depFile =
-          CompilerOutputPaths.getDepFilePath(
-              CompilerOutputPaths.of(buildTarget, buckPaths).getOutputJarDirPath());
       UnusedDependenciesParams unusedDependenciesParams =
           createUnusedDependenciesParams(
               factory.convert(factory.deps, sourcePathResolver, rootPath),
               factory.convert(factory.providedDeps, sourcePathResolver, rootPath),
-              depFile,
+              jarBuildStepsFactory.getConfiguredCompiler().getDepFilePaths(filesystem, buildTarget),
               factory);
 
       addUnusedDependencyStep(
@@ -420,7 +413,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   public UnusedDependenciesParams createUnusedDependenciesParams(
       ImmutableList<DependencyAndExportedDepsPath> deps,
       ImmutableList<DependencyAndExportedDepsPath> providedDeps,
-      RelPath depFile,
+      ImmutableList<RelPath> depFiles,
       UnusedDependenciesFinderFactory factory) {
     UnusedDependenciesParams.Builder builder = UnusedDependenciesParams.newBuilder();
 
@@ -432,7 +425,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       builder.addProvidedDeps(providedDep);
     }
 
-    builder.setDepFile(toModelRelPath(depFile));
+    for (RelPath depFile : depFiles) {
+      builder.addDepFile(toModelRelPath(depFile));
+    }
     builder.setUnusedDependenciesAction(unusedDependenciesAction);
 
     for (String exportedDep : factory.exportedDeps) {

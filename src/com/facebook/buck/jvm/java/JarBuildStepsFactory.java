@@ -615,13 +615,12 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       CellPathResolver cellPathResolver,
       BuildTarget buildTarget) {
     Preconditions.checkState(useDependencyFileRuleKeys());
-    BuckPaths buckPath = filesystem.getBuckPaths();
     return DefaultClassUsageFileReader.loadFromFile(
         filesystem.getRootPath(),
         cellPathResolver,
-        filesystem.getPathForRelativePath(
-            CompilerOutputPaths.getDepFilePath(
-                CompilerOutputPaths.of(buildTarget, buckPath).getOutputJarDirPath())),
+        configuredCompiler.getDepFilePaths(filesystem, buildTarget).stream()
+            .map(filesystem::getPathForRelativePath)
+            .collect(ImmutableList.toImmutableList()),
         getDepOutputPathToAbiSourcePath(context.getSourcePathResolver(), ruleFinder));
   }
 

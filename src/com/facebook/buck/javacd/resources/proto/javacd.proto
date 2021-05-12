@@ -313,7 +313,7 @@ message ResolvedJavac {
 message UnusedDependenciesParams {
     repeated DependencyAndExportedDepsPath deps = 1;
     repeated DependencyAndExportedDepsPath providedDeps = 2;
-    RelPath depFile = 3;
+    repeated RelPath depFile = 3;
     UnusedDependenciesAction unusedDependenciesAction = 4;
     repeated string exportedDeps = 5;
     string buildozerPath = 6;

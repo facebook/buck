@@ -84,8 +84,13 @@ public abstract class CompilerOutputPaths {
   }
 
   /** Returns a path to a file that contains dependencies used in the compilation */
-  public static RelPath getDepFilePath(RelPath outputJarDirPath) {
+  public static RelPath getJavaDepFilePath(RelPath outputJarDirPath) {
     return outputJarDirPath.resolveRel("used-classes.json");
+  }
+
+  /** Returns a path to a file that contains dependencies used in Kotlin the compilation */
+  public static RelPath getKotlinDepFilePath(RelPath outputJarDirPath) {
+    return outputJarDirPath.resolveRel("kotlin-used-classes.json");
   }
 
   public static ImmutableCompilerOutputPaths.Builder builder() {

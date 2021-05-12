@@ -401,7 +401,7 @@ public final class JavaCDProto {
       "AndExportedDepsPath\022[\n\014providedDeps\030\002 \003(" +
       "\0132E.javacd.api.v1.UnusedDependenciesPara" +
       "ms.DependencyAndExportedDepsPath\022\'\n\007depF" +
-      "ile\030\003 \001(\0132\026.javacd.api.v1.RelPath\022b\n\030unu" +
+      "ile\030\003 \003(\0132\026.javacd.api.v1.RelPath\022b\n\030unu" +
       "sedDependenciesAction\030\004 \001(\0162@.javacd.api" +
       ".v1.UnusedDependenciesParams.UnusedDepen" +
       "denciesAction\022\024\n\014exportedDeps\030\005 \003(\t\022\025\n\rb" +

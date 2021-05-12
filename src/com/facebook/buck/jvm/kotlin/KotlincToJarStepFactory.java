@@ -35,12 +35,14 @@ import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.BuildTargetValueExtraParams;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -466,6 +468,19 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
   @Override
   protected Optional<String> getBootClasspath() {
     return javacOptions.withBootclasspathFromContext(extraClasspathProvider).getBootclasspath();
+  }
+
+  @Override
+  public ImmutableList<RelPath> getDepFilePaths(
+      ProjectFilesystem filesystem, BuildTarget buildTarget) {
+    BuckPaths buckPaths = filesystem.getBuckPaths();
+    RelPath outputPath = CompilerOutputPaths.of(buildTarget, buckPaths).getOutputJarDirPath();
+
+    // Java dependencies file path is needed for Kotlin modules
+    // because some Java code can be generated during the build.
+    return ImmutableList.of(
+        CompilerOutputPaths.getJavaDepFilePath(outputPath),
+        CompilerOutputPaths.getKotlinDepFilePath(outputPath));
   }
 
   private String encodeKaptApOptions(Map<String, String> kaptApOptions, String kaptGeneratedPath) {

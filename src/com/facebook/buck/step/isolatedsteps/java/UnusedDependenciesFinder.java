@@ -76,7 +76,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   public abstract ImmutableMap<CanonicalCellName, RelPath> getCellToPathMappings();
 
-  public abstract RelPath getDepFile();
+  public abstract ImmutableList<RelPath> getDepFiles();
 
   public abstract boolean doUltralightChecking();
 
@@ -89,7 +89,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
-      RelPath depFile,
+      ImmutableList<RelPath> depFiles,
       boolean doUltralightChecking) {
     return ImmutableUnusedDependenciesFinder.ofImpl(
         fullyQualifiedBuildTargetName,
@@ -100,7 +100,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
         buildozerPath,
         onlyPrintCommands,
         cellToPathMappings,
-        depFile,
+        depFiles,
         doUltralightChecking);
   }
 
@@ -148,12 +148,12 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
 
   private ImmutableSet<AbsPath> loadUsedJarPaths(
       AbsPath root, CellPathExtractor cellPathExtractor) {
-    AbsPath depFile = toAbsPath(root, getDepFile());
-    if (!depFile.toFile().exists()) {
-      return ImmutableSet.of();
-    }
+    ImmutableList<AbsPath> depFiles =
+        getDepFiles().stream()
+            .map(path -> toAbsPath(root, path))
+            .collect(ImmutableList.toImmutableList());
     return DefaultClassUsageFileReader.loadUsedJarsFromFile(
-        root, cellPathExtractor, depFile, doUltralightChecking());
+        root, cellPathExtractor, depFiles, doUltralightChecking());
   }
 
   private MessageHandler chooseMessageHandler(IsolatedExecutionContext executionContext) {

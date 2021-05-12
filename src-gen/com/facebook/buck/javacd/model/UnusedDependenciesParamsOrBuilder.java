@@ -58,17 +58,28 @@ public interface UnusedDependenciesParamsOrBuilder extends
       int index);
 
   /**
-   * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
    */
-  boolean hasDepFile();
+  java.util.List<com.facebook.buck.javacd.model.RelPath> 
+      getDepFileList();
   /**
-   * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
    */
-  com.facebook.buck.javacd.model.RelPath getDepFile();
+  com.facebook.buck.javacd.model.RelPath getDepFile(int index);
   /**
-   * <code>.javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
    */
-  com.facebook.buck.javacd.model.RelPathOrBuilder getDepFileOrBuilder();
+  int getDepFileCount();
+  /**
+   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   */
+  java.util.List<? extends com.facebook.buck.javacd.model.RelPathOrBuilder> 
+      getDepFileOrBuilderList();
+  /**
+   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   */
+  com.facebook.buck.javacd.model.RelPathOrBuilder getDepFileOrBuilder(
+      int index);
 
   /**
    * <code>.javacd.api.v1.UnusedDependenciesParams.UnusedDependenciesAction unusedDependenciesAction = 4;</code>

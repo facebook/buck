@@ -37,6 +37,8 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BinaryOperator;
+import java.util.stream.Stream;
 
 /** Provides utility methods for reading dependency file entries. */
 public class DefaultClassUsageFileReader {
@@ -45,6 +47,9 @@ public class DefaultClassUsageFileReader {
 
   private static ImmutableMap<String, ImmutableMap<String, Integer>> loadClassUsageMap(
       Path mapFilePath) {
+    if (!mapFilePath.toFile().exists()) {
+      return ImmutableMap.of();
+    }
     try {
       return ObjectMappers.readValue(
           mapFilePath, new TypeReference<ImmutableMap<String, ImmutableMap<String, Integer>>>() {});
@@ -62,13 +67,12 @@ public class DefaultClassUsageFileReader {
   public static ImmutableList<SourcePath> loadFromFile(
       AbsPath root,
       CellPathResolver cellPathResolver,
-      Path classUsageFilePath,
+      ImmutableList<Path> classUsageFilePaths,
       ImmutableMap<Path, SourcePath> jarPathToSourcePath) {
     ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
-    ImmutableMap<String, ImmutableMap<String, Integer>> classUsageEntries =
-        loadClassUsageMap(classUsageFilePath);
+
     for (Map.Entry<String, ImmutableMap<String, Integer>> jarUsedClassesEntry :
-        classUsageEntries.entrySet()) {
+        getClassUsageEntries(classUsageFilePaths).entrySet()) {
       AbsPath jarAbsolutePath =
           convertRecordedJarPathToAbsolute(root, cellPathResolver, jarUsedClassesEntry.getKey());
       SourcePath sourcePath = jarPathToSourcePath.get(jarAbsolutePath.getPath());
@@ -88,12 +92,16 @@ public class DefaultClassUsageFileReader {
   public static ImmutableSet<AbsPath> loadUsedJarsFromFile(
       AbsPath root,
       CellPathExtractor cellPathExtractor,
-      AbsPath classUsageFilePath,
+      ImmutableList<AbsPath> classUsageFilePaths,
       boolean doUltralightChecking) {
     ImmutableSet.Builder<AbsPath> builder = ImmutableSet.builder();
-    ImmutableMap<String, ImmutableMap<String, Integer>> classUsageEntries =
-        loadClassUsageMap(classUsageFilePath.getPath());
-    for (Map.Entry<String, ImmutableMap<String, Integer>> entry : classUsageEntries.entrySet()) {
+
+    for (Map.Entry<String, ImmutableMap<String, Integer>> entry :
+        getClassUsageEntries(
+                classUsageFilePaths.stream()
+                    .map(AbsPath::getPath)
+                    .collect(ImmutableList.toImmutableList()))
+            .entrySet()) {
       if (doUltralightChecking && isUltralightOnlyDependency(entry.getValue())) {
         continue;
       }
@@ -103,6 +111,27 @@ public class DefaultClassUsageFileReader {
       builder.add(jarAbsolutePath);
     }
     return builder.build();
+  }
+
+  private static ImmutableMap<String, ImmutableMap<String, Integer>> getClassUsageEntries(
+      ImmutableList<Path> classUsageFilePaths) {
+    ImmutableMap<String, ImmutableMap<String, Integer>> classUsageEntries = ImmutableMap.of();
+    for (Path classUsageFilePath : classUsageFilePaths) {
+      ImmutableMap<String, ImmutableMap<String, Integer>> classUsageMap =
+          loadClassUsageMap(classUsageFilePath);
+      classUsageEntries =
+          merge(classUsageEntries, classUsageMap, (a, b) -> merge(a, b, Integer::sum));
+    }
+    return classUsageEntries;
+  }
+
+  /** Merges two {@link ImmutableMap}s using provided merge function */
+  private static <K, V> ImmutableMap<K, V> merge(
+      ImmutableMap<K, V> a, ImmutableMap<K, V> b, BinaryOperator<V> mergeFunction) {
+    return Stream.concat(a.entrySet().stream(), b.entrySet().stream())
+        .collect(
+            ImmutableMap.toImmutableMap(
+                ImmutableMap.Entry::getKey, ImmutableMap.Entry::getValue, mergeFunction));
   }
 
   /**
