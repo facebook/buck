@@ -233,6 +233,7 @@ import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -859,9 +860,18 @@ public final class MainRunner {
               clock,
               buildTargetFactory,
               targetConfigurationSerializer);
-
       BuckGlobalState buckGlobalState = buckGlobalStateRequest.getFirst();
       LifecycleStatus stateLifecycleStatus = buckGlobalStateRequest.getSecond();
+
+      if (reusePreviousConfig) {
+        // Self-check
+        Preconditions.checkState(
+            stateLifecycleStatus != LifecycleStatus.NEW
+                && stateLifecycleStatus != LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED
+                && stateLifecycleStatus != LifecycleStatus.INVALIDATED_FILESYSTEM_CHANGED,
+            "buckconfig should not be invalidated when reusePreviousConfig=true, but it is: %s",
+            stateLifecycleStatus);
+      }
 
       commandManager.registerGlobalState(buckGlobalState);
 
