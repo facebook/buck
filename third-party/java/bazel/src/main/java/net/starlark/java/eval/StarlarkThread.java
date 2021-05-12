@@ -16,7 +16,6 @@ package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -147,7 +146,7 @@ public final class StarlarkThread {
 
   /** A Frame records information about an active function call. */
   static final class Frame {
-    final StarlarkThread thread;
+
     final StarlarkCallable fn; // the called function
 
     // Current PC location. Initially fn.getLocation(); for Starlark functions,
@@ -159,8 +158,7 @@ public final class StarlarkThread {
     // location (loc) should not be overrwritten.
     private boolean errorLocationSet;
 
-    private Frame(StarlarkThread thread, StarlarkCallable fn) {
-      this.thread = thread;
+    private Frame(StarlarkCallable fn) {
       this.fn = fn;
     }
 
@@ -217,7 +215,7 @@ public final class StarlarkThread {
 
   /** Pushes a function onto the call stack. */
   void push(StarlarkCallable fn) {
-    Frame fr = new Frame(this, fn);
+    Frame fr = new Frame(fn);
     callstack.add(fr);
   }
 

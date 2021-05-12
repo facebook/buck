@@ -12,6 +12,7 @@ class BcEval {
 
   private static final TokenKind[] TOKENS = TokenKind.values();
 
+  private final StarlarkThread thread;
   private final StarlarkThread.Frame fr;
   private final StarlarkFunction fn;
   private final BcCompiled compiled;
@@ -52,9 +53,10 @@ class BcEval {
   /** Number of instructions executed in this function. */
   private int localSteps = 0;
 
-  private BcEval(StarlarkThread.Frame fr, StarlarkFunction fn, Object[] locals) {
+  private BcEval(StarlarkThread thread, StarlarkThread.Frame fr,
+      StarlarkFunction fn, Object[] locals) {
+    this.thread = thread;
     this.fr = fr;
-
     this.fn = fn;
     this.compiled = fn.compiled;
     this.slots = locals;
@@ -64,9 +66,10 @@ class BcEval {
   }
 
   /** Public API. */
-  public static Object eval(StarlarkThread.Frame fr, StarlarkFunction fn, Object[] locals)
+  public static Object eval(StarlarkThread thread, StarlarkThread.Frame fr,
+      StarlarkFunction fn, Object[] locals)
       throws InterruptedException, EvalException {
-    BcEval bcEval = new BcEval(fr, fn, locals);
+    BcEval bcEval = new BcEval(thread, fr, fn, locals);
     if (StarlarkRuntimeStats.ENABLED) {
       StarlarkRuntimeStats.enter(StarlarkRuntimeStats.WhereWeAre.BC_EVAL);
     }
@@ -82,7 +85,7 @@ class BcEval {
   private Object eval() throws EvalException, InterruptedException {
     try {
       while (ip != text.length) {
-        if (++fr.thread.steps >= fr.thread.stepLimit) {
+        if (++thread.steps >= thread.stepLimit) {
           throw new EvalException("Starlark computation cancelled: too many steps");
         }
 
@@ -374,10 +377,10 @@ class BcEval {
     boolean postAssignHook = nextOperand() != 0;
     fn.getModule().setGlobalByIndex(globalVarIndex, value);
     if (postAssignHook) {
-      if (fr.thread.postAssignHook != null) {
+      if (thread.postAssignHook != null) {
         if (fn.isToplevel()) {
           String name = compiled.strings[nameConstantIndex];
-          fr.thread.postAssignHook.assign(name, value);
+          thread.postAssignHook.assign(name, value);
         }
       }
     }
@@ -391,7 +394,7 @@ class BcEval {
 
   private void loadStmt() throws EvalException, InterruptedException {
     LoadStatement statement = (LoadStatement) compiled.objects[nextOperand()];
-    Eval.execLoad(fr, slots, statement);
+    Eval.execLoad(thread, fr, slots, statement);
   }
 
   private void setIndex() throws EvalException {
@@ -418,7 +421,7 @@ class BcEval {
     Resolver.Function fn = (Resolver.Function) compiled.objects[nextOperand()];
     Tuple parameterDefaults = Tuple.wrap(nextNSlotsListSharedArray());
     int result = nextOperand();
-    StarlarkFunction starlarkFunction = Eval.newFunction(fr, slots, fn, parameterDefaults);
+    StarlarkFunction starlarkFunction = Eval.newFunction(thread, fr, slots, fn, parameterDefaults);
     setSlot(result, starlarkFunction);
   }
 
@@ -516,7 +519,7 @@ class BcEval {
     int b = nextOperand();
     int e = nextOperand();
 
-    fr.thread.checkInterrupt();
+    thread.checkInterrupt();
 
     // After then continue iteration we are branching to either
     // `b` or `e` label.
@@ -610,7 +613,7 @@ class BcEval {
 
   private void list() throws EvalException {
     Object[] data = nextNSlotsListUnsharedArray();
-    StarlarkList<?> result = StarlarkList.wrap(fr.thread.mutability(), data);
+    StarlarkList<?> result = StarlarkList.wrap(thread.mutability(), data);
     setSlot(nextOperand(), result);
   }
 
@@ -624,7 +627,7 @@ class BcEval {
     int size = nextOperand();
     Dict<?, ?> result;
     if (size == 0) {
-      result = Dict.of(fr.thread.mutability());
+      result = Dict.of(thread.mutability());
     } else {
       LinkedHashMap<Object, Object> lhm = Maps.newLinkedHashMapWithExpectedSize(size);
       for (int j = 0; j != size; ++j) {
@@ -637,7 +640,7 @@ class BcEval {
               "dictionary expression has duplicate key: " + Starlark.repr(key));
         }
       }
-      result = Dict.wrap(fr.thread.mutability(), lhm);
+      result = Dict.wrap(thread.mutability(), lhm);
     }
     setSlot(nextOperand(), result);
   }
@@ -650,7 +653,7 @@ class BcEval {
 
     Object self = getSlot(selfSlot);
     BcDotSite site = (BcDotSite) compiled.objects[siteIndex];
-    Object result = site.getattr(fr.thread, self);
+    Object result = site.getattr(thread, self);
     setSlot(resultSlot, result);
   }
 
@@ -660,7 +663,7 @@ class BcEval {
     Object index = getSlot(nextOperand());
     setSlot(
         nextOperand(),
-        EvalUtils.index(fr.thread.mutability(), fr.thread.getSemantics(), object, index));
+        EvalUtils.index(thread.mutability(), thread.getSemantics(), object, index));
   }
 
   /** Slice operator. */
@@ -669,12 +672,12 @@ class BcEval {
     Object start = getSlotNullAsNone(nextOperand());
     Object stop = getSlotNullAsNone(nextOperand());
     Object step = getSlotNullAsNone(nextOperand());
-    setSlot(nextOperand(), Starlark.slice(fr.thread.mutability(), object, start, stop, step));
+    setSlot(nextOperand(), Starlark.slice(thread.mutability(), object, start, stop, step));
   }
 
   /** Call operator. */
   private void call() throws EvalException, InterruptedException {
-    fr.thread.checkInterrupt();
+    thread.checkInterrupt();
 
     BcCallLocs locs = (BcCallLocs) compiled.objects[nextOperand()];
     fr.setLocation(locs.getLparentLocation());
@@ -701,14 +704,14 @@ class BcEval {
       }
     }
 
-    Object result = BcCall.linkAndCallCs(fr.thread, fn, callSite, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+    Object result = BcCall.linkAndCallCs(thread, fn, callSite, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
 
     setSlot(nextOperand(), result);
   }
 
   /** Call after successful link at compile time. */
   private void callLinked() throws EvalException, InterruptedException {
-    fr.thread.checkInterrupt();
+    thread.checkInterrupt();
 
     BcCallLocs locs = (BcCallLocs) compiled.objects[nextOperand()];
     fr.setLocation(locs.getLparentLocation());
@@ -731,7 +734,7 @@ class BcEval {
           String.format("argument after ** must be a dict, not %s", Starlark.type(starStar)));
     }
 
-    Object result = BcCall.callLinked(fr.thread, fn, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+    Object result = BcCall.callLinked(thread, fn, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
     setSlot(nextOperand(), result);
   }
 
@@ -739,7 +742,7 @@ class BcEval {
     int callCachedIndex = nextOperand();
     int resultSlot = nextOperand();
     BcCallCached callCached = (BcCallCached) compiled.objects[callCachedIndex];
-    Object result = callCached.call(fr.thread);
+    Object result = callCached.call(thread);
     setSlot(resultSlot, result);
   }
 
@@ -770,7 +773,7 @@ class BcEval {
     }
     setSlot(
         nextOperand(),
-        EvalUtils.binaryOp(op, x, y, fr.thread.getSemantics(), fr.thread.mutability()));
+        EvalUtils.binaryOp(op, x, y, thread.getSemantics(), thread.mutability()));
   }
 
   /** {@code +=} operator. */
@@ -780,7 +783,7 @@ class BcEval {
     int result = nextOperand();
     Object x = getSlot(lhs);
     Object y = getSlot(rhs);
-    setSlot(result, Eval.inplaceBinaryPlus(fr, x, y));
+    setSlot(result, Eval.inplaceBinaryPlus(thread, x, y));
   }
 
   /** {@code "aaa%sbbb" % string} */
@@ -858,7 +861,7 @@ class BcEval {
     if (x instanceof String && y instanceof String) {
       result = (String) x + (String) y;
     } else {
-      result = Eval.inplaceBinaryPlus(fr, x, y);
+      result = Eval.inplaceBinaryPlus(thread, x, y);
     }
     setSlot(resultSlot, result);
   }
@@ -874,7 +877,7 @@ class BcEval {
       result = x;
     } else {
       Object[] rhsValues = nextNSlotsListUnsharedArray();
-      result = Eval.inplaceBinaryPlus(fr, x, StarlarkList.wrap(fr.thread.mutability(), rhsValues));
+      result = Eval.inplaceBinaryPlus(thread, x, StarlarkList.wrap(thread.mutability(), rhsValues));
     }
     int resultSlot = nextOperand();
     setSlot(resultSlot, result);
@@ -913,7 +916,7 @@ class BcEval {
     int resultSlot = nextOperand();
     Object lhs = getSlot(lhsSlot);
     Object rhs = getSlot(rhsSlot);
-    setSlot(resultSlot, EvalUtils.binaryPlus(lhs, rhs, fr.thread.mutability()));
+    setSlot(resultSlot, EvalUtils.binaryPlus(lhs, rhs, thread.mutability()));
   }
 
   /** a + b where a and b are likely strings. */
@@ -927,7 +930,7 @@ class BcEval {
     if (lhs instanceof String && rhs instanceof String) {
       result = (String) lhs + (String) rhs;
     } else {
-      result = EvalUtils.binaryPlus(lhs, rhs, fr.thread.mutability());
+      result = EvalUtils.binaryPlus(lhs, rhs, thread.mutability());
     }
     setSlot(resultSlot, result);
   }
@@ -938,13 +941,13 @@ class BcEval {
     Object result;
     if (lhs instanceof StarlarkList<?>) {
       Object[] rhs = nextNSlotsListSharedArray();
-      result = StarlarkList.concat((StarlarkList<?>) lhs, rhs, fr.thread.mutability());
+      result = StarlarkList.concat((StarlarkList<?>) lhs, rhs, thread.mutability());
     } else {
       Object[] rhs = nextNSlotsListUnsharedArray();
       result = EvalUtils.binaryPlus(
           lhs,
-          StarlarkList.wrap(fr.thread.mutability(), rhs),
-          fr.thread.mutability());
+          StarlarkList.wrap(thread.mutability(), rhs),
+          thread.mutability());
     }
     int resultSlot = nextOperand();
     setSlot(resultSlot, result);
@@ -957,7 +960,7 @@ class BcEval {
     int resultSlot = nextOperand();
     Object lhs = getSlot(lhsSlot);
     Object rhs = getSlot(rhsSlot);
-    setSlot(resultSlot, EvalUtils.binaryIn(lhs, rhs, fr.thread.getSemantics()));
+    setSlot(resultSlot, EvalUtils.binaryIn(lhs, rhs, thread.getSemantics()));
   }
 
   /** {@code a not in b} */
@@ -967,7 +970,7 @@ class BcEval {
     int resultSlot = nextOperand();
     Object lhs = getSlot(lhsSlot);
     Object rhs = getSlot(rhsSlot);
-    setSlot(resultSlot, !EvalUtils.binaryIn(lhs, rhs, fr.thread.getSemantics()));
+    setSlot(resultSlot, !EvalUtils.binaryIn(lhs, rhs, thread.getSemantics()));
   }
 
   private void evalException() throws EvalException {

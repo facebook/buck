@@ -47,7 +47,7 @@ abstract class StarlarkFunctionLinkedBase extends StarlarkCallableLinked {
       }
     }
 
-    return BcEval.eval(fr, fn, locals);
+    return BcEval.eval(thread, fr, fn, locals);
   }
 
   protected abstract void processArgs(
