@@ -394,6 +394,13 @@ class BuckTool(object):
         self._tmp_dir = platform_path(buck_project.tmp_dir)
         self._buck_out_tmp = platform_path(buck_project.buck_out_tmp)
         self._fake_buck_version = os.environ.get("BUCK_FAKE_VERSION")
+
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
+            logging.debug(
+                "Package info:\n"
+                + "\n".join(["  %s=%s" % (k, v) for k, v in self._package_info.items()])
+            )
+
         if self._fake_buck_version:
             logging.info("Using fake buck version: {}".format(self._fake_buck_version))
 
