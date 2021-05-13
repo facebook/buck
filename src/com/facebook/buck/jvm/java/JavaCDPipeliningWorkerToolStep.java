@@ -27,6 +27,7 @@ import com.facebook.buck.javacd.model.BuildTargetValue;
 import com.facebook.buck.javacd.model.LibraryPipeliningCommand;
 import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.javacd.model.PipeliningCommand;
+import com.facebook.buck.javacd.model.StartNextPipeliningCommand;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
@@ -71,6 +72,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
   private ImmutableMap<String, Future<ResultEvent>> actionIdToResultEventMap = ImmutableMap.of();
   @Nullable private BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool;
+  @Nullable private WorkerToolExecutor workerToolExecutor;
   private final SettableFuture<Unit> done = SettableFuture.create();
 
   public JavaCDPipeliningWorkerToolStep(
@@ -104,6 +106,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
         JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams);
 
     if (borrowedWorkerTool == null) {
+      // the first execution
       Preconditions.checkState(actionIdToResultEventMap.isEmpty());
 
       WorkerProcessPool<WorkerToolExecutor> workerToolPool =
@@ -113,11 +116,14 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
               workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
 
       try {
-        actionIdToResultEventMap = startExecution(borrowedWorkerTool.get());
+        workerToolExecutor = borrowedWorkerTool.get();
+        actionIdToResultEventMap = startExecution();
       } catch (ExecutionException e) {
         return JavaCDWorkerStepUtils.createFailStepExecutionResult(
             launchJavaCDCommand, actionId, e);
       }
+    } else {
+      startNextPipeliningCommand(actionId);
     }
 
     Future<ResultEvent> resultEventFuture =
@@ -136,9 +142,9 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     }
   }
 
-  private ImmutableMap<String, Future<ResultEvent>> startExecution(
-      WorkerToolExecutor workerToolExecutor)
+  private ImmutableMap<String, Future<ResultEvent>> startExecution()
       throws IOException, ExecutionException, InterruptedException {
+    Preconditions.checkNotNull(workerToolExecutor);
 
     Preconditions.checkArgument(
         !commands.isEmpty() && commands.size() <= 2, "Commands size must be equal only to 1 or 2");
@@ -188,6 +194,16 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     return buildTargetValue.getFullyQualifiedName();
   }
 
+  private void startNextPipeliningCommand(String actionId) throws IOException {
+    Preconditions.checkNotNull(workerToolExecutor);
+    LOG.debug(
+        "Sending start execution next pipelining command (action id: %s) signal to worker tool.",
+        actionId);
+    StartNextPipeliningCommand startNextPipeliningCommand =
+        StartNextPipeliningCommand.newBuilder().setActionId(actionId).build();
+    workerToolExecutor.startNextCommand(startNextPipeliningCommand, actionId);
+  }
+
   @Override
   public void close() {
     try {
@@ -224,6 +240,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     if (borrowedWorkerTool != null) {
       borrowedWorkerTool.close();
       borrowedWorkerTool = null;
+      workerToolExecutor = null;
     }
   }
 }

@@ -28,6 +28,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.PipeliningCommand;
+import com.facebook.buck.javacd.model.StartNextPipeliningCommand;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -175,6 +176,13 @@ public class JavaCDWorkerToolMain {
               break;
 
             case START_NEXT_PIPELINING_COMMAND:
+              StartNextPipeliningCommand startNextPipeliningCommand =
+                  StartNextPipeliningCommand.parseDelimitedFrom(commandsInputStream);
+              LOG.debug(
+                  "Received start next pipelining command with action id: %s",
+                  startNextPipeliningCommand.getActionId());
+              break;
+
             case UNKNOWN:
             case UNRECOGNIZED:
             default:
