@@ -152,9 +152,9 @@
     <include name="jackson/jackson-module-kotlin-2.9.9.jar" />
     <include name="kotlin/kotlin-reflect.jar" />
     <include name="android/sdklib-25.3.0.jar" />
-    <include name="nailgun/nailgun-server-1.0.0.jar" />
-    <include name="jna/jna-4.5.1.jar" />
-    <include name="jna/jna-platform-4.5.1.jar" />
+    <include name="nailgun/nailgun-server-1.0.1.jar" />
+    <include name="jna/jna-5.6.0.jar" />
+    <include name="jna/jna-platform-5.6.0.jar" />
     <include name="sqlite/sqlite-jdbc-3.20.0.jar" />
     <include name="bazel/bazel_deploy.jar" />
     <include name="remote-apis/remote-apis.jar" />
@@ -168,7 +168,7 @@
 
   <fileset dir="${third-party.dir}/java" id="third-party.jars">
     <patternset refid="third-party.jars.private"/>
-    <include name="ObjCBridge/ObjCBridge.jar" />
+    <include name="ObjCBridge/java-objc-bridge-1.1-SNAPSHOT.jar" />
     <include name="aapt2-proto/aapt2-proto-0.4.0.jar" />
     <include name="android/common-25.3.0.jar" />
     <include name="android/layoutlib-api-25.3.0.jar" />
@@ -229,14 +229,14 @@
     <include name="kotlinx-metadata-jvm/kotlinx-metadata-jvm-0.1.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
-    <include name="nuprocess/nuprocess-1.2.4.jar" />
+    <include name="nuprocess/nuprocess-2.0.1.jar" />
     <include name="objenesis/objenesis-1.2.jar" />
     <include name="okhttp/okhttp-3.11.0.jar" />
     <include name="okhttp/okhttp-tls-3.11.0.jar" />
     <include name="okio/okio-1.13.0.jar" />
     <include name="opencensus/opencensus-api-0.24.0.jar" />
     <include name="opencensus/opencensus-contrib-grpc-metrics-0.24.0.jar" />
-    <include name="oshi/oshi-core-3.3-SNAPSHOT.jar" />
+    <include name="oshi/oshi-core-5.2.5.jar" />
     <include name="pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
     <include name="protobuf/protobuf-java-3.7.0.jar" />
     <include name="protobuf/protobuf-java-util-3.7.0.jar" />

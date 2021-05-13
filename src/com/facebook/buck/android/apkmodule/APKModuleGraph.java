@@ -81,6 +81,7 @@ public class APKModuleGraph implements AddsToRuleKey {
 
   @AddToRuleKey private final Optional<List<BuildTarget>> blacklistedModules;
   @AddToRuleKey private final Set<String> modulesWithResources;
+  @AddToRuleKey private final Set<String> modulesWithManifest;
   private final Optional<Set<BuildTarget>> seedTargets;
   private final Map<APKModule, Set<BuildTarget>> buildTargetsMap = new HashMap<>();
 
@@ -140,6 +141,7 @@ public class APKModuleGraph implements AddsToRuleKey {
         Optional.empty(),
         Optional.empty(),
         ImmutableSet.of(),
+        ImmutableSet.of(),
         targetGraph,
         target);
   }
@@ -156,6 +158,9 @@ public class APKModuleGraph implements AddsToRuleKey {
    *     target is required by both these modules, we can safely place it in the minimal cover which
    *     is the APKModule <b>m2</b>.
    * @param blacklistedModules A list of targets that will NOT be included in any module.
+   * @param modulesWithResources A list of modules with resources
+   * @param modulesWithManifest A list of modules with manifests. This parameter will be later used
+   *     to fetch Manifest information for each module.
    * @param targetGraph The full target graph of the build
    * @param target The root target to use to traverse the graph
    */
@@ -164,12 +169,14 @@ public class APKModuleGraph implements AddsToRuleKey {
       Optional<ImmutableMap<String, ImmutableList<String>>> appModuleDependencies,
       Optional<List<BuildTarget>> blacklistedModules,
       Set<String> modulesWithResources,
+      Set<String> modulesWithManifest,
       TargetGraph targetGraph,
       BuildTarget target) {
     this.targetGraph = targetGraph;
     this.appModuleDependencies = appModuleDependencies;
     this.blacklistedModules = blacklistedModules;
     this.modulesWithResources = modulesWithResources;
+    this.modulesWithManifest = modulesWithManifest;
     this.target = target;
     this.seedTargets = Optional.empty();
     this.suppliedSeedConfigMap = seedConfigMap;
@@ -191,6 +198,7 @@ public class APKModuleGraph implements AddsToRuleKey {
     this.appModuleDependencies = Optional.empty();
     this.blacklistedModules = Optional.empty();
     this.modulesWithResources = ImmutableSet.of();
+    this.modulesWithManifest = ImmutableSet.of();
   }
 
   public ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> toOutgoingEdgesMap() {
@@ -300,6 +308,18 @@ public class APKModuleGraph implements AddsToRuleKey {
     APKModule module = targetToModuleMapSupplier.get().get(target);
     return (module == null || !module.hasResources()) ? rootAPKModuleSupplier.get() : module;
   }
+
+  /**
+   * Get the Module that should contain the manifest for the given target or else fallback to the same logic of findResourceModuleForTarget.
+   *
+   * @param target target to search for in modules
+   * @return the module that contains the target
+   */
+  public APKModule findManifestModuleForTarget(BuildTarget target) {
+    APKModule module = targetToModuleMapSupplier.get().get(target);
+    return (module == null || !module.hasManifest()) ? findResourceModuleForTarget(target) : module;
+  }
+
 
   /**
    * Group the classes in the input jars into a multimap based on the APKModule they belong to
@@ -438,7 +458,7 @@ public class APKModuleGraph implements AddsToRuleKey {
         }
       }.start();
     }
-    APKModule rootModule = APKModule.of(ROOT_APKMODULE_NAME, true);
+    APKModule rootModule = APKModule.of(ROOT_APKMODULE_NAME, true, true);
     buildTargetsMap.put(rootModule, ImmutableSet.copyOf(rootTargets));
     return rootModule;
   }
@@ -548,7 +568,7 @@ public class APKModuleGraph implements AddsToRuleKey {
     for (TreeSet<String> moduleCover : sortedContainingModuleSets) {
       String moduleName =
           moduleCover.size() == 1 ? moduleCover.iterator().next() : "shared" + currentId++;
-      APKModule module = APKModule.of(moduleName, modulesWithResources.contains(moduleName));
+      APKModule module = APKModule.of(moduleName, modulesWithResources.contains(moduleName), modulesWithManifest.contains(moduleName));
       combinedModuleHashToModuleMap.put(ImmutableSet.copyOf(moduleCover), module);
     }
 

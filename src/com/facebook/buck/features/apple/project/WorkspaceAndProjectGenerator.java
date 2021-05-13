@@ -1264,6 +1264,8 @@ public class WorkspaceAndProjectGenerator {
       Optional<ImmutableMap<SchemeActionType, PBXTarget>> expandVariablesBasedOn) {
     Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> environmentVariables =
         Optional.empty();
+    Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>> commandLineArguments =
+        Optional.empty();
     Optional<
             ImmutableMap<
                 SchemeActionType, ImmutableMap<XCScheme.AdditionalActions, ImmutableList<String>>>>
@@ -1277,6 +1279,7 @@ public class WorkspaceAndProjectGenerator {
 
     if (schemeConfigArg.isPresent()) {
       environmentVariables = schemeConfigArg.get().getEnvironmentVariables();
+      commandLineArguments = schemeConfigArg.get().getCommandLineArguments();
       additionalSchemeActions = schemeConfigArg.get().getAdditionalSchemeActions();
       launchStyle = schemeConfigArg.get().getLaunchStyle().orElse(launchStyle);
       watchInterface = schemeConfigArg.get().getWatchInterface();
@@ -1302,6 +1305,7 @@ public class WorkspaceAndProjectGenerator {
         targetToProjectPathMap,
         environmentVariables,
         expandVariablesBasedOn,
+        commandLineArguments,
         additionalSchemeActions,
         launchStyle,
         watchInterface,

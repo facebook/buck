@@ -40,26 +40,26 @@ graph and action graph.
 <p>
 The Buck daemon writes its port, process id, and log output to files in
 a <code>.buckd</code>{sp} directory that the daemon creates in the
-project root directory.  Subsequent Buck commands use these files to 
+project root directory.  Subsequent Buck commands use these files to
 find the daemon process, and a new Buck daemon process will use
 them to kill any already-existing daemon process.
 </p>
 
 <p>
 It is safe to run multiple Buck daemons started from different project
-directories as they do not interfere with each other, 
-making <code>buckd</code> suitable for use in shared-server environments 
+directories as they do not interfere with each other,
+making <code>buckd</code> suitable for use in shared-server environments
 or where several projects are being worked on concurrently.
 </p>
 
 <p>
 While it runs, the Buck daemon process monitors the project's file
 system and invalidates cached build rules if any build input files
-change. The Buck daemon excludes from monitoring any subtrees of the 
+change. The Buck daemon excludes from monitoring any subtrees of the
 project file system that are specified in
 the {call buckconfig.project_ignore /} setting
-of <code>.buckconfig</code>. By adding project-specific output 
-directories and source-control directories, such as<code>.git</code>, to 
+of <code>.buckconfig</code>. By adding project-specific output
+directories and source-control directories, such as<code>.git</code>, to
 this setting, you can significantly improve performance; this might be necessary
 to avoid file-change overflows when using Buck daemons to build large
 projects.
@@ -81,7 +81,7 @@ The Buck daemon process is killed if
 </p>
 
 <p>
-You can also kill the Buck daemon explicitly by 
+You can also kill the Buck daemon explicitly by
 running {call buck.cmd_kill /} in the directory tree for your project.
 Note that if&mdash;for some reason&mdash;multiple instances of the
 daemon are running, the <code>buck kill</code> command kills only one of
@@ -95,7 +95,7 @@ restarts.</em>
 </p>
 
 <p>
-To disable the daemon and prevent it from starting, set the environment 
+To disable the daemon and prevent it from starting, set the environment
 variable {sp}<code>NO_BUCKD</code> to <code>1</code>. For example:
 </p>
 
@@ -112,8 +112,8 @@ buck build project_name
 <h4>Buck configuration changes invalidate the daemon's state</h4>
 <p>
 If you change Buck's configuration, it invalidates any cached state
-stored by the Buck daemon&mdash;unless that change is to 
-a <em>small subset</em> of configuration settings that are whitelisted 
+stored by the Buck daemon&mdash;unless that change is to
+a <em>small subset</em> of configuration settings that are supported
 in <a
  href="https://github.com/facebook/buck/blob/master/src/com/facebook/buck/command/config/AbstractConfigIgnoredByDaemon.java"><code>AbstractConfigIgnoredByDaemon.java</code></a>.
 </p>
@@ -124,18 +124,18 @@ the following:
 <p>
 <pre>
 {literal}
-Invalidating internal cached state: 
-Buck configuration options changed between invocations. 
+Invalidating internal cached state:
+Buck configuration options changed between invocations.
 This may cause slower builds.
 {/literal}
 </pre>
 </p>
 
 <p>
-Note that a Buck configuration change that invalidates the daemon's state can be 
-caused not only by explicitly changing a setting in one of Buck's 
-configuration files, such as <code>.buckconfig</code> or <code>.buckconfig.local</code>, but also by using 
-the <code>--config</code>, <code>--flagfile</code>, or <code>--config-file</code> {call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: ' command-line parameters' /}{/call}. 
+Note that a Buck configuration change that invalidates the daemon's state can be
+caused not only by explicitly changing a setting in one of Buck's
+configuration files, such as <code>.buckconfig</code> or <code>.buckconfig.local</code>, but also by using
+the <code>--config</code>, <code>--flagfile</code>, or <code>--config-file</code> {call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: ' command-line parameters' /}{/call}.
 </p>
 
     {/param}  // content

@@ -1,19 +1,19 @@
 prebuilt_jar(
     name = "jna",
-    binary_jar = "jna-4.5.1.jar",
+    binary_jar = "jna-5.6.0.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "jna-4.5.1-sources.jar",
+    source_jar = "jna-5.6.0-sources.jar",
     visibility = ["PUBLIC"],
 )
 
 prebuilt_jar(
     name = "jna-platform",
-    binary_jar = "jna-platform-4.5.1.jar",
+    binary_jar = "jna-platform-5.6.0.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "jna-platform-4.5.1-sources.jar",
+    source_jar = "jna-platform-5.6.0-sources.jar",
     visibility = ["PUBLIC"],
 )

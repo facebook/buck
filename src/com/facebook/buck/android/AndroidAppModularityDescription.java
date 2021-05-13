@@ -55,6 +55,7 @@ public class AndroidAppModularityDescription
             args.getApplicationModuleDependencies(),
             APKModuleGraph.extractTargetsFromQueries(args.getApplicationModuleBlacklist()),
             ImmutableSet.of(),
+            ImmutableSet.of(),
             context.getTargetGraph(),
             buildTarget);
 
