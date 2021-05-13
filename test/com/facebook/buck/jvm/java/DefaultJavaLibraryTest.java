@@ -36,6 +36,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -154,7 +155,15 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     BuildContext context = createBuildContext();
 
     List<Step> steps =
-        AndroidLibraryBuilder.createBuilder(buildTarget)
+        AndroidLibraryBuilder.createBuilder(
+                buildTarget,
+                JavaBuckConfig.of(
+                    FakeBuckConfig.builder()
+                        .setSections(
+                            "[" + JavaBuckConfig.SECTION + "]",
+                            FakeBuckConfig.getPropertyString(
+                                JavaBuckConfig.PROPERTY_JAVACD_ENABLED, false))
+                        .build()))
             .addSrc(src.getPath())
             .build(graphBuilder)
             .getBuildSteps(context, new FakeBuildableContext());
@@ -172,7 +181,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ProjectFilesystem filesystem =
         new AllExistingProjectFilesystem() {
           @Override
-          public boolean isDirectory(Path path, LinkOption... linkOptionsk) {
+          public boolean isDirectory(Path path, LinkOption... linkOptions) {
             return true;
           }
         };
@@ -1573,7 +1582,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
   public JavacStep getJavacStep(Iterable<Step> steps) {
     Step step = Iterables.find(steps, command -> command instanceof JavacStep);
-    assertNotNull("Expected a JavacStep in the steplist.", step);
+    assertNotNull("Expected a JavacStep in the step's list.", step);
     return (JavacStep) step;
   }
 

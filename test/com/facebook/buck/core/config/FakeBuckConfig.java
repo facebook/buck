@@ -53,6 +53,10 @@ public class FakeBuckConfig {
     return builder().build();
   }
 
+  public static String getPropertyString(String propertyName, boolean enabled) {
+    return String.format("%s = %s", propertyName, enabled);
+  }
+
   public static class Builder {
     @Nullable private ProjectFilesystem filesystem = null;
     private ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();

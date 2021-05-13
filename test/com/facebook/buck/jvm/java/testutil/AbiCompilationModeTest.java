@@ -48,9 +48,9 @@ public abstract class AbiCompilationModeTest {
         FakeBuckConfig.builder()
             .setSections(
                 "[" + JavaBuckConfig.SECTION + "]",
-                JavaBuckConfig.PROPERTY_COMPILE_AGAINST_ABIS
-                    + " = "
-                    + compileAgainstAbis.equals(TRUE))
+                FakeBuckConfig.getPropertyString(
+                    JavaBuckConfig.PROPERTY_COMPILE_AGAINST_ABIS, compileAgainstAbis.equals(TRUE)),
+                FakeBuckConfig.getPropertyString(JavaBuckConfig.PROPERTY_JAVACD_ENABLED, false))
             .build());
   }
 
