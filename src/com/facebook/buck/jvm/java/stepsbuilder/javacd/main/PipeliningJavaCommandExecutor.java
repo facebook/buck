@@ -18,8 +18,10 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.javacd.model.BasePipeliningCommand;
@@ -44,6 +46,7 @@ import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JarParameter
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacOptionsSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacSerializer;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
@@ -53,14 +56,19 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /** Executes pipelining java compilation command. */
 class PipeliningJavaCommandExecutor {
@@ -76,8 +84,9 @@ class PipeliningJavaCommandExecutor {
       Platform platform,
       ProcessExecutor processExecutor,
       Console console,
-      Clock clock)
-      throws IOException, InterruptedException {
+      Clock clock,
+      Optional<SettableFuture<Unit>> startNextCommandOptional)
+      throws IOException {
 
     BaseJavacToJarStepFactory javacToJarStepFactory =
         JavaStepsBuilder.getBaseJavacToJarStepFactory(pipeliningCommand.getBaseCommandParams());
@@ -129,22 +138,20 @@ class PipeliningJavaCommandExecutor {
 
         if (contextOptional.isPresent()) {
           try (IsolatedExecutionContext isolatedExecutionContext = contextOptional.get()) {
-
-            // TODO: msemko - change this to wait for a signal from buck when library jar execution
-            // has been started.
-            // abi execution just finished. Let's wait till buck starts execution new pipelining
-            // rule for library jar.
-            // Without this sleep chrome trace events become broken as javacd immediately starting
-            // library jar execution,
-            // while buck is doing switchover to a new library-jar pipelining rule.
-            Thread.sleep(10);
-
-            StepExecutionUtils.executeSteps(
-                isolatedExecutionContext,
-                eventsOutputStream,
-                downwardProtocol,
-                libraryActionId,
-                librarySteps);
+            boolean ok =
+                waitForNextCommandSignal(
+                    eventsOutputStream,
+                    downwardProtocol,
+                    startNextCommandOptional,
+                    libraryActionId);
+            if (ok) {
+              StepExecutionUtils.executeSteps(
+                  isolatedExecutionContext,
+                  eventsOutputStream,
+                  downwardProtocol,
+                  libraryActionId,
+                  librarySteps);
+            }
           }
         } else {
           StepExecutionUtils.executeSteps(
@@ -162,6 +169,63 @@ class PipeliningJavaCommandExecutor {
       }
     }
     StepExecutionUtils.writePipelineFinishedEvent(downwardProtocol, eventsOutputStream);
+  }
+
+  private static boolean waitForNextCommandSignal(
+      OutputStream eventsOutputStream,
+      DownwardProtocol downwardProtocol,
+      Optional<SettableFuture<Unit>> startNextCommandOptional,
+      String libraryActionId)
+      throws IOException {
+    Preconditions.checkState(
+        startNextCommandOptional.isPresent(),
+        "`startNextCommandOptional` has to be present if pipelining command contains more than one command.");
+    Future<?> waitForTheNextCommandFuture = startNextCommandOptional.get();
+
+    Optional<String> errorMessageOptional =
+        waitForFuture(libraryActionId, waitForTheNextCommandFuture);
+    if (!errorMessageOptional.isPresent()) {
+      return true;
+    }
+
+    String errorMessage = errorMessageOptional.get();
+    ResultEvent resultEvent =
+        ResultEvent.newBuilder()
+            .setActionId(libraryActionId)
+            .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
+            .setMessage(errorMessage)
+            .build();
+    StepExecutionUtils.writeResultEvent(downwardProtocol, eventsOutputStream, resultEvent);
+    return false;
+  }
+
+  private static Optional<String> waitForFuture(
+      String libraryActionId, Future<?> waitForTheNextCommandFuture) {
+    String errorMessage = null;
+    try {
+      waitForTheNextCommandFuture.get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      errorMessage =
+          String.format(
+              "Thread that waited for a signal to start the next pipelining command %s  has been interrupted",
+              libraryActionId);
+    } catch (ExecutionException e) {
+      errorMessage =
+          String.format(
+              "Exception %s%n while waiting for start next pipelining command signal for action id: %s",
+              getErrorMessage(e), libraryActionId);
+    }
+
+    return Optional.ofNullable(errorMessage);
+  }
+
+  private static String getErrorMessage(ExecutionException e) {
+    Exception cause = (Exception) e.getCause();
+    if (cause instanceof HumanReadableException) {
+      return ((HumanReadableException) cause).getHumanReadableErrorMessage();
+    }
+    return Throwables.getStackTraceAsString(cause);
   }
 
   private static Pair<ImmutableList<IsolatedStep>, AbsPath> getAbiSteps(

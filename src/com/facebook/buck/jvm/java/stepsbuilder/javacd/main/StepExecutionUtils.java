@@ -158,7 +158,7 @@ class StepExecutionUtils {
     return resultEventBuilder.build();
   }
 
-  private static void writeResultEvent(
+  static void writeResultEvent(
       DownwardProtocol downwardProtocol, OutputStream eventsOutputStream, ResultEvent resultEvent)
       throws IOException {
     writeEvent(EventType.RESULT_EVENT, resultEvent, eventsOutputStream, downwardProtocol);

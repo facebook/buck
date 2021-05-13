@@ -34,17 +34,26 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
 import com.facebook.buck.workertool.model.StartPipelineCommand;
+import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /** JavaCD main class */
 public class JavaCDWorkerToolMain {
@@ -55,6 +64,15 @@ public class JavaCDWorkerToolMain {
   private static final DownwardProtocolType DOWNWARD_PROTOCOL_TYPE = DownwardProtocolType.BINARY;
   private static final DownwardProtocol DOWNWARD_PROTOCOL =
       DOWNWARD_PROTOCOL_TYPE.getDownwardProtocol();
+
+  private static final ThreadPoolExecutor THREAD_POOL =
+      new ThreadPoolExecutor(
+          0,
+          Integer.MAX_VALUE,
+          1,
+          TimeUnit.SECONDS,
+          new SynchronousQueue<>(),
+          new MostExecutors.NamedThreadFactory("JavaCD"));
 
   /** Main entrypoint of JavaCD worker tool. */
   public static void main(String[] args) {
@@ -114,6 +132,8 @@ public class JavaCDWorkerToolMain {
     // no need to measure thread CPU time as this is an external process and we do not pass thread
     // time back to buck with Downward API
     Clock clock = new DefaultClock(false);
+    SettableFuture<Unit> startNextCommand = null;
+    Future<Unit> pipeliningCommandExecutedFuture = null;
 
     try (IsolatedEventBus eventBus =
         new DefaultIsolatedEventBus(buildUuid, eventsOutputStream, clock, DOWNWARD_PROTOCOL)) {
@@ -163,16 +183,49 @@ public class JavaCDWorkerToolMain {
                   PipeliningCommand.parseDelimitedFrom(commandsInputStream);
               LOG.debug("Start executing pipelining command with action ids: %s", actionIds);
 
-              PipeliningJavaCommandExecutor.executePipeliningJavaCommand(
-                  actionIds,
-                  pipeliningCommand,
-                  eventsOutputStream,
-                  DOWNWARD_PROTOCOL,
-                  eventBus,
-                  platform,
-                  processExecutor,
-                  console,
-                  clock);
+              Optional<SettableFuture<Unit>> startNextCommandOptional;
+              if (actionIds.size() > 1) {
+                checkFutureIsNullOrDone(
+                    startNextCommand, "Previous `startNextCommand` is not yet done!");
+                startNextCommand = SettableFuture.create();
+                startNextCommandOptional = Optional.of(startNextCommand);
+              } else {
+                startNextCommandOptional = Optional.empty();
+              }
+
+              checkFutureIsNullOrDone(
+                  pipeliningCommandExecutedFuture,
+                  "Previous `pipeliningCommandExecutedFuture` is not yet done!");
+              pipeliningCommandExecutedFuture =
+                  THREAD_POOL.submit(
+                      () -> {
+                        LOG.debug(
+                            "Starting execution of pipelining command with action ids: %s",
+                            actionIds);
+
+                        PipeliningJavaCommandExecutor.executePipeliningJavaCommand(
+                            actionIds,
+                            pipeliningCommand,
+                            eventsOutputStream,
+                            DOWNWARD_PROTOCOL,
+                            eventBus,
+                            platform,
+                            processExecutor,
+                            console,
+                            clock,
+                            startNextCommandOptional);
+
+                        LOG.debug(
+                            "Pipelining command has been executed. Action ids: %s", actionIds);
+
+                        return Unit.UNIT;
+                      });
+
+              // if only 1 command, then wait till it get executed
+              if (actionIds.size() == 1) {
+                LOG.debug("Start waiting till pipelining command get executed.");
+                pipeliningCommandExecutedFuture.get();
+              }
               break;
 
             case START_NEXT_PIPELINING_COMMAND:
@@ -181,6 +234,19 @@ public class JavaCDWorkerToolMain {
               LOG.debug(
                   "Received start next pipelining command with action id: %s",
                   startNextPipeliningCommand.getActionId());
+
+              checkFutureNotDone(
+                  startNextCommand,
+                  "`startNextCommand` must wait for a signal of the next pipelining command");
+              checkFutureNotDone(
+                  pipeliningCommandExecutedFuture,
+                  "`pipeliningCommandExecutedFuture` must wait for a signal of the next pipelining command");
+
+              // signal to pipelining runner that it could continue with pipelining command
+              // execution
+              startNextCommand.set(Unit.UNIT);
+              LOG.debug("Start waiting till pipelining command get executed.");
+              pipeliningCommandExecutedFuture.get();
               break;
 
             case UNKNOWN:
@@ -191,5 +257,17 @@ public class JavaCDWorkerToolMain {
         }
       }
     }
+  }
+
+  private static void checkFutureNotDone(Future<Unit> future, String message) {
+    Preconditions.checkState(!isNullOrDone(future), message);
+  }
+
+  private static void checkFutureIsNullOrDone(Future<Unit> future, String message) {
+    Preconditions.checkState(isNullOrDone(future), message);
+  }
+
+  private static boolean isNullOrDone(Future<Unit> future) {
+    return future == null || future.isDone();
   }
 }
