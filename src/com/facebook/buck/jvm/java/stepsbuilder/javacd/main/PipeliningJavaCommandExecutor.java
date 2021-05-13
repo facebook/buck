@@ -77,7 +77,7 @@ class PipeliningJavaCommandExecutor {
       ProcessExecutor processExecutor,
       Console console,
       Clock clock)
-      throws IOException {
+      throws IOException, InterruptedException {
 
     BaseJavacToJarStepFactory javacToJarStepFactory =
         JavaStepsBuilder.getBaseJavacToJarStepFactory(pipeliningCommand.getBaseCommandParams());
@@ -129,6 +129,16 @@ class PipeliningJavaCommandExecutor {
 
         if (contextOptional.isPresent()) {
           try (IsolatedExecutionContext isolatedExecutionContext = contextOptional.get()) {
+
+            // TODO: msemko - change this to wait for a signal from buck when library jar execution
+            // has been started.
+            // abi execution just finished. Let's wait till buck starts execution new pipelining
+            // rule for library jar.
+            // Without this sleep chrome trace events become broken as javacd immediately starting
+            // library jar execution,
+            // while buck is doing switchover to a new library-jar pipelining rule.
+            Thread.sleep(10);
+
             StepExecutionUtils.executeSteps(
                 isolatedExecutionContext,
                 eventsOutputStream,
