@@ -38,7 +38,8 @@ message CommandTypeMessage {
         UNKNOWN = 0;
         EXECUTE_COMMAND = 1;
         START_PIPELINE_COMMAND = 2;
-        SHUTDOWN_COMMAND = 3;
+        START_NEXT_PIPELINING_COMMAND = 3;
+        SHUTDOWN_COMMAND = 4;
     }
 }
 
