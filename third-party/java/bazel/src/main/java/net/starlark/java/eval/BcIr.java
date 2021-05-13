@@ -13,7 +13,6 @@ import javax.annotation.Nullable;
  * <ul>
  *   <li>Instructions are represented by java objects, not by ints
  *   <li>Strings and objects are stored as is, not indexed
- *   <li>There are special instructions to allocate and release slots
  *   <li>There's an instruction to patch jump address
  *   <li>There's an instruction to close for loop
  *   <li>IR code is address-independent: two IR objects can be concatenated to produce valid IR,
@@ -36,21 +35,8 @@ class BcIr {
 
   /** Serialize this bytecode into executable bytecode. */
   void write(BcWriter writer) {
-    BcIrWriteContext writeContext = new BcIrWriteContext(writer);
-    for (int i = 0; i < instructions.size(); i++) {
-      BcIrInstr instr = instructions.get(i);
-      try {
-        instr.write(writeContext);
-      } catch (Exception e) {
-        throw new IllegalStateException(
-            String.format("failed to write instruction %s of %s", i, this), e);
-      }
-    }
-    try {
-      writeContext.assertWrittenCorrectly();
-    } catch (Exception e) {
-      throw new IllegalStateException(String.format("failed to write %s", this), e);
-    }
+    BcIrWriteContext writeContext = new BcIrWriteContext(writer, instructions);
+    writeContext.write();
   }
 
   /** Add instruction. */
@@ -58,19 +44,12 @@ class BcIr {
     instructions.add(instr);
   }
 
-  /** Allocate slot. */
-  BcIrSlot.LazyLocal allocSlot(String label) {
-    BcIrSlot.LazyLocal lazyLocal = new BcIrSlot.LazyLocal(Friend.FRIEND, label);
-    add(new BcIrInstr.AllocSlot(lazyLocal, Friend.FRIEND));
-    return lazyLocal;
-  }
-
   /** Copy slot to a fresh local slot if necessary. */
   BcIrSlot.AnyLocal makeLocal(BcWriter.LocOffset locOffset, BcIrSlot slot, String label) {
     if (slot instanceof BcIrSlot.AnyLocal) {
       return (BcIrSlot.AnyLocal) slot;
     } else {
-      BcIrSlot.LazyLocal local = allocSlot(label);
+      BcIrSlot.LazyLocal local = new BcIrSlot.LazyLocal(label);
       add(new BcIrInstr.Cp(locOffset, slot, local));
       return local;
     }
@@ -201,15 +180,14 @@ class BcIr {
   /** Check if function returns {@code type(p0) == 'xxx'} of parameter 0. */
   @Nullable
   String returnsTypeIsOfParam0() {
-    BcIrInstr.AllocSlot allocSlot = getOrNull(0, BcIrInstr.AllocSlot.class);
-    BcIrInstr.TypeIs typeIs = getOrNull(1, BcIrInstr.TypeIs.class);
-    BcIrInstr.Return returnInstr = getOrNull(2, BcIrInstr.Return.class);
+    BcIrInstr.TypeIs typeIs = getOrNull(0, BcIrInstr.TypeIs.class);
+    BcIrInstr.Return returnInstr = getOrNull(1, BcIrInstr.Return.class);
 
-    if (allocSlot == null || typeIs == null || returnInstr == null) {
+    if (typeIs == null || returnInstr == null) {
       return null;
     }
 
-    if (allocSlot.lazyLocal != typeIs.result || typeIs.result != returnInstr.value) {
+    if (typeIs.result != returnInstr.value) {
       return null;
     }
 
@@ -236,14 +214,12 @@ class BcIr {
    */
   @Nullable
   PopTypeIs popTypeIs(BcIrSlot typeIsResultSlot) {
-    BcIrInstr.AllocSlot allocSlot = getFromBackOrNull(1, BcIrInstr.AllocSlot.class);
     BcIrInstr.TypeIs typeIs = getFromBackOrNull(0, BcIrInstr.TypeIs.class);
-    if (allocSlot == null || typeIs == null) {
+    if (typeIs == null) {
       return null;
     }
     Preconditions.checkState(typeIsResultSlot == typeIs.result);
-    Preconditions.checkState(allocSlot.lazyLocal == typeIs.result);
-    instructions.subList(instructions.size() - 2, instructions.size()).clear();
+    instructions.subList(instructions.size() - 1, instructions.size()).clear();
     return new PopTypeIs(typeIs.expr, typeIs.type);
   }
 

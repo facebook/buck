@@ -199,7 +199,7 @@ class Bc {
     }
 
     private void compileDefStatement(BcIr ir, DefStatement def) {
-      BcIrSlot.LazyLocal result = ir.allocSlot("def");
+      BcIrSlot.LazyLocal result = new BcIrSlot.LazyLocal("def");
       compileNewFunction(ir, def.getResolvedFunction(), def, result);
       compileSet(ir, result, def.getIdentifier(), true);
     }
@@ -285,7 +285,7 @@ class Bc {
       // Register where we are storing the next iterator value.
       // This register is updated by FOR_INIT and CONTINUE instructions.
       BcIrSlot.AnyLocal nextValueSlot = assignStraightToLocal ?
-          localIdentSlot((Identifier) vars) : ir.allocSlot("item");
+          localIdentSlot((Identifier) vars) : new BcIrSlot.LazyLocal("item");
 
       ir.add(new BcIrInstr.ForInit(
           nodeToLocOffset(collection),
@@ -368,7 +368,7 @@ class Bc {
             && ((Identifier) element).getBinding().getScope() == Resolver.Scope.LOCAL) {
           lhs.add(localIdentSlot((Identifier) element));
         } else {
-          BcIrSlot.LazyLocal slot = ir.allocSlot("unpack");
+          BcIrSlot.LazyLocal slot = new BcIrSlot.LazyLocal("unpack");
           postUnpackAssignmentSlots.add(slot);
           postUnpackAssignmentExprs.add(element);
           lhs.add(slot);
@@ -441,7 +441,7 @@ class Bc {
         );
       } else {
         CompileExpressionResult value = compileGet(lhs);
-        BcIrSlot.LazyLocal temp = ir.allocSlot("aug");
+        BcIrSlot.LazyLocal temp = new BcIrSlot.LazyLocal("aug");
         writeBinaryInPlace(
             ir,
             assignmentStatement,
@@ -530,21 +530,16 @@ class Bc {
         BcIrSlot object = compileExpression(ir, indexExpression.getObject()).slot;
         BcIrSlot key = compileExpression(ir, indexExpression.getKey()).slot;
 
-        object.incRef();
-        key.incRef();
-
         AugmentedAssignmentRhs rhs = compileAugmentedAssignmentRhs(
             ir,
             assignmentStatement.getOperator(),
             assignmentStatement.getRHS());
-        BcIrSlot.LazyLocal temp = ir.allocSlot("aug");
+        BcIrSlot.LazyLocal temp = new BcIrSlot.LazyLocal("aug");
         ir.add(new BcIrInstr.Index(
             nodeToLocOffset(assignmentStatement),
             object,
             key,
             temp));
-        temp.incRef();
-        temp.incRef();
         writeBinaryInPlace(ir, assignmentStatement, temp, rhs, temp);
         ir.add(new BcIrInstr.SetIndex(
             nodeToLocOffset(assignmentStatement),
@@ -626,7 +621,7 @@ class Bc {
 
     private CompileExpressionResult compileLambda(BcIr ir,
         LambdaExpression lambda, BcIrLocalOrAny result) {
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "lambda");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("lambda");
       compileNewFunction(ir, lambda.getResolvedFunction(), lambda, resultLocal);
       return new CompileExpressionResult(resultLocal);
     }
@@ -717,8 +712,7 @@ class Bc {
 
     /** Compile expression discarding the result. */
     private void compileExpressionForEffect(BcIr ir, Expression expression) {
-      CompileExpressionResult result = compileExpressionTo(ir, expression, BcIrLocalOrAny.Any.ANY);
-      result.slot.decRef();
+      compileExpressionTo(ir, expression, BcIrLocalOrAny.Any.ANY);
     }
 
     /** Compile expression and return an IR and result slot. */
@@ -768,7 +762,7 @@ class Bc {
 
     private CompileExpressionResult compileIndex(
         BcIr ir, IndexExpression expression, BcIrLocalOrAny result) {
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "index");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("index");
 
       BcIrSlot object = compileExpression(ir, expression.getObject()).slot;
       BcIrSlot key = compileExpression(ir, expression.getKey()).slot;
@@ -806,7 +800,7 @@ class Bc {
         }
       }
 
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "dot");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("dot");
 
       ir.add(new BcIrInstr.Dot(
           nodeToLocOffset(dotExpression),
@@ -825,7 +819,7 @@ class Bc {
       BcIrSlotOrNull stop = compileExpressionOrNull(ir, slice.getStop());
       BcIrSlotOrNull step = compileExpressionOrNull(ir, slice.getStep());
 
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "slice");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("slice");
 
       ir.add(new BcIrInstr.Slice(
           nodeToLocOffset(slice),
@@ -883,7 +877,7 @@ class Bc {
         BcIr ir, Comprehension comprehension, BcIrLocalOrAny result) {
       // Must explicitly use temporary variable, because comprehension expression
       // may reference to the same slot we are about to write.
-      BcIrSlot.LazyLocal temp = ir.allocSlot("compr");
+      BcIrSlot.LazyLocal temp = new BcIrSlot.LazyLocal("compr");
       if (comprehension.isDict()) {
         ir.add(new BcIrInstr.Dict(
             nodeToLocOffset(comprehension),
@@ -923,7 +917,6 @@ class Bc {
               throw new IllegalStateException("unknown compr clause: " + clause);
             }
           } else {
-            temp.incRef();
             if (comprehension.isDict()) {
               DictExpression.Entry entry = (DictExpression.Entry) comprehension.getBody();
               BcIrSlot key = compileExpression(ir, entry.getKey()).slot;
@@ -948,7 +941,7 @@ class Bc {
       if (result == BcIrLocalOrAny.Any.ANY) {
         return new CompileExpressionResult(temp);
       } else {
-        BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "compr_r");
+        BcIrSlot.AnyLocal resultLocal = result.makeLocal("compr_r");
         cp(ir, comprehension, temp, resultLocal);
         return new CompileExpressionResult(resultLocal);
       }
@@ -956,7 +949,7 @@ class Bc {
 
     private CompileExpressionResult compileDict(BcIr ir,
         DictExpression dictExpression, BcIrLocalOrAny result) {
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "dict");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("dict");
 
       ImmutableList.Builder<BcIrSlot> args = ImmutableList
           .builderWithExpectedSize(dictExpression.getEntries().size() * 2);
@@ -988,7 +981,7 @@ class Bc {
         }
       }
 
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "list");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("list");
 
       if (listExpression.isTuple()) {
         ir.add(new BcIrInstr.Tuple(
@@ -1034,9 +1027,7 @@ class Bc {
         }
       }
 
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "cond");
-      // Inc ref count because the slot is referenced twice: in then and in else
-      resultLocal.incRef();
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("cond");
 
       new BcCompilerForIf(this)
           .compileIfElse(
@@ -1065,7 +1056,7 @@ class Bc {
         return compileConstantTo(ir, expression, !Starlark.truth(value.value()), result);
       }
 
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "un");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("un");
 
       BcIrInstr.UnOpOp unOpOp = BcIrInstr.UnOpOp.fromToken(expression.getOperator());
 
@@ -1114,9 +1105,7 @@ class Bc {
         }
       }
 
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "and_or");
-
-      lhs.slot.incRef();
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("and_or");
 
       BcIrInstr.JumpLabel elseTarget = ir.ifBr(
           nodeToLocOffset(expression),
@@ -1125,7 +1114,6 @@ class Bc {
       compileExpressionTo(ir, expression.getY(), resultLocal);
       BcIrInstr.JumpLabel endTarget = ir.br(nodeToLocOffset(expression));
       ir.add(elseTarget);
-      resultLocal.incRef();
       cp(ir, expression, lhs.slot, resultLocal);
       ir.add(endTarget);
       return new CompileExpressionResult(resultLocal);
@@ -1196,7 +1184,7 @@ class Bc {
       BcIrListArg rhs = compileExpressionList(
           ir, ((ListExpression) expression.getY()).getElements());
 
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "plus_list");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("plus_list");
 
       ir.add(new BcIrInstr.PlusList(
           nodeToLocOffset(expression),
@@ -1211,7 +1199,7 @@ class Bc {
         BcIr ir, Node expression, BcIrSlot slot, String type, BcIrLocalOrAny result) {
       BcIrSlot.AnyLocal local = ir.makeLocal(nodeToLocOffset(expression), slot, "type_is_v");
 
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "type_is");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("type_is");
 
       ir.add(new BcIrInstr.TypeIs(
           nodeToLocOffset(expression),
@@ -1331,7 +1319,7 @@ class Bc {
 
       ir.addAll(localIr);
 
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "bin");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("bin");
 
       writeBinaryOp(ir, expression, expression.getOperator(), x, y, resultLocal);
       return new CompileExpressionResult(resultLocal);
@@ -1369,7 +1357,7 @@ class Bc {
         y = compileExpression(ir, expression.getY());
         tuple = false;
       }
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "str_percent");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("str_percent");
       ir.add(new BcIrInstr.PercentSOne(
           nodeToLocOffset(expression),
           format,

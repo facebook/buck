@@ -1,6 +1,5 @@
 package net.starlark.java.eval;
 
-import com.google.common.base.Preconditions;
 import javax.annotation.Nullable;
 
 /** Slot in Starlark IR. */
@@ -16,21 +15,6 @@ abstract class BcIrSlot {
   public Object constValue() {
     return null;
   }
-
-  /**
-   * Inc allowed use count for this slot.
-   *
-   * <p>This is used for precise temporaries allocation: temporary is created with refcount zero for
-   * typical use case: allocate, write, read. This can be incremented explicitly if temporary need
-   * to be read (or written) with then one instruction.
-   *
-   * <p>Incorrect refcounter inc/dec causes exception at IR serialization time.
-   *
-   * <p>This method is no-op except for temporary slots.
-   */
-  void incRef() {}
-
-  void decRef() {}
 
   /** Any local slot. */
   abstract static class AnyLocal extends BcIrSlot {}
@@ -62,51 +46,15 @@ abstract class BcIrSlot {
   static class LazyLocal extends AnyLocal {
     /** For debugging. */
     private final String label;
-    /** Number of time this local will be referenced in instructions. */
-    private int refCount = 2;
-    /** No incRef/decRef allowed when frozen. */
-    private boolean frozen = false;
 
-    LazyLocal(BcIr.Friend friend, String label) {
+    LazyLocal(String label) {
       this.label = label;
-      friend.markUsed();
-    }
-
-    /** Fill the slot number during serialization. */
-    void init(BcIrWriteContext writeContext) {
-      int local = writeContext.writer.allocSlot();
-
-      BcIrWriteContext.LazyLocalState prev =
-          writeContext.lazyLocals.put(this, new BcIrWriteContext.LazyLocalState(local));
-      Preconditions.checkState(prev == null, "slot can be allocated only once");
-
-      this.frozen = true;
-    }
-
-    @Override
-    void incRef() {
-      Preconditions.checkState(!frozen, "must not incRef after freeze");
-      ++refCount;
-    }
-
-    @Override
-    void decRef() {
-      Preconditions.checkState(!frozen, "must not decRef after freeze");
-      Preconditions.checkState(refCount > 0, "refcount is already zero");
-      --refCount;
     }
 
     @Override
     int encode(BcIrWriteContext writeContext) {
-      BcIrWriteContext.LazyLocalState localState = writeContext.lazyLocals.get(this);
-      Preconditions.checkState(localState != null, "Lazy slot was not initialized, %s", this);
-
-      Preconditions.checkState(
-          localState.useCount < refCount, "use counter reached ref counter, %s", this);
-      if (++localState.useCount == refCount) {
-        writeContext.writer.releaseSlot(localState.local);
-      }
-      return BcSlot.local(localState.local);
+      int local = writeContext.lazyLocalSlot(this);
+      return BcSlot.local(local);
     }
 
     @Override

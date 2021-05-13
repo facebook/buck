@@ -1,29 +1,144 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 /** IR-specific context while writing bytecode. */
 class BcIrWriteContext {
   final BcWriter writer;
 
-  BcIrWriteContext(BcWriter writer) {
+  private final ArrayList<BcIrInstr> instructions;
+
+  /** Allocate these slots before instruction. */
+  private final ArrayList<LazyLocalState>[] allocSlotsByInstruction;
+  /** Release these slots after instruction. */
+  private final ArrayList<LazyLocalState>[] releaseSlotsByInstruction;
+
+  /** Map lazy locals to slot numbers. */
+  private final HashMap<BcIrSlot.LazyLocal, LazyLocalState> lazyLocals = new HashMap<>();
+
+  /** Jump label map to addresses to patch when the label is encountered. */
+  private final HashMap<BcIrInstr.JumpLabel, IntArrayBuilder> forwardJumpAddrsToPatch =
+      new HashMap<>();
+
+  @SuppressWarnings("unchecked")
+  BcIrWriteContext(BcWriter writer, ArrayList<BcIrInstr> instructions) {
     this.writer = writer;
-  }
+    this.instructions = instructions;
 
-  /** {@link BcIrSlot.LazyLocal} during serialization. */
-  static class LazyLocalState {
-    final int local;
-    int useCount = 0;
+    // Now detect the scope of lazy locals: first the first and last instructions
+    // where this lazy local was referenced, so it can be allocated at the first reference
+    // and deallocated on the last reference.
 
-    public LazyLocalState(int local) {
-      Preconditions.checkArgument(local >= 0);
-      this.local = local;
+    for (int i = 0; i < instructions.size(); i++) {
+      BcIrInstr instr = instructions.get(i);
+      int finalI = i;
+      instr.visitSlots(
+          new BcIrSlotVisitor() {
+            @Override
+            void visitSlot(BcIrSlot slot) {
+              if (slot instanceof BcIrSlot.LazyLocal) {
+                BcIrSlot.LazyLocal lazyLocal = (BcIrSlot.LazyLocal) slot;
+                LazyLocalState state =
+                    lazyLocals.computeIfAbsent(lazyLocal, k -> new LazyLocalState(finalI));
+                state.lastInstruction = finalI;
+              }
+            }
+          });
+    }
+
+    allocSlotsByInstruction = (ArrayList<LazyLocalState>[]) new ArrayList<?>[instructions.size()];
+    releaseSlotsByInstruction = (ArrayList<LazyLocalState>[]) new ArrayList<?>[instructions.size()];
+
+    for (Map.Entry<BcIrSlot.LazyLocal, LazyLocalState> entry : lazyLocals.entrySet()) {
+      LazyLocalState state = entry.getValue();
+
+      if (allocSlotsByInstruction[state.firstInstruction] == null) {
+        allocSlotsByInstruction[state.firstInstruction] = new ArrayList<>();
+      }
+      allocSlotsByInstruction[state.firstInstruction].add(state);
+
+      if (releaseSlotsByInstruction[state.lastInstruction] == null) {
+        releaseSlotsByInstruction[state.lastInstruction] = new ArrayList<>();
+      }
+      releaseSlotsByInstruction[state.lastInstruction].add(state);
     }
   }
 
-  HashMap<BcIrSlot.LazyLocal, LazyLocalState> lazyLocals = new HashMap<>();
-  HashMap<BcIrInstr.JumpLabel, IntArrayBuilder> forwardJumpAddrsToPatch = new HashMap<>();
+  void write() {
+    for (int i = 0; i < this.instructions.size(); i++) {
+      BcIrInstr instr = this.instructions.get(i);
+      try {
+        ArrayList<LazyLocalState> alloc = allocSlotsByInstruction[i];
+        if (alloc != null) {
+          for (LazyLocalState lazyLocal : alloc) {
+            Preconditions.checkState(lazyLocal.local == LazyLocalState.LOCAL_NOT_INITIALIZED);
+            lazyLocal.local = writer.allocSlot();
+          }
+        }
+
+        instr.write(this);
+
+        ArrayList<LazyLocalState> release = releaseSlotsByInstruction[i];
+        if (release != null) {
+          for (LazyLocalState lazyLocal : release) {
+            Preconditions.checkState(lazyLocal.local >= 0);
+            writer.releaseSlot(lazyLocal.local);
+            lazyLocal.local = LazyLocalState.LOCAL_RELEASED;
+          }
+        }
+      } catch (Exception e) {
+        throw new IllegalStateException(
+            String.format("failed to write instruction %s of %s", i, instructions), e);
+      }
+    }
+    try {
+      assertWrittenCorrectly();
+    } catch (Exception e) {
+      throw new IllegalStateException(String.format("failed to write %s", this), e);
+    }
+  }
+
+  /** {@link BcIrSlot.LazyLocal} during serialization. */
+  private static class LazyLocalState {
+    private static final int LOCAL_NOT_INITIALIZED = -1;
+    private static final int LOCAL_RELEASED = -2;
+
+    /** First instruction referencing this lazy local. */
+    private final int firstInstruction;
+    /** Last instruction referencing this lazy local. */
+    private int lastInstruction = -1;
+
+    /** Local slot number while in scope of this lazy local. */
+    private int local = LOCAL_NOT_INITIALIZED;
+
+    LazyLocalState(int firstInstruction) {
+      this.firstInstruction = firstInstruction;
+    }
+  }
+
+  /**
+   * Obtain current lazy local real slot number or crash if called outside of lazy local detected
+   * scope.
+   */
+  int lazyLocalSlot(BcIrSlot.LazyLocal lazyLocal) {
+    LazyLocalState state = lazyLocals.get(lazyLocal);
+    Preconditions.checkState(state != null, "lazy local was not referenced: %s", lazyLocal);
+    int local = state.local;
+    if (local < 0) {
+      switch (local) {
+        case LazyLocalState.LOCAL_RELEASED:
+          throw new IllegalStateException("local was released: " + lazyLocal);
+        case LazyLocalState.LOCAL_NOT_INITIALIZED:
+          throw new IllegalStateException("local was not initialized: " + lazyLocal);
+        default:
+          throw new IllegalStateException("impossible");
+      }
+    }
+    return local;
+  }
 
   void writeForwardJump(BcWriter.LocOffset locOffset, BcIrInstr.JumpLabel jumpLabel) {
     int patchAddr = writer.writeForwardJump(locOffset);

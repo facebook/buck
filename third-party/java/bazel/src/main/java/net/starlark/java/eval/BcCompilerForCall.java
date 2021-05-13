@@ -148,7 +148,7 @@ class BcCompilerForCall {
         && callable.isImmutable()) {
       compiledArguments.addToIr(ir);
 
-      BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "call");
+      BcIrSlot.AnyLocal resultLocal = result.makeLocal("call");
 
       ir.add(
           new BcIrInstr.CallCached(
@@ -265,7 +265,7 @@ class BcCompilerForCall {
 
     compiledArguments.addToIr(ir);
 
-    BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "call");
+    BcIrSlot.AnyLocal resultLocal = result.makeLocal("call");
 
     ir.add(
         new BcIrInstr.CallLinked(
@@ -293,7 +293,7 @@ class BcCompilerForCall {
 
     compiledArguments.addToIr(ir);
 
-    BcIrSlot.AnyLocal resultLocal = result.makeLocal(ir, "call");
+    BcIrSlot.AnyLocal resultLocal = result.makeLocal("call");
 
     ir.add(
         new BcIrInstr.Call(

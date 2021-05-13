@@ -5,7 +5,7 @@ abstract class BcIrLocalOrAny {
   private BcIrLocalOrAny() {}
 
   /** Get a local or make one. */
-  abstract BcIrSlot.AnyLocal makeLocal(BcIr ir, String label);
+  abstract BcIrSlot.AnyLocal makeLocal(String label);
 
   /** Pointer to a local slot. */
   static class Local extends BcIrLocalOrAny {
@@ -16,7 +16,7 @@ abstract class BcIrLocalOrAny {
     }
 
     @Override
-    BcIrSlot.AnyLocal makeLocal(BcIr ir, String label) {
+    BcIrSlot.AnyLocal makeLocal(String label) {
       return local;
     }
   }
@@ -26,8 +26,8 @@ abstract class BcIrLocalOrAny {
     private Any() {}
 
     @Override
-    BcIrSlot.AnyLocal makeLocal(BcIr ir, String label) {
-      return ir.allocSlot(label);
+    BcIrSlot.AnyLocal makeLocal(String label) {
+      return new BcIrSlot.LazyLocal(label);
     }
 
     static final Any ANY = new Any();

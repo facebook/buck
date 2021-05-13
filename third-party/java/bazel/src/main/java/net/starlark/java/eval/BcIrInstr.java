@@ -29,6 +29,8 @@ abstract class BcIrInstr {
   /** Serialize this instruction. */
   abstract void write(BcIrWriteContext writeContext);
 
+  abstract void visitSlots(BcIrSlotVisitor visitor);
+
   static class Cp extends BcIrInstr {
     final BcWriter.LocOffset locOffset;
     final BcIrSlot src;
@@ -55,6 +57,12 @@ abstract class BcIrInstr {
       }
       writeContext.writer.write(
           opcode, locOffset, src.encode(writeContext), dest.encode(writeContext));
+    }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(src);
+      visitor.visitSlot(dest);
     }
   }
 
@@ -93,6 +101,11 @@ abstract class BcIrInstr {
           writeContext.writer.allocString(name),
           postAssignHook ? 1 : 0);
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(rhs);
+    }
   }
 
   static class SetCell extends BcIrInstr {
@@ -115,6 +128,11 @@ abstract class BcIrInstr {
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
           BcInstr.Opcode.SET_CELL, locOffset, rhs.encode(writeContext), cellIndex);
+    }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(rhs);
     }
   }
 
@@ -139,6 +157,12 @@ abstract class BcIrInstr {
       int[] args = BcWriter.args(arg.encode(writeContext), result.encode(writeContext));
       writeContext.writer.write(BcInstr.Opcode.LIST, locOffset, args);
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlots(arg);
+      visitor.visitSlot(result);
+    }
   }
 
   static class Tuple extends BcIrInstr {
@@ -161,6 +185,12 @@ abstract class BcIrInstr {
     void write(BcIrWriteContext writeContext) {
       int[] args = BcWriter.args(arg.encode(writeContext), result.encode(writeContext));
       writeContext.writer.write(BcInstr.Opcode.TUPLE, locOffset, args);
+    }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlots(arg);
+      visitor.visitSlot(result);
     }
   }
 
@@ -192,6 +222,12 @@ abstract class BcIrInstr {
       args[i++] = result.encode(writeContext);
       Preconditions.checkState(i == args.length);
       writeContext.writer.write(BcInstr.Opcode.DICT, locOffset, args);
+    }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlots(arg);
+      visitor.visitSlot(result);
     }
   }
 
@@ -234,6 +270,15 @@ abstract class BcIrInstr {
           step.encode(writeContext),
           result.encode(writeContext));
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(object);
+      visitor.visitSlot(start);
+      visitor.visitSlot(stop);
+      visitor.visitSlot(step);
+      visitor.visitSlot(result);
+    }
   }
 
   static class Index extends BcIrInstr {
@@ -262,6 +307,13 @@ abstract class BcIrInstr {
           object.encode(writeContext),
           index.encode(writeContext),
           result.encode(writeContext));
+    }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(object);
+      visitor.visitSlot(index);
+      visitor.visitSlot(result);
     }
   }
 
@@ -293,6 +345,12 @@ abstract class BcIrInstr {
           writeContext.writer.allocObject(field),
           result.encode(writeContext));
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(object);
+      visitor.visitSlot(result);
+    }
   }
 
   static class SetIndex extends BcIrInstr {
@@ -322,6 +380,13 @@ abstract class BcIrInstr {
           index.encode(writeContext),
           rhs.encode(writeContext));
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(lhs);
+      visitor.visitSlot(index);
+      visitor.visitSlot(rhs);
+    }
   }
 
   static class ListAppend extends BcIrInstr {
@@ -347,6 +412,12 @@ abstract class BcIrInstr {
           locOffset,
           list.encode(writeContext),
           item.encode(writeContext));
+    }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(list);
+      visitor.visitSlot(item);
     }
   }
 
@@ -450,6 +521,13 @@ abstract class BcIrInstr {
             result.encode(writeContext));
       }
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(lhs);
+      visitor.visitSlot(rhs);
+      visitor.visitSlot(result);
+    }
   }
 
   enum UnOpOp {
@@ -512,6 +590,12 @@ abstract class BcIrInstr {
           break;
       }
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(arg);
+      visitor.visitSlot(result);
+    }
   }
 
   static class Br extends BcIrInstr implements Flow {
@@ -532,6 +616,9 @@ abstract class BcIrInstr {
     void write(BcIrWriteContext writeContext) {
       writeContext.writeForwardJump(locOffset, jumpLabel);
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {}
   }
 
   /** Conditional forward jump. */
@@ -555,6 +642,11 @@ abstract class BcIrInstr {
     void write(BcIrWriteContext writeContext) {
       writeContext.writeForwardCondJump(locOffset, cond, jumpLabel);
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      cond.visitSlots(visitor);
+    }
   }
 
   /** Jump label. Patches previously written jumps on serialization. Generates no bytecode. */
@@ -572,6 +664,9 @@ abstract class BcIrInstr {
     void write(BcIrWriteContext writeContext) {
       writeContext.patchForwardJump(this);
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {}
   }
 
   /** For loop initialization routine. */
@@ -597,6 +692,12 @@ abstract class BcIrInstr {
       writeContext.writer.writeForInit(
           locOffset, collection.encode(writeContext), item.encode(writeContext));
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(collection);
+      visitor.visitSlot(item);
+    }
   }
 
   /**
@@ -617,6 +718,9 @@ abstract class BcIrInstr {
       writeContext.writer.writeForClose();
     }
 
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {}
+
     static final ForClose FOR_CLOSE = new ForClose();
   }
 
@@ -636,6 +740,9 @@ abstract class BcIrInstr {
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.writeBreak(locOffset);
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {}
   }
 
   static class Continue extends BcIrInstr implements Flow {
@@ -654,6 +761,9 @@ abstract class BcIrInstr {
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.writeContinue(locOffset);
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {}
   }
 
   static class PlusList extends BcIrInstr {
@@ -685,6 +795,13 @@ abstract class BcIrInstr {
               rhs.encode(writeContext),
               new int[] {result.encode(writeContext)}));
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(lhs);
+      visitor.visitSlots(rhs);
+      visitor.visitSlot(result);
+    }
   }
 
   static class PlusListInPlace extends BcIrInstr {
@@ -715,6 +832,13 @@ abstract class BcIrInstr {
               new int[] {lhs.encode(writeContext)},
               rhs.encode(writeContext),
               new int[] {result.encode(writeContext)}));
+    }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(lhs);
+      visitor.visitSlots(rhs);
+      visitor.visitSlot(result);
     }
   }
 
@@ -748,6 +872,12 @@ abstract class BcIrInstr {
           expr.encode(writeContext),
           writeContext.writer.allocString(type),
           result.encode(writeContext));
+    }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(expr);
+      visitor.visitSlot(result);
     }
   }
 
@@ -791,6 +921,12 @@ abstract class BcIrInstr {
           result.encode(writeContext));
     }
 
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(arg);
+      visitor.visitSlot(result);
+    }
+
     private BcInstr.Opcode opcode() {
       return tuple ? BcInstr.Opcode.PERCENT_S_ONE_TUPLE : BcInstr.Opcode.PERCENT_S_ONE;
     }
@@ -818,6 +954,11 @@ abstract class BcIrInstr {
         writeContext.writer.write(BcInstr.Opcode.RETURN, locOffset, value.encode(writeContext));
       }
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(value);
+    }
   }
 
   static class EvalException extends BcIrInstr implements Flow {
@@ -838,6 +979,9 @@ abstract class BcIrInstr {
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.writeEvalException(locOffset, message);
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {}
   }
 
   static class Call extends BcIrInstr {
@@ -912,6 +1056,15 @@ abstract class BcIrInstr {
         writeContext.writer.write(BcInstr.Opcode.CALL, locOffset, args);
       }
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(fn);
+      visitor.visitSlots(listArg);
+      visitor.visitSlot(starArg);
+      visitor.visitSlot(starStarArg);
+      visitor.visitSlot(result);
+    }
   }
 
   static class CallLinked extends BcIrInstr {
@@ -979,6 +1132,14 @@ abstract class BcIrInstr {
         writeContext.writer.write(BcInstr.Opcode.CALL_LINKED, locOffset, newArgs);
       }
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlots(listArg);
+      visitor.visitSlot(starArg);
+      visitor.visitSlot(starStarArg);
+      visitor.visitSlot(result);
+    }
   }
 
   static class CallCached extends BcIrInstr {
@@ -1004,6 +1165,11 @@ abstract class BcIrInstr {
           locOffset,
           writeContext.writer.allocObject(callCached),
           result.encode(writeContext));
+    }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(result);
     }
   }
 
@@ -1045,6 +1211,12 @@ abstract class BcIrInstr {
 
       writeContext.writer.write(BcInstr.Opcode.NEW_FUNCTION, locOffset, args);
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlots(defaults);
+      visitor.visitSlot(result);
+    }
   }
 
   static class LoadStmt extends BcIrInstr {
@@ -1066,6 +1238,9 @@ abstract class BcIrInstr {
       writeContext.writer.write(
           BcInstr.Opcode.LOAD_STMT, locOffset, writeContext.writer.allocObject(loadStmt));
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {}
   }
 
   static class Unpack extends BcIrInstr {
@@ -1097,28 +1272,11 @@ abstract class BcIrInstr {
       Preconditions.checkState(i == args.length);
       writeContext.writer.write(BcInstr.Opcode.UNPACK, locOffset, args);
     }
-  }
-
-  /**
-   * An instruction to allocate a slot number. This instruction populates lazy slot object with slot
-   * number, and generates no bytecode.
-   */
-  static class AllocSlot extends BcIrInstr {
-    final BcIrSlot.LazyLocal lazyLocal;
-
-    AllocSlot(BcIrSlot.LazyLocal lazyLocal, BcIr.Friend friend) {
-      friend.markUsed();
-      this.lazyLocal = lazyLocal;
-    }
 
     @Override
-    protected Object[] argsForToString() {
-      return new Object[] {AllocSlot.class.getSimpleName(), lazyLocal};
-    }
-
-    @Override
-    void write(BcIrWriteContext writeContext) {
-      lazyLocal.init(writeContext);
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(rhs);
+      visitor.visitSlots(lhs);
     }
   }
 }

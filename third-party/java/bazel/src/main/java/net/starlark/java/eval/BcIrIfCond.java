@@ -20,6 +20,8 @@ abstract class BcIrIfCond {
   /** To string for an instruction is space-separated arguments. */
   protected abstract Object[] argsForToString();
 
+  abstract void visitSlots(BcIrSlotVisitor visitor);
+
   static class Local extends BcIrIfCond {
     final BcIrSlot.AnyLocal cond;
     final BcWriter.JumpCond jumpCond;
@@ -38,6 +40,11 @@ abstract class BcIrIfCond {
     @Override
     protected Object[] argsForToString() {
       return new Object[] {cond, jumpCond};
+    }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(cond);
     }
   }
 
@@ -62,6 +69,11 @@ abstract class BcIrIfCond {
     protected Object[] argsForToString() {
       return new Object[] {expr, type, jumpCond};
     }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(expr);
+    }
   }
 
   static class Bin extends BcIrIfCond {
@@ -84,6 +96,12 @@ abstract class BcIrIfCond {
     @Override
     protected Object[] argsForToString() {
       return new Object[] {a, b, cond};
+    }
+
+    @Override
+    void visitSlots(BcIrSlotVisitor visitor) {
+      visitor.visitSlot(a);
+      visitor.visitSlot(b);
     }
   }
 }
