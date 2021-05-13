@@ -176,6 +176,11 @@ message PipelineState {
     ResolvedJavacOptions resolvedJavacOptions = 16;
 }
 
+// Represents a signal that the next command in pipelining command could be started
+message StartNextPipeliningCommand{
+    string actionId = 1;
+}
+
 message FilesystemParams {
     AbsPath rootPath = 1;
     RelPath configuredBuckOut = 2;
