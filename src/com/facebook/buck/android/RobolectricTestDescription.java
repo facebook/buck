@@ -301,35 +301,6 @@ public class RobolectricTestDescription
     graphBuilder.addToIndex(unitTestOptions);
     params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(unitTestOptions));
 
-    Optional<RobolectricRuntimeDependencies> robolectricRuntimeDependenciesRule = Optional.empty();
-    ImmutableSortedSet<BuildRule> robolectricRuntimeDependencyRules =
-        graphBuilder.getAllRules(args.getRobolectricRuntimeDependencies());
-    if (!robolectricRuntimeDependencyRules.isEmpty()) {
-      Preconditions.checkState(
-          !args.getRobolectricRuntimeDependency().isPresent(),
-          "Cannot set robolectric_runtime_dependency and robolectric_runtime_dependencies!");
-      ImmutableList<SourcePath> robolectricJarPaths =
-          robolectricRuntimeDependencyRules.stream()
-              .map(BuildRule::getSourcePathToOutput)
-              .collect(ImmutableList.toImmutableList());
-      for (SourcePath sourcePath : robolectricJarPaths) {
-        Preconditions.checkState(
-            !projectFilesystem.isDirectory(sourcePathResolver.getAbsolutePath(sourcePath)),
-            "robolectric_runtime_dependencies must not output directories!");
-      }
-
-      RobolectricRuntimeDependencies robolectricRuntimeDependencies =
-          new RobolectricRuntimeDependencies(
-              buildTarget.withAppendedFlavors(
-                  InternalFlavor.of("robolectric_runtime_dependencies")),
-              projectFilesystem,
-              graphBuilder,
-              robolectricJarPaths);
-      graphBuilder.addToIndex(robolectricRuntimeDependencies);
-      robolectricRuntimeDependenciesRule = Optional.of(robolectricRuntimeDependencies);
-      params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(robolectricRuntimeDependencies));
-    }
-
     if (resourcesProvider.hasResources()) {
       GenerateRDotJava generateRDotJava =
           new GenerateRDotJava(
@@ -457,8 +428,6 @@ public class RobolectricTestDescription
         args.getResources(),
         args.getExternalResourcesPaths(),
         args.getRobolectricRuntimeDependency(),
-        robolectricRuntimeDependencyRules,
-        robolectricRuntimeDependenciesRule,
         args.getRobolectricManifest(),
         javaOptions.getJavaRuntime(),
         javaOptions.getJavaRuntimeVersion(),
@@ -493,8 +462,6 @@ public class RobolectricTestDescription
       extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg {
 
     Optional<SourcePath> getRobolectricRuntimeDependency();
-
-    ImmutableList<BuildTarget> getRobolectricRuntimeDependencies();
 
     SourcePath getRobolectricManifest();
 

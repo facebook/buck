@@ -4,7 +4,6 @@ prebuilt_jar(
     licenses = [
         "LICENSE",
     ],
-    visibility = ["PUBLIC"],
 )
 
 prebuilt_jar(

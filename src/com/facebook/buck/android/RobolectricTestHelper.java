@@ -22,11 +22,9 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.stream.RichStream;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -35,30 +33,23 @@ import java.util.stream.Stream;
 
 /** A helper class for {@link RobolectricTest} */
 class RobolectricTestHelper {
-
   static final String ROBOLECTRIC_DEPENDENCY_DIR = "robolectric.dependency.dir";
 
   private final MergeAssets binaryResources;
   private final ImmutableSet<Path> externalResourcesPaths;
   private final SourcePath robolectricManifest;
   private final Optional<SourcePath> robolectricRuntimeDependency;
-  private final ImmutableSortedSet<BuildRule> robolectricRuntimeDependencies;
-  private final Optional<RobolectricRuntimeDependencies> robolectricRuntimeDependenciesRule;
   private final ProjectFilesystem projectFilesystem;
 
   RobolectricTestHelper(
       MergeAssets binaryResources,
       ImmutableSet<Path> externalResourcesPaths,
       Optional<SourcePath> robolectricRuntimeDependency,
-      ImmutableSortedSet<BuildRule> robolectricRuntimeDependencies,
-      Optional<RobolectricRuntimeDependencies> robolectricRuntimeDependenciesRule,
       SourcePath robolectricManifest,
       ProjectFilesystem projectFilesystem) {
     this.binaryResources = binaryResources;
     this.externalResourcesPaths = externalResourcesPaths;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
-    this.robolectricRuntimeDependencies = robolectricRuntimeDependencies;
-    this.robolectricRuntimeDependenciesRule = robolectricRuntimeDependenciesRule;
     this.robolectricManifest = robolectricManifest;
     this.projectFilesystem = projectFilesystem;
   }
@@ -68,17 +59,6 @@ class RobolectricTestHelper {
       ImmutableList.Builder<String> vmArgsBuilder, SourcePathResolverAdapter pathResolver) {
     // Force robolectric to only use local dependency resolution.
     vmArgsBuilder.add("-Drobolectric.offline=true");
-
-    Preconditions.checkState(
-        robolectricRuntimeDependenciesRule.isPresent() | robolectricRuntimeDependency.isPresent());
-    robolectricRuntimeDependenciesRule.ifPresent(
-        rule ->
-            vmArgsBuilder.add(
-                String.format(
-                    "-D%s=%s",
-                    RobolectricTestHelper.ROBOLECTRIC_DEPENDENCY_DIR,
-                    pathResolver.getAbsolutePath(rule.getSourcePathToOutput()))));
-
     robolectricRuntimeDependency.ifPresent(
         s ->
             vmArgsBuilder.add(
@@ -91,8 +71,8 @@ class RobolectricTestHelper {
   /** get extra run time dependency defined in the test description */
   Stream<BuildTarget> getExtraRuntimeDeps(SortedSet<BuildRule> buildDeps) {
     return Stream.of(
+            // We need the binary resources.
             RichStream.of(binaryResources),
-            robolectricRuntimeDependencies.stream(),
             // It's possible that the user added some tool as a dependency, so make sure we
             // promote this rules first-order deps to runtime deps, so that these potential
             // tools are available when this test runs.
@@ -110,32 +90,6 @@ class RobolectricTestHelper {
             .getPath());
     builder.add(sourcePathResolverAdapter.getAbsolutePath(robolectricManifest).getPath());
     externalResourcesPaths.stream().map(projectFilesystem::resolve).forEach(builder::add);
-
-    robolectricRuntimeDependenciesRule.ifPresent(
-        robolectricRuntimeDir -> {
-          Path robolectricRuntimeDirPath =
-              sourcePathResolverAdapter
-                  .getAbsolutePath(robolectricRuntimeDir.getSourcePathToOutput())
-                  .getPath();
-          ImmutableCollection<Path> relativePaths;
-          try {
-            relativePaths =
-                projectFilesystem.asView().getDirectoryContents(robolectricRuntimeDirPath);
-          } catch (IOException e) {
-            throw new RuntimeException(
-                "Unable to get directory contents for "
-                    + robolectricRuntimeDir.getSourcePathToOutput(),
-                e);
-          }
-          relativePaths.stream().map(projectFilesystem::resolve).forEach(builder::add);
-        });
-
-    for (BuildRule runtimeDependencyJar : robolectricRuntimeDependencies) {
-      builder.add(
-          sourcePathResolverAdapter
-              .getAbsolutePath(runtimeDependencyJar.getSourcePathToOutput())
-              .getPath());
-    }
 
     robolectricRuntimeDependency.ifPresent(
         robolectricRuntimeDir -> {
