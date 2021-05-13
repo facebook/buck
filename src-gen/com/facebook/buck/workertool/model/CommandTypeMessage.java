@@ -101,9 +101,13 @@ private static final long serialVersionUID = 0L;
      */
     START_PIPELINE_COMMAND(2),
     /**
-     * <code>SHUTDOWN_COMMAND = 3;</code>
+     * <code>START_NEXT_PIPELINING_COMMAND = 3;</code>
      */
-    SHUTDOWN_COMMAND(3),
+    START_NEXT_PIPELINING_COMMAND(3),
+    /**
+     * <code>SHUTDOWN_COMMAND = 4;</code>
+     */
+    SHUTDOWN_COMMAND(4),
     UNRECOGNIZED(-1),
     ;
 
@@ -120,9 +124,13 @@ private static final long serialVersionUID = 0L;
      */
     public static final int START_PIPELINE_COMMAND_VALUE = 2;
     /**
-     * <code>SHUTDOWN_COMMAND = 3;</code>
+     * <code>START_NEXT_PIPELINING_COMMAND = 3;</code>
      */
-    public static final int SHUTDOWN_COMMAND_VALUE = 3;
+    public static final int START_NEXT_PIPELINING_COMMAND_VALUE = 3;
+    /**
+     * <code>SHUTDOWN_COMMAND = 4;</code>
+     */
+    public static final int SHUTDOWN_COMMAND_VALUE = 4;
 
 
     public final int getNumber() {
@@ -146,7 +154,8 @@ private static final long serialVersionUID = 0L;
         case 0: return UNKNOWN;
         case 1: return EXECUTE_COMMAND;
         case 2: return START_PIPELINE_COMMAND;
-        case 3: return SHUTDOWN_COMMAND;
+        case 3: return START_NEXT_PIPELINING_COMMAND;
+        case 4: return SHUTDOWN_COMMAND;
         default: return null;
       }
     }

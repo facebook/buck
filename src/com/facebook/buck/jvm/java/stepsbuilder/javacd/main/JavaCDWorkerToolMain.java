@@ -174,6 +174,7 @@ public class JavaCDWorkerToolMain {
                   clock);
               break;
 
+            case START_NEXT_PIPELINING_COMMAND:
             case UNKNOWN:
             case UNRECOGNIZED:
             default:

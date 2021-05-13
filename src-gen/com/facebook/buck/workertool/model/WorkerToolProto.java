@@ -47,16 +47,17 @@ public final class WorkerToolProto {
     java.lang.String[] descriptorData = {
       "\nBsrc/com/facebook/buck/workertool/resou" +
       "rces/proto/worker_tool.proto\022\021workertool" +
-      ".api.v1\"\300\001\n\022CommandTypeMessage\022G\n\014comman" +
+      ".api.v1\"\344\001\n\022CommandTypeMessage\022G\n\014comman" +
       "d_type\030\001 \001(\01621.workertool.api.v1.Command" +
-      "TypeMessage.CommandType\"a\n\013CommandType\022\013" +
-      "\n\007UNKNOWN\020\000\022\023\n\017EXECUTE_COMMAND\020\001\022\032\n\026STAR" +
-      "T_PIPELINE_COMMAND\020\002\022\024\n\020SHUTDOWN_COMMAND" +
-      "\020\003\"#\n\016ExecuteCommand\022\021\n\taction_id\030\001 \001(\t\"" +
-      ")\n\024StartPipelineCommand\022\021\n\taction_id\030\001 \003" +
-      "(\t\"\021\n\017ShutdownCommandB7\n\"com.facebook.bu" +
-      "ck.workertool.modelB\017WorkerToolProtoP\001b\006" +
-      "proto3"
+      "TypeMessage.CommandType\"\204\001\n\013CommandType\022" +
+      "\013\n\007UNKNOWN\020\000\022\023\n\017EXECUTE_COMMAND\020\001\022\032\n\026STA" +
+      "RT_PIPELINE_COMMAND\020\002\022!\n\035START_NEXT_PIPE" +
+      "LINING_COMMAND\020\003\022\024\n\020SHUTDOWN_COMMAND\020\004\"#" +
+      "\n\016ExecuteCommand\022\021\n\taction_id\030\001 \001(\t\")\n\024S" +
+      "tartPipelineCommand\022\021\n\taction_id\030\001 \003(\t\"\021" +
+      "\n\017ShutdownCommandB7\n\"com.facebook.buck.w" +
+      "orkertool.modelB\017WorkerToolProtoP\001b\006prot" +
+      "o3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
