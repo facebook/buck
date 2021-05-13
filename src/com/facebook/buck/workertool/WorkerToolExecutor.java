@@ -45,4 +45,12 @@ public interface WorkerToolExecutor extends WorkerProcess {
       AbstractMessage executeCommandMessage,
       SettableFuture<Unit> pipelineFinished)
       throws IOException, ExecutionException, InterruptedException;
+
+  /**
+   * Sends a signal to worker tool that it could start execution the next pipelining command.
+   *
+   * @param actionId - action id of the next pipelining command.
+   */
+  void startNextCommand(AbstractMessage startNextPipeliningCommand, String actionId)
+      throws IOException;
 }

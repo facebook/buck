@@ -186,10 +186,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     private void processPipelineFinishedEvent() {
       LOG.debug(
           "Received pipeline finished event. Actions: %s, worker id: %s",
-          executingActions.stream()
-              .map(ExecutingAction::getActionId)
-              .collect(Collectors.joining(",")),
-          workerId);
+          getExecutingActionIds(), workerId);
 
       // signal to Step that pipeline is finished
       Preconditions.checkNotNull(pipelineFinished);
@@ -264,15 +261,42 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
         .collect(ImmutableList.toImmutableList());
   }
 
+  @Override
+  public void startNextCommand(AbstractMessage startNextPipeliningCommand, String actionId)
+      throws IOException {
+    checkState(isAlive(), "Launched process is not alive");
+    checkState(!pipelineFinished.isDone(), "Pipeline is finished.");
+
+    runUnderLock(
+        () -> {
+          boolean isExecuting = false;
+          for (ExecutingAction executingAction : executingActions) {
+            if (executingAction.getActionId().equals(actionId)) {
+              isExecuting = true;
+              break;
+            }
+          }
+          checkState(
+              isExecuting,
+              "Action id: %s is not found among currently execution actions: %s",
+              actionId,
+              getExecutingActionIds());
+        });
+
+    CommandTypeMessage commandTypeMessage =
+        getCommandTypeMessage(CommandTypeMessage.CommandType.START_NEXT_PIPELINING_COMMAND);
+
+    commandTypeMessage.writeDelimitedTo(outputStream);
+    startNextPipeliningCommand.writeDelimitedTo(outputStream);
+
+    LOG.debug(
+        "Started next pipelining command with action id: %s has been send to worker id: %s",
+        actionId, workerId);
+  }
+
   private void checkThatNoActionsAreExecuting() {
     // `executingActions` list has to be empty when a request to execute a new command arrived.
-    checkState(
-        executingActions.isEmpty(),
-        "Actions "
-            + executingActions.stream()
-                .map(ExecutingAction::getActionId)
-                .collect(Collectors.joining(", "))
-            + " are executing...");
+    checkState(executingActions.isEmpty(), "Actions %s are executing...", getExecutingActionIds());
   }
 
   private void prepareForTheNextCommand() {
@@ -310,17 +334,20 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
           String executingActionId = executingAction.getActionId();
           checkState(
               actionId.equals(executingActionId),
-              String.format(
-                  "Received action id %s is not equals to expected one %s. Currently executing actions: %s",
-                  actionId,
-                  executingActionId,
-                  executingActions.stream()
-                      .map(ExecutingAction::getActionId)
-                      .collect(Collectors.joining(", "))));
+              "Received action id %s is not equals to expected one %s. Currently executing actions: %s",
+              actionId,
+              executingActionId,
+              getExecutingActionIds());
 
           SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
           resultEventFuture.set(resultEvent);
         });
+  }
+
+  private String getExecutingActionIds() {
+    return executingActions.stream()
+        .map(ExecutingAction::getActionId)
+        .collect(Collectors.joining(", "));
   }
 
   @Override
