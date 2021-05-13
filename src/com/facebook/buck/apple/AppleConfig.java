@@ -104,9 +104,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String BUNDLE_INPUT_BASED_RULEKEY_ENABLED =
       "bundle_input_based_rulekey_enabled";
 
-  // TODO(T78663283): This is a temporary flag, remove after successful deployment
-  private static final String PARALLELIZE_CODE_SIGN_ON_COPY = "parallelize_code_sign_on_copy";
-
   private static final String STRIP_SWIFT_SYMBOLS = "strip_swift_symbols";
 
   private static final String EMBED_XCTEST_IN_TEST_BUNDLES = "embed_xctest_in_test_bundles";
@@ -635,10 +632,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getBundleInputBasedRulekeyEnabled() {
     return delegate.getBooleanValue(APPLE_SECTION, BUNDLE_INPUT_BASED_RULEKEY_ENABLED, false);
-  }
-
-  public boolean getParallelCodeSignOnCopyEnabled() {
-    return delegate.getBooleanValue(APPLE_SECTION, PARALLELIZE_CODE_SIGN_ON_COPY, false);
   }
 
   public boolean getStripSwiftSymbolsEnabled() {

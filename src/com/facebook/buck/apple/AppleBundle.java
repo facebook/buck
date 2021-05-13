@@ -181,8 +181,6 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final boolean inputBasedRulekeyEnabled;
 
-  @AddToRuleKey private final boolean parallelCodeSignOnCopyEnabled;
-
   AppleBundle(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -216,8 +214,7 @@ public class AppleBundle extends AbstractBuildRule
       Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath,
       Optional<SourcePath> processedResourcesContentHashesFileSourcePath,
       boolean incrementalBundlingEnabled,
-      boolean inputBasedRulekeyEnabled,
-      boolean parallelCodeSignOnCopyEnabled) {
+      boolean inputBasedRulekeyEnabled) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
     this.extension = extension;
@@ -278,7 +275,6 @@ public class AppleBundle extends AbstractBuildRule
         processedResourcesContentHashesFileSourcePath;
     this.incrementalBundlingEnabled = incrementalBundlingEnabled;
     this.inputBasedRulekeyEnabled = inputBasedRulekeyEnabled;
-    this.parallelCodeSignOnCopyEnabled = parallelCodeSignOnCopyEnabled;
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -1022,45 +1018,36 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableList<Path> codeSignOnCopyPaths,
       Supplier<CodeSignIdentity> codeSignIdentitySupplier,
       Optional<Path> maybeEntitlementsPath) {
-    if (parallelCodeSignOnCopyEnabled) {
-      stepsBuilder.add(
-          new AbstractExecutionStep("parallel-code-sign-paths") {
-            @Override
-            public StepExecutionResult execute(StepExecutionContext stepContext) {
-              // TODO(T79316205) Ideally use future based API
-              List<StepExecutionResult> subResults =
-                  codeSignOnCopyPaths
-                      .parallelStream()
-                      .map(
-                          path -> {
-                            Step subStep =
-                                makeCodeSignStep(
-                                    context.getSourcePathResolver(), path,
-                                    Optional.empty(), codeSignIdentitySupplier);
-                            try {
-                              return subStep.execute(stepContext);
-                            } catch (Exception e) {
-                              LOG.error(
-                                  e,
-                                  "Failed to execute code sign step for path %s.",
-                                  path.toString());
-                              return StepExecutionResults.ERROR;
-                            }
-                          })
-                      .collect(Collectors.toList());
-              return subResults.stream().allMatch(StepExecutionResult::isSuccess)
-                  ? StepExecutionResults.SUCCESS
-                  : StepExecutionResults.ERROR;
-            }
-          });
-    } else {
-      for (Path codeSignOnCopyPath : codeSignOnCopyPaths) {
-        stepsBuilder.add(
-            makeCodeSignStep(
-                context.getSourcePathResolver(), codeSignOnCopyPath,
-                Optional.empty(), codeSignIdentitySupplier));
-      }
-    }
+    stepsBuilder.add(
+        new AbstractExecutionStep("parallel-code-sign-paths") {
+          @Override
+          public StepExecutionResult execute(StepExecutionContext stepContext) {
+            // TODO(T79316205) Ideally use future based API
+            List<StepExecutionResult> subResults =
+                codeSignOnCopyPaths
+                    .parallelStream()
+                    .map(
+                        path -> {
+                          Step subStep =
+                              makeCodeSignStep(
+                                  context.getSourcePathResolver(), path,
+                                  Optional.empty(), codeSignIdentitySupplier);
+                          try {
+                            return subStep.execute(stepContext);
+                          } catch (Exception e) {
+                            LOG.error(
+                                e,
+                                "Failed to execute code sign step for path %s.",
+                                path.toString());
+                            return StepExecutionResults.ERROR;
+                          }
+                        })
+                    .collect(Collectors.toList());
+            return subResults.stream().allMatch(StepExecutionResult::isSuccess)
+                ? StepExecutionResults.SUCCESS
+                : StepExecutionResults.ERROR;
+          }
+        });
     stepsBuilder.add(
         makeCodeSignStep(
             context.getSourcePathResolver(),

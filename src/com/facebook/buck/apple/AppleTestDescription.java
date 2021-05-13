@@ -390,7 +390,6 @@ public class AppleTestDescription
                         appleConfig.getCodeSignTypeOverride(),
                         appleConfig.getBundleInputBasedRulekeyEnabled(),
                         appleConfig.getIncrementalHashCacheEnabled(),
-                        appleConfig.getParallelCodeSignOnCopyEnabled(),
                         appleConfig.getEmbedXctestInTestBundles(),
                         appleConfig.getDoNotEmbedHostAppInTestBundle(),
                         testHostWithTargetApp));

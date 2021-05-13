@@ -433,7 +433,6 @@ public class AppleBinaryDescription
         appleConfig.getCodeSignTypeOverride(),
         appleConfig.getBundleInputBasedRulekeyEnabled(),
         appleConfig.getIncrementalHashCacheEnabled(),
-        appleConfig.getParallelCodeSignOnCopyEnabled(),
         false,
         false,
         Optional.empty());

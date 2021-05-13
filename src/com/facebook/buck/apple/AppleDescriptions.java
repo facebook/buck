@@ -796,7 +796,6 @@ public class AppleDescriptions {
       Optional<AppleCodeSignType> codeSignTypeOverride,
       boolean bundleInputBasedRulekeyEnabled,
       boolean shouldCacheFileHashes,
-      boolean parallelCodeSignOnCopyEnabled,
       boolean shouldEmbedXctest,
       boolean doNotEmbedHostAppInTestBundle,
       Optional<AppleTestDescription.TestHostInfo> testHostInfo) {
@@ -1421,8 +1420,7 @@ public class AppleDescriptions {
         nonProcessedResourcesContentHashesFileSourcePath,
         processResources.getSourcePathToContentHashes(),
         incrementalBundlingEnabled,
-        bundleInputBasedRulekeyEnabled,
-        parallelCodeSignOnCopyEnabled);
+        bundleInputBasedRulekeyEnabled);
   }
 
   private static Optional<SourcePath> frameworkIncrementalInfo(
