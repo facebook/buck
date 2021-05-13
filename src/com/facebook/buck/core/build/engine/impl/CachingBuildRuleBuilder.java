@@ -135,6 +135,7 @@ import javax.annotation.Nullable;
 class CachingBuildRuleBuilder {
 
   private static final Logger LOG = Logger.get(CachingBuildRuleBuilder.class);
+
   private final BuildRuleBuilderDelegate buildRuleBuilderDelegate;
   private final BuildType buildMode;
   private final boolean consoleLogBuildFailuresInline;
@@ -1583,7 +1584,8 @@ class CachingBuildRuleBuilder {
       @SuppressWarnings("unchecked")
       PipelinedModernBuildRule<State, ?> pipelinedModernBuildRule =
           (PipelinedModernBuildRule<State, ?>) pipelinedRule;
-      pipelinedModernBuildRule.appendWithCommonSetupSteps(buildRuleBuildContext, stepsBuilder);
+      pipelinedModernBuildRule.appendWithCommonSetupSteps(
+          buildRuleBuildContext, buildableContext, stepsBuilder);
     }
 
     private void rethrowIgnoredInterruptedException(Step step) throws InterruptedException {
