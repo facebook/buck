@@ -123,7 +123,7 @@ public class AndroidInstrumentationApkDescription
         .map(BuildRule::getBuildTarget)
         .forEach(buildTargetsToExclude::add);
 
-    APKModule rootAPKModule = APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true);
+    APKModule rootAPKModule = APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true, true);
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         apkUnderTest.getAndroidPackageableCollection().getResourceDetails().get(rootAPKModule);
     ImmutableSet<BuildTarget> resourcesToExclude =

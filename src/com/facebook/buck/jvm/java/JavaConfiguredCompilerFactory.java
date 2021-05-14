@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
@@ -86,6 +87,7 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   public CompileToJarStepFactory configure(
       @Nullable JvmLibraryArg arg,
       JavacOptions javacOptions,
+      ActionGraphBuilder actionGraphBuilder,
       BuildRuleResolver buildRuleResolver,
       TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider) {

@@ -25,12 +25,12 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.testng.IAnnotationTransformer;
@@ -51,7 +51,7 @@ import org.testng.reporters.JUnitReportReporter;
 import org.testng.reporters.SuiteHTMLReporter;
 import org.testng.reporters.XMLReporter;
 
-/** Class that runs a set of TestNG tests and writes the results to a directory. */
+/** Class that runs a set of TestNG tests and outputs the results to a directory. */
 public final class TestNGRunner extends BaseRunner {
 
   @Override
@@ -60,11 +60,13 @@ public final class TestNGRunner extends BaseRunner {
 
       Class<?> testClass = Class.forName(className);
 
-      List<TestResult> results;
+      Collection<TestResult> results;
       if (!mightBeATestClass(testClass)) {
         results = Collections.emptyList();
       } else {
-        results = new ArrayList<>();
+        // TestNG can run a test class's tests in parallel via DataProvider.
+        // Use concurrency-safe collection to avoid comodification errors. 
+        results = new ConcurrentLinkedQueue<>();
         TestNG testng = new TestNG();
         testng.setUseDefaultListeners(false);
         testng.addListener(new FilteringAnnotationTransformer(results));
@@ -155,9 +157,9 @@ public final class TestNGRunner extends BaseRunner {
   }
 
   public class FilteringAnnotationTransformer implements IAnnotationTransformer {
-    final List<TestResult> results;
+    final Collection<TestResult> results;
 
-    FilteringAnnotationTransformer(List<TestResult> results) {
+    FilteringAnnotationTransformer(Collection<TestResult> results) {
       this.results = results;
     }
 
@@ -199,13 +201,13 @@ public final class TestNGRunner extends BaseRunner {
   }
 
   private static class TestListener implements ITestListener, IConfigurationListener {
-    private final List<TestResult> results;
+    private final Collection<TestResult> results;
     private boolean mustRestoreStdoutAndStderr;
     private PrintStream originalOut, originalErr, stdOutStream, stdErrStream;
     private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
     private Map<IClass, Throwable> failedConfigurationTestClasses = new HashMap<>();
 
-    public TestListener(List<TestResult> results) {
+    public TestListener(Collection<TestResult> results) {
       this.results = results;
     }
 

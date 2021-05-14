@@ -44,6 +44,7 @@ class StubJarClassEntry extends StubJarEntry {
   private final Path path;
   private final ClassNode stub;
   private final boolean retainEverything;
+  private final boolean isKotlinClass;
 
   @Nullable
   public static StubJarClassEntry of(
@@ -70,7 +71,7 @@ class StubJarClassEntry extends StubJarEntry {
           // used within an inline function, and in these cases we need to retain the whole class.
           input.visitClass(path, stub, false);
           return new StubJarClassEntry(
-              path, stub, Collections.emptySet(), Collections.emptyList(), true);
+              path, stub, Collections.emptySet(), Collections.emptyList(), true, isKotlinClass);
         }
         ClassNode dummyStub = new ClassNode(Opcodes.ASM7);
         input.visitClass(path, dummyStub, true);
@@ -94,7 +95,7 @@ class StubJarClassEntry extends StubJarEntry {
     // ABI methods and fields, and will use that information later to filter the InnerClasses table.
     ClassReferenceTracker referenceTracker = new ClassReferenceTracker(stub);
     ClassVisitor firstLevelFiltering =
-        new AbiFilteringClassVisitor(referenceTracker, methodBodiesToRetain);
+        new AbiFilteringClassVisitor(referenceTracker, methodBodiesToRetain, null, isKotlinClass);
 
     // If we want ABIs that are compatible with those generated from source, we add a visitor
     // at the very start of the chain which transforms the event stream coming out of `ClassNode`
@@ -112,7 +113,7 @@ class StubJarClassEntry extends StubJarEntry {
         || retainAllMethodBodies
         || stub.name.endsWith("/package-info")) {
       return new StubJarClassEntry(
-          path, stub, referenceTracker.getReferencedClassNames(), methodBodiesToRetain, false);
+          path, stub, referenceTracker.getReferencedClassNames(), methodBodiesToRetain, false, isKotlinClass);
     }
 
     return null;
@@ -123,12 +124,14 @@ class StubJarClassEntry extends StubJarEntry {
       ClassNode stub,
       Set<String> referencedClassNames,
       List<String> methodBodiesToRetain,
-      boolean retainEverything) {
+      boolean retainEverything,
+      boolean isKotlinClass) {
     this.path = path;
     this.stub = stub;
     this.referencedClassNames = referencedClassNames;
     this.methodBodiesToRetain = methodBodiesToRetain;
     this.retainEverything = retainEverything;
+    this.isKotlinClass = isKotlinClass;
   }
 
   @Override
@@ -146,7 +149,7 @@ class StubJarClassEntry extends StubJarEntry {
     ClassVisitor visitor = writer;
     if (!retainEverything) {
       visitor = new InnerClassSortingClassVisitor(stub.name, visitor);
-      visitor = new AbiFilteringClassVisitor(visitor, methodBodiesToRetain, referencedClassNames);
+      visitor = new AbiFilteringClassVisitor(visitor, methodBodiesToRetain, referencedClassNames, isKotlinClass);
     }
 
     stub.accept(visitor);

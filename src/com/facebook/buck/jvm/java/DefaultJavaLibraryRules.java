@@ -563,6 +563,7 @@ public abstract class DefaultJavaLibraryRules {
             getArgs(),
             getJavacOptions(),
             getActionGraphBuilder(),
+            getActionGraphBuilder(),
             getInitialBuildTarget().getTargetConfiguration(),
             getToolchainProvider());
   }
@@ -573,6 +574,7 @@ public abstract class DefaultJavaLibraryRules {
         .configure(
             getArgs(),
             getJavacOptionsForSourceOnlyAbi(),
+            getActionGraphBuilder(),
             getActionGraphBuilder(),
             getInitialBuildTarget().getTargetConfiguration(),
             getToolchainProvider());

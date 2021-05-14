@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
@@ -43,6 +44,7 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   public CompileToJarStepFactory configure(
       @Nullable JvmLibraryArg args,
       JavacOptions javacOptions,
+      ActionGraphBuilder actionGraphBuilder,
       BuildRuleResolver buildRuleResolver,
       TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider) {

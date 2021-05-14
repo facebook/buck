@@ -68,7 +68,7 @@ public class ProcessHelper {
             try {
               LOG.verbose("Getting process tree...");
               OperatingSystem os = OSHI.getOperatingSystem();
-              OSProcess[] processes = os.getProcesses(100, OperatingSystem.ProcessSort.NEWEST);
+              List<OSProcess> processes = os.getProcesses(100, OperatingSystem.ProcessSort.NEWEST);
               for (OSProcess process : processes) {
                 tree.add(process);
               }

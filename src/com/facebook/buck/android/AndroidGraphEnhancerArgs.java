@@ -101,6 +101,11 @@ public interface AndroidGraphEnhancerArgs
     return ImmutableSet.of();
   }
 
+  @Value.Default
+  default Set<String> getApplicationModulesWithManifest() {
+    return ImmutableSet.of();
+  }
+
   Optional<ImmutableMap<String, ImmutableList<String>>> getApplicationModuleDependencies();
 
   @Value.Default
@@ -200,6 +205,11 @@ public interface AndroidGraphEnhancerArgs
 
   @Value.Default
   default boolean isSkipProguard() {
+    return false;
+  }
+
+  @Value.Default
+  default boolean getUseDynamicFeature() {
     return false;
   }
 

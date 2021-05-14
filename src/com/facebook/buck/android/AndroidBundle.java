@@ -16,6 +16,8 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.android.BinaryType.AAB;
+
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.ResourcesFilter.ResourceCompressionMode;
 import com.facebook.buck.android.apkmodule.APKModule;
@@ -67,12 +69,32 @@ import java.util.stream.Stream;
  *
  *
  * <pre>
- * android_binary(
+ * android_bundle(
  *   name = 'messenger',
  *   manifest = 'AndroidManifest.xml',
  *   deps = [
  *     '//src/com/facebook/messenger:messenger_library',
  *   ],
+ * )
+ * </pre>
+ *
+ * Configuration for dynamic feature (enable use_split_dex, use_dynamic_feature and application_module_configs flags) :
+ * <pre>A new configuration application_modules_with_manifest is defined to decouple the manifest behaviour from the resources. This approach is aligned with dynamic features heuristics where base manifest has complete information of the feature manifest</pre>
+ * <pre>
+ * android_bundle(
+ *   name = 'messenger',
+ *   manifest = 'AndroidManifest.xml',
+ *   deps = [
+ *     '//src/com/facebook/messenger:messenger_library',
+ *   ],
+ *   use_split_dex = True,
+ *   use_dynamic_feature = True,
+ *   application_module_configs = {
+ *     "feature1":['//feature1:module_root'],
+ *   },
+ *   application_modules_with_manifest = [
+ *     "feature1",
+ *   ]
  * )
  * </pre>
  */
@@ -107,6 +129,7 @@ public class AndroidBundle extends AbstractBuildRule
   private final BuildRuleParams buildRuleParams;
 
   @AddToRuleKey private final AndroidBinaryBuildable buildable;
+  @AddToRuleKey private final AndroidBinaryOptimizer optimizer;
 
   // TODO(cjhopman): What's the difference between shouldProguard and skipProguard?
   AndroidBundle(
@@ -141,7 +164,8 @@ public class AndroidBundle extends AbstractBuildRule
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
       Optional<ExopackageInfo> exopackageInfo,
-      Optional<SourcePath> bundleConfigFilePath) {
+      Optional<SourcePath> bundleConfigFilePath,
+      boolean useDynamicFeature) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -185,17 +209,12 @@ public class AndroidBundle extends AbstractBuildRule
     }
 
     this.buildable =
-        new AndroidBinaryBuildable(
+        new AndroidBundleBuildable(
             getBuildTarget(),
             getProjectFilesystem(),
             androidSdkLocation,
-            androidPlatformTarget,
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
-            redexOptions,
-            redexOptions
-                .map(options -> enhancementResult.getAdditionalRedexInputs())
-                .orElse(ImmutableList.of()),
             exopackageModes,
             xzCompressionLevel,
             packageAssetLibraries,
@@ -203,14 +222,27 @@ public class AndroidBundle extends AbstractBuildRule
             assetCompressionAlgorithm,
             javaRuntimeLauncher,
             enhancementResult.getAndroidManifestPath(),
-            resourceCompressionMode.isCompressResources(),
             dexFilesInfo,
             nativeFilesInfo,
             resourceFilesInfo,
             apkModules,
             enhancementResult.getModuleResourceApkPaths(),
             bundleConfigFilePath,
-            false);
+            AAB,
+            useDynamicFeature);
+    this.optimizer =
+        new AndroidBundleOptimizer(
+            getBuildTarget(),
+            getProjectFilesystem(),
+            androidSdkLocation,
+            androidPlatformTarget,
+            keystore.getPathToStore(),
+            keystore.getPathToPropertiesFile(),
+            redexOptions,
+            packageAssetLibraries,
+            compressAssetLibraries,
+            assetCompressionAlgorithm,
+            resourceCompressionMode.isCompressResources());
     this.exopackageInfo = exopackageInfo;
 
     params =
@@ -298,12 +330,17 @@ public class AndroidBundle extends AbstractBuildRule
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    return buildable.getBuildSteps(context, buildableContext);
+    return ImmutableList.<Step>builder()
+        .addAll(buildable.getBuildSteps(context, buildableContext))
+        .addAll(optimizer.getBuildSteps(context, buildableContext))
+        .build();
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), buildable.getFinalApkPath());
+    return ExplicitBuildTargetSourcePath.of(
+        getBuildTarget(),
+        AndroidBinaryPathUtility.getFinalApkPath(getProjectFilesystem(), getBuildTarget(), AAB));
   }
 
   public Keystore getKeystore() {

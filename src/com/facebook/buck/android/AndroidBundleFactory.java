@@ -135,6 +135,7 @@ public class AndroidBundleFactory {
         filesInfo.getResourceFilesInfo(),
         ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
         filesInfo.getExopackageInfo(),
-        args.getBundleConfigFile());
+        args.getBundleConfigFile(),
+        args.getUseDynamicFeature());
   }
 }

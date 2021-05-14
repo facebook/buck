@@ -316,7 +316,7 @@ public class AndroidPackageableCollectorTest {
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableList.toImmutableList());
 
-    APKModule rootModule = APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true);
+    APKModule rootModule = APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true, true);
 
     assertEquals(
         "Android resources should be topologically sorted.",
@@ -401,7 +401,7 @@ public class AndroidPackageableCollectorTest {
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         androidPackageableCollection
             .getResourceDetails()
-            .get(APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true));
+            .get(APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true, true));
     assertThat(
         resourceDetails.getResourceDirectories(), Matchers.contains(resAPath, resPath, resBPath));
   }

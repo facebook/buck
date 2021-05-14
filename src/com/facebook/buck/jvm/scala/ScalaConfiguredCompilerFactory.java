@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -71,6 +72,7 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   public CompileToJarStepFactory configure(
       @Nullable JvmLibraryArg arg,
       JavacOptions javacOptions,
+      ActionGraphBuilder actionGraphBuilder,
       BuildRuleResolver buildRuleResolver,
       TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider) {
