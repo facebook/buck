@@ -4,6 +4,7 @@ java_library(
     name = "starlark-annot",
     srcs = glob([
         "src/main/java/net/starlark/java/annot/*.java",
+        "src/main/java/net/starlark/java/annot/internal/*.java",
     ]),
     required_for_source_only_abi = True,
     # Force version 8 because these jars are generated for Idea

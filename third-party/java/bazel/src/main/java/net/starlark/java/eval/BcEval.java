@@ -1,6 +1,8 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
+import net.starlark.java.annot.internal.BcOpcodeHandler;
+import net.starlark.java.annot.internal.BcOpcodeNumber;
 import net.starlark.java.syntax.*;
 
 import javax.annotation.Nullable;
@@ -11,7 +13,7 @@ class BcEval {
 
   private static final TokenKind[] TOKENS = TokenKind.values();
 
-  private final StarlarkThread thread;
+  final StarlarkThread thread;
   private final StarlarkThread.Frame fr;
   private final StarlarkFunction fn;
   private final BcCompiled compiled;
@@ -41,19 +43,19 @@ class BcEval {
   private int loopDepth = 0;
 
   /** Program text. */
-  private final int[] text;
+  final int[] text;
 
   /** Current instruction pointer */
-  private int currentIp;
+  int currentIp;
 
   /** Instruction pointer while decoding operands */
-  private int ip = 0;
+  int ip = 0;
 
   /** Number of instructions executed in this function. */
-  private int localSteps = 0;
+  int localSteps = 0;
 
-  private BcEval(StarlarkThread thread, StarlarkThread.Frame fr,
-      StarlarkFunction fn, Object[] locals) {
+  private BcEval(
+      StarlarkThread thread, StarlarkThread.Frame fr, StarlarkFunction fn, Object[] locals) {
     this.thread = thread;
     this.fr = fr;
     this.fn = fn;
@@ -65,8 +67,8 @@ class BcEval {
   }
 
   /** Public API. */
-  public static Object eval(StarlarkThread thread, StarlarkThread.Frame fr,
-      StarlarkFunction fn, Object[] locals)
+  public static Object eval(
+      StarlarkThread thread, StarlarkThread.Frame fr, StarlarkFunction fn, Object[] locals)
       throws InterruptedException, EvalException {
     BcEval bcEval = new BcEval(thread, fr, fn, locals);
     if (StarlarkRuntimeStats.ENABLED) {
@@ -83,186 +85,7 @@ class BcEval {
 
   private Object eval() throws EvalException, InterruptedException {
     try {
-      while (ip != text.length) {
-        if (++thread.steps >= thread.stepLimit) {
-          throw new EvalException("Starlark computation cancelled: too many steps");
-        }
-
-        currentIp = ip;
-
-        // Each instruction is:
-        // * opcode
-        // * operands which depend on opcode
-        int opcode = text[ip++];
-
-        if (StarlarkRuntimeStats.ENABLED) {
-          StarlarkRuntimeStats.recordInst(opcode);
-          ++localSteps;
-        }
-
-        switch (opcode) {
-          case BcInstr.CP:
-            cp();
-            break;
-          case BcInstr.CP_LOCAL:
-            cpLocal();
-            break;
-          case BcInstr.RETURN:
-            return returnInstr();
-          case BcInstr.BR:
-            br();
-            continue;
-          case BcInstr.IF_BR_LOCAL:
-            ifBrLocal();
-            continue;
-          case BcInstr.IF_NOT_BR_LOCAL:
-            ifNotBrLocal();
-            continue;
-          case BcInstr.IF_TYPE_IS_BR:
-            ifTypeIsBr();
-            continue;
-          case BcInstr.IF_NOT_TYPE_IS_BR:
-            ifNotTypeIsBr();
-            continue;
-          case BcInstr.IF_EQ_BR:
-            ifEqBr();
-            continue;
-          case BcInstr.IF_NOT_EQ_BR:
-            ifNotEqBr();
-            continue;
-          case BcInstr.IF_IN_BR:
-            ifInBr();
-            continue;
-          case BcInstr.IF_NOT_IN_BR:
-            ifNotInBr();
-            continue;
-          case BcInstr.FOR_INIT:
-            forInit();
-            continue;
-          case BcInstr.CONTINUE:
-            continueInstr();
-            continue;
-          case BcInstr.BREAK:
-            breakInstr();
-            continue;
-          case BcInstr.NOT:
-            not();
-            break;
-          case BcInstr.UNARY:
-            unary();
-            break;
-          case BcInstr.EQ:
-            eq();
-            break;
-          case BcInstr.NOT_EQ:
-            notEq();
-            break;
-          case BcInstr.IN:
-            binaryIn();
-            break;
-          case BcInstr.NOT_IN:
-            binaryNotIn();
-            break;
-          case BcInstr.PLUS:
-            plus();
-            break;
-          case BcInstr.PLUS_STRING:
-            plusString();
-            break;
-          case BcInstr.PLUS_LIST:
-            plusList();
-            break;
-          case BcInstr.PERCENT_S_ONE:
-            percentSOne();
-            break;
-          case BcInstr.PERCENT_S_ONE_TUPLE:
-            percentSOneTuple();
-            break;
-          case BcInstr.PLUS_IN_PLACE:
-            plusInPlace();
-            break;
-          case BcInstr.PLUS_STRING_IN_PLACE:
-            plusStringInPlace();
-            break;
-          case BcInstr.PLUS_LIST_IN_PLACE:
-            plusListInPlace();
-            break;
-          case BcInstr.TYPE_IS:
-            typeIs();
-            break;
-          case BcInstr.BINARY:
-            binary();
-            break;
-          case BcInstr.SET_GLOBAL:
-            setGlobal();
-            break;
-          case BcInstr.SET_CELL:
-            setCell();
-            break;
-          case BcInstr.DOT:
-            dot();
-            break;
-          case BcInstr.INDEX:
-            index();
-            break;
-          case BcInstr.SLICE:
-            slice();
-            break;
-          case BcInstr.CALL:
-            call();
-            break;
-          case BcInstr.CALL_1:
-            call1();
-            break;
-          case BcInstr.CALL_2:
-            call2();
-            break;
-          case BcInstr.CALL_LINKED:
-            callLinked();
-            break;
-          case BcInstr.CALL_LINKED_1:
-            callLinked1();
-            break;
-          case BcInstr.CALL_LINKED_2:
-            callLinked2();
-            break;
-          case BcInstr.CALL_CACHED:
-            callCached();
-            break;
-          case BcInstr.LIST:
-            list();
-            break;
-          case BcInstr.TUPLE:
-            tuple();
-            break;
-          case BcInstr.DICT:
-            dict();
-            break;
-          case BcInstr.LIST_APPEND:
-            listAppend();
-            break;
-          case BcInstr.SET_INDEX:
-            setIndex();
-            break;
-          case BcInstr.UNPACK:
-            unpack();
-            break;
-          case BcInstr.NEW_FUNCTION:
-            newFunction();
-            break;
-          case BcInstr.LOAD_STMT:
-            loadStmt();
-            break;
-          case BcInstr.EVAL_EXCEPTION:
-            evalException();
-            continue;
-          default:
-            throw otherOpcode(opcode);
-        }
-
-        validateInstructionDecodedCorrectly();
-
-      }
+      return BcEvalDispatch.run(this);
     } catch (Throwable e) {
       try {
         fr.setLocation(compiled.locationAt(currentIp));
@@ -275,7 +98,6 @@ class BcEval {
         popFor();
       }
     }
-    return Starlark.NONE;
   }
 
   /** Pop one for statement. */
@@ -297,8 +119,7 @@ class BcEval {
   }
 
   private EvalException referencedBeforeAssignment(Resolver.Scope scope, String name) {
-    return Starlark.errorf(
-        "%s variable '%s' is referenced before assignment.", scope, name);
+    return Starlark.errorf("%s variable '%s' is referenced before assignment.", scope, name);
   }
 
   /** Get a value from the register slot. */
@@ -385,21 +206,24 @@ class BcEval {
     slots[slot] = value;
   }
 
-  private void cp() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.CP)
+  void cp() throws EvalException {
     int fromSlot = nextOperand();
     int resultSlot = nextOperand();
     Object value = getSlot(fromSlot);
     setSlot(resultSlot, value);
   }
 
-  private void cpLocal() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.CP_LOCAL)
+  void cpLocal() throws EvalException {
     int fromSlot = nextOperand();
     int resultSlot = nextOperand();
     Object value = getLocal(fromSlot);
     setSlot(resultSlot, value);
   }
 
-  private void setGlobal() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.SET_GLOBAL)
+  void setGlobal() throws EvalException {
     Object value = getSlot(nextOperand());
     int globalVarIndex = nextOperand();
     int nameConstantIndex = nextOperand();
@@ -415,38 +239,44 @@ class BcEval {
     }
   }
 
-  private void setCell() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.SET_CELL)
+  void setCell() throws EvalException {
     Object value = getSlot(nextOperand());
     int cellIndex = nextOperand();
     ((StarlarkFunction.Cell) slots[cellIndex]).x = value;
   }
 
-  private void loadStmt() throws EvalException, InterruptedException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.LOAD_STMT)
+  void loadStmt() throws EvalException, InterruptedException {
     LoadStatement statement = (LoadStatement) compiled.objects[nextOperand()];
     Eval.execLoad(thread, fr, slots, statement);
   }
 
-  private void setIndex() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.SET_INDEX)
+  void setIndex() throws EvalException {
     Object dict = getSlot(nextOperand());
     Object key = getSlot(nextOperand());
     Object value = getSlot(nextOperand());
     EvalUtils.setIndex(dict, key, value);
   }
 
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.LIST_APPEND)
   @SuppressWarnings("unchecked")
-  private void listAppend() throws EvalException {
+  void listAppend() throws EvalException {
     StarlarkList<Object> list = (StarlarkList<Object>) getSlot(nextOperand());
     Object item = getSlot(nextOperand());
     list.addElement(item);
   }
 
-  private Object returnInstr() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.RETURN)
+  Object returnInstr() throws EvalException {
     Object result = getSlotNullAsNone(nextOperand());
     validateInstructionDecodedCorrectly();
     return result;
   }
 
-  private void newFunction() throws EvalException, InterruptedException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.NEW_FUNCTION)
+  void newFunction() throws EvalException, InterruptedException {
     Resolver.Function fn = (Resolver.Function) compiled.objects[nextOperand()];
     Tuple parameterDefaults = Tuple.wrap(nextNSlotsListSharedArray());
     int result = nextOperand();
@@ -454,7 +284,8 @@ class BcEval {
     setSlot(result, starlarkFunction);
   }
 
-  private void br() {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.BR, mayJump = true)
+  void br() {
     int dest = nextOperand();
     goTo(dest);
   }
@@ -468,21 +299,28 @@ class BcEval {
     }
   }
 
-  private void ifBrLocal() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.IF_BR_LOCAL, mayJump = true)
+  void ifBrLocal() throws EvalException {
     int condSlot = nextOperand();
     int dest = nextOperand();
     Object cond = getLocal(condSlot);
     goToIf(Starlark.truth(cond), dest);
   }
 
-  private void ifNotBrLocal() throws EvalException {
+  @BcOpcodeHandler(
+      opcode = BcOpcodeNumber.IF_NOT_BR_LOCAL,
+      mayJump = true)
+  void ifNotBrLocal() throws EvalException {
     int condSlot = nextOperand();
     int dest = nextOperand();
     Object cond = getLocal(condSlot);
     goToIf(!Starlark.truth(cond), dest);
   }
 
-  private void ifTypeIsBr() throws EvalException {
+  @BcOpcodeHandler(
+      opcode = BcOpcodeNumber.IF_TYPE_IS_BR,
+      mayJump = true)
+  void ifTypeIsBr() throws EvalException {
     int valueSlot = nextOperand();
     int stringIndex = nextOperand();
     int dest = nextOperand();
@@ -491,7 +329,10 @@ class BcEval {
     goToIf(EvalUtils.typeIs(value, type), dest);
   }
 
-  private void ifNotTypeIsBr() throws EvalException {
+  @BcOpcodeHandler(
+      opcode = BcOpcodeNumber.IF_NOT_TYPE_IS_BR,
+      mayJump = true)
+  void ifNotTypeIsBr() throws EvalException {
     int valueSlot = nextOperand();
     int stringIndex = nextOperand();
     int dest = nextOperand();
@@ -500,7 +341,8 @@ class BcEval {
     goToIf(!EvalUtils.typeIs(value, type), dest);
   }
 
-  private void ifEqBr() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.IF_EQ_BR, mayJump = true)
+  void ifEqBr() throws EvalException {
     int aSlot = nextOperand();
     int bSlot = nextOperand();
     int dest = nextOperand();
@@ -509,7 +351,10 @@ class BcEval {
     goToIf(EvalUtils.equal(a, b), dest);
   }
 
-  private void ifNotEqBr() throws EvalException {
+  @BcOpcodeHandler(
+      opcode = BcOpcodeNumber.IF_NOT_EQ_BR,
+      mayJump = true)
+  void ifNotEqBr() throws EvalException {
     int aSlot = nextOperand();
     int bSlot = nextOperand();
     int dest = nextOperand();
@@ -518,7 +363,8 @@ class BcEval {
     goToIf(!EvalUtils.equal(a, b), dest);
   }
 
-  private void ifInBr() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.IF_IN_BR, mayJump = true)
+  void ifInBr() throws EvalException {
     int aSlot = nextOperand();
     int bSlot = nextOperand();
     int dest = nextOperand();
@@ -527,7 +373,10 @@ class BcEval {
     goToIf(EvalUtils.binaryIn(a, b, thread.getSemantics()), dest);
   }
 
-  private void ifNotInBr() throws EvalException {
+  @BcOpcodeHandler(
+      opcode = BcOpcodeNumber.IF_NOT_IN_BR,
+      mayJump = true)
+  void ifNotInBr() throws EvalException {
     int aSlot = nextOperand();
     int bSlot = nextOperand();
     int dest = nextOperand();
@@ -542,7 +391,8 @@ class BcEval {
     ip = addr;
   }
 
-  private void forInit() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.FOR_INIT, mayJump = true)
+  void forInit() throws EvalException {
     Object value = getSlot(nextOperand());
     int nextValueSlot = nextOperand();
     int end = nextOperand();
@@ -595,7 +445,8 @@ class BcEval {
     validateInstructionDecodedCorrectly();
   }
 
-  private void continueInstr() throws InterruptedException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.CONTINUE, mayJump = true)
+  void continueInstr() throws InterruptedException {
     int nextValueSlot = nextOperand();
     int b = nextOperand();
     int e = nextOperand();
@@ -635,14 +486,16 @@ class BcEval {
     goTo(gotoAddr);
   }
 
-  private void breakInstr() {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.BREAK, mayJump = true)
+  void breakInstr() {
     int e = nextOperand();
     popFor();
     validateInstructionDecodedCorrectly();
     ip = e;
   }
 
-  private void unpack() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.UNPACK)
+  void unpack() throws EvalException {
     Object x = getSlot(nextOperand());
     int nrhs = Starlark.len(x);
     int nlhs = nextOperand();
@@ -692,19 +545,22 @@ class BcEval {
     return nextNSlots(size);
   }
 
-  private void list() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.LIST)
+  void list() throws EvalException {
     Object[] data = nextNSlotsListUnsharedArray();
     StarlarkList<?> result = StarlarkList.wrap(thread.mutability(), data);
     setSlot(nextOperand(), result);
   }
 
-  private void tuple() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.TUPLE)
+  void tuple() throws EvalException {
     Object[] data = nextNSlotsListSharedArray();
     Tuple result = Tuple.wrap(data);
     setSlot(nextOperand(), result);
   }
 
-  private void dict() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.DICT)
+  void dict() throws EvalException {
     int size = nextOperand();
     Dict<?, ?> result;
     if (size == 0) {
@@ -717,8 +573,7 @@ class BcEval {
         Object value = getSlot(nextOperand());
         Object prev = lhm.putNoResize(key, value);
         if (prev != null) {
-          throw new EvalException(
-              "dictionary expression has duplicate key: " + Starlark.repr(key));
+          throw new EvalException("dictionary expression has duplicate key: " + Starlark.repr(key));
         }
       }
       result = Dict.wrap(thread.mutability(), lhm);
@@ -727,7 +582,8 @@ class BcEval {
   }
 
   /** Dot operator. */
-  private void dot() throws EvalException, InterruptedException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.DOT)
+  void dot() throws EvalException, InterruptedException {
     int selfSlot = nextOperand();
     int siteIndex = nextOperand();
     int resultSlot = nextOperand();
@@ -739,16 +595,17 @@ class BcEval {
   }
 
   /** Index operator. */
-  private void index() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.INDEX)
+  void index() throws EvalException {
     Object object = getSlot(nextOperand());
     Object index = getSlot(nextOperand());
     setSlot(
-        nextOperand(),
-        EvalUtils.index(thread.mutability(), thread.getSemantics(), object, index));
+        nextOperand(), EvalUtils.index(thread.mutability(), thread.getSemantics(), object, index));
   }
 
   /** Slice operator. */
-  private void slice() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.SLICE)
+  void slice() throws EvalException {
     Object object = getSlot(nextOperand());
     Object start = getSlotNullAsNone(nextOperand());
     Object stop = getSlotNullAsNone(nextOperand());
@@ -767,7 +624,8 @@ class BcEval {
   }
 
   /** Call operator. */
-  private void call() throws EvalException, InterruptedException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.CALL)
+  void call() throws EvalException, InterruptedException {
     thread.checkInterrupt();
 
     StarlarkCallable fn = nextCallable();
@@ -792,12 +650,14 @@ class BcEval {
       }
     }
 
-    Object result = BcCall.linkAndCallCs(thread, fn, callSite, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+    Object result =
+        BcCall.linkAndCallCs(thread, fn, callSite, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
 
     setSlot(nextOperand(), result);
   }
 
-  private void call1() throws EvalException, InterruptedException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.CALL_1)
+  void call1() throws EvalException, InterruptedException {
     thread.checkInterrupt();
 
     StarlarkCallable fn = nextCallable();
@@ -809,7 +669,8 @@ class BcEval {
     setSlot(nextOperand(), result);
   }
 
-  private void call2() throws InterruptedException, EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.CALL_2)
+  void call2() throws InterruptedException, EvalException {
     thread.checkInterrupt();
 
     StarlarkCallable fn = nextCallable();
@@ -833,7 +694,8 @@ class BcEval {
   }
 
   /** Call after successful link at compile time. */
-  private void callLinked() throws EvalException, InterruptedException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.CALL_LINKED)
+  void callLinked() throws EvalException, InterruptedException {
     thread.checkInterrupt();
 
     BcCallLocs locs = nextCallLocs();
@@ -859,7 +721,8 @@ class BcEval {
     setSlot(nextOperand(), result);
   }
 
-  private void callLinked1() throws InterruptedException, EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.CALL_LINKED_1)
+  void callLinked1() throws InterruptedException, EvalException {
     thread.checkInterrupt();
 
     nextCallLocs();
@@ -871,7 +734,8 @@ class BcEval {
     setSlot(nextOperand(), result);
   }
 
-  private void callLinked2() throws InterruptedException, EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.CALL_LINKED_2)
+  void callLinked2() throws InterruptedException, EvalException {
     thread.checkInterrupt();
 
     nextCallLocs();
@@ -886,7 +750,8 @@ class BcEval {
     setSlot(nextOperand(), result);
   }
 
-  private void callCached() throws EvalException, InterruptedException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.CALL_CACHED)
+  void callCached() throws EvalException, InterruptedException {
     int callCachedIndex = nextOperand();
     int resultSlot = nextOperand();
     BcCallCached callCached = (BcCallCached) compiled.objects[callCachedIndex];
@@ -895,13 +760,15 @@ class BcEval {
   }
 
   /** Not operator. */
-  private void not() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.NOT)
+  void not() throws EvalException {
     Object value = getSlot(nextOperand());
     setSlot(nextOperand(), !Starlark.truth(value));
   }
 
   /** Generic unary operator. */
-  private void unary() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.UNARY)
+  void unary() throws EvalException {
     Object value = getSlot(nextOperand());
     TokenKind op = TOKENS[nextOperand()];
     setSlot(nextOperand(), EvalUtils.unaryOp(op, value));
@@ -912,7 +779,8 @@ class BcEval {
    *
    * <p>Note that {@code and} and {@code or} are not emitted as binary operator instruction. .
    */
-  private void binary() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.BINARY)
+  void binary() throws EvalException {
     Object x = getSlot(nextOperand());
     Object y = getSlot(nextOperand());
     TokenKind op = TOKENS[nextOperand()];
@@ -920,12 +788,12 @@ class BcEval {
       StarlarkRuntimeStats.recordBinaryOp(op);
     }
     setSlot(
-        nextOperand(),
-        EvalUtils.binaryOp(op, x, y, thread.getSemantics(), thread.mutability()));
+        nextOperand(), EvalUtils.binaryOp(op, x, y, thread.getSemantics(), thread.mutability()));
   }
 
   /** {@code +=} operator. */
-  private void plusInPlace() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.PLUS_IN_PLACE)
+  void plusInPlace() throws EvalException {
     int lhs = nextOperand();
     int rhs = nextOperand();
     int result = nextOperand();
@@ -956,7 +824,8 @@ class BcEval {
     }
   }
 
-  private void percentSOne() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.PERCENT_S_ONE)
+  void percentSOne() throws EvalException {
     int formatIndex = nextOperand();
     int percent = nextOperand();
     int argIndex = nextOperand();
@@ -984,7 +853,8 @@ class BcEval {
     setSlot(out, result);
   }
 
-  private void percentSOneTuple() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.PERCENT_S_ONE_TUPLE)
+  void percentSOneTuple() throws EvalException {
     int formatIndex = nextOperand();
     int percent = nextOperand();
     int argIndex = nextOperand();
@@ -999,7 +869,8 @@ class BcEval {
   }
 
   /** {@code +=} operator where operators are likely strings. */
-  private void plusStringInPlace() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.PLUS_STRING_IN_PLACE)
+  void plusStringInPlace() throws EvalException {
     int lhs = nextOperand();
     int rhs = nextOperand();
     int resultSlot = nextOperand();
@@ -1016,7 +887,8 @@ class BcEval {
 
   /** {@code x += [...]}. */
   @SuppressWarnings("unchecked")
-  private void plusListInPlace() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.PLUS_LIST_IN_PLACE)
+  void plusListInPlace() throws EvalException {
     Object x = getSlot(nextOperand());
     Object result;
     if (x instanceof StarlarkList<?>) {
@@ -1031,7 +903,8 @@ class BcEval {
     setSlot(resultSlot, result);
   }
 
-  private void typeIs() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.TYPE_IS)
+  void typeIs() throws EvalException {
     int lhsSlot = nextOperand();
     int typeIndex = nextOperand();
     int resultSlot = nextOperand();
@@ -1044,21 +917,24 @@ class BcEval {
   }
 
   /** Equality. */
-  private void eq() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.EQ)
+  void eq() throws EvalException {
     Object lhs = getSlot(nextOperand());
     Object rhs = getSlot(nextOperand());
     setSlot(nextOperand(), EvalUtils.equal(lhs, rhs));
   }
 
   /** Equality. */
-  private void notEq() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.NOT_EQ)
+  void notEq() throws EvalException {
     Object lhs = getSlot(nextOperand());
     Object rhs = getSlot(nextOperand());
     setSlot(nextOperand(), !EvalUtils.equal(lhs, rhs));
   }
 
   /** a + b. */
-  private void plus() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.PLUS)
+  void plus() throws EvalException {
     int lhsSlot = nextOperand();
     int rhsSlot = nextOperand();
     int resultSlot = nextOperand();
@@ -1068,7 +944,8 @@ class BcEval {
   }
 
   /** a + b where a and b are likely strings. */
-  private void plusString() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.PLUS_STRING)
+  void plusString() throws EvalException {
     int lhsSlot = nextOperand();
     int rhsSlot = nextOperand();
     int resultSlot = nextOperand();
@@ -1084,7 +961,8 @@ class BcEval {
   }
 
   /** a + b where b is a {@link BcInstrOperand#IN_LIST}. */
-  private void plusList() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.PLUS_LIST)
+  void plusList() throws EvalException {
     Object lhs = getSlot(nextOperand());
     Object result;
     if (lhs instanceof StarlarkList<?>) {
@@ -1092,17 +970,17 @@ class BcEval {
       result = StarlarkList.concat((StarlarkList<?>) lhs, rhs, thread.mutability());
     } else {
       Object[] rhs = nextNSlotsListUnsharedArray();
-      result = EvalUtils.binaryPlus(
-          lhs,
-          StarlarkList.wrap(thread.mutability(), rhs),
-          thread.mutability());
+      result =
+          EvalUtils.binaryPlus(
+              lhs, StarlarkList.wrap(thread.mutability(), rhs), thread.mutability());
     }
     int resultSlot = nextOperand();
     setSlot(resultSlot, result);
   }
 
   /** {@code a in b} */
-  private void binaryIn() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.IN)
+  void binaryIn() throws EvalException {
     int lhsSlot = nextOperand();
     int rhsSlot = nextOperand();
     int resultSlot = nextOperand();
@@ -1112,7 +990,8 @@ class BcEval {
   }
 
   /** {@code a not in b} */
-  private void binaryNotIn() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.NOT_IN)
+  void binaryNotIn() throws EvalException {
     int lhsSlot = nextOperand();
     int rhsSlot = nextOperand();
     int resultSlot = nextOperand();
@@ -1121,13 +1000,15 @@ class BcEval {
     setSlot(resultSlot, !EvalUtils.binaryIn(lhs, rhs, thread.getSemantics()));
   }
 
-  private void evalException() throws EvalException {
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.EVAL_EXCEPTION)
+  void evalException() throws EvalException {
     String message = compiled.strings[nextOperand()];
     validateInstructionDecodedCorrectly();
     throw new EvalException(message);
   }
 
-  private EvalException otherOpcode(int opcode) {
+  EvalException otherOpcode() {
+    int opcode = text[currentIp];
     if (opcode < BcInstr.Opcode.values().length) {
       throw new IllegalStateException("not implemented opcode: " + BcInstr.Opcode.values()[opcode]);
     } else {
@@ -1135,7 +1016,7 @@ class BcEval {
     }
   }
 
-  private void validateInstructionDecodedCorrectly() {
+  void validateInstructionDecodedCorrectly() {
     if (Bc.ASSERTIONS) {
       // Validate the last instruction was decoded correctly
       // (got all the argument, and no extra arguments).

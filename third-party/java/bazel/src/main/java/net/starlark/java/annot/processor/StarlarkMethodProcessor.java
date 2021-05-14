@@ -22,7 +22,6 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -61,9 +60,12 @@ import net.starlark.java.annot.StarlarkMethod;
  */
 @SupportedAnnotationTypes({
   "net.starlark.java.annot.StarlarkMethod",
-  "net.starlark.java.annot.StarlarkBuiltin"
+  "net.starlark.java.annot.StarlarkBuiltin",
+  "net.starlark.java.annot.internal.BcEvalHandler",
 })
 public class StarlarkMethodProcessor extends AbstractProcessor {
+
+  private BcEvalDispatchGen bcEvalDispatchGen;
 
   private Types types;
   private Elements elements;
@@ -90,6 +92,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     this.filer = env.getFiler();
     this.classesWithSelfcall = new HashSet<>();
     this.processedClassMethods = LinkedHashMultimap.create();
+    this.bcEvalDispatchGen = new BcEvalDispatchGen(env);
   }
 
   private TypeMirror getType(String canonicalName) {
@@ -182,6 +185,8 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
 
       generateBuiltins(classElement, entry.getValue(), typeNames);
     }
+
+    bcEvalDispatchGen.gen(roundEnv);
 
     // Returning false allows downstream processors to work on the same annotations
     return false;
@@ -373,47 +378,6 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
       name = type.getSimpleName() + "_" + name;
     }
     return name + StarlarkGeneratedFiles.GENERATED_CLASS_NAME_SUFFIX;
-  }
-
-  private static class SourceWriter {
-    private final Writer writer;
-    private int indent = 0;
-
-    SourceWriter(Writer writer) {
-      this.writer = writer;
-    }
-
-    void indent() {
-      ++indent;
-    }
-
-    void dedent() {
-      --indent;
-    }
-
-    interface IoRunnable {
-      void run() throws IOException;
-    }
-
-    void indented(IoRunnable runnable) throws IOException {
-      indent();
-      runnable.run();
-      dedent();
-    }
-
-    void writeLine(String line) throws IOException {
-      if (!line.isEmpty()) {
-        for (int i = 0; i != indent; ++i) {
-          writer.write("  ");
-        }
-      }
-      writer.write(line);
-      writer.write("\n");
-    }
-
-    void writeLineF(String line, Object... args) throws IOException {
-      writeLine(String.format(Locale.US, line, args));
-    }
   }
 
   private void processElement(
