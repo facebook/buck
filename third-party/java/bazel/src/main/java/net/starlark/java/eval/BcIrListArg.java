@@ -2,45 +2,33 @@ package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import java.util.Arrays;
 import javax.annotation.Nullable;
 
 /** List arg (sequence of slots or an array of constants) in IR. */
-abstract class BcIrListArg {
-  private BcIrListArg() {}
+class BcIrListArg {
+  final ImmutableList<BcIrSlot> slots;
+  /** Nonnull if all slots are constants. */
+  @Nullable private final Object[] consts;
 
-  /** Serialize to bytecode. */
-  abstract int[] encode(BcIrWriteContext writeContext);
-
-  /** All values are constants and all are immutable. */
-  abstract boolean allConstantsImmutable();
-
-  @Override
-  public abstract String toString();
-
-  /** Constants or null if at least one value is not a constant. */
-  @Nullable
-  abstract Object[] data();
-
-  abstract int size();
-
-  /** Single list item, null if empty or more than one. */
-  @Nullable
-  abstract BcIrSlot singleArg();
-
-  /** Arg i as slot. */
-  abstract BcIrSlot arg(int i);
-
-  /** List of slots. */
-  static class Slots extends BcIrListArg {
-    final ImmutableList<BcIrSlot> slots;
-
-    Slots(ImmutableList<BcIrSlot> slots) {
-      this.slots = slots;
+  private BcIrListArg(ImmutableList<BcIrSlot> slots) {
+    this.slots = slots;
+    Object[] consts = ArraysForStarlark.newObjectArray(slots.size());
+    for (int i = 0; i < slots.size(); i++) {
+      BcIrSlot slot = slots.get(i);
+      if (slot instanceof BcIrSlot.Const) {
+        consts[i] = ((BcIrSlot.Const) slot).value;
+      } else {
+        consts = null;
+        break;
+      }
     }
+    this.consts = consts;
+  }
 
-    @Override
-    int[] encode(BcIrWriteContext writeContext) {
+  int[] encode(BcIrWriteContext writeContext) {
+    if (consts != null && consts.length != 0) {
+      return new int[] {BcSlot.objectIndexToNegativeSize(writeContext.writer.allocObject(consts))};
+    } else {
       int[] r = new int[1 + slots.size()];
       int i = 0;
       r[i++] = slots.size();
@@ -50,97 +38,58 @@ abstract class BcIrListArg {
       Preconditions.checkState(i == r.length);
       return r;
     }
-
-    @Override
-    boolean allConstantsImmutable() {
-      return slots.isEmpty();
-    }
-
-    @Nullable
-    @Override
-    Object[] data() {
-      return slots.isEmpty() ? ArraysForStarlark.EMPTY_OBJECT_ARRAY : null;
-    }
-
-    @Override
-    int size() {
-      return slots.size();
-    }
-
-    @Nullable
-    @Override
-    public BcIrSlot singleArg() {
-      if (slots.size() == 1) {
-        return slots.get(0);
-      } else {
-        return null;
-      }
-    }
-
-    @Override
-    public BcIrSlot arg(int i) {
-      return slots.get(i);
-    }
-
-    @Override
-    public String toString() {
-      return slots.toString();
-    }
-
-    static final Slots EMPTY = new Slots(ImmutableList.of());
   }
 
-  static class ListData extends BcIrListArg {
-    final Object[] data;
-
-    ListData(Object[] data) {
-      Preconditions.checkArgument(data.length > 0, "for empty arg list Slots.EMPTY should be used");
-      this.data = data;
+  /** All values are constants and all are immutable. */
+  boolean allConstantsImmutable() {
+    if (consts == null) {
+      return false;
     }
-
-    @Override
-    int[] encode(BcIrWriteContext writeContext) {
-      return new int[] {BcSlot.objectIndexToNegativeSize(writeContext.writer.allocObject(data))};
-    }
-
-    @Override
-    boolean allConstantsImmutable() {
-      for (Object datum : data) {
-        if (!Starlark.isImmutable(datum)) {
-          return false;
-        }
-      }
-      return true;
-    }
-
-    @Override
-    Object[] data() {
-      return data;
-    }
-
-    @Override
-    int size() {
-      return data.length;
-    }
-
-    @Nullable
-    @Override
-    BcIrSlot singleArg() {
-      if (data.length == 1) {
-        return new BcIrSlot.Const(data[0]);
-      } else {
-        return null;
+    for (Object constValue : consts) {
+      if (!Starlark.isImmutable(constValue)) {
+        return false;
       }
     }
+    return true;
+  }
 
-    @Override
-    BcIrSlot arg(int i) {
-      return new BcIrSlot.Const(data[i]);
+  @Override
+  public String toString() {
+    return slots.toString();
+  }
+
+  /** Constants or null if at least one value is not a constant. */
+  @Nullable
+  Object[] data() {
+    return consts;
+  }
+
+  int size() {
+    return slots.size();
+  }
+
+  /** Single list item, null if empty or more than one. */
+  @Nullable
+  BcIrSlot singleArg() {
+    if (slots.size() == 1) {
+      return slots.get(0);
+    } else {
+      return null;
     }
+  }
 
-    @Override
-    public String toString() {
-      return Arrays.toString(data);
+  /** Arg i as slot. */
+  BcIrSlot arg(int i) {
+    return slots.get(i);
+  }
+
+  static final BcIrListArg EMPTY = new BcIrListArg(ImmutableList.of());
+
+  static BcIrListArg of(ImmutableList<BcIrSlot> slots) {
+    if (slots.isEmpty()) {
+      return EMPTY;
+    } else {
+      return new BcIrListArg(slots);
     }
   }
 }

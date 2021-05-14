@@ -113,14 +113,10 @@ class BcCompilerForCall {
     boolean functionIsSpeculativeSafe =
         callable instanceof BuiltinFunction
             && ((BuiltinFunction) callable).purity() == FnPurity.SPEC_SAFE;
-    if (functionIsSpeculativeSafe
-        && !linkSig.hasStars()
-        && args instanceof BcIrListArg.ListData
-        && args.allConstantsImmutable()) {
+    if (functionIsSpeculativeSafe && !linkSig.hasStars() && args.allConstantsImmutable()) {
       try {
         Object specCallResult =
-            callable.linkAndCall(
-                linkSig, compiler.thread, ((BcIrListArg.ListData) args).data, null, null);
+            callable.linkAndCall(linkSig, compiler.thread, args.data(), null, null);
         if (Starlark.isImmutable(specCallResult)) {
           compiledArguments.assertNoIr();
           return compiler.compileConstantTo(ir, callExpression, specCallResult, result);

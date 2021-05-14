@@ -17,9 +17,7 @@ abstract class BcIrSlotVisitor {
   }
 
   final void visitSlots(BcIrListArg arg) {
-    if (arg instanceof BcIrListArg.Slots) {
-      visitSlots(((BcIrListArg.Slots) arg).slots);
-    }
+    visitSlots(arg.slots);
   }
 
   final void visitSlots(List<? extends BcIrSlot> slots) {

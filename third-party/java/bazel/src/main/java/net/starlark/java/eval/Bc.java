@@ -886,7 +886,7 @@ class Bc {
       } else {
         ir.add(new BcIrInstr.List(
             nodeToLocOffset(comprehension),
-            BcIrListArg.Slots.EMPTY,
+            BcIrListArg.EMPTY,
             temp));
       }
 
@@ -1120,31 +1120,14 @@ class Bc {
     }
 
     BcIrListArg compileExpressionList(BcIr ir, List<Expression> expressions) {
-      if (expressions.isEmpty()) {
-        return BcIrListArg.Slots.EMPTY;
-      }
-
-      int initialSize = ir.size();
-
       ImmutableList.Builder<BcIrSlot> slots = ImmutableList
           .builderWithExpectedSize(expressions.size());
 
-      Object[] constants = new Object[expressions.size()];
-      for (int i = 0; i < expressions.size(); i++) {
-        Expression elemExpr = expressions.get(i);
+      for (Expression elemExpr : expressions) {
         CompileExpressionResult elem = compileExpression(ir, elemExpr);
-        if (constants != null && elem.value() != null) {
-          constants[i] = elem.value();
-        } else {
-          constants = null;
-        }
         slots.add(elem.slot);
       }
-      if (constants != null) {
-        Preconditions.checkState(ir.size() == initialSize);
-        return new BcIrListArg.ListData(constants);
-      }
-      return new BcIrListArg.Slots(slots.build());
+      return BcIrListArg.of(slots.build());
     }
 
     static class ListArgWithIr {
