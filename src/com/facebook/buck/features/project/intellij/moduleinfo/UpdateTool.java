@@ -43,7 +43,7 @@ public class UpdateTool {
 
   private static final String IML_SUFFIX = ".iml";
   private static final String EXCLUDE_KEY = "excludeFolder";
-  private static final String INCLUDE_KEY = "includeFolder";
+  private static final String INCLUDE_KEY = "sourceFolder";
 
   /** Entry point */
   public static void main(String[] args) throws IOException {
@@ -68,7 +68,7 @@ public class UpdateTool {
     }
   }
 
-  private static ModuleInfo moduleInfoFromFile(@Nonnull Path projectRoot, @Nonnull Path imlFile) {
+  static ModuleInfo moduleInfoFromFile(@Nonnull Path projectRoot, @Nonnull Path imlFile) {
     final String fileName = imlFile.getFileName().toString();
     Preconditions.checkArgument(fileName.endsWith(IML_SUFFIX), "Only .iml files can be processed");
     Preconditions.checkArgument(
