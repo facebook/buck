@@ -1348,7 +1348,7 @@ public final class ParserTest {
 
   private static ParserInput veryDeepExpression() {
     StringBuilder s = new StringBuilder();
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 10000; i++) {
       s.append("{");
     }
     return ParserInput.fromString(s.toString(), "foo.star");
