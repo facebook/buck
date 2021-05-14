@@ -283,12 +283,7 @@ public class CxxLinkableEnhancer {
     Optional<SourcePath> filteredFocusedTargets;
 
     if (useFocusedDebugging) {
-      filteredFocusedTargets =
-          Optional.ofNullable(
-              graphBuilder
-                  .requireRule(
-                      target.withAppendedFlavors(CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS))
-                  .getSourcePathToOutput());
+      filteredFocusedTargets = debugStrategy.getFilteredFocusedTargets(target, graphBuilder);
     } else {
       filteredFocusedTargets = Optional.empty();
     }

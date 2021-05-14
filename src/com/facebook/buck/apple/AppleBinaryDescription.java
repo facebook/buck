@@ -604,7 +604,8 @@ public class AppleBinaryDescription
                 delegateArg.build(),
                 extraCxxDeps,
                 AppleCxxRelinkStrategyFactory.getConfiguredStrategy(appleConfig),
-                AppleCxxDebugSymbolLinkStrategyFactory.getDebugStrategyFactory(appleConfig));
+                AppleCxxDebugSymbolLinkStrategyFactory.getDebugStrategyFactory(
+                    appleConfig, cxxBuckConfig));
           }
         });
   }

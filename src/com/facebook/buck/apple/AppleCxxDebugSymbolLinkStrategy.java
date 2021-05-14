@@ -18,11 +18,14 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDebugSymbolLinkStrategy;
+import com.facebook.buck.cxx.CxxFocusedDebugTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
 import com.google.common.collect.ImmutableList;
@@ -69,6 +72,15 @@ public class AppleCxxDebugSymbolLinkStrategy implements CxxDebugSymbolLinkStrate
   @Override
   public Optional<ImmutableSet<AbsPath>> getFocusedBuildOutputPaths() {
     return Optional.of(focusedBuildOutputPaths);
+  }
+
+  @Override
+  public Optional<SourcePath> getFilteredFocusedTargets(
+      BuildTarget target, ActionGraphBuilder graphBuilder) {
+    return Optional.ofNullable(
+        graphBuilder
+            .requireRule(target.withAppendedFlavors(CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS))
+            .getSourcePathToOutput());
   }
 
   private ImmutableSet<AbsPath> createFocusedBuildOutputPaths(

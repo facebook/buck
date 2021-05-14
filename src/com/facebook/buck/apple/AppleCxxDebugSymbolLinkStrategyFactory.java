@@ -21,6 +21,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDebugSymbolLinkStrategy;
 import com.facebook.buck.cxx.CxxDebugSymbolLinkStrategyFactory;
 import com.facebook.buck.cxx.CxxDebugSymbolLinkStrategyFactoryAlwaysDebug;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -41,9 +42,26 @@ public class AppleCxxDebugSymbolLinkStrategyFactory implements CxxDebugSymbolLin
     this.focusedTargets = getFocusedTargets(focusedTargetsPath);
   }
 
-  public static CxxDebugSymbolLinkStrategyFactory getDebugStrategyFactory(AppleConfig appleConfig) {
+  private AppleCxxDebugSymbolLinkStrategyFactory() {
+    this.focusedTargets = ImmutableSet.of();
+  }
+
+  /**
+   * Acquires the debug strategy factory. The debug strategies are passed to CxxLink build rules to
+   * allow for Apple specific behaviors.
+   *
+   * @param appleConfig configs under the "apple" section
+   * @param cxxBuckConfig configs under the "cxx" section
+   * @return a debug strategy applicable to CxxLink build rules
+   */
+  public static CxxDebugSymbolLinkStrategyFactory getDebugStrategyFactory(
+      AppleConfig appleConfig, CxxBuckConfig cxxBuckConfig) {
     if (appleConfig.getFocusedTargetsPath().isPresent()) {
       return new AppleCxxDebugSymbolLinkStrategyFactory(appleConfig.getFocusedTargetsPath().get());
+    } else if (cxxBuckConfig.getFocusedDebuggingEnabled()) {
+      // In this case we'll be reading the focused targets from build rule outputs and not
+      // from an arbitrary file.
+      return new AppleCxxDebugSymbolLinkStrategyFactory();
     } else {
       return CxxDebugSymbolLinkStrategyFactoryAlwaysDebug.FACTORY;
     }

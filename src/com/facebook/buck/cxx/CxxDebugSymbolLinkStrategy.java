@@ -17,7 +17,10 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
@@ -34,4 +37,7 @@ public interface CxxDebugSymbolLinkStrategy extends AddsToRuleKey {
    * @return A set to focused build output paths.
    */
   Optional<ImmutableSet<AbsPath>> getFocusedBuildOutputPaths();
+
+  Optional<SourcePath> getFilteredFocusedTargets(
+      BuildTarget target, ActionGraphBuilder graphBuilder);
 }

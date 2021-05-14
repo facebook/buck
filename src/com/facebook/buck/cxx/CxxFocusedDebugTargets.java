@@ -165,7 +165,9 @@ public class CxxFocusedDebugTargets extends ModernBuildRule<CxxFocusedDebugTarge
                         focusedTargetsSet.contains(target.getUnflavoredBuildTarget().toString()))
                 .collect(Collectors.toList());
       } else {
-        filteredTargets = targets;
+        // If no focused targets list is provided, then none of this rule's deps is used for
+        // debugging.
+        filteredTargets = ImmutableList.of();
       }
 
       // Ensure we sort the targets to prevent running into rule key differs.

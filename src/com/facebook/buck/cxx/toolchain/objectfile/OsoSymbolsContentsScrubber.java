@@ -91,9 +91,12 @@ public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
               ObjectMappers.createParser(exemptTargetsListPath.get().getPath()),
               new TypeReference<List<String>>() {});
 
+      ImmutableMap<String, AbsPath> targetToOutputPath = targetToOutputPathMap.get();
+
       Set<Path> exemptPathsFromTargets =
           exemptTargets.stream()
-              .map(this.targetToOutputPathMap.get()::get)
+              .filter(targetToOutputPath::containsKey)
+              .map(targetToOutputPath::get)
               .map(AbsPath::getPath)
               .collect(Collectors.toSet());
 

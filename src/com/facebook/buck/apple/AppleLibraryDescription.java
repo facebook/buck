@@ -815,7 +815,8 @@ public class AppleLibraryDescription
               transitiveCxxDeps,
               cxxDelegate,
               AppleCxxRelinkStrategyFactory.getConfiguredStrategy(appleConfig),
-              AppleCxxDebugSymbolLinkStrategyFactory.getDebugStrategyFactory(appleConfig));
+              AppleCxxDebugSymbolLinkStrategyFactory.getDebugStrategyFactory(
+                  appleConfig, cxxBuckConfig));
         });
   }
 
