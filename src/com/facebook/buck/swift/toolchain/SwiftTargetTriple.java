@@ -40,19 +40,26 @@ public abstract class SwiftTargetTriple implements AddsToRuleKey {
   @AddToRuleKey
   public abstract String getTargetSdkVersion();
 
+  @AddToRuleKey
+  public abstract Boolean getIsSimulator();
+
   public String getTriple() {
-    return getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + getTargetSdkVersion();
+    String triple = getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + getTargetSdkVersion();
+    if(getIsSimulator()) {
+      triple = triple + "-simulator";
+    }
+    return triple;
   }
 
   public static SwiftTargetTriple of(
-      String architecture, String vendor, String platformName, String targetSdkVersion) {
-    return ImmutableSwiftTargetTriple.of(architecture, vendor, platformName, targetSdkVersion);
+      String architecture, String vendor, String platformName, String targetSdkVersion, Boolean isSimulator) {
+    return ImmutableSwiftTargetTriple.of(architecture, vendor, platformName, targetSdkVersion, isSimulator);
   }
 
   public SwiftTargetTriple withTargetSdkVersion(String targetSdkVersion) {
     if (targetSdkVersion.equals(getTargetSdkVersion())) {
       return this;
     }
-    return of(getArchitecture(), getVendor(), getPlatformName(), targetSdkVersion);
+    return of(getArchitecture(), getVendor(), getPlatformName(), targetSdkVersion, getIsSimulator());
   }
 }
