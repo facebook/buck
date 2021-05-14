@@ -39,7 +39,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 /** A command line tool to update IntelliJ binary index for changed IML files */
-public class UpdateBinaryIndexFromIMLListTool {
+public class UpdateTool {
 
   private static final String IML_SUFFIX = ".iml";
   private static final String EXCLUDE_KEY = "excludeFolder";
@@ -48,36 +48,38 @@ public class UpdateBinaryIndexFromIMLListTool {
   /** Entry point */
   public static void main(String[] args) throws IOException {
     if (args.length != 2) {
-      System.err.println(
-          "Usage: update-binary-index-from-iml-list-tool <path/to/iml-file-list> <path/to/.idea>");
+      System.err.println("Usage: updatetool <path/to/iml-file-list> <path/to/.idea>");
       System.exit(1);
     }
-
-    final ModuleInfoBinaryIndex index = new ModuleInfoBinaryIndex(Paths.get(args[1]));
-    index.update(moduleInfosFromPath(Paths.get(args[0])));
+    final Path ideaConfigDir = Paths.get(args[1]);
+    final ModuleInfoBinaryIndex index = new ModuleInfoBinaryIndex(ideaConfigDir);
+    index.update(moduleInfosFromPath(ideaConfigDir.getParent(), Paths.get(args[0])));
   }
 
-  private static ImmutableSet<ModuleInfo> moduleInfosFromPath(@Nonnull Path path) {
+  private static ImmutableSet<ModuleInfo> moduleInfosFromPath(
+      @Nonnull Path projectRoot, @Nonnull Path path) {
     try (final Stream<String> lineStream = Files.lines(path, StandardCharsets.UTF_8)) {
       return lineStream
           .parallel()
-          .map(File::new)
-          .map(UpdateBinaryIndexFromIMLListTool::moduleInfoFromFile)
+          .map(filePath -> moduleInfoFromFile(projectRoot, Paths.get(filePath)))
           .collect(ImmutableSet.toImmutableSet());
     } catch (IOException e) {
       throw new RuntimeException("Could not read from path: " + path, e);
     }
   }
 
-  private static ModuleInfo moduleInfoFromFile(@Nonnull File imlFile) {
-    final String fileName = imlFile.getName();
+  private static ModuleInfo moduleInfoFromFile(@Nonnull Path projectRoot, @Nonnull Path imlFile) {
+    final String fileName = imlFile.getFileName().toString();
     Preconditions.checkArgument(fileName.endsWith(IML_SUFFIX), "Only .iml files can be processed");
+    Preconditions.checkArgument(
+        imlFile.startsWith(projectRoot),
+        "Module file " + imlFile + " is not under the project root " + projectRoot);
     final String moduleName = fileName.substring(0, fileName.length() - IML_SUFFIX.length());
-    final Document IMLDocument = getIMLDocument(imlFile);
+    final Document IMLDocument = getIMLDocument(imlFile.toFile());
 
     return ModuleInfo.of(
         moduleName,
-        imlFile.getParent(), // modulePath
+        projectRoot.relativize(imlFile.getParent()).toString(), // modulePath
         dependenciesFromDocument(IMLDocument),
         contentInfosFromDocument(IMLDocument));
   }
@@ -93,7 +95,7 @@ public class UpdateBinaryIndexFromIMLListTool {
   private static ImmutableList<ContentRootInfo> contentInfosFromDocument(
       @Nonnull Document document) {
     return streamFromNodeList(document.getElementsByTagName("content"))
-        .map(UpdateBinaryIndexFromIMLListTool::contentInfoFromNode)
+        .map(UpdateTool::contentInfoFromNode)
         .collect(ImmutableList.toImmutableList());
   }
 
@@ -123,7 +125,7 @@ public class UpdateBinaryIndexFromIMLListTool {
 
   private static ImmutableList<String> dependenciesFromDocument(@Nonnull Document document) {
     return streamFromNodeList(document.getElementsByTagName("orderEntry"))
-        .filter(UpdateBinaryIndexFromIMLListTool::isModule)
+        .filter(UpdateTool::isModule)
         .map(node -> extractAttributeNamed(node, "module-name"))
         .collect(ImmutableList.toImmutableList());
   }

@@ -34,18 +34,18 @@ java_binary(
 )
 
 java_library_with_plugins(
-    name = "update-index-tool-lib",
-    srcs = ["UpdateBinaryIndexFromIMLListTool.java"],
+    name = "updatetool-lib",
+    srcs = ["UpdateTool.java"],
     deps = [
         ":moduleinfo",
     ],
 )
 
 java_binary(
-    name = "update-binary-index-from-iml-list-tool",
-    main_class = "com.facebook.buck.features.project.intellij.moduleinfo.UpdateBinaryIndexFromIMLListTool",
+    name = "updatetool",
+    main_class = "com.facebook.buck.features.project.intellij.moduleinfo.UpdateTool",
     deps = [
-        ":update-index-tool-lib",
+        ":updatetool-lib",
         "//third-party/java/guava:guava",
     ],
 )
