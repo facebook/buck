@@ -13,34 +13,95 @@ class BcInstr {
   // We assign integer constants explicitly instead of using enum for performance:
   // our bytecode stores integers, and converting each opcode to enum might be expensive.
 
+  // Instruction frequency:
+  // CONTINUE              54072231
+  // IF_NOT_BR_LOCAL       34227216
+  // DOT                   26776754
+  // IF_NOT_IN_BR          21075583
+  // RETURN                20517769
+  // CALL_LINKED_1         19792256
+  // LIST                  18523533
+  // FOR_INIT              18455440
+  // IF_NOT_EQ_BR          16400964
+  // IF_BR_LOCAL           14964727
+  // CALL_2                13493378
+  // CALL_LINKED_2         13403222
+  // CALL_1                13205714
+  // BR                    12341333
+  // IF_NOT_TYPE_IS_BR     11546144
+  // RETURN_CONST          10690875
+  // SET_INDEX              9640045
+  // CP                     8461185
+  // EQ                     7137958
+  // INDEX                  7130950
+  // IF_EQ_BR               7110633
+  // CALL_LINKED            6347729
+  // CP_LOCAL               6271050
+  // LIST_APPEND            6256466
+  // PLUS_STRING            6079450
+  // IN                     5202096
+  // PERCENT_S_ONE          4997522
+  // PLUS_LIST              3898241
+  // SLICE                  3688547
+  // UNPACK                 3483477
+  // CALL                   3267990
+  // BINARY                 3119850
+  // PLUS_STRING_IN_PLACE   2996547
+  // RETURN_LOCAL           2902766
+  // PLUS_IN_PLACE          2265284
+  // IF_TYPE_IS_BR          2211067
+  // TUPLE                  2118512
+  // UNARY                  1791752
+  // PLUS                   1675565
+  // CALL_CACHED            1103264
+  // RETURN_NONE             981873
+  // DICT                    974003
+  // NOT_EQ                  919440
+  // IF_IN_BR                678312
+  // NOT                     356982
+  // PLUS_LIST_IN_PLACE      122677
+  // TYPE_IS                  77142
+  // BREAK                    33631
+  // SET_GLOBAL                3410
+  // NOT_IN                    2445
+  // NEW_FUNCTION              2426
+  // LOAD_STMT                 1818
+  // PERCENT_S_ONE_TUPLE          0
+  // SET_CELL                     0
+  // EVAL_EXCEPTION               0
+
   public static final int CP = 0;
   public static final int CP_LOCAL = CP + 1;
-  public static final int EQ = CP_LOCAL + 1;
-  public static final int NOT_EQ = EQ + 1;
-  public static final int PLUS = NOT_EQ + 1;
-  public static final int PLUS_STRING = PLUS + 1;
-  public static final int PLUS_LIST = PLUS_STRING + 1;
-  public static final int IN = PLUS_LIST + 1;
-  public static final int NOT_IN = IN + 1;
-  public static final int NOT = NOT_IN + 1;
-  public static final int UNARY = NOT + 1;
-  public static final int BR = UNARY + 1;
+  public static final int RETURN = CP_LOCAL + 1;
+  public static final int BR = RETURN + 1;
   public static final int IF_BR_LOCAL = BR + 1;
   public static final int IF_NOT_BR_LOCAL = IF_BR_LOCAL + 1;
   public static final int IF_TYPE_IS_BR = IF_NOT_BR_LOCAL + 1;
-  public static final int IF_NOT_TYPE_IS = IF_TYPE_IS_BR + 1;
-  public static final int IF_EQ_BR = IF_NOT_TYPE_IS + 1;
+  public static final int IF_NOT_TYPE_IS_BR = IF_TYPE_IS_BR + 1;
+  public static final int IF_EQ_BR = IF_NOT_TYPE_IS_BR + 1;
   public static final int IF_NOT_EQ_BR = IF_EQ_BR + 1;
   public static final int IF_IN_BR = IF_NOT_EQ_BR + 1;
   public static final int IF_NOT_IN_BR = IF_IN_BR + 1;
-  public static final int BINARY = IF_NOT_IN_BR + 1;
-  public static final int PERCENT_S_ONE = BINARY + 1;
+  public static final int FOR_INIT = IF_NOT_IN_BR + 1;
+  public static final int CONTINUE = FOR_INIT + 1;
+  public static final int BREAK = CONTINUE + 1;
+  public static final int NOT = BREAK + 1;
+  public static final int UNARY = NOT + 1;
+  public static final int EQ = UNARY + 1;
+  public static final int NOT_EQ = EQ + 1;
+  public static final int IN = NOT_EQ + 1;
+  public static final int NOT_IN = IN + 1;
+  public static final int PLUS = NOT_IN + 1;
+  public static final int PLUS_STRING = PLUS + 1;
+  public static final int PLUS_LIST = PLUS_STRING + 1;
+  public static final int PERCENT_S_ONE = PLUS_LIST + 1;
   public static final int PERCENT_S_ONE_TUPLE = PERCENT_S_ONE + 1;
   public static final int PLUS_IN_PLACE = PERCENT_S_ONE_TUPLE + 1;
   public static final int PLUS_STRING_IN_PLACE = PLUS_IN_PLACE + 1;
   public static final int PLUS_LIST_IN_PLACE = PLUS_STRING_IN_PLACE + 1;
   public static final int TYPE_IS = PLUS_LIST_IN_PLACE + 1;
-  public static final int SET_GLOBAL = TYPE_IS + 1;
+  public static final int BINARY = TYPE_IS + 1;
+  public static final int SET_GLOBAL = BINARY + 1;
   public static final int SET_CELL = SET_GLOBAL + 1;
   public static final int DOT = SET_CELL + 1;
   public static final int INDEX = DOT + 1;
@@ -52,18 +113,14 @@ class BcInstr {
   public static final int CALL_LINKED_1 = CALL_LINKED + 1;
   public static final int CALL_LINKED_2 = CALL_LINKED_1 + 1;
   public static final int CALL_CACHED = CALL_LINKED_2 + 1;
-  public static final int RETURN = CALL_CACHED + 1;
-  public static final int NEW_FUNCTION = RETURN + 1;
-  public static final int FOR_INIT = NEW_FUNCTION + 1;
-  public static final int CONTINUE = FOR_INIT + 1;
-  public static final int BREAK = CONTINUE + 1;
-  public static final int LIST = BREAK + 1;
+  public static final int LIST = CALL_CACHED + 1;
   public static final int TUPLE = LIST + 1;
   public static final int DICT = TUPLE + 1;
   public static final int LIST_APPEND = DICT + 1;
   public static final int SET_INDEX = LIST_APPEND + 1;
   public static final int UNPACK = SET_INDEX + 1;
-  public static final int LOAD_STMT = UNPACK + 1;
+  public static final int NEW_FUNCTION = UNPACK + 1;
+  public static final int LOAD_STMT = NEW_FUNCTION + 1;
   public static final int EVAL_EXCEPTION = LOAD_STMT + 1;
 
   /**
@@ -77,42 +134,8 @@ class BcInstr {
     CP(BcInstr.CP, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
     /** Similar to {@link #CP} but assumes in slot is local. */
     CP_LOCAL(BcInstr.CP_LOCAL, BcInstrOperand.IN_LOCAL, BcInstrOperand.OUT_SLOT),
-    /**
-     * {@code a2 = a0 == a1}. This is quite common operation, which deserves its own opcode to avoid
-     * switching in generic binary operator handling.
-     */
-    EQ(BcInstr.EQ, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
-    /**
-     * {@code a2 = a0 != a1}. This is quite common operation, which deserves its own opcode to avoid
-     * switching in generic binary operator handling.
-     */
-    NOT_EQ(BcInstr.NOT_EQ, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
-    /** {@code a2 = a0 + a1}. */
-    PLUS(BcInstr.PLUS, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
-    /** {@code a2 = a0 + a1}. */
-    PLUS_STRING(BcInstr.PLUS_STRING, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
-    /** {@code a2 = a0 + a1}. */
-    PLUS_LIST(
-        BcInstr.PLUS_LIST,
-        // lhs
-        BcInstrOperand.IN_SLOT,
-        // rhs list elements
-        BcInstrOperand.IN_LIST,
-        // Where to store result
-        BcInstrOperand.OUT_SLOT),
-    /** {@code a2 = a0 in a1}. */
-    IN(BcInstr.IN, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
-    /** {@code a2 = a0 not in a1}. */
-    NOT_IN(BcInstr.NOT_IN, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
-    /**
-     * {@code a1 = not a0}.
-     *
-     * <p>This could be handled by generic UNARY opcode, but it is specialized for performance.
-     */
-    NOT(BcInstr.NOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
-    /** {@code a2 = (a1) a0}. */
-    UNARY(
-        BcInstr.UNARY, BcInstrOperand.IN_SLOT, BcInstrOperand.TOKEN_KIND, BcInstrOperand.OUT_SLOT),
+    /** {@code return a0} */
+    RETURN(BcInstr.RETURN, BcInstrOperand.IN_SLOT),
     /** Goto. */
     BR(BcInstr.BR, BcInstrOperand.ADDR),
     /** Goto if. */
@@ -127,7 +150,7 @@ class BcInstr {
         BcInstrOperand.ADDR),
     /** Goto if type is not. */
     IF_NOT_TYPE_IS_BR(
-        BcInstr.IF_NOT_TYPE_IS,
+        BcInstr.IF_NOT_TYPE_IS_BR,
         BcInstrOperand.IN_SLOT,
         BcInstrOperand.STRING,
         BcInstrOperand.ADDR),
@@ -155,12 +178,83 @@ class BcInstr {
         BcInstrOperand.IN_SLOT,
         BcInstrOperand.IN_SLOT,
         BcInstrOperand.ADDR),
-    /** {@code a3 = a0 (a2) a1}. */
-    BINARY(
-        BcInstr.BINARY,
+    /**
+     * For loop init:
+     *
+     * <ul>
+     *   <li>Check if operand is iterable
+     *   <li>Lock the iterable
+     *   <li>Create an iterator
+     *   <li>If iterator has no elements, go to "e".
+     *   <li>Otherwise push iterable and iterator onto the stack
+     *   <li>Fetch the first element of the iterator and store it in the provided register
+     * </ul>
+     */
+    FOR_INIT(
+        BcInstr.FOR_INIT,
+        // Collection parameter
         BcInstrOperand.IN_SLOT,
+        // Next value register
+        BcInstrOperand.OUT_SLOT,
+        BcInstrOperand.ADDR),
+    /**
+     * Continue the loop:
+     *
+     * <ul>
+     *   <li>If current iterator (stored on the stack) is empty, unlock the iterable and pop
+     *       iterable and iterable from the stack and go to the label "e" after the end of the loop.
+     *   <li>Otherwise assign the next iterator item to the provided register and go to the label
+     *       "b", loop body.
+     * </ul>
+     */
+    CONTINUE(
+        BcInstr.CONTINUE,
+        // Iterator next value.
+        BcInstrOperand.OUT_SLOT,
+        // Beginning of the loop
+        BcInstrOperand.ADDR,
+        // End of the loop
+        BcInstrOperand.ADDR),
+    /**
+     * Exit the loop: unlock the iterable, pop it from the loop stack and goto a label after the
+     * loop.
+     */
+    BREAK(BcInstr.BREAK, BcInstrOperand.ADDR),
+    /**
+     * {@code a1 = not a0}.
+     *
+     * <p>This could be handled by generic UNARY opcode, but it is specialized for performance.
+     */
+    NOT(BcInstr.NOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /** {@code a2 = (a1) a0}. */
+    UNARY(
+        BcInstr.UNARY, BcInstrOperand.IN_SLOT, BcInstrOperand.TOKEN_KIND, BcInstrOperand.OUT_SLOT),
+    /**
+     * {@code a2 = a0 == a1}. This is quite common operation, which deserves its own opcode to avoid
+     * switching in generic binary operator handling.
+     */
+    EQ(BcInstr.EQ, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /**
+     * {@code a2 = a0 != a1}. This is quite common operation, which deserves its own opcode to avoid
+     * switching in generic binary operator handling.
+     */
+    NOT_EQ(BcInstr.NOT_EQ, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /** {@code a2 = a0 in a1}. */
+    IN(BcInstr.IN, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /** {@code a2 = a0 not in a1}. */
+    NOT_IN(BcInstr.NOT_IN, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /** {@code a2 = a0 + a1}. */
+    PLUS(BcInstr.PLUS, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /** {@code a2 = a0 + a1}. */
+    PLUS_STRING(BcInstr.PLUS_STRING, BcInstrOperand.IN_SLOT, BcInstrOperand.IN_SLOT, BcInstrOperand.OUT_SLOT),
+    /** {@code a2 = a0 + a1}. */
+    PLUS_LIST(
+        BcInstr.PLUS_LIST,
+        // lhs
         BcInstrOperand.IN_SLOT,
-        BcInstrOperand.TOKEN_KIND,
+        // rhs list elements
+        BcInstrOperand.IN_LIST,
+        // Where to store result
         BcInstrOperand.OUT_SLOT),
     /** "aaa%sbbb" % arg */
     PERCENT_S_ONE(
@@ -209,6 +303,13 @@ class BcInstr {
         BcInstr.TYPE_IS,
         BcInstrOperand.IN_LOCAL,
         BcInstrOperand.STRING,
+        BcInstrOperand.OUT_SLOT),
+    /** {@code a3 = a0 (a2) a1}. */
+    BINARY(
+        BcInstr.BINARY,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.IN_SLOT,
+        BcInstrOperand.TOKEN_KIND,
         BcInstrOperand.OUT_SLOT),
     /** Assign a value without destructuring to a global variable. */
     SET_GLOBAL(
@@ -324,59 +425,6 @@ class BcInstr {
         // Where to store result
         BcInstrOperand.OUT_SLOT
     ),
-    /** {@code return a0} */
-    RETURN(BcInstr.RETURN, BcInstrOperand.IN_SLOT),
-    /** Create a new function. */
-    NEW_FUNCTION(
-        BcInstr.NEW_FUNCTION,
-        // Resolver.Function
-        BcInstrOperand.OBJECT,
-        // Function default values
-        BcInstrOperand.lengthDelimited(BcInstrOperand.IN_SLOT),
-        // Where to store result
-        BcInstrOperand.OUT_SLOT),
-    /**
-     * For loop init:
-     *
-     * <ul>
-     *   <li>Check if operand is iterable
-     *   <li>Lock the iterable
-     *   <li>Create an iterator
-     *   <li>If iterator has no elements, go to "e".
-     *   <li>Otherwise push iterable and iterator onto the stack
-     *   <li>Fetch the first element of the iterator and store it in the provided register
-     * </ul>
-     */
-    FOR_INIT(
-        BcInstr.FOR_INIT,
-        // Collection parameter
-        BcInstrOperand.IN_SLOT,
-        // Next value register
-        BcInstrOperand.OUT_SLOT,
-        BcInstrOperand.ADDR),
-    /**
-     * Continue the loop:
-     *
-     * <ul>
-     *   <li>If current iterator (stored on the stack) is empty, unlock the iterable and pop
-     *       iterable and iterable from the stack and go to the label "e" after the end of the loop.
-     *   <li>Otherwise assign the next iterator item to the provided register and go to the label
-     *       "b", loop body.
-     * </ul>
-     */
-    CONTINUE(
-        BcInstr.CONTINUE,
-        // Iterator next value.
-        BcInstrOperand.OUT_SLOT,
-        // Beginning of the loop
-        BcInstrOperand.ADDR,
-        // End of the loop
-        BcInstrOperand.ADDR),
-    /**
-     * Exit the loop: unlock the iterable, pop it from the loop stack and goto a label after the
-     * loop.
-     */
-    BREAK(BcInstr.BREAK, BcInstrOperand.ADDR),
     /** List constructor. */
     LIST(
         BcInstr.LIST,
@@ -404,6 +452,15 @@ class BcInstr {
         BcInstr.UNPACK,
         BcInstrOperand.IN_SLOT,
         BcInstrOperand.lengthDelimited(BcInstrOperand.OUT_SLOT)),
+    /** Create a new function. */
+    NEW_FUNCTION(
+        BcInstr.NEW_FUNCTION,
+        // Resolver.Function
+        BcInstrOperand.OBJECT,
+        // Function default values
+        BcInstrOperand.lengthDelimited(BcInstrOperand.IN_SLOT),
+        // Where to store result
+        BcInstrOperand.OUT_SLOT),
     /** Load statement. */
     LOAD_STMT(BcInstr.LOAD_STMT,
         // LoadStatement object.

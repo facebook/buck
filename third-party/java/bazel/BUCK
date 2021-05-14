@@ -71,6 +71,11 @@ java_library(
     ],
 )
 
+export_file(
+    name = "BcEval.java",
+    src = "src/main/java/net/starlark/java/eval/BcEval.java",
+)
+
 java_test(
     name = "tests",
     srcs = glob(
@@ -86,6 +91,9 @@ java_test(
             "src/test/java/net/starlark/java/annot/processor/StarlarkMethodProcessorTest.java",
         ],
     ),
+    env = {
+        "BC_EVAL_JAVA": "$(location :BcEval.java)",
+    },
     plugins = [
         ":starlark-annot-processor",
     ],

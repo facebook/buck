@@ -1,7 +1,6 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import net.starlark.java.syntax.*;
 
 import javax.annotation.Nullable;
@@ -108,54 +107,8 @@ class BcEval {
           case BcInstr.CP_LOCAL:
             cpLocal();
             break;
-          case BcInstr.EQ:
-            eq();
-            break;
-          case BcInstr.NOT_EQ:
-            notEq();
-            break;
-          case BcInstr.PLUS:
-            plus();
-            break;
-          case BcInstr.PLUS_STRING:
-            plusString();
-            break;
-          case BcInstr.PLUS_LIST:
-            plusList();
-            break;
-          case BcInstr.IN:
-            binaryIn();
-            break;
-          case BcInstr.NOT_IN:
-            binaryNotIn();
-            break;
-          case BcInstr.NOT:
-            not();
-            break;
-          case BcInstr.UNARY:
-            unary();
-            break;
-          case BcInstr.BINARY:
-            binary();
-            break;
-          case BcInstr.PLUS_IN_PLACE:
-            plusInPlace();
-            break;
-          case BcInstr.PERCENT_S_ONE:
-            percentSOne();
-            break;
-          case BcInstr.PERCENT_S_ONE_TUPLE:
-            percentSOneTuple();
-            break;
-          case BcInstr.PLUS_STRING_IN_PLACE:
-            plusStringInPlace();
-            break;
-          case BcInstr.PLUS_LIST_IN_PLACE:
-            plusListInPlace();
-            break;
-          case BcInstr.TYPE_IS:
-            typeIs();
-            break;
+          case BcInstr.RETURN:
+            return returnInstr();
           case BcInstr.BR:
             br();
             continue;
@@ -168,7 +121,7 @@ class BcEval {
           case BcInstr.IF_TYPE_IS_BR:
             ifTypeIsBr();
             continue;
-          case BcInstr.IF_NOT_TYPE_IS:
+          case BcInstr.IF_NOT_TYPE_IS_BR:
             ifNotTypeIsBr();
             continue;
           case BcInstr.IF_EQ_BR:
@@ -183,6 +136,69 @@ class BcEval {
           case BcInstr.IF_NOT_IN_BR:
             ifNotInBr();
             continue;
+          case BcInstr.FOR_INIT:
+            forInit();
+            continue;
+          case BcInstr.CONTINUE:
+            continueInstr();
+            continue;
+          case BcInstr.BREAK:
+            breakInstr();
+            continue;
+          case BcInstr.NOT:
+            not();
+            break;
+          case BcInstr.UNARY:
+            unary();
+            break;
+          case BcInstr.EQ:
+            eq();
+            break;
+          case BcInstr.NOT_EQ:
+            notEq();
+            break;
+          case BcInstr.IN:
+            binaryIn();
+            break;
+          case BcInstr.NOT_IN:
+            binaryNotIn();
+            break;
+          case BcInstr.PLUS:
+            plus();
+            break;
+          case BcInstr.PLUS_STRING:
+            plusString();
+            break;
+          case BcInstr.PLUS_LIST:
+            plusList();
+            break;
+          case BcInstr.PERCENT_S_ONE:
+            percentSOne();
+            break;
+          case BcInstr.PERCENT_S_ONE_TUPLE:
+            percentSOneTuple();
+            break;
+          case BcInstr.PLUS_IN_PLACE:
+            plusInPlace();
+            break;
+          case BcInstr.PLUS_STRING_IN_PLACE:
+            plusStringInPlace();
+            break;
+          case BcInstr.PLUS_LIST_IN_PLACE:
+            plusListInPlace();
+            break;
+          case BcInstr.TYPE_IS:
+            typeIs();
+            break;
+          case BcInstr.BINARY:
+            binary();
+            break;
+          case BcInstr.SET_GLOBAL:
+            setGlobal();
+            break;
+          case BcInstr.SET_CELL:
+            setCell();
+            break;
           case BcInstr.DOT:
             dot();
             break;
@@ -213,43 +229,26 @@ class BcEval {
           case BcInstr.CALL_CACHED:
             callCached();
             break;
-          case BcInstr.RETURN:
-            return returnInstr();
-          case BcInstr.NEW_FUNCTION:
-            newFunction();
+          case BcInstr.LIST:
+            list();
             break;
           case BcInstr.TUPLE:
             tuple();
             break;
-          case BcInstr.LIST:
-            list();
-            break;
           case BcInstr.DICT:
             dict();
             break;
-          case BcInstr.UNPACK:
-            unpack();
-            break;
-          case BcInstr.SET_GLOBAL:
-            setGlobal();
-            break;
-          case BcInstr.SET_CELL:
-            setCell();
-            break;
-          case BcInstr.FOR_INIT:
-            forInit();
-            continue;
-          case BcInstr.BREAK:
-            breakInstr();
-            continue;
-          case BcInstr.CONTINUE:
-            continueInstr();
-            continue;
           case BcInstr.LIST_APPEND:
             listAppend();
             break;
           case BcInstr.SET_INDEX:
             setIndex();
+            break;
+          case BcInstr.UNPACK:
+            unpack();
+            break;
+          case BcInstr.NEW_FUNCTION:
+            newFunction();
             break;
           case BcInstr.LOAD_STMT:
             loadStmt();
