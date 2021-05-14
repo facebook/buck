@@ -179,6 +179,10 @@ class BcCompiled {
         .codeSize(text, ip + BcInstr.INSTR_HEADER_LEN);
   }
 
+  String getName() {
+    return name;
+  }
+
   @VisibleForTesting
   ImmutableList<BcInstr.Decoded> instructions() {
     ImmutableList.Builder<BcInstr.Decoded> instructions = ImmutableList.builder();

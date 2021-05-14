@@ -1382,7 +1382,11 @@ class Bc {
           rfn.getLocals(),
           rfn.getFreeVars());
       ir.write(bcWriter);
-      return bcWriter.finish(returnsConst, returnsTypeIs);
+      BcCompiled compiled = bcWriter.finish(returnsConst, returnsTypeIs);
+
+      StarlarkPrintDef.dumpIfShould(compiled, ir);
+
+      return compiled;
     }
   }
 

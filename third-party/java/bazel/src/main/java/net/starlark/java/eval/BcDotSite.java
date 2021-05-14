@@ -69,4 +69,9 @@ class BcDotSite {
       this.desc = desc;
     }
   }
+
+  @Override
+  public String toString() {
+    return name;
+  }
 }

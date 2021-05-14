@@ -7,9 +7,11 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
@@ -49,6 +51,16 @@ public class StarlarkRuntimeStats {
   }
 
   private static StarlarkRuntimeStats stats = ENABLED ? new StarlarkRuntimeStats() : null;
+
+  private ConcurrentLinkedDeque<String> defs = new ConcurrentLinkedDeque<>();
+
+  static void addDef(String def) {
+    if (!ENABLED) {
+      return;
+    }
+
+    stats.defs.add(def);
+  }
 
   private static class NativeCallStats {
     private final AtomicInteger count = new AtomicInteger();
@@ -302,6 +314,7 @@ public class StarlarkRuntimeStats {
     printCallCachedStats(out);
     printInstructionStats(out);
     printBinaryOpStats(out);
+    printDefs(out);
   }
 
   private void printTimeStats(PrintStream out) {
@@ -544,6 +557,13 @@ public class StarlarkRuntimeStats {
     out.println();
     out.println("Binary ops by " + TokenKind.class.getSimpleName() + ":");
     StarlarkRuntimeStatsTable.printTable(out, binaryOpCountByOp, "bin_op", "count");
+  }
+
+  private void printDefs(PrintStream out) {
+    for (String def : new ArrayList<>(defs)) {
+      out.println();
+      out.print(def);
+    }
   }
 
 }

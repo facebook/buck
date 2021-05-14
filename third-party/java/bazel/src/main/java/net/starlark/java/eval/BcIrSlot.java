@@ -144,7 +144,7 @@ abstract class BcIrSlot {
 
     @Override
     public String toString() {
-      return "CONST_VALUE:" + value;
+      return "CONST_VALUE:" + Starlark.repr(value);
     }
 
     @Nullable
