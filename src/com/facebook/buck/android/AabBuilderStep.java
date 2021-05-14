@@ -28,12 +28,15 @@ import com.android.tools.build.bundletool.commands.BuildBundleCommand;
 import com.android.tools.build.bundletool.model.BundleModule;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.impl.BuildPaths;
+import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -100,22 +103,28 @@ public class AabBuilderStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  public StepExecutionResult execute(StepExecutionContext context)
+      throws IOException, InterruptedException {
     PrintStream output = null;
     if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
       output = context.getStdOut();
     }
 
+    for (Step step : MakeCleanDirectoryStep.of(BuildCellRelativePath.of(getGenDir()))) {
+      step.execute(context);
+    }
     // We should only add a single source file to a given Module.
     Set<Path> addedSourceFiles = new HashSet<>();
 
     File fakeResApk = filesystem.createTempFile("fake", ".txt").toFile();
     for (ModuleInfo moduleInfo : modulesInfo) {
       Set<String> addedFiles = new HashSet<>();
+      Path modulePath = getPathForModule(moduleInfo);
+
       StepExecutionResult moduleBuildResult =
           addModule(
               context,
-              getPathForModule(moduleInfo),
+              modulePath,
               fakeResApk,
               output,
               moduleInfo,
@@ -161,9 +170,12 @@ public class AabBuilderStep implements Step {
     addedSourceFiles.add(file);
   }
 
+  private RelPath getGenDir() {
+    return BuildPaths.getGenDir(filesystem.getBuckPaths(), buildTarget);
+  }
+
   private Path getPathForModule(ModuleInfo moduleInfo) {
-    return BuildTargetPaths.getGenPathForBaseName(filesystem, buildTarget)
-        .resolve(String.format("%s.zip", moduleInfo.getModuleName()));
+      return getGenDir().resolve(String.format("%s.zip", moduleInfo.getModuleName()));
   }
 
   private StepExecutionResult addModule(
