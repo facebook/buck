@@ -6,6 +6,9 @@ java_library(
         "src/main/java/net/starlark/java/annot/*.java",
     ]),
     required_for_source_only_abi = True,
+    # Force version 8 because these jars are generated for Idea
+    source = "8",
+    target = "8",
     visibility = [
         "PUBLIC",
     ],
@@ -23,6 +26,8 @@ java_library(
         "src/main/resources/META-INF/services/javax.annotation.processing.Processor",
     ],
     resources_root = "src/main/resources",
+    source = "8",
+    target = "8",
     deps = [
         ":starlark-annot",
         "//third-party/java/errorprone:error-prone-annotations",
