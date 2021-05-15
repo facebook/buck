@@ -75,7 +75,7 @@ public class BcTest {
     Module module = Module.create();
     module.setGlobal("stru", new Structure() {
       @Override
-      public Object getValue(String name) throws EvalException {
+      public Object getField(String name) throws EvalException {
         assertEquals(name, "y");
         return StarlarkInt.of(23);
       }

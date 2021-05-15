@@ -346,7 +346,7 @@ public final class ScriptTest {
     }
 
     @Override
-    public Object getValue(String name) {
+    public Object getField(String name) {
       return fields.get(name);
     }
 

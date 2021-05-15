@@ -44,7 +44,7 @@ public class BuckStarlarkStructObjectTest {
 
     TestStructLikeClass structLikeClass = ImmutableTestStructLikeClass.ofImpl("foo");
 
-    assertEquals(structLikeClass.getFoo(), structLikeClass.getValue("get_foo"));
+    assertEquals(structLikeClass.getFoo(), structLikeClass.getField("get_foo"));
   }
 
   @Test
@@ -53,6 +53,6 @@ public class BuckStarlarkStructObjectTest {
     TestStructLikeClass structLikeClass = ImmutableTestStructLikeClass.ofImpl("foo");
 
     expectedException.expect(EvalException.class);
-    structLikeClass.getValue("get_bar");
+    structLikeClass.getField("get_bar");
   }
 }

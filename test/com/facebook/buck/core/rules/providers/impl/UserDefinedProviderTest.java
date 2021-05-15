@@ -132,9 +132,9 @@ public class UserDefinedProviderTest {
       assertTrue(rawInfo instanceof UserDefinedProviderInfo);
 
       UserDefinedProviderInfo info = (UserDefinedProviderInfo) rawInfo;
-      assertEquals("foo_value", info.getValue("foo"));
-      assertEquals(Starlark.NONE, info.getValue("bar"));
-      assertEquals("baz_value", info.getValue("baz"));
+      assertEquals("foo_value", info.getField("foo"));
+      assertEquals(Starlark.NONE, info.getField("bar"));
+      assertEquals("baz_value", info.getField("baz"));
     }
   }
 
@@ -156,9 +156,9 @@ public class UserDefinedProviderTest {
       assertTrue(rawInfo instanceof UserDefinedProviderInfo);
 
       UserDefinedProviderInfo info = (UserDefinedProviderInfo) rawInfo;
-      assertEquals("foo_value", info.getValue("foo"));
-      assertEquals("bar_value", info.getValue("bar"));
-      assertEquals("baz_value", info.getValue("baz"));
+      assertEquals("foo_value", info.getField("foo"));
+      assertEquals("bar_value", info.getField("bar"));
+      assertEquals("baz_value", info.getField("baz"));
     }
   }
 

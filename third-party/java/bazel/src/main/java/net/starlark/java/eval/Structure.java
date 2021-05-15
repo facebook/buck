@@ -35,23 +35,8 @@ public abstract class Structure extends StarlarkValue {
    *
    * @throws EvalException if a user-visible error occurs (other than non-existent field).
    */
-  // TODO(adonovan): rename "getField".
   @Nullable
-  public abstract Object getValue(String name) throws EvalException;
-
-  /**
-   * Returns the value of the field with the given name, or null if the field does not exist. The
-   * interpreter (Starlark code) calls this getValue, but client code cannot be relied upon to do
-   * so, so any checks done on the semantics are incompletely enforced.
-   *
-   * @param semantics the Starlark semantics, which determine the available fields
-   * @param name the name of the field to retrieve
-   * @throws EvalException if the field exists but could not be retrieved
-   */
-  @Nullable
-  public Object getValue(StarlarkSemantics semantics, String name) throws EvalException {
-    return this.getValue(name);
-  }
+  public abstract Object getField(String name) throws EvalException;
 
   /**
    * Returns the names of this value's fields, in some undefined but stable order.

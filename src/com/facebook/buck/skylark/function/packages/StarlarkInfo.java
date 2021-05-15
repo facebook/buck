@@ -277,7 +277,7 @@ public final class StarlarkInfo extends StructImpl implements HasBinary {
   }
 
   @Override
-  public Object getValue(String name) {
+  public Object getField(String name) {
     int n = table.length / 2;
     int i = Arrays.binarySearch(table, 0, n, name);
     if (i < 0) {

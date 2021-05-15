@@ -43,7 +43,7 @@ public abstract class BuckStarlarkStructObject extends Structure {
 
   @Nullable
   @Override
-  public Object getValue(String name) throws EvalException {
+  public Object getField(String name) throws EvalException {
     try {
       @Nullable Method method = getMethods().get(name);
       if (method == null) {
@@ -93,7 +93,7 @@ public abstract class BuckStarlarkStructObject extends Structure {
       printer.append(fieldName);
       printer.append(" = ");
       try {
-        printer.repr(getValue(fieldName));
+        printer.repr(getField(fieldName));
       } catch (EvalException e) {
         printer.repr(null);
       }

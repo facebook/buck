@@ -238,7 +238,7 @@ public class ListCommandLineArgsTest {
       UserDefinedProviderInfo providerInfo =
           (UserDefinedProviderInfo)
               Starlark.call(env.getEnv(), provider, Tuple.of(), ImmutableMap.of("foo", args));
-      assertEquals(args, providerInfo.getValue("foo"));
+      assertEquals(args, providerInfo.getField("foo"));
       assertTrue(providerInfo.isImmutable());
     }
   }

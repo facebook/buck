@@ -96,7 +96,7 @@ public class SkylarkRuleContextAttr extends Structure {
 
   @Nullable
   @Override
-  public Object getValue(String name) {
+  public Object getField(String name) {
     if (!attributes.containsKey(name)) {
       // loading cache can't store null, so we exit early
       return null;

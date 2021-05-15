@@ -100,7 +100,7 @@ class JsonPrinter {
       sb.append('"');
       sb.append(field);
       sb.append("\":");
-      printJson(value.getValue(field), sb, loc, "struct field", field);
+      printJson(value.getField(field), sb, loc, "struct field", field);
     }
     sb.append('}');
   }

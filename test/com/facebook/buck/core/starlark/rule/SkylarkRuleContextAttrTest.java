@@ -108,8 +108,8 @@ public class SkylarkRuleContextAttrTest {
             ImmutableMap.of(ParamName.bySnakeCase("foo"), placeholderStringAttr),
             new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
 
-    assertEquals("foo_value", attr.getValue("foo"));
-    assertNull(attr.getValue("bar"));
+    assertEquals("foo_value", attr.getField("foo"));
+    assertNull(attr.getField("bar"));
   }
 
   @Test
@@ -149,9 +149,9 @@ public class SkylarkRuleContextAttrTest {
                 attr),
             new FakeRuleAnalysisContextImpl(ImmutableMap.of(target, providerInfos)));
 
-    assertEquals("foo_value", ctxAttr.getValue("foo"));
-    assertEquals(target, ((Pair) ctxAttr.getValue("bar")).getSecond());
-    Artifact createdArtifact = ((Artifact) ((Pair) ctxAttr.getValue("bar")).getFirst());
+    assertEquals("foo_value", ctxAttr.getField("foo"));
+    assertEquals(target, ((Pair) ctxAttr.getField("bar")).getSecond());
+    Artifact createdArtifact = ((Artifact) ((Pair) ctxAttr.getField("bar")).getFirst());
     assertFalse(createdArtifact.isBound());
     assertEquals("out.txt", createdArtifact.getBasename());
   }

@@ -216,7 +216,7 @@ public final class MethodLibraryTest {
   @StarlarkBuiltin(name = "AStruct", documented = false, doc = "")
   static final class AStruct extends Structure {
     @Override
-    public Object getValue(String name) {
+    public Object getField(String name) {
       switch (name) {
         case "field":
           return "a";

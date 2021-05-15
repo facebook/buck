@@ -89,11 +89,11 @@ public abstract class StructImpl extends Structure implements Info, StructApi {
   }
 
   /**
-   * Returns the result of {@link #getValue(String)}, cast as the given type, throwing {@link
+   * Returns the result of {@link #getField(String)}, cast as the given type, throwing {@link
    * EvalException} if the cast fails.
    */
   public final <T> T getValue(String key, Class<T> type) throws EvalException {
-    Object obj = getValue(key);
+    Object obj = getField(key);
     if (obj == null) {
       return null;
     }
@@ -184,7 +184,7 @@ public abstract class StructImpl extends Structure implements Info, StructApi {
 
   private Object getValueOrNull(String name) {
     try {
-      return getValue(name);
+      return getField(name);
     } catch (EvalException e) {
       return null;
     }
@@ -203,7 +203,7 @@ public abstract class StructImpl extends Structure implements Info, StructApi {
     List<String> fields = new ArrayList<>(object.getFieldNames());
     Collections.sort(fields);
     for (String field : fields) {
-      printProtoTextMessage(field, object.getValue(field), sb, indent);
+      printProtoTextMessage(field, object.getField(field), sb, indent);
     }
   }
 
@@ -293,7 +293,7 @@ public abstract class StructImpl extends Structure implements Info, StructApi {
         join = ",";
         appendJSONStringLiteral(sb, field);
         sb.append(':');
-        printJson(((Structure) value).getValue(field), sb, "struct field", field);
+        printJson(((Structure) value).getField(field), sb, "struct field", field);
       }
       sb.append("}");
     } else if (value instanceof Dict) {

@@ -37,7 +37,7 @@ class BcDotSite {
     // user-defined field?
     if (self instanceof Structure) {
       Structure struct = (Structure) self;
-      Object field = struct.getValue(thread.getSemantics(), name);
+      Object field = struct.getField(name);
       if (field != null) {
         return Starlark.checkValid(field);
       }

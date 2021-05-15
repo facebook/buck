@@ -203,7 +203,7 @@ public final class Json extends StarlarkValue {
           appendQuoted(field);
           out.append(":");
           try {
-            Object v = obj.getValue(field); // may fail (field not defined)
+            Object v = obj.getField(field); // may fail (field not defined)
             encode(v); // may fail (unexpected type)
           } catch (EvalException ex) {
             throw Starlark.errorf("in %s field .%s: %s", Starlark.type(x), field, ex.getMessage());

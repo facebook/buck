@@ -82,7 +82,7 @@ public class UserDefinedProviderInfo extends Structure
 
   @Nullable
   @Override
-  public Object getValue(String name) {
+  public Object getField(String name) {
     return fieldValues.get(name);
   }
 

@@ -640,7 +640,7 @@ public final class Starlark {
    */
   public static boolean hasattr(Object x, String name)
       throws EvalException {
-    return (x instanceof Structure && ((Structure) x).getValue(name) != null)
+    return (x instanceof Structure && ((Structure) x).getField(name) != null)
         || CallUtils.getAnnotatedMethods(x.getClass()).containsKey(name);
   }
 
@@ -669,7 +669,7 @@ public final class Starlark {
     // user-defined field?
     if (x instanceof Structure) {
       Structure struct = (Structure) x;
-      Object field = struct.getValue(semantics, name);
+      Object field = struct.getField(name);
       if (field != null) {
         return Starlark.checkValid(field);
       }

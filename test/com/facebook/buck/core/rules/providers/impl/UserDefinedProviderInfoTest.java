@@ -104,9 +104,9 @@ public class UserDefinedProviderInfoTest {
                 Starlark.NONE));
 
     assertEquals(ImmutableList.of("foo", "bar", "empty"), info.getFieldNames().asList());
-    assertEquals(Starlark.NONE, info.getValue("empty"));
-    assertEquals("bar_value", info.getValue("bar"));
-    assertNull(info.getValue("bad_field"));
+    assertEquals(Starlark.NONE, info.getField("empty"));
+    assertEquals("bar_value", info.getField("bar"));
+    assertNull(info.getField("bad_field"));
   }
 
   @Test
@@ -124,13 +124,13 @@ public class UserDefinedProviderInfoTest {
                 Starlark.NONE));
 
     ImmutableMap<String, Object> map = ImmutableMap.of("info", info);
-    assertEquals(info.getValue("foo"), TestStarlarkParser.eval("info.foo", map));
-    assertEquals(info.getValue("bar"), TestStarlarkParser.eval("info.bar", map));
-    assertEquals(info.getValue("empty"), TestStarlarkParser.eval("info.empty", map));
+    assertEquals(info.getField("foo"), TestStarlarkParser.eval("info.foo", map));
+    assertEquals(info.getField("bar"), TestStarlarkParser.eval("info.bar", map));
+    assertEquals(info.getField("empty"), TestStarlarkParser.eval("info.empty", map));
 
     thrown.expect(EvalException.class);
     thrown.expectMessage("no field named invalid");
-    assertEquals(info.getValue("foo"), TestStarlarkParser.eval("info.invalid", map));
+    assertEquals(info.getField("foo"), TestStarlarkParser.eval("info.invalid", map));
   }
 
   @Test
@@ -174,23 +174,23 @@ public class UserDefinedProviderInfoTest {
               TestStarlarkParser.eval(env.getEnv(), env.getModule(), buildFile);
 
       assertNotNull(out2);
-      out1 = (UserDefinedProviderInfo) out2.getValue("value");
+      out1 = (UserDefinedProviderInfo) out2.getField("value");
 
       assertNotNull(out1);
 
       assertFalse(out1.isImmutable());
-      assertTrue(Starlark.isImmutable(Objects.requireNonNull(out1.getValue("value"))));
-      assertTrue(Starlark.isImmutable(Objects.requireNonNull(out1.getValue("immutable"))));
-      assertFalse(Starlark.isImmutable(Objects.requireNonNull(out1.getValue("mutable"))));
+      assertTrue(Starlark.isImmutable(Objects.requireNonNull(out1.getField("value"))));
+      assertTrue(Starlark.isImmutable(Objects.requireNonNull(out1.getField("immutable"))));
+      assertFalse(Starlark.isImmutable(Objects.requireNonNull(out1.getField("mutable"))));
 
       assertFalse(out2.isImmutable());
-      assertFalse(Starlark.isImmutable(Objects.requireNonNull(out2.getValue("value"))));
-      assertTrue(Starlark.isImmutable(Objects.requireNonNull(out2.getValue("immutable"))));
-      assertFalse(Starlark.isImmutable(Objects.requireNonNull(out2.getValue("mutable"))));
+      assertFalse(Starlark.isImmutable(Objects.requireNonNull(out2.getField("value"))));
+      assertTrue(Starlark.isImmutable(Objects.requireNonNull(out2.getField("immutable"))));
+      assertFalse(Starlark.isImmutable(Objects.requireNonNull(out2.getField("mutable"))));
 
       assertEquals(
           ImmutableList.of(StarlarkInt.of(1), StarlarkInt.of(2), StarlarkInt.of(3)),
-          ((StarlarkList<?>) out1.getValue("immutable")).getImmutableList());
+          ((StarlarkList<?>) out1.getField("immutable")).getImmutableList());
       assertEquals(
           ImmutableList.of(
               StarlarkInt.of(4),
@@ -198,10 +198,10 @@ public class UserDefinedProviderInfoTest {
               StarlarkInt.of(6),
               StarlarkInt.of(7),
               StarlarkInt.of(8)),
-          ((StarlarkList<?>) out1.getValue("mutable")).getImmutableList());
+          ((StarlarkList<?>) out1.getField("mutable")).getImmutableList());
       assertEquals(
           ImmutableList.of(StarlarkInt.of(1), StarlarkInt.of(2), StarlarkInt.of(3)),
-          ((StarlarkList<?>) out2.getValue("immutable")).getImmutableList());
+          ((StarlarkList<?>) out2.getField("immutable")).getImmutableList());
       assertEquals(
           ImmutableList.of(
               StarlarkInt.of(4),
@@ -209,17 +209,17 @@ public class UserDefinedProviderInfoTest {
               StarlarkInt.of(6),
               StarlarkInt.of(7),
               StarlarkInt.of(8)),
-          ((StarlarkList<?>) out2.getValue("mutable")).getImmutableList());
+          ((StarlarkList<?>) out2.getField("mutable")).getImmutableList());
     }
 
     assertTrue(out1.isImmutable());
-    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out1.getValue("value"))));
-    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out1.getValue("immutable"))));
-    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out1.getValue("mutable"))));
+    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out1.getField("value"))));
+    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out1.getField("immutable"))));
+    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out1.getField("mutable"))));
 
     assertTrue(out2.isImmutable());
-    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out2.getValue("value"))));
-    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out2.getValue("immutable"))));
-    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out2.getValue("mutable"))));
+    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out2.getField("value"))));
+    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out2.getField("immutable"))));
+    assertTrue(Starlark.isImmutable(Objects.requireNonNull(out2.getField("mutable"))));
   }
 }

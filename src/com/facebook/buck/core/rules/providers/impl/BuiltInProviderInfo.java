@@ -95,7 +95,7 @@ public abstract class BuiltInProviderInfo<T extends BuiltInProviderInfo<T>>
     }
     for (String field : getFieldNames()) {
       try {
-        if (!BuckSkylarkTypes.isImmutable(Objects.requireNonNull(getValue(field)))) {
+        if (!BuckSkylarkTypes.isImmutable(Objects.requireNonNull(getField(field)))) {
           return false;
         }
       } catch (EvalException e) {
