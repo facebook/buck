@@ -46,6 +46,7 @@ import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
+import com.facebook.buck.util.concurrent.AutoCloseableReadLocked;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -63,6 +64,7 @@ public class DaemonicCellStateTest {
   private Cell childCell;
   private DaemonicCellState state;
   private DaemonicCellState childState;
+  private DaemonicParserStateLocks locks;
 
   private void populateDummyRawNode(DaemonicCellState state, BuildTarget target) {
     Cell targetCell;
@@ -73,7 +75,7 @@ public class DaemonicCellStateTest {
     } else {
       throw new AssertionError();
     }
-    state.putBuildFileManifestIfNotPresent(
+    state.putBuildFileManifestIfNotPresentForTest(
         targetCell
             .getRoot()
             .resolve(
@@ -107,7 +109,7 @@ public class DaemonicCellStateTest {
             .build();
     cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     childCell = cells.getCell(CanonicalCellName.of(Optional.of("xplat")));
-    DaemonicParserStateLocks locks = new DaemonicParserStateLocks();
+    locks = new DaemonicParserStateLocks();
     state = new DaemonicCellState(cells.getRootCell(), locks);
     childState = new DaemonicCellState(childCell, locks);
   }
@@ -140,17 +142,21 @@ public class DaemonicCellStateTest {
     UnconfiguredTargetNode n1 = rawTargetNode("n1");
     UnconfiguredTargetNode n2 = rawTargetNode("n2");
 
-    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n1);
-    assertEquals(
-        "Cached node was not found",
-        Optional.of(n1),
-        cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
+    try (AutoCloseableReadLocked readLock = locks.cachesLock.lockRead()) {
 
-    assertEquals(n1, cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n2));
-    assertEquals(
-        "Previously cached node should not be updated",
-        Optional.of(n1),
-        cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
+      cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n1, readLock);
+      assertEquals(
+          "Cached node was not found",
+          Optional.of(n1),
+          cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
+
+      assertEquals(
+          n1, cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n2, readLock));
+      assertEquals(
+          "Previously cached node should not be updated",
+          Optional.of(n1),
+          cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
+    }
   }
 
   @Test
@@ -166,10 +172,12 @@ public class DaemonicCellStateTest {
 
     UnconfiguredTargetNode n1 = rawTargetNode("n1");
 
-    cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n1);
+    try (AutoCloseableReadLocked readLock = locks.cachesLock.lockRead()) {
+      cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n1, readLock);
+    }
     assertEquals(Optional.of(n1), cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
 
-    childState.putBuildFileManifestIfNotPresent(
+    childState.putBuildFileManifestIfNotPresentForTest(
         targetPath,
         BuildFileManifestFactory.create(
             ImmutableMap.of(
@@ -195,7 +203,7 @@ public class DaemonicCellStateTest {
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
     PackageFileManifest cachedManifest =
-        state.putPackageFileManifestIfNotPresent(packageFile, manifest, ImmutableSet.of());
+        state.putPackageFileManifestIfNotPresentForTest(packageFile, manifest, ImmutableSet.of());
 
     assertSame(cachedManifest, manifest);
 
@@ -207,7 +215,7 @@ public class DaemonicCellStateTest {
             ImmutableList.of());
 
     cachedManifest =
-        state.putPackageFileManifestIfNotPresent(packageFile, manifest, ImmutableSet.of());
+        state.putPackageFileManifestIfNotPresentForTest(packageFile, manifest, ImmutableSet.of());
 
     assertNotSame(secondaryManifest, cachedManifest);
   }
@@ -221,7 +229,7 @@ public class DaemonicCellStateTest {
     assertFalse(lookupManifest.isPresent());
 
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
-    state.putPackageFileManifestIfNotPresent(packageFile, manifest, ImmutableSet.of());
+    state.putPackageFileManifestIfNotPresentForTest(packageFile, manifest, ImmutableSet.of());
     lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertSame(lookupManifest.get(), manifest);
   }
@@ -231,7 +239,7 @@ public class DaemonicCellStateTest {
     AbsPath packageFile = dummyPackageFile();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
-    state.putPackageFileManifestIfNotPresent(packageFile, manifest, ImmutableSet.of());
+    state.putPackageFileManifestIfNotPresentForTest(packageFile, manifest, ImmutableSet.of());
 
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
@@ -254,7 +262,8 @@ public class DaemonicCellStateTest {
 
     AbsPath dependentFile = filesystem.resolve("path/to/pkg_dependent.bzl");
 
-    state.putPackageFileManifestIfNotPresent(packageFile, manifest, ImmutableSet.of(dependentFile));
+    state.putPackageFileManifestIfNotPresentForTest(
+        packageFile, manifest, ImmutableSet.of(dependentFile));
 
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());

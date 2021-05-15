@@ -40,6 +40,7 @@ import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.concurrent.AutoCloseableLocked;
+import com.facebook.buck.util.concurrent.AutoCloseableReadLocked;
 import com.facebook.buck.util.concurrent.AutoCloseableWriteLocked;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -97,16 +98,20 @@ public class DaemonicParserState {
         Cell cell, K target, T targetNode, boolean targetIsConfiguration)
         throws BuildTargetException {
 
-      AbsPath buildFile =
-          cell.getBuckConfigView(ParserConfig.class)
-              .getAbsolutePathToBuildFileUnsafe(
-                  cell, type.convertToUnconfiguredBuildTargetView(target));
+      try (AutoCloseableReadLocked readLock = locks.cachesLock.lockRead()) {
 
-      if (targetIsConfiguration) {
-        configurationBuildFiles.add(buildFile);
+        AbsPath buildFile =
+            cell.getBuckConfigView(ParserConfig.class)
+                .getAbsolutePathToBuildFileUnsafe(
+                    cell, type.convertToUnconfiguredBuildTargetView(target));
+
+        if (targetIsConfiguration) {
+          configurationBuildFiles.add(buildFile);
+        }
+
+        return getOrCreateCache(cell, readLock)
+            .putComputedNodeIfNotPresent(target, targetNode, readLock);
       }
-
-      return getOrCreateCache(cell).putComputedNodeIfNotPresent(target, targetNode);
     }
 
     private @Nullable DaemonicCellState.Cache<K, T> getCache(Cell cell) {
@@ -117,8 +122,9 @@ public class DaemonicParserState {
       return cellState.getCache(type);
     }
 
-    private DaemonicCellState.Cache<K, T> getOrCreateCache(Cell cell) {
-      return getOrCreateCellState(cell).getCache(type);
+    private DaemonicCellState.Cache<K, T> getOrCreateCache(
+        Cell cell, AutoCloseableReadLocked readLock) {
+      return getOrCreateCellState(cell, readLock).getCache(type);
     }
   }
 
@@ -153,22 +159,28 @@ public class DaemonicParserState {
         boolean targetIsConfiguration)
         throws BuildTargetException {
 
-      AbsPath buildFileAbs = cell.getRoot().resolve(buildFile);
+      try (AutoCloseableReadLocked locked = locks.cachesLock.lockRead()) {
 
-      ImmutableSet.Builder<AbsPath> dependentsOfEveryNode = ImmutableSet.builder();
+        AbsPath buildFileAbs = cell.getRoot().resolve(buildFile);
 
-      addAllIncludes(dependentsOfEveryNode, manifest.getIncludes(), cell);
+        ImmutableSet.Builder<AbsPath> dependentsOfEveryNode = ImmutableSet.builder();
 
-      if (cell.getBuckConfig().getView(ParserConfig.class).getEnablePackageFiles()) {
-        // Add the PACKAGE file in the build file's directory, regardless of whether they currently
-        // exist. If a PACKAGE file is added, or a parent PACKAGE file is modified/added we need to
-        // invalidate all relevant nodes.
-        ForwardRelPath packageFile = PackagePipeline.getPackageFileFromBuildFile(cell, buildFile);
-        dependentsOfEveryNode.add(cell.getRoot().resolve(packageFile));
+        addAllIncludes(dependentsOfEveryNode, manifest.getIncludes(), cell);
+
+        if (cell.getBuckConfig().getView(ParserConfig.class).getEnablePackageFiles()) {
+          // Add the PACKAGE file in the build file's directory, regardless of whether they
+          // currently
+          // exist. If a PACKAGE file is added, or a parent PACKAGE file is modified/added we need
+          // to
+          // invalidate all relevant nodes.
+          ForwardRelPath packageFile = PackagePipeline.getPackageFileFromBuildFile(cell, buildFile);
+          dependentsOfEveryNode.add(cell.getRoot().resolve(packageFile));
+        }
+
+        return getOrCreateCellState(cell, locked)
+            .putBuildFileManifestIfNotPresent(
+                buildFileAbs, manifest, dependentsOfEveryNode.build(), locked);
       }
-
-      return getOrCreateCellState(cell)
-          .putBuildFileManifestIfNotPresent(buildFileAbs, manifest, dependentsOfEveryNode.build());
     }
   }
 
@@ -202,19 +214,22 @@ public class DaemonicParserState {
         boolean targetIsConfiguration)
         throws BuildTargetException {
 
-      AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
+      try (AutoCloseableReadLocked locked = locks.cachesLock.lockRead()) {
+        AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
 
-      ImmutableSet.Builder<AbsPath> packageDependents = ImmutableSet.builder();
+        ImmutableSet.Builder<AbsPath> packageDependents = ImmutableSet.builder();
 
-      addAllIncludes(packageDependents, manifest.getIncludes(), cell);
+        addAllIncludes(packageDependents, manifest.getIncludes(), cell);
 
-      // Package files may depend on their parent PACKAGE file.
-      Optional<ForwardRelPath> parentPackageFile =
-          PackagePipeline.getParentPackageFile(packageFile);
-      parentPackageFile.ifPresent(path -> packageDependents.add(cell.getRoot().resolve(path)));
+        // Package files may depend on their parent PACKAGE file.
+        Optional<ForwardRelPath> parentPackageFile =
+            PackagePipeline.getParentPackageFile(packageFile);
+        parentPackageFile.ifPresent(path -> packageDependents.add(cell.getRoot().resolve(path)));
 
-      return getOrCreateCellState(cell)
-          .putPackageFileManifestIfNotPresent(packageFileAbs, manifest, packageDependents.build());
+        return getOrCreateCellState(cell, locked)
+            .putPackageFileManifestIfNotPresent(
+                packageFileAbs, manifest, packageDependents.build(), locked);
+      }
     }
   }
 
@@ -361,7 +376,9 @@ public class DaemonicParserState {
     return cellToDaemonicState.get(cell.getCanonicalName());
   }
 
-  private DaemonicCellState getOrCreateCellState(Cell cell) {
+  private DaemonicCellState getOrCreateCellState(Cell cell, AutoCloseableReadLocked locked) {
+    locked.markUsed();
+
     return cellToDaemonicState.computeIfAbsent(
         cell.getCanonicalName(), r -> new DaemonicCellState(cell, locks));
   }

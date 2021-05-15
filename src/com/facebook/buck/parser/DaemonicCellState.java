@@ -32,6 +32,8 @@ import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.concurrent.AutoCloseableLocked;
+import com.facebook.buck.util.concurrent.AutoCloseableReadLocked;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
@@ -82,22 +84,23 @@ class DaemonicCellState {
       return Optional.ofNullable(allComputedNodes.getIfPresent(target));
     }
 
-    public T putComputedNodeIfNotPresent(K target, T targetNode) throws BuildTargetException {
-      try (AutoCloseableLocked readLock = locks.cachesLock.lockRead()) {
-        T updatedNode = allComputedNodes.putIfAbsentAndGet(target, targetNode);
-        Preconditions.checkState(
-            allRawNodeTargets.contains(type.keyToUnflavoredBuildTargetView.apply(target)),
-            "Added %s to computed nodes, which isn't present in raw nodes",
-            target);
-        if (updatedNode.equals(targetNode)) {
-          targetsCornucopia
-              .computeIfAbsent(
-                  type.keyToUnflavoredBuildTargetView.apply(target),
-                  t -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
-              .add(target);
-        }
-        return updatedNode;
+    public T putComputedNodeIfNotPresent(K target, T targetNode, AutoCloseableLocked readLock)
+        throws BuildTargetException {
+      readLock.markUsed();
+
+      T updatedNode = allComputedNodes.putIfAbsentAndGet(target, targetNode);
+      Preconditions.checkState(
+          allRawNodeTargets.contains(type.keyToUnflavoredBuildTargetView.apply(target)),
+          "Added %s to computed nodes, which isn't present in raw nodes",
+          target);
+      if (updatedNode.equals(targetNode)) {
+        targetsCornucopia
+            .computeIfAbsent(
+                type.keyToUnflavoredBuildTargetView.apply(target),
+                t -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+            .add(target);
       }
+      return updatedNode;
     }
   }
 
@@ -212,25 +215,37 @@ class DaemonicCellState {
   BuildFileManifest putBuildFileManifestIfNotPresent(
       AbsPath buildFile,
       BuildFileManifest buildFileManifest,
+      ImmutableSet<AbsPath> dependentsOfEveryNode,
+      AutoCloseableReadLocked locked) {
+    locked.markUsed();
+
+    BuildFileManifest updated =
+        allBuildFileManifests.putIfAbsentAndGet(buildFile, buildFileManifest);
+    for (RawTargetNode node : updated.getTargets().values()) {
+      allRawNodeTargets.add(
+          UnflavoredBuildTargetFactory.createFromRawNode(
+              cellRoot.getPath(), cellCanonicalName, node, buildFile.getPath()));
+    }
+    if (updated == buildFileManifest) {
+      // We now know all the nodes. They all implicitly depend on everything in
+      // the "dependentsOfEveryNode" set.
+      for (AbsPath dependent : dependentsOfEveryNode) {
+        buildFileDependents
+            .computeIfAbsent(dependent, p -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+            .add(buildFile);
+      }
+    }
+    return updated;
+  }
+
+  @VisibleForTesting
+  BuildFileManifest putBuildFileManifestIfNotPresentForTest(
+      AbsPath buildFile,
+      BuildFileManifest buildFileManifest,
       ImmutableSet<AbsPath> dependentsOfEveryNode) {
-    try (AutoCloseableLocked readLock = locks.cachesLock.lockRead()) {
-      BuildFileManifest updated =
-          allBuildFileManifests.putIfAbsentAndGet(buildFile, buildFileManifest);
-      for (RawTargetNode node : updated.getTargets().values()) {
-        allRawNodeTargets.add(
-            UnflavoredBuildTargetFactory.createFromRawNode(
-                cellRoot.getPath(), cellCanonicalName, node, buildFile.getPath()));
-      }
-      if (updated == buildFileManifest) {
-        // We now know all the nodes. They all implicitly depend on everything in
-        // the "dependentsOfEveryNode" set.
-        for (AbsPath dependent : dependentsOfEveryNode) {
-          buildFileDependents
-              .computeIfAbsent(dependent, p -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
-              .add(buildFile);
-        }
-      }
-      return updated;
+    try (AutoCloseableReadLocked locked = locks.cachesLock.lockRead()) {
+      return putBuildFileManifestIfNotPresent(
+          buildFile, buildFileManifest, dependentsOfEveryNode, locked);
     }
   }
 
@@ -241,20 +256,31 @@ class DaemonicCellState {
   PackageFileManifest putPackageFileManifestIfNotPresent(
       AbsPath packageFile,
       PackageFileManifest packageFileManifest,
-      ImmutableSet<AbsPath> packageDependents) {
-    try (AutoCloseableLocked readLock = locks.cachesLock.lockRead()) {
-      PackageFileManifest updated =
-          allPackageFileManifests.putIfAbsentAndGet(packageFile, packageFileManifest);
-      if (updated == packageFileManifest) {
-        // The package file will depend on all dependents and we keep a reverse mapping to know
-        // which package files to invalidate if a dependent changes.
-        for (AbsPath dependent : packageDependents) {
-          this.packageFileDependents
-              .computeIfAbsent(dependent, p -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
-              .add(packageFile);
-        }
+      ImmutableSet<AbsPath> packageDependents,
+      AutoCloseableReadLocked locked) {
+    locked.markUsed();
+    PackageFileManifest updated =
+        allPackageFileManifests.putIfAbsentAndGet(packageFile, packageFileManifest);
+    if (updated == packageFileManifest) {
+      // The package file will depend on all dependents and we keep a reverse mapping to know
+      // which package files to invalidate if a dependent changes.
+      for (AbsPath dependent : packageDependents) {
+        this.packageFileDependents
+            .computeIfAbsent(dependent, p -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
+            .add(packageFile);
       }
-      return updated;
+    }
+    return updated;
+  }
+
+  @VisibleForTesting
+  PackageFileManifest putPackageFileManifestIfNotPresentForTest(
+      AbsPath packageFile,
+      PackageFileManifest packageFileManifest,
+      ImmutableSet<AbsPath> packageDependents) {
+    try (AutoCloseableReadLocked locked = locks.cachesLock.lockRead()) {
+      return putPackageFileManifestIfNotPresent(
+          packageFile, packageFileManifest, packageDependents, locked);
     }
   }
 
