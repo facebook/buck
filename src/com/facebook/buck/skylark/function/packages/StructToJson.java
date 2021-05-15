@@ -31,32 +31,35 @@ class StructToJson {
       throws EvalException {
     if (value == Starlark.NONE) {
       sb.append("null");
+    } else if (value instanceof StructImpl) {
+      sb.append("{");
+      int size = ((StructImpl) value).table.length / 2;
+      for (int i = 0; i != size; ++i) {
+        String fieldName = (String) ((StructImpl) value).table[i];
+        Object fieldValue = ((StructImpl) value).table[size + i];
+        appendJsonObjectField(sb, i == 0, fieldName, fieldValue, "struct field");
+      }
+      sb.append("}");
     } else if (value instanceof Structure) {
       sb.append("{");
-
-      String join = "";
+      boolean first = true;
       for (String field : ((Structure) value).getFieldNames()) {
-        sb.append(join);
-        join = ",";
-        appendJSONStringLiteral(sb, field);
-        sb.append(':');
-        printJson(((Structure) value).getField(field), sb, "struct field", field);
+        Object fieldValue = ((Structure) value).getField(field);
+        appendJsonObjectField(sb, first, field, fieldValue, "struct field");
+        first = false;
       }
       sb.append("}");
     } else if (value instanceof Dict) {
       sb.append("{");
-      String join = "";
+      boolean first = true;
       for (Map.Entry<?, ?> entry : ((Dict<?, ?>) value).entrySet()) {
-        sb.append(join);
-        join = ",";
         if (!(entry.getKey() instanceof String)) {
           throw Starlark.errorf(
               "Keys must be a string but got a %s for %s%s",
               Starlark.type(entry.getKey()), container, key != null ? " '" + key + "'" : "");
         }
-        appendJSONStringLiteral(sb, (String) entry.getKey());
-        sb.append(':');
-        printJson(entry.getValue(), sb, "dict value", String.valueOf(entry.getKey()));
+        appendJsonObjectField(sb, first, (String) entry.getKey(), entry.getValue(), "dict value");
+        first = false;
       }
       sb.append("}");
     } else if (value instanceof Sequence) {
@@ -78,6 +81,17 @@ class StructToJson {
               + " %s%s",
           Starlark.type(value), container, key != null ? " '" + key + "'" : "");
     }
+  }
+
+  private static void appendJsonObjectField(
+      StringBuilder sb, boolean first, String field, Object fieldValue, String container)
+      throws EvalException {
+    if (!first) {
+      sb.append(",");
+    }
+    appendJSONStringLiteral(sb, field);
+    sb.append(':');
+    printJson(fieldValue, sb, container, field);
   }
 
   private static void appendJSONStringLiteral(StringBuilder out, String s) {

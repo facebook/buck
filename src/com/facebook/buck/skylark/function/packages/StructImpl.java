@@ -63,7 +63,7 @@ public final class StructImpl extends Structure implements Info, HasBinary {
 
   // For a n-element info, the table contains n key strings, sorted,
   // followed by the n corresponding legal Starlark values.
-  private final Object[] table;
+  final Object[] table;
 
   // A format string with one %s placeholder for the missing field name.
   // If null, uses the default format specified by the provider.
