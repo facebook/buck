@@ -364,16 +364,12 @@ public class DaemonicParserState {
 
   @Nullable
   private DaemonicCellState getCellState(Cell cell) {
-    try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
-      return cellToDaemonicState.get(cell.getCanonicalName());
-    }
+    return cellToDaemonicState.get(cell.getCanonicalName());
   }
 
   private DaemonicCellState getOrCreateCellState(Cell cell) {
-    try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
-      return cellToDaemonicState.computeIfAbsent(
-          cell.getCanonicalName(), r -> new DaemonicCellState(cell, locks));
-    }
+    return cellToDaemonicState.computeIfAbsent(
+        cell.getCanonicalName(), r -> new DaemonicCellState(cell, locks));
   }
 
   @Subscribe
@@ -576,8 +572,6 @@ public class DaemonicParserState {
 
   @Override
   public String toString() {
-    try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
-      return String.format("memoized=%s", cellToDaemonicState);
-    }
+    return String.format("memoized=%s", cellToDaemonicState);
   }
 }
