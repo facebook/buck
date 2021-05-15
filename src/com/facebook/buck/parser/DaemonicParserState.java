@@ -41,7 +41,7 @@ import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.concurrent.AutoCloseableLocked;
-import com.facebook.buck.util.concurrent.AutoCloseableReadWriteLock;
+import com.facebook.buck.util.concurrent.AutoCloseableWriteLocked;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -265,8 +265,8 @@ public class DaemonicParserState {
 
   /**
    * The set of {@link Cell} instances that have been seen by this state. This information is used
-   * for cache invalidation. Please see {@link #invalidateBasedOn(WatchmanPathEvent)} for example
-   * usage.
+   * for cache invalidation. Please see {@link #invalidateBasedOn(WatchmanWatcherOneBigEvent)} for
+   * example usage.
    */
   private final ConcurrentMap<CanonicalCellName, DaemonicCellState> cellToDaemonicState;
 
@@ -296,7 +296,6 @@ public class DaemonicParserState {
 
   private final LoadingCache<Cell, BuildFileTree> buildFileTrees;
 
-  private final AutoCloseableReadWriteLock cellStateLock;
   private final DaemonicParserStateLocks locks;
 
   public DaemonicParserState() {
@@ -317,7 +316,6 @@ public class DaemonicParserState {
     this.rawNodeCache = new DaemonicRawCacheView();
     this.packageFileCache = new DaemonicPackageCache();
 
-    this.cellStateLock = new AutoCloseableReadWriteLock();
     this.locks = new DaemonicParserStateLocks();
   }
 
@@ -374,30 +372,33 @@ public class DaemonicParserState {
 
   @Subscribe
   public void invalidateBasedOn(WatchmanWatcherOneBigEvent event) {
-    if (!event.getOverflowEvents().isEmpty()) {
-      invalidateBasedOn(event.getOverflowEvents());
-    } else {
-      for (WatchmanPathEvent pathEvent : event.getPathEvents()) {
-        invalidateBasedOn(pathEvent);
+    try (AutoCloseableWriteLocked locked = locks.cachesLock.lockWrite()) {
+      if (!event.getOverflowEvents().isEmpty()) {
+        invalidateBasedOn(event.getOverflowEvents(), locked);
+      } else {
+        for (WatchmanPathEvent pathEvent : event.getPathEvents()) {
+          invalidateBasedOn(pathEvent, locked);
+        }
       }
     }
   }
 
   @VisibleForTesting
-  void invalidateBasedOn(ImmutableList<WatchmanOverflowEvent> events) {
+  void invalidateBasedOn(
+      ImmutableList<WatchmanOverflowEvent> events, AutoCloseableWriteLocked locked) {
     Preconditions.checkArgument(!events.isEmpty(), "overflow event list must not be empty");
 
     // Non-path change event, likely an overflow due to many change events: invalidate everything.
     LOG.debug("Received non-path change event %s, assuming overflow and checking caches.", events);
 
-    if (invalidateAllCaches()) {
+    if (invalidateAllCachesLocked(locked)) {
       LOG.warn("Invalidated cache on watch event %s.", events);
       counters.recordCacheInvalidatedByWatchOverflow();
     }
   }
 
   @VisibleForTesting
-  void invalidateBasedOn(WatchmanPathEvent event) {
+  void invalidateBasedOn(WatchmanPathEvent event, AutoCloseableWriteLocked locked) {
     LOG.verbose("Parser watched event %s %s", event.getKind(), event.getPath());
 
     counters.recordFilesChanged();
@@ -408,46 +409,43 @@ public class DaemonicParserState {
     // We only care about creation and deletion events because modified should result in a
     // rule key change.  For parsing, these are the only events we need to care about.
     if (isPathCreateOrDeleteEvent(event)) {
-      try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
-        for (DaemonicCellState state : cellToDaemonicState.values()) {
+      for (DaemonicCellState state : cellToDaemonicState.values()) {
+        try {
+          Cell cell = state.getCell();
+          BuildFileTree buildFiles = buildFileTrees.get(cell);
+
+          if (fullPath.endsWith(cell.getBuckConfigView(ParserConfig.class).getBuildFileName())) {
+            LOG.debug(
+                "Build file %s changed, invalidating build file tree for cell %s", fullPath, cell);
+            // If a build file has been added or removed, reconstruct the build file tree.
+            buildFileTrees.invalidate(cell);
+          }
+
+          // Added or removed files can affect globs, so invalidate the package build file
+          // "containing" {@code path} unless its filename matches a temp file pattern.
+          if (!cell.getFilesystem().isIgnored(path)) {
+            invalidateContainingBuildFile(state, cell, buildFiles, path);
+          } else {
+            LOG.debug(
+                "Not invalidating the owning build file of %s because it is a temporary file.",
+                fullPath);
+          }
+        } catch (ExecutionException | UncheckedExecutionException e) {
           try {
-            Cell cell = state.getCell();
-            BuildFileTree buildFiles = buildFileTrees.get(cell);
-
-            if (fullPath.endsWith(cell.getBuckConfigView(ParserConfig.class).getBuildFileName())) {
-              LOG.debug(
-                  "Build file %s changed, invalidating build file tree for cell %s",
-                  fullPath, cell);
-              // If a build file has been added or removed, reconstruct the build file tree.
-              buildFileTrees.invalidate(cell);
-            }
-
-            // Added or removed files can affect globs, so invalidate the package build file
-            // "containing" {@code path} unless its filename matches a temp file pattern.
-            if (!cell.getFilesystem().isIgnored(path)) {
-              invalidateContainingBuildFile(state, cell, buildFiles, path);
-            } else {
-              LOG.debug(
-                  "Not invalidating the owning build file of %s because it is a temporary file.",
-                  fullPath);
-            }
-          } catch (ExecutionException | UncheckedExecutionException e) {
-            try {
-              Throwables.throwIfInstanceOf(e, BuildFileParseException.class);
-              Throwables.throwIfUnchecked(e);
-              throw new RuntimeException(e);
-            } catch (BuildFileParseException bfpe) {
-              LOG.warn("Unable to parse already parsed build file.", bfpe);
-            }
+            Throwables.throwIfInstanceOf(e, BuildFileParseException.class);
+            Throwables.throwIfUnchecked(e);
+            throw new RuntimeException(e);
+          } catch (BuildFileParseException bfpe) {
+            LOG.warn("Unable to parse already parsed build file.", bfpe);
           }
         }
       }
     }
 
-    if (configurationBuildFiles.contains(fullPath) || configurationRulesDependOn(path)) {
-      invalidateAllCaches();
+    if (configurationBuildFiles.contains(fullPath) || configurationRulesDependOn(path, locked)) {
+      invalidateAllCachesLocked(locked);
     } else {
-      invalidatePath(fullPath);
+      invalidatePath(fullPath, locked);
     }
   }
 
@@ -455,33 +453,34 @@ public class DaemonicParserState {
    * Check whether at least one build file in {@link #configurationBuildFiles} depends on the given
    * file.
    */
-  private boolean configurationRulesDependOn(ForwardRelPath path) {
-    try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
-      for (DaemonicCellState state : cellToDaemonicState.values()) {
-        if (state.pathDependentPresentIn(path, configurationBuildFiles)) {
-          return true;
-        }
+  private boolean configurationRulesDependOn(ForwardRelPath path, AutoCloseableWriteLocked locked) {
+    locked.markUsed();
+
+    for (DaemonicCellState state : cellToDaemonicState.values()) {
+      if (state.pathDependentPresentIn(path, configurationBuildFiles)) {
+        return true;
       }
     }
     return false;
   }
 
   /** Invalidate everything which depend on path. */
-  private void invalidatePath(AbsPath path) {
+  private void invalidatePath(AbsPath path, AutoCloseableWriteLocked locked) {
+    locked.markUsed();
 
     // The paths from watchman are not absolute. Because of this, we adopt a conservative approach
     // to invalidating the caches.
-    try (AutoCloseableLocked readLock = cellStateLock.lockRead()) {
-      for (DaemonicCellState state : cellToDaemonicState.values()) {
-        invalidatePath(state, path);
-      }
+    for (DaemonicCellState state : cellToDaemonicState.values()) {
+      invalidatePath(state, path);
     }
   }
 
   /** Invalidate everything which depend on path. */
   public void invalidatePaths(Collection<AbsPath> paths) {
-    for (AbsPath path : paths) {
-      invalidatePath(path);
+    try (AutoCloseableWriteLocked locked = locks.cachesLock.lockWrite()) {
+      for (AbsPath path : paths) {
+        invalidatePath(path, locked);
+      }
     }
   }
 
@@ -550,20 +549,20 @@ public class DaemonicParserState {
     return event.getKind() == Kind.CREATE || event.getKind() == Kind.DELETE;
   }
 
-  public boolean invalidateAllCaches() {
+  private boolean invalidateAllCachesLocked(AutoCloseableLocked writeLock) {
+    writeLock.markUsed();
+
     LOG.debug("Starting to invalidate all caches..");
-    try (AutoCloseableLocked writeLock = cellStateLock.lockWrite()) {
-      boolean invalidated = !cellToDaemonicState.isEmpty();
-      cellToDaemonicState.clear();
-      buildFileTrees.invalidateAll();
-      configurationBuildFiles.clear();
-      if (invalidated) {
-        LOG.debug("Cache data invalidated.");
-      } else {
-        LOG.debug("Caches were empty, no data invalidated.");
-      }
-      return invalidated;
+    boolean invalidated = !cellToDaemonicState.isEmpty();
+    cellToDaemonicState.clear();
+    buildFileTrees.invalidateAll();
+    configurationBuildFiles.clear();
+    if (invalidated) {
+      LOG.debug("Cache data invalidated.");
+    } else {
+      LOG.debug("Caches were empty, no data invalidated.");
     }
+    return invalidated;
   }
 
   public ImmutableList<Counter> getCounters() {

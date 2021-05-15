@@ -32,6 +32,9 @@ public abstract class AutoCloseableLocked implements AutoCloseable {
     this.locked = true;
   }
 
+  /** This is a dummy function to be used to mute unused locked parameter warning. */
+  public void markUsed() {}
+
   @Override
   public void close() {
     Preconditions.checkState(locked);

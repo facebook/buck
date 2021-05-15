@@ -53,6 +53,11 @@ public abstract class WatchmanWatcherOneBigEvent {
     return ImmutableWatchmanWatcherOneBigEvent.ofImpl(changes, ImmutableList.of());
   }
 
+  /** Create path event. */
+  public static WatchmanWatcherOneBigEvent pathEvent(WatchmanPathEvent change) {
+    return pathEvents(ImmutableList.of(change));
+  }
+
   /** Merge multiple events into one event. */
   public static WatchmanWatcherOneBigEvent merge(Collection<WatchmanWatcherOneBigEvent> events) {
     ImmutableList.Builder<WatchmanPathEvent> pathEvents = ImmutableList.builder();
