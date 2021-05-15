@@ -30,6 +30,7 @@
 
 package com.facebook.buck.skylark.function.packages;
 
+import net.starlark.java.annot.FnPurity;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkBuiltin;
@@ -116,7 +117,9 @@ public interface StructApi {
                 defaultValue = "{}",
                 doc = "Dictionary of arguments."),
         useStarlarkThread = true,
-        selfCall = true)
-    StructApi createStruct(Dict<String, Object> kwargs, StarlarkThread thread) throws EvalException;
+        selfCall = true,
+        purity = FnPurity.SPEC_SAFE)
+    StructImpl createStruct(Dict<String, Object> kwargs, StarlarkThread thread)
+        throws EvalException;
   }
 }
