@@ -22,6 +22,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
@@ -235,10 +236,15 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    * configuration or {@code default_target_platform} rule arg
    */
   ListenableFuture<ImmutableList<TargetNodeMaybeIncompatible>> getAllRequestedTargetNodesJob(
-      Cell cell, AbsPath buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
+      Cell cell,
+      ForwardRelPath buildFile,
+      Optional<TargetConfiguration> globalTargetConfiguration) {
+
+    AbsPath buildFileAbs = cell.getRoot().resolve(buildFile);
+
     SettableFuture<ImmutableList<TargetNodeMaybeIncompatible>> future = SettableFuture.create();
     Pair<AbsPath, Optional<TargetConfiguration>> pathCacheKey =
-        new Pair<>(buildFile, globalTargetConfiguration);
+        new Pair<>(buildFileAbs, globalTargetConfiguration);
     ListenableFuture<ImmutableList<TargetNodeMaybeIncompatible>> cachedFuture =
         allNodeCache.putIfAbsent(pathCacheKey, future);
 
@@ -288,7 +294,9 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
    * @throws BuildFileParseException for syntax errors.
    */
   ImmutableList<TargetNodeMaybeIncompatible> getAllRequestedTargetNodes(
-      Cell cell, AbsPath buildFile, Optional<TargetConfiguration> globalTargetConfiguration) {
+      Cell cell,
+      ForwardRelPath buildFile,
+      Optional<TargetConfiguration> globalTargetConfiguration) {
     Preconditions.checkState(!shuttingDown.get());
 
     try {
