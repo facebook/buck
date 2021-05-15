@@ -6,12 +6,10 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/core/model/label:label",
+        "//src/com/facebook/buck/util/types:types",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
-        "//src/com/facebook/buck/util/types:types",
-        "//src/com/facebook/buck/core/model/label:label",
-        # TODO(nga): we don't need to depend on protobuf
-        "//third-party/java/protobuf:protobuf",
     ],
     exported_deps = [
         "//third-party/java/bazel:bazel",
