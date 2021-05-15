@@ -74,7 +74,9 @@ public class PackagePipeline implements AutoCloseable {
         SimplePerfEvent.scope(
             eventBus.isolated(), SimplePerfEvent.PerfEventTitle.of("package_pipeline"));
 
-    this.cache = new PipelineNodeCache<>(new PackageCachePerBuild(), n -> false);
+    this.cache =
+        new PipelineNodeCache<>(
+            new PackageCachePerBuild(), DaemonicParserValidationToken.invalid(), n -> false);
   }
 
   /**

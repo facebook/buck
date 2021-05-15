@@ -39,7 +39,6 @@ import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.util.concurrent.AutoCloseableLocked;
 import com.facebook.buck.util.concurrent.AutoCloseableReadLocked;
 import com.facebook.buck.util.concurrent.AutoCloseableWriteLocked;
 import com.google.common.annotations.VisibleForTesting;
@@ -85,21 +84,31 @@ public class DaemonicParserState {
     }
 
     @Override
-    public Optional<T> lookupComputedNode(Cell cell, K target) throws BuildTargetException {
+    public Optional<T> lookupComputedNode(
+        Cell cell, K target, DaemonicParserValidationToken validationToken)
+        throws BuildTargetException {
       DaemonicCellState.Cache<K, T> state = getCache(cell);
       if (state == null) {
         return Optional.empty();
       }
-      return state.lookupComputedNode(target);
+      return state.lookupComputedNode(target, validationToken);
     }
 
     @Override
     public T putComputedNodeIfNotPresent(
-        Cell cell, K target, T targetNode, boolean targetIsConfiguration)
+        Cell cell,
+        K target,
+        T targetNode,
+        boolean targetIsConfiguration,
+        DaemonicParserValidationToken validationToken)
         throws BuildTargetException {
 
-      try (AutoCloseableReadLocked readLock = locks.cachesLock.lockRead()) {
+      AutoCloseableReadLocked readLock = locks.lockForUpdate(validationToken);
+      if (readLock == null) {
+        return targetNode;
+      }
 
+      try {
         AbsPath buildFile =
             cell.getBuckConfigView(ParserConfig.class)
                 .getAbsolutePathToBuildFileUnsafe(
@@ -111,6 +120,8 @@ public class DaemonicParserState {
 
         return getOrCreateCache(cell, readLock)
             .putComputedNodeIfNotPresent(target, targetNode, readLock);
+      } finally {
+        readLock.close();
       }
     }
 
@@ -133,7 +144,8 @@ public class DaemonicParserState {
       implements PipelineNodeCache.Cache<ForwardRelPath, BuildFileManifest> {
 
     @Override
-    public Optional<BuildFileManifest> lookupComputedNode(Cell cell, ForwardRelPath buildFile)
+    public Optional<BuildFileManifest> lookupComputedNode(
+        Cell cell, ForwardRelPath buildFile, DaemonicParserValidationToken validationToken)
         throws BuildTargetException {
       AbsPath buildFileAbs = cell.getRoot().resolve(buildFile);
 
@@ -141,7 +153,7 @@ public class DaemonicParserState {
       if (state == null) {
         return Optional.empty();
       }
-      return state.lookupBuildFileManifest(buildFileAbs);
+      return state.lookupBuildFileManifest(buildFileAbs, validationToken);
     }
 
     /**
@@ -156,10 +168,16 @@ public class DaemonicParserState {
         Cell cell,
         ForwardRelPath buildFile,
         BuildFileManifest manifest,
-        boolean targetIsConfiguration)
+        boolean targetIsConfiguration,
+        DaemonicParserValidationToken validationToken)
         throws BuildTargetException {
 
-      try (AutoCloseableReadLocked locked = locks.cachesLock.lockRead()) {
+      AutoCloseableReadLocked locked = locks.lockForUpdate(validationToken);
+      if (locked == null) {
+        return manifest;
+      }
+
+      try {
 
         AbsPath buildFileAbs = cell.getRoot().resolve(buildFile);
 
@@ -180,6 +198,8 @@ public class DaemonicParserState {
         return getOrCreateCellState(cell, locked)
             .putBuildFileManifestIfNotPresent(
                 buildFileAbs, manifest, dependentsOfEveryNode.build(), locked);
+      } finally {
+        locked.close();
       }
     }
   }
@@ -189,7 +209,8 @@ public class DaemonicParserState {
       implements PipelineNodeCache.Cache<ForwardRelPath, PackageFileManifest> {
 
     @Override
-    public Optional<PackageFileManifest> lookupComputedNode(Cell cell, ForwardRelPath packageFile)
+    public Optional<PackageFileManifest> lookupComputedNode(
+        Cell cell, ForwardRelPath packageFile, DaemonicParserValidationToken validationToken)
         throws BuildTargetException {
 
       AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
@@ -198,7 +219,7 @@ public class DaemonicParserState {
       if (state == null) {
         return Optional.empty();
       }
-      return state.lookupPackageFileManifest(packageFileAbs);
+      return state.lookupPackageFileManifest(packageFileAbs, validationToken);
     }
 
     /**
@@ -211,10 +232,16 @@ public class DaemonicParserState {
         Cell cell,
         ForwardRelPath packageFile,
         PackageFileManifest manifest,
-        boolean targetIsConfiguration)
+        boolean targetIsConfiguration,
+        DaemonicParserValidationToken validationToken)
         throws BuildTargetException {
 
-      try (AutoCloseableReadLocked locked = locks.cachesLock.lockRead()) {
+      AutoCloseableReadLocked locked = locks.lockForUpdate(validationToken);
+      if (locked == null) {
+        return manifest;
+      }
+
+      try {
         AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
 
         ImmutableSet.Builder<AbsPath> packageDependents = ImmutableSet.builder();
@@ -229,6 +256,8 @@ public class DaemonicParserState {
         return getOrCreateCellState(cell, locked)
             .putPackageFileManifestIfNotPresent(
                 packageFileAbs, manifest, packageDependents.build(), locked);
+      } finally {
+        locked.close();
       }
     }
   }
@@ -387,10 +416,15 @@ public class DaemonicParserState {
   public void invalidateBasedOn(WatchmanWatcherOneBigEvent event) {
     try (AutoCloseableWriteLocked locked = locks.cachesLock.lockWrite()) {
       if (!event.getOverflowEvents().isEmpty()) {
+        locks.markInvalidated(locked);
         invalidateBasedOn(event.getOverflowEvents(), locked);
       } else {
-        for (WatchmanPathEvent pathEvent : event.getPathEvents()) {
-          invalidateBasedOn(pathEvent, locked);
+        ImmutableList<WatchmanPathEvent> pathEvents = event.getPathEvents();
+        if (!pathEvents.isEmpty()) {
+          locks.markInvalidated(locked);
+          for (WatchmanPathEvent pathEvent : pathEvents) {
+            invalidateBasedOn(pathEvent, locked);
+          }
         }
       }
     }
@@ -437,7 +471,7 @@ public class DaemonicParserState {
           // Added or removed files can affect globs, so invalidate the package build file
           // "containing" {@code path} unless its filename matches a temp file pattern.
           if (!cell.getFilesystem().isIgnored(path)) {
-            invalidateContainingBuildFile(state, cell, buildFiles, path);
+            invalidateContainingBuildFile(state, cell, buildFiles, path, locked);
           } else {
             LOG.debug(
                 "Not invalidating the owning build file of %s because it is a temporary file.",
@@ -467,10 +501,8 @@ public class DaemonicParserState {
    * file.
    */
   private boolean configurationRulesDependOn(ForwardRelPath path, AutoCloseableWriteLocked locked) {
-    locked.markUsed();
-
     for (DaemonicCellState state : cellToDaemonicState.values()) {
-      if (state.pathDependentPresentIn(path, configurationBuildFiles)) {
+      if (state.pathDependentPresentIn(path, configurationBuildFiles, locked)) {
         return true;
       }
     }
@@ -479,18 +511,21 @@ public class DaemonicParserState {
 
   /** Invalidate everything which depend on path. */
   private void invalidatePath(AbsPath path, AutoCloseableWriteLocked locked) {
-    locked.markUsed();
-
     // The paths from watchman are not absolute. Because of this, we adopt a conservative approach
     // to invalidating the caches.
     for (DaemonicCellState state : cellToDaemonicState.values()) {
-      invalidatePath(state, path);
+      invalidatePath(state, path, locked);
     }
   }
 
   /** Invalidate everything which depend on path. */
   public void invalidatePaths(Collection<AbsPath> paths) {
+    if (paths.isEmpty()) {
+      return;
+    }
+
     try (AutoCloseableWriteLocked locked = locks.cachesLock.lockWrite()) {
+      locks.markInvalidated(locked);
       for (AbsPath path : paths) {
         invalidatePath(path, locked);
       }
@@ -505,7 +540,11 @@ public class DaemonicParserState {
    *     to find and invalidate.
    */
   private void invalidateContainingBuildFile(
-      DaemonicCellState state, Cell cell, BuildFileTree buildFiles, ForwardRelPath path) {
+      DaemonicCellState state,
+      Cell cell,
+      BuildFileTree buildFiles,
+      ForwardRelPath path,
+      AutoCloseableWriteLocked locked) {
     LOG.verbose("Invalidating rules dependent on change to %s in cell %s", path, cell);
     Set<ForwardRelPath> packageBuildFiles = new HashSet<>();
 
@@ -541,7 +580,7 @@ public class DaemonicParserState {
     for (ForwardRelPath buildFile : packageBuildFiles) {
       ForwardRelPath withBuildFile =
           buildFile.resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
-      invalidatePath(state, cell.getRoot().resolve(withBuildFile));
+      invalidatePath(state, cell.getRoot().resolve(withBuildFile), locked);
     }
   }
 
@@ -551,10 +590,11 @@ public class DaemonicParserState {
    *
    * @param path The File that has changed.
    */
-  private void invalidatePath(DaemonicCellState state, AbsPath path) {
+  private void invalidatePath(
+      DaemonicCellState state, AbsPath path, AutoCloseableWriteLocked locked) {
     LOG.verbose("Invalidating path %s for cell %s", path, state.getCellRoot());
 
-    int invalidatedNodes = state.invalidatePath(path, true);
+    int invalidatedNodes = state.invalidatePath(path, true, locked);
     counters.recordRulesInvalidatedByWatchEvents(invalidatedNodes);
   }
 
@@ -562,7 +602,7 @@ public class DaemonicParserState {
     return event.getKind() == Kind.CREATE || event.getKind() == Kind.DELETE;
   }
 
-  private boolean invalidateAllCachesLocked(AutoCloseableLocked writeLock) {
+  private boolean invalidateAllCachesLocked(AutoCloseableWriteLocked writeLock) {
     writeLock.markUsed();
 
     LOG.debug("Starting to invalidate all caches..");
@@ -580,6 +620,10 @@ public class DaemonicParserState {
 
   public ImmutableList<Counter> getCounters() {
     return counters.get();
+  }
+
+  public DaemonicParserValidationToken validationToken() {
+    return locks.validationToken();
   }
 
   @Override

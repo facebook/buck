@@ -133,6 +133,12 @@ public class PerBuildStateFactory {
       DaemonicParserState daemonicParserState,
       Optional<AtomicLong> parseProcessedBytes) {
 
+    // Here we acquired validation token.
+    // At this moment we already handled watchman event, so
+    // parser state should not be invalidated after this point
+    // (except for invalidation by another command of course).
+    DaemonicParserValidationToken validationToken = daemonicParserState.validationToken();
+
     Cells cells = parsingContext.getCells();
     ListeningExecutorService executorService = parsingContext.getExecutor();
     SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
@@ -172,7 +178,8 @@ public class PerBuildStateFactory {
 
     BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline =
         new BuildFileRawNodeParsePipeline(
-            new PipelineNodeCache<>(daemonicParserState.getRawNodeCache(), n -> false),
+            new PipelineNodeCache<>(
+                daemonicParserState.getRawNodeCache(), validationToken, n -> false),
             projectBuildFileParserPool,
             executorService,
             eventBus,
@@ -195,7 +202,8 @@ public class PerBuildStateFactory {
 
     PackageFileParsePipeline packageFileParsePipeline =
         new PackageFileParsePipeline(
-            new PipelineNodeCache<>(daemonicParserState.getPackageFileCache(), n -> false),
+            new PipelineNodeCache<>(
+                daemonicParserState.getPackageFileCache(), validationToken, n -> false),
             packageFileParserPool,
             executorService,
             eventBus,
@@ -214,6 +222,7 @@ public class PerBuildStateFactory {
     UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline =
         new UnconfiguredTargetNodePipeline(
             pipelineExecutorService,
+            validationToken,
             daemonicParserState.getOrCreateNodeCache(
                 DaemonicParserState.RAW_TARGET_NODE_CACHE_TYPE),
             eventBus,
@@ -277,6 +286,7 @@ public class PerBuildStateFactory {
     UnconfiguredTargetNodeToTargetNodeParsePipeline nonResolvingTargetNodeParsePipeline =
         new UnconfiguredTargetNodeToTargetNodeParsePipeline(
             daemonicParserState.getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
+            validationToken,
             MoreExecutors.newDirectExecutorService(),
             cells,
             unconfiguredTargetNodePipeline,
@@ -328,6 +338,7 @@ public class PerBuildStateFactory {
     UnconfiguredTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline =
         new UnconfiguredTargetNodeToTargetNodeParsePipeline(
             daemonicParserState.getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
+            validationToken,
             configuredPipelineExecutor,
             cells,
             unconfiguredTargetNodePipeline,

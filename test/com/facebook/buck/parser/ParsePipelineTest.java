@@ -394,7 +394,8 @@ public class ParsePipelineTest {
         fixture
             .daemonicParserState
             .getPackageFileCache()
-            .lookupComputedNode(cell, nonExistentPackageFile)
+            .lookupComputedNode(
+                cell, nonExistentPackageFile, fixture.daemonicParserState.validationToken())
             .get();
     assertSame(PackageFileParsePipeline.NONEXISTENT_PACKAGE, cachedPackageFileManifest);
   }
@@ -514,13 +515,18 @@ public class ParsePipelineTest {
     private final Map<K, V> nodeMap = new HashMap<>();
 
     @Override
-    public synchronized Optional<V> lookupComputedNode(Cell cell, K key) {
+    public synchronized Optional<V> lookupComputedNode(
+        Cell cell, K key, DaemonicParserValidationToken validationToken) {
       return Optional.ofNullable(nodeMap.get(key));
     }
 
     @Override
     public synchronized V putComputedNodeIfNotPresent(
-        Cell cell, K key, V value, boolean targetIsConfiguration) {
+        Cell cell,
+        K key,
+        V value,
+        boolean targetIsConfiguration,
+        DaemonicParserValidationToken validationToken) {
       if (!nodeMap.containsKey(key)) {
         nodeMap.put(key, value);
       }
@@ -611,7 +617,10 @@ public class ParsePipelineTest {
                   });
       buildFileRawNodeParsePipeline =
           new BuildFileRawNodeParsePipeline(
-              new PipelineNodeCache<>(daemonicParserState.getRawNodeCache(), n -> false),
+              new PipelineNodeCache<>(
+                  daemonicParserState.getRawNodeCache(),
+                  daemonicParserState.validationToken(),
+                  n -> false),
               projectBuildFileParserPool,
               executorService,
               eventBus,
@@ -636,7 +645,10 @@ public class ParsePipelineTest {
 
       PackageFileParsePipeline packageFileParsePipeline =
           new PackageFileParsePipeline(
-              new PipelineNodeCache<>(daemonicParserState.getPackageFileCache(), n -> false),
+              new PipelineNodeCache<>(
+                  daemonicParserState.getPackageFileCache(),
+                  daemonicParserState.validationToken(),
+                  n -> false),
               packageFileParserPool,
               executorService,
               eventBus,
@@ -648,6 +660,7 @@ public class ParsePipelineTest {
       UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline =
           new UnconfiguredTargetNodePipeline(
               executorService,
+              daemonicParserState.validationToken(),
               new TypedParsePipelineCache<>(),
               eventBus,
               buildFileRawNodeParsePipeline,
@@ -679,6 +692,7 @@ public class ParsePipelineTest {
       this.targetNodeParsePipeline =
           new UnconfiguredTargetNodeToTargetNodeParsePipeline(
               this.daemonicParserState.getTargetNodeCache(),
+              daemonicParserState.validationToken(),
               this.executorService,
               cells,
               unconfiguredTargetNodePipeline,
@@ -705,21 +719,21 @@ public class ParsePipelineTest {
     public boolean targetExistsInCache(BuildTarget target) {
       return daemonicParserState
           .getTargetNodeCache()
-          .lookupComputedNode(cells.getRootCell(), target)
+          .lookupComputedNode(cells.getRootCell(), target, daemonicParserState.validationToken())
           .isPresent();
     }
 
     public boolean buildFileExistsInCache(ForwardRelPath path) {
       return daemonicParserState
           .getRawNodeCache()
-          .lookupComputedNode(cells.getRootCell(), path)
+          .lookupComputedNode(cells.getRootCell(), path, daemonicParserState.validationToken())
           .isPresent();
     }
 
     public boolean packageFileExistsInCache(ForwardRelPath path) {
       return daemonicParserState
           .getPackageFileCache()
-          .lookupComputedNode(cells.getRootCell(), path)
+          .lookupComputedNode(cells.getRootCell(), path, daemonicParserState.validationToken())
           .isPresent();
     }
 

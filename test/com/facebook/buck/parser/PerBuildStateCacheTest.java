@@ -89,7 +89,8 @@ public class PerBuildStateCacheTest {
     Package pkg = createPackage(cells.getRootCell(), packageFile);
 
     Package cachedPackage =
-        packageCache.putComputedNodeIfNotPresent(cells.getRootCell(), packageFile, pkg, false);
+        packageCache.putComputedNodeIfNotPresent(
+            cells.getRootCell(), packageFile, pkg, false, DaemonicParserValidationToken.invalid());
 
     Assert.assertSame(cachedPackage, pkg);
   }
@@ -99,14 +100,18 @@ public class PerBuildStateCacheTest {
     ForwardRelPath packageFile = ForwardRelPath.of("Foo");
 
     Optional<Package> lookupPackage =
-        packageCache.lookupComputedNode(cells.getRootCell(), packageFile);
+        packageCache.lookupComputedNode(
+            cells.getRootCell(), packageFile, DaemonicParserValidationToken.invalid());
 
     Assert.assertFalse(lookupPackage.isPresent());
 
     Package pkg = createPackage(cells.getRootCell(), packageFile);
-    packageCache.putComputedNodeIfNotPresent(cells.getRootCell(), packageFile, pkg, false);
+    packageCache.putComputedNodeIfNotPresent(
+        cells.getRootCell(), packageFile, pkg, false, DaemonicParserValidationToken.invalid());
 
-    lookupPackage = packageCache.lookupComputedNode(cells.getRootCell(), packageFile);
+    lookupPackage =
+        packageCache.lookupComputedNode(
+            cells.getRootCell(), packageFile, DaemonicParserValidationToken.invalid());
     Assert.assertSame(lookupPackage.get(), pkg);
   }
 
@@ -128,15 +133,20 @@ public class PerBuildStateCacheTest {
         createPackage(
             childCell, childPackageFile, false, ImmutableList.of("//bar/..."), ImmutableList.of());
 
-    packageCache.putComputedNodeIfNotPresent(cells.getRootCell(), packageFile, pkg1, false);
-    packageCache.putComputedNodeIfNotPresent(childCell, childPackageFile, pkg2, false);
+    packageCache.putComputedNodeIfNotPresent(
+        cells.getRootCell(), packageFile, pkg1, false, DaemonicParserValidationToken.invalid());
+    packageCache.putComputedNodeIfNotPresent(
+        childCell, childPackageFile, pkg2, false, DaemonicParserValidationToken.invalid());
 
     Optional<Package> lookupPackage =
-        packageCache.lookupComputedNode(cells.getRootCell(), packageFile);
+        packageCache.lookupComputedNode(
+            cells.getRootCell(), packageFile, DaemonicParserValidationToken.invalid());
     Assert.assertSame(lookupPackage.get(), pkg1);
     Assert.assertNotSame(lookupPackage.get(), pkg2);
 
-    lookupPackage = packageCache.lookupComputedNode(childCell, childPackageFile);
+    lookupPackage =
+        packageCache.lookupComputedNode(
+            childCell, childPackageFile, DaemonicParserValidationToken.invalid());
     Assert.assertSame(lookupPackage.get(), pkg2);
     Assert.assertNotSame(lookupPackage.get(), pkg1);
   }

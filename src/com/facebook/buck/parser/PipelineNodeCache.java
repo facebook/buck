@@ -39,10 +39,15 @@ class PipelineNodeCache<K, T> {
   }
 
   private final Cache<K, T> cache;
+  private final DaemonicParserValidationToken validationToken;
   private final ConcurrentMap<JobsCacheKey<K>, ListenableFuture<T>> jobsCache;
   private final Predicate<T> targetNodeIsConfiguration;
 
-  public PipelineNodeCache(Cache<K, T> cache, Predicate<T> targetNodeIsConfiguration) {
+  public PipelineNodeCache(
+      Cache<K, T> cache,
+      DaemonicParserValidationToken validationToken,
+      Predicate<T> targetNodeIsConfiguration) {
+    this.validationToken = validationToken;
     this.targetNodeIsConfiguration = targetNodeIsConfiguration;
     this.jobsCache = new ConcurrentHashMap<>();
     this.cache = cache;
@@ -73,7 +78,7 @@ class PipelineNodeCache<K, T> {
     // to the SettableFuture, so that anyone else waiting on it will get the same result.
 
     try {
-      Optional<T> cacheLookupResult = cache.lookupComputedNode(cell, key);
+      Optional<T> cacheLookupResult = cache.lookupComputedNode(cell, key, validationToken);
       if (cacheLookupResult.isPresent()) {
         resultFuture.set(cacheLookupResult.get());
       } else {
@@ -85,7 +90,7 @@ class PipelineNodeCache<K, T> {
                   boolean targetNodeIsConfiguration = this.targetNodeIsConfiguration.test(input);
                   return Futures.immediateFuture(
                       cache.putComputedNodeIfNotPresent(
-                          cell, key, input, targetNodeIsConfiguration));
+                          cell, key, input, targetNodeIsConfiguration, validationToken));
                 },
                 MoreExecutors.directExecutor());
         resultFuture.setFuture(cacheJob);
@@ -102,7 +107,9 @@ class PipelineNodeCache<K, T> {
   }
 
   public interface Cache<K, V> {
-    Optional<V> lookupComputedNode(Cell cell, K target) throws BuildTargetException;
+    Optional<V> lookupComputedNode(
+        Cell cell, K target, DaemonicParserValidationToken validationToken)
+        throws BuildTargetException;
 
     /**
      * Insert item into the cache if it was not already there.
@@ -113,7 +120,12 @@ class PipelineNodeCache<K, T> {
      * @param targetIsConfiguration target is configuration target
      * @return previous node for the target if the cache contained it, new one otherwise.
      */
-    V putComputedNodeIfNotPresent(Cell cell, K target, V targetNode, boolean targetIsConfiguration)
+    V putComputedNodeIfNotPresent(
+        Cell cell,
+        K target,
+        V targetNode,
+        boolean targetIsConfiguration,
+        DaemonicParserValidationToken validationToken)
         throws BuildTargetException;
   }
 }

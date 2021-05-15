@@ -148,14 +148,14 @@ public class DaemonicCellStateTest {
       assertEquals(
           "Cached node was not found",
           Optional.of(n1),
-          cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
+          cache.lookupComputedNode(target.getUnconfiguredBuildTarget(), locks.validationToken()));
 
       assertEquals(
           n1, cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n2, readLock));
       assertEquals(
           "Previously cached node should not be updated",
           Optional.of(n1),
-          cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
+          cache.lookupComputedNode(target.getUnconfiguredBuildTarget(), locks.validationToken()));
     }
   }
 
@@ -175,7 +175,9 @@ public class DaemonicCellStateTest {
     try (AutoCloseableReadLocked readLock = locks.cachesLock.lockRead()) {
       cache.putComputedNodeIfNotPresent(target.getUnconfiguredBuildTarget(), n1, readLock);
     }
-    assertEquals(Optional.of(n1), cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
+    assertEquals(
+        Optional.of(n1),
+        cache.lookupComputedNode(target.getUnconfiguredBuildTarget(), locks.validationToken()));
 
     childState.putBuildFileManifestIfNotPresentForTest(
         targetPath,
@@ -190,11 +192,12 @@ public class DaemonicCellStateTest {
                     ImmutableList.of(),
                     TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("name", "target"))))),
         ImmutableSet.of());
-    assertEquals("Still only one invalidated node", 1, childState.invalidatePath(targetPath, true));
+    assertEquals(
+        "Still only one invalidated node", 1, childState.invalidatePathForTest(targetPath, true));
     assertEquals(
         "Cell-named target should still be invalidated",
         Optional.empty(),
-        cache.lookupComputedNode(target.getUnconfiguredBuildTarget()));
+        cache.lookupComputedNode(target.getUnconfiguredBuildTarget(), locks.validationToken()));
   }
 
   @Test
@@ -224,13 +227,14 @@ public class DaemonicCellStateTest {
   public void lookupPackage() {
     AbsPath packageFile = dummyPackageFile();
 
-    Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
+    Optional<PackageFileManifest> lookupManifest =
+        state.lookupPackageFileManifest(packageFile, locks.validationToken());
 
     assertFalse(lookupManifest.isPresent());
 
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
     state.putPackageFileManifestIfNotPresentForTest(packageFile, manifest, ImmutableSet.of());
-    lookupManifest = state.lookupPackageFileManifest(packageFile);
+    lookupManifest = state.lookupPackageFileManifest(packageFile, locks.validationToken());
     assertSame(lookupManifest.get(), manifest);
   }
 
@@ -241,17 +245,18 @@ public class DaemonicCellStateTest {
 
     state.putPackageFileManifestIfNotPresentForTest(packageFile, manifest, ImmutableSet.of());
 
-    Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
+    Optional<PackageFileManifest> lookupManifest =
+        state.lookupPackageFileManifest(packageFile, locks.validationToken());
     assertTrue(lookupManifest.isPresent());
 
-    state.invalidatePath(filesystem.resolve("path/to/random.bzl"), true);
+    state.invalidatePathForTest(filesystem.resolve("path/to/random.bzl"), true);
 
-    lookupManifest = state.lookupPackageFileManifest(packageFile);
+    lookupManifest = state.lookupPackageFileManifest(packageFile, locks.validationToken());
     assertTrue(lookupManifest.isPresent());
 
-    state.invalidatePath(packageFile, true);
+    state.invalidatePathForTest(packageFile, true);
 
-    lookupManifest = state.lookupPackageFileManifest(packageFile);
+    lookupManifest = state.lookupPackageFileManifest(packageFile, locks.validationToken());
     assertFalse(lookupManifest.isPresent());
   }
 
@@ -265,12 +270,13 @@ public class DaemonicCellStateTest {
     state.putPackageFileManifestIfNotPresentForTest(
         packageFile, manifest, ImmutableSet.of(dependentFile));
 
-    Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
+    Optional<PackageFileManifest> lookupManifest =
+        state.lookupPackageFileManifest(packageFile, locks.validationToken());
     assertTrue(lookupManifest.isPresent());
 
-    state.invalidatePath(dependentFile, true);
+    state.invalidatePathForTest(dependentFile, true);
 
-    lookupManifest = state.lookupPackageFileManifest(packageFile);
+    lookupManifest = state.lookupPackageFileManifest(packageFile, locks.validationToken());
     assertFalse(lookupManifest.isPresent());
   }
 }

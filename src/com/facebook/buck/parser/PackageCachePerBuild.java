@@ -67,8 +67,14 @@ class PackageCachePerBuild implements PipelineNodeCache.Cache<ForwardRelPath, Pa
   }
 
   @Override
-  public Optional<Package> lookupComputedNode(Cell cell, ForwardRelPath packageFile)
+  public Optional<Package> lookupComputedNode(
+      Cell cell, ForwardRelPath packageFile, DaemonicParserValidationToken validationToken)
       throws BuildTargetException {
+
+    Preconditions.checkArgument(
+        validationToken.isInvalid(),
+        "This is a per-build cache, so validation token should not be used");
+
     CellState state = getCellState(cell);
     if (state == null) {
       return Optional.empty();
@@ -79,8 +85,17 @@ class PackageCachePerBuild implements PipelineNodeCache.Cache<ForwardRelPath, Pa
 
   @Override
   public Package putComputedNodeIfNotPresent(
-      Cell cell, ForwardRelPath packageFile, Package pkg, boolean targetIsConfiguration)
+      Cell cell,
+      ForwardRelPath packageFile,
+      Package pkg,
+      boolean targetIsConfiguration,
+      DaemonicParserValidationToken validationToken)
       throws BuildTargetException {
+
+    Preconditions.checkArgument(
+        validationToken.isInvalid(),
+        "This is a per-build cache, so validation token should not be used");
+
     Preconditions.checkState(!targetIsConfiguration);
     AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
     return getOrCreateCellState(cell).putPackageIfNotPresent(packageFileAbs, pkg);

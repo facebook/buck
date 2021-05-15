@@ -33,6 +33,7 @@ import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.concurrent.AutoCloseableLocked;
 import com.facebook.buck.util.concurrent.AutoCloseableReadLocked;
+import com.facebook.buck.util.concurrent.AutoCloseableWriteLocked;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -73,15 +74,19 @@ class DaemonicCellState {
     }
 
     // Assumes caller has a write lock on `cachesLock`.
-    private void invalidateFor(UnflavoredBuildTarget target) {
+    private void invalidateFor(UnflavoredBuildTarget target, AutoCloseableWriteLocked locked) {
+      locked.markUsed();
+
       Set<K> keys = targetsCornucopia.remove(target);
       if (keys != null) {
         allComputedNodes.invalidateAll(keys);
       }
     }
 
-    public Optional<T> lookupComputedNode(K target) throws BuildTargetException {
-      return Optional.ofNullable(allComputedNodes.getIfPresent(target));
+    public Optional<T> lookupComputedNode(K target, DaemonicParserValidationToken validationToken)
+        throws BuildTargetException {
+      T node = allComputedNodes.getIfPresent(target);
+      return node != null && locks.isValid(validationToken) ? Optional.of(node) : Optional.empty();
     }
 
     public T putComputedNodeIfNotPresent(K target, T targetNode, AutoCloseableLocked readLock)
@@ -208,8 +213,12 @@ class DaemonicCellState {
     return type.getCache.apply(this);
   }
 
-  Optional<BuildFileManifest> lookupBuildFileManifest(AbsPath buildFile) {
-    return Optional.ofNullable(allBuildFileManifests.getIfPresent(buildFile));
+  Optional<BuildFileManifest> lookupBuildFileManifest(
+      AbsPath buildFile, DaemonicParserValidationToken validationToken) {
+    BuildFileManifest manifest = allBuildFileManifests.getIfPresent(buildFile);
+    return manifest != null && locks.isValid(validationToken)
+        ? Optional.of(manifest)
+        : Optional.empty();
   }
 
   BuildFileManifest putBuildFileManifestIfNotPresent(
@@ -249,8 +258,12 @@ class DaemonicCellState {
     }
   }
 
-  Optional<PackageFileManifest> lookupPackageFileManifest(AbsPath packageFile) {
-    return Optional.ofNullable(allPackageFileManifests.getIfPresent(packageFile));
+  Optional<PackageFileManifest> lookupPackageFileManifest(
+      AbsPath packageFile, DaemonicParserValidationToken validationToken) {
+    PackageFileManifest manifest = allPackageFileManifests.getIfPresent(packageFile);
+    return manifest != null && locks.isValid(validationToken)
+        ? Optional.of(manifest)
+        : Optional.empty();
   }
 
   PackageFileManifest putPackageFileManifestIfNotPresent(
@@ -290,29 +303,30 @@ class DaemonicCellState {
    *
    * @return The number of invalidated nodes.
    */
-  int invalidateNodesInPath(AbsPath path, boolean invalidateBuildTargets) {
-    try (AutoCloseableLocked writeLock = locks.cachesLock.lockWrite()) {
-      int invalidatedRawNodes = 0;
-      BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(path);
-      if (buildFileManifest != null) {
-        TwoArraysImmutableHashMap<String, RawTargetNode> rawNodes = buildFileManifest.getTargets();
-        // Increment the counter
-        invalidatedRawNodes = rawNodes.size();
-        for (RawTargetNode rawNode : rawNodes.values()) {
-          UnflavoredBuildTarget target =
-              UnflavoredBuildTargetFactory.createFromRawNode(
-                  cellRoot.getPath(), cellCanonicalName, rawNode, path.getPath());
-          LOG.debug("Invalidating target for path %s: %s", path, target);
-          for (Cache<?, ?> cache : typedNodeCaches()) {
-            cache.invalidateFor(target);
-          }
-          if (invalidateBuildTargets) {
-            allRawNodeTargets.remove(target);
-          }
+  private int invalidateNodesInPath(
+      AbsPath path, boolean invalidateBuildTargets, AutoCloseableWriteLocked locked) {
+    locked.markUsed();
+
+    int invalidatedRawNodes = 0;
+    BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(path);
+    if (buildFileManifest != null) {
+      TwoArraysImmutableHashMap<String, RawTargetNode> rawNodes = buildFileManifest.getTargets();
+      // Increment the counter
+      invalidatedRawNodes = rawNodes.size();
+      for (RawTargetNode rawNode : rawNodes.values()) {
+        UnflavoredBuildTarget target =
+            UnflavoredBuildTargetFactory.createFromRawNode(
+                cellRoot.getPath(), cellCanonicalName, rawNode, path.getPath());
+        LOG.debug("Invalidating target for path %s: %s", path, target);
+        for (Cache<?, ?> cache : typedNodeCaches()) {
+          cache.invalidateFor(target, locked);
+        }
+        if (invalidateBuildTargets) {
+          allRawNodeTargets.remove(target);
         }
       }
-      return invalidatedRawNodes;
     }
+    return invalidatedRawNodes;
   }
 
   /**
@@ -333,68 +347,77 @@ class DaemonicCellState {
    * @param invalidateManifests Whether to invalidate cached manifests at {@code path}.
    * @return Count of all invalidated raw nodes for the path
    */
-  int invalidatePath(AbsPath path, boolean invalidateManifests) {
-    try (AutoCloseableLocked writeLock = locks.cachesLock.lockWrite()) {
-      // If `path` is a build file with a valid entry in `allBuildFileManifests`, we also want to
-      // invalidate the build targets in the manifest.
-      int invalidatedRawNodes = invalidateNodesInPath(path, true);
+  int invalidatePath(AbsPath path, boolean invalidateManifests, AutoCloseableWriteLocked locked) {
 
-      if (invalidateManifests) {
-        allBuildFileManifests.invalidate(path);
-        allPackageFileManifests.invalidate(path);
-      }
+    // If `path` is a build file with a valid entry in `allBuildFileManifests`, we also want to
+    // invalidate the build targets in the manifest.
+    int invalidatedRawNodes = invalidateNodesInPath(path, true, locked);
 
-      // We may have been given a file that other build files depend on. Invalidate accordingly.
-      Set<AbsPath> dependents = buildFileDependents.getOrDefault(path, ImmutableSet.of());
-      boolean pathIsPackageFile = PackagePipeline.isPackageFile(path.getPath());
-      LOG.verbose("Invalidating dependents for path %s: %s", path, dependents);
-      for (AbsPath dependent : dependents) {
-        if (dependent.equals(path)) {
-          continue;
-        }
-        if (pathIsPackageFile) {
-          // Typically, the dependents of PACKAGE files are build files. If there is a valid entry
-          // for `dependent` in `allBuildFileManifests`, invalidate the cached nodes, but not the
-          // build targets contained within in.
-          invalidatedRawNodes += invalidateNodesInPath(dependent, false);
-        } else {
-          // Recursively invalidate all cached content based on `dependent`.
-          invalidatedRawNodes += invalidatePath(dependent, true);
-        }
-      }
-      if (!pathIsPackageFile) {
-        // Package files do not invalidate the build file (as the build file does not need to be
-        // re-parsed). This means the dependents of the package remain intact.
-        buildFileDependents.remove(path);
-      }
+    if (invalidateManifests) {
+      allBuildFileManifests.invalidate(path);
+      allPackageFileManifests.invalidate(path);
+    }
 
-      // We may have been given a file that package files depends on. Iteratively invalidate those
-      // package files.
-      dependents = packageFileDependents.getOrDefault(path, ImmutableSet.of());
-      for (AbsPath dependent : dependents) {
-        if (dependent.equals(path)) {
-          continue;
-        }
-        if (pathIsPackageFile) {
-          // Package files depend on parent package files (if a valid parent exists), but the
-          // invalidation of a parent does not invalidate the manifest of a child package file.
-          invalidatedRawNodes += invalidatePath(dependent, false);
-        } else {
-          invalidatedRawNodes += invalidatePath(dependent, true);
-        }
+    // We may have been given a file that other build files depend on. Invalidate accordingly.
+    Set<AbsPath> dependents = buildFileDependents.getOrDefault(path, ImmutableSet.of());
+    boolean pathIsPackageFile = PackagePipeline.isPackageFile(path.getPath());
+    LOG.verbose("Invalidating dependents for path %s: %s", path, dependents);
+    for (AbsPath dependent : dependents) {
+      if (dependent.equals(path)) {
+        continue;
       }
-      // Dependents of package files are build files and other package files, neither of which
-      // we want to invalidate.
-      if (!pathIsPackageFile) {
-        packageFileDependents.remove(path);
+      if (pathIsPackageFile) {
+        // Typically, the dependents of PACKAGE files are build files. If there is a valid entry
+        // for `dependent` in `allBuildFileManifests`, invalidate the cached nodes, but not the
+        // build targets contained within in.
+        invalidatedRawNodes += invalidateNodesInPath(dependent, false, locked);
+      } else {
+        // Recursively invalidate all cached content based on `dependent`.
+        invalidatedRawNodes += invalidatePath(dependent, true, locked);
       }
+    }
+    if (!pathIsPackageFile) {
+      // Package files do not invalidate the build file (as the build file does not need to be
+      // re-parsed). This means the dependents of the package remain intact.
+      buildFileDependents.remove(path);
+    }
 
-      return invalidatedRawNodes;
+    // We may have been given a file that package files depends on. Iteratively invalidate those
+    // package files.
+    dependents = packageFileDependents.getOrDefault(path, ImmutableSet.of());
+    for (AbsPath dependent : dependents) {
+      if (dependent.equals(path)) {
+        continue;
+      }
+      if (pathIsPackageFile) {
+        // Package files depend on parent package files (if a valid parent exists), but the
+        // invalidation of a parent does not invalidate the manifest of a child package file.
+        invalidatedRawNodes += invalidatePath(dependent, false, locked);
+      } else {
+        invalidatedRawNodes += invalidatePath(dependent, true, locked);
+      }
+    }
+    // Dependents of package files are build files and other package files, neither of which
+    // we want to invalidate.
+    if (!pathIsPackageFile) {
+      packageFileDependents.remove(path);
+    }
+
+    return invalidatedRawNodes;
+  }
+
+  @VisibleForTesting
+  int invalidatePathForTest(AbsPath path, boolean invalidateManifests) {
+    try (AutoCloseableWriteLocked locked = locks.cachesLock.lockWrite()) {
+      return invalidatePath(path, invalidateManifests, locked);
     }
   }
 
   /** @return {@code true} if the given path has dependencies that are present in the given set. */
-  boolean pathDependentPresentIn(ForwardRelPath path, Set<AbsPath> buildFiles) {
+  boolean pathDependentPresentIn(
+      ForwardRelPath path, Set<AbsPath> buildFiles, AutoCloseableWriteLocked locked) {
+    locked.markUsed();
+
     return !Collections.disjoint(
         buildFileDependents.getOrDefault(cellRoot.resolve(path), ImmutableSet.of()), buildFiles);
   }

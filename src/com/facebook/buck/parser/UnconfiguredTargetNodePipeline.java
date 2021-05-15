@@ -73,6 +73,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
 
   public UnconfiguredTargetNodePipeline(
       ListeningExecutorService executorService,
+      DaemonicParserValidationToken validationToken,
       Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> cache,
       BuckEventBus eventBus,
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
@@ -92,7 +93,8 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
             eventBus.isolated(),
             SimplePerfEvent.PerfEventTitle.of("raw_target_node_parse_pipeline"));
     this.cache =
-        new PipelineNodeCache<>(cache, UnconfiguredTargetNodePipeline::targetNodeIsConfiguration);
+        new PipelineNodeCache<>(
+            cache, validationToken, UnconfiguredTargetNodePipeline::targetNodeIsConfiguration);
   }
 
   private static boolean targetNodeIsConfiguration(UnconfiguredTargetNode targetNode) {

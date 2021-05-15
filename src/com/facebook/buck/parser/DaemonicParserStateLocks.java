@@ -16,10 +16,66 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.util.concurrent.AutoCloseableReadLocked;
 import com.facebook.buck.util.concurrent.AutoCloseableReadWriteLock;
+import com.facebook.buck.util.concurrent.AutoCloseableWriteLocked;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.annotation.Nullable;
 
 /** Lock objects shared by different state objects. */
 class DaemonicParserStateLocks {
   /** Locks cache data. */
   final AutoCloseableReadWriteLock cachesLock = new AutoCloseableReadWriteLock();
+
+  /**
+   * Cache validation model is following:
+   *
+   * <ul>
+   *   <li>We acquire write lock to update invalidation count
+   *   <li>We acquire read lock to update the cache, so invalidation count cannot be updated while
+   *       we performing cache write
+   *   <li>We don't acquire any locks when we read from the cache, but we check the invalidation
+   *       number after we perform cache read
+   * </ul>
+   */
+  private final AtomicInteger invalidationCount = new AtomicInteger();
+
+  /**
+   * Increment invalidation counter.
+   *
+   * <p>Note, invalidation counter increment <b>must</b> happen before updating cache fields because
+   * we read cache without locking, so cache read must not successfully observe partially invalidate
+   * cache.
+   */
+  void markInvalidated(AutoCloseableWriteLocked locked) {
+    locked.markUsed();
+
+    // This is slightly inefficient: we don't need to increment counter multiple times
+    // per invalidation, but that is likely non-issue.
+    invalidationCount.incrementAndGet();
+  }
+
+  boolean isValid(DaemonicParserValidationToken token) {
+    return token.invalidationCount == invalidationCount.get();
+  }
+
+  /** Lock cache for update, return {@code null} token is not valid. */
+  @Nullable
+  AutoCloseableReadLocked lockForUpdate(DaemonicParserValidationToken validationToken) {
+    AutoCloseableReadLocked locked = cachesLock.lockRead();
+    // Must hold lock to check if token is valid.
+    if (!isValid(validationToken)) {
+      locked.close();
+      return null;
+    }
+    return locked;
+  }
+
+  DaemonicParserValidationToken validationToken() {
+    // We must acquire a lock for reading `invalidationCount` because
+    // invalidation and counter increment does not happen atomically.
+    try (AutoCloseableReadLocked locked = cachesLock.lockRead()) {
+      return new DaemonicParserValidationToken(invalidationCount.get());
+    }
+  }
 }

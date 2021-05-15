@@ -93,6 +93,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
   /** Create new pipeline for parsing Buck files. */
   public UnconfiguredTargetNodeToTargetNodeParsePipeline(
       Cache<BuildTarget, TargetNodeMaybeIncompatible> cache,
+      DaemonicParserValidationToken validationToken,
       ListeningExecutorService executorService,
       Cells cells,
       UnconfiguredTargetNodePipeline unconfiguredTargetNodePipeline,
@@ -115,8 +116,10 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     this.perfEventTitle = SimplePerfEvent.PerfEventTitle.of("GetTargetNode");
     this.eventBus = eventBus;
     this.cache =
-        new PipelineNodeCache<BuildTarget, TargetNodeMaybeIncompatible>(
-            cache, UnconfiguredTargetNodeToTargetNodeParsePipeline::targetNodeIsConfiguration);
+        new PipelineNodeCache<>(
+            cache,
+            validationToken,
+            UnconfiguredTargetNodeToTargetNodeParsePipeline::targetNodeIsConfiguration);
   }
 
   private static boolean targetNodeIsConfiguration(
