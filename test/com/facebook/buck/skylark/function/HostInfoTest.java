@@ -31,7 +31,7 @@ import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.skylark.function.packages.StarlarkInfo;
+import com.facebook.buck.skylark.function.packages.StructImpl;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.parser.BuckGlobals;
 import com.facebook.buck.skylark.parser.RuleFunctionFactory;
@@ -51,11 +51,11 @@ import org.junit.Test;
 
 public class HostInfoTest {
 
-  private void validateSkylarkStruct(StarlarkInfo struct, String topLevel, String trueKey)
+  private void validateSkylarkStruct(StructImpl struct, String topLevel, String trueKey)
       throws EvalException {
     // Assert that all keys are false except the one specified by {@code trueKey}
 
-    StarlarkInfo topLevelStruct = struct.getValue(topLevel, StarlarkInfo.class);
+    StructImpl topLevelStruct = struct.getValue(topLevel, StructImpl.class);
     for (String key : topLevelStruct.getFieldNames()) {
       if (key.equals(trueKey)) {
         continue;
@@ -149,8 +149,7 @@ public class HostInfoTest {
   public void isUseableInBuildFile() throws EvalException, InterruptedException, IOException {
     String expectedOutput = "";
     String macroFile = "";
-    StarlarkInfo realHostInfo =
-        HostInfo.createHostInfoStruct(Platform::detect, Architecture::detect);
+    StructImpl realHostInfo = HostInfo.createHostInfoStruct(Platform::detect, Architecture::detect);
 
     macroFile =
         "def printer():\n"
@@ -191,8 +190,8 @@ public class HostInfoTest {
             + "arch.is_unknown: False\n"
             + "arch.is_x86_64: False\n";
     // Make sure we set the current system's os/arch to True
-    StarlarkInfo realHostOs = realHostInfo.getValue("os", StarlarkInfo.class);
-    StarlarkInfo realHostArch = realHostInfo.getValue("arch", StarlarkInfo.class);
+    StructImpl realHostOs = realHostInfo.getValue("os", StructImpl.class);
+    StructImpl realHostArch = realHostInfo.getValue("arch", StructImpl.class);
     String trueOsKey =
         realHostOs.getFieldNames().stream()
             .filter(

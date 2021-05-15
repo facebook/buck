@@ -17,7 +17,7 @@
 package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.skylark.function.packages.Info;
-import com.facebook.buck.skylark.function.packages.StarlarkInfo;
+import com.facebook.buck.skylark.function.packages.StructImpl;
 import com.facebook.buck.skylark.function.packages.StructProvider;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
@@ -32,7 +32,7 @@ public class HostInfo {
   private HostInfo() {}
 
   @VisibleForTesting
-  static StarlarkInfo createHostInfoStruct(
+  static StructImpl createHostInfoStruct(
       Supplier<Platform> platformSupplier, Supplier<Architecture> architectureSupplier) {
     Platform hostPlatform = platformSupplier.get();
     Architecture hostArchitecture = architectureSupplier.get();

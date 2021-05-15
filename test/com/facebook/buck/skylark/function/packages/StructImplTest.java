@@ -26,8 +26,8 @@ public class StructImplTest {
 
   @Test
   public void toJson() throws Exception {
-    StarlarkInfo struct =
-        StarlarkInfo.create(StructProvider.STRUCT, ImmutableMap.of("a", StarlarkInt.of(1)), null);
+    StructImpl struct =
+        StructImpl.create(StructProvider.STRUCT, ImmutableMap.of("a", StarlarkInt.of(1)), null);
     assertEquals("{\"a\":1}", struct.toJson());
   }
 }

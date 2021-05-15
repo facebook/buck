@@ -155,7 +155,7 @@ public final class StarlarkProvider extends StarlarkCallable
     if (positional.length > 0) {
       throw Starlark.errorf("%s: unexpected positional arguments", getName());
     }
-    return StarlarkInfo.createFromNamedArgs(this, named, schema, thread.getCallerLocation());
+    return StructImpl.createFromNamedArgs(this, named, schema, thread.getCallerLocation());
   }
 
   @Override

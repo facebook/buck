@@ -31,6 +31,11 @@
 package com.facebook.buck.skylark.function.packages;
 
 import java.util.Map;
+import net.starlark.java.annot.FnPurity;
+import net.starlark.java.annot.Param;
+import net.starlark.java.annot.ParamType;
+import net.starlark.java.annot.StarlarkBuiltin;
+import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.eval.Dict;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Starlark;
@@ -42,8 +47,8 @@ import net.starlark.java.syntax.Location;
  *
  * <p>Its singleton instance is {@link StructProvider#STRUCT}.
  */
-public final class StructProvider extends BuiltinProvider<StructImpl>
-    implements StructApi.StructProviderApi {
+@StarlarkBuiltin(name = "Provider", documented = false, doc = "")
+public final class StructProvider extends BuiltinProvider<StructImpl> {
 
   /** "struct" function. */
   public static final StructProvider STRUCT = new StructProvider();
@@ -52,15 +57,25 @@ public final class StructProvider extends BuiltinProvider<StructImpl>
     super("struct", StructImpl.class);
   }
 
-  @Override
+  @StarlarkMethod(
+      name = "struct",
+      doc =
+          "Creates an immutable struct using the keyword arguments as attributes. It is used to "
+              + "group multiple values together. Example:<br>"
+              + "<pre class=\"language-python\">s = struct(x = 2, y = 3)\n"
+              + "return s.x + getattr(s, \"y\")  # returns 5</pre>",
+      extraKeywords =
+          @Param(
+              name = "kwargs",
+              allowedTypes = @ParamType(type = Dict.class),
+              defaultValue = "{}",
+              doc = "Dictionary of arguments."),
+      useStarlarkThread = true,
+      selfCall = true,
+      purity = FnPurity.SPEC_SAFE)
   public StructImpl createStruct(Dict<String, Object> kwargs, StarlarkThread thread)
       throws EvalException {
     return create(kwargs, thread.getCallerLocation());
-  }
-
-  // Called from StarlarkRepositoryContext. TODO(adonovan): eliminate.
-  public StructImpl createWithBuiltinLocation(Dict<String, Object> kwargs) throws EvalException {
-    return create(kwargs, Location.BUILTIN);
   }
 
   private StructImpl create(Dict<String, Object> kwargs, Location location) throws EvalException {
@@ -70,7 +85,7 @@ public final class StructProvider extends BuiltinProvider<StructImpl>
     if (kwargs.containsKey("to_proto")) {
       throw Starlark.errorf("cannot override built-in struct function 'to_proto'");
     }
-    return StarlarkInfo.create(this, kwargs, location);
+    return StructImpl.create(this, kwargs, location);
   }
 
   /**
@@ -80,7 +95,7 @@ public final class StructProvider extends BuiltinProvider<StructImpl>
    * providers, such as the {@code native} object, and the struct fields of {@code ctx} like {@code
    * ctx.attr}.
    */
-  public StarlarkInfo create(Map<String, Object> values, String errorMessageFormatForUnknownField) {
-    return StarlarkInfo.createWithCustomMessage(this, values, errorMessageFormatForUnknownField);
+  public StructImpl create(Map<String, Object> values, String errorMessageFormatForUnknownField) {
+    return StructImpl.createWithCustomMessage(this, values, errorMessageFormatForUnknownField);
   }
 }
