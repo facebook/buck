@@ -39,7 +39,7 @@ class BcDotSite {
       Structure struct = (Structure) self;
       Object field = struct.getField(name);
       if (field != null) {
-        return Starlark.checkValid(field);
+        return field;
       }
 
       String error = struct.getErrorMessageForUnknownField(name);

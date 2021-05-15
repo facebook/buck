@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.Printer;
+import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.eval.Structure;
 import net.starlark.java.syntax.Location;
@@ -44,6 +45,11 @@ public abstract class BuckStarlarkStructObject extends Structure {
   @Nullable
   @Override
   public Object getField(String name) throws EvalException {
+    return Starlark.checkValid(getFieldUnchecked(name));
+  }
+
+  /** Get field, but do not require that return value is valid Starlark object. */
+  protected Object getFieldUnchecked(String name) throws EvalException {
     try {
       @Nullable Method method = getMethods().get(name);
       if (method == null) {
@@ -93,7 +99,7 @@ public abstract class BuckStarlarkStructObject extends Structure {
       printer.append(fieldName);
       printer.append(" = ");
       try {
-        printer.repr(getField(fieldName));
+        printer.repr(getFieldUnchecked(fieldName));
       } catch (EvalException e) {
         printer.repr(null);
       }

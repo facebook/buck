@@ -95,7 +95,9 @@ public abstract class BuiltInProviderInfo<T extends BuiltInProviderInfo<T>>
     }
     for (String field : getFieldNames()) {
       try {
-        if (!BuckSkylarkTypes.isImmutable(Objects.requireNonNull(getField(field)))) {
+        // NOTE(nga): this is broken and dead code, we can't call `getField`
+        //   because `getField` is supposed to return only valid Starlark objects.
+        if (!BuckSkylarkTypes.isImmutable(Objects.requireNonNull(getFieldUnchecked(field)))) {
           return false;
         }
       } catch (EvalException e) {
