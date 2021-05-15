@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -57,7 +56,7 @@ class PipelineNodeCache<K, T> {
    *     ongoing job (job cache hit) or a new job (miss).
    */
   protected final ListenableFuture<T> getJobWithCacheLookup(
-      Cell cell, K key, JobSupplier<T> jobSupplier, BuckEventBus eventBus) {
+      Cell cell, K key, JobSupplier<T> jobSupplier) {
 
     JobsCacheKey<K> jobsCacheKey = ImmutableJobsCacheKey.ofImpl(cell.getCanonicalName(), key);
 
@@ -74,7 +73,7 @@ class PipelineNodeCache<K, T> {
     // to the SettableFuture, so that anyone else waiting on it will get the same result.
 
     try {
-      Optional<T> cacheLookupResult = cache.lookupComputedNode(cell, key, eventBus);
+      Optional<T> cacheLookupResult = cache.lookupComputedNode(cell, key);
       if (cacheLookupResult.isPresent()) {
         resultFuture.set(cacheLookupResult.get());
       } else {
@@ -86,7 +85,7 @@ class PipelineNodeCache<K, T> {
                   boolean targetNodeIsConfiguration = this.targetNodeIsConfiguration.test(input);
                   return Futures.immediateFuture(
                       cache.putComputedNodeIfNotPresent(
-                          cell, key, input, targetNodeIsConfiguration, eventBus));
+                          cell, key, input, targetNodeIsConfiguration));
                 },
                 MoreExecutors.directExecutor());
         resultFuture.setFuture(cacheJob);
@@ -103,8 +102,7 @@ class PipelineNodeCache<K, T> {
   }
 
   public interface Cache<K, V> {
-    Optional<V> lookupComputedNode(Cell cell, K target, BuckEventBus eventBus)
-        throws BuildTargetException;
+    Optional<V> lookupComputedNode(Cell cell, K target) throws BuildTargetException;
 
     /**
      * Insert item into the cache if it was not already there.
@@ -115,8 +113,7 @@ class PipelineNodeCache<K, T> {
      * @param targetIsConfiguration target is configuration target
      * @return previous node for the target if the cache contained it, new one otherwise.
      */
-    V putComputedNodeIfNotPresent(
-        Cell cell, K target, V targetNode, boolean targetIsConfiguration, BuckEventBus eventBus)
+    V putComputedNodeIfNotPresent(Cell cell, K target, V targetNode, boolean targetIsConfiguration)
         throws BuildTargetException;
   }
 }

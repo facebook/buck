@@ -89,8 +89,7 @@ public class PerBuildStateCacheTest {
     Package pkg = createPackage(cells.getRootCell(), packageFile);
 
     Package cachedPackage =
-        packageCache.putComputedNodeIfNotPresent(
-            cells.getRootCell(), packageFile, pkg, false, eventBus);
+        packageCache.putComputedNodeIfNotPresent(cells.getRootCell(), packageFile, pkg, false);
 
     Assert.assertSame(cachedPackage, pkg);
   }
@@ -100,15 +99,14 @@ public class PerBuildStateCacheTest {
     ForwardRelPath packageFile = ForwardRelPath.of("Foo");
 
     Optional<Package> lookupPackage =
-        packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
+        packageCache.lookupComputedNode(cells.getRootCell(), packageFile);
 
     Assert.assertFalse(lookupPackage.isPresent());
 
     Package pkg = createPackage(cells.getRootCell(), packageFile);
-    packageCache.putComputedNodeIfNotPresent(
-        cells.getRootCell(), packageFile, pkg, false, eventBus);
+    packageCache.putComputedNodeIfNotPresent(cells.getRootCell(), packageFile, pkg, false);
 
-    lookupPackage = packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
+    lookupPackage = packageCache.lookupComputedNode(cells.getRootCell(), packageFile);
     Assert.assertSame(lookupPackage.get(), pkg);
   }
 
@@ -130,16 +128,15 @@ public class PerBuildStateCacheTest {
         createPackage(
             childCell, childPackageFile, false, ImmutableList.of("//bar/..."), ImmutableList.of());
 
-    packageCache.putComputedNodeIfNotPresent(
-        cells.getRootCell(), packageFile, pkg1, false, eventBus);
-    packageCache.putComputedNodeIfNotPresent(childCell, childPackageFile, pkg2, false, eventBus);
+    packageCache.putComputedNodeIfNotPresent(cells.getRootCell(), packageFile, pkg1, false);
+    packageCache.putComputedNodeIfNotPresent(childCell, childPackageFile, pkg2, false);
 
     Optional<Package> lookupPackage =
-        packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
+        packageCache.lookupComputedNode(cells.getRootCell(), packageFile);
     Assert.assertSame(lookupPackage.get(), pkg1);
     Assert.assertNotSame(lookupPackage.get(), pkg2);
 
-    lookupPackage = packageCache.lookupComputedNode(childCell, childPackageFile, eventBus);
+    lookupPackage = packageCache.lookupComputedNode(childCell, childPackageFile);
     Assert.assertSame(lookupPackage.get(), pkg2);
     Assert.assertNotSame(lookupPackage.get(), pkg1);
   }

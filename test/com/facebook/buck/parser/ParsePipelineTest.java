@@ -394,7 +394,7 @@ public class ParsePipelineTest {
         fixture
             .daemonicParserState
             .getPackageFileCache()
-            .lookupComputedNode(cell, nonExistentPackageFile, eventBus)
+            .lookupComputedNode(cell, nonExistentPackageFile)
             .get();
     assertSame(PackageFileParsePipeline.NONEXISTENT_PACKAGE, cachedPackageFileManifest);
   }
@@ -514,13 +514,13 @@ public class ParsePipelineTest {
     private final Map<K, V> nodeMap = new HashMap<>();
 
     @Override
-    public synchronized Optional<V> lookupComputedNode(Cell cell, K key, BuckEventBus eventBus) {
+    public synchronized Optional<V> lookupComputedNode(Cell cell, K key) {
       return Optional.ofNullable(nodeMap.get(key));
     }
 
     @Override
     public synchronized V putComputedNodeIfNotPresent(
-        Cell cell, K key, V value, boolean targetIsConfiguration, BuckEventBus eventBus) {
+        Cell cell, K key, V value, boolean targetIsConfiguration) {
       if (!nodeMap.containsKey(key)) {
         nodeMap.put(key, value);
       }
@@ -705,21 +705,21 @@ public class ParsePipelineTest {
     public boolean targetExistsInCache(BuildTarget target) {
       return daemonicParserState
           .getTargetNodeCache()
-          .lookupComputedNode(cells.getRootCell(), target, eventBus)
+          .lookupComputedNode(cells.getRootCell(), target)
           .isPresent();
     }
 
     public boolean buildFileExistsInCache(ForwardRelPath path) {
       return daemonicParserState
           .getRawNodeCache()
-          .lookupComputedNode(cells.getRootCell(), path, eventBus)
+          .lookupComputedNode(cells.getRootCell(), path)
           .isPresent();
     }
 
     public boolean packageFileExistsInCache(ForwardRelPath path) {
       return daemonicParserState
           .getPackageFileCache()
-          .lookupComputedNode(cells.getRootCell(), path, eventBus)
+          .lookupComputedNode(cells.getRootCell(), path)
           .isPresent();
     }
 

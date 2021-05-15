@@ -146,8 +146,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                                   target,
                                   DependencyStack.top(target),
                                   from,
-                                  resultingPair.getFirst()),
-                          eventBus));
+                                  resultingPair.getFirst())));
                 }
 
                 return Futures.allAsList(allNodeJobs.build());
@@ -183,8 +182,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                   return dispatchComputeNode(
                       cell, buildTarget, dependencyStack, rawAttributes, resultingPair.getFirst());
                 },
-                executorService),
-        eventBus);
+                executorService));
   }
 
   private ListenableFuture<UnconfiguredTargetNode> dispatchComputeNode(

@@ -71,7 +71,6 @@ public class PackageFileParsePipeline extends GenericFileParsePipeline<PackageFi
           }
 
           return Futures.immediateFuture(NONEXISTENT_PACKAGE);
-        },
-        eventBus);
+        });
   }
 }

@@ -152,8 +152,7 @@ public class PackagePipeline implements AutoCloseable {
                             computePackage(
                                 cell, packageFile, packageFileManifest.getPackage(), parentPkg),
                         executorService),
-                executorService),
-        eventBus);
+                executorService));
   }
 
   private ListenableFuture<Optional<Package>> getParentPackageJob(

@@ -21,7 +21,6 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
@@ -68,8 +67,8 @@ class PackageCachePerBuild implements PipelineNodeCache.Cache<ForwardRelPath, Pa
   }
 
   @Override
-  public Optional<Package> lookupComputedNode(
-      Cell cell, ForwardRelPath packageFile, BuckEventBus eventBus) throws BuildTargetException {
+  public Optional<Package> lookupComputedNode(Cell cell, ForwardRelPath packageFile)
+      throws BuildTargetException {
     CellState state = getCellState(cell);
     if (state == null) {
       return Optional.empty();
@@ -80,11 +79,7 @@ class PackageCachePerBuild implements PipelineNodeCache.Cache<ForwardRelPath, Pa
 
   @Override
   public Package putComputedNodeIfNotPresent(
-      Cell cell,
-      ForwardRelPath packageFile,
-      Package pkg,
-      boolean targetIsConfiguration,
-      BuckEventBus eventBus)
+      Cell cell, ForwardRelPath packageFile, Package pkg, boolean targetIsConfiguration)
       throws BuildTargetException {
     Preconditions.checkState(!targetIsConfiguration);
     AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);

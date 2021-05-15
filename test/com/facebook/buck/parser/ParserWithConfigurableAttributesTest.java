@@ -2073,7 +2073,7 @@ public class ParserWithConfigurableAttributesTest {
       assertTrue(
           permState
               .getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE)
-              .lookupComputedNode(cells.getRootCell(), target, eventBus)
+              .lookupComputedNode(cells.getRootCell(), target)
               .isPresent());
     }
   }

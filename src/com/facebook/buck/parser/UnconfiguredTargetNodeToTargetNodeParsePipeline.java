@@ -397,8 +397,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
                 from -> dispatchComputeNode(cell, buildTarget, dependencyStack, from),
                 executorService);
           }
-        },
-        eventBus);
+        });
   }
 
   /**

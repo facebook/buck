@@ -30,7 +30,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.Counter;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
@@ -85,8 +84,7 @@ public class DaemonicParserState {
     }
 
     @Override
-    public Optional<T> lookupComputedNode(Cell cell, K target, BuckEventBus eventBus)
-        throws BuildTargetException {
+    public Optional<T> lookupComputedNode(Cell cell, K target) throws BuildTargetException {
       DaemonicCellState.Cache<K, T> state = getCache(cell);
       if (state == null) {
         return Optional.empty();
@@ -96,7 +94,7 @@ public class DaemonicParserState {
 
     @Override
     public T putComputedNodeIfNotPresent(
-        Cell cell, K target, T targetNode, boolean targetIsConfiguration, BuckEventBus eventBus)
+        Cell cell, K target, T targetNode, boolean targetIsConfiguration)
         throws BuildTargetException {
 
       AbsPath buildFile =
@@ -129,8 +127,8 @@ public class DaemonicParserState {
       implements PipelineNodeCache.Cache<ForwardRelPath, BuildFileManifest> {
 
     @Override
-    public Optional<BuildFileManifest> lookupComputedNode(
-        Cell cell, ForwardRelPath buildFile, BuckEventBus eventBus) throws BuildTargetException {
+    public Optional<BuildFileManifest> lookupComputedNode(Cell cell, ForwardRelPath buildFile)
+        throws BuildTargetException {
       AbsPath buildFileAbs = cell.getRoot().resolve(buildFile);
 
       DaemonicCellState state = getCellState(cell);
@@ -152,8 +150,7 @@ public class DaemonicParserState {
         Cell cell,
         ForwardRelPath buildFile,
         BuildFileManifest manifest,
-        boolean targetIsConfiguration,
-        BuckEventBus eventBus)
+        boolean targetIsConfiguration)
         throws BuildTargetException {
 
       AbsPath buildFileAbs = cell.getRoot().resolve(buildFile);
@@ -180,8 +177,8 @@ public class DaemonicParserState {
       implements PipelineNodeCache.Cache<ForwardRelPath, PackageFileManifest> {
 
     @Override
-    public Optional<PackageFileManifest> lookupComputedNode(
-        Cell cell, ForwardRelPath packageFile, BuckEventBus eventBus) throws BuildTargetException {
+    public Optional<PackageFileManifest> lookupComputedNode(Cell cell, ForwardRelPath packageFile)
+        throws BuildTargetException {
 
       AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
 
@@ -202,8 +199,7 @@ public class DaemonicParserState {
         Cell cell,
         ForwardRelPath packageFile,
         PackageFileManifest manifest,
-        boolean targetIsConfiguration,
-        BuckEventBus eventBus)
+        boolean targetIsConfiguration)
         throws BuildTargetException {
 
       AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
