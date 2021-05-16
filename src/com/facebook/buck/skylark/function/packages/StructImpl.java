@@ -92,7 +92,7 @@ public final class StructImpl extends Structure implements Info, HasBinary {
     int i = 0;
     for (Map.Entry<String, Object> e : values.entrySet()) {
       table[i] = e.getKey();
-      table[n + i] = Starlark.checkValid(e.getValue());
+      table[n + i] = e.getValue();
       i++;
     }
     // Sort keys, permuting values in parallel.
