@@ -178,8 +178,9 @@ public abstract class AbstractSkylarkFunctions extends StarlarkValue {
             defaultValue = "''",
             doc = "Optional custom error to report if no condition matches.",
             named = true)
-      })
-  public Object select(Dict<?, ?> dict, String noMatchError) throws EvalException {
+      },
+      purity = FnPurity.PURE)
+  public SelectorList select(Dict<?, ?> dict, String noMatchError) throws EvalException {
     if (dict.isEmpty()) {
       throw Starlark.errorf(
           "select({}) with an empty dictionary can never resolve because it includes no conditions"
