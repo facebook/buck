@@ -160,8 +160,7 @@ public final class Starlark {
    } else if (x instanceof StarlarkValue) {
       ((StarlarkValue) x).checkHashable();
     } else {
-      Starlark.checkValid(x);
-      // String and Boolean are hashable.
+      // bool is hashable
     }
   }
 
