@@ -16,7 +16,6 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.skylark.function.packages.Info;
 import com.facebook.buck.skylark.function.packages.StructImpl;
 import com.facebook.buck.skylark.function.packages.StructProvider;
 import com.facebook.buck.util.environment.Architecture;
@@ -67,6 +66,6 @@ public class HostInfo {
         "no such property on host_info struct: '%s'");
   }
 
-  public static final Info HOST_INFO =
+  public static final StructImpl HOST_INFO =
       HostInfo.createHostInfoStruct(Platform::detect, Architecture::detect);
 }

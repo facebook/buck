@@ -18,7 +18,7 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
-import com.facebook.buck.skylark.function.packages.Info;
+import com.facebook.buck.skylark.function.packages.StructImpl;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -161,7 +161,7 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
             .collect(ImmutableList.toImmutableList()));
   }
 
-  /** {@code host_info} */
+  /** Host info. */
   @StarlarkMethod(
       name = "host_info",
       doc =
@@ -195,7 +195,7 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
               + "  )</pre>\n",
       documented = true,
       purity = FnPurity.SPEC_SAFE)
-  public Info hostInfo() {
+  public StructImpl hostInfo() {
     return HostInfo.HOST_INFO;
   }
 
