@@ -440,11 +440,7 @@ final class EvalUtils {
   static Object index(Mutability mu, StarlarkSemantics semantics, Object object, Object key)
       throws EvalException {
     if (object instanceof StarlarkIndexable) {
-      Object result = ((StarlarkIndexable) object).getIndex(semantics, key);
-      // TODO(bazel-team): We shouldn't have this fromJava call here. If it's needed at all,
-      // it should go in the implementations of StarlarkIndexable#getIndex that produce non-Starlark
-      // values.
-      return result == null ? null : Starlark.fromJava(result, mu);
+      return ((StarlarkIndexable<?>) object).getIndex(semantics, key);
     } else if (object instanceof String) {
       String string = (String) object;
       int index = Starlark.toInt(key, "string index");
