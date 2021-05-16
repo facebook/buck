@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import net.starlark.java.eval.Dict;
 import net.starlark.java.eval.EvalException;
@@ -79,5 +80,60 @@ public class StructImplTest {
             ImmutableMap.of("a", Dict.immutableOf("x", StarlarkInt.of(1))),
             null);
     assertEquals("{\"a\":{\"x\":1}}", struct.toJson());
+  }
+
+  @Test
+  public void getField() throws EvalException {
+    StarlarkInt one = StarlarkInt.of(1);
+    StarlarkInt two = StarlarkInt.of(2);
+    StructImpl struct =
+        StructImpl.create(StructProvider.STRUCT, ImmutableMap.of("one", one, "two", two), null);
+
+    assertSame(one, struct.getField("one"));
+    assertSame(one, struct.getField(new String("one")));
+
+    assertSame(two, struct.getField("two"));
+    assertSame(two, struct.getField(new String("two")));
+  }
+
+  @Test
+  public void getFieldForMediumStruct() throws EvalException {
+    // below linear search for identity but above linear search for equality
+    int size = 60;
+
+    StructImpl struct =
+        StructImpl.create(
+            StructProvider.STRUCT,
+            IntStream.range(0, size)
+                .boxed()
+                .collect(ImmutableMap.toImmutableMap(i -> "f" + i, StarlarkInt::of)),
+            null);
+
+    // Here binary search is used
+    for (int i = 0; i != size; ++i) {
+      assertEquals(StarlarkInt.of(i), struct.getField("f" + i));
+    }
+
+    assertNull(struct.getField("nonexistent"));
+  }
+
+  @Test
+  public void getFieldForLargeStruct() throws EvalException {
+    int size = 1000;
+
+    StructImpl struct =
+        StructImpl.create(
+            StructProvider.STRUCT,
+            IntStream.range(0, size)
+                .boxed()
+                .collect(ImmutableMap.toImmutableMap(i -> "f" + i, StarlarkInt::of)),
+            null);
+
+    // Here binary search is used
+    for (int i = 0; i != size; ++i) {
+      assertEquals(StarlarkInt.of(i), struct.getField("f" + i));
+    }
+
+    assertNull(struct.getField("nonexistent"));
   }
 }

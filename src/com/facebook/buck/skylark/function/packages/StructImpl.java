@@ -293,6 +293,29 @@ public final class StructImpl extends Structure implements Info, HasBinary {
   @Override
   public Object getField(String name) {
     int n = table.length / 2;
+
+    // Try linear search first
+    if (n < 100) {
+      // Most identifiers in Starlark are interned, so try identity search first
+      for (int i = 0; i != n; ++i) {
+        if (table[i] == name) {
+          return table[n + i];
+        }
+      }
+
+      // If identity search misses, maybe try linear equality search
+
+      if (n < 20) {
+        for (int i = 0; i != n; ++i) {
+          if (name.equals(table[i])) {
+            return table[n + i];
+          }
+        }
+        // field not found, no reason to fall back to binary search
+        return null;
+      }
+    }
+
     int i = Arrays.binarySearch(table, 0, n, name);
     if (i < 0) {
       return null;
