@@ -1,1 +1,1 @@
-kotlinx-metadata-jvm jars are downloaded from https://kotlin.bintray.com/kotlinx/org/jetbrains/kotlinx/kotlinx-metadata-jvm/
+kotlinx-metadata-jvm jars are downloaded from https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-metadata-jvm/
