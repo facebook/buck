@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi.kotlin;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -39,7 +40,16 @@ public class KotlinMetadataReader {
    * and reading it.
    */
   public static ImmutableList<String> getInlineFunctions(AnnotationNode annotationNode) {
-    KotlinClassMetadata metadata = KotlinClassMetadata.read(createHeader(annotationNode));
+    KotlinClassHeader classHeader = createHeader(annotationNode);
+    KotlinClassMetadata metadata = KotlinClassMetadata.read(classHeader);
+    if (metadata == null) {
+      throw new AssertionError(
+          "Unsupported kind of Kotlin classes: ["
+              + classHeader.getKind()
+              + "] or has an unsupported metadata version: ["
+              + Arrays.toString(classHeader.getMetadataVersion())
+              + "]");
+    }
 
     KmDeclarationContainer container;
     if (metadata instanceof KotlinClassMetadata.Class) {
