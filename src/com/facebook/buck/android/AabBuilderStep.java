@@ -123,13 +123,7 @@ public class AabBuilderStep implements Step {
 
       StepExecutionResult moduleBuildResult =
           addModule(
-              context,
-              modulePath,
-              fakeResApk,
-              output,
-              moduleInfo,
-              addedFiles,
-              addedSourceFiles);
+              context, modulePath, fakeResApk, output, moduleInfo, addedFiles, addedSourceFiles);
 
       if (!moduleBuildResult.isSuccess()) {
         return moduleBuildResult;
@@ -175,7 +169,7 @@ public class AabBuilderStep implements Step {
   }
 
   private Path getPathForModule(ModuleInfo moduleInfo) {
-      return getGenDir().resolve(String.format("%s.zip", moduleInfo.getModuleName()));
+    return getGenDir().resolve(String.format("%s.zip", moduleInfo.getModuleName()));
   }
 
   private StepExecutionResult addModule(
