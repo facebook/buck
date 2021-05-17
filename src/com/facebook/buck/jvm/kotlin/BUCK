@@ -3,6 +3,9 @@ load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 java_library_with_plugins(
     name = "kotlin",
     srcs = glob(["*.java"]),
+    resources = [
+        "//src/com/facebook/buck/jvm/kotlin/plugin:kotlinc-plugin",
+    ],
     tests = [
         "//test/com/facebook/buck/jvm/kotlin:kotlin",
     ],

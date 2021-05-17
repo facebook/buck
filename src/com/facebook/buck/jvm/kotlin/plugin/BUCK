@@ -1,0 +1,37 @@
+kotlin_library(
+    name = "plugin",
+    srcs = [
+        "ClassUsageRecorder.kt",
+        "DependencyTrackerCommandLineProcessor.kt",
+        "DependencyTrackerExtension.kt",
+        "DependencyTrackerRegistrar.kt",
+    ],
+    provided_deps = [
+        "//third-party/java/kotlin:kotlin-compiler",
+    ],
+    resources = glob(["resources/**"]),
+    resources_root = "resources",
+    deps = [
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jackson:jackson-module-kotlin",
+    ],
+)
+
+java_library(
+    name = "plugin-loader",
+    srcs = ["PluginLoader.java"],
+    visibility = [
+        "//src/com/facebook/buck/jvm/kotlin:kotlin",
+    ],
+)
+
+java_binary(
+    name = "kotlinc-plugin",
+    visibility = [
+        "//src/com/facebook/buck/jvm/kotlin:kotlin",
+    ],
+    deps = [
+        ":plugin",
+    ],
+)

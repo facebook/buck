@@ -34,6 +34,13 @@
   <property name="javac-plugin.jar" value="${build.dir}/javac-plugin/${javac-plugin.jar.name}" />
   <property name="javac-plugin.location.dir.name" value="com/facebook/buck/jvm/java/plugin" />
   <property name="javac-plugin.location.dir" value="${classes.dir}/${javac-plugin.location.dir.name}" />
+  <property name="kotlinc-plugin.src.dir" value="${src.dir}/com/facebook/buck/jvm/kotlin/plugin" />
+  <property name="kotlinc-plugin.classes.dir.name" value="kotlinc-plugin/classes" />
+  <property name="kotlinc-plugin.classes.dir" value="${build.dir}/${kotlinc-plugin.classes.dir.name}" />
+  <property name="kotlinc-plugin.jar.name" value="kotlinc-plugin.jar" />
+  <property name="kotlinc-plugin.jar" value="${build.dir}/kotlinc-plugin/${kotlinc-plugin.jar.name}" />
+  <property name="kotlinc-plugin.location.dir.name" value="com/facebook/buck/jvm/kotlin/plugin" />
+  <property name="kotlinc-plugin.location.dir" value="${classes.dir}/${kotlinc-plugin.location.dir.name}" />
   <property name="buck.path_to_sh_binary_template" value="${basedir}/src/com/facebook/buck/shell/sh_binary_template" />
   <property name="buck.path_to_isolated_trampoline" value="${basedir}/src/com/facebook/buck/rules/modern/builders/trampoline.sh" />
   <property name="buck.logging_config_file" value="${basedir}/config/logging.properties.st" />
@@ -66,6 +73,8 @@
 
   <property name="gensrc.dir" value="${build.dir}/gen" />
   <property name="aosp.gensrc.dir" value="${build.dir}/aosp-gen" />
+
+  <property name="kotlin.lib" value="${third-party.dir}/java/kotlin/" />
 
   <property name="devbuild" value="0" />
 
@@ -112,6 +121,8 @@
       <isset property="jdk8_or_higher"/>
     </and>
   </condition>
+
+  <typedef resource="org/jetbrains/kotlin/ant/antlib.xml" classpath="${kotlin.lib}kotlin-ant.jar"/>
 
   <fileset dir="${third-party.dir}/java" id="buck.jars">
     <include name="args4j/args4j-2.0.30.jar" />
@@ -339,7 +350,7 @@
 
        clear-successful-build must be first, and mark-successful-build last, in the list of dependencies.-->
   <target name="default" depends="clear-successful-build, compile, build-modules, copy-resources,
-                                  dx, javac-plugin, report-generator-jar, create-classpath,
+                                  dx, javac-plugin, kotlinc-plugin, report-generator-jar, create-classpath,
                                   create-resources-signature, gen-package-info, mark-successful-build" />
 
   <target name="checkversion">
@@ -493,6 +504,37 @@
     <!-- Put the tracing jar in resources so it can be dynamically loaded at runtime. See
      com.facebook.buck.jvm.java.plugin.Plugin -->
     <copy file="${javac-plugin.jar}" todir="${javac-plugin.location.dir}" />
+  </target>
+
+  <path id="kotlinc-plugin.classpath">
+    <fileset dir="${third-party.dir}/java" id="kotlinc-plugin.jars">
+      <include name="kotlin/kotlin-compiler.jar" />
+      <include name="kotlin/kotlin-reflect.jar" />
+      <include name="kotlin/kotlin-stdlib.jar" />
+      <include name="jackson/jackson-annotations-2.9.7.jar" />
+      <include name="jackson/jackson-core-2.9.7.jar" />
+      <include name="jackson/jackson-databind-2.9.7.jar" />
+    </fileset>
+  </path>
+
+  <target name="kotlinc-plugin">
+    <mkdir dir="${kotlinc-plugin.classes.dir}" />
+    <kotlinc
+      src="${kotlinc-plugin.src.dir}"
+      output="${kotlinc-plugin.classes.dir}"
+      classpathref="kotlinc-plugin.classpath"
+      includeRuntime="false"
+      noStdlib="true" />
+
+    <jar destfile="${kotlinc-plugin.jar}">
+      <fileset dir="${kotlinc-plugin.classes.dir}" />
+      <fileset dir="${kotlinc-plugin.src.dir}/resources" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/jackson/jackson-annotations-2.9.7.jar"/>
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/jackson/jackson-core-2.9.7.jar"/>
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/jackson/jackson-databind-2.9.7.jar"/>
+    </jar>
+
+    <copy file="${kotlinc-plugin.jar}" todir="${kotlinc-plugin.location.dir}" />
   </target>
 
   <target name="compile-android-annotations" depends="checkversion">
