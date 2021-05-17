@@ -22,11 +22,10 @@ import android.widget.TextView
 import com.sample.kotlin.R
 
 public class OnDemandKotlinFeatureActivity : Activity() {
-    override fun onCreate(savedInstanceState: Bundle) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.layout_on_demand_kotlin)
-        TextView tv = (TextView) findViewById (R.id.on_demand_kotlin_text_view);
-        tv.setText(R.string.on_demand_kotlin_text);
+        val tv: TextView = findViewById(R.id.on_demand_kotlin_text_view) as TextView
+        tv.text = getString(R.string.on_demand_kotlin_text)
     }
 }

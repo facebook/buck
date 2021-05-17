@@ -43,6 +43,7 @@ import com.facebook.buck.util.zip.ZipConstants;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -64,6 +65,8 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    workspace.addTemplateToWorkspace(Paths.get("test/com/facebook/buck/toolchains/kotlin"));
+    setWorkspaceCompilationMode(workspace);
 
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
