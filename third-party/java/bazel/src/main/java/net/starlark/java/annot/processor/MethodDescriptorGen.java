@@ -70,10 +70,14 @@ class MethodDescriptorGen {
                     .map(e -> new Method((ExecutableElement) e))
                     .collect(ImmutableList.toImmutableList());
 
+            for (Method method : methods) {
+              genDescriptorImpl(sw, method);
+            }
+            sw.writeLine("");
             sw.writeLine(
                 "public static net.starlark.java.eval.MethodDescriptorGenerated[] HANDLERS = {");
             for (Method method : methods) {
-              genNewMethodDescriptor(sw, method);
+              sw.writeLineF("new %s(),", innerClassName(method));
             }
             sw.writeLine("};");
           });
@@ -83,6 +87,29 @@ class MethodDescriptorGen {
     } catch (IOException e) {
       errorf(classElement, "Failed to write class file %s: %s", classElement, e);
     }
+  }
+
+  private String innerClassName(Method method) {
+    return String.format("Desc_%s", method.annotation.name());
+  }
+
+  private void genDescriptorImpl(SourceWriter sw, Method method) throws IOException {
+    sw.writeLineF("private static class %s", innerClassName(method));
+    sw.writeLineF("    extends net.starlark.java.eval.MethodDescriptorGenerated {");
+    sw.indented(
+        () -> {
+          sw.writeLineF("%s() {", innerClassName(method));
+          sw.indented(
+              () -> {
+                sw.writeLineF(
+                    "super(\"%s\", \"%s\");",
+                    method.method.getSimpleName(), method.annotation.name());
+              });
+          sw.writeLine("}");
+          sw.writeLine("");
+          genInvoke(sw, method);
+        });
+    sw.writeLine("}");
   }
 
   private static class Method {
@@ -95,17 +122,7 @@ class MethodDescriptorGen {
     }
   }
 
-  private void genNewMethodDescriptor(SourceWriter sw, Method method) throws IOException {
-    StarlarkMethod starlarkMethod = method.annotation;
-    sw.writeLineF(
-        "new net.starlark.java.eval.MethodDescriptorGenerated(\"%s\", \"%s\") {",
-        method.method.getSimpleName(), starlarkMethod.name());
-    sw.indented(() -> genInvoke(sw, method));
-    sw.writeLine("},");
-  }
-
-  private void genInvoke(SourceWriter sw, Method method)
-      throws IOException {
+  private void genInvoke(SourceWriter sw, Method method) throws IOException {
     sw.writeLine("@java.lang.Override");
     sw.writeLine(
         "public Object invoke(java.lang.Object receiver, java.lang.Object[] args, net.starlark.java.eval.StarlarkThread thread)");
