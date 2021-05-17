@@ -1,0 +1,10 @@
+android_resource(
+    name = "kotlin",
+    package = "com.sample.kotlin",
+    res = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
+)

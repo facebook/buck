@@ -1,0 +1,11 @@
+android_library(
+    name = "src_release",
+    srcs = glob(["*.java"]),
+    manifest = "AndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/dynamic_features/conditional:java",
+    ],
+)

@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android'
+    xmlns:dist="http://schemas.android.com/apk/distribution"
+    package='com.example'
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <application>
+        <activity
+            android:exported='true'
+            android:name='com.sample.dynamic_features.conditional.ConditionalJavaFeatureActivity'/>
+    </application>
+
+    <!-- Configure conditional delivery -->
+    <dist:module
+        dist:instant="false"
+        dist:title="@string/title_java">
+        <dist:delivery>
+            <dist:install-time>
+                <dist:conditions>
+                    <!-- If you specify conditions, as described in the steps
+                         below, the IDE includes them here. -->
+                    <dist:min-sdk dist:value="21"/>
+                    <dist:max-sdk dist:value="24"/>
+                </dist:conditions>
+            </dist:install-time>
+        </dist:delivery>
+        <dist:fusing dist:include="true"/>
+    </dist:module>
+
+</manifest>

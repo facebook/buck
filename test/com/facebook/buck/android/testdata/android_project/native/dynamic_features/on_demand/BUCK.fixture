@@ -1,0 +1,18 @@
+android_library(
+    name = "src_release",
+    srcs = glob(["*.java"]),
+    manifest = "AndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/dynamic_features/on_demand/native:native",
+        ":native_libs",
+    ],
+)
+
+prebuilt_native_library(
+    name = "native_libs",
+    native_libs = "libs",
+    visibility = ["PUBLIC"],
+)

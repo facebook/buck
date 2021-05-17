@@ -38,11 +38,14 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
+import com.facebook.buck.util.MoreStringsForTests;
 import com.facebook.buck.util.zip.ZipConstants;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import org.apache.commons.compress.archivers.zip.ZipUtil;
@@ -62,6 +65,8 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    workspace.addTemplateToWorkspace(Paths.get("test/com/facebook/buck/toolchains/kotlin"));
+    setWorkspaceCompilationMode(workspace);
 
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
@@ -180,5 +185,73 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists("base/dex/classes2.dex");
     zipInspector.assertFileExists("small_with_no_resource_deps/manifest/AndroidManifest.xml");
     zipInspector.assertFileExists("small_with_no_resource_deps/resources.pb");
+  }
+
+  @Test
+  public void testAppBundleWithDynamicFeatures() throws IOException {
+    String target = "//apps/dynamic_features:app_dynamic_features";
+    ProcessResult result = workspace.runBuckCommand("build", target);
+    result.assertSuccess();
+
+    Path aab =
+      workspace.getPath(
+        BuildTargetPaths.getGenPath(
+          filesystem, BuildTargetFactory.newInstance(target), "%s.signed.aab"));
+
+    ZipInspector zipInspector = new ZipInspector(aab);
+
+    // Verify dex are built for specific module
+    zipInspector.assertFileExists("base/dex/classes.dex");
+    zipInspector.assertFileExists("native/dex/classes.dex");
+    zipInspector.assertFileExists("java/dex/classes.dex");
+    zipInspector.assertFileExists("kotlin/dex/classes.dex");
+    zipInspector.assertFileExists("initialInstall/dex/classes.dex");
+
+    // Verify native libs are present only in native module
+    zipInspector.assertFileExists("native/lib/x86/libprebuilt.so");
+    zipInspector.assertFileDoesNotExist("base/lib/x86/libprebuilt.so");
+
+    // Verify only x86 libs are present in the generated bundle file
+    zipInspector.assertFileExists("native/lib/x86/libprebuilt.so");
+    zipInspector.assertFileDoesNotExist("base/lib/arm64-v8a/libprebuilt.so");
+
+    // Verify manifest properties and delivery modes of respective modules
+    zipInspector.assertFileExists("base/manifest/AndroidManifest.xml");
+    zipInspector.assertFileExists("native/manifest/AndroidManifest.xml");
+    zipInspector.assertFileExists("java/manifest/AndroidManifest.xml");
+    zipInspector.assertFileExists("kotlin/manifest/AndroidManifest.xml");
+    zipInspector.assertFileExists("initialInstall/manifest/AndroidManifest.xml");
+
+    String nativeManifestContent = new String(
+      zipInspector.getFileContents("native/manifest/AndroidManifest.xml"));
+    assertTrue(Pattern.compile(".*(split[\\u0000-\\u007F]+native).*").matcher(
+      MoreStringsForTests.containsIgnoringPlatformNewlines(nativeManifestContent).toString()).matches());
+    assertTrue(nativeManifestContent.contains("on-demand"));
+
+    String javaManifestContent = new String(
+      zipInspector.getFileContents("java/manifest/AndroidManifest.xml"));
+    assertTrue(Pattern.compile(".*(split[\\u0000-\\u007F]+java).*").matcher(
+      MoreStringsForTests.containsIgnoringPlatformNewlines(javaManifestContent).toString()).matches());
+    assertTrue(javaManifestContent.contains("install-time"));
+    assertTrue(javaManifestContent.contains("conditions"));
+
+    String kotlinManifestContent = new String(
+      zipInspector.getFileContents("kotlin/manifest/AndroidManifest.xml"));
+    assertTrue(Pattern.compile(".*(split[\\u0000-\\u007F]+kotlin).*").matcher(
+      MoreStringsForTests.containsIgnoringPlatformNewlines(kotlinManifestContent).toString()).matches());
+    assertTrue(kotlinManifestContent.contains("on-demand"));
+
+    String initialInstallManifestContent = new String(
+      zipInspector.getFileContents("initialInstall/manifest/AndroidManifest.xml"));
+    assertTrue(Pattern.compile(".*(split[\\u0000-\\u007F]+initialInstall).*").matcher(
+      MoreStringsForTests.containsIgnoringPlatformNewlines(initialInstallManifestContent).toString()).matches());
+    assertTrue(initialInstallManifestContent.contains("install-time"));
+
+    // Verify base manifest should include details of all feature Manifest files
+    String baseManifestContent = new String(zipInspector.getFileContents("base/manifest/AndroidManifest.xml"));
+    assertTrue(baseManifestContent.contains("OnDemandNativeFeatureActivity"));
+    assertTrue(baseManifestContent.contains("ConditionalJavaFeatureActivity"));
+    assertTrue(baseManifestContent.contains("OnDemandKotlinFeatureActivity"));
+    assertTrue(baseManifestContent.contains("AtInstallFeatureActivity"));
   }
 }

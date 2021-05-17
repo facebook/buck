@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android'
+          xmlns:dist="http://schemas.android.com/apk/distribution"
+          package='com.example.ccode'
+          android:versionCode="1"
+          android:versionName="1.0">
+
+    <application>
+        <activity
+            android:exported='true'
+            android:name='dynamic_features.on_demand.OnDemandNativeFeatureActivity'/>
+    </application>
+
+    <!-- Configure on demand delivery -->
+    <dist:module
+        dist:instant="false"
+        dist:title="@string/title_native">
+        <dist:delivery>
+            <dist:on-demand/>
+        </dist:delivery>
+        <dist:fusing dist:include="true"/>
+    </dist:module>
+
+</manifest>
