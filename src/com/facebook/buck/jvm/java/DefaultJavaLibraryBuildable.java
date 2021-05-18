@@ -128,7 +128,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     RelPath pathToClassHashes = getPathToClassHashes(filesystem);
     this.pathToClassHashesOutputPath = new PublicOutputPath(pathToClassHashes);
-
     this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
     this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
   }

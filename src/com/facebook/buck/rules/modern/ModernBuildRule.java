@@ -273,10 +273,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   @Override
   public final ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    ImmutableList.Builder<Path> outputsBuilder = ImmutableList.builder();
-    deriveOutputs(outputsBuilder::add);
-    ImmutableList<Path> outputs = outputsBuilder.build();
-    outputs.forEach(buildableContext::recordArtifact);
+    ImmutableList<Path> outputs = deriveAndRecordOutputs(buildableContext);
     return stepsForBuildable(
         context,
         buildable,
@@ -521,5 +518,22 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     }
 
     return this.getBuildTarget().compareTo(that.getBuildTarget());
+  }
+
+  /**
+   * Derives and records output paths this Buildable {@code this.buildable}. Returns a list of
+   * output paths.
+   */
+  protected ImmutableList<Path> deriveAndRecordOutputs(BuildableContext buildableContext) {
+    // derive outputs into a builder
+    ImmutableList.Builder<Path> outputsBuilder = ImmutableList.builder();
+    deriveOutputs(outputsBuilder::add);
+    ImmutableList<Path> outputs = outputsBuilder.build();
+
+    // record outputs
+    outputs.forEach(buildableContext::recordArtifact);
+
+    // return outputs
+    return outputs;
   }
 }

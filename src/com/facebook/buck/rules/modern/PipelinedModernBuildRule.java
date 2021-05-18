@@ -58,11 +58,7 @@ public abstract class PipelinedModernBuildRule<
       BuildContext context,
       BuildableContext buildableContext,
       ImmutableList.Builder<Step> stepsBuilder) {
-    ImmutableList.Builder<Path> outputsBuilder = ImmutableList.builder();
-    deriveOutputs(outputsBuilder::add);
-    ImmutableList<Path> outputs = outputsBuilder.build();
-    outputs.forEach(buildableContext::recordArtifact);
-
+    ImmutableList<Path> outputs = deriveAndRecordOutputs(buildableContext);
     ModernBuildRule.appendWithSetupStepsForBuildable(
         context,
         getProjectFilesystem(),

@@ -1572,24 +1572,16 @@ class CachingBuildRuleBuilder {
         StateHolder<State> stateHolder,
         SupportsPipelining<State> pipelinedRule,
         BuildableContext buildableContext) {
-      ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
-      if (stateHolder.isFirstStage()) {
-        appendWithCommonSetupSteps(pipelinedRule, buildableContext, stepsBuilder);
-      }
-      stepsBuilder.add(stateHolder.getCompilationDaemonStep());
-      return stepsBuilder.build();
-    }
-
-    private void appendWithCommonSetupSteps(
-        SupportsPipelining<State> pipelinedRule,
-        BuildableContext buildableContext,
-        ImmutableList.Builder<Step> stepsBuilder) {
       Preconditions.checkState(pipelinedRule instanceof PipelinedModernBuildRule);
       @SuppressWarnings("unchecked")
       PipelinedModernBuildRule<State, ?> pipelinedModernBuildRule =
           (PipelinedModernBuildRule<State, ?>) pipelinedRule;
+
+      ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
       pipelinedModernBuildRule.appendWithCommonSetupSteps(
           buildRuleBuildContext, buildableContext, stepsBuilder);
+      stepsBuilder.add(stateHolder.getCompilationDaemonStep());
+      return stepsBuilder.build();
     }
 
     private void rethrowIgnoredInterruptedException(Step step) throws InterruptedException {
