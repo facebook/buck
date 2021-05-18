@@ -18,6 +18,8 @@ package com.facebook.buck.features.apple.projectV2;
 
 import static com.facebook.buck.apple.AppleBundleDescription.WATCH_OS_FLAVOR;
 import static com.facebook.buck.apple.AppleDescriptions.SWIFT_COMPILE_FLAVOR;
+import static com.facebook.buck.apple.AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR;
+import static com.facebook.buck.apple.AppleVFSOverlayBuildRule.VFS_OVERLAY_FILENAME;
 import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR;
 import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.assertTargetExistsAndReturnTarget;
 import static com.facebook.buck.features.apple.projectV2.ProjectGeneratorTestUtils.getExpectedBuildPhasesByType;
@@ -96,11 +98,13 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderBuilder;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.features.apple.common.Xcconfig;
@@ -579,21 +583,55 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
     assertThat(settings.get("OTHER_SWIFT_FLAGS"), not(containsString("-import-underlying-module")));
+    assertThat(settings.get("OTHER_SWIFT_FLAGS"), not(containsString("-ivfsoverlay")));
+  }
+
+  @Test
+  public void testModularLibraryMixedSourcesFlags() throws IOException, InterruptedException {
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
+
+    TargetNode<?> libNode =
+        AppleLibraryBuilder.createBuilder(libTarget, projectFilesystem)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("HeaderGroup1/bar.h")))
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSwiftVersion(Optional.of("3"))
+            .setModular(true)
+            .build();
+
+    ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(libNode), libTarget);
+
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
+    PBXProject project = result.generatedProject;
+    assertNotNull(project);
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+
+    RelPath exportedHeadersPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(),
+            libTarget.withAppendedFlavors(
+                CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
+                DEFAULT_PLATFORM.getFlavor(),
+                HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor()),
+            "%s");
+
+    RelPath vfsOverlayPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(),
+            libTarget.withAppendedFlavors(
+                SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR, DEFAULT_PLATFORM.getFlavor()),
+            "%s/" + VFS_OVERLAY_FILENAME);
+
+    ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
     assertThat(
         settings.get("OTHER_SWIFT_FLAGS"),
-        not(
-            containsString(
-                "-Xcc -ivfsoverlay -Xcc '$REPO_ROOT/buck-out/gen/_p/CwkbTNOBmb-pub/objc-module-overlay.yaml'")));
-
-    List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
-    assertThat(headerSymlinkTrees, hasSize(1));
-
-    assertEquals("buck-out/gen/_p/CwkbTNOBmb-priv", headerSymlinkTrees.get(0).toString());
-    assertFalse(
-        projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("objc-module-overlay.yaml")));
-    assertFalse(
-        projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("lib/module.modulemap")));
-    assertFalse(projectFilesystem.isFile(headerSymlinkTrees.get(0).resolve("lib/objc.modulemap")));
+        containsString(
+            "-import-underlying-module -Xcc -I"
+                + projectFilesystem.resolve(exportedHeadersPath)
+                + " -Xcc -ivfsoverlay"
+                + projectFilesystem.resolve(vfsOverlayPath)));
   }
 
   @Test

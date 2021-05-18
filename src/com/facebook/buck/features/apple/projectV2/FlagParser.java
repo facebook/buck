@@ -42,7 +42,6 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.features.apple.common.Utils;
 import com.facebook.buck.features.halide.HalideLibraryDescription;
 import com.facebook.buck.rules.args.Arg;
@@ -173,7 +172,7 @@ class FlagParser {
             .orElse(ImmutableList.of()));
 
     if (containsSwiftCode && isModularAppleLibrary && hasPublicCxxHeaders) {
-      targetSpecificSwiftFlags.addAll(collectModularTargetSpecificSwiftFlags(targetNode));
+      targetSpecificSwiftFlags.addAll(collectMixedSwiftModuleFlags(targetNode));
     }
 
     // Explicitly add system include directories to compile flags to mute warnings,
@@ -580,17 +579,15 @@ class FlagParser {
                     .orElse(ImmutableList.of()));
   }
 
-  private Iterable<String> collectModularTargetSpecificSwiftFlags(
+  private Iterable<String> collectMixedSwiftModuleFlags(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
     ImmutableList.Builder<String> targetSpecificSwiftFlags = ImmutableList.builder();
-    targetSpecificSwiftFlags.add("-import-underlying-module");
-    Path vfsOverlay =
-        HeaderSearchPaths.getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(
-            headerSearchPaths.getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC));
-    targetSpecificSwiftFlags.add("-Xcc");
-    targetSpecificSwiftFlags.add("-ivfsoverlay");
-    targetSpecificSwiftFlags.add("-Xcc");
-    targetSpecificSwiftFlags.add("$REPO_ROOT/" + vfsOverlay);
+    targetSpecificSwiftFlags.add(
+        "-import-underlying-module",
+        "-Xcc",
+        "-I" + headerSearchPaths.getModularIncludePath(targetNode).toString(),
+        "-Xcc",
+        "-ivfsoverlay" + headerSearchPaths.getMixedModuleVFSOverlayPath(targetNode).toString());
     return targetSpecificSwiftFlags.build();
   }
 

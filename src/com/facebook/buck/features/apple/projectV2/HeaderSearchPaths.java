@@ -16,6 +16,9 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
+import static com.facebook.buck.apple.AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR;
+import static com.facebook.buck.apple.AppleVFSOverlayBuildRule.VFS_OVERLAY_FILENAME;
+
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
@@ -291,8 +294,34 @@ class HeaderSearchPaths {
     }
   }
 
-  static Path getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
-    return headerSymlinkTreeRoot.resolve("objc-module-overlay.yaml");
+  public Path getModularIncludePath(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
+    BuildTarget buildTarget =
+        NodeHelper.getModularMapTarget(
+            targetNode,
+            HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
+            getDefaultPlatformFlavor(targetNode));
+    RelPath includePath =
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s");
+    return projectFilesystem.resolve(includePath).getPath();
+  }
+
+  public Path getMixedModuleVFSOverlayPath(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
+    BuildTarget vfsOverlayTarget =
+        targetNode
+            .getBuildTarget()
+            .withAppendedFlavors(
+                SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR, getDefaultPlatformFlavor(targetNode));
+    RelPath vfsOverlayPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(), vfsOverlayTarget, "%s/" + VFS_OVERLAY_FILENAME);
+    return projectFilesystem.resolve(vfsOverlayPath).getPath();
+  }
+
+  private Flavor getDefaultPlatformFlavor(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
+    return targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
   }
 
   private ImmutableSortedMap<Path, SourcePath> getPublicCxxHeaders(

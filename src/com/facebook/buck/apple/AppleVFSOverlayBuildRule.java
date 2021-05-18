@@ -56,6 +56,11 @@ import java.nio.file.attribute.BasicFileAttributes;
  */
 public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBuildRule.Impl> {
 
+  // the filename of the overlay is important, if we use the same
+  // name as Xcode then the flag is skipped when serializing debug info
+  // https://github.com/apple/swift/blob/af8cf15e22661a91086930d03a033e3917feb4f2/lib/Serialization/Serialization.cpp#L992-L1006
+  public static String VFS_OVERLAY_FILENAME = "unextended-module-overlay.yaml";
+
   AppleVFSOverlayBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
@@ -96,11 +101,7 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
     Impl(SourcePath underlyingModulemapPath, RelPath exportedHeadersWithModulemapPath) {
       this.underlyingModulemapPath = underlyingModulemapPath;
       this.exportedHeadersWithModulemapPath = exportedHeadersWithModulemapPath.toString();
-
-      // the filename of the overlay is important, if we use the same
-      // name as Xcode then the flag is skipped when serializing debug info
-      // https://github.com/apple/swift/blob/af8cf15e22661a91086930d03a033e3917feb4f2/lib/Serialization/Serialization.cpp#L992-L1006
-      this.yamlPath = new OutputPath("unextended-module-overlay.yaml");
+      this.yamlPath = new OutputPath(VFS_OVERLAY_FILENAME);
     }
 
     @Override
