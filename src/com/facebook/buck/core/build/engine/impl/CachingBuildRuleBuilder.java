@@ -1550,7 +1550,7 @@ class CachingBuildRuleBuilder {
           SupportsPipelining<State> pipelinedRule = (SupportsPipelining<State>) rule;
           StateHolder<State> stateHolder = getInitializedStateHolder();
           if (pipelinedRule.supportsCompilationDaemon()) {
-            return getCompilationDaemonSteps(stateHolder, pipelinedRule);
+            return getCompilationDaemonSteps(stateHolder, pipelinedRule, buildableContext);
           }
           return pipelinedRule.getPipelinedBuildSteps(
               buildRuleBuildContext, buildableContext, stateHolder);
@@ -1569,17 +1569,21 @@ class CachingBuildRuleBuilder {
     }
 
     private ImmutableList<Step> getCompilationDaemonSteps(
-        StateHolder<State> stateHolder, SupportsPipelining<State> pipelinedRule) {
+        StateHolder<State> stateHolder,
+        SupportsPipelining<State> pipelinedRule,
+        BuildableContext buildableContext) {
       ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
       if (stateHolder.isFirstStage()) {
-        appendWithCommonSetupSteps(pipelinedRule, stepsBuilder);
+        appendWithCommonSetupSteps(pipelinedRule, buildableContext, stepsBuilder);
       }
       stepsBuilder.add(stateHolder.getCompilationDaemonStep());
       return stepsBuilder.build();
     }
 
     private void appendWithCommonSetupSteps(
-        SupportsPipelining<State> pipelinedRule, ImmutableList.Builder<Step> stepsBuilder) {
+        SupportsPipelining<State> pipelinedRule,
+        BuildableContext buildableContext,
+        ImmutableList.Builder<Step> stepsBuilder) {
       Preconditions.checkState(pipelinedRule instanceof PipelinedModernBuildRule);
       @SuppressWarnings("unchecked")
       PipelinedModernBuildRule<State, ?> pipelinedModernBuildRule =
