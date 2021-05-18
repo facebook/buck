@@ -93,11 +93,68 @@ class MethodDescriptorGen {
     return String.format("Desc_%s", method.annotation.name());
   }
 
+  private String quoteJavaString(String s) {
+    // Seems like there's a bug in ecj which quotes this string incorrectly, so we can't use
+    // ```
+    // return elements.getConstantExpression(s);
+    // ```
+    // TODO: escape other non-printable characters.
+    //   Not-escaping them would result in compilation error (generated code will be invalid).
+    return '"'
+        + s.replace("\\", "\\\\")
+        .replace("\t", "\\t")
+        .replace("\r", "\\r")
+        .replace("\n", "\\n")
+        .replace("\"", "\\\"")
+        + '"';
+  }
+
+  private String evalDefaultExpression(String paramName, String expr) {
+    // Eval certain expression at codegen time for faster Java startup.
+    // We could evaluate all of them, but we don't have access to Starlark runtime
+    // in annotation processor.
+    switch (expr) {
+      case "None":
+        return "net.starlark.java.eval.Starlark.NONE";
+      case "True":
+        return "true";
+      case "False":
+        return "false";
+      case "unbound":
+        return "net.starlark.java.eval.Starlark.UNBOUND";
+      case "[]":
+        return "net.starlark.java.eval.StarlarkList.empty()";
+      case "()":
+        return "net.starlark.java.eval.Tuple.empty()";
+      case "''":
+        return "\"\"";
+      default:
+        if (expr.matches("\\d{1,10}")) {
+          return String.format("net.starlark.java.eval.StarlarkInt.of(%s)", expr);
+        } else {
+          return String.format("evalDefault(\"%s\", %s)", paramName, quoteJavaString(expr));
+        }
+    }
+  }
+
   private void genDescriptorImpl(SourceWriter sw, Method method) throws IOException {
     sw.writeLineF("private static class %s", innerClassName(method));
     sw.writeLineF("    extends net.starlark.java.eval.MethodDescriptorGenerated {");
     sw.indented(
         () -> {
+          Param[] parameters = method.annotation.parameters();
+          for (int i = 0; i < parameters.length; i++) {
+            Param param = parameters[i];
+            if (param.defaultValue().isEmpty()) {
+              continue;
+            }
+            VariableElement p = method.method.getParameters().get(i);
+            TypeMirror paramType = this.types.erasure(p.asType());
+            sw.writeLineF(
+                "private static final %s P%s_DEFAULT = (%s) %s;",
+                paramType, i, paramType, evalDefaultExpression(param.name(), param.defaultValue()));
+          }
+
           sw.writeLineF("%s() {", innerClassName(method));
           sw.indented(
               () -> {
@@ -162,14 +219,38 @@ class MethodDescriptorGen {
       callArgs.add("(String) receiver");
     }
     for (int i = 0; i != argsSize; ++i) {
-      int index = i + (isStringModule ? 1 : 0);
-      VariableElement p = method.method.getParameters().get(index);
+      int paramIndex = i + (isStringModule ? 1 : 0);
+      VariableElement p = method.method.getParameters().get(paramIndex);
       TypeMirror varType = this.types.erasure(p.asType());
-      if (index < starlarkMethod.parameters().length) {
-        // Otherwise it is varargs or kwargs or thread
-        genCheckAllowedTypes(sw, starlarkMethod, varType, index, String.format("args[%s]", i));
+      sw.writeLineF("%s a%s;", varType, i);
+      if (paramIndex < starlarkMethod.parameters().length) {
+        Param param = starlarkMethod.parameters()[paramIndex];
+        if (param.defaultValue().isEmpty()) {
+          sw.ifBlock(
+              String.format("args[%s] == null", i),
+              () -> {
+                sw.writeLine("throw new ArgumentBindException();");
+              });
+          genCheckAllowedTypes(
+              sw, starlarkMethod, varType, paramIndex, String.format("args[%s]", i));
+          sw.writeLineF("a%s = (%s) args[%s];", i, varType, i);
+        } else {
+          int ii = i;
+          sw.ifElse(
+              String.format("args[%s] == null", i),
+              () -> {
+                sw.writeLineF("a%s = P%s_DEFAULT;", ii, paramIndex);
+              },
+              () -> {
+                genCheckAllowedTypes(
+                    sw, starlarkMethod, varType, paramIndex, String.format("args[%s]", ii));
+                sw.writeLineF("a%s = (%s) args[%s];", ii, varType, ii);
+              });
+        }
+      } else {
+        // Varargs or kwargs
+        sw.writeLineF("a%s = (%s) args[%s];", i, varType, i);
       }
-      sw.writeLineF("%s a%s = (%s) args[%s];", varType, i, varType, i);
       callArgs.add(String.format("a%s", i));
     }
     if (starlarkMethod.useStarlarkThread()) {

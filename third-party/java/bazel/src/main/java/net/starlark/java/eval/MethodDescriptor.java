@@ -14,7 +14,6 @@
 
 package net.starlark.java.eval;
 
-import com.google.common.base.Preconditions;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import net.starlark.java.annot.FnPurity;
@@ -127,7 +126,11 @@ final class MethodDescriptor {
     if (!structField) {
       throw new IllegalStateException("not a struct field: " + name);
     }
-    return call(obj, ArraysForStarlark.EMPTY_OBJECT_ARRAY, thread);
+    try {
+      return call(obj, ArraysForStarlark.EMPTY_OBJECT_ARRAY, thread);
+    } catch (MethodDescriptorGenerated.ArgumentBindException e) {
+      throw new RuntimeException("not possible, because there are no arguments", e);
+    }
   }
 
   /**
@@ -138,9 +141,13 @@ final class MethodDescriptor {
    * <p>The Mutability is used if it is necessary to allocate a Starlark copy of a Java result.
    */
   Object call(Object obj, Object[] args, StarlarkThread thread)
-      throws EvalException, InterruptedException {
+      throws EvalException, InterruptedException,
+      MethodDescriptorGenerated.ArgumentBindException {
     try {
       return generated.invoke(obj, args, thread);
+    } catch (MethodDescriptorGenerated.ArgumentBindException e) {
+      // handled by the `BuiltinFunction`
+      throw e;
     } catch (EvalException | InterruptedException | RuntimeException | Error e) {
       // Don't intercept unchecked exceptions.
       throw e;

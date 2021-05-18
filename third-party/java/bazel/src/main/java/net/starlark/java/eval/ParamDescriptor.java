@@ -125,7 +125,7 @@ final class ParamDescriptor {
       new ConcurrentHashMap<>();
 
   // Evaluates the default value expression for a parameter.
-  private static Object evalDefault(String name, String expr) {
+  static Object evalDefault(String name, String expr) {
     // Values required by defaults of functions in UNIVERSE must
     // be handled without depending on the evaluator, or even
     // on defaultValueCache, because JVM global variable initialization

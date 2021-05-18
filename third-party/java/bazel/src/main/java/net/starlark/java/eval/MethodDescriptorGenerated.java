@@ -3,10 +3,7 @@ package net.starlark.java.eval;
 import com.google.errorprone.annotations.CheckReturnValue;
 import java.util.Arrays;
 
-/**
- * This class is inherited in generated code
- * for faster reflective builtin function invocation.
- */
+/** This class is inherited in generated code for faster reflective builtin function invocation. */
 public abstract class MethodDescriptorGenerated {
   final String javaMethodName;
   private final String fnName;
@@ -16,7 +13,14 @@ public abstract class MethodDescriptorGenerated {
     this.fnName = fnName;
   }
 
-  public abstract Object invoke(Object receiver, Object[] args, StarlarkThread thread) throws Exception;
+  /**
+   * Invoke the generated descriptor.
+   *
+   * @param args is the array of arguments matching function arguments. This array may contain nulls
+   *     for arguments to be filled with default values.
+   */
+  public abstract Object invoke(Object receiver, Object[] args, StarlarkThread thread)
+      throws Exception;
 
   @CheckReturnValue // don't forget to throw it
   protected NullPointerException methodInvocationReturnedNull(Object[] args) {
@@ -34,4 +38,21 @@ public abstract class MethodDescriptorGenerated {
         Starlark.type(value),
         ParamDescriptor.typeErrorMessage(Arrays.asList(allowedClasses)));
   }
+
+  /** Evaluate parameter default value. */
+  protected static Object evalDefault(String name, String expr) {
+    // `ParamDescriptor.evalDefault` is package private, so this function
+    // exists here to provide access to it from generated code.
+    return ParamDescriptor.evalDefault(name, expr);
+  }
+
+  /**
+   * This exception is thrown by generated descriptor trampoline when some arguments are incorrect.
+   * There's no details in this exception, because when it is caught, slow error handler will
+   * produce detailed error message.
+   *
+   * <p>Error message may be produced by the generated descriptor, but that would compliate codegen,
+   * and probably slow down fast execution path.
+   */
+  public static class ArgumentBindException extends Exception {}
 }

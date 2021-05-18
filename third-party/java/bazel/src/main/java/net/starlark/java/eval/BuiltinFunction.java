@@ -126,7 +126,12 @@ public final class BuiltinFunction extends StarlarkCallable {
       Object[] vector =
           getArgumentVector(thread, linkSig, args, starArgs, (Dict<Object, Object>) starStarArgs);
 
-      return desc.call(obj, vector, thread);
+      try {
+        return desc.call(obj, vector, thread);
+      } catch (MethodDescriptorGenerated.ArgumentBindException e) {
+        throw BuiltinFunctionLinkedError.error(
+            this, linkSig, args, starArgs, (Dict<Object, Object>) starStarArgs);
+      }
     } finally {
       if (StarlarkRuntimeStats.ENABLED) {
         StarlarkRuntimeStats.leaveNativeCall(getName());
@@ -277,17 +282,7 @@ public final class BuiltinFunction extends StarlarkCallable {
       }
     }
 
-    // Set default values for missing parameters,
-    // and report any that are still missing.
-    for (int i = 0; i < parameters.length; i++) {
-      if (vector[i] == null) {
-        ParamDescriptor param = parameters[i];
-        vector[i] = param.getDefaultValue();
-        if (vector[i] == null) {
-          throw BuiltinFunctionLinkedError.error(this, linkSig, args, starArgs, starStarArgs);
-        }
-      }
-    }
+    // Default values and missing parameters are populated in generated descriptors
 
     // special parameters
     int i = parameters.length;

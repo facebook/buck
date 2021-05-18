@@ -43,6 +43,14 @@ class SourceWriter {
     writeLineF("}");
   }
 
+  void ifElse(String cond, IoRunnable thenBody, IoRunnable elseBody) throws IOException {
+    writeLineF("if (%s) {", cond);
+    indented(thenBody);
+    writeLineF("} else {");
+    indented(elseBody);
+    writeLineF("}");
+  }
+
   void whileBlock(String cond, IoRunnable body) throws IOException {
     writeLineF("while (%s) {", cond);
     indented(body);
