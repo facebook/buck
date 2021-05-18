@@ -224,7 +224,10 @@ public class ErrorLogger {
     for (Throwable t : causeStack(e)) {
       if (t instanceof ExceptionWithContext) {
         ((ExceptionWithContext) t).getContext().ifPresent(msg -> context.add(0, msg));
-        e = e.getCause();
+        Throwable cause = e.getCause();
+        if (cause != null) {
+          e = e.getCause();
+        }
       }
     }
 
