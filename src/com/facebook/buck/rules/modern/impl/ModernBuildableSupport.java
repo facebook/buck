@@ -23,7 +23,6 @@ import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
 import com.facebook.buck.rules.modern.ModernBuildRule;
-import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 
@@ -35,25 +34,20 @@ public class ModernBuildableSupport {
   // Not intended to be instantiated.
   private ModernBuildableSupport() {}
 
-  public static OutputPathResolver newOutputPathResolver(
-      BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
-    return new DefaultOutputPathResolver(projectFilesystem, buildTarget);
-  }
-
   /** Derives an ArtifactVerifier from the @AddToRuleKey annotated fields. */
   public static RecordArtifactVerifier getDerivedArtifactVerifier(
+      BuildTarget buildTarget, ProjectFilesystem filesystem, AddsToRuleKey buildable) {
+    return getDerivedArtifactVerifier(buildTarget, filesystem, buildable, path -> {});
+  }
+
+  private static RecordArtifactVerifier getDerivedArtifactVerifier(
       BuildTarget target,
       ProjectFilesystem filesystem,
       AddsToRuleKey buildable,
       BuildableContext buildableContext) {
     ImmutableSet.Builder<Path> allowedPathsBuilder = ImmutableSet.builder();
     ModernBuildRule.recordOutputs(
-        allowedPathsBuilder::add, newOutputPathResolver(target, filesystem), buildable);
+        allowedPathsBuilder::add, new DefaultOutputPathResolver(filesystem, target), buildable);
     return new RecordArtifactVerifier(allowedPathsBuilder.build(), buildableContext);
-  }
-
-  public static RecordArtifactVerifier getDerivedArtifactVerifier(
-      BuildTarget buildTarget, ProjectFilesystem filesystem, AddsToRuleKey buildable) {
-    return getDerivedArtifactVerifier(buildTarget, filesystem, buildable, path -> {});
   }
 }
