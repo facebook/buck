@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder.isActionableUnusedDependenciesAction;
 
+import com.facebook.buck.core.build.buildable.context.NoOpBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
@@ -326,7 +327,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             stateHolder.isFirstStage(),
             compilerOutputPathsValue,
             stepsBuilder,
-            path -> {},
+            NoOpBuildableContext.INSTANCE,
             RelPathSerializer.toResourceMap(basePipeliningCommand.getResourcesMapList()));
 
     LibraryJarBaseCommand libraryJarBaseCommand =

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.build.buildable.context.NoOpBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
@@ -250,7 +251,7 @@ public class CalculateSourceAbi
               stateHolder.isFirstStage(),
               compilerOutputPathsValue,
               stepsBuilder,
-              path -> {},
+              NoOpBuildableContext.INSTANCE,
               RelPathSerializer.toResourceMap(basePipeliningCommand.getResourcesMapList()));
 
       return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps

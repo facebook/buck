@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.buildable.context.NoOpBuildableContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
@@ -42,7 +43,8 @@ public class ModernBuildableSupport {
    */
   public static RecordArtifactVerifier getDerivedArtifactVerifier(
       BuildTarget buildTarget, ProjectFilesystem filesystem, Buildable buildable) {
-    return getDerivedArtifactVerifier(buildTarget, filesystem, buildable, path -> {});
+    return getDerivedArtifactVerifier(
+        buildTarget, filesystem, buildable, NoOpBuildableContext.INSTANCE);
   }
 
   private static RecordArtifactVerifier getDerivedArtifactVerifier(

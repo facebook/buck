@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
+import com.facebook.buck.core.build.buildable.context.NoOpBuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -130,7 +131,7 @@ public class JavaStepsBuilder {
         command.getTrackJavacPhaseEvents(),
         withDownwardApi,
         filesystemParams,
-        path -> {},
+        NoOpBuildableContext.INSTANCE,
         buildTargetValue,
         CompilerOutputPathsValueSerializer.deserialize(command.getOutputPathsValue()),
         pathToClassHashes,
@@ -175,7 +176,7 @@ public class JavaStepsBuilder {
         command.getTrackJavacPhaseEvents(),
         withDownwardApi,
         filesystemParams,
-        path -> {},
+        NoOpBuildableContext.INSTANCE,
         BuildTargetValueSerializer.deserialize(command.getBuildTargetValue()),
         CompilerOutputPathsValueSerializer.deserialize(command.getOutputPathsValue()),
         RelPathSerializer.toSortedSetOfRelPath(command.getCompileTimeClasspathPathsList()),

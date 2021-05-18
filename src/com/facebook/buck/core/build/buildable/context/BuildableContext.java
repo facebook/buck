@@ -27,6 +27,7 @@ import java.nio.file.Path;
  * com.facebook.buck.core.rules.BuildRule#getBuildSteps(com.facebook.buck.core.build.context.BuildContext,
  * BuildableContext)}.
  */
+@FunctionalInterface
 public interface BuildableContext {
   /** @see com.facebook.buck.core.build.engine.buildinfo.BuildInfoRecorder#recordArtifact(Path) */
   void recordArtifact(Path pathToArtifact);

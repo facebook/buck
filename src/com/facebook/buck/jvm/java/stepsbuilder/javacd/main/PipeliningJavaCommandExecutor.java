@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
+import com.facebook.buck.core.build.buildable.context.NoOpBuildableContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -268,7 +269,7 @@ class PipeliningJavaCommandExecutor {
         !javacPipelineState.isRunning(),
         compilerOutputPathsValue,
         stepsBuilder,
-        path -> {},
+        NoOpBuildableContext.INSTANCE,
         resourcesMap);
 
     AbsPath ruleCellRoot = JavaStepsBuilder.getRootPath(filesystemParams);
@@ -312,7 +313,7 @@ class PipeliningJavaCommandExecutor {
         !javacPipelineState.isRunning(),
         compilerOutputPathsValue,
         stepsBuilder,
-        path -> {},
+        NoOpBuildableContext.INSTANCE,
         resourcesMap);
 
     LibraryJarBaseCommand libraryJarBaseCommand = libraryCommand.getLibraryJarBaseCommand();
