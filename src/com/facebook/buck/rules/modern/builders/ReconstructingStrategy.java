@@ -55,6 +55,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * version. Useful for debugging serialization/deserialization issues.
  */
 class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
+
   private final Map<HashCode, byte[]> dataMap;
   private final AtomicInteger id;
   private final Delegate delegate;
@@ -139,7 +140,7 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
                           step,
                           Optional.of(rule.getBuildTarget()));
                     }
-                    converted.recordOutputs(strategyContext.getBuildableContext());
+                    converted.deriveOutputs(strategyContext.getBuildableContext()::recordArtifact);
                   } catch (IOException | StepFailedException | InterruptedException e) {
                     throw new BuckUncheckedExecutionException(e);
                   }

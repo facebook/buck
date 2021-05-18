@@ -52,6 +52,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -273,7 +274,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   public final ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Path> outputsBuilder = ImmutableList.builder();
-    recordOutputs(outputsBuilder::add);
+    deriveOutputs(outputsBuilder::add);
     ImmutableList<Path> outputs = outputsBuilder.build();
     outputs.forEach(buildableContext::recordArtifact);
     return stepsForBuildable(
@@ -430,7 +431,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
       BuildTarget buildTarget,
       ImmutableList<OutputPath> excludedPaths) {
     ImmutableList.Builder<Path> outputs = ImmutableList.builder();
-    recordOutputs(
+    deriveOutputs(
         outputs::add,
         new DefaultOutputPathResolver(filesystem, buildTarget),
         DefaultClassInfoFactory.forInstance(buildable),
@@ -440,19 +441,19 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   }
 
   /**
-   * Records the outputs of this Buildable. An output will only be recorded once (i.e. no duplicates
-   * and if a directory is recorded, none of its contents will be).
+   * Derives the outputs of this Buildable. An output will only be passed into {@code consumer} only
+   * once (i.e. no duplicates and if a directory is recorded, none of its contents will be).
    */
-  public void recordOutputs(BuildableContext buildableContext) {
-    recordOutputs(buildableContext, outputPathResolver, classInfo, buildable);
+  public void deriveOutputs(Consumer<Path> consumer) {
+    deriveOutputs(consumer, outputPathResolver, classInfo, buildable);
   }
 
   /**
-   * Records the outputs of this Buildable. An output will only be recorded once (i.e. no duplicates
-   * and if a directory is recorded, none of its contents will be).
+   * Derives the outputs of this Buildable. An output will only be passed into {@code consumer} only
+   * once (i.e. no duplicates and if a directory is consumed, none of its contents will be).
    */
-  private static <T extends Buildable> void recordOutputs(
-      BuildableContext buildableContext,
+  private static <T extends Buildable> void deriveOutputs(
+      Consumer<Path> consumer,
       OutputPathResolver outputPathResolver,
       ClassInfo<T> classInfo,
       T buildable) {
@@ -484,19 +485,19 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
     ImmutableSet<RelPath> outputs = outputsBuilder.build();
     for (RelPath relPath : outputs) {
       if (shouldRecord(outputs, relPath)) {
-        buildableContext.recordArtifact(relPath.getPath());
+        consumer.accept(relPath.getPath());
       }
     }
   }
 
   /**
-   * Records the outputs of this Buildable. An output will only be recorded once (i.e. no duplicates
-   * and if a directory is recorded, none of its contents will be).
+   * Derives the outputs of this Buildable. An output will only be passed into {@code consumer} only
+   * once (i.e. no duplicates and if a directory is consumed, none of its contents will be).
    */
-  public static <T extends Buildable> void recordOutputs(
-      BuildableContext buildableContext, OutputPathResolver outputPathResolver, T buildable) {
-    recordOutputs(
-        buildableContext,
+  public static <T extends Buildable> void deriveOutputs(
+      Consumer<Path> outputsConsumer, OutputPathResolver outputPathResolver, T buildable) {
+    deriveOutputs(
+        outputsConsumer,
         outputPathResolver,
         DefaultClassInfoFactory.forInstance(buildable),
         buildable);

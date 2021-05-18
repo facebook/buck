@@ -425,7 +425,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       getFileInputs(inputsMerkleTree, requiredDataPredicate, requiredDataBuilder::add);
 
       outputs = new HashSet<>();
-      rule.recordOutputs(
+      rule.deriveOutputs(
           path ->
               outputs.add(
                   cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(path)).getPath()));

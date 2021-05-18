@@ -56,7 +56,8 @@ public class ModernBuildRuleTest {
 
     BuckUncheckedExecutionException expectedException =
         assertThrows(
-            BuckUncheckedExecutionException.class, () -> rule.recordOutputs(buildableContext));
+            BuckUncheckedExecutionException.class,
+            () -> rule.deriveOutputs(buildableContext::recordArtifact));
 
     Throwable cause = expectedException.getCause();
     assertThat(cause, instanceOf(IllegalStateException.class));

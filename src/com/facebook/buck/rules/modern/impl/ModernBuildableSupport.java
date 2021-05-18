@@ -52,9 +52,10 @@ public class ModernBuildableSupport {
       ProjectFilesystem filesystem,
       Buildable buildable,
       BuildableContext buildableContext) {
-    ImmutableSet.Builder<Path> allowedPathsBuilder = ImmutableSet.builder();
-    ModernBuildRule.recordOutputs(
-        allowedPathsBuilder::add, new DefaultOutputPathResolver(filesystem, target), buildable);
-    return new RecordArtifactVerifier(allowedPathsBuilder.build(), buildableContext);
+    ImmutableSet.Builder<Path> outputsBuilder = ImmutableSet.builder();
+    ModernBuildRule.deriveOutputs(
+        outputsBuilder::add, new DefaultOutputPathResolver(filesystem, target), buildable);
+    ImmutableSet<Path> allowedPaths = outputsBuilder.build();
+    return new RecordArtifactVerifier(allowedPaths, buildableContext);
   }
 }
