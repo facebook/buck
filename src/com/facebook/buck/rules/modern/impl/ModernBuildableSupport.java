@@ -21,8 +21,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
 import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 
@@ -34,16 +36,19 @@ public class ModernBuildableSupport {
   // Not intended to be instantiated.
   private ModernBuildableSupport() {}
 
-  /** Derives an ArtifactVerifier from the @AddToRuleKey annotated fields. */
+  /**
+   * Derives an {@link RecordArtifactVerifier} from the {@link AddsToRuleKey} annotated fields of
+   * {@link OutputPath} type.
+   */
   public static RecordArtifactVerifier getDerivedArtifactVerifier(
-      BuildTarget buildTarget, ProjectFilesystem filesystem, AddsToRuleKey buildable) {
+      BuildTarget buildTarget, ProjectFilesystem filesystem, Buildable buildable) {
     return getDerivedArtifactVerifier(buildTarget, filesystem, buildable, path -> {});
   }
 
   private static RecordArtifactVerifier getDerivedArtifactVerifier(
       BuildTarget target,
       ProjectFilesystem filesystem,
-      AddsToRuleKey buildable,
+      Buildable buildable,
       BuildableContext buildableContext) {
     ImmutableSet.Builder<Path> allowedPathsBuilder = ImmutableSet.builder();
     ModernBuildRule.recordOutputs(

@@ -22,7 +22,6 @@ import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -53,9 +52,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -443,7 +440,7 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   }
 
   /**
-   * Records the outputs of this buildrule. An output will only be recorded once (i.e. no duplicates
+   * Records the outputs of this Buildable. An output will only be recorded once (i.e. no duplicates
    * and if a directory is recorded, none of its contents will be).
    */
   public void recordOutputs(BuildableContext buildableContext) {
@@ -451,16 +448,19 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
   }
 
   /**
-   * Records the outputs of this buildrule. An output will only be recorded once (i.e. no duplicates
+   * Records the outputs of this Buildable. An output will only be recorded once (i.e. no duplicates
    * and if a directory is recorded, none of its contents will be).
    */
-  public static <T extends AddsToRuleKey> void recordOutputs(
+  private static <T extends Buildable> void recordOutputs(
       BuildableContext buildableContext,
       OutputPathResolver outputPathResolver,
       ClassInfo<T> classInfo,
       T buildable) {
-    Stream.Builder<Path> collector = Stream.builder();
-    collector.add(outputPathResolver.getRootPath().getPath());
+
+    ImmutableSet.Builder<RelPath> outputsBuilder = ImmutableSet.builder();
+    outputsBuilder.add(outputPathResolver.getRootPath());
+
+    RelPath tempPath = outputPathResolver.getTempPath();
     classInfo.visit(
         buildable,
         new OutputPathVisitor(
@@ -468,29 +468,32 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
               // Check that any PublicOutputPath is not specified inside the rule's temporary
               // directory,
               // as the temp directory may be deleted after the rule is run.
-              if (path instanceof PublicOutputPath
-                  && path.getPath().startsWith(outputPathResolver.getTempPath().getPath())) {
-                throw new IllegalStateException(
-                    "PublicOutputPath should not be inside rule temporary directory. Path: "
-                        + path);
+              if (path instanceof PublicOutputPath) {
+                RelPath relPath = path.getPath();
+                if (relPath.startsWith(tempPath)) {
+                  throw new IllegalStateException(
+                      String.format(
+                          "PublicOutputPath %s should not be inside rule temporary directory: %s",
+                          relPath, tempPath));
+                }
               }
-              collector.add(outputPathResolver.resolvePath(path).getPath());
+              outputsBuilder.add(outputPathResolver.resolvePath(path));
             }));
+
     // ImmutableSet guarantees that iteration order is unchanged.
-    Set<Path> outputs = collector.build().collect(ImmutableSet.toImmutableSet());
-    for (Path path : outputs) {
-      Preconditions.checkState(!path.isAbsolute());
-      if (shouldRecord(outputs, path)) {
-        buildableContext.recordArtifact(path);
+    ImmutableSet<RelPath> outputs = outputsBuilder.build();
+    for (RelPath relPath : outputs) {
+      if (shouldRecord(outputs, relPath)) {
+        buildableContext.recordArtifact(relPath.getPath());
       }
     }
   }
 
   /**
-   * Records the outputs of this buildrule. An output will only be recorded once (i.e. no duplicates
+   * Records the outputs of this Buildable. An output will only be recorded once (i.e. no duplicates
    * and if a directory is recorded, none of its contents will be).
    */
-  public static <T extends AddsToRuleKey> void recordOutputs(
+  public static <T extends Buildable> void recordOutputs(
       BuildableContext buildableContext, OutputPathResolver outputPathResolver, T buildable) {
     recordOutputs(
         buildableContext,
@@ -499,8 +502,8 @@ public class ModernBuildRule<T extends Buildable> extends AbstractBuildRule
         buildable);
   }
 
-  private static boolean shouldRecord(Set<Path> outputs, Path path) {
-    Path parent = path.getParent();
+  private static boolean shouldRecord(ImmutableSet<RelPath> outputs, RelPath path) {
+    RelPath parent = path.getParent();
     while (parent != null) {
       if (outputs.contains(parent)) {
         return false;

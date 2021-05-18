@@ -17,14 +17,16 @@
 package com.facebook.buck.rules.modern;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -39,10 +41,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.ErrorLogger;
-import com.facebook.buck.util.ErrorLogger.DeconstructedException;
 import com.google.common.collect.ImmutableList;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class ModernBuildRuleTest {
@@ -51,20 +50,20 @@ public class ModernBuildRuleTest {
   public void shouldErrorWhenPublicOutputPathIsInsideTempPath() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    ModernBuildRule rule =
+    ModernBuildRule<?> rule =
         new InvalidPublicOutputPathBuildRule(target, filesystem, new TestActionGraphBuilder());
-
     BuildableContext buildableContext = new FakeBuildableContext();
-    try {
-      rule.recordOutputs(buildableContext);
-      Assert.fail("Should have thrown an exception.");
-    } catch (Exception e) {
-      DeconstructedException deconstructed = ErrorLogger.deconstruct(e);
-      assertThat(deconstructed.getRootCause(), instanceOf(IllegalStateException.class));
-      assertThat(
-          deconstructed.getMessage(true),
-          containsString("PublicOutputPath should not be inside rule temporary directory"));
-    }
+
+    BuckUncheckedExecutionException expectedException =
+        assertThrows(
+            BuckUncheckedExecutionException.class, () -> rule.recordOutputs(buildableContext));
+
+    Throwable cause = expectedException.getCause();
+    assertThat(cause, instanceOf(IllegalStateException.class));
+    assertThat(
+        cause.getMessage(),
+        stringContainsInOrder(
+            "PublicOutputPath ", "should not be inside rule temporary directory: "));
   }
 
   @Test

@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.google.common.base.MoreObjects;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -55,6 +56,11 @@ public class OutputPath implements AddsToRuleKey {
 
   public static Internals internals() {
     return Internals.INSTANCE;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("path", path).toString();
   }
 
   /**
