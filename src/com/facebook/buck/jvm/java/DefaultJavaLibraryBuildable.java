@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder.isActionableUnusedDependenciesAction;
 
-import com.facebook.buck.core.build.buildable.context.NoOpBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
@@ -301,7 +300,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   @Override
   public ImmutableList<Step> getPipelinedBuildSteps(
-      StateHolder<JavacPipelineState> stateHolder, AbstractMessage command) {
+      StateHolder<JavacPipelineState> stateHolder,
+      AbstractMessage command,
+      ProjectFilesystem filesystem) {
     Preconditions.checkState(command instanceof LibraryPipeliningCommand);
     LibraryPipeliningCommand libraryPipeliningCommand = (LibraryPipeliningCommand) command;
 
@@ -327,7 +328,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             stateHolder.isFirstStage(),
             compilerOutputPathsValue,
             stepsBuilder,
-            NoOpBuildableContext.INSTANCE,
+            ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
             RelPathSerializer.toResourceMap(basePipeliningCommand.getResourcesMapList()));
 
     LibraryJarBaseCommand libraryJarBaseCommand =

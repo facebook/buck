@@ -34,5 +34,5 @@ public interface PipelinedBuildable<State extends RulePipelineState> extends Bui
       BuildCellRelativePathFactory buildCellPathFactory);
 
   ImmutableList<Step> getPipelinedBuildSteps(
-      StateHolder<State> stateHolder, AbstractMessage command);
+      StateHolder<State> stateHolder, AbstractMessage command, ProjectFilesystem filesystem);
 }

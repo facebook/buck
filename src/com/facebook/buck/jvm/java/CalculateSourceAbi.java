@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.buildable.context.NoOpBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
@@ -228,7 +227,9 @@ public class CalculateSourceAbi
 
     @Override
     public ImmutableList<Step> getPipelinedBuildSteps(
-        StateHolder<JavacPipelineState> stateHolder, AbstractMessage command) {
+        StateHolder<JavacPipelineState> stateHolder,
+        AbstractMessage command,
+        ProjectFilesystem filesystem) {
       Preconditions.checkState(command instanceof BasePipeliningCommand);
       BasePipeliningCommand basePipeliningCommand = (BasePipeliningCommand) command;
 
@@ -251,7 +252,7 @@ public class CalculateSourceAbi
               stateHolder.isFirstStage(),
               compilerOutputPathsValue,
               stepsBuilder,
-              NoOpBuildableContext.INSTANCE,
+              ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
               RelPathSerializer.toResourceMap(basePipeliningCommand.getResourcesMapList()));
 
       return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps

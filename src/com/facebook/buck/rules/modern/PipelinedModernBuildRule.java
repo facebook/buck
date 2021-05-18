@@ -48,7 +48,9 @@ public abstract class PipelinedModernBuildRule<
     ImmutableList.Builder<Step> stepsBuilder = ImmutableList.builder();
     appendWithCommonSetupSteps(context, buildableContext, stepsBuilder);
     AbstractMessage pipelinedCommand = getPipelinedCommand(context);
-    stepsBuilder.addAll(getBuildable().getPipelinedBuildSteps(stateHolder, pipelinedCommand));
+    stepsBuilder.addAll(
+        getBuildable()
+            .getPipelinedBuildSteps(stateHolder, pipelinedCommand, getProjectFilesystem()));
     return stepsBuilder.build();
   }
 
