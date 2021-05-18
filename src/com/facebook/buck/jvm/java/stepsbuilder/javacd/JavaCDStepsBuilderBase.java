@@ -16,9 +16,11 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.AbiJarCommand;
 import com.facebook.buck.javacd.model.BaseCommandParams;
@@ -32,6 +34,7 @@ import com.facebook.buck.javacd.model.ResolvedJavacOptions;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavaExtraParams;
@@ -174,5 +177,30 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
     Preconditions.checkState(extraParams instanceof JavaExtraParams);
     JavaExtraParams javaExtraParams = (JavaExtraParams) extraParams;
     return ResolvedJavacOptionsSerializer.serialize(javaExtraParams.getResolvedJavacOptions());
+  }
+
+  protected void recordArtifacts(
+      BuildableContext buildableContext,
+      CompilerOutputPathsValue compilerOutputPathsValue,
+      BuildTargetValue buildTargetValue,
+      ImmutableSortedSet<RelPath> javaSrcs,
+      boolean trackClassUsage,
+      @Nullable JarParameters jarParameters) {
+    Preconditions.checkState(buildableContext instanceof RecordArtifactVerifier);
+    RecordArtifactVerifier recordArtifactVerifier = (RecordArtifactVerifier) buildableContext;
+
+    CompilerOutputPaths outputPaths =
+        compilerOutputPathsValue.getByType(buildTargetValue.getType());
+    boolean needDepFile = !javaSrcs.isEmpty() && trackClassUsage;
+
+    if (needDepFile) {
+      RelPath depFilePath =
+          CompilerOutputPaths.getJavaDepFilePath(outputPaths.getOutputJarDirPath());
+      recordArtifactVerifier.recordArtifact(depFilePath.getPath());
+    }
+    recordArtifactVerifier.recordArtifact(outputPaths.getAnnotationPath().getPath());
+    if (jarParameters != null) {
+      recordArtifactVerifier.recordArtifact(jarParameters.getJarPath().getPath());
+    }
   }
 }

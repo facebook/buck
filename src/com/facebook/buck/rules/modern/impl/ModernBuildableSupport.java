@@ -21,14 +21,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.DefaultBuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * ModernBuildableSupport provides methods to make using, implementing and migrating to
@@ -37,13 +34,6 @@ import java.util.Optional;
 public class ModernBuildableSupport {
   // Not intended to be instantiated.
   private ModernBuildableSupport() {}
-
-  /** Creates a BuildCellRelativePathFactory for a build root and filesystem pair. */
-  public static BuildCellRelativePathFactory newCellRelativePathFactory(
-      Path buildCellRootPath, ProjectFilesystem projectFilesystem) {
-    return new DefaultBuildCellRelativePathFactory(
-        buildCellRootPath, projectFilesystem, Optional.empty());
-  }
 
   public static OutputPathResolver newOutputPathResolver(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {

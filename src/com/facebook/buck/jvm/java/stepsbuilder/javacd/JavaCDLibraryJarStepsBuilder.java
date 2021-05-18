@@ -117,6 +117,14 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
     pathToClasses
         .map(RelPathSerializer::serialize)
         .ifPresent(libraryJarBaseCommandBuilder::setPathToClasses);
+
+    recordArtifacts(
+        buildableContext,
+        compilerOutputPathsValue,
+        buildTargetValue,
+        javaSrcs,
+        trackClassUsage,
+        libraryJarParameters);
   }
 
   @Override

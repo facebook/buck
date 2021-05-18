@@ -102,6 +102,14 @@ class JavaCDAbiJarStepsBuilder extends JavaCDStepsBuilderBase<AbiJarCommand>
     if (abiJarParameters != null) {
       builder.setAbiJarParameters(JarParametersSerializer.serialize(abiJarParameters));
     }
+
+    recordArtifacts(
+        buildableContext,
+        compilerOutputPathsValue,
+        buildTargetValue,
+        javaSrcs,
+        trackClassUsage,
+        abiJarParameters);
   }
 
   @Override
