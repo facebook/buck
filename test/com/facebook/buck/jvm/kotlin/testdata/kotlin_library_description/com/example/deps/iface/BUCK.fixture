@@ -1,0 +1,7 @@
+java_library(
+    name = "iface",
+    srcs = ["IFace.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+)

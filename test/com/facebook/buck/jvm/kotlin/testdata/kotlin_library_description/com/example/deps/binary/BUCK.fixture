@@ -1,0 +1,17 @@
+kotlin_library(
+    name = "binary_lib",
+    srcs = ["Main.kt"],
+    deps = [
+        "//com/example/deps/a:a",
+        "//com/example/deps/b:b",
+        "//com/example/deps/iface:iface",
+    ],
+)
+
+java_binary(
+    name = "binary",
+    main_class = "com.example.deps.binary.MainKt",
+    deps = [
+        ":binary_lib",
+    ],
+)

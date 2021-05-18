@@ -1,2 +1,4 @@
 [kotlin]
   kotlin_home = kotlinc/
+  track_class_usage = true
+  unused_dependencies_action = warn

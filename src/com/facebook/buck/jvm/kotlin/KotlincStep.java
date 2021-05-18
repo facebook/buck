@@ -19,22 +19,30 @@ package com.facebook.buck.jvm.kotlin;
 import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.java.CompilerOutputPaths;
+import com.facebook.buck.jvm.java.DefaultClassUsageFileWriter;
+import com.facebook.buck.jvm.kotlin.plugin.PluginLoader;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.Optional;
 
 /** Kotlin compile Step */
@@ -53,8 +61,11 @@ public class KotlincStep extends IsolatedStep {
   private final ImmutableSortedSet<RelPath> sourceFilePaths;
   private final Path pathToSrcsList;
   private final BuildTargetValue invokingRule;
-  private final Optional<Path> workingDirectory;
+  private final CompilerOutputPaths outputPaths;
   private final boolean withDownwardApi;
+  private final boolean trackClassUsage;
+  private final RelPath configuredBuckOut;
+  private final ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings;
 
   KotlincStep(
       BuildTargetValue invokingRule,
@@ -65,8 +76,11 @@ public class KotlincStep extends IsolatedStep {
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
       ImmutableList<String> verboseModeOnlyExtraArguments,
-      Optional<Path> workingDirectory,
-      boolean withDownwardApi) {
+      CompilerOutputPaths outputPaths,
+      boolean withDownwardApi,
+      boolean trackClassUsage,
+      RelPath configuredBuckOut,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
     this.invokingRule = invokingRule;
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
@@ -75,8 +89,11 @@ public class KotlincStep extends IsolatedStep {
     this.combinedClassPathEntries = combinedClassPathEntries;
     this.extraArguments = extraArguments;
     this.verboseModeOnlyExtraArguments = verboseModeOnlyExtraArguments;
-    this.workingDirectory = workingDirectory;
+    this.outputPaths = outputPaths;
     this.withDownwardApi = withDownwardApi;
+    this.trackClassUsage = trackClassUsage;
+    this.configuredBuckOut = configuredBuckOut;
+    this.cellToPathMappings = cellToPathMappings;
   }
 
   @Override
@@ -102,7 +119,7 @@ public class KotlincStep extends IsolatedStep {
               getOptions(context, combinedClassPathEntries),
               sourceFilePaths,
               pathToSrcsList,
-              workingDirectory,
+              Optional.of(outputPaths.getWorkingDirectory().getPath()),
               context.getRuleCellRoot(),
               withDownwardApi);
 
@@ -112,12 +129,28 @@ public class KotlincStep extends IsolatedStep {
         returnedStderr = Optional.of(firstOrderStderr);
       } else {
         returnedStderr = Optional.empty();
+
+        if (trackClassUsage) {
+          AbsPath ruleCellRoot = context.getRuleCellRoot();
+          RelPath outputJarDirPath = outputPaths.getOutputJarDirPath();
+          new DefaultClassUsageFileWriter()
+              .writeFile(
+                  readClassUsage(getTempDepFilePath(outputJarDirPath, ruleCellRoot)),
+                  CompilerOutputPaths.getKotlinDepFilePath(outputJarDirPath),
+                  ruleCellRoot,
+                  configuredBuckOut,
+                  cellToPathMappings);
+        }
       }
       return StepExecutionResult.builder()
           .setExitCode(declaredDepsBuildResult)
           .setStderr(returnedStderr)
           .build();
     }
+  }
+
+  private static AbsPath getTempDepFilePath(RelPath outputJarDirPath, AbsPath ruleCellRoot) {
+    return ruleCellRoot.resolve(outputJarDirPath.resolve("kotlin-used-classes-tmp.json"));
   }
 
   @VisibleForTesting
@@ -161,6 +194,14 @@ public class KotlincStep extends IsolatedStep {
     builder.add(INCLUDE_RUNTIME_FLAG);
     builder.add(EXCLUDE_REFLECT);
 
+    if (trackClassUsage) {
+      builder.add("-Xplugin=" + PluginLoader.KOTLINC_PLUGIN_JAR_PATH);
+      builder.add("-P");
+      builder.add(
+          "plugin:buck_deps_tracker:out="
+              + getTempDepFilePath(outputPaths.getOutputJarDirPath(), ruleCellRoot));
+    }
+
     if (!extraArguments.isEmpty()) {
       for (String extraArgument : extraArguments) {
         if (!extraArgument.isEmpty()) {
@@ -185,5 +226,12 @@ public class KotlincStep extends IsolatedStep {
   @VisibleForTesting
   ImmutableSortedSet<Path> getClasspathEntries() {
     return combinedClassPathEntries;
+  }
+
+  private static ImmutableMap<Path, Map<Path, Integer>> readClassUsage(AbsPath classUsageFilePath)
+      throws IOException {
+    return ObjectMappers.READER.readValue(
+        ObjectMappers.createParser(classUsageFilePath.getPath()),
+        new TypeReference<ImmutableMap<Path, Map<Path, Integer>>>() {});
   }
 }

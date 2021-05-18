@@ -1,0 +1,11 @@
+kotlin_library(
+    name = "a",
+    srcs = ["A.kt", "Z.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//com/example/deps/iface:iface",
+        "//com/example/deps/c:c",
+    ],
+)

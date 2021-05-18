@@ -382,8 +382,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
               kotlinc,
               extraArguments.build(),
               ImmutableList.of(VERBOSE),
-              Optional.of(parameters.getOutputPaths().getWorkingDirectory().getPath()),
-              withDownwardApi));
+              parameters.getOutputPaths(),
+              withDownwardApi,
+              parameters.shouldTrackClassUsage(),
+              RelPath.get(filesystemParams.getConfiguredBuckOut().getPath()),
+              cellToPathMappings));
 
       steps.addAll(postKotlinCompilationSteps.build());
     }
@@ -442,6 +445,23 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
         buildableContext,
         resolvedJavac,
         javacToJarStepFactory.createExtraParams(resolver, rootPath));
+  }
+
+  @Override
+  protected void recordDepFileIfNecessary(
+      CompilerOutputPathsValue compilerOutputPathsValue,
+      BuildTargetValue buildTargetValue,
+      CompilerParameters compilerParameters,
+      BuildableContext buildableContext) {
+    super.recordDepFileIfNecessary(
+        compilerOutputPathsValue, buildTargetValue, compilerParameters, buildableContext);
+    if (compilerParameters.shouldTrackClassUsage()) {
+      CompilerOutputPaths outputPath =
+          compilerOutputPathsValue.getByType(buildTargetValue.getType());
+      RelPath depFilePath =
+          CompilerOutputPaths.getKotlinDepFilePath(outputPath.getOutputJarDirPath());
+      buildableContext.recordArtifact(depFilePath.getPath());
+    }
   }
 
   /**

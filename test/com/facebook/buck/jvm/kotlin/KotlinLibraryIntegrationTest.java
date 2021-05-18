@@ -221,4 +221,25 @@ public class KotlinLibraryIntegrationTest {
             "build", "//com/example/compilerplugin:example_with_wrong_options");
     buildResult.assertFailure();
   }
+
+  @Test
+  public void shouldDetectUnusedDependencies() {
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", "//com/example/deps/binary:binary");
+    buildResult.assertSuccess("Build should have succeeded.");
+    assertTrue(
+        buildResult
+            .getStderr()
+            .contains(
+                String.format(
+                    "Target //com/example/deps/binary:binary_lib is declared with unused targets in deps: %n"
+                        + "//com/example/deps/a:a%n%n")));
+    assertTrue(
+        buildResult
+            .getStderr()
+            .contains(
+                String.format(
+                    "Target //com/example/deps/a:a is declared with unused targets in deps: %n"
+                        + "//com/example/deps/c:c%n%n")));
+  }
 }

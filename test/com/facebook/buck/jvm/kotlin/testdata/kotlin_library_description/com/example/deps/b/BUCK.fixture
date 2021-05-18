@@ -1,0 +1,10 @@
+java_library(
+    name = "b",
+    srcs = ["B.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//com/example/deps/iface:iface",
+    ],
+)
