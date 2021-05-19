@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.easymock.EasyMock.mock;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assume.assumeTrue;
@@ -30,8 +31,10 @@ import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -81,7 +84,8 @@ public class LcUuidContentsScrubberTest {
     try (FileChannel file =
         FileChannel.open(path.getPath(), StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       LcUuidContentsScrubber scrubber = new LcUuidContentsScrubber(scrubConcurrently);
-      scrubber.scrubFile(file);
+      scrubber.scrubFile(
+          file, path.getPath(), mock(ProcessExecutor.class), mock(ImmutableMap.class));
     }
   }
 

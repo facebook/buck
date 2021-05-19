@@ -71,7 +71,9 @@ public class FileScrubberStep implements Step {
       for (FileScrubber scrubber : scrubbers) {
         try (FileChannel channel = readWriteChannel(filePath)) {
           if (scrubber instanceof FileContentsScrubber) {
-            ((FileContentsScrubber) scrubber).scrubFile(channel);
+            ((FileContentsScrubber) scrubber)
+                .scrubFile(
+                    channel, filePath, context.getProcessExecutor(), context.getEnvironment());
           } else if (scrubber instanceof FileAttributesScrubber) {
             ((FileAttributesScrubber) scrubber)
                 .scrubFileWithPath(

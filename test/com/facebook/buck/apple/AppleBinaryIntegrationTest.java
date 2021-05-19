@@ -983,12 +983,12 @@ public class AppleBinaryIntegrationTest {
     // Check that binary has no debug symbols
     String binaryDebugSymbolFiles =
         buildAndGetMacBinaryDebugSymbolFiles("//Apps/TestApp:TestApp", workspace);
-    assertThat(binaryDebugSymbolFiles, matchesRegex("(.*)fake/path(.*)"));
+    assertEquals(binaryDebugSymbolFiles, "");
 
     // Check that Dylib1 has no debug symbols
     String dylibDebugSymbolFiles =
         getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib1", "Dylib1.dylib", workspace);
-    assertThat(dylibDebugSymbolFiles, matchesRegex("(.*)fake/path(.*)"));
+    assertEquals(dylibDebugSymbolFiles, "");
 
     // Check that Dylib2 contains relative path to A.c.o and fake path to C.c.o
     String dylib2DebugSymbolFiles =
@@ -1054,12 +1054,12 @@ public class AppleBinaryIntegrationTest {
     // Check that Dylib1 has no debug symbols
     String dylibDebugSymbolFiles =
         getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib1", "Dylib1.dylib", workspace);
-    assertThat(dylibDebugSymbolFiles, matchesRegex("(.*)fake/path(.*)"));
+    assertEquals(dylibDebugSymbolFiles, "");
 
     // Check that Dylib2 contains relative path to A.c.o and fake path to C.c.o
     String dylib2DebugSymbolFiles =
         getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib2", "Dylib2.dylib", workspace);
-    assertThat(dylib2DebugSymbolFiles, matchesRegex("(.*)[\\n\\r](.*)fake/path(.*)"));
+    assertEquals(dylib2DebugSymbolFiles, "");
   }
 
   @Test
@@ -1084,12 +1084,12 @@ public class AppleBinaryIntegrationTest {
     // Check that Dylib1 has no debug symbols
     String dylibDebugSymbolFiles =
         getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib1", "Dylib1.dylib", workspace);
-    assertThat(dylibDebugSymbolFiles, matchesRegex("(.*)fake/path(.*)"));
+    assertEquals(dylibDebugSymbolFiles, "");
 
     // Check that Dylib2 contains relative path to A.c.o and fake path to C.c.o
     String dylib2DebugSymbolFiles =
         getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib2", "Dylib2.dylib", workspace);
-    assertThat(dylib2DebugSymbolFiles, matchesRegex("(.*)[\\n\\r](.*)fake/path(.*)"));
+    assertEquals(dylib2DebugSymbolFiles, "");
   }
 
   @Test

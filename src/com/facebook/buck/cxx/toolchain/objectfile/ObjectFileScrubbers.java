@@ -18,8 +18,10 @@ package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.io.file.FileContentsScrubber;
 import com.facebook.buck.util.ObjectFileCommonModificationDate;
+import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
@@ -32,6 +34,7 @@ import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 public class ObjectFileScrubbers {
@@ -65,7 +68,12 @@ public class ObjectFileScrubbers {
        */
       @SuppressWarnings("PMD.AvoidUsingOctalValues")
       @Override
-      public void scrubFile(FileChannel file) throws IOException, ScrubException {
+      public void scrubFile(
+          FileChannel file,
+          Path filePath,
+          ProcessExecutor processExecutor,
+          ImmutableMap<String, String> environment)
+          throws IOException, ScrubException {
         try {
           ByteBuffer header = ByteBuffer.allocate(GLOBAL_HEADER_SIZE);
           file.read(header);

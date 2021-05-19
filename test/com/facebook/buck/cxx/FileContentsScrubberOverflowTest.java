@@ -16,9 +16,13 @@
 
 package com.facebook.buck.cxx;
 
+import static org.easymock.EasyMock.mock;
+
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
 import com.facebook.buck.io.file.FileContentsScrubber;
 import com.facebook.buck.io.file.FileScrubber;
+import com.facebook.buck.util.ProcessExecutor;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -26,6 +30,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Test;
@@ -169,9 +174,14 @@ public class FileContentsScrubberOverflowTest {
   }
 
   @Test
-  public void thatFileSizesOver32BitsIsOkay() throws IOException, FileScrubber.ScrubException {
+  public void thatFileSizesOver32BitsIsOkay()
+      throws IOException, FileScrubber.ScrubException, InterruptedException {
     FileContentsScrubber scrubber =
         ObjectFileScrubbers.createDateUidGidScrubber(ObjectFileScrubbers.PaddingStyle.LEFT);
-    scrubber.scrubFile(new FakeFileChannel());
+    scrubber.scrubFile(
+        new FakeFileChannel(),
+        mock(Path.class),
+        mock(ProcessExecutor.class),
+        mock(ImmutableMap.class));
   }
 }

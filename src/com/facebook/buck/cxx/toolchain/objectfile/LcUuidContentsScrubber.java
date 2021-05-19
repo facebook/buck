@@ -18,8 +18,10 @@ package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.FileContentsScrubber;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Range;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -28,6 +30,7 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -57,7 +60,12 @@ public class LcUuidContentsScrubber implements FileContentsScrubber {
   }
 
   @Override
-  public void scrubFile(FileChannel file) throws IOException, ScrubException {
+  public void scrubFile(
+      FileChannel file,
+      Path filePath,
+      ProcessExecutor processExecutor,
+      ImmutableMap<String, String> environment)
+      throws IOException, ScrubException {
     if (!Machos.isMacho(file)) {
       return;
     }

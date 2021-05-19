@@ -17,10 +17,13 @@
 package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.io.file.FileContentsScrubber;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -47,7 +50,12 @@ import java.util.Optional;
 public class DylibStubContentsScrubber implements FileContentsScrubber {
 
   @Override
-  public void scrubFile(FileChannel file) throws IOException, ScrubException {
+  public void scrubFile(
+      FileChannel file,
+      Path filePath,
+      ProcessExecutor processExecutor,
+      ImmutableMap<String, String> environment)
+      throws IOException, ScrubException {
     try (ByteBufferUnmapper unmapper =
         ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, file.size()))) {
       ByteBuffer mappedFile = unmapper.getByteBuffer();

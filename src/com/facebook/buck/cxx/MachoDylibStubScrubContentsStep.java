@@ -49,7 +49,8 @@ public class MachoDylibStubScrubContentsStep implements Step {
             filesystem.resolve(dylibPath), StandardOpenOption.READ, StandardOpenOption.WRITE)) {
 
       DylibStubContentsScrubber scrubber = new DylibStubContentsScrubber();
-      scrubber.scrubFile(dylibFile);
+      scrubber.scrubFile(
+          dylibFile, dylibPath, context.getProcessExecutor(), context.getEnvironment());
     } catch (FileScrubber.ScrubException scrubException) {
       throw new IOException(scrubException.getMessage());
     }

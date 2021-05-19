@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import static junit.framework.TestCase.assertTrue;
+import static org.easymock.EasyMock.mock;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -34,8 +35,10 @@ import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -88,7 +91,11 @@ public class DylibStubContentsScrubberTest {
         FileChannel.open(
             destDylibPath.getPath(), StandardOpenOption.READ, StandardOpenOption.WRITE);
     DylibStubContentsScrubber scrubber = new DylibStubContentsScrubber();
-    scrubber.scrubFile(dylibChannel);
+    scrubber.scrubFile(
+        dylibChannel,
+        destDylibPath.getPath(),
+        mock(ProcessExecutor.class),
+        mock(ImmutableMap.class));
 
     // Read the DYLD info, so we can get the offset to the export trie + read it
     try (ByteBufferUnmapper unmapper =
@@ -136,7 +143,11 @@ public class DylibStubContentsScrubberTest {
         FileChannel.open(
             destDylibPath.getPath(), StandardOpenOption.READ, StandardOpenOption.WRITE);
     DylibStubContentsScrubber scrubber = new DylibStubContentsScrubber();
-    scrubber.scrubFile(dylibChannel);
+    scrubber.scrubFile(
+        dylibChannel,
+        destDylibPath.getPath(),
+        mock(ProcessExecutor.class),
+        mock(ImmutableMap.class));
 
     String nmOutput = workspace.runCommand("nm", destDylibPath.toString()).getStdout().get();
     assertFalse(nmOutput.isEmpty());
