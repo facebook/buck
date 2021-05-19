@@ -66,19 +66,23 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
 
   private static final int WAIT_FOR_HANDLER_TIMEOUT_MILLIS = 5_000;
 
-  private final LinkedBlockingQueue<WindowsHandle> openHandles = new LinkedBlockingQueue<>();
-  private final LinkedBlockingQueue<WindowsHandle> connectedHandles = new LinkedBlockingQueue<>();
+  private final BlockingQueue<WindowsHandle> openHandles = new LinkedBlockingQueue<>();
+  private final BlockingQueue<WindowsHandle> connectedHandles = new LinkedBlockingQueue<>();
   private final Consumer<WindowsHandle> closeCallback;
   private final WindowsHandleFactory windowsHandleFactory;
   private boolean isClosed = false;
+
+  private final Object connectedHandlersLock = new Object();
 
   public WindowsNamedPipeServerBase(Path path, WindowsHandleFactory windowsHandleFactory) {
     super(path);
     this.windowsHandleFactory = windowsHandleFactory;
     this.closeCallback =
         handle -> {
-          if (connectedHandles.remove(handle)) {
-            closeConnectedPipe(handle, false);
+          synchronized (connectedHandlersLock) {
+            if (connectedHandles.remove(handle)) {
+              closeConnectedPipe(handle, false);
+            }
           }
           if (openHandles.remove(handle)) {
             closeOpenPipe(handle);
@@ -119,14 +123,18 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
       WindowsOverlapped overlapped = closeableWrapper.get();
       if (API.ConnectNamedPipe(rawHandle, overlapped.getPointer())) {
         openHandles.remove(handle);
-        connectedHandles.add(handle);
+        synchronized (connectedHandlersLock) {
+          connectedHandles.add(handle);
+        }
         return getClient(handle, clazz);
       }
 
       connectError = Kernel32.INSTANCE.GetLastError();
       if (connectError == WinError.ERROR_PIPE_CONNECTED) {
         openHandles.remove(handle);
-        connectedHandles.add(handle);
+        synchronized (connectedHandlersLock) {
+          connectedHandles.add(handle);
+        }
         return getClient(handle, clazz);
       }
 
@@ -152,7 +160,9 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
         }
 
         openHandles.remove(handle);
-        connectedHandles.add(handle);
+        synchronized (connectedHandlersLock) {
+          connectedHandles.add(handle);
+        }
         return getClient(handle, clazz);
       }
     }
@@ -198,23 +208,32 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
   @Override
   public void prepareToClose(Future<Void> readyToClose)
       throws InterruptedException, ExecutionException, TimeoutException {
+
+    boolean connectedHandlesEmpty;
+    WindowsHandle connectedHandle = null;
+    synchronized (connectedHandlersLock) {
+      connectedHandlesEmpty = connectedHandles.isEmpty();
+      if (!connectedHandlesEmpty) {
+        connectedHandle = getTheOnlyHandle(connectedHandles);
+      }
+    }
     try {
-      if (connectedHandles.isEmpty()) {
+      if (connectedHandlesEmpty) {
         if (!openHandles.isEmpty()) {
           // Client never connected. There should be an open handle
           WindowsHandle handle = getTheOnlyHandle(openHandles);
           closeConnectedPipe(handle, false);
         }
       } else {
-        WindowsHandle handle = getTheOnlyHandle(connectedHandles);
-        API.FlushFileBuffers(handle.getHandle());
+        Preconditions.checkNotNull(connectedHandle);
+        API.FlushFileBuffers(connectedHandle.getHandle());
 
         try {
           // After flushing, we need to wait until the handler thread finishes reading everything
           // before disconnecting.
           readyToClose.get(WAIT_FOR_HANDLER_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
         } finally {
-          closeConnectedPipe(handle, true);
+          closeConnectedPipe(connectedHandle, true);
         }
       }
     } catch (RuntimeException e) {
@@ -243,7 +262,9 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
     }
 
     List<WindowsHandle> handlesToDisconnect = new ArrayList<>();
-    connectedHandles.drainTo(handlesToDisconnect);
+    synchronized (connectedHandlersLock) {
+      connectedHandles.drainTo(handlesToDisconnect);
+    }
     handlesToDisconnect.forEach(handle -> closeConnectedPipe(handle, true));
 
     isClosed = true;

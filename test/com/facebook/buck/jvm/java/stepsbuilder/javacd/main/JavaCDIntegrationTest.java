@@ -31,6 +31,7 @@ import static org.hamcrest.Matchers.stringContainsInOrder;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downward.model.ResultEvent;
+import com.facebook.buck.downwardapi.processexecutor.BaseNamedPipeEventHandler;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.downwardapi.testutil.TestWindowsHandleFactory;
 import com.facebook.buck.event.BuckEventBus;
@@ -69,6 +70,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.WorkerToolLauncher;
+import com.facebook.buck.workertool.impl.DefaultWorkerToolExecutor;
 import com.facebook.buck.workertool.impl.DefaultWorkerToolLauncher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -117,11 +119,19 @@ public class JavaCDIntegrationTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  @Rule public Timeout globalTestTimeout = Timeout.seconds(60);
+  @Rule public Timeout globalTestTimeout = Timeout.seconds(180);
 
   @Rule
   public TestLogSink javacdLogSink =
       new TestLogSink(JavaCDIntegrationTest.class.getPackage().getName() + ".StepExecutionUtils");
+
+  @Rule
+  public TestLogSink workerToolLogSink =
+      new TestLogSink(DefaultWorkerToolExecutor.class.getCanonicalName());
+
+  @Rule
+  public TestLogSink eventHandlerLogSink =
+      new TestLogSink(BaseNamedPipeEventHandler.class.getCanonicalName());
 
   @BeforeClass
   public static void beforeClass() throws Exception {
@@ -326,6 +336,37 @@ public class JavaCDIntegrationTest {
         hasItem(
             logRecordWithMessage(
                 stringContainsInOrder("Failed to execute isolated step", "h@shC0de()"))));
+  }
+
+  @Test
+  public void sendCommandToKilledProcess() throws Exception {
+    WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(executionContext);
+    try (WorkerToolExecutor workerToolExecutor =
+        workerToolLauncher.launchWorker(getLaunchJavaCDCommand(), getEnvs())) {
+      workerToolExecutor.prepareForReuse();
+
+      // stop the process
+      workerToolExecutor.close();
+
+      // send shutdown command
+      DefaultWorkerToolExecutor defaultWorkerToolExecutor =
+          (DefaultWorkerToolExecutor) workerToolExecutor;
+      defaultWorkerToolExecutor.sendShutdownCommand();
+    }
+
+    waitTillEventsProcessed();
+    if (Platform.detect() == Platform.WINDOWS) {
+      assertThat(
+          eventHandlerLogSink.getRecords(),
+          hasItem(logRecordWithMessage(stringContainsInOrder("Named pipe", "is closed"))));
+    } else {
+      assertThat(
+          workerToolLogSink.getRecords(),
+          hasItem(
+              logRecordWithMessage(
+                  stringContainsInOrder(
+                      "Cannot write shutdown command for named pipe", "Worker id: 1"))));
+    }
   }
 
   private BuildJavaCommand createBuildCommand(String target, String baseDirectory) {
@@ -537,6 +578,7 @@ public class JavaCDIntegrationTest {
     return ImmutableList.of(
         JavaBuckConfig.getJavaBinCommand(),
         "-Dfile.encoding=" + UTF_8.name(),
+        "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"),
         "-cp",
         testBinary.toString(),
         BuckClasspath.BOOTSTRAP_MAIN_CLASS,

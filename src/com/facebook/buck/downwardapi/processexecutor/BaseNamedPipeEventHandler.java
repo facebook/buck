@@ -17,7 +17,6 @@
 package com.facebook.buck.downwardapi.processexecutor;
 
 import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EndEvent;
@@ -174,6 +173,13 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
         break;
       }
     }
+  }
+
+  private static <T> T requireNonNull(T message, String errorMessage) throws IOException {
+    if (message == null) {
+      throw new PipeNotConnectedException(errorMessage);
+    }
+    return message;
   }
 
   protected abstract void processEvent(EventType eventType, AbstractMessage event);

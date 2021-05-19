@@ -16,6 +16,7 @@
 
 package com.facebook.buck.workertool.impl;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
@@ -40,7 +41,7 @@ import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
 import com.facebook.buck.workertool.model.StartPipelineCommand;
 import com.facebook.buck.workertool.utils.WorkerToolConstants;
-import com.google.common.base.Preconditions;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -60,7 +61,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /** Default implementation of {@link WorkerToolExecutor} */
-class DefaultWorkerToolExecutor implements WorkerToolExecutor {
+public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
   private static final Logger LOG = Logger.get(DefaultWorkerToolExecutor.class);
 
@@ -189,7 +190,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
           getExecutingActionIds(), workerId);
 
       // signal to Step that pipeline is finished
-      Preconditions.checkNotNull(pipelineFinished);
+      checkNotNull(pipelineFinished);
       pipelineFinished.set(Unit.UNIT);
     }
   }
@@ -265,6 +266,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   public void startNextCommand(AbstractMessage startNextPipeliningCommand, String actionId)
       throws IOException {
     checkState(isAlive(), "Launched process is not alive");
+    checkNotNull(pipelineFinished, "Pipeline is not started.");
     checkState(!pipelineFinished.isDone(), "Pipeline is finished.");
 
     runUnderLock(
@@ -376,7 +378,9 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
             });
   }
 
-  private void sendShutdownCommand() {
+  @VisibleForTesting
+  public void sendShutdownCommand() {
+    LOG.debug("Sending shutdown command to worker tool: %s", workerId);
     try {
       CommandTypeMessage shutdownCommandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.SHUTDOWN_COMMAND);
@@ -386,7 +390,7 @@ class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     } catch (IOException e) {
       LOG.error(
           e,
-          "Cannot write shutdown command for for named pipe: %s. Worker id: %s",
+          "Cannot write shutdown command for named pipe: %s. Worker id: %s",
           namedPipeWriter.getName(),
           workerId);
     }
