@@ -60,7 +60,7 @@ Provide information about build configuration parameters, targets, and rules.
 Syntax:
 </p>
 
-<pre>buck audit &lt;command&gt; [ &lt;parameter&gt; . . . ] &lt;target&gt;  . . .</pre> 
+<pre>buck audit &lt;command&gt; [ &lt;parameter&gt; . . . ] &lt;target&gt;  . . .</pre>
 
 <p>
 Example:
@@ -92,15 +92,15 @@ For more examples, see the command descriptions and <strong>Examples</strong> se
     {param desc}
 
     <p>
-    List the absolute paths to the cells that are specified in 
-    the {call buckconfig.repositories /} section of 
-    the <code>.buckconfig</code> file that is in 
+    List the absolute paths to the cells that are specified in
+    the {call buckconfig.repositories /} section of
+    the <code>.buckconfig</code> file that is in
     the root of the current cell. The path to each cell is prefixed
     with the specified alias for that cell. For example:
 <p>
 <pre>
 {literal}
-$ buck audit cell 
+$ buck audit cell
 buck: /Users/buxster/local/buck
 bazel_skylib: /Users/buxster/local/buck/third-party/skylark/bazel-skylib
 {/literal}
@@ -127,8 +127,8 @@ $ buck audit cell --paths-only
 </p>
 
     <p>
-      If your <code>.buckconfig</code> does not contain 
-      a <code>[repositories]</code> section, 
+      If your <code>.buckconfig</code> does not contain
+      a <code>[repositories]</code> section,
       then <code>buck audit cell</code> doesn't return any output.
     </p>
 
@@ -154,23 +154,16 @@ $ buck audit cell --paths-only
     <p>
     List the values from <code>.buckconfig</code> (and
     {sp}<code>.buckconfig.local</code>) for the specified
-    sections and properties. 
+    sections and properties.
     </p>
 
     <p>
-    If you specify only the section name, <code>buck audit config</code> lists 
+    If you specify only the section name, <code>buck audit config</code> lists
     all the properties and values for that section.
     </p>
 
     <p>
-    Note that properties and values specified 
-    with {call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: '<code>--config</code>' /}{/call} are 
-    not surfaced by this command, and those properties and values
-    override both <code>.buckconfig</code> and <code>.buckconfig.local</code>.
-    </p>
-
-    <p>
-    Use <code>--tab</code> to get tab-delimited output. 
+    Use <code>--tab</code> to get tab-delimited output.
     </p>
 
     <p>
@@ -226,12 +219,12 @@ cxx.cxx&#9;/usr/bin/g++
     <p>
     List the dependencies used to build the specified targets. Results are
     listed in alphabetical order. By default, only direct dependencies
-    are listed; to show transitive dependencies, use 
+    are listed; to show transitive dependencies, use
     the <code>--transitive</code> parameter.  To show tests for a rule, use
     the <code>--include-tests</code> parameter. This prints out a rule's
     tests as if they were dependencies of the rule.  To print out all of
-    the <em>test's</em> dependencies as well, 
-    combine <code>--include-tests</code> with the <code>--transitive</code> parameter. 
+    the <em>test's</em> dependencies as well,
+    combine <code>--include-tests</code> with the <code>--transitive</code> parameter.
     </p>
     {/param}
   {/call}
@@ -242,10 +235,10 @@ cxx.cxx&#9;/usr/bin/g++
     {param desc}
     <p>
     List the flavors that are available for the specified targets and
-    what the default flavor is for each target. 
-    If the <code>flavors</code> command prints <code>no flavors</code>, 
-    it indicates that, although the target rule supports flavors, Buck 
-    was not able to extract any. If the <code>flavors</code> command 
+    what the default flavor is for each target.
+    If the <code>flavors</code> command prints <code>no flavors</code>,
+    it indicates that, although the target rule supports flavors, Buck
+    was not able to extract any. If the <code>flavors</code> command
     prints <code>unknown</code>, it indicates that the target rule
     doesn't support flavors. The <code>flavors</code> command supports
     the <code>--json</code> parameter for JSON-formatted output.
@@ -269,7 +262,7 @@ cxx.cxx&#9;/usr/bin/g++
     {param nodash: true /}
     {param desc}
     <p>
-    List the {call buck.build_file /}s, and their extensions, that 
+    List the {call buck.build_file /}s, and their extensions, that
     are included in the specified build file.
     </p>
     {/param}
@@ -362,7 +355,7 @@ apple_binary
     <p>
     List the tests for the specified targets. Results are listed in alphabetical
     order. Only tests for the specified targets are printed, though multiple
-    targets may be specified on a single command line. 
+    targets may be specified on a single command line.
     This command is intended to be used in
     conjunction with the <code>audit dependencies</code> command. For example,
     to retrieve a list of all tests for a given project, use:
@@ -387,9 +380,9 @@ buck audit dependencies --transitive PROJECT | xargs buck audit tests
   {param name: 'include-tests' /}
   {param desc}
   <p>
-  Show the tests for the specified targets. Can be combined with 
-  the <code>--transitive</code> parameter. For more information, see 
-  the <code>dependencies</code> command.   
+  Show the tests for the specified targets. Can be combined with
+  the <code>--transitive</code> parameter. For more information, see
+  the <code>dependencies</code> command.
   </p>
   {/param}
 {/call}
@@ -407,8 +400,8 @@ buck audit dependencies --transitive PROJECT | xargs buck audit tests
   {param name: 'list' /}
   {param desc}
   <p>
-  List <code>.buckconfig</code> and <code>.buckconfig.local</code> aliases. 
-  Used only with the <code>aliases</code> command. For more information, see 
+  List <code>.buckconfig</code> and <code>.buckconfig.local</code> aliases.
+  Used only with the <code>aliases</code> command. For more information, see
   that command.
   </p>
   {/param}
@@ -419,7 +412,7 @@ buck audit dependencies --transitive PROJECT | xargs buck audit tests
   {param desc}
   <p>
   Output the results using tab delimiters.
-  Used only with the <code>config</code> command. For more information, see 
+  Used only with the <code>config</code> command. For more information, see
   that command.
   </p>
   {/param}
@@ -431,7 +424,7 @@ buck audit dependencies --transitive PROJECT | xargs buck audit tests
   <p>
   Show transitive dependencies in addition to direct dependencies. Can
   be combined with the <code>--include-tests</code> parameter. For
-  more information, see the <code>dependencies</code> command. 
+  more information, see the <code>dependencies</code> command.
   </p>
   {/param}
 {/call}
@@ -650,4 +643,3 @@ buck audit dependencies --json /&#x2F;examples:two /&#x2F;examples:three
     {/param}  // content
   {/call} // buck.page
 {/template}
-
