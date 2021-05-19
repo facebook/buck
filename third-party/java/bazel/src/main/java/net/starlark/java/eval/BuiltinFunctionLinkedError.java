@@ -47,6 +47,7 @@ class BuiltinFunctionLinkedError {
       }
 
       Object value = foldedArgs.positional.get(argIndex++);
+      checkParamValue(param, value);
       vector[paramIndex] = value;
     }
 
@@ -132,7 +133,8 @@ class BuiltinFunctionLinkedError {
     }
 
     // positional-only param?
-    if (!parameters[index].isNamed()) {
+    ParamDescriptor param = parameters[index];
+    if (!param.isNamed()) {
       // spill to **kwargs
       if (!desc.acceptsExtraKwargs()) {
         throw Starlark.errorf(
@@ -146,7 +148,24 @@ class BuiltinFunctionLinkedError {
       throw Starlark.errorf("%s() got multiple values for argument '%s'", fn.getName(), key);
     }
 
+    checkParamValue(param, value);
     vector[index] = value;
+  }
+
+  private void checkParamValue(ParamDescriptor param, Object value) throws EvalException {
+    // Value must belong to one of the specified classes.
+    boolean ok = false;
+    for (Class<?> cls : param.getAllowedClasses()) {
+      if (cls.isInstance(value)) {
+        ok = true;
+        break;
+      }
+    }
+    if (!ok) {
+      throw Starlark.errorf(
+          "in call to %s(), parameter '%s' got value of type '%s', want '%s'",
+          fn.getName(), param.getName(), Starlark.type(value), param.getTypeErrorMessage());
+    }
   }
 
   static EvalException error(

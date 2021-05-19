@@ -538,7 +538,6 @@ class MethodDescriptorGen {
 
     Param param = starlarkMethod.parameters()[index];
     ArrayList<String> exprs = new ArrayList<>();
-    ArrayList<String> allowedTypes = new ArrayList<>();
     if (param.allowedTypes().length != 0) {
       for (ParamType paramType : param.allowedTypes()) {
         TypeMirror paramTypeType = StarlarkMethodProcessor.getParamTypeType(paramType);
@@ -546,26 +545,19 @@ class MethodDescriptorGen {
           return;
         }
         exprs.add(String.format("!(%s instanceof %s)", expr, paramTypeType));
-        allowedTypes.add(paramTypeType + ".class");
       }
     } else {
       if (this.types.isSameType(varType, starlarkTypeNames.objectType)) {
         return;
       } else if (varType.getKind() == TypeKind.BOOLEAN) {
         exprs.add(String.format("!(%s instanceof java.lang.Boolean)", expr));
-        allowedTypes.add("java.lang.Boolean.class");
       } else {
         exprs.add(String.format("!(%s instanceof %s)", expr, varType));
-        allowedTypes.add(varType + ".class");
       }
     }
     sw.ifBlock(
         String.join(" && ", exprs),
-        () -> {
-          sw.writeLineF(
-              "throw notAllowedArgument(\"%s\", %s, new Class[] { %s });",
-              param.name(), expr, String.join(", ", allowedTypes));
-        });
+        () -> writeArgBindException(sw));
   }
 
   // Reports a (formatted) error and fails the compilation.

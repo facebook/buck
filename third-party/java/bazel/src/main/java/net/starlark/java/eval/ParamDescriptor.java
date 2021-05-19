@@ -118,6 +118,10 @@ final class ParamDescriptor {
     return defaultValue;
   }
 
+  List<Class<?>> getAllowedClasses() {
+    return allowedClasses;
+  }
+
   // A memoization of evalDefault, keyed by expression.
   // This cache is manually maintained (instead of using LoadingCache),
   // as default values may sometimes be recursively requested.
