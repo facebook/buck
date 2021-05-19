@@ -49,7 +49,7 @@ class MethodLibrary {
       extraPositionals = @Param(name = "args", doc = "The elements to be checked."),
       trustReturnsValid = true,
       purity = FnPurity.PURE)
-  public Object min(Sequence<?> args) throws EvalException {
+  public static Object min(Sequence<?> args) throws EvalException {
     return findExtreme(args, Starlark.ORDERING.reverse());
   }
 
@@ -65,7 +65,7 @@ class MethodLibrary {
       extraPositionals = @Param(name = "args", doc = "The elements to be checked."),
       trustReturnsValid = true,
       purity = FnPurity.PURE)
-  public Object max(Sequence<?> args) throws EvalException {
+  public static Object max(Sequence<?> args) throws EvalException {
     return findExtreme(args, Starlark.ORDERING);
   }
 
@@ -93,7 +93,7 @@ class MethodLibrary {
               + "all([-1, 0, 1]) == False</pre>",
       parameters = {@Param(name = "elements", doc = "A string or a collection of elements.")},
       purity = FnPurity.PURE)
-  public boolean all(Object collection) throws EvalException {
+  public static boolean all(Object collection) throws EvalException {
     return !hasElementWithBooleanValue(collection, false);
   }
 
@@ -106,7 +106,7 @@ class MethodLibrary {
               + "any([False, 0, \"\"]) == False</pre>",
       parameters = {@Param(name = "elements", doc = "A string or a collection of elements.")},
       purity = FnPurity.PURE)
-  public boolean any(Object collection) throws EvalException {
+  public static boolean any(Object collection) throws EvalException {
     return hasElementWithBooleanValue(collection, true);
   }
 
@@ -147,7 +147,7 @@ class MethodLibrary {
       },
       useStarlarkThread = true,
       purity = FnPurity.PURE)
-  public StarlarkList<?> sorted(
+  public static StarlarkList<?> sorted(
       StarlarkIterable<?> iterable, Object key, boolean reverse, StarlarkThread thread)
       throws EvalException, InterruptedException {
     Object[] array = Starlark.toArray(iterable);
@@ -243,7 +243,7 @@ class MethodLibrary {
       },
       useStarlarkThread = true,
       purity = FnPurity.PURE)
-  public StarlarkList<?> reversed(StarlarkIterable<?> sequence, StarlarkThread thread)
+  public static StarlarkList<?> reversed(StarlarkIterable<?> sequence, StarlarkThread thread)
       throws EvalException {
     Object[] array = Starlark.toArray(sequence);
     reverse(array);
@@ -259,7 +259,7 @@ class MethodLibrary {
               + "tuple({5: \"a\", 2: \"b\", 4: \"c\"}) == (5, 2, 4)</pre>",
       parameters = {@Param(name = "x", defaultValue = "()", doc = "The object to convert.")},
       purity = FnPurity.SPEC_SAFE)
-  public Tuple tuple(StarlarkIterable<?> x) throws EvalException {
+  public static Tuple tuple(StarlarkIterable<?> x) throws EvalException {
     if (x instanceof Tuple) {
       return (Tuple) x;
     }
@@ -276,7 +276,7 @@ class MethodLibrary {
       parameters = {@Param(name = "x", defaultValue = "[]", doc = "The object to convert.")},
       useStarlarkThread = true,
       purity = FnPurity.PURE)
-  public StarlarkList<?> list(StarlarkIterable<?> x, StarlarkThread thread) throws EvalException {
+  public static StarlarkList<?> list(StarlarkIterable<?> x, StarlarkThread thread) throws EvalException {
     return StarlarkList.wrap(thread.mutability(), Starlark.toArray(x));
   }
 
@@ -287,7 +287,7 @@ class MethodLibrary {
               + " iterable.",
       parameters = {@Param(name = "x", doc = "The value whose length to report.")},
       purity = FnPurity.SPEC_SAFE)
-  public int len(Object x) throws EvalException {
+  public static int len(Object x) throws EvalException {
     int len = Starlark.len(x);
     if (len < 0) {
       throw Starlark.errorf("%s is not iterable", Starlark.type(x));
@@ -303,7 +303,7 @@ class MethodLibrary {
               + "str(8) == \"8\"</pre>",
       parameters = {@Param(name = "x", doc = "The object to convert.")},
       purity = FnPurity.SPEC_SAFE)
-  public String str(Object x) throws EvalException {
+  public static String str(Object x) throws EvalException {
     return Starlark.str(x);
   }
 
@@ -314,7 +314,7 @@ class MethodLibrary {
               + "<pre class=\"language-python\">repr(\"ab\") == '\"ab\"'</pre>",
       parameters = {@Param(name = "x", doc = "The object to convert.")},
       purity = FnPurity.SPEC_SAFE)
-  public String repr(Object x) {
+  public static String repr(Object x) {
     return Starlark.repr(x);
   }
 
@@ -328,7 +328,7 @@ class MethodLibrary {
               + "Otherwise, it returns <code>True</code>.",
       parameters = {@Param(name = "x", defaultValue = "False", doc = "The variable to convert.")},
       purity = FnPurity.SPEC_SAFE)
-  public boolean bool(Object x) throws EvalException {
+  public static boolean bool(Object x) throws EvalException {
     return Starlark.truth(x);
   }
 
@@ -353,7 +353,7 @@ class MethodLibrary {
         @Param(name = "x", doc = "The value to convert.", defaultValue = "unbound"),
       },
       purity = FnPurity.SPEC_SAFE)
-  public StarlarkFloat floatForStarlark(Object x) throws EvalException {
+  public static StarlarkFloat floatForStarlark(Object x) throws EvalException {
     if (x instanceof String) {
       String s = (String) x;
       if (s.isEmpty()) {
@@ -469,7 +469,7 @@ class MethodLibrary {
             named = true)
       },
       purity = FnPurity.SPEC_SAFE)
-  public StarlarkInt intForStarlark(Object x, Object baseO) throws EvalException {
+  public static StarlarkInt intForStarlark(Object x, Object baseO) throws EvalException {
     if (x instanceof String) {
       int base = baseO == Starlark.UNBOUND ? 10 : Starlark.toInt(baseO, "base");
       try {
@@ -513,7 +513,7 @@ class MethodLibrary {
       extraKeywords = @Param(name = "kwargs", doc = "Dictionary of additional entries."),
       useStarlarkThread = true,
       purity = FnPurity.PURE)
-  public Dict<?, ?> dict(Object pairs, Dict<String, Object> kwargs, StarlarkThread thread)
+  public static Dict<?, ?> dict(Object pairs, Dict<String, Object> kwargs, StarlarkThread thread)
       throws EvalException {
     // common case: dict(k=v, ...)
     if (pairs instanceof StarlarkList && ((StarlarkList) pairs).isEmpty()) {
@@ -538,7 +538,7 @@ class MethodLibrary {
       },
       useStarlarkThread = true,
       purity = FnPurity.PURE)
-  public StarlarkList<?> enumerate(Object input, StarlarkInt startI, StarlarkThread thread)
+  public static StarlarkList<?> enumerate(Object input, StarlarkInt startI, StarlarkThread thread)
       throws EvalException {
     int start = Starlark.toInt(startI, "start");
     Object[] array = Starlark.toArray(input);
@@ -560,7 +560,7 @@ class MethodLibrary {
       // Python, which promise stable hashing only within a given execution of the program.
       parameters = {@Param(name = "value", doc = "String value to hash.")},
       purity = FnPurity.SPEC_SAFE)
-  public int hash(String value) throws EvalException {
+  public static int hash(String value) throws EvalException {
     return value.hashCode();
   }
 
@@ -595,7 +595,7 @@ class MethodLibrary {
             doc = "The increment (default is 1). It may be negative.")
       },
       purity = FnPurity.SPEC_SAFE)
-  public Sequence<StarlarkInt> range(StarlarkInt startOrStop, Object stopOrNone, StarlarkInt stepI)
+  public static Sequence<StarlarkInt> range(StarlarkInt startOrStop, Object stopOrNone, StarlarkInt stepI)
       throws EvalException {
     int start;
     int stop;
@@ -626,7 +626,7 @@ class MethodLibrary {
         @Param(name = "name", doc = "The name of the attribute.")
       },
       purity = FnPurity.PURE)
-  public boolean hasattr(Object obj, String name) throws EvalException {
+  public static boolean hasattr(Object obj, String name) throws EvalException {
     return Starlark.hasattr(obj, name);
   }
 
@@ -651,7 +651,7 @@ class MethodLibrary {
       trustReturnsValid = true,
       useStarlarkThread = true,
       purity = FnPurity.PURE)
-  public Object getattr(Object obj, String name, Object defaultValue, StarlarkThread thread)
+  public static Object getattr(Object obj, String name, Object defaultValue, StarlarkThread thread)
       throws EvalException, InterruptedException {
     return Starlark.getattr(
         thread,
@@ -668,7 +668,7 @@ class MethodLibrary {
       parameters = {@Param(name = "x", doc = "The object to check.")},
       useStarlarkThread = true,
       purity = FnPurity.PURE)
-  public StarlarkList<?> dir(Object object, StarlarkThread thread) throws EvalException {
+  public static StarlarkList<?> dir(Object object, StarlarkThread thread) throws EvalException {
     return Starlark.dir(thread.mutability(), object);
   }
 
@@ -706,7 +706,7 @@ class MethodLibrary {
                   "A list of values, formatted with str and joined with spaces, that appear in the"
                       + " error message."),
       purity = FnPurity.PURE)
-  public void fail(Object msg, Object attr, Tuple args) throws EvalException {
+  public static void fail(Object msg, Object attr, Tuple args) throws EvalException {
     List<String> elems = new ArrayList<>();
     // msg acts like a leading element of args.
     if (msg != Starlark.NONE) {
@@ -745,7 +745,7 @@ class MethodLibrary {
       // NB: as compared to Python3, we're missing optional named-only arguments 'end' and 'file'
       extraPositionals = @Param(name = "args", doc = "The objects to print."),
       useStarlarkThread = true)
-  public void print(String sep, Sequence<?> args, StarlarkThread thread) throws EvalException {
+  public static void print(String sep, Sequence<?> args, StarlarkThread thread) throws EvalException {
     Printer p = new Printer();
     String separator = "";
     for (Object x : args) {
@@ -779,7 +779,7 @@ class MethodLibrary {
               + "</pre>",
       parameters = {@Param(name = "x", doc = "The object to check type of.")},
       purity = FnPurity.SPEC_SAFE)
-  public String type(Object object) {
+  public static String type(Object object) {
     // There is no 'type' type in Starlark, so we return a string with the type name.
     return Starlark.type(object);
   }
@@ -799,7 +799,7 @@ class MethodLibrary {
       extraPositionals = @Param(name = "args", doc = "lists to zip."),
       useStarlarkThread = true,
       purity = FnPurity.PURE)
-  public StarlarkList<?> zip(Sequence<?> args, StarlarkThread thread) throws EvalException {
+  public static StarlarkList<?> zip(Sequence<?> args, StarlarkThread thread) throws EvalException {
     StarlarkList<Tuple> result = StarlarkList.newList(thread.mutability());
     int ncols = args.size();
     if (ncols > 0) {
@@ -832,7 +832,7 @@ class MethodLibrary {
       name = "starlark_debug_frame",
       useStarlarkThread = true,
       doc = "Print current stack instructions to the debug output")
-  public void starlarkDebugFrame(StarlarkThread thread) {
+  public static void starlarkDebugFrame(StarlarkThread thread) {
     StarlarkThread.Frame caller = thread.frame(1);
     thread.getPrintHandler().print(thread, "Debug for frame " + caller.getFunction());
     if (caller.fn instanceof StarlarkFunction) {

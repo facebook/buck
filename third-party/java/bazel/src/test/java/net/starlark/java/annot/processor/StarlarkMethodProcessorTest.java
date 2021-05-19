@@ -51,16 +51,6 @@ public final class StarlarkMethodProcessorTest {
   }
 
   @Test
-  public void testStaticMethod() throws Exception {
-    assertAbout(javaSource())
-        .that(getFile("StaticMethod.java"))
-        .processedWith(new StarlarkMethodProcessor())
-        .failsToCompile()
-        .withErrorContaining("StarlarkMethod-annotated methods cannot be static.");
-  }
-
-
-  @Test
   public void testStructFieldWithArguments() throws Exception {
     assertAbout(javaSource())
         .that(getFile("StructFieldWithArguments.java"))

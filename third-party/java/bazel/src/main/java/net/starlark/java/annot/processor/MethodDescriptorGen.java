@@ -1,7 +1,7 @@
 package net.starlark.java.annot.processor;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.net.MediaType;
 import com.google.errorprone.annotations.FormatMethod;
 import java.io.IOException;
 import java.io.Writer;
@@ -12,6 +12,7 @@ import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
@@ -289,17 +290,28 @@ class MethodDescriptorGen {
     sw.writeLine("}");
   }
 
-  private void writeReceiverTyped(SourceWriter sw, Method method) throws IOException {
-    if (method.isStringModule) {
-      sw.writeLineF(
-          "net.starlark.java.eval.StringModule receiverTyped = net.starlark.java.eval.StringModule.INSTANCE;");
-    } else if (method.isMethodLibrary) {
-      sw.writeLineF(
-          "net.starlark.java.eval.MethodLibrary receiverTyped = net.starlark.java.eval.MethodLibrary.INSTANCE;");
+  /** Assign to {@code receiverTyped} variable if necessary. */
+  private void writeAssignToReceiverTyped(SourceWriter sw, Method method) throws IOException {
+    if (method.isStringModule || method.isMethodLibrary) {
+      Preconditions.checkState(
+          method.method.getModifiers().contains(Modifier.STATIC),
+          "builtin method must be static: %s",
+          method.method);
     } else {
-      sw.writeLineF(
-          "%s receiverTyped = (%s) receiver;",
-          method.enclosingType().getQualifiedName(), method.enclosingType().getQualifiedName());
+      if (!method.method.getModifiers().contains(Modifier.STATIC)) {
+        sw.writeLineF(
+            "%s receiverTyped = (%s) receiver;",
+            method.enclosingType().getQualifiedName(), method.enclosingType().getQualifiedName());
+      }
+    }
+  }
+
+  /** Expression of builtin function receiver, either class name or variable name. */
+  private String receiverTypedExpr(Method method) {
+    if (method.method.getModifiers().contains(Modifier.STATIC)) {
+      return method.enclosingType().getQualifiedName().toString();
+    } else {
+      return "receiverTyped";
     }
   }
 
@@ -311,7 +323,7 @@ class MethodDescriptorGen {
       throws IOException {
     StarlarkMethod starlarkMethod = method.annotation;
 
-    writeReceiverTyped(sw, method);
+    writeAssignToReceiverTyped(sw, method);
 
     ArrayList<String> callArgs = new ArrayList<>();
     if (method.isStringModule) {
@@ -337,11 +349,13 @@ class MethodDescriptorGen {
     }
     String callArgsFormatted = String.join(", ", callArgs);
     if (method.method.getReturnType().getKind() == TypeKind.VOID) {
-      sw.writeLineF("receiverTyped.%s(%s);", method.method.getSimpleName(), callArgsFormatted);
+      sw.writeLineF(
+          "%s.%s(%s);", receiverTypedExpr(method), method.method.getSimpleName(), callArgsFormatted);
     } else {
       sw.writeLineF(
-          "%s r = receiverTyped.%s(%s);",
+          "%s r = %s.%s(%s);",
           this.types.erasure(method.method.getReturnType()),
+          receiverTypedExpr(method),
           method.method.getSimpleName(),
           callArgsFormatted);
     }

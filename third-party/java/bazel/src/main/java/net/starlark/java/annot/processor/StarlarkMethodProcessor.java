@@ -169,9 +169,6 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     if (!method.getModifiers().contains(Modifier.PUBLIC)) {
       errorf(method, "StarlarkMethod-annotated methods must be public.");
     }
-    if (method.getModifiers().contains(Modifier.STATIC)) {
-      errorf(method, "StarlarkMethod-annotated methods cannot be static.");
-    }
 
     // Check the annotation itself.
     StarlarkMethod annot = method.getAnnotation(StarlarkMethod.class);
