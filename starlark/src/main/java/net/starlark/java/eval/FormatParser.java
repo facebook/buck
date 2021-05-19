@@ -41,6 +41,8 @@ import java.util.Map;
  */
 final class FormatParser {
 
+  private FormatParser() {}
+
   /**
    * Matches strings likely to be a number, faster alternative to relying solely on Integer.parseInt
    * and NumberFormatException to determine numericness.
@@ -61,8 +63,7 @@ final class FormatParser {
    * @param kwargs Named arguments
    * @return The formatted string
    */
-  String format(String input, Sequence<Object> args, Map<String, Object> kwargs)
-      throws EvalException {
+  static String format(String input, Tuple args, Dict<String, Object> kwargs) throws EvalException {
     char[] chars = input.toCharArray();
     StringBuilder output = new StringBuilder();
     History history = new History();
@@ -98,11 +99,11 @@ final class FormatParser {
    * @param output StringBuilder that consumes the result
    * @return Number of characters that have been consumed by this method
    */
-  private int processOpeningBrace(
+  private static int processOpeningBrace(
       char[] chars,
       int pos,
-      Sequence<Object> args,
-      Map<String, Object> kwargs,
+      Tuple args,
+      Dict<String, Object> kwargs,
       History history,
       StringBuilder output)
       throws EvalException {
@@ -144,7 +145,7 @@ final class FormatParser {
     return key.length() + 1;
   }
 
-  private Object getKwarg(Map<String, Object> kwargs, String key) throws EvalException {
+  private static Object getKwarg(Map<String, Object> kwargs, String key) throws EvalException {
     if (!kwargs.containsKey(key)) {
       throw Starlark.errorf("Missing argument '%s'", key);
     }
@@ -160,7 +161,7 @@ final class FormatParser {
    * @param output StringBuilder that consumes the result
    * @return Number of characters that have been consumed by this method
    */
-  private int processClosingBrace(char[] chars, int pos, StringBuilder output)
+  private static int processClosingBrace(char[] chars, int pos, StringBuilder output)
       throws EvalException {
     if (!has(chars, pos + 1, '}')) {
       // Invalid brace outside replacement field
@@ -191,7 +192,7 @@ final class FormatParser {
    * @param openingBrace Position of the opening brace of the replacement field
    * @return Name or index of the current replacement field
    */
-  private String getFieldName(char[] chars, int openingBrace) throws EvalException {
+  private static String getFieldName(char[] chars, int openingBrace) throws EvalException {
     StringBuilder result = new StringBuilder();
     boolean foundClosingBrace = false;
 
@@ -227,7 +228,7 @@ final class FormatParser {
    *     replacement fields
    * @return The integer equivalent of the key
    */
-  private int parsePositional(String key, History history) throws EvalException {
+  private static int parsePositional(String key, History history) throws EvalException {
     int result = -1;
 
     try {

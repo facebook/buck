@@ -1009,7 +1009,7 @@ final class StringModule extends StarlarkValue {
       purity = FnPurity.SPEC_SAFE)
   public static String format(String self, Tuple args, Dict<String, Object> kwargs)
       throws EvalException {
-    return new FormatParser().format(self, args, kwargs);
+    return FormatParser.format(self, args, kwargs);
   }
 
   @StarlarkMethod(
