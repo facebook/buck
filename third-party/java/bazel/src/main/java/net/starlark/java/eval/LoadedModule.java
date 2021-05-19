@@ -4,20 +4,14 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
-/**
- * A module to be provided to load callback.
- */
+/** A module to be provided to load callback. */
 public interface LoadedModule {
 
-  /**
-   * Query module.
-   */
+  /** Query module. */
   @Nullable
   Object getGlobal(String name);
 
-  /**
-   * Names available in the module, used for diagnostics.
-   */
+  /** Names available in the module, used for diagnostics. */
   Collection<String> getGlobalNamesForSpelling();
 
   /** Simple map-based module. */

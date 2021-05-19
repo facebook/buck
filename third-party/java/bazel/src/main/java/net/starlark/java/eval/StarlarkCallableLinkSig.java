@@ -21,8 +21,8 @@ public class StarlarkCallableLinkSig {
   // cache hash code
   private final int hashCode;
 
-  private StarlarkCallableLinkSig(int numPositionals, String[] namedNames, boolean hasStar,
-      boolean hasStarStar) {
+  private StarlarkCallableLinkSig(
+      int numPositionals, String[] namedNames, boolean hasStar, boolean hasStarStar) {
     this.numPositionals = numPositionals;
     this.namedNames = namedNames;
     this.namedNameDictHashes = DictHash.hashes(namedNames);
@@ -66,8 +66,10 @@ public class StarlarkCallableLinkSig {
   private static StarlarkCallableLinkSig[] initPosOnly() {
     StarlarkCallableLinkSig[] array = new StarlarkCallableLinkSig[10];
     for (int numPositionals = 0; numPositionals < array.length; numPositionals++) {
-      array[numPositionals] = interner.intern(
-          new StarlarkCallableLinkSig(numPositionals, ArraysForStarlark.EMPTY_STRING_ARRAY, false, false));
+      array[numPositionals] =
+          interner.intern(
+              new StarlarkCallableLinkSig(
+                  numPositionals, ArraysForStarlark.EMPTY_STRING_ARRAY, false, false));
     }
     return array;
   }
@@ -75,17 +77,19 @@ public class StarlarkCallableLinkSig {
   private static final StarlarkCallableLinkSig[] posOnly = initPosOnly();
 
   private static final StarlarkCallableLinkSig kwargsOnly =
-      interner.intern(new StarlarkCallableLinkSig(0, ArraysForStarlark.EMPTY_STRING_ARRAY, false, true));
+      interner.intern(
+          new StarlarkCallableLinkSig(0, ArraysForStarlark.EMPTY_STRING_ARRAY, false, true));
 
-  public static StarlarkCallableLinkSig of(int numPositionals, String[] namedNames,
-      boolean hasStar, boolean hasStarStar) {
+  public static StarlarkCallableLinkSig of(
+      int numPositionals, String[] namedNames, boolean hasStar, boolean hasStarStar) {
     if (numPositionals < posOnly.length && namedNames.length == 0 && !hasStar && !hasStarStar) {
       return posOnly[numPositionals];
     }
     if (numPositionals == 0 && namedNames.length == 0 && !hasStar && hasStarStar) {
       return kwargsOnly;
     }
-    return interner.intern(new StarlarkCallableLinkSig(numPositionals, namedNames, hasStar, hasStarStar));
+    return interner.intern(
+        new StarlarkCallableLinkSig(numPositionals, namedNames, hasStar, hasStarStar));
   }
 
   public static StarlarkCallableLinkSig positional(int count) {

@@ -8,42 +8,43 @@ import org.junit.Test;
 public class BcTypeIsTest {
   @Test
   public void typeIsStringOpcodes() throws Exception {
-    String program = "" //
-        + "def is_string(x):\n"
-        + "  return type(x) == type('')\n"
-        + "is_string";
+    String program =
+        "" //
+            + "def is_string(x):\n"
+            + "  return type(x) == type('')\n"
+            + "is_string";
     assertEquals(
-        ImmutableList.of(BcInstrOpcode.TYPE_IS, BcInstrOpcode.RETURN),
-        BcTestUtil.opcodes(program));
+        ImmutableList.of(BcInstrOpcode.TYPE_IS, BcInstrOpcode.RETURN), BcTestUtil.opcodes(program));
   }
 
   @Test
   public void typeIsTupleOpcodes() throws Exception {
-    String program = "" //
-        + "def is_tuple(x):\n"
-        + "  return type(x) == type(())\n"
-        + "is_tuple";
+    String program =
+        "" //
+            + "def is_tuple(x):\n"
+            + "  return type(x) == type(())\n"
+            + "is_tuple";
     assertEquals(
-        ImmutableList.of(BcInstrOpcode.TYPE_IS, BcInstrOpcode.RETURN),
-        BcTestUtil.opcodes(program));
+        ImmutableList.of(BcInstrOpcode.TYPE_IS, BcInstrOpcode.RETURN), BcTestUtil.opcodes(program));
   }
 
   @Test
   public void typeIsOpcodesRev() throws Exception {
-    String program = "" //
-        + "def is_int(x):\n"
-        + "  return type(1) == type(x)\n"
-        + "is_int";
+    String program =
+        "" //
+            + "def is_int(x):\n"
+            + "  return type(1) == type(x)\n"
+            + "is_int";
     assertEquals(
-        ImmutableList.of(BcInstrOpcode.TYPE_IS, BcInstrOpcode.RETURN),
-        BcTestUtil.opcodes(program));
+        ImmutableList.of(BcInstrOpcode.TYPE_IS, BcInstrOpcode.RETURN), BcTestUtil.opcodes(program));
   }
 
   @Test
   public void typeIsOpcodeForNonTrivialExpression() throws Exception {
-    String program = "" //
-        + "def test(x): return type(x + x) == 'xxx'\n"
-        + "test";
+    String program =
+        "" //
+            + "def test(x): return type(x + x) == 'xxx'\n"
+            + "test";
     assertEquals(
         ImmutableList.of(BcInstrOpcode.PLUS, BcInstrOpcode.TYPE_IS, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
@@ -51,19 +52,21 @@ public class BcTypeIsTest {
 
   @Test
   public void evalTypeIs() throws Exception {
-    String program = "" //
-        + "def is_string(x):\n"
-        + "  return type(x) == type('')\n"
-        + "is_string(1)";
+    String program =
+        "" //
+            + "def is_string(x):\n"
+            + "  return type(x) == type('')\n"
+            + "is_string(1)";
     assertEquals(false, BcTestUtil.eval(program));
   }
 
   @Test
   public void typeIsInlined() throws Exception {
-    String program = "" //
-        + "def is_tuple(x): return type(x) == type(())\n"
-        + "def f(x): return not is_tuple(x)\n"
-        + "f";
+    String program =
+        "" //
+            + "def is_tuple(x): return type(x) == type(())\n"
+            + "def f(x): return not is_tuple(x)\n"
+            + "f";
     assertEquals(
         ImmutableList.of(BcInstrOpcode.TYPE_IS, BcInstrOpcode.NOT, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
@@ -71,10 +74,11 @@ public class BcTypeIsTest {
 
   @Test
   public void typeIsInlinedIfNonTrivialExpr() throws Exception {
-    String program = "" //
-        + "def is_tuple(x): return type(x) == type(())\n"
-        + "def f(x): return not is_tuple(x + x)\n"
-        + "f";
+    String program =
+        "" //
+            + "def is_tuple(x): return type(x) == type(())\n"
+            + "def f(x): return not is_tuple(x + x)\n"
+            + "f";
     assertEquals(
         ImmutableList.of(
             BcInstrOpcode.PLUS, BcInstrOpcode.TYPE_IS, BcInstrOpcode.NOT, BcInstrOpcode.RETURN),

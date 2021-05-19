@@ -12,9 +12,9 @@ import javax.annotation.Nullable;
 /**
  * A Module is a static abstraction of a Starlark module (see {@link
  * net.starlark.java.eval.Module})). It describes, for the resolver and compiler, the set of
- * variable names that are predeclared, either by the interpreter (UNIVERSAL) or by the
- * application (PREDECLARED), plus the set of pre-defined global names (which is typically empty,
- * except in a REPL or EvaluationTestCase scenario).
+ * variable names that are predeclared, either by the interpreter (UNIVERSAL) or by the application
+ * (PREDECLARED), plus the set of pre-defined global names (which is typically empty, except in a
+ * REPL or EvaluationTestCase scenario).
  */
 public class ResolverModule {
 
@@ -27,9 +27,7 @@ public class ResolverModule {
 
   private boolean frozen;
 
-  public ResolverModule(
-      ImmutableMap<String, Object> predeclared,
-      ImportedScopeObjects universe) {
+  public ResolverModule(ImmutableMap<String, Object> predeclared, ImportedScopeObjects universe) {
     this.predeclared = predeclared;
     this.universe = universe;
   }
@@ -93,9 +91,7 @@ public class ResolverModule {
     return ImmutableList.copyOf(names);
   }
 
-  /**
-   * Name resolve result.
-   */
+  /** Name resolve result. */
   public static class ResolvedName {
 
     final Resolver.Scope scope;
@@ -106,9 +102,7 @@ public class ResolverModule {
       this.nameIndex = nameIndex;
     }
 
-    /**
-     * Binding is predeclared by the application (e.g. glob in Bazel).
-     */
+    /** Binding is predeclared by the application (e.g. glob in Bazel). */
     public static final ResolvedName PREDECLARED = new ResolvedName(Resolver.Scope.PREDECLARED, -1);
 
     public static ResolvedName global(int nameIndex) {
@@ -116,9 +110,7 @@ public class ResolverModule {
       return new ResolvedName(Resolver.Scope.GLOBAL, nameIndex);
     }
 
-    /**
-     * Binding is predeclared by the core (e.g. None).
-     */
+    /** Binding is predeclared by the core (e.g. None). */
     public static ResolvedName universal(int nameIndex) {
       Preconditions.checkArgument(nameIndex >= 0);
       return new ResolvedName(Resolver.Scope.UNIVERSAL, nameIndex);
@@ -131,9 +123,7 @@ public class ResolverModule {
     return predeclared.get(name);
   }
 
-  /**
-   * Returns this module's additional predeclared bindings. (Excludes universe.)
-   */
+  /** Returns this module's additional predeclared bindings. (Excludes universe.) */
   public ImmutableMap<String, Object> getPredeclaredBindings() {
     return predeclared;
   }
@@ -168,13 +158,12 @@ public class ResolverModule {
 
   /**
    * An Undefined exception indicates a failure to resolve a top-level name. If {@code candidates}
-   * is non-null, it provides the set of accessible top-level names, which, along with local
-   * names, will be used as candidates for spelling suggestions.
+   * is non-null, it provides the set of accessible top-level names, which, along with local names,
+   * will be used as candidates for spelling suggestions.
    */
   public static final class Undefined extends Exception {
 
-    @Nullable
-    final Set<String> candidates;
+    @Nullable final Set<String> candidates;
 
     public Undefined(String message, @Nullable Set<String> candidates) {
       super(message);

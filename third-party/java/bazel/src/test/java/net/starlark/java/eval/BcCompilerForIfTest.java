@@ -46,10 +46,10 @@ public class BcCompilerForIfTest {
     Module module = Module.create();
     module.setGlobal("true", new AltBool(countCalls, true));
     module.setGlobal("false", new AltBool(countCalls, false));
-    StarlarkFunction f = (StarlarkFunction) Starlark.execFile(
-        ParserInput.fromString(program, "f.star"),
-        FileOptions.DEFAULT, module,
-        thread);
+    StarlarkFunction f =
+        (StarlarkFunction)
+            Starlark.execFile(
+                ParserInput.fromString(program, "f.star"), FileOptions.DEFAULT, module, thread);
     return Starlark.call(thread, f, Tuple.empty(), Dict.empty());
   }
 
@@ -65,14 +65,17 @@ public class BcCompilerForIfTest {
 
     boolean eval(boolean lhs, boolean rhs) {
       switch (this) {
-        case AND: return lhs && rhs;
-        case OR: return lhs || rhs;
-        default: throw new AssertionError();
+        case AND:
+          return lhs && rhs;
+        case OR:
+          return lhs || rhs;
+        default:
+          throw new AssertionError();
       }
     }
   }
 
-  private static abstract class TestExpr {
+  private abstract static class TestExpr {
     abstract String expr();
 
     abstract boolean eval(CountCalls countCalls);
@@ -114,10 +117,7 @@ public class BcCompilerForIfTest {
   private static final TestValue ALT_FALSE = new TestValue(false, false, "false");
 
   private static final TestValue[] testValues = {
-      TRUE,
-      ALT_TRUE,
-      FALSE,
-      ALT_FALSE,
+    TRUE, ALT_TRUE, FALSE, ALT_FALSE,
   };
 
   private static class Not extends TestExpr {
@@ -136,7 +136,6 @@ public class BcCompilerForIfTest {
     boolean eval(CountCalls countCalls) {
       return !arg.eval(countCalls);
     }
-
   }
 
   private static class Logical extends TestExpr {
@@ -202,13 +201,12 @@ public class BcCompilerForIfTest {
   public void andOrNot() throws Exception {
     for (TestValue lhs : testValues) {
       for (TestValue rhs : testValues) {
-        for (boolean negateLhs : new boolean[] { true, false }) {
-          for (boolean negateRhs : new boolean[] { true, false }) {
+        for (boolean negateLhs : new boolean[] {true, false}) {
+          for (boolean negateRhs : new boolean[] {true, false}) {
             for (BinOp binOp : BinOp.values()) {
-              Logical expr = new Logical(
-                  negateLhs ? new Not(lhs) : lhs,
-                  negateRhs ? new Not(rhs) : rhs,
-                  binOp);
+              Logical expr =
+                  new Logical(
+                      negateLhs ? new Not(lhs) : lhs, negateRhs ? new Not(rhs) : rhs, binOp);
               doTestIf(expr);
             }
           }
@@ -286,44 +284,41 @@ public class BcCompilerForIfTest {
     CountCalls expectedCalls = new CountCalls();
 
     Object callResult = exec(program, programCalls);
-    assertEquals(
-        testExpr.toString(),
-        testExpr.eval(expectedCalls) ? "t" : "f",
-        callResult);
-    assertEquals(
-        testExpr.toString(),
-        expectedCalls.calls,
-        programCalls.calls);
+    assertEquals(testExpr.toString(), testExpr.eval(expectedCalls) ? "t" : "f", callResult);
+    assertEquals(testExpr.toString(), expectedCalls.calls, programCalls.calls);
   }
 
   private void doTestIf(TestExpr testExpr) throws Exception {
-    String program = "" //
-        + "def test():\n"
-        + "  if EXPR:\n"
-        + "    return 't'\n"
-        + "  return 'f'\n"
-        + "test";
+    String program =
+        "" //
+            + "def test():\n"
+            + "  if EXPR:\n"
+            + "    return 't'\n"
+            + "  return 'f'\n"
+            + "test";
     doTestProgram(testExpr, program);
   }
 
   private void doTestIfElse(TestExpr testExpr) throws Exception {
-    String program = "" //
-        + "def test():\n"
-        + "  if EXPR:\n"
-        + "    return 't'\n"
-        + "  else:\n"
-        + "    return 'f'\n"
-        + "test";
+    String program =
+        "" //
+            + "def test():\n"
+            + "  if EXPR:\n"
+            + "    return 't'\n"
+            + "  else:\n"
+            + "    return 'f'\n"
+            + "test";
     doTestProgram(testExpr, program);
   }
 
   @Test
   public void eqOpcodes() throws Exception {
-    String program = "" //
-        + "def f(x):\n"
-        + "  if x == 1:\n"
-        + "    return 2\n"
-        + "f";
+    String program =
+        "" //
+            + "def f(x):\n"
+            + "  if x == 1:\n"
+            + "    return 2\n"
+            + "f";
     assertEquals(
         ImmutableList.of(BcInstrOpcode.IF_NOT_EQ_BR, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
@@ -331,11 +326,12 @@ public class BcCompilerForIfTest {
 
   @Test
   public void inOpcodes() throws Exception {
-    String program = "" //
-        + "def f(x):\n"
-        + "  if 1 not in x:\n"
-        + "    return 2\n"
-        + "f";
+    String program =
+        "" //
+            + "def f(x):\n"
+            + "  if 1 not in x:\n"
+            + "    return 2\n"
+            + "f";
     assertEquals(
         ImmutableList.of(BcInstrOpcode.IF_IN_BR, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
@@ -343,11 +339,12 @@ public class BcCompilerForIfTest {
 
   @Test
   public void typeIsOpcodes() throws Exception {
-    String program = "" //
-        + "def f(x):\n"
-        + "  if type(x) == 'list':\n"
-        + "    return 1\n"
-        + "f";
+    String program =
+        "" //
+            + "def f(x):\n"
+            + "  if type(x) == 'list':\n"
+            + "    return 1\n"
+            + "f";
     assertEquals(
         ImmutableList.of(BcInstrOpcode.IF_NOT_TYPE_IS_BR, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
@@ -355,11 +352,12 @@ public class BcCompilerForIfTest {
 
   @Test
   public void notTypeIsOpcodes() throws Exception {
-    String program = "" //
-        + "def f(x):\n"
-        + "  if not type(x) == 'list':\n"
-        + "    return 1\n"
-        + "f";
+    String program =
+        "" //
+            + "def f(x):\n"
+            + "  if not type(x) == 'list':\n"
+            + "    return 1\n"
+            + "f";
     assertEquals(
         ImmutableList.of(BcInstrOpcode.IF_TYPE_IS_BR, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
@@ -367,13 +365,12 @@ public class BcCompilerForIfTest {
 
   @Test
   public void typeIsEval() throws Exception {
-    String program = "" //
-        + "def f(x):\n"
-        + "  if type(x) == 'list':\n"
-        + "    return 1\n"
-        + "f([])";
-    assertEquals(
-        StarlarkInt.of(1),
-        BcTestUtil.eval(program));
+    String program =
+        "" //
+            + "def f(x):\n"
+            + "  if type(x) == 'list':\n"
+            + "    return 1\n"
+            + "f([])";
+    assertEquals(StarlarkInt.of(1), BcTestUtil.eval(program));
   }
 }

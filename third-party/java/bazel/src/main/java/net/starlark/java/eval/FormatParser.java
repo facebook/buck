@@ -15,7 +15,6 @@ package net.starlark.java.eval;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableSet;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,7 +45,8 @@ final class FormatParser {
    * @param kwargs Named arguments
    * @return The formatted string
    */
-  String format(String input, Sequence<Object> args, Map<String, Object> kwargs) throws EvalException {
+  String format(String input, Sequence<Object> args, Map<String, Object> kwargs)
+      throws EvalException {
     char[] chars = input.toCharArray();
     StringBuilder output = new StringBuilder();
     History history = new History();
@@ -231,18 +231,14 @@ final class FormatParser {
     return result;
   }
 
-  /**
-   * Exception for invalid combinations of replacement field types
-   */
+  /** Exception for invalid combinations of replacement field types */
   private static final class MixedTypeException extends Exception {
     MixedTypeException() {
       super("Cannot mix manual and automatic numbering of positional fields");
     }
   }
 
-  /**
-   * A wrapper to keep track of information about previous replacement fields
-   */
+  /** A wrapper to keep track of information about previous replacement fields */
   private static final class History {
     /** Different types of positional replacement fields */
     enum Positional {

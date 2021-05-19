@@ -85,8 +85,8 @@ class BcInstrOperand {
     abstract void print(OpcodePrinter visitor);
 
     /**
-     * Given the offset of the operand, return the position after the operand.
-     * In another words, determine operand code size.
+     * Given the offset of the operand, return the position after the operand. In another words,
+     * determine operand code size.
      *
      * <p>For example, length-delimited operand may return the different number of ints depending on
      * the actual bytecode.
@@ -112,8 +112,7 @@ class BcInstrOperand {
         List<Object> constantRegs,
         List<Object> objects,
         OpcodePrinterFunctionContext fnCtx) {
-      OpcodePrinter printer =
-          new OpcodePrinter(parser, strings, constantRegs, objects, fnCtx);
+      OpcodePrinter printer = new OpcodePrinter(parser, strings, constantRegs, objects, fnCtx);
       print(printer);
       return printer.sb.toString();
     }
@@ -180,8 +179,12 @@ class BcInstrOperand {
     private final OpcodePrinterFunctionContext fnCtx;
     private StringBuilder sb = new StringBuilder();
 
-    private OpcodePrinter(BcInstrParser parser, List<String> strings, List<Object> constantRegs,
-        List<Object> objects, OpcodePrinterFunctionContext fnCtx) {
+    private OpcodePrinter(
+        BcInstrParser parser,
+        List<String> strings,
+        List<Object> constantRegs,
+        List<Object> objects,
+        OpcodePrinterFunctionContext fnCtx) {
       this.parser = parser;
       this.objects = objects;
       this.fnCtx = fnCtx;
@@ -195,7 +198,7 @@ class BcInstrOperand {
   }
 
   /** One word operand (e. g. register). */
-  private static abstract class OneWordOperand extends Operands {
+  private abstract static class OneWordOperand extends Operands {
     @Override
     protected final void consume(BcInstrParser parser) {
       parser.nextInt();
@@ -267,7 +270,6 @@ class BcInstrOperand {
         this.register = register;
       }
     }
-
   }
 
   static class Register extends OneWordOperand {
@@ -376,7 +378,8 @@ class BcInstrOperand {
     @Override
     public void print(OpcodePrinter visitor) {
       int objectIndex = visitor.parser.nextInt();
-      Object o = objectIndex < visitor.objects.size() ? visitor.objects.get(objectIndex) : "invalid";
+      Object o =
+          objectIndex < visitor.objects.size() ? visitor.objects.get(objectIndex) : "invalid";
       visitor.append("o" + objectIndex + "=" + o);
     }
 
@@ -424,16 +427,17 @@ class BcInstrOperand {
     static class Decoded extends Operands.Decoded {
       final ImmutableList<Operands.Decoded> operands;
 
-      Decoded(
-          ImmutableList<Operands.Decoded> operands) {
+      Decoded(ImmutableList<Operands.Decoded> operands) {
         this.operands = operands;
       }
     }
 
     @Override
     Decoded decode(BcInstrParser parser) {
-      return new Decoded(Arrays.stream(operands).map(o -> o.decode(parser))
-          .collect(ImmutableList.toImmutableList()));
+      return new Decoded(
+          Arrays.stream(operands)
+              .map(o -> o.decode(parser))
+              .collect(ImmutableList.toImmutableList()));
     }
   }
 
@@ -464,21 +468,21 @@ class BcInstrOperand {
         element.consume(parser);
       }
     }
-    
+
     static class Decoded extends Operands.Decoded {
       private final ImmutableList<Operands.Decoded> elements;
 
-      Decoded(
-          ImmutableList<Operands.Decoded> elements) {
+      Decoded(ImmutableList<Operands.Decoded> elements) {
         this.elements = elements;
       }
     }
 
     @Override
     Decoded decode(BcInstrParser parser) {
-      return new Decoded(IntStream.range(0, parser.nextInt())
-          .mapToObj(i -> element.decode(parser))
-          .collect(ImmutableList.toImmutableList()));
+      return new Decoded(
+          IntStream.range(0, parser.nextInt())
+              .mapToObj(i -> element.decode(parser))
+              .collect(ImmutableList.toImmutableList()));
     }
   }
 

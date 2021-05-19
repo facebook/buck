@@ -19,7 +19,6 @@ import static net.starlark.java.syntax.LexerTest.assertContainsError;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import net.starlark.java.eval.Starlark;
 import org.junit.Test;
@@ -38,8 +37,8 @@ public class ResolverTest {
   // Realistically, most clients will use an eval.Module.
   // TODO(adonovan): move into test/ tree.
   private static ResolverModule moduleWithPredeclared(String... names) {
-    ImmutableMap<String, Object> predeclared = Arrays.stream(names)
-        .collect(ImmutableMap.toImmutableMap(n -> n, n -> true));
+    ImmutableMap<String, Object> predeclared =
+        Arrays.stream(names).collect(ImmutableMap.toImmutableMap(n -> n, n -> true));
     return new ResolverModule(predeclared, Starlark.UNIVERSE_OBJECTS);
   }
 

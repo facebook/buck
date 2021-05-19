@@ -18,7 +18,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Set;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.ResolverModule;
 
@@ -40,9 +39,9 @@ import net.starlark.java.syntax.ResolverModule;
  * records the module's build label (such as "//dir:file.bzl").
  *
  * <p>Use {@link #create} to create a {@link Module} with no predeclared bindings other than the
- * universal ones. Use {@link #withPredeclared(Map)} to create a module with the
- * predeclared environment specified by the map, using the semantics to determine whether any
- * FlagGuardedValues in the map are enabled or disabled.
+ * universal ones. Use {@link #withPredeclared(Map)} to create a module with the predeclared
+ * environment specified by the map, using the semantics to determine whether any FlagGuardedValues
+ * in the map are enabled or disabled.
  */
 public final class Module {
 
@@ -175,5 +174,4 @@ public final class Module {
   public String toString() {
     return String.format("<module %s>", clientData == null ? "?" : clientData);
   }
-
 }

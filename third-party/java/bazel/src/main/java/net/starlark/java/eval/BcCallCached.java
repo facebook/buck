@@ -35,16 +35,14 @@ class BcCallCached {
     if (cachedValue != null) {
       if (StarlarkRuntimeStats.ENABLED) {
         StarlarkRuntimeStats.recordCallCached(
-            fn.getName(),
-            StarlarkRuntimeStats.CallCachedResult.HIT);
+            fn.getName(), StarlarkRuntimeStats.CallCachedResult.HIT);
       }
       return cachedValue;
     }
     if (cannotCache) {
       if (StarlarkRuntimeStats.ENABLED) {
         StarlarkRuntimeStats.recordCallCached(
-            fn.getName(),
-            StarlarkRuntimeStats.CallCachedResult.SKIP);
+            fn.getName(), StarlarkRuntimeStats.CallCachedResult.SKIP);
       }
       return BcCall.callLinked(thread, fn, args, null, null);
     }
@@ -67,7 +65,7 @@ class BcCallCached {
         StarlarkRuntimeStats.recordCallCached(fn.getName(), callCachedResult);
       }
       return result;
-    } finally{
+    } finally {
       thread.popSideEffect(savedExternalSideEffects);
     }
   }

@@ -151,8 +151,7 @@ public final class StarlarkThread {
 
     // Current PC location. Initially fn.getLocation(); for Starlark functions,
     // it is updated at key points when it may be observed: calls, breakpoints, errors.
-    @Nullable
-    private Location loc;
+    @Nullable private Location loc;
 
     // Indicates that setErrorLocation has been called already and the error
     // location (loc) should not be overrwritten.

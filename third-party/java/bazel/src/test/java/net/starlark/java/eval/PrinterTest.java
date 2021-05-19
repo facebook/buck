@@ -20,15 +20,14 @@ import static org.junit.Assert.assertThrows;
 import com.google.common.collect.ImmutableMap;
 import java.util.IllegalFormatException;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 /**
- *  Test properties of the evaluator's datatypes and utility functions
- *  without actually creating any parse trees.
+ * Test properties of the evaluator's datatypes and utility functions without actually creating any
+ * parse trees.
  */
 @RunWith(JUnit4.class)
 public class PrinterTest {
@@ -104,13 +103,13 @@ public class PrinterTest {
     assertThat(Starlark.formatWithList("", Tuple.of())).isEmpty();
     assertThat(Starlark.format("%s", "foo")).isEqualTo("foo");
     assertThat(Starlark.format("%s", 3.14159)).isEqualTo("3.14159");
-    checkFormatPositionalFails("not all arguments converted during string formatting",
-        "%s", 1, 2, 3);
+    checkFormatPositionalFails(
+        "not all arguments converted during string formatting", "%s", 1, 2, 3);
     assertThat(Starlark.format("%%%s", "foo")).isEqualTo("%foo");
-    checkFormatPositionalFails("not all arguments converted during string formatting",
-        "%%s", "foo");
-    checkFormatPositionalFails("unsupported format character \" \" at index 1 in \"% %s\"",
-        "% %s", "foo");
+    checkFormatPositionalFails(
+        "not all arguments converted during string formatting", "%%s", "foo");
+    checkFormatPositionalFails(
+        "unsupported format character \" \" at index 1 in \"% %s\"", "% %s", "foo");
     assertThat(
             Starlark.format(
                 "%s",
@@ -125,15 +124,11 @@ public class PrinterTest {
     assertThat(Starlark.format("%% %d %r %s", StarlarkInt.of(1), "2", "3"))
         .isEqualTo("% 1 \"2\" 3");
 
+    checkFormatPositionalFails("invalid argument \"1\" for format pattern %d", "%d", "1");
+    checkFormatPositionalFails("unsupported format character \".\" at index 1 in \"%.3g\"", "%.3g");
     checkFormatPositionalFails(
-        "invalid argument \"1\" for format pattern %d",
-        "%d", "1");
-    checkFormatPositionalFails("unsupported format character \".\" at index 1 in \"%.3g\"",
-        "%.3g");
-    checkFormatPositionalFails("unsupported format character \".\" at index 1 in \"%.3g\"",
-        "%.3g", 1, 2);
-    checkFormatPositionalFails("unsupported format character \".\" at index 1 in \"%.s\"",
-        "%.s");
+        "unsupported format character \".\" at index 1 in \"%.3g\"", "%.3g", 1, 2);
+    checkFormatPositionalFails("unsupported format character \".\" at index 1 in \"%.s\"", "%.s");
   }
 
   private StarlarkValue createObjWithStr() {

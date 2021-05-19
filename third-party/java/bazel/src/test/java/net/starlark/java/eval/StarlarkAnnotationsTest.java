@@ -73,8 +73,10 @@ public class StarlarkAnnotationsTest {
 
     @Override
     public void bar() {}
+
     @Override
     public void baz() {}
+
     @Override
     public void qux() {}
   }
@@ -94,10 +96,13 @@ public class StarlarkAnnotationsTest {
       implements MockInterfaceB1, MockInterfaceB2 {
     @Override
     public void foo() {}
+
     @Override
     public void bar() {}
+
     @Override
     public void baz() {}
+
     @Override
     public void qux() {}
   }
@@ -142,8 +147,7 @@ public class StarlarkAnnotationsTest {
   public static class UnambiguousClass extends SubclassOfBoth implements ExtendsInterfaceB {}
 
   /** MockClassZ */
-  public static class MockClassZ {
-  }
+  public static class MockClassZ {}
 
   // The tests for getStarlarkBuiltin() double as tests for getParentWithStarlarkBuiltin(),
   // since they share an implementation.

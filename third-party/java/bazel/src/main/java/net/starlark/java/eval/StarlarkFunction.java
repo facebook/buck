@@ -165,9 +165,13 @@ public final class StarlarkFunction extends StarlarkCallable {
   }
 
   @Override
-  public Object linkAndCall(StarlarkCallableLinkSig linkSig,
-      StarlarkThread thread, Object[] args, @Nullable Sequence<?> starArgs,
-      @Nullable Dict<?, ?> starStarArgs) throws InterruptedException, EvalException {
+  public Object linkAndCall(
+      StarlarkCallableLinkSig linkSig,
+      StarlarkThread thread,
+      Object[] args,
+      @Nullable Sequence<?> starArgs,
+      @Nullable Dict<?, ?> starStarArgs)
+      throws InterruptedException, EvalException {
     return linkCall(linkSig).callLinked(thread, args, starArgs, starStarArgs);
   }
 
@@ -195,7 +199,10 @@ public final class StarlarkFunction extends StarlarkCallable {
     int numPositionalParams = nparams - numKeywordOnlyParams;
 
     if (sig.namedNames.length == 0 && !sig.hasStar && !sig.hasStarStar) {
-      if (!hasVarargs() && !hasKwargs() && numKeywordOnlyParams == 0 && nparams == sig.numPositionals) {
+      if (!hasVarargs()
+          && !hasKwargs()
+          && numKeywordOnlyParams == 0
+          && nparams == sig.numPositionals) {
         // positional-only invocation
         return new StarlarkFunctionLinkedPos(sig, this);
       }
@@ -277,8 +284,9 @@ public final class StarlarkFunction extends StarlarkCallable {
     // only by users? or by `sorted` builtin.
     // Still do the fast track optimization to be on the safe size.
     if (named.length == 0) {
-      StarlarkCallableLinkSig linkSig = StarlarkCallableLinkSig.of(
-          positional.length, ArraysForStarlark.EMPTY_STRING_ARRAY, false, false);
+      StarlarkCallableLinkSig linkSig =
+          StarlarkCallableLinkSig.of(
+              positional.length, ArraysForStarlark.EMPTY_STRING_ARRAY, false, false);
 
       return linkCall(linkSig).callLinked(thread, positional, null, null);
     } else {
@@ -288,8 +296,8 @@ public final class StarlarkFunction extends StarlarkCallable {
         names[i] = (String) named[i * 2];
         allArgs[positional.length + i] = named[i * 2 + 1];
       }
-      StarlarkCallableLinkSig linkSig = StarlarkCallableLinkSig.of(
-          positional.length, names, false, false);
+      StarlarkCallableLinkSig linkSig =
+          StarlarkCallableLinkSig.of(positional.length, names, false, false);
       return linkCall(linkSig).callLinked(thread, allArgs, null, null);
     }
   }

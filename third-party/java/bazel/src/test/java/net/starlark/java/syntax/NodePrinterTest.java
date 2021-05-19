@@ -76,8 +76,8 @@ public final class NodePrinterTest {
    */
   private static void assertExprPrettyMatches(String source, String expected)
       throws SyntaxError.Exception {
-      Expression node = parseExpression(source);
-      assertPrettyMatches(node, expected);
+    Expression node = parseExpression(source);
+    assertPrettyMatches(node, expected);
   }
 
   /**
@@ -86,8 +86,8 @@ public final class NodePrinterTest {
    */
   private static void assertExprTostringMatches(String source, String expected)
       throws SyntaxError.Exception {
-      Expression node = parseExpression(source);
-      assertThat(node.toString()).isEqualTo(expected);
+    Expression node = parseExpression(source);
+    assertThat(node.toString()).isEqualTo(expected);
   }
 
   /**
@@ -235,8 +235,12 @@ public final class NodePrinterTest {
 
   @Test
   public void assignmentStatement() throws SyntaxError.Exception {
-    assertStmtIndentedPrettyMatches("x = y", "  x = y\n");
-    assertStmtTostringMatches("x = y", "x = y\n");
+    assertStmtIndentedPrettyMatches(
+        "x = y", //
+        "  x = y\n");
+    assertStmtTostringMatches(
+        "x = y", //
+        "x = y\n");
   }
 
   @Test
@@ -254,22 +258,27 @@ public final class NodePrinterTest {
   @Test
   public void defStatement() throws SyntaxError.Exception {
     assertStmtIndentedPrettyMatches(
-        join("def f(x):",
-             "  print(x)"),
-        join("  def f(x):",
-             "    print(x)",
-             ""));
+        join(
+            "def f(x):", //
+            "  print(x)"),
+        join(
+            "  def f(x):", //
+            "    print(x)",
+            ""));
     assertStmtTostringMatches(
-        join("def f(x):",
-             "  print(x)"),
+        join(
+            "def f(x):", //
+            "  print(x)"),
         "def f(x): ...\n");
 
     assertStmtIndentedPrettyMatches(
-        join("def f(a, b=B, *c, d=D, **e):",
-             "  print(x)"),
-        join("  def f(a, b=B, *c, d=D, **e):",
-             "    print(x)",
-             ""));
+        join(
+            "def f(a, b=B, *c, d=D, **e):", //
+            "  print(x)"),
+        join(
+            "  def f(a, b=B, *c, d=D, **e):", //
+            "    print(x)",
+            ""));
     assertStmtTostringMatches(
         join(
             "def f(a, b=B, *c, d=D, **e):", //
@@ -277,78 +286,102 @@ public final class NodePrinterTest {
         "def f(a, b=B, *c, d=D, **e): ...\n");
 
     assertStmtIndentedPrettyMatches(
-        join("def f():",
-             "  pass"),
-        join("  def f():",
-             "    pass",
-             ""));
+        join(
+            "def f():", //
+            "  pass"),
+        join(
+            "  def f():", //
+            "    pass",
+            ""));
     assertStmtTostringMatches(
-        join("def f():",
-             "  pass"),
+        join(
+            "def f():", //
+            "  pass"),
         "def f(): ...\n");
   }
 
   @Test
   public void flowStatement() throws SyntaxError.Exception {
     assertStmtIndentedPrettyMatches(
-        join("def f():", "     pass", "     continue", "     break"),
-        join("  def f():", "    pass", "    continue", "    break", ""));
+        join(
+            "def f():", //
+            "     pass",
+            "     continue",
+            "     break"),
+        join(
+            "  def f():", //
+            "    pass",
+            "    continue",
+            "    break",
+            ""));
   }
 
   @Test
   public void forStatement() throws SyntaxError.Exception {
     assertStmtIndentedPrettyMatches(
-        join("for x in y:",
-             "  print(x)"),
-        join("  for x in y:",
-             "    print(x)",
-             ""));
+        join(
+            "for x in y:", //
+            "  print(x)"),
+        join(
+            "  for x in y:", //
+            "    print(x)",
+            ""));
     assertStmtTostringMatches(
-        join("for x in y:",
-             "  print(x)"),
+        join(
+            "for x in y:", //
+            "  print(x)"),
         "for x in y: ...\n");
 
     assertStmtIndentedPrettyMatches(
-        join("for x in y:",
-             "  pass"),
-        join("  for x in y:",
-             "    pass",
-             ""));
+        join(
+            "for x in y:", //
+            "  pass"),
+        join(
+            "  for x in y:", //
+            "    pass",
+            ""));
     assertStmtTostringMatches(
-        join("for x in y:",
-             "  pass"),
+        join(
+            "for x in y:", //
+            "  pass"),
         "for x in y: ...\n");
   }
 
   @Test
   public void ifStatement() throws SyntaxError.Exception {
     assertStmtIndentedPrettyMatches(
-        join("if True:",
-             "  print(x)"),
-        join("  if True:",
-             "    print(x)",
-             ""));
+        join(
+            "if True:", //
+            "  print(x)"),
+        join(
+            "  if True:", //
+            "    print(x)",
+            ""));
     assertStmtTostringMatches(
-        join("if True:",
-             "  print(x)"),
+        join(
+            "if True:", //
+            "  print(x)"),
         "if True: ...\n");
 
     assertStmtIndentedPrettyMatches(
-        join("if True:",
-             "  print(x)",
-             "elif False:",
-             "  print(y)",
-             "else:",
-             "  print(z)"),
-        join("  if True:",
-             "    print(x)",
-             "  elif False:",
-             "    print(y)",
-             "  else:",
-             "    print(z)",
-             ""));
+        join(
+            "if True:", //
+            "  print(x)",
+            "elif False:",
+            "  print(y)",
+            "else:",
+            "  print(z)"),
+        join(
+            "  if True:",
+            "    print(x)",
+            "  elif False:",
+            "    print(y)",
+            "  else:",
+            "    print(z)",
+            ""));
     assertStmtTostringMatches(
-        join("if True:",
+        join(
+            "if True:", //
             "  print(x)",
             "elif False:",
             "  print(y)",
@@ -360,21 +393,35 @@ public final class NodePrinterTest {
   @Test
   public void loadStatement() throws SyntaxError.Exception {
     assertStmtIndentedPrettyMatches(
-        "load(\"foo.bzl\", a=\"A\", \"B\")", "  load(\"foo.bzl\", a=\"A\", \"B\")\n");
+        "load(\"foo.bzl\", a=\"A\", \"B\")", //
+        "  load(\"foo.bzl\", a=\"A\", \"B\")\n");
     assertStmtTostringMatches(
-        "load(\"foo.bzl\", a=\"A\", \"B\")\n", "load(\"foo.bzl\", a=\"A\", \"B\")\n");
+        "load(\"foo.bzl\", a=\"A\", \"B\")\n", //
+        "load(\"foo.bzl\", a=\"A\", \"B\")\n");
   }
 
   @Test
   public void returnStatement() throws SyntaxError.Exception {
-    assertStmtIndentedPrettyMatches("return \"foo\"", "  return \"foo\"\n");
-    assertStmtTostringMatches("return \"foo\"", "return \"foo\"\n");
+    assertStmtIndentedPrettyMatches(
+        "return \"foo\"", //
+        "  return \"foo\"\n");
+    assertStmtTostringMatches(
+        "return \"foo\"", //
+        "return \"foo\"\n");
 
-    assertStmtIndentedPrettyMatches("return None", "  return None\n");
-    assertStmtTostringMatches("return None", "return None\n");
+    assertStmtIndentedPrettyMatches(
+        "return None", //
+        "  return None\n");
+    assertStmtTostringMatches(
+        "return None", //
+        "return None\n");
 
-    assertStmtIndentedPrettyMatches("return", "  return\n");
-    assertStmtTostringMatches("return", "return\n");
+    assertStmtIndentedPrettyMatches(
+        "return", //
+        "  return\n");
+    assertStmtTostringMatches(
+        "return", //
+        "return\n");
   }
 
   // Miscellaneous.
@@ -384,9 +431,10 @@ public final class NodePrinterTest {
     Node node = parseFile("print(x)\nprint(y)");
     assertIndentedPrettyMatches(
         node,
-        join("  print(x)",
-             "  print(y)",
-             ""));
+        join(
+            "  print(x)", //
+            "  print(y)",
+            ""));
     assertTostringMatches(node, "<StarlarkFile with 2 statements>");
   }
 

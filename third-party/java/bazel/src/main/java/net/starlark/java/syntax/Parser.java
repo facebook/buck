@@ -141,7 +141,7 @@ final class Parser {
           EnumSet.of(TokenKind.SLASH, TokenKind.SLASH_SLASH, TokenKind.STAR, TokenKind.PERCENT));
 
   private int errorsCount;
-  private boolean recoveryMode;  // stop reporting errors until next statement
+  private boolean recoveryMode; // stop reporting errors until next statement
 
   // Intern string literals, as some files contain many literals for the same string.
   private final Map<String, String> stringInterner = new HashMap<>();
@@ -313,8 +313,9 @@ final class Parser {
   }
 
   /**
-   * Consume tokens until we reach the first token that has a kind that is in
-   * the set of terminatingTokens.
+   * Consume tokens until we reach the first token that has a kind that is in the set of
+   * terminatingTokens.
+   *
    * @param terminatingTokens
    * @return the end offset of the terminating token.
    */
@@ -359,15 +360,27 @@ final class Parser {
     }
     String error;
     switch (token.kind) {
-      case ASSERT: error = "'assert' not supported, use 'fail' instead"; break;
+      case ASSERT:
+        error = "'assert' not supported, use 'fail' instead";
+        break;
       case DEL:
         error = "'del' not supported, use '.pop()' to delete an item from a dictionary or a list";
         break;
-      case IMPORT: error = "'import' not supported, use 'load' instead"; break;
-      case IS: error = "'is' not supported, use '==' instead"; break;
-      case RAISE: error = "'raise' not supported, use 'fail' instead"; break;
-      case TRY: error = "'try' not supported, all exceptions are fatal"; break;
-      case WHILE: error = "'while' not supported, use 'for' instead"; break;
+      case IMPORT:
+        error = "'import' not supported, use 'load' instead";
+        break;
+      case IS:
+        error = "'is' not supported, use '==' instead";
+        break;
+      case RAISE:
+        error = "'raise' not supported, use 'fail' instead";
+        break;
+      case TRY:
+        error = "'try' not supported, all exceptions are fatal";
+        break;
+      case WHILE:
+        error = "'while' not supported, use 'for' instead";
+        break;
       default:
         error = "keyword '" + token.kind + "' not supported";
         break;
@@ -395,7 +408,6 @@ final class Parser {
     // even when it fails.
     return new Identifier(locs, lexer.bufferSlice(start, end), start);
   }
-
 
   // arg = IDENTIFIER '=' test
   //     | expr
@@ -885,7 +897,7 @@ final class Parser {
     // The loop is not strictly needed, but it prevents risks of stack overflow. Depth is
     // limited to number of different precedence levels (operatorPrecedence.size()).
     TokenKind lastOp = null;
-    for (;;) {
+    for (; ; ) {
       if (token.kind == TokenKind.NOT) {
         // If NOT appears when we expect a binary operator, it must be followed by IN.
         // Since the code expects every operator to be a single token, we push a NOT_IN token.

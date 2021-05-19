@@ -15,7 +15,8 @@ public class BcTestUtil {
     }
     return Starlark.execFile(
         ParserInput.fromString(program, "f.star"),
-        FileOptions.DEFAULT, module,
+        FileOptions.DEFAULT,
+        module,
         new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT));
   }
 
@@ -30,11 +31,9 @@ public class BcTestUtil {
     for (Map.Entry<String, Object> entry : globals.entrySet()) {
       module.setGlobal(entry.getKey(), entry.getValue());
     }
-    Object result = Starlark.execFile(
-        ParserInput.fromString(program, "f.star"),
-        FileOptions.DEFAULT,
-        module,
-        thread);
+    Object result =
+        Starlark.execFile(
+            ParserInput.fromString(program, "f.star"), FileOptions.DEFAULT, module, thread);
     thread.mutability().freeze();
     return result;
   }
@@ -47,7 +46,8 @@ public class BcTestUtil {
     return makeFrozenFunction(program, ImmutableMap.of());
   }
 
-  static StarlarkFunction makeFrozenFunction(String program, ImmutableMap<String, Object> globals) throws Exception {
+  static StarlarkFunction makeFrozenFunction(String program, ImmutableMap<String, Object> globals)
+      throws Exception {
     return (StarlarkFunction) evalAndFreeze(program, globals);
   }
 

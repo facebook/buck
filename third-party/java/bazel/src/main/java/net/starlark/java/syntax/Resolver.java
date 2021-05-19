@@ -16,18 +16,14 @@ package net.starlark.java.syntax;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.FormatMethod;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
-import net.starlark.java.eval.Starlark;
 import net.starlark.java.spelling.SpellChecker;
 
 /**
@@ -206,7 +202,8 @@ public final class Resolver extends NodeVisitor {
       this.varargsIndex = varargsIndex;
       this.kwargsIndex = kwargsIndex;
 
-      this.numNonStarParams = params.size() - (varargsIndex >= 0 ? 1 : 0) - (kwargsIndex >= 0 ? 1 : 0);
+      this.numNonStarParams =
+          params.size() - (varargsIndex >= 0 ? 1 : 0) - (kwargsIndex >= 0 ? 1 : 0);
     }
 
     public ResolverModule getModule() {
@@ -519,7 +516,8 @@ public final class Resolver extends NodeVisitor {
     }
     switch (resolvedName.scope) {
       case GLOBAL:
-        bind = new Binding(Scope.GLOBAL, resolvedName.nameIndex, id, options.allowToplevelRebinding());
+        bind =
+            new Binding(Scope.GLOBAL, resolvedName.nameIndex, id, options.allowToplevelRebinding());
         // Accumulate globals in module.
         globals.add(name);
         break;
@@ -895,7 +893,12 @@ public final class Resolver extends NodeVisitor {
       if (bind == null) {
         // New global binding: add to module and to toplevel cache.
         isNew = true;
-        bind = new Binding(Scope.GLOBAL, module.getIndexOfGlobal(id.getName()), id, options.allowToplevelRebinding());
+        bind =
+            new Binding(
+                Scope.GLOBAL,
+                module.getIndexOfGlobal(id.getName()),
+                id,
+                options.allowToplevelRebinding());
         globals.add(name);
         toplevel.put(name, bind);
 
@@ -915,7 +918,9 @@ public final class Resolver extends NodeVisitor {
       if (bind == null) {
         // New local binding: add to enclosing function's frame and bindings map.
         isNew = true;
-        bind = new Binding(Scope.LOCAL, locals.frame.size(), id, !isLoad || options.allowToplevelRebinding());
+        bind =
+            new Binding(
+                Scope.LOCAL, locals.frame.size(), id, !isLoad || options.allowToplevelRebinding());
         locals.bindings.put(name, bind);
         locals.frame.add(bind);
       }

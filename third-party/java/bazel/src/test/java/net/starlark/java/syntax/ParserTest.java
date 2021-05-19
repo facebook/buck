@@ -95,8 +95,16 @@ public final class ParserTest {
     int actualEnd = node.getEndOffset();
 
     if (actualStart != start || actualEnd != end) {
-      fail("Expected location = [" + start + ", " + end + "), found ["
-          + actualStart + ", " + actualEnd + ")");
+      fail(
+          "Expected location = ["
+              + start
+              + ", "
+              + end
+              + "), found ["
+              + actualStart
+              + ", "
+              + actualEnd
+              + ")");
     }
   }
 
@@ -128,7 +136,7 @@ public final class ParserTest {
   @Test
   public void testPrecedence1() throws Exception {
     BinaryOperatorExpression e =
-      (BinaryOperatorExpression) parseExpression("'%sx' % 'foo' + 'bar'");
+        (BinaryOperatorExpression) parseExpression("'%sx' % 'foo' + 'bar'");
 
     assertThat(e.getOperator()).isEqualTo(TokenKind.PLUS);
   }
@@ -136,28 +144,26 @@ public final class ParserTest {
   @Test
   public void testPrecedence2() throws Exception {
     BinaryOperatorExpression e =
-      (BinaryOperatorExpression) parseExpression("('%sx' % 'foo') + 'bar'");
+        (BinaryOperatorExpression) parseExpression("('%sx' % 'foo') + 'bar'");
     assertThat(e.getOperator()).isEqualTo(TokenKind.PLUS);
   }
 
   @Test
   public void testPrecedence3() throws Exception {
     BinaryOperatorExpression e =
-      (BinaryOperatorExpression) parseExpression("'%sx' % ('foo' + 'bar')");
+        (BinaryOperatorExpression) parseExpression("'%sx' % ('foo' + 'bar')");
     assertThat(e.getOperator()).isEqualTo(TokenKind.PERCENT);
   }
 
   @Test
   public void testPrecedence4() throws Exception {
-    BinaryOperatorExpression e =
-        (BinaryOperatorExpression) parseExpression("1 + - (2 - 3)");
+    BinaryOperatorExpression e = (BinaryOperatorExpression) parseExpression("1 + - (2 - 3)");
     assertThat(e.getOperator()).isEqualTo(TokenKind.PLUS);
   }
 
   @Test
   public void testPrecedence5() throws Exception {
-    BinaryOperatorExpression e =
-        (BinaryOperatorExpression) parseExpression("2 * x | y + 1");
+    BinaryOperatorExpression e = (BinaryOperatorExpression) parseExpression("2 * x | y + 1");
     assertThat(e.getOperator()).isEqualTo(TokenKind.PIPE);
   }
 
@@ -985,7 +991,8 @@ public final class ParserTest {
       commentLines.append(") ");
     }
     assertWithMessage("Found: " + commentLines)
-        .that(result.getComments().size()).isEqualTo(10); // One per '#'
+        .that(result.getComments().size())
+        .isEqualTo(10); // One per '#'
   }
 
   @Test
@@ -993,8 +1000,7 @@ public final class ParserTest {
     setFailFast(false);
     // Regression test.
     // Note: missing comma after name='foo'
-    parseFile("genrule(name = 'foo'\n"
-              + "      srcs = ['in'])");
+    parseFile("genrule(name = 'foo'\n" + "      srcs = ['in'])");
     assertContainsError("syntax error at 'srcs'");
   }
 
@@ -1075,7 +1081,7 @@ public final class ParserTest {
     assertThat(((Identifier) returnNone.getResult()).getName()).isEqualTo("None");
 
     int i = 0;
-    for (String end : new String[]{";", "\n"}) {
+    for (String end : new String[] {";", "\n"}) {
       List<Statement> defNoExpr = parseStatements("def bar" + i + "():", "  return" + end);
       i++;
       assertThat(defNoExpr).hasSize(1);

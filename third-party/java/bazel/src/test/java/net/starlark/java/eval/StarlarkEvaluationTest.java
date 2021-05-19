@@ -45,8 +45,7 @@ public final class StarlarkEvaluationTest {
   private final EvaluationTestCase ev = new EvaluationTestCase();
 
   static class Bad {
-    Bad () {
-    }
+    Bad() {}
   }
 
   @StarlarkMethod(name = "foobar", documented = false)
@@ -73,7 +72,10 @@ public final class StarlarkEvaluationTest {
   private static Object getattr(Object x, String name) {
     try {
       return Starlark.getattr(
-          new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT), x, name, Starlark.NONE);
+          new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT),
+          x,
+          name,
+          Starlark.NONE);
     } catch (EvalException | InterruptedException ex) {
       throw new IllegalStateException(ex);
     }
@@ -144,6 +146,7 @@ public final class StarlarkEvaluationTest {
     public Boolean isEmpty(String str) {
       return str.isEmpty();
     }
+
     public void value() {}
 
     @StarlarkMethod(name = "return_bad", documented = false)
@@ -361,15 +364,7 @@ public final class StarlarkEvaluationTest {
     public String withArgsAndThread(
         StarlarkInt pos1, boolean pos2, boolean named, Sequence<?> args, StarlarkThread thread) {
       String argsString = debugPrintArgs(args);
-      return "with_args_and_thread("
-          + pos1
-          + ", "
-          + pos2
-          + ", "
-          + named
-          + ", "
-          + argsString
-          + ")";
+      return "with_args_and_thread(" + pos1 + ", " + pos2 + ", " + named + ", " + argsString + ")";
     }
 
     @StarlarkMethod(
@@ -383,9 +378,7 @@ public final class StarlarkEvaluationTest {
     public String withKwargs(boolean pos, boolean named, Dict<String, Object> kwargs) {
       String kwargsString =
           "kwargs("
-              + kwargs
-                  .entrySet()
-                  .stream()
+              + kwargs.entrySet().stream()
                   .map(entry -> entry.getKey() + "=" + entry.getValue())
                   .collect(joining(", "))
               + ")";
@@ -404,9 +397,7 @@ public final class StarlarkEvaluationTest {
       String argsString = debugPrintArgs(args);
       String kwargsString =
           "kwargs("
-              + kwargs
-                  .entrySet()
-                  .stream()
+              + kwargs.entrySet().stream()
                   .map(entry -> entry.getKey() + "=" + entry.getValue())
                   .collect(joining(", "))
               + ")";
@@ -450,6 +441,7 @@ public final class StarlarkEvaluationTest {
     public Boolean isEmpty(String str) {
       return str.isEmpty();
     }
+
     @Override
     public Boolean isEmptyInterface(String str) {
       return str.isEmpty();
@@ -696,6 +688,7 @@ public final class StarlarkEvaluationTest {
             "  return ys")
         .testEval("foo()", "[1, 2, 1, 2]");
   }
+
   @Test
   public void testForNestedWithListCompBad() throws Exception {
     ev.new Scenario()
@@ -1036,8 +1029,8 @@ public final class StarlarkEvaluationTest {
   }
 
   /**
-   * This test verifies an error is raised when a method parameter is set both positionally and
-   * by name.
+   * This test verifies an error is raised when a method parameter is set both positionally and by
+   * name.
    */
   @Test
   public void testArgSpecifiedBothByNameAndPosition() throws Exception {
@@ -1095,7 +1088,8 @@ public final class StarlarkEvaluationTest {
         .update("mock", new Mock())
         .setUp("")
         .testIfExactError(
-            "with_params() missing 1 required keyword-only argument: named", "mock.with_params(1, True)");
+            "with_params() missing 1 required keyword-only argument: named",
+            "mock.with_params(1, True)");
     ev.new Scenario()
         .update("mock", new Mock())
         .setUp("")
@@ -1610,7 +1604,8 @@ public final class StarlarkEvaluationTest {
             "e = func()")
         .testLookup(
             "e",
-            Dict.immutableOf("d", Dict.immutableOf("a", StarlarkInt.of(1), "b", StarlarkInt.of(2))));
+            Dict.immutableOf(
+                "d", Dict.immutableOf("a", StarlarkInt.of(1), "b", StarlarkInt.of(2))));
   }
 
   @Test

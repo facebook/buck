@@ -163,7 +163,9 @@ final class Lexer {
   private void newlineInsideExpression() {
     while (pos < buffer.length) {
       switch (buffer[pos]) {
-        case ' ': case '\t': case '\r':
+        case ' ':
+        case '\t':
+        case '\r':
           pos++;
           break;
         default:
@@ -225,8 +227,8 @@ final class Lexer {
   }
 
   /**
-   * Returns true if current position is in the middle of a triple quote
-   * delimiter (3 x quot), and advances 'pos' by two if so.
+   * Returns true if current position is in the middle of a triple quote delimiter (3 x quot), and
+   * advances 'pos' by two if so.
    */
   private boolean skipTripleQuote(char quot) {
     if (peek(0) == quot && peek(1) == quot) {
@@ -240,8 +242,8 @@ final class Lexer {
   /**
    * Scans a string literal delimited by 'quot', containing escape sequences.
    *
-   * <p>ON ENTRY: 'pos' is 1 + the index of the first delimiter
-   * ON EXIT: 'pos' is 1 + the index of the last delimiter.
+   * <p>ON ENTRY: 'pos' is 1 + the index of the first delimiter ON EXIT: 'pos' is 1 + the index of
+   * the last delimiter.
    */
   private void escapedStringLiteral(char quot, boolean isRaw) {
     int literalStartPos = isRaw ? pos - 2 : pos - 1;
@@ -398,8 +400,8 @@ final class Lexer {
    * Scans a string literal delimited by 'quot'.
    *
    * <ul>
-   * <li> ON ENTRY: 'pos' is 1 + the index of the first delimiter
-   * <li> ON EXIT: 'pos' is 1 + the index of the last delimiter.
+   *   <li>ON ENTRY: 'pos' is 1 + the index of the first delimiter
+   *   <li>ON EXIT: 'pos' is 1 + the index of the last delimiter.
    * </ul>
    *
    * @param isRaw if true, do not escape the string.
@@ -504,8 +506,8 @@ final class Lexer {
   /**
    * Scans an identifier or keyword.
    *
-   * <p>ON ENTRY: 'pos' is 1 + the index of the first char in the identifier.
-   * ON EXIT: 'pos' is 1 + the index of the last char in the identifier.
+   * <p>ON ENTRY: 'pos' is 1 + the index of the first char in the identifier. ON EXIT: 'pos' is 1 +
+   * the index of the last char in the identifier.
    */
   private void identifierOrKeyword() {
     int oldPos = pos - 1;
@@ -526,21 +528,71 @@ final class Lexer {
     while (pos < buffer.length) {
       switch (buffer[pos]) {
         case '_':
-        case 'a': case 'b': case 'c': case 'd': case 'e': case 'f':
-        case 'g': case 'h': case 'i': case 'j': case 'k': case 'l':
-        case 'm': case 'n': case 'o': case 'p': case 'q': case 'r':
-        case 's': case 't': case 'u': case 'v': case 'w': case 'x':
-        case 'y': case 'z':
-        case 'A': case 'B': case 'C': case 'D': case 'E': case 'F':
-        case 'G': case 'H': case 'I': case 'J': case 'K': case 'L':
-        case 'M': case 'N': case 'O': case 'P': case 'Q': case 'R':
-        case 'S': case 'T': case 'U': case 'V': case 'W': case 'X':
-        case 'Y': case 'Z':
-        case '0': case '1': case '2': case '3': case '4': case '5':
-        case '6': case '7': case '8': case '9':
+        case 'a':
+        case 'b':
+        case 'c':
+        case 'd':
+        case 'e':
+        case 'f':
+        case 'g':
+        case 'h':
+        case 'i':
+        case 'j':
+        case 'k':
+        case 'l':
+        case 'm':
+        case 'n':
+        case 'o':
+        case 'p':
+        case 'q':
+        case 'r':
+        case 's':
+        case 't':
+        case 'u':
+        case 'v':
+        case 'w':
+        case 'x':
+        case 'y':
+        case 'z':
+        case 'A':
+        case 'B':
+        case 'C':
+        case 'D':
+        case 'E':
+        case 'F':
+        case 'G':
+        case 'H':
+        case 'I':
+        case 'J':
+        case 'K':
+        case 'L':
+        case 'M':
+        case 'N':
+        case 'O':
+        case 'P':
+        case 'Q':
+        case 'R':
+        case 'S':
+        case 'T':
+        case 'U':
+        case 'V':
+        case 'W':
+        case 'X':
+        case 'Y':
+        case 'Z':
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
           pos++;
           break;
-       default:
+        default:
           return bufferSlice(oldPos, pos);
       }
     }
@@ -549,6 +601,7 @@ final class Lexer {
 
   /**
    * Tokenizes a two-char operator.
+   *
    * @return true if it tokenized an operator
    */
   private boolean tokenizeTwoChars() {

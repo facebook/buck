@@ -1,12 +1,11 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
+import java.util.*;
+import javax.annotation.Nullable;
 import net.starlark.java.annot.internal.BcOpcodeHandler;
 import net.starlark.java.annot.internal.BcOpcodeNumber;
 import net.starlark.java.syntax.*;
-
-import javax.annotation.Nullable;
-import java.util.*;
 
 /** Bytecode interpreter. Takes a compiled function body and returns a result. */
 class BcEval {
@@ -307,9 +306,7 @@ class BcEval {
     goToIf(Starlark.truth(cond), dest);
   }
 
-  @BcOpcodeHandler(
-      opcode = BcOpcodeNumber.IF_NOT_BR_LOCAL,
-      mayJump = true)
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.IF_NOT_BR_LOCAL, mayJump = true)
   void ifNotBrLocal() throws EvalException {
     int condSlot = nextOperand();
     int dest = nextOperand();
@@ -317,9 +314,7 @@ class BcEval {
     goToIf(!Starlark.truth(cond), dest);
   }
 
-  @BcOpcodeHandler(
-      opcode = BcOpcodeNumber.IF_TYPE_IS_BR,
-      mayJump = true)
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.IF_TYPE_IS_BR, mayJump = true)
   void ifTypeIsBr() throws EvalException {
     int valueSlot = nextOperand();
     int stringIndex = nextOperand();
@@ -329,9 +324,7 @@ class BcEval {
     goToIf(EvalUtils.typeIs(value, type), dest);
   }
 
-  @BcOpcodeHandler(
-      opcode = BcOpcodeNumber.IF_NOT_TYPE_IS_BR,
-      mayJump = true)
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.IF_NOT_TYPE_IS_BR, mayJump = true)
   void ifNotTypeIsBr() throws EvalException {
     int valueSlot = nextOperand();
     int stringIndex = nextOperand();
@@ -351,9 +344,7 @@ class BcEval {
     goToIf(EvalUtils.equal(a, b), dest);
   }
 
-  @BcOpcodeHandler(
-      opcode = BcOpcodeNumber.IF_NOT_EQ_BR,
-      mayJump = true)
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.IF_NOT_EQ_BR, mayJump = true)
   void ifNotEqBr() throws EvalException {
     int aSlot = nextOperand();
     int bSlot = nextOperand();
@@ -373,9 +364,7 @@ class BcEval {
     goToIf(EvalUtils.binaryIn(a, b, thread.getSemantics()), dest);
   }
 
-  @BcOpcodeHandler(
-      opcode = BcOpcodeNumber.IF_NOT_IN_BR,
-      mayJump = true)
+  @BcOpcodeHandler(opcode = BcOpcodeNumber.IF_NOT_IN_BR, mayJump = true)
   void ifNotInBr() throws EvalException {
     int aSlot = nextOperand();
     int bSlot = nextOperand();

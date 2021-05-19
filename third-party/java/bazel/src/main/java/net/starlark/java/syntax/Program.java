@@ -28,7 +28,9 @@ public final class Program {
   private final ResolverModule module;
 
   private Program(
-      Resolver.Function body, ImmutableList<String> loads, ImmutableList<Location> loadLocations,
+      Resolver.Function body,
+      ImmutableList<String> loads,
+      ImmutableList<Location> loadLocations,
       ResolverModule module) {
     // TODO(adonovan): compile here.
     this.body = body;
@@ -52,7 +54,7 @@ public final class Program {
     return loads;
   }
 
-  /*** Returns the location of the ith load (see {@link #getLoads}). */
+  /** * Returns the location of the ith load (see {@link #getLoads}). */
   public Location getLoadLocation(int i) {
     return loadLocations.get(i);
   }
@@ -103,9 +105,6 @@ public final class Program {
       throws SyntaxError.Exception {
     Resolver.Function body = Resolver.resolveExpr(expr, module, options);
     return new Program(
-        body,
-        /*loads=*/ ImmutableList.of(),
-        /*loadLocations=*/ ImmutableList.of(),
-        module);
+        body, /*loads=*/ ImmutableList.of(), /*loadLocations=*/ ImmutableList.of(), module);
   }
 }

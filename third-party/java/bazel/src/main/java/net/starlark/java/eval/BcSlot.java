@@ -21,6 +21,7 @@ class BcSlot {
 
   /** Operand type mask. */
   static final int MASK = 0xff_00_00_00;
+
   static final int LOCAL_FLAG = LOCAL_KIND << INDEX_BITS;
   static final int CONST_FLAG = CONST_KIND << INDEX_BITS;
   static final int GLOBAL_FLAG = GLOBAL_KIND << INDEX_BITS;
@@ -75,19 +76,26 @@ class BcSlot {
       case CONST_FLAG:
         return;
       default:
-        throw new VerifyException(String.format("invalid source slot: %s (mask %x)", slot, slot & MASK));
+        throw new VerifyException(
+            String.format("invalid source slot: %s (mask %x)", slot, slot & MASK));
     }
   }
 
   static String slotToString(int slot) {
     int index = slot & ~MASK;
     switch (slot & MASK) {
-      case LOCAL_FLAG: return "LOCAL:" + index;
-      case GLOBAL_FLAG: return "GLOBAL:" + index;
-      case FREE_FLAG: return "FREE:" + index;
-      case CELL_FLAG: return "CELL:" + index;
-      case CONST_FLAG: return "CONST:" + index;
-      default: return "INCORRECT:" + slot;
+      case LOCAL_FLAG:
+        return "LOCAL:" + index;
+      case GLOBAL_FLAG:
+        return "GLOBAL:" + index;
+      case FREE_FLAG:
+        return "FREE:" + index;
+      case CELL_FLAG:
+        return "CELL:" + index;
+      case CONST_FLAG:
+        return "CONST:" + index;
+      default:
+        return "INCORRECT:" + slot;
     }
   }
 

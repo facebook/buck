@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThrows;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -41,9 +40,7 @@ public final class StarlarkMutableTest {
     {
       Iterator<?> it = list.iterator();
       it.next();
-      assertThrows(
-          UnsupportedOperationException.class,
-          () -> it.remove());
+      assertThrows(UnsupportedOperationException.class, () -> it.remove());
     }
   }
 
@@ -60,23 +57,17 @@ public final class StarlarkMutableTest {
     {
       Iterator<Map.Entry<Object, Object>> it = dict.entrySet().iterator();
       Map.Entry<Object, Object> entry = it.next();
-      assertThrows(
-          UnsupportedOperationException.class,
-          () -> entry.setValue(5));
+      assertThrows(UnsupportedOperationException.class, () -> entry.setValue(5));
     }
     {
       Iterator<Object> it = dict.keySet().iterator();
       it.next();
-      assertThrows(
-          UnsupportedOperationException.class,
-          () -> it.remove());
+      assertThrows(UnsupportedOperationException.class, () -> it.remove());
     }
     {
       Iterator<Object> it = dict.values().iterator();
       it.next();
-      assertThrows(
-          UnsupportedOperationException.class,
-          () -> it.remove());
+      assertThrows(UnsupportedOperationException.class, () -> it.remove());
     }
   }
 

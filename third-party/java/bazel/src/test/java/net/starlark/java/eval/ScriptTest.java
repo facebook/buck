@@ -82,11 +82,12 @@ public final class ScriptTest {
     assertThat(files).isNotEmpty();
     Arrays.sort(files);
     return Arrays.stream(files)
-        .map(f -> new Object[] {
-            // Either JUnit or Idea doesn't like dots in test names
-            f.getName().replaceAll("\\..*", ""),
-            f,
-        })
+        .map(
+            f ->
+                new Object[] {
+                  // Either JUnit or Idea doesn't like dots in test names
+                  f.getName().replaceAll("\\..*", ""), f,
+                })
         .collect(ImmutableList.toImmutableList());
   }
 

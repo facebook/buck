@@ -17,38 +17,41 @@ import org.junit.Test;
 public class BcCallCachedTest {
   @Test
   public void callCachedInstructionUsed() throws Exception {
-    String programG = "" //
-        + "def g(x): pass\n"
-        + "g";
+    String programG =
+        "" //
+            + "def g(x): pass\n"
+            + "g";
     StarlarkFunction g = BcTestUtil.makeFrozenFunction(programG);
 
-    String program = "" //
-        + "def f(): return g(1)\n"
-        + "f";
+    String program =
+        "" //
+            + "def f(): return g(1)\n"
+            + "f";
     StarlarkThread thread = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
     Module module = Module.create();
     module.setGlobal("g", g);
-    StarlarkFunction f = (StarlarkFunction) Starlark.execFile(
-        ParserInput.fromString(program, "f.star"),
-        FileOptions.DEFAULT, module,
-        thread);
+    StarlarkFunction f =
+        (StarlarkFunction)
+            Starlark.execFile(
+                ParserInput.fromString(program, "f.star"), FileOptions.DEFAULT, module, thread);
     ImmutableList<BcInstrOpcode.Decoded> instructions = f.compiled.instructions();
     assertEquals(BcInstrOpcode.CALL_CACHED, instructions.get(0).opcode);
   }
 
   @Test
   public void callCachedInstructionIsNotUsedWhenFunctionAccessesGlobals() throws Exception {
-    String program = "" //
-        + "L = []\n"
-        + "def g(x): L.append(x)\n"
-        + "def f(): return g(1)\n"
-        + "f";
+    String program =
+        "" //
+            + "L = []\n"
+            + "def g(x): L.append(x)\n"
+            + "def f(): return g(1)\n"
+            + "f";
     StarlarkThread thread = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
     Module module = Module.create();
-    StarlarkFunction f = (StarlarkFunction) Starlark.execFile(
-        ParserInput.fromString(program, "f.star"),
-        FileOptions.DEFAULT, module,
-        thread);
+    StarlarkFunction f =
+        (StarlarkFunction)
+            Starlark.execFile(
+                ParserInput.fromString(program, "f.star"), FileOptions.DEFAULT, module, thread);
     ImmutableList<BcInstrOpcode.Decoded> instructions = f.compiled.instructions();
     // We are calling `g` with `CALL_LINKED`, not `CALL_CACHED`
     assertEquals(BcInstrOpcode.CALL_LINKED_1, instructions.get(0).opcode);
@@ -56,22 +59,24 @@ public class BcCallCachedTest {
 
   @Test
   public void callCachedInstructionUsedButCallIsNotCached() throws Exception {
-    String gProgram = "" //
-        + "def g(x):\n"
-        + "  return [x]\n"
-        + "g";
+    String gProgram =
+        "" //
+            + "def g(x):\n"
+            + "  return [x]\n"
+            + "g";
     StarlarkFunction g = BcTestUtil.makeFrozenFunction(gProgram);
 
-    String program = "" //
-        + "def f(): return g(1)\n"
-        + "f";
+    String program =
+        "" //
+            + "def f(): return g(1)\n"
+            + "f";
     StarlarkThread thread = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
     Module module = Module.create();
     module.setGlobal("g", g);
-    StarlarkFunction f = (StarlarkFunction) Starlark.execFile(
-        ParserInput.fromString(program, "f.star"),
-        FileOptions.DEFAULT, module,
-        thread);
+    StarlarkFunction f =
+        (StarlarkFunction)
+            Starlark.execFile(
+                ParserInput.fromString(program, "f.star"), FileOptions.DEFAULT, module, thread);
     ImmutableList<BcInstrOpcode.Decoded> instructions = f.compiled.instructions();
     // We compile `g(1)` as `CALL_CACHED`
     assertEquals(BcInstrOpcode.CALL_CACHED, instructions.get(0).opcode);
@@ -81,9 +86,7 @@ public class BcCallCachedTest {
     assertEquals(StarlarkList.immutableOf(StarlarkInt.of(1)), firstCallResult);
     assertEquals(StarlarkList.immutableOf(StarlarkInt.of(1)), secondCallResult);
     assertNotSame(
-        "Second invocation produced different instance",
-        firstCallResult,
-        secondCallResult);
+        "Second invocation produced different instance", firstCallResult, secondCallResult);
   }
 
   public static class SideEffectsPure extends StarlarkValue {
@@ -96,11 +99,7 @@ public class BcCallCachedTest {
 
     @StarlarkMethod(
         name = "pure",
-        parameters = {
-            @Param(
-                name = "x"
-            )
-        },
+        parameters = {@Param(name = "x")},
         documented = false,
         purity = FnPurity.PURE)
     public String pure(Object x) {
@@ -113,24 +112,25 @@ public class BcCallCachedTest {
   public void callWasCachedBecausePure() throws Exception {
     SideEffectsPure sideEffects = new SideEffectsPure();
 
-    String programG = "" //
-        + "def g(x): return side_effects.pure(x)\n"
-        + "g";
+    String programG =
+        "" //
+            + "def g(x): return side_effects.pure(x)\n"
+            + "g";
 
-    StarlarkFunction g = BcTestUtil.makeFrozenFunction(
-        programG,
-        ImmutableMap.of("side_effects", sideEffects));
+    StarlarkFunction g =
+        BcTestUtil.makeFrozenFunction(programG, ImmutableMap.of("side_effects", sideEffects));
 
-    String program = "" //
-        + "def f(): return g(1)\n"
-        + "f";
+    String program =
+        "" //
+            + "def f(): return g(1)\n"
+            + "f";
     StarlarkThread thread = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
     Module module = Module.create();
     module.setGlobal("g", g);
-    StarlarkFunction f = (StarlarkFunction) Starlark.execFile(
-        ParserInput.fromString(program, "f.star"),
-        FileOptions.DEFAULT, module,
-        thread);
+    StarlarkFunction f =
+        (StarlarkFunction)
+            Starlark.execFile(
+                ParserInput.fromString(program, "f.star"), FileOptions.DEFAULT, module, thread);
     ImmutableList<BcInstrOpcode.Decoded> instructions = f.compiled.instructions();
     assertEquals(BcInstrOpcode.CALL_CACHED, instructions.get(0).opcode);
 
@@ -151,11 +151,7 @@ public class BcCallCachedTest {
 
     @StarlarkMethod(
         name = "not_pure",
-        parameters = {
-            @Param(
-                name = "x"
-            )
-        },
+        parameters = {@Param(name = "x")},
         documented = false,
         purity = FnPurity.DEFAULT)
     public String notPure(Object x) {
@@ -168,24 +164,25 @@ public class BcCallCachedTest {
   public void callWasNotCachedBecauseNotPure() throws Exception {
     SideEffectsNotPure sideEffects = new SideEffectsNotPure();
 
-    String programG = "" //
-        + "def g(x): return side_effects.not_pure(x)\n"
-        + "g";
+    String programG =
+        "" //
+            + "def g(x): return side_effects.not_pure(x)\n"
+            + "g";
 
-    StarlarkFunction g = BcTestUtil.makeFrozenFunction(
-        programG,
-        ImmutableMap.of("side_effects", sideEffects));
+    StarlarkFunction g =
+        BcTestUtil.makeFrozenFunction(programG, ImmutableMap.of("side_effects", sideEffects));
 
-    String program = "" //
-        + "def f(): return g(1)\n"
-        + "f";
+    String program =
+        "" //
+            + "def f(): return g(1)\n"
+            + "f";
     StarlarkThread thread = new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT);
     Module module = Module.create();
     module.setGlobal("g", g);
-    StarlarkFunction f = (StarlarkFunction) Starlark.execFile(
-        ParserInput.fromString(program, "f.star"),
-        FileOptions.DEFAULT, module,
-        thread);
+    StarlarkFunction f =
+        (StarlarkFunction)
+            Starlark.execFile(
+                ParserInput.fromString(program, "f.star"), FileOptions.DEFAULT, module, thread);
     ImmutableList<BcInstrOpcode.Decoded> instructions = f.compiled.instructions();
     // Even if function is not pure, we are still using `CALL_CACHED` instruction
     assertEquals(BcInstrOpcode.CALL_CACHED, instructions.get(0).opcode);

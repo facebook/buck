@@ -43,6 +43,7 @@ final class MethodDescriptor {
   private final boolean useStarlarkThread;
   /** Can reuse fastcall positional arguments if parameter count matches. */
   private final MethodDescriptorGenerated generated;
+
   private final FnPurity purity;
   /** Size of array to be passed to {@link #call(Object, Object[], StarlarkThread)}. */
   private final int argsSize;
@@ -68,7 +69,10 @@ final class MethodDescriptor {
     this.doc = doc;
     this.documented = documented;
     this.structField = structField;
-    this.parameters = method.getDeclaringClass() == StringModule.class ? Arrays.copyOfRange(parameters, 1, parameters.length) : parameters;
+    this.parameters =
+        method.getDeclaringClass() == StringModule.class
+            ? Arrays.copyOfRange(parameters, 1, parameters.length)
+            : parameters;
     this.extraPositionals = extraPositionals;
     this.extraKeywords = extraKeywords;
     this.selfCall = selfCall;
@@ -151,8 +155,7 @@ final class MethodDescriptor {
    * <p>The Mutability is used if it is necessary to allocate a Starlark copy of a Java result.
    */
   Object call(Object obj, Object[] args, StarlarkThread thread)
-      throws EvalException, InterruptedException,
-      MethodDescriptorGenerated.ArgumentBindException {
+      throws EvalException, InterruptedException, MethodDescriptorGenerated.ArgumentBindException {
     try {
       return generated.invoke(obj, args, thread);
     } catch (MethodDescriptorGenerated.ArgumentBindException e) {
@@ -234,5 +237,4 @@ final class MethodDescriptor {
   public FnPurity getPurity() {
     return purity;
   }
-
 }

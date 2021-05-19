@@ -22,9 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests for {@link SpellChecker}.
- */
+/** Tests for {@link SpellChecker}. */
 @RunWith(JUnit4.class)
 public class SpellCheckerTest {
 
@@ -82,10 +80,26 @@ public class SpellCheckerTest {
 
   @Test
   public void suggest() throws Exception {
-    List<String> dict = Lists.newArrayList(
-        "isalnum", "isalpha", "isdigit", "islower", "isupper", "find", "join", "range",
-        "rsplit", "rstrip", "split", "splitlines", "startswith", "strip", "title", "upper",
-        "x", "xyz");
+    List<String> dict =
+        Lists.newArrayList(
+            "isalnum",
+            "isalpha",
+            "isdigit",
+            "islower",
+            "isupper",
+            "find",
+            "join",
+            "range",
+            "rsplit",
+            "rstrip",
+            "split",
+            "splitlines",
+            "startswith",
+            "strip",
+            "title",
+            "upper",
+            "x",
+            "xyz");
 
     assertThat(SpellChecker.suggest("isdfit", dict)).isEqualTo("isdigit");
     assertThat(SpellChecker.suggest("rspit", dict)).isEqualTo("rsplit");

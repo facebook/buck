@@ -687,8 +687,8 @@ public final class MethodLibraryTest {
    * string and chars argument. If chars is null no argument is passed.
    */
   private void checkStrip(
-      String input, Object chars,
-      String expLeft, String expRight, String expBoth) throws Exception {
+      String input, Object chars, String expLeft, String expRight, String expBoth)
+      throws Exception {
     if (chars == null) {
       ev.new Scenario()
           .update("s", input)
@@ -718,9 +718,7 @@ public final class MethodLibraryTest {
     checkStrip(" a b c ", Starlark.NONE, "a b c ", " a b c", "a b c");
     // Default whitespace with full range of Latin-1 whitespace chars.
     String whitespace = "\u0009\n\u000B\u000C\r\u001C\u001D\u001E\u001F\u0020\u0085\u00A0";
-    checkStrip(
-        whitespace + "a" + whitespace, null,
-        "a" + whitespace, whitespace + "a", "a");
+    checkStrip(whitespace + "a" + whitespace, null, "a" + whitespace, whitespace + "a", "a");
     checkStrip(
         whitespace + "a" + whitespace, Starlark.NONE, "a" + whitespace, whitespace + "a", "a");
     // Empty cases.
@@ -764,7 +762,6 @@ public final class MethodLibraryTest {
 
   @Test
   public void starlarkDebugFrame() throws Exception {
-    ev.new Scenario()
-        .testExpression("starlark_debug_frame()", Starlark.NONE);
+    ev.new Scenario().testExpression("starlark_debug_frame()", Starlark.NONE);
   }
 }

@@ -26,9 +26,7 @@ public @interface Param {
    */
   String name();
 
-  /**
-   * Documentation of the parameter.
-   */
+  /** Documentation of the parameter. */
   String doc() default "";
 
   /**

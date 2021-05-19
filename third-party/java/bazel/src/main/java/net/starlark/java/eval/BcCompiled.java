@@ -9,46 +9,28 @@ import net.starlark.java.syntax.FileLocations;
 import net.starlark.java.syntax.Location;
 import net.starlark.java.syntax.Resolver;
 
-/**
- * Function body as a bytecode block.
- */
+/** Function body as a bytecode block. */
 class BcCompiled {
 
-  /**
-   * For debugging.
-   */
+  /** For debugging. */
   private final String name;
-  /**
-   * For errors.
-   */
+  /** For errors. */
   private final FileLocations fileLocations;
 
   private final ImmutableList<Resolver.Binding> locals;
   private final ImmutableList<Resolver.Binding> freeVars;
   private final Module module;
-  /**
-   * Strings references by the bytecode.
-   */
+  /** Strings references by the bytecode. */
   final String[] strings;
-  /**
-   * Other objects references by the bytecode.
-   */
+  /** Other objects references by the bytecode. */
   final Object[] objects;
-  /**
-   * The bytecode.
-   */
+  /** The bytecode. */
   final int[] text;
-  /**
-   * Number of registers.
-   */
+  /** Number of registers. */
   final int slotCount;
-  /**
-   * Registers holding constants.
-   */
+  /** Registers holding constants. */
   final Object[] constSlots;
-  /**
-   * Max depths of for loops.
-   */
+  /** Max depths of for loops. */
   final int loopDepth;
   /**
    * Instruction pointer to a location offset.
@@ -56,10 +38,9 @@ class BcCompiled {
    * <p>Key is a beginning of an instruction.
    */
   final BcInstrToLoc instrToLoc;
-  @Nullable
-  private final Object returnsConst;
-  @Nullable
-  private final String returnsTypeIs;
+
+  @Nullable private final Object returnsConst;
+  @Nullable private final String returnsTypeIs;
 
   BcCompiled(
       String name,
@@ -74,10 +55,8 @@ class BcCompiled {
       Object[] constSlots,
       int loopDepth,
       BcInstrToLoc instrToLoc,
-      @Nullable
-      Object returnsConst,
-      @Nullable
-      String returnsTypeIs) {
+      @Nullable Object returnsConst,
+      @Nullable String returnsTypeIs) {
     this.name = name;
     this.fileLocations = fileLocations;
     this.locals = locals;
@@ -108,15 +87,19 @@ class BcCompiled {
 
   @Override
   public String toString() {
-    return toStringImpl(name, text, new BcInstrOperand.OpcodePrinterFunctionContext(
-            getLocalNames(),
-            module.getResolverModule().getGlobalNamesSlow(),
-            getFreeVarNames()),
-        Arrays.asList(strings), Arrays.asList(constSlots), Arrays.asList(objects));
+    return toStringImpl(
+        name,
+        text,
+        new BcInstrOperand.OpcodePrinterFunctionContext(
+            getLocalNames(), module.getResolverModule().getGlobalNamesSlow(), getFreeVarNames()),
+        Arrays.asList(strings),
+        Arrays.asList(constSlots),
+        Arrays.asList(objects));
   }
 
   private ImmutableList<String> getFreeVarNames() {
-    return freeVars.stream().map(Resolver.Binding::getName)
+    return freeVars.stream()
+        .map(Resolver.Binding::getName)
         .collect(ImmutableList.toImmutableList());
   }
 
@@ -125,24 +108,35 @@ class BcCompiled {
   }
 
   ImmutableList<String> toStringInstructions() {
-    return toStringInstructionsImpl(text, new BcInstrOperand.OpcodePrinterFunctionContext(
-            getLocalNames(),
-            module.getResolverModule().getGlobalNamesSlow(),
-            getFreeVarNames()),
-        Arrays.asList(strings), Arrays.asList(constSlots), Arrays.asList(objects));
+    return toStringInstructionsImpl(
+        text,
+        new BcInstrOperand.OpcodePrinterFunctionContext(
+            getLocalNames(), module.getResolverModule().getGlobalNamesSlow(), getFreeVarNames()),
+        Arrays.asList(strings),
+        Arrays.asList(constSlots),
+        Arrays.asList(objects));
   }
 
   @VisibleForTesting
-  static String toStringImpl(String name, int[] text,
+  static String toStringImpl(
+      String name,
+      int[] text,
       BcInstrOperand.OpcodePrinterFunctionContext fnCtx,
-      List<String> strings, List<Object> constants, List<Object> objects) {
-    return "def " + name + "; " + String
-        .join("; ", toStringInstructionsImpl(text, fnCtx, strings, constants, objects));
+      List<String> strings,
+      List<Object> constants,
+      List<Object> objects) {
+    return "def "
+        + name
+        + "; "
+        + String.join("; ", toStringInstructionsImpl(text, fnCtx, strings, constants, objects));
   }
 
-  private static ImmutableList<String> toStringInstructionsImpl(int[] text,
+  private static ImmutableList<String> toStringInstructionsImpl(
+      int[] text,
       BcInstrOperand.OpcodePrinterFunctionContext fnCtx,
-      List<String> strings, List<Object> constants, List<Object> objects) {
+      List<String> strings,
+      List<Object> constants,
+      List<Object> objects) {
     ImmutableList.Builder<String> ret = ImmutableList.builder();
     BcInstrParser parser = new BcInstrParser(text);
     while (!parser.eof()) {
@@ -151,8 +145,7 @@ class BcCompiled {
       BcInstrOpcode opcode = parser.nextOpcode();
       sb.append(opcode);
       String argsString =
-          opcode.operands.toStringAndCount(
-              parser, strings, constants, objects, fnCtx);
+          opcode.operands.toStringAndCount(parser, strings, constants, objects, fnCtx);
 
       sb.append(" ").append(argsString);
       ret.add(sb.toString());
@@ -162,21 +155,15 @@ class BcCompiled {
     return ret.build();
   }
 
-  /**
-   * Instruction opcode at IP.
-   */
+  /** Instruction opcode at IP. */
   BcInstrOpcode instrOpcodeAt(int ip) {
     return BcInstrOpcode.values()[text[ip]];
   }
 
-  /**
-   * Instruction length at IP.
-   */
+  /** Instruction length at IP. */
   public int instrLenAt(int ip) {
     return BcInstr.INSTR_HEADER_LEN
-        + instrOpcodeAt(ip)
-        .operands
-        .codeSize(text, ip + BcInstr.INSTR_HEADER_LEN);
+        + instrOpcodeAt(ip).operands.codeSize(text, ip + BcInstr.INSTR_HEADER_LEN);
   }
 
   String getName() {

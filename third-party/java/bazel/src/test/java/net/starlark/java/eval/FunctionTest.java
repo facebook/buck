@@ -585,29 +585,21 @@ public final class FunctionTest {
   @Test
   public void testExtraVarargs() throws Exception {
     ev.exec("def f(): pass");
-    ev.checkEvalError(
-        "f() does not accept positional arguments, but got 2",
-        "f(*[1, 2])");
+    ev.checkEvalError("f() does not accept positional arguments, but got 2", "f(*[1, 2])");
 
     ev.exec("def g(a): pass");
-    ev.checkEvalError(
-        "g() accepts no more than 1 positional argument but got 2",
-        "g(*[1, 2])");
+    ev.checkEvalError("g() accepts no more than 1 positional argument but got 2", "g(*[1, 2])");
   }
 
   @Test
   public void namedAndStarStarConflict() throws Exception {
     ev.exec("def f(**kwargs): pass");
-    ev.checkEvalError(
-        "f() got multiple values for keyword argument 'a'",
-        "f(a = 1, **{'a': 2})");
+    ev.checkEvalError("f() got multiple values for keyword argument 'a'", "f(a = 1, **{'a': 2})");
   }
 
   @Test
   public void unboundNamed() throws Exception {
     ev.exec("def f(): pass");
-    ev.checkEvalError(
-        "f() got unexpected keyword argument: b",
-        "f(**{'b': 2})");
+    ev.checkEvalError("f() got unexpected keyword argument: b", "f(**{'b': 2})");
   }
 }

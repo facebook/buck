@@ -11,8 +11,7 @@ class BcDotSite {
     this.name = name;
   }
 
-  @Nullable
-  private Cache cache = null;
+  @Nullable private Cache cache = null;
 
   Object getattr(StarlarkThread thread, Object self) throws EvalException, InterruptedException {
 
@@ -20,8 +19,7 @@ class BcDotSite {
 
     Cache cache = this.cache;
     if (cache == null || cache.selfClass != self.getClass()) {
-      MethodDescriptor method =
-          CallUtils.getAnnotatedMethods(self.getClass()).get(name);
+      MethodDescriptor method = CallUtils.getAnnotatedMethods(self.getClass()).get(name);
 
       cache = this.cache = new Cache(self.getClass(), method);
     }
@@ -56,8 +54,7 @@ class BcDotSite {
         "'%s' value has no field or method '%s'%s",
         Starlark.type(self),
         name,
-        SpellChecker.didYouMean(
-            name, Starlark.dir(thread.mutability(), self)));
+        SpellChecker.didYouMean(name, Starlark.dir(thread.mutability(), self)));
   }
 
   private static class Cache {

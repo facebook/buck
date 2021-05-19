@@ -34,8 +34,7 @@ class MethodLibrary {
 
   static final MethodLibrary INSTANCE = new MethodLibrary();
 
-  private MethodLibrary() {
-  }
+  private MethodLibrary() {}
 
   @StarlarkMethod(
       name = "min",
@@ -174,8 +173,9 @@ class MethodLibrary {
     // decorate
     for (int i = 0; i < array.length; i++) {
       Object v = array[i];
-      Object k = BcCall
-          .linkAndCall(thread, keyfn, StarlarkCallableLinkSig.positional(1), new Object[] {v}, null, null);
+      Object k =
+          BcCall.linkAndCall(
+              thread, keyfn, StarlarkCallableLinkSig.positional(1), new Object[] {v}, null, null);
       array[i] = new Object[] {k, v};
     }
 
@@ -276,7 +276,8 @@ class MethodLibrary {
       parameters = {@Param(name = "x", defaultValue = "[]", doc = "The object to convert.")},
       useStarlarkThread = true,
       purity = FnPurity.PURE)
-  public static StarlarkList<?> list(StarlarkIterable<?> x, StarlarkThread thread) throws EvalException {
+  public static StarlarkList<?> list(StarlarkIterable<?> x, StarlarkThread thread)
+      throws EvalException {
     return StarlarkList.wrap(thread.mutability(), Starlark.toArray(x));
   }
 
@@ -595,8 +596,8 @@ class MethodLibrary {
             doc = "The increment (default is 1). It may be negative.")
       },
       purity = FnPurity.SPEC_SAFE)
-  public static Sequence<StarlarkInt> range(StarlarkInt startOrStop, Object stopOrNone, StarlarkInt stepI)
-      throws EvalException {
+  public static Sequence<StarlarkInt> range(
+      StarlarkInt startOrStop, Object stopOrNone, StarlarkInt stepI) throws EvalException {
     int start;
     int stop;
     if (stopOrNone == Starlark.NONE) {
@@ -654,10 +655,7 @@ class MethodLibrary {
   public static Object getattr(Object obj, String name, Object defaultValue, StarlarkThread thread)
       throws EvalException, InterruptedException {
     return Starlark.getattr(
-        thread,
-        obj,
-        name,
-        defaultValue == Starlark.UNBOUND ? null : defaultValue);
+        thread, obj, name, defaultValue == Starlark.UNBOUND ? null : defaultValue);
   }
 
   @StarlarkMethod(
@@ -745,7 +743,8 @@ class MethodLibrary {
       // NB: as compared to Python3, we're missing optional named-only arguments 'end' and 'file'
       extraPositionals = @Param(name = "args", doc = "The objects to print."),
       useStarlarkThread = true)
-  public static void print(String sep, Sequence<?> args, StarlarkThread thread) throws EvalException {
+  public static void print(String sep, Sequence<?> args, StarlarkThread thread)
+      throws EvalException {
     Printer p = new Printer();
     String separator = "";
     for (Object x : args) {
@@ -824,9 +823,8 @@ class MethodLibrary {
   }
 
   /**
-   * Print some internal debugging information to stderr.
-   * This function is intentionally unspecified.
-   * It can be changed or removed any time without notice.
+   * Print some internal debugging information to stderr. This function is intentionally
+   * unspecified. It can be changed or removed any time without notice.
    */
   @StarlarkMethod(
       name = "starlark_debug_frame",
@@ -837,8 +835,7 @@ class MethodLibrary {
     thread.getPrintHandler().print(thread, "Debug for frame " + caller.getFunction());
     if (caller.fn instanceof StarlarkFunction) {
       thread.getPrintHandler().print(thread, "Instructions:");
-      for (String instr :
-          ((StarlarkFunction) caller.fn).compiled.toStringInstructions()) {
+      for (String instr : ((StarlarkFunction) caller.fn).compiled.toStringInstructions()) {
         thread.getPrintHandler().print(thread, instr);
       }
     } else {
@@ -846,7 +843,6 @@ class MethodLibrary {
     }
     thread.getPrintHandler().print(thread, ".");
   }
-
 
   /** Starlark bool type. */
   @StarlarkBuiltin(

@@ -2,7 +2,6 @@ package net.starlark.java.eval;
 
 import com.google.common.base.Joiner;
 import java.util.ArrayList;
-import java.util.List;
 
 /** Utility to collect missing params for {@link StarlarkFunction} and {@link BuiltinFunction}. */
 class MissingParams {
@@ -37,10 +36,7 @@ class MissingParams {
     if (!named.isEmpty()) {
       return Starlark.errorf(
           "%s() missing %d required keyword-only argument%s: %s",
-          name,
-          named.size(),
-          StarlarkFunction.plural(named.size()),
-          Joiner.on(", ").join(named));
+          name, named.size(), StarlarkFunction.plural(named.size()), Joiner.on(", ").join(named));
     }
     throw new AssertionError("unreachable: must have at least one positional or named param");
   }

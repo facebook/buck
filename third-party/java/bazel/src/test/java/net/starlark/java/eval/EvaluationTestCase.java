@@ -293,6 +293,7 @@ class EvaluationTestCase {
 
     /**
      * Executes the given Testable
+     *
      * @param testable
      * @throws Exception
      */
@@ -313,9 +314,7 @@ class EvaluationTestCase {
       this.decorated = decorated;
     }
 
-    /**
-     * Executes all stored actions and updates plus the actual {@code Testable}
-     */
+    /** Executes all stored actions and updates plus the actual {@code Testable} */
     @Override
     public void run() throws Exception {
       setup.executeAll();

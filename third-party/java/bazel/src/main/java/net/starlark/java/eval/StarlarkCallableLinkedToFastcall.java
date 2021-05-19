@@ -3,7 +3,6 @@ package net.starlark.java.eval;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import java.util.Arrays;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 /** Simple (and inefficient) implementation of linked callable which delegates to fastcalll. */
@@ -14,11 +13,16 @@ class StarlarkCallableLinkedToFastcall extends StarlarkCallableLinked {
   }
 
   @Override
-  public Object callLinked(StarlarkThread thread, Object[] args,
-      @Nullable Sequence<?> starArgs, @Nullable Dict<?, ?> starStarArgs) throws EvalException, InterruptedException {
+  public Object callLinked(
+      StarlarkThread thread,
+      Object[] args,
+      @Nullable Sequence<?> starArgs,
+      @Nullable Dict<?, ?> starStarArgs)
+      throws EvalException, InterruptedException {
 
     // Cheap self-check
-    Preconditions.checkState(linkSig.numPositionals + linkSig.namedNames.length == args.length,
+    Preconditions.checkState(
+        linkSig.numPositionals + linkSig.namedNames.length == args.length,
         "Linked function called with incorrect number of arguments");
 
     // Fast track for calls like `list(x)`
@@ -27,7 +31,8 @@ class StarlarkCallableLinkedToFastcall extends StarlarkCallableLinked {
     }
 
     int fastcallNPositional = linkSig.numPositionals + (starArgs != null ? starArgs.size() : 0);
-    int fastcallNNamed = linkSig.namedNames.length + (starStarArgs != null ? starStarArgs.size() : 0);
+    int fastcallNNamed =
+        linkSig.namedNames.length + (starStarArgs != null ? starStarArgs.size() : 0);
 
     Object[] fastcallPositional;
     if (args.length == linkSig.numPositionals && args.length == fastcallNPositional) {

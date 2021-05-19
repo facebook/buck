@@ -17,12 +17,10 @@ package net.starlark.java.eval;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import net.starlark.java.eval.Debug.ReadyToPause;
 import net.starlark.java.eval.Debug.Stepping;
 import net.starlark.java.syntax.FileOptions;
-import net.starlark.java.syntax.Location;
 import net.starlark.java.syntax.ParserInput;
 import net.starlark.java.syntax.SyntaxError;
 import org.junit.Test;
@@ -134,8 +132,7 @@ public class StarlarkThreadDebuggingTest {
 
   @Test
   public void testEvaluateVariableInScope() throws Exception {
-    Module module =
-        Module.withPredeclared(ImmutableMap.of("a", StarlarkInt.of(1)));
+    Module module = Module.withPredeclared(ImmutableMap.of("a", StarlarkInt.of(1)));
 
     StarlarkThread thread = newThread();
     Object a = Starlark.execFile(ParserInput.fromLines("a"), FileOptions.DEFAULT, module, thread);
@@ -159,9 +156,7 @@ public class StarlarkThreadDebuggingTest {
   @Test
   public void testEvaluateExpressionOnVariableInScope() throws Exception {
     StarlarkThread thread = newThread();
-    Module module =
-        Module.withPredeclared(
-            /*predeclared=*/ ImmutableMap.of("a", "string"));
+    Module module = Module.withPredeclared(/*predeclared=*/ ImmutableMap.of("a", "string"));
 
     assertThat(
             Starlark.execFile(

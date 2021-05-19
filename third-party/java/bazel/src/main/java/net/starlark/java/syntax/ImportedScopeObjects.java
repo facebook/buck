@@ -2,7 +2,6 @@ package net.starlark.java.syntax;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.stream.IntStream;
 
 /** Map from name to value with index by name. */

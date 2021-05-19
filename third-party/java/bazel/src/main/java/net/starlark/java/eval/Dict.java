@@ -17,7 +17,6 @@ package net.starlark.java.eval;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -90,8 +89,7 @@ import net.starlark.java.annot.StarlarkMethod;
             + " are permitted.\n"
             + "</ol>")
 public final class Dict<K, V> extends StarlarkIndexable<K>
-    implements Map<K, V>,
-        Mutability.Freezable {
+    implements Map<K, V>, Mutability.Freezable {
 
   // TODO(adonovan): for dicts that are born frozen, use ImmutableMap, which is also
   // insertion-ordered and has smaller Entries (singly linked, no hash).
@@ -291,8 +289,7 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
       },
       extraKeywords = @Param(name = "kwargs", doc = "Dictionary of additional entries."),
       purity = FnPurity.PURE)
-  public void update(Object pairs, Dict<String, Object> kwargs)
-      throws EvalException {
+  public void update(Object pairs, Dict<String, Object> kwargs) throws EvalException {
     checkMutable();
     @SuppressWarnings("unchecked")
     Dict<Object, Object> dict = (Dict) this; // see class doc comment
@@ -360,7 +357,7 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
     Object[] array = contents.nodesToArray();
     for (int i = 0; i < array.length; i++) {
       DictMap.Node<?, ?> node = (DictMap.Node<?, ?>) array[i];
-      array[i] = Tuple.wrap(new Object[] { node.key, node.getValue() });
+      array[i] = Tuple.wrap(new Object[] {node.key, node.getValue()});
     }
     return StarlarkList.wrap(thread.mutability(), array);
   }
@@ -392,28 +389,30 @@ public final class Dict<K, V> extends StarlarkIndexable<K>
   }
 
   public static <K, V> Dict<K, V> immutableOf(K k0, V v0) throws EvalException {
-    return Dict.<K, V>builder()
+    return Dict.<K, V>builder() //
         .put(k0, v0)
         .buildImmutable();
   }
 
   public static <K, V> Dict<K, V> immutableOf(K k0, V v0, K k1, V v1) throws EvalException {
-    return Dict.<K, V>builder()
+    return Dict.<K, V>builder() //
         .put(k0, v0)
         .put(k1, v1)
         .buildImmutable();
   }
 
-  public static <K, V> Dict<K, V> immutableOf(K k0, V v0, K k1, V v1, K k2, V v2) throws EvalException {
-    return Dict.<K, V>builder()
+  public static <K, V> Dict<K, V> immutableOf(K k0, V v0, K k1, V v1, K k2, V v2)
+      throws EvalException {
+    return Dict.<K, V>builder() //
         .put(k0, v0)
         .put(k1, v1)
         .put(k2, v2)
         .buildImmutable();
   }
 
-  public static <K, V> Dict<K, V> immutableOf(K k0, V v0, K k1, V v1, K k2, V v2, K k3, V v3) throws EvalException {
-    return Dict.<K, V>builder()
+  public static <K, V> Dict<K, V> immutableOf(K k0, V v0, K k1, V v1, K k2, V v2, K k3, V v3)
+      throws EvalException {
+    return Dict.<K, V>builder() //
         .put(k0, v0)
         .put(k1, v1)
         .put(k2, v2)

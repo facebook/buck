@@ -16,19 +16,14 @@ package net.starlark.java.spelling;
 
 import javax.annotation.Nullable;
 
-/**
- * Class that provides functions to do spell checking, i.e. detect typos
- * and make suggestions.
- */
+/** Class that provides functions to do spell checking, i.e. detect typos and make suggestions. */
 public final class SpellChecker {
   /**
-   * Computes the edit distance between two strings. The edit distance is
-   * the minimum number of insertions, deletions and replacements to
-   * transform a string into the other string.
+   * Computes the edit distance between two strings. The edit distance is the minimum number of
+   * insertions, deletions and replacements to transform a string into the other string.
    *
-   * maxEditDistance is the maximum distance the function can return. If
-   * it would be greater, the function returns -1. It is useful for
-   * speeding up the computations.
+   * <p>maxEditDistance is the maximum distance the function can return. If it would be greater, the
+   * function returns -1. It is useful for speeding up the computations.
    */
   public static int editDistance(String s1, String s2, int maxEditDistance) {
     // This is the Levenshtein distance, as described here:
@@ -60,9 +55,10 @@ public final class SpellChecker {
       for (int j = 1; j <= s2.length(); j++) {
         int old = row[j];
 
-        row[j] = Math.min(
-            previous + (s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1),
-            1 + Math.min(row[j - 1], row[j]));
+        row[j] =
+            Math.min(
+                previous + (s1.charAt(i - 1) == s2.charAt(j - 1) ? 0 : 1),
+                1 + Math.min(row[j - 1], row[j]));
         previous = old;
         bestInTheRow = Math.min(bestInTheRow, row[j]);
       }
@@ -75,9 +71,9 @@ public final class SpellChecker {
   }
 
   /**
-   * Find in words which string is the most similar to input (according to
-   * the edit distance, ignoring case) - or null if no string is similar
-   * enough. In case of equality, the first one in words wins.
+   * Find in words which string is the most similar to input (according to the edit distance,
+   * ignoring case) - or null if no string is similar enough. In case of equality, the first one in
+   * words wins.
    */
   @Nullable
   public static String suggest(String input, Iterable<String> words) {

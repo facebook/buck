@@ -13,9 +13,8 @@ class BcCallLocs {
   private final int starOffset;
   private final int starStarOffset;
 
-   private BcCallLocs(Location lparentLocation, int starOffset,
-       int starStarOffset) {
-     this.lparentLocation = lparentLocation;
+  private BcCallLocs(Location lparentLocation, int starOffset, int starStarOffset) {
+    this.lparentLocation = lparentLocation;
     this.starOffset = starOffset;
     this.starStarOffset = starStarOffset;
   }

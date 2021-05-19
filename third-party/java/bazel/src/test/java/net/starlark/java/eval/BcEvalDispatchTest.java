@@ -24,8 +24,7 @@ public class BcEvalDispatchTest {
     ImmutableSet<BcInstrOpcode> opcodes = ImmutableSet.copyOf(BcInstrOpcode.values());
 
     Sets.SetView<BcInstrOpcode> unmappedOpcodes = Sets.difference(opcodes, mapped);
-    assertTrue(
-        "Some opcodes are not mapped: " + unmappedOpcodes, unmappedOpcodes.isEmpty());
+    assertTrue("Some opcodes are not mapped: " + unmappedOpcodes, unmappedOpcodes.isEmpty());
 
     // self-test
     assertEquals(opcodes, mapped);

@@ -14,8 +14,9 @@ abstract class StarlarkFunctionLinkedBase extends StarlarkCallableLinked {
 
   @SuppressWarnings("unchecked")
   @Override
-  public Object callLinked(StarlarkThread thread, Object[] args, Sequence<?> starArgs,
-      Dict<?, ?> starStarArgs) throws EvalException, InterruptedException {
+  public Object callLinked(
+      StarlarkThread thread, Object[] args, Sequence<?> starArgs, Dict<?, ?> starStarArgs)
+      throws EvalException, InterruptedException {
     StarlarkFunction fn = fn();
     StarlarkThread.Frame fr;
     Object[] locals;
@@ -51,7 +52,10 @@ abstract class StarlarkFunctionLinkedBase extends StarlarkCallableLinked {
   }
 
   protected abstract void processArgs(
-      Mutability mu, Object[] args, @Nullable Sequence<?> starArgs, @Nullable Dict<Object, Object> starStarArgs,
+      Mutability mu,
+      Object[] args,
+      @Nullable Sequence<?> starArgs,
+      @Nullable Dict<Object, Object> starStarArgs,
       Object[] locals)
       throws EvalException;
 }

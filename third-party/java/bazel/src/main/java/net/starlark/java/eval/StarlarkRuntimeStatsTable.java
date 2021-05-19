@@ -19,10 +19,11 @@ class StarlarkRuntimeStatsTable {
       ImmutableList<Column<R>> columns,
       int top,
       Function<R, S> topBy) {
-    ImmutableList<R> topRows = rows.stream()
-        .sorted(Comparator.comparing(topBy).reversed())
-        .limit(top)
-        .collect(ImmutableList.toImmutableList());
+    ImmutableList<R> topRows =
+        rows.stream()
+            .sorted(Comparator.comparing(topBy).reversed())
+            .limit(top)
+            .collect(ImmutableList.toImmutableList());
     printTable(printStream, topRows, columns);
   }
 
@@ -34,15 +35,12 @@ class StarlarkRuntimeStatsTable {
     printTable(
         out,
         entries,
-        new String[] { keyName, valueName },
-        e -> new Object[] { e.getKey(), e.getValue() });
+        new String[] {keyName, valueName},
+        e -> new Object[] {e.getKey(), e.getValue()});
   }
 
   static <R> void printTable(
-      PrintStream printStream,
-      ImmutableList<R> rows,
-      ImmutableList<Column<R>> columns
-  ) {
+      PrintStream printStream, ImmutableList<R> rows, ImmutableList<Column<R>> columns) {
     Preconditions.checkArgument(!columns.isEmpty());
 
     printTable(
@@ -54,7 +52,9 @@ class StarlarkRuntimeStatsTable {
 
   static <R> void printTable(
       PrintStream printStream,
-      ImmutableList<R> rows, String[] columnNames, Function<R, Object[]> columns) {
+      ImmutableList<R> rows,
+      String[] columnNames,
+      Function<R, Object[]> columns) {
     int[] maxWidthByColumn = Arrays.stream(columnNames).mapToInt(String::length).toArray();
     for (R row : rows) {
       Object[] cells = columns.apply(row);

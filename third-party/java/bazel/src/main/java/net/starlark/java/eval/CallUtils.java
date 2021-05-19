@@ -146,8 +146,7 @@ final class CallUtils {
   private static class GeneratedDescriptors {
     private final ImmutableMap<String, MethodDescriptorGenerated> descriptors;
 
-    private GeneratedDescriptors(
-        ImmutableMap<String, MethodDescriptorGenerated> descriptors) {
+    private GeneratedDescriptors(ImmutableMap<String, MethodDescriptorGenerated> descriptors) {
       this.descriptors = descriptors;
     }
   }
@@ -174,11 +173,13 @@ final class CallUtils {
       return;
     }
 
-    String packageRelativeName = current.getName().substring(current.getPackage().getName().length() + 1);
-    String generatedFqn = current.getPackage().getName()
-        + "."
-        + packageRelativeName.replace("$", "_")
-        + StarlarkGeneratedFiles.GENERATED_CLASS_NAME_SUFFIX;
+    String packageRelativeName =
+        current.getName().substring(current.getPackage().getName().length() + 1);
+    String generatedFqn =
+        current.getPackage().getName()
+            + "."
+            + packageRelativeName.replace("$", "_")
+            + StarlarkGeneratedFiles.GENERATED_CLASS_NAME_SUFFIX;
     if (current.getClassLoader() == null) {
       if (current.getName().startsWith("java.")) {
         return;
@@ -188,7 +189,8 @@ final class CallUtils {
     try {
       Class<?> builtinsClass = current.getClassLoader().loadClass(generatedFqn);
       try {
-        MethodDescriptorGenerated[] handlers = (MethodDescriptorGenerated[]) builtinsClass.getField("HANDLERS").get(null);
+        MethodDescriptorGenerated[] handlers =
+            (MethodDescriptorGenerated[]) builtinsClass.getField("HANDLERS").get(null);
         for (MethodDescriptorGenerated handler : handlers) {
           descriptors.put(handler.javaMethodName, handler);
         }

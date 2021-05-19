@@ -8,7 +8,8 @@ class BcStrFormat {
     if (percent < 0) {
       return -1;
     }
-    if (format.length() >= percent + 2 && format.charAt(percent + 1) == 's'
+    if (format.length() >= percent + 2
+        && format.charAt(percent + 1) == 's'
         && format.indexOf('%', percent + 2) < 0) {
       return percent;
     } else {

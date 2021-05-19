@@ -43,6 +43,7 @@ import java.util.stream.StreamSupport;
 public abstract class Sequence<E> extends StarlarkIndexable<E> implements RandomAccess {
 
   public abstract int size();
+
   public abstract E get(int index);
 
   public Object[] toArray() {
@@ -173,6 +174,7 @@ public abstract class Sequence<E> extends StarlarkIndexable<E> implements Random
     return new Iterator<E>() {
       final int size = size();
       int i = 0;
+
       @Override
       public boolean hasNext() {
         return i < size;

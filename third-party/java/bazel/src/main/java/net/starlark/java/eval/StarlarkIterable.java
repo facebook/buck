@@ -34,15 +34,15 @@ public abstract class StarlarkIterable<T> extends StarlarkValue implements Itera
       throw Starlark.errorf("trying to mutate a frozen %s value", Starlark.type(this));
     }
     if (updateIteratorCount(0)) {
-      throw Starlark
-          .errorf("%s value is temporarily immutable due to active for-loop iteration", Starlark
-              .type(this));
+      throw Starlark.errorf(
+          "%s value is temporarily immutable due to active for-loop iteration",
+          Starlark.type(this));
     }
   }
 
   /**
-   * Returns the {@link Mutability} associated with this. This should not change
-   * over the lifetime of the object.
+   * Returns the {@link Mutability} associated with this. This should not change over the lifetime
+   * of the object.
    */
   public Mutability mutability() {
     return Mutability.IMMUTABLE;

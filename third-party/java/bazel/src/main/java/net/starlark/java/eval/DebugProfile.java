@@ -2,10 +2,7 @@ package net.starlark.java.eval;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * Hold the information about the number of debuggers or profilers
- * attached to this process.
- */
+/** Hold the information about the number of debuggers or profilers attached to this process. */
 class DebugProfile {
 
   private static final AtomicInteger numberOfAgents = new AtomicInteger(0);

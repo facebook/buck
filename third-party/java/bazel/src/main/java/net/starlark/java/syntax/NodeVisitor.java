@@ -33,7 +33,7 @@ public class NodeVisitor {
   /**
    * Visit a sequence ("block") of statements (e.g. an if branch, for block, function block etc.)
    *
-   * This method allows subclasses to handle statement blocks more easily, like doing an action
+   * <p>This method allows subclasses to handle statement blocks more easily, like doing an action
    * after every statement in a block without having to override visit(...) for all statements.
    *
    * @param statements list of statements in the block

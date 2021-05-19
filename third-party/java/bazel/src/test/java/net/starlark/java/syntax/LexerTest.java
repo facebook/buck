@@ -24,9 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-/**
- * Tests of tokenization behavior of the {@link Lexer}.
- */
+/** Tests of tokenization behavior of the {@link Lexer}. */
 @RunWith(JUnit4.class)
 public class LexerTest {
 
@@ -35,8 +33,8 @@ public class LexerTest {
   private final List<SyntaxError> errors = new ArrayList<>();
 
   /**
-   * Create a lexer which takes input from the specified string. Resets the
-   * error handler beforehand.
+   * Create a lexer which takes input from the specified string. Resets the error handler
+   * beforehand.
    */
   private Lexer createLexer(String input) {
     ParserInput inputSource = ParserInput.fromString(input, "");
@@ -95,8 +93,8 @@ public class LexerTest {
   }
 
   /**
-   * Returns a string containing the names of the tokens and their associated
-   * values. (String-literals are printed without escaping.)
+   * Returns a string containing the names of the tokens and their associated values.
+   * (String-literals are printed without escaping.)
    */
   private static String values(Token[] tokens) {
     StringBuilder buffer = new StringBuilder();
@@ -141,8 +139,8 @@ public class LexerTest {
   }
 
   /**
-   * Returns a string containing just the half-open position intervals of each
-   * token. e.g. "[3,4) [4,9)".
+   * Returns a string containing just the half-open position intervals of each token. e.g. "[3,4)
+   * [4,9)".
    */
   private static String positions(Token[] tokens) {
     StringBuilder buf = new StringBuilder();

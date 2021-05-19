@@ -3,8 +3,7 @@ package net.starlark.java.eval;
 /** Utilities work with Java arrays. */
 class ArraysForStarlark {
 
-  private ArraysForStarlark() {
-  }
+  private ArraysForStarlark() {}
 
   static final String[] EMPTY_STRING_ARRAY = {};
   static final Object[] EMPTY_OBJECT_ARRAY = {};

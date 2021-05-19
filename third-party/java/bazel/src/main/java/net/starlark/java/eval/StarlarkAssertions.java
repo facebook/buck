@@ -17,8 +17,8 @@ class StarlarkAssertions {
    *
    * <p>Note the assertions are turned on when tests are launched from Bazel.
    */
-  public static final boolean ENABLED = Boolean.getBoolean("starlark.assertions")
-      || System.getenv("STARLARK_ASSERTIONS") != null;
+  public static final boolean ENABLED =
+      Boolean.getBoolean("starlark.assertions") || System.getenv("STARLARK_ASSERTIONS") != null;
 
   static {
     if (ENABLED) {
@@ -29,5 +29,4 @@ class StarlarkAssertions {
       System.err.println();
     }
   }
-
 }

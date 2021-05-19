@@ -69,12 +69,7 @@ final class ParamDescriptor {
     }
 
     return new ParamDescriptor(
-        param.name(),
-        defaultExpr,
-        param.named(),
-        param.positional(),
-        allowedClasses
-    );
+        param.name(), defaultExpr, param.named(), param.positional(), allowedClasses);
   }
 
   /** @see Param#name() */

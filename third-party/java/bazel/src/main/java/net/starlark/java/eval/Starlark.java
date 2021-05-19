@@ -95,9 +95,7 @@ public final class Starlark {
     return env.build();
   }
 
-  /**
-   * Universal bindings index.
-   */
+  /** Universal bindings index. */
   public static final ImportedScopeObjects UNIVERSE_OBJECTS = ImportedScopeObjects.create(UNIVERSE);
 
   /**
@@ -157,7 +155,7 @@ public final class Starlark {
       // Strings are the most common dict keys.
       // Check them first for that reason, but also because
       // instanceof interface if very slow.
-   } else if (x instanceof StarlarkValue) {
+    } else if (x instanceof StarlarkValue) {
       ((StarlarkValue) x).checkHashable();
     } else {
       // bool is hashable
@@ -603,8 +601,7 @@ public final class Starlark {
   public static final class UncheckedEvalException extends RuntimeException {
     private final ImmutableList<StarlarkThread.CallStackEntry> stack;
 
-    UncheckedEvalException(
-        Throwable cause, ImmutableList<StarlarkThread.CallStackEntry> stack) {
+    UncheckedEvalException(Throwable cause, ImmutableList<StarlarkThread.CallStackEntry> stack) {
       super(cause);
       this.stack = stack;
     }
@@ -637,8 +634,7 @@ public final class Starlark {
    * Reports whether the value {@code x} has a field or method of the given name, as if by the
    * Starlark expression {@code hasattr(x, name)}.
    */
-  public static boolean hasattr(Object x, String name)
-      throws EvalException {
+  public static boolean hasattr(Object x, String name) throws EvalException {
     return (x instanceof Structure && ((Structure) x).getField(name) != null)
         || CallUtils.getAnnotatedMethods(x.getClass()).containsKey(name);
   }
@@ -649,10 +645,7 @@ public final class Starlark {
    * defaultValue} if non-null, or throws an EvalException otherwise.
    */
   public static Object getattr(
-      StarlarkThread thread,
-      Object x,
-      String name,
-      @Nullable Object defaultValue)
+      StarlarkThread thread, Object x, String name, @Nullable Object defaultValue)
       throws EvalException, InterruptedException {
     StarlarkSemantics semantics = thread.getSemantics();
     // StarlarkMethod-annotated field or method?
@@ -726,8 +719,7 @@ public final class Starlark {
   // TODO(adonovan): move to StarlarkAnnotations; it's a static property of the annotations.
   public static ImmutableMap<Method, StarlarkMethod> getMethodAnnotations(Class<?> clazz) {
     ImmutableMap.Builder<Method, StarlarkMethod> result = ImmutableMap.builder();
-    for (MethodDescriptor desc :
-        CallUtils.getAnnotatedMethods(clazz).values()) {
+    for (MethodDescriptor desc : CallUtils.getAnnotatedMethods(clazz).values()) {
       result.put(desc.getMethod(), desc.getAnnotation());
     }
     return result.build();
@@ -754,8 +746,7 @@ public final class Starlark {
   public static void addMethods(ImmutableMap.Builder<String, Object> env, Object v) {
     Class<?> cls = v.getClass();
     // TODO(adonovan): rather than silently skip the selfCall method, reject it.
-    for (Map.Entry<String, MethodDescriptor> e :
-        CallUtils.getAnnotatedMethods(cls).entrySet()) {
+    for (Map.Entry<String, MethodDescriptor> e : CallUtils.getAnnotatedMethods(cls).entrySet()) {
       String name = e.getKey();
       MethodDescriptor desc = e.getValue();
 
@@ -815,13 +806,12 @@ public final class Starlark {
 
     StarlarkFunction toplevel =
         new StarlarkFunction(
-            thread,
-            rfn,
-            module,
-            /*defaultValues=*/ Tuple.empty(),
-            /*freevars=*/ Tuple.empty());
-    return Starlark.fastcall(thread, toplevel,
-        ArraysForStarlark.EMPTY_OBJECT_ARRAY, ArraysForStarlark.EMPTY_OBJECT_ARRAY);
+            thread, rfn, module, /*defaultValues=*/ Tuple.empty(), /*freevars=*/ Tuple.empty());
+    return Starlark.fastcall(
+        thread,
+        toplevel,
+        ArraysForStarlark.EMPTY_OBJECT_ARRAY,
+        ArraysForStarlark.EMPTY_OBJECT_ARRAY);
   }
 
   /**
@@ -832,12 +822,11 @@ public final class Starlark {
    * @throws EvalException if there was a (dynamic) evaluation error.
    * @throws InterruptedException if the Java thread was interrupted during evaluation.
    */
-  static Object eval(
-      ParserInput input, FileOptions options, Module module, StarlarkThread thread)
+  static Object eval(ParserInput input, FileOptions options, Module module, StarlarkThread thread)
       throws SyntaxError.Exception, EvalException, InterruptedException {
     StarlarkFunction fn = newExprFunction(thread, input, options, module);
-    return Starlark.fastcall(thread, fn, ArraysForStarlark.EMPTY_OBJECT_ARRAY,
-        ArraysForStarlark.EMPTY_OBJECT_ARRAY);
+    return Starlark.fastcall(
+        thread, fn, ArraysForStarlark.EMPTY_OBJECT_ARRAY, ArraysForStarlark.EMPTY_OBJECT_ARRAY);
   }
 
   /** Variant of {@link #eval} that creates a module for the given predeclared environment. */
@@ -860,8 +849,8 @@ public final class Starlark {
    * @throws SyntaxError.Exception if there were scanner, parser, or resolver errors.
    */
   public static StarlarkFunction newExprFunction(
-      StarlarkThread thread, ParserInput input, FileOptions options,
-      Module module) throws SyntaxError.Exception {
+      StarlarkThread thread, ParserInput input, FileOptions options, Module module)
+      throws SyntaxError.Exception {
     Expression expr = Expression.parse(input, options);
     Program prog = Program.compileExpr(expr, module.getResolverModule(), options);
     Resolver.Function rfn = prog.getResolvedFunction();

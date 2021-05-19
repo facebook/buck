@@ -35,7 +35,6 @@ public class StarlarkRuntimeStats {
 
   private static final String STARLARK_RT_STATS = getStarlarkRtStats();
 
-
   /**
    * Whether statistics enabled. This is initialized from property {@code starlark.rt.stats} or from
    * env variable {@code STARLARK_RT_STATS}.
@@ -178,8 +177,7 @@ public class StarlarkRuntimeStats {
       return;
     }
 
-    CachedCallStats callStats = stats.cachedCalls
-        .computeIfAbsent(name, k -> new CachedCallStats());
+    CachedCallStats callStats = stats.cachedCalls.computeIfAbsent(name, k -> new CachedCallStats());
 
     callStats.countByResult.addAndGet(result.ordinal(), 1);
   }
@@ -208,7 +206,8 @@ public class StarlarkRuntimeStats {
     DEF_PREPARE_ARGS,
   }
 
-  private final AtomicLongArray whereDurationNanos = new AtomicLongArray(WhereWeAre.values().length);
+  private final AtomicLongArray whereDurationNanos =
+      new AtomicLongArray(WhereWeAre.values().length);
   private final AtomicLongArray whereCounts = new AtomicLongArray(WhereWeAre.values().length);
 
   private static class WhereWeAreThreadLocal {
@@ -241,8 +240,8 @@ public class StarlarkRuntimeStats {
     }
   }
 
-  private static final ThreadLocal<WhereWeAreThreadLocal> whereWeAreThreaLocal = ThreadLocal
-      .withInitial(WhereWeAreThreadLocal::new);
+  private static final ThreadLocal<WhereWeAreThreadLocal> whereWeAreThreaLocal =
+      ThreadLocal.withInitial(WhereWeAreThreadLocal::new);
 
   static void enter(WhereWeAre where) {
     if (!ENABLED) {
@@ -332,22 +331,24 @@ public class StarlarkRuntimeStats {
 
     ImmutableList<WhereTriple> stats =
         Arrays.stream(WhereWeAre.values())
-            .map(cat -> {
-              return new WhereTriple(cat, whereDurationNanos.get(cat.ordinal()),
-                  whereCounts.get(cat.ordinal()));
-            })
+            .map(
+                cat -> {
+                  return new WhereTriple(
+                      cat, whereDurationNanos.get(cat.ordinal()), whereCounts.get(cat.ordinal()));
+                })
             .collect(ImmutableList.toImmutableList());
     long totalTimeNanos = stats.stream().mapToLong(t -> t.durationNanos).sum();
 
     out.println();
-    out.println("Total time spent in Starlark (except parser), ms: " + (totalTimeNanos / 1_000_000));
+    out.println(
+        "Total time spent in Starlark (except parser), ms: " + (totalTimeNanos / 1_000_000));
     out.println();
     out.println("Time spent by category:");
     StarlarkRuntimeStatsTable.printTable(
         out,
         stats,
-        new String[] { WhereWeAre.class.getSimpleName(), "tot_ms", "count" },
-        t -> new Object[] { t.cat, t.durationNanos / 1_000_000, t.count });
+        new String[] {WhereWeAre.class.getSimpleName(), "tot_ms", "count"},
+        t -> new Object[] {t.cat, t.durationNanos / 1_000_000, t.count});
   }
 
   private static final int TOP = 50;
@@ -364,8 +365,7 @@ public class StarlarkRuntimeStats {
 
     out.println();
     out.println("Total native calls: " + totalNativeCalls);
-    out.println(
-        "Total time spent in native calls, ms: " + totalNativeDurationNanos / 1_000_000);
+    out.println("Total time spent in native calls, ms: " + totalNativeDurationNanos / 1_000_000);
 
     StarlarkRuntimeStatsTable.Column<AbstractMap.SimpleEntry<String, NativeCallStats>> name =
         StarlarkRuntimeStatsTable.column("name", AbstractMap.SimpleEntry::getKey);
@@ -447,11 +447,10 @@ public class StarlarkRuntimeStats {
   }
 
   private void printCallCachedStats(PrintStream out) {
-    ImmutableList<AbstractMap.SimpleEntry<String, CachedCallStats>> cachedCalls = this.cachedCalls
-        .entrySet()
-        .stream()
-        .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().copy()))
-        .collect(ImmutableList.toImmutableList());
+    ImmutableList<AbstractMap.SimpleEntry<String, CachedCallStats>> cachedCalls =
+        this.cachedCalls.entrySet().stream()
+            .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), e.getValue().copy()))
+            .collect(ImmutableList.toImmutableList());
 
     int[] countByResult = new int[CallCachedResult.values().length];
     for (AbstractMap.SimpleEntry<String, CachedCallStats> call : cachedCalls) {
@@ -465,26 +464,32 @@ public class StarlarkRuntimeStats {
     StarlarkRuntimeStatsTable.printTable(
         out,
         ImmutableList.copyOf(CallCachedResult.values()),
-        new String[] { "result", "count" },
-        r -> new Object[] { r.name(), countByResult[r.ordinal()] });
+        new String[] {"result", "count"},
+        r -> new Object[] {r.name(), countByResult[r.ordinal()]});
 
-    ImmutableList<AbstractMap.SimpleEntry<String, CachedCallStats>> topHitFunctions = cachedCalls
-        .stream()
-        .filter(e -> e.getValue().countByResult(CallCachedResult.HIT) != 0)
-        .sorted(Comparator.comparing((AbstractMap.SimpleEntry<String, CachedCallStats> e) -> {
-          return e.getValue().countByResult(CallCachedResult.HIT);
-        }).reversed())
-        .limit(50)
-        .collect(ImmutableList.toImmutableList());
+    ImmutableList<AbstractMap.SimpleEntry<String, CachedCallStats>> topHitFunctions =
+        cachedCalls.stream()
+            .filter(e -> e.getValue().countByResult(CallCachedResult.HIT) != 0)
+            .sorted(
+                Comparator.comparing(
+                        (AbstractMap.SimpleEntry<String, CachedCallStats> e) -> {
+                          return e.getValue().countByResult(CallCachedResult.HIT);
+                        })
+                    .reversed())
+            .limit(50)
+            .collect(ImmutableList.toImmutableList());
 
-    ImmutableList<AbstractMap.SimpleEntry<String, CachedCallStats>> topSkippedFunctions = cachedCalls
-        .stream()
-        .filter(e -> e.getValue().countByResult(CallCachedResult.SKIP) != 0)
-        .sorted(Comparator.comparing((AbstractMap.SimpleEntry<String, CachedCallStats> e) -> {
-          return e.getValue().countByResult(CallCachedResult.SKIP);
-        }).reversed())
-        .limit(50)
-        .collect(ImmutableList.toImmutableList());
+    ImmutableList<AbstractMap.SimpleEntry<String, CachedCallStats>> topSkippedFunctions =
+        cachedCalls.stream()
+            .filter(e -> e.getValue().countByResult(CallCachedResult.SKIP) != 0)
+            .sorted(
+                Comparator.comparing(
+                        (AbstractMap.SimpleEntry<String, CachedCallStats> e) -> {
+                          return e.getValue().countByResult(CallCachedResult.SKIP);
+                        })
+                    .reversed())
+            .limit(50)
+            .collect(ImmutableList.toImmutableList());
 
     out.println();
     out.println("Top " + CallCachedResult.HIT + " functions:");
@@ -492,15 +497,14 @@ public class StarlarkRuntimeStats {
         out,
         topHitFunctions,
         new String[] {
-            "name",
-            CallCachedResult.HIT.name(),
-            CallCachedResult.STORE.name(),
+          "name", CallCachedResult.HIT.name(), CallCachedResult.STORE.name(),
         },
-        e -> new Object[] {
-            e.getKey(),
-            e.getValue().countByResult(CallCachedResult.HIT),
-            e.getValue().countByResult(CallCachedResult.STORE),
-        });
+        e ->
+            new Object[] {
+              e.getKey(),
+              e.getValue().countByResult(CallCachedResult.HIT),
+              e.getValue().countByResult(CallCachedResult.STORE),
+            });
 
     out.println();
     out.println("Top " + CallCachedResult.SKIP + " functions:");
@@ -508,17 +512,18 @@ public class StarlarkRuntimeStats {
         out,
         topSkippedFunctions,
         new String[] {
-            "name",
-            CallCachedResult.SKIP.name(),
-            CallCachedResult.SIDE_EFFECT.name(),
-            CallCachedResult.MUTABLE.name(),
+          "name",
+          CallCachedResult.SKIP.name(),
+          CallCachedResult.SIDE_EFFECT.name(),
+          CallCachedResult.MUTABLE.name(),
         },
-        e -> new Object[] {
-            e.getKey(),
-            e.getValue().countByResult(CallCachedResult.SKIP),
-            e.getValue().countByResult(CallCachedResult.SIDE_EFFECT),
-            e.getValue().countByResult(CallCachedResult.MUTABLE),
-        });
+        e ->
+            new Object[] {
+              e.getKey(),
+              e.getValue().countByResult(CallCachedResult.SKIP),
+              e.getValue().countByResult(CallCachedResult.SIDE_EFFECT),
+              e.getValue().countByResult(CallCachedResult.MUTABLE),
+            });
   }
 
   private void printInstructionStats(PrintStream out) {
@@ -545,8 +550,9 @@ public class StarlarkRuntimeStats {
         Arrays.stream(TokenKind.values())
             .map(o -> new AbstractMap.SimpleEntry<>(o, this.binaryOps.get(o.ordinal())))
             .filter(e -> e.getValue() != 0)
-            .sorted(Comparator.comparing(AbstractMap.SimpleEntry<TokenKind, Integer>::getValue)
-                .reversed())
+            .sorted(
+                Comparator.comparing(AbstractMap.SimpleEntry<TokenKind, Integer>::getValue)
+                    .reversed())
             .collect(ImmutableList.toImmutableList());
 
     long totalBinaryOps =
@@ -565,5 +571,4 @@ public class StarlarkRuntimeStats {
       out.print(def);
     }
   }
-
 }

@@ -27,9 +27,7 @@ class IntArrayBuilder {
 
   public void addAll(int[] values) {
     if (size + values.length > array.length) {
-      int newCapacity = Math.max(
-          size + values.length,
-          array.length * 2);
+      int newCapacity = Math.max(size + values.length, array.length * 2);
       array = Arrays.copyOf(array, newCapacity);
     }
     System.arraycopy(values, 0, array, size, values.length);

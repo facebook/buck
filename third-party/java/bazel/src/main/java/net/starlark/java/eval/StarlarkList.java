@@ -71,8 +71,8 @@ import net.starlark.java.annot.StarlarkMethod;
             + "['a', 'b', 'c', 'd'][::2]  # ['a', 'c']\n"
             + "['a', 'b', 'c', 'd'][3:0:-1]  # ['d', 'c', 'b']</pre>"
             + "Lists are mutable, as in Python.")
-public final class StarlarkList<E> extends Sequence<E> implements
-    Mutability.Freezable, Comparable<StarlarkList<?>> {
+public final class StarlarkList<E> extends Sequence<E>
+    implements Mutability.Freezable, Comparable<StarlarkList<?>> {
 
   // The implementation strategy is similar to ArrayList,
   // but without the extra indirection of using ArrayList.
@@ -133,8 +133,8 @@ public final class StarlarkList<E> extends Sequence<E> implements
    * environments were then frozen. This instance is for empty lists that were always frozen from
    * the beginning.
    */
-  private static final StarlarkList<?> EMPTY = wrap(Mutability.IMMUTABLE,
-      ArraysForStarlark.EMPTY_OBJECT_ARRAY);
+  private static final StarlarkList<?> EMPTY =
+      wrap(Mutability.IMMUTABLE, ArraysForStarlark.EMPTY_OBJECT_ARRAY);
 
   /** Returns an empty frozen list of the desired type. */
   @SuppressWarnings("unchecked")
@@ -167,13 +167,11 @@ public final class StarlarkList<E> extends Sequence<E> implements
   }
 
   /**
-   * Similar to {@link #copyOf(Mutability, Iterable)} but do not verify
-   * values are valid starlark values.
+   * Similar to {@link #copyOf(Mutability, Iterable)} but do not verify values are valid starlark
+   * values.
    */
-  static <T> StarlarkList<T> copyOfUnchecked(
-      Mutability mutability, Iterable<? extends T> elems) {
-    if (elems instanceof StarlarkList
-        && ((StarlarkList<?>) elems).isImmutable()) {
+  static <T> StarlarkList<T> copyOfUnchecked(Mutability mutability, Iterable<? extends T> elems) {
+    if (elems instanceof StarlarkList && ((StarlarkList<?>) elems).isImmutable()) {
       @SuppressWarnings("unchecked")
       StarlarkList<T> list = (StarlarkList<T>) elems; // safe
       return list;
@@ -236,7 +234,8 @@ public final class StarlarkList<E> extends Sequence<E> implements
     return ImmutableList.copyOf(this);
   }
 
-  /** Get list data.
+  /**
+   * Get list data.
    *
    * <p>Note the returned array may have more elements than the list size.
    */
@@ -594,6 +593,8 @@ public final class StarlarkList<E> extends Sequence<E> implements
   /** Returns a new array of class Object[] containing the list elements. */
   @Override
   public Object[] toArray() {
-    return size != 0 ? Arrays.copyOf(elems, size, Object[].class) : ArraysForStarlark.EMPTY_OBJECT_ARRAY;
+    return size != 0
+        ? Arrays.copyOf(elems, size, Object[].class)
+        : ArraysForStarlark.EMPTY_OBJECT_ARRAY;
   }
 }

@@ -37,8 +37,7 @@ public final class EvalUtilsTest {
   public static class MockClassA extends StarlarkValue {}
 
   /** MockClassB */
-  public static class MockClassB extends MockClassA {
-  }
+  public static class MockClassB extends MockClassA {}
 
   @Test
   public void testDataTypeNames() throws Exception {

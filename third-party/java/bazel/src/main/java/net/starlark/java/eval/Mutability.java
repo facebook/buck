@@ -172,7 +172,7 @@ public final class Mutability implements AutoCloseable {
    * Freezes this {@code Mutability}, rendering all {@link Freezable} objects that refer to it
    * immutable.
    *
-   * Note that freezing does not directly touch all the {@code Freezables}, so this operation is
+   * <p>Note that freezing does not directly touch all the {@code Freezables}, so this operation is
    * constant-time.
    *
    * @return this object, in the fluent style
@@ -230,8 +230,7 @@ public final class Mutability implements AutoCloseable {
      * Throws {@link IllegalArgumentException} if the precondition for {@link #unsafeShallowFreeze}
      * is violated. To be used by implementors of {@link #unsafeShallowFreeze}.
      */
-    static void checkUnsafeShallowFreezePrecondition(
-        StarlarkIterable<?> freezable) {
+    static void checkUnsafeShallowFreezePrecondition(StarlarkIterable<?> freezable) {
       Mutability mutability = freezable.mutability();
       if (mutability.isFrozen()) {
         // It's not safe to rewrite the Mutability pointer if this is already frozen, because we

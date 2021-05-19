@@ -944,7 +944,8 @@ final class StringModule extends StarlarkValue {
             doc = "optional position at which to stop comparing.")
       },
       purity = FnPurity.SPEC_SAFE)
-  public static boolean endsWith(String self, Object sub, Object start, Object end) throws EvalException {
+  public static boolean endsWith(String self, Object sub, Object start, Object end)
+      throws EvalException {
     long indices = substringIndices(self, start, end);
     if (sub instanceof String) {
       return substringEndsWith(self, IntPair.lo(indices), IntPair.hi(indices), (String) sub);
@@ -990,7 +991,8 @@ final class StringModule extends StarlarkValue {
       extraKeywords =
           @Param(name = "kwargs", defaultValue = "{}", doc = "Dictionary of arguments."),
       purity = FnPurity.SPEC_SAFE)
-  public static String format(String self, Tuple args, Dict<String, Object> kwargs) throws EvalException {
+  public static String format(String self, Tuple args, Dict<String, Object> kwargs)
+      throws EvalException {
     return new FormatParser().format(self, args, kwargs);
   }
 

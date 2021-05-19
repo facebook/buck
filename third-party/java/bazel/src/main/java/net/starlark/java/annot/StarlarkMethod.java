@@ -110,9 +110,7 @@ public @interface StarlarkMethod {
    */
   boolean structField() default false;
 
-  /**
-   * List of parameters this function accepts.
-   */
+  /** List of parameters this function accepts. */
   Param[] parameters() default {};
 
   /**
@@ -166,13 +164,14 @@ public @interface StarlarkMethod {
   boolean allowReturnNones() default false;
 
   /**
-   * When true, Starlark interpreter does not validate function returns a valid Starlark runtime object.
+   * When true, Starlark interpreter does not validate function returns a valid Starlark runtime
+   * object.
    */
   boolean trustReturnsValid() default false;
 
   /**
-   * When true, Starlark may speculatively invoke the function at bytecode generation time
-   * or function invocation can be cached.
+   * When true, Starlark may speculatively invoke the function at bytecode generation time or
+   * function invocation can be cached.
    *
    * @see FnPurity for the definition of purity levels.
    */

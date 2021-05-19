@@ -47,8 +47,7 @@ class BcCall {
       callable = (StarlarkCallable) fn;
     } else {
       // @StarlarkMethod(selfCall)?
-      MethodDescriptor desc =
-          CallUtils.getSelfCallMethodDescriptor(fn.getClass());
+      MethodDescriptor desc = CallUtils.getSelfCallMethodDescriptor(fn.getClass());
       if (desc == null) {
         throw Starlark.errorf("'%s' object is not callable", Starlark.type(fn));
       }
@@ -74,19 +73,15 @@ class BcCall {
     }
   }
 
-  static Object callLinked1(
-      StarlarkThread thread,
-      StarlarkCallableLinked fn,
-      Object arg0) throws EvalException, InterruptedException {
-    return callLinked(thread, fn, new Object[] { arg0 }, null, null);
+  static Object callLinked1(StarlarkThread thread, StarlarkCallableLinked fn, Object arg0)
+      throws EvalException, InterruptedException {
+    return callLinked(thread, fn, new Object[] {arg0}, null, null);
   }
 
   static Object callLinked2(
-      StarlarkThread thread,
-      StarlarkCallableLinked fn,
-      Object arg0,
-      Object arg1) throws EvalException, InterruptedException {
-    return callLinked(thread, fn, new Object[] { arg0, arg1 }, null, null);
+      StarlarkThread thread, StarlarkCallableLinked fn, Object arg0, Object arg1)
+      throws EvalException, InterruptedException {
+    return callLinked(thread, fn, new Object[] {arg0, arg1}, null, null);
   }
 
   static Object linkAndCall(
@@ -126,22 +121,14 @@ class BcCall {
   }
 
   static Object linkAndCall1Cs(
-      StarlarkThread thread,
-      StarlarkCallable fn,
-      BcDynCallSite callSite,
-      Object arg0)
+      StarlarkThread thread, StarlarkCallable fn, BcDynCallSite callSite, Object arg0)
       throws EvalException, InterruptedException {
-    return linkAndCallCs(thread, fn, callSite, new Object[] { arg0 }, null, null);
+    return linkAndCallCs(thread, fn, callSite, new Object[] {arg0}, null, null);
   }
 
   static Object linkAndCall2Cs(
-      StarlarkThread thread,
-      StarlarkCallable fn,
-      BcDynCallSite callSite,
-      Object arg0,
-      Object arg1)
+      StarlarkThread thread, StarlarkCallable fn, BcDynCallSite callSite, Object arg0, Object arg1)
       throws EvalException, InterruptedException {
-    return linkAndCallCs(thread, fn, callSite, new Object[] { arg0, arg1 }, null, null);
+    return linkAndCallCs(thread, fn, callSite, new Object[] {arg0, arg1}, null, null);
   }
-
 }

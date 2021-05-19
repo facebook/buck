@@ -110,10 +110,10 @@ class MethodDescriptorGen {
     //   Not-escaping them would result in compilation error (generated code will be invalid).
     return '"'
         + s.replace("\\", "\\\\")
-        .replace("\t", "\\t")
-        .replace("\r", "\\r")
-        .replace("\n", "\\n")
-        .replace("\"", "\\\"")
+            .replace("\t", "\\t")
+            .replace("\r", "\\r")
+            .replace("\n", "\\n")
+            .replace("\"", "\\\"")
         + '"';
   }
 
@@ -350,7 +350,8 @@ class MethodDescriptorGen {
     String callArgsFormatted = String.join(", ", callArgs);
     if (method.method.getReturnType().getKind() == TypeKind.VOID) {
       sw.writeLineF(
-          "%s.%s(%s);", receiverTypedExpr(method), method.method.getSimpleName(), callArgsFormatted);
+          "%s.%s(%s);",
+          receiverTypedExpr(method), method.method.getSimpleName(), callArgsFormatted);
     } else {
       sw.writeLineF(
           "%s r = %s.%s(%s);",
@@ -555,9 +556,7 @@ class MethodDescriptorGen {
         exprs.add(String.format("!(%s instanceof %s)", expr, varType));
       }
     }
-    sw.ifBlock(
-        String.join(" && ", exprs),
-        () -> writeArgBindException(sw));
+    sw.ifBlock(String.join(" && ", exprs), () -> writeArgBindException(sw));
   }
 
   // Reports a (formatted) error and fails the compilation.

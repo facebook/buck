@@ -30,8 +30,8 @@ public abstract class Structure extends StarlarkValue {
    * <p>The set of names for which {@code getValue} returns non-null should match {@code
    * getFieldNames} if possible.
    *
-   * <p>Note current interpreter/optimizer relies on the fact that this operation
-   * produces the same result for given structure/field pair during the structure lifetime.
+   * <p>Note current interpreter/optimizer relies on the fact that this operation produces the same
+   * result for given structure/field pair during the structure lifetime.
    *
    * @throws EvalException if a user-visible error occurs (other than non-existent field).
    */

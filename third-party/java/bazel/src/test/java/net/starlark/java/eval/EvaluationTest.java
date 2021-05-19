@@ -18,7 +18,6 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import net.starlark.java.syntax.FileOptions;
 import net.starlark.java.syntax.ParserInput;
@@ -117,8 +116,7 @@ public final class EvaluationTest {
   // printEvents.
   private static void execWithInterrupt(
       ParserInput input, InterruptFunction interrupt, List<String> printEvents) throws Exception {
-    Module module =
-        Module.withPredeclared(ImmutableMap.of("interrupt", interrupt));
+    Module module = Module.withPredeclared(ImmutableMap.of("interrupt", interrupt));
     try (Mutability mu = Mutability.create("test")) {
       StarlarkThread thread = new StarlarkThread(mu, StarlarkSemantics.DEFAULT);
       thread.setPrintHandler((_thread, msg) -> printEvents.add(msg));
@@ -137,9 +135,7 @@ public final class EvaluationTest {
 
     class C {
       long run(int n) throws SyntaxError.Exception, EvalException, InterruptedException {
-        Module module =
-            Module.withPredeclared(
-                ImmutableMap.of("n", StarlarkInt.of(n)));
+        Module module = Module.withPredeclared(ImmutableMap.of("n", StarlarkInt.of(n)));
         long steps0 = thread.getExecutedSteps();
         Starlark.execFile(input, FileOptions.DEFAULT, module, thread);
         return thread.getExecutedSteps() - steps0;
@@ -778,7 +774,8 @@ public final class EvaluationTest {
   @Test
   public void testTopLevelRebinding() throws Exception {
     FileOptions options =
-        FileOptions.DEFAULT.toBuilder()
+        FileOptions.DEFAULT
+            .toBuilder()
             .allowToplevelRebinding(true)
             .loadBindsGlobally(true)
             .build();

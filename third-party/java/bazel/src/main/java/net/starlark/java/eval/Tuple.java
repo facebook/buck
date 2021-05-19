@@ -18,7 +18,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ObjectArrays;
 import java.util.AbstractCollection;
-import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Iterator;
 import net.starlark.java.annot.StarlarkBuiltin;
@@ -41,8 +40,7 @@ import net.starlark.java.annot.StarlarkBuiltin;
             + "('a', 'b', 'c', 'd')[::2]  # ('a', 'c')\n"
             + "('a', 'b', 'c', 'd')[3:0:-1]  # ('d', 'c', 'b')</pre>"
             + "Tuples are immutable, therefore <code>x[1] = \"a\"</code> is not supported.")
-public final class Tuple extends Sequence<Object>
-    implements Comparable<Tuple> {
+public final class Tuple extends Sequence<Object> implements Comparable<Tuple> {
 
   private final Object[] elems;
 

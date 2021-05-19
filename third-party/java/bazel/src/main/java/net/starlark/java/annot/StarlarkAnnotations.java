@@ -85,9 +85,9 @@ public final class StarlarkAnnotations {
   }
 
   /**
-   * Returns the {@link StarlarkBuiltin} annotation for the given class, if it exists, and
-   * null otherwise. The first annotation found will be returned, starting with {@code classObj}
-   * and following its base classes and interfaces recursively.
+   * Returns the {@link StarlarkBuiltin} annotation for the given class, if it exists, and null
+   * otherwise. The first annotation found will be returned, starting with {@code classObj} and
+   * following its base classes and interfaces recursively.
    */
   @Nullable
   public static StarlarkBuiltin getStarlarkBuiltin(Class<?> classObj) {

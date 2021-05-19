@@ -54,7 +54,10 @@ class BcWriter {
   /** Other untyped objects referenced in currently built bytecode. */
   private ArrayList<Object> objects = new ArrayList<>();
 
-  BcWriter(FileLocations fileLocations, Module module, String name,
+  BcWriter(
+      FileLocations fileLocations,
+      Module module,
+      String name,
       ImmutableList<Resolver.Binding> locals,
       ImmutableList<Resolver.Binding> freeVars) {
     this.fileLocations = fileLocations;
@@ -92,16 +95,14 @@ class BcWriter {
   }
 
   /**
-   * Store a string in a string pool, return an index of that string. Note these strings are
-   * special strings like variable or field names. These are not constant registers.
+   * Store a string in a string pool, return an index of that string. Note these strings are special
+   * strings like variable or field names. These are not constant registers.
    */
   int allocString(String s) {
     return strings.index(s);
   }
 
-  /**
-   * Store an arbitrary object in an object storage; the object store is not a const registers.
-   */
+  /** Store an arbitrary object in an object storage; the object store is not a const registers. */
   int allocObject(Object o) {
     Preconditions.checkNotNull(o);
     int r = objects.size();
@@ -143,7 +144,12 @@ class BcWriter {
   }
 
   void writeForInit(LocOffset collectionLocOffset, int collectionSlot, int nextValueSlot) {
-    write(BcInstrOpcode.FOR_INIT, collectionLocOffset, collectionSlot, nextValueSlot, FORWARD_JUMP_ADDR);
+    write(
+        BcInstrOpcode.FOR_INIT,
+        collectionLocOffset,
+        collectionSlot,
+        nextValueSlot,
+        FORWARD_JUMP_ADDR);
 
     int endToPatch = ip - 1;
 
@@ -205,11 +211,16 @@ class BcWriter {
 
     JumpBindCond not() {
       switch (this) {
-        case EQ: return NOT_EQ;
-        case NOT_EQ: return EQ;
-        case IN: return NOT_IN;
-        case NOT_IN: return IN;
-        default: throw new AssertionError("unreachable");
+        case EQ:
+          return NOT_EQ;
+        case NOT_EQ:
+          return EQ;
+        case IN:
+          return NOT_IN;
+        case NOT_IN:
+          return IN;
+        default:
+          throw new AssertionError("unreachable");
       }
     }
   }
@@ -294,9 +305,7 @@ class BcWriter {
     ip += args.length;
 
     if (StarlarkAssertions.ENABLED) {
-      int expectedArgCount =
-          opcode.operands.codeSize(
-              text, prevIp + BcInstr.INSTR_HEADER_LEN);
+      int expectedArgCount = opcode.operands.codeSize(text, prevIp + BcInstr.INSTR_HEADER_LEN);
       Preconditions.checkState(
           expectedArgCount == args.length,
           "incorrect signature for %s: expected %s, actual %s",
@@ -319,8 +328,7 @@ class BcWriter {
   }
 
   static int[] args(int[] args0, int[] args1, int[] args2) {
-    IntArrayBuilder args = new IntArrayBuilder(
-        args0.length + args1.length + args2.length);
+    IntArrayBuilder args = new IntArrayBuilder(args0.length + args1.length + args2.length);
     args.addAll(args0);
     args.addAll(args1);
     args.addAll(args2);
@@ -328,8 +336,8 @@ class BcWriter {
   }
 
   /**
-   * Write forward condition jump instruction. Return an address to be patched when the jump
-   * address is known.
+   * Write forward condition jump instruction. Return an address to be patched when the jump address
+   * is known.
    */
   int writeForwardCondJump(JumpCond jumpCond, LocOffset locOffset, int cond) {
     write(jumpCond.opcode, locOffset, cond, FORWARD_JUMP_ADDR);
@@ -338,15 +346,18 @@ class BcWriter {
 
   static BcInstrOpcode typeIsJumpOpcode(JumpCond jumpCond) {
     switch (jumpCond) {
-      case IF: return BcInstrOpcode.IF_TYPE_IS_BR;
-      case IF_NOT: return BcInstrOpcode.IF_NOT_TYPE_IS_BR;
-      default: throw new AssertionError("unreachable");
+      case IF:
+        return BcInstrOpcode.IF_TYPE_IS_BR;
+      case IF_NOT:
+        return BcInstrOpcode.IF_NOT_TYPE_IS_BR;
+      default:
+        throw new AssertionError("unreachable");
     }
   }
 
   /**
-   * Write forward condition jump instruction. Return an address to be patched when the jump
-   * address is known.
+   * Write forward condition jump instruction. Return an address to be patched when the jump address
+   * is known.
    */
   int writeForwardTypeIsJump(JumpCond jumpCond, LocOffset locOffset, int expr, String type) {
     write(typeIsJumpOpcode(jumpCond), locOffset, expr, allocString(type), FORWARD_JUMP_ADDR);
@@ -354,8 +365,8 @@ class BcWriter {
   }
 
   /**
-   * Write forward condition jump instruction. Return an address to be patched when the jump
-   * address is known.
+   * Write forward condition jump instruction. Return an address to be patched when the jump address
+   * is known.
    */
   int writeForwardBinCondJump(JumpBindCond jumpBindCond, LocOffset locOffset, int a, int b) {
     write(jumpBindCond.opcode, locOffset, a, b, FORWARD_JUMP_ADDR);
@@ -430,7 +441,8 @@ class BcWriter {
   }
 
   private ImmutableList<String> getFreeVarNames() {
-    return freeVars.stream().map(Resolver.Binding::getName)
+    return freeVars.stream()
+        .map(Resolver.Binding::getName)
         .collect(ImmutableList.toImmutableList());
   }
 
@@ -444,9 +456,7 @@ class BcWriter {
         name,
         text(),
         new BcInstrOperand.OpcodePrinterFunctionContext(
-            getLocalNames(),
-            module.getResolverModule().getGlobalNamesSlow(),
-            getFreeVarNames()),
+            getLocalNames(), module.getResolverModule().getGlobalNamesSlow(), getFreeVarNames()),
         strings.values,
         constSlots.values,
         objects);

@@ -29,8 +29,8 @@ import org.junit.runners.JUnit4;
 public final class StarlarkMethodProcessorTest {
 
   private static JavaFileObject getFile(String pathToFile) {
-    return JavaFileObjects.forResource(Resources.getResource(
-        StarlarkMethodProcessorTest.class, "testsources/" + pathToFile));
+    return JavaFileObjects.forResource(
+        Resources.getResource(StarlarkMethodProcessorTest.class, "testsources/" + pathToFile));
   }
 
   @Test

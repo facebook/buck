@@ -18,11 +18,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.IntStream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -125,8 +121,9 @@ public final class StarlarkListTest {
     assertThat(listEval("l[-6:10:2]")).containsExactly("b", "d", "f").inOrder();
     assertThat(listEval("l[1:5:3]")).containsExactly("b", "e").inOrder();
     assertThat(listEval("l[-10:3:2]")).containsExactly("a", "c").inOrder();
-    assertThat(listEval("l[-10:10:1]")).containsExactly(
-        "a", "b", "c", "d", "e", "f", "g").inOrder();
+    assertThat(listEval("l[-10:10:1]"))
+        .containsExactly("a", "b", "c", "d", "e", "f", "g")
+        .inOrder();
   }
 
   @Test
@@ -345,5 +342,4 @@ public final class StarlarkListTest {
   private static void fail(String format, Object... args) {
     throw new AssertionError(String.format(format, args));
   }
-
 }

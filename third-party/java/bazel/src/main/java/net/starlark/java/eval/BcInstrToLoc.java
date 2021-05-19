@@ -10,8 +10,7 @@ class BcInstrToLoc {
   /** (instruction, offset) pairs */
   private final int[] instrToOffset;
 
-  BcInstrToLoc(FileLocations fileLocations,
-      int[] instrToOffset) {
+  BcInstrToLoc(FileLocations fileLocations, int[] instrToOffset) {
     Preconditions.checkArgument(instrToOffset.length % 2 == 0);
     this.fileLocations = fileLocations;
     this.instrToOffset = instrToOffset;

@@ -9,9 +9,13 @@ class StarlarkFunctionLinkedPos extends StarlarkFunctionLinkedBase {
   }
 
   @Override
-  protected void processArgs(Mutability mu, Object[] args,
-      @Nullable Sequence<?> starArgs, @Nullable Dict<Object, Object>
-      starStarArgs, Object[] locals) throws EvalException {
+  protected void processArgs(
+      Mutability mu,
+      Object[] args,
+      @Nullable Sequence<?> starArgs,
+      @Nullable Dict<Object, Object> starStarArgs,
+      Object[] locals)
+      throws EvalException {
     System.arraycopy(args, 0, locals, 0, args.length);
   }
 }

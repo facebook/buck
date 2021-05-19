@@ -9,8 +9,7 @@ public abstract class StarlarkCallableLinked {
   /** Link target. */
   final StarlarkCallable orig;
 
-  protected StarlarkCallableLinked(StarlarkCallableLinkSig linkSig,
-      StarlarkCallable orig) {
+  protected StarlarkCallableLinked(StarlarkCallableLinkSig linkSig, StarlarkCallable orig) {
     this.linkSig = linkSig;
     this.orig = orig;
   }
@@ -18,8 +17,8 @@ public abstract class StarlarkCallableLinked {
   /**
    * Perform the linked call.
    *
-   * {@code args} here contains positional arguments followed by named arguments,
-   * and the number of argument is consistent with {@code linkSig}.
+   * <p>{@code args} here contains positional arguments followed by named arguments, and the number
+   * of argument is consistent with {@code linkSig}.
    */
   public abstract Object callLinked(
       StarlarkThread thread,

@@ -14,13 +14,9 @@
 
 package net.starlark.java.eval;
 
-import java.util.List;
 import net.starlark.java.spelling.SpellChecker;
-import net.starlark.java.syntax.DotExpression;
 import net.starlark.java.syntax.Expression;
 import net.starlark.java.syntax.Identifier;
-import net.starlark.java.syntax.IndexExpression;
-import net.starlark.java.syntax.ListExpression;
 import net.starlark.java.syntax.LoadStatement;
 import net.starlark.java.syntax.Resolver;
 
@@ -34,8 +30,11 @@ final class Eval {
     return (StarlarkFunction) fr.fn;
   }
 
-  static StarlarkFunction newFunction(StarlarkThread thread,
-      StarlarkThread.Frame fr, Object[] locals, Resolver.Function rfn,
+  static StarlarkFunction newFunction(
+      StarlarkThread thread,
+      StarlarkThread.Frame fr,
+      Object[] locals,
+      Resolver.Function rfn,
       Tuple defaults)
       throws EvalException, InterruptedException {
 
@@ -60,11 +59,12 @@ final class Eval {
     // Nested functions use the same globalIndex as their enclosing function,
     // since both were compiled from the same Program.
     StarlarkFunction fn = fn(fr);
-    return new StarlarkFunction(
-        thread, rfn, fn.getModule(), defaults, Tuple.wrap(freevars));
+    return new StarlarkFunction(thread, rfn, fn.getModule(), defaults, Tuple.wrap(freevars));
   }
 
-  static void execLoad(StarlarkThread thread, StarlarkThread.Frame fr, Object[] locals, LoadStatement node) throws EvalException {
+  static void execLoad(
+      StarlarkThread thread, StarlarkThread.Frame fr, Object[] locals, LoadStatement node)
+      throws EvalException {
     // Has the application defined a behavior for load statements in this thread?
     StarlarkThread.Loader loader = thread.getLoader();
     if (loader == null) {
@@ -97,8 +97,8 @@ final class Eval {
     }
   }
 
-  private static void assignIdentifier(StarlarkThread.Frame fr, Object[] locals, Identifier id, Object value)
-      throws EvalException {
+  private static void assignIdentifier(
+      StarlarkThread.Frame fr, Object[] locals, Identifier id, Object value) throws EvalException {
     Resolver.Binding bind = id.getBinding();
     switch (bind.getScope()) {
       case LOCAL:
@@ -116,8 +116,7 @@ final class Eval {
   }
 
   @SuppressWarnings("unchecked")
-  static Object inplaceBinaryPlus(StarlarkThread thread, Object x, Object y)
-      throws EvalException {
+  static Object inplaceBinaryPlus(StarlarkThread thread, Object x, Object y) throws EvalException {
     // list += iterable  behaves like  list.extend(iterable)
     // TODO(b/141263526): following Python, allow list+=iterable (but not list+iterable).
     if (x instanceof StarlarkList && y instanceof StarlarkList) {
@@ -135,5 +134,4 @@ final class Eval {
     // We only interpret bytecode.
     throw new AssertionError("dead code");
   }
-
 }
