@@ -39,7 +39,7 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     this.argToStarStar = argToStarStar;
     this.argToStarStarName = argToStarStarName;
     this.argToStarStarNameDictHashes = DictHash.hashes(argToStarStarName);
-    if (Bc.ASSERTIONS) {
+    if (StarlarkAssertions.ENABLED) {
       assertions();
     }
   }

@@ -92,7 +92,7 @@ class BcSlot {
   }
 
   static int negativeSizeToObjectIndex(int size) {
-    if (Bc.ASSERTIONS) {
+    if (StarlarkAssertions.ENABLED) {
       Preconditions.checkArgument(size < 0);
     }
     return -1 - size;

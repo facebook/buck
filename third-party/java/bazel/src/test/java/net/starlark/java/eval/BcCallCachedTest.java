@@ -32,8 +32,8 @@ public class BcCallCachedTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, module,
         thread);
-    ImmutableList<BcInstr.Decoded> instructions = f.compiled.instructions();
-    assertEquals(BcInstr.Opcode.CALL_CACHED, instructions.get(0).opcode);
+    ImmutableList<BcInstrOpcode.Decoded> instructions = f.compiled.instructions();
+    assertEquals(BcInstrOpcode.CALL_CACHED, instructions.get(0).opcode);
   }
 
   @Test
@@ -49,9 +49,9 @@ public class BcCallCachedTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, module,
         thread);
-    ImmutableList<BcInstr.Decoded> instructions = f.compiled.instructions();
+    ImmutableList<BcInstrOpcode.Decoded> instructions = f.compiled.instructions();
     // We are calling `g` with `CALL_LINKED`, not `CALL_CACHED`
-    assertEquals(BcInstr.Opcode.CALL_LINKED_1, instructions.get(0).opcode);
+    assertEquals(BcInstrOpcode.CALL_LINKED_1, instructions.get(0).opcode);
   }
 
   @Test
@@ -72,9 +72,9 @@ public class BcCallCachedTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, module,
         thread);
-    ImmutableList<BcInstr.Decoded> instructions = f.compiled.instructions();
+    ImmutableList<BcInstrOpcode.Decoded> instructions = f.compiled.instructions();
     // We compile `g(1)` as `CALL_CACHED`
-    assertEquals(BcInstr.Opcode.CALL_CACHED, instructions.get(0).opcode);
+    assertEquals(BcInstrOpcode.CALL_CACHED, instructions.get(0).opcode);
 
     Object firstCallResult = Starlark.call(thread, f, Tuple.empty(), Dict.empty());
     Object secondCallResult = Starlark.call(thread, f, Tuple.empty(), Dict.empty());
@@ -131,8 +131,8 @@ public class BcCallCachedTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, module,
         thread);
-    ImmutableList<BcInstr.Decoded> instructions = f.compiled.instructions();
-    assertEquals(BcInstr.Opcode.CALL_CACHED, instructions.get(0).opcode);
+    ImmutableList<BcInstrOpcode.Decoded> instructions = f.compiled.instructions();
+    assertEquals(BcInstrOpcode.CALL_CACHED, instructions.get(0).opcode);
 
     assertEquals("int", Starlark.call(thread, f, Tuple.of(), Dict.empty()));
     assertEquals("int", Starlark.call(thread, f, Tuple.of(), Dict.empty()));
@@ -186,9 +186,9 @@ public class BcCallCachedTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, module,
         thread);
-    ImmutableList<BcInstr.Decoded> instructions = f.compiled.instructions();
+    ImmutableList<BcInstrOpcode.Decoded> instructions = f.compiled.instructions();
     // Even if function is not pure, we are still using `CALL_CACHED` instruction
-    assertEquals(BcInstr.Opcode.CALL_CACHED, instructions.get(0).opcode);
+    assertEquals(BcInstrOpcode.CALL_CACHED, instructions.get(0).opcode);
 
     assertEquals("int", Starlark.call(thread, f, Tuple.of(), Dict.empty()));
     assertEquals("int", Starlark.call(thread, f, Tuple.of(), Dict.empty()));

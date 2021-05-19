@@ -1009,20 +1009,20 @@ class BcEval {
 
   EvalException otherOpcode() {
     int opcode = text[currentIp];
-    if (opcode < BcInstr.Opcode.values().length) {
-      throw new IllegalStateException("not implemented opcode: " + BcInstr.Opcode.values()[opcode]);
+    if (opcode < BcInstrOpcode.values().length) {
+      throw new IllegalStateException("not implemented opcode: " + BcInstrOpcode.values()[opcode]);
     } else {
       throw new IllegalStateException("wrong opcode: " + opcode);
     }
   }
 
   void validateInstructionDecodedCorrectly() {
-    if (Bc.ASSERTIONS) {
+    if (StarlarkAssertions.ENABLED) {
       // Validate the last instruction was decoded correctly
       // (got all the argument, and no extra arguments).
       // This is quite helpful, but expensive assertion, only enabled when bytecode assertions
       // are on.
-      BcInstr.Opcode opcode = BcInstr.Opcode.values()[text[currentIp]];
+      BcInstrOpcode opcode = BcInstrOpcode.values()[text[currentIp]];
       int prevInstrLen = compiled.instrLenAt(currentIp);
       Preconditions.checkState(
           ip == currentIp + prevInstrLen,

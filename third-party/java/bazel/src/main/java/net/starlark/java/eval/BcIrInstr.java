@@ -44,16 +44,16 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.CP, src, dest};
+      return new Object[] {BcInstrOpcode.CP, src, dest};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
-      BcInstr.Opcode opcode;
+      BcInstrOpcode opcode;
       if (src instanceof BcIrSlot.AnyLocal) {
-        opcode = BcInstr.Opcode.CP_LOCAL;
+        opcode = BcInstrOpcode.CP_LOCAL;
       } else {
-        opcode = BcInstr.Opcode.CP;
+        opcode = BcInstrOpcode.CP;
       }
       writeContext.writer.write(
           opcode, locOffset, src.encode(writeContext), dest.encode(writeContext));
@@ -88,13 +88,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.SET_GLOBAL, rhs, globalIndex, name, postAssignHook};
+      return new Object[] {BcInstrOpcode.SET_GLOBAL, rhs, globalIndex, name, postAssignHook};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.SET_GLOBAL,
+          BcInstrOpcode.SET_GLOBAL,
           locOffset,
           rhs.encode(writeContext),
           globalIndex,
@@ -121,13 +121,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.SET_CELL, rhs, cellIndex};
+      return new Object[] {BcInstrOpcode.SET_CELL, rhs, cellIndex};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.SET_CELL, locOffset, rhs.encode(writeContext), cellIndex);
+          BcInstrOpcode.SET_CELL, locOffset, rhs.encode(writeContext), cellIndex);
     }
 
     @Override
@@ -149,13 +149,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.LIST, arg, result};
+      return new Object[] {BcInstrOpcode.LIST, arg, result};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       int[] args = BcWriter.args(arg.encode(writeContext), result.encode(writeContext));
-      writeContext.writer.write(BcInstr.Opcode.LIST, locOffset, args);
+      writeContext.writer.write(BcInstrOpcode.LIST, locOffset, args);
     }
 
     @Override
@@ -178,13 +178,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.TUPLE, arg, result};
+      return new Object[] {BcInstrOpcode.TUPLE, arg, result};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       int[] args = BcWriter.args(arg.encode(writeContext), result.encode(writeContext));
-      writeContext.writer.write(BcInstr.Opcode.TUPLE, locOffset, args);
+      writeContext.writer.write(BcInstrOpcode.TUPLE, locOffset, args);
     }
 
     @Override
@@ -208,7 +208,7 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.DICT, arg, result};
+      return new Object[] {BcInstrOpcode.DICT, arg, result};
     }
 
     @Override
@@ -221,7 +221,7 @@ abstract class BcIrInstr {
       }
       args[i++] = result.encode(writeContext);
       Preconditions.checkState(i == args.length);
-      writeContext.writer.write(BcInstr.Opcode.DICT, locOffset, args);
+      writeContext.writer.write(BcInstrOpcode.DICT, locOffset, args);
     }
 
     @Override
@@ -256,13 +256,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.SLICE, object, start, stop, step};
+      return new Object[] {BcInstrOpcode.SLICE, object, start, stop, step};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.SLICE,
+          BcInstrOpcode.SLICE,
           locOffset,
           object.encode(writeContext),
           start.encode(writeContext),
@@ -296,13 +296,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.INDEX, object, index, result};
+      return new Object[] {BcInstrOpcode.INDEX, object, index, result};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.INDEX,
+          BcInstrOpcode.INDEX,
           locOffset,
           object.encode(writeContext),
           index.encode(writeContext),
@@ -333,13 +333,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.DOT, object, field, result};
+      return new Object[] {BcInstrOpcode.DOT, object, field, result};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.DOT,
+          BcInstrOpcode.DOT,
           locOffset,
           object.encode(writeContext),
           writeContext.writer.allocObject(field),
@@ -368,13 +368,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.SET_INDEX, lhs, index, rhs};
+      return new Object[] {BcInstrOpcode.SET_INDEX, lhs, index, rhs};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.SET_INDEX,
+          BcInstrOpcode.SET_INDEX,
           locOffset,
           lhs.encode(writeContext),
           index.encode(writeContext),
@@ -402,13 +402,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.LIST_APPEND, list, item};
+      return new Object[] {BcInstrOpcode.LIST_APPEND, list, item};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.LIST_APPEND,
+          BcInstrOpcode.LIST_APPEND,
           locOffset,
           list.encode(writeContext),
           item.encode(writeContext));
@@ -423,14 +423,14 @@ abstract class BcIrInstr {
 
   /** Binary operation operator. */
   enum BinOpOp {
-    EQ(BcInstr.Opcode.EQ, TokenKind.EQUALS_EQUALS),
-    NOT_EQ(BcInstr.Opcode.NOT_EQ, TokenKind.NOT_EQUALS),
-    PLUS(BcInstr.Opcode.PLUS, TokenKind.PLUS),
-    PLUS_STRING(BcInstr.Opcode.PLUS_STRING),
-    PLUS_STRING_IN_PLACE(BcInstr.Opcode.PLUS_STRING_IN_PLACE),
-    PLUS_IN_PLACE(BcInstr.Opcode.PLUS_IN_PLACE),
-    IN(BcInstr.Opcode.IN, TokenKind.IN),
-    NOT_IN(BcInstr.Opcode.NOT_IN, TokenKind.NOT_IN),
+    EQ(BcInstrOpcode.EQ, TokenKind.EQUALS_EQUALS),
+    NOT_EQ(BcInstrOpcode.NOT_EQ, TokenKind.NOT_EQUALS),
+    PLUS(BcInstrOpcode.PLUS, TokenKind.PLUS),
+    PLUS_STRING(BcInstrOpcode.PLUS_STRING),
+    PLUS_STRING_IN_PLACE(BcInstrOpcode.PLUS_STRING_IN_PLACE),
+    PLUS_IN_PLACE(BcInstrOpcode.PLUS_IN_PLACE),
+    IN(BcInstrOpcode.IN, TokenKind.IN),
+    NOT_IN(BcInstrOpcode.NOT_IN, TokenKind.NOT_IN),
     PERCENT(TokenKind.PERCENT),
     STAR(TokenKind.STAR),
     MINUS(TokenKind.MINUS),
@@ -446,14 +446,14 @@ abstract class BcIrInstr {
     CARET(TokenKind.CARET),
     PIPE(TokenKind.PIPE),
     ;
-    final BcInstr.Opcode opcode;
+    final BcInstrOpcode opcode;
     @Nullable final TokenKind tokenKind;
 
     private static class MapFromTokenKind {
       private static final BinOpOp[] MAP = new BinOpOp[TokenKind.values().length];
     }
 
-    BinOpOp(BcInstr.Opcode opcode, TokenKind tokenKind) {
+    BinOpOp(BcInstrOpcode opcode, TokenKind tokenKind) {
       Preconditions.checkState(MapFromTokenKind.MAP[tokenKind.ordinal()] == null);
       MapFromTokenKind.MAP[tokenKind.ordinal()] = this;
       this.opcode = opcode;
@@ -461,10 +461,10 @@ abstract class BcIrInstr {
     }
 
     BinOpOp(TokenKind tokenKind) {
-      this(BcInstr.Opcode.BINARY, tokenKind);
+      this(BcInstrOpcode.BINARY, tokenKind);
     }
 
-    BinOpOp(BcInstr.Opcode opcode) {
+    BinOpOp(BcInstrOpcode opcode) {
       this.opcode = opcode;
       this.tokenKind = null;
     }
@@ -504,9 +504,9 @@ abstract class BcIrInstr {
 
     @Override
     void write(BcIrWriteContext writeContext) {
-      if (op.opcode == BcInstr.Opcode.BINARY) {
+      if (op.opcode == BcInstrOpcode.BINARY) {
         writeContext.writer.write(
-            BcInstr.Opcode.BINARY,
+            BcInstrOpcode.BINARY,
             locOffset,
             lhs.encode(writeContext),
             rhs.encode(writeContext),
@@ -578,11 +578,11 @@ abstract class BcIrInstr {
       switch (op) {
         case NOT:
           writeContext.writer.write(
-              BcInstr.Opcode.NOT, locOffset, arg.encode(writeContext), result.encode(writeContext));
+              BcInstrOpcode.NOT, locOffset, arg.encode(writeContext), result.encode(writeContext));
           break;
         default:
           writeContext.writer.write(
-              BcInstr.Opcode.UNARY,
+              BcInstrOpcode.UNARY,
               locOffset,
               arg.encode(writeContext),
               op.tokenKind.ordinal(),
@@ -609,7 +609,7 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.BR, jumpLabel};
+      return new Object[] {BcInstrOpcode.BR, jumpLabel};
     }
 
     @Override
@@ -684,7 +684,7 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.FOR_INIT, collection, item};
+      return new Object[] {BcInstrOpcode.FOR_INIT, collection, item};
     }
 
     @Override
@@ -733,7 +733,7 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.BREAK};
+      return new Object[] {BcInstrOpcode.BREAK};
     }
 
     @Override
@@ -754,7 +754,7 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.CONTINUE};
+      return new Object[] {BcInstrOpcode.CONTINUE};
     }
 
     @Override
@@ -782,13 +782,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.PLUS_LIST, lhs, rhs, result};
+      return new Object[] {BcInstrOpcode.PLUS_LIST, lhs, rhs, result};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.PLUS_LIST,
+          BcInstrOpcode.PLUS_LIST,
           locOffset,
           BcWriter.args(
               new int[] {lhs.encode(writeContext)},
@@ -820,13 +820,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.PLUS_LIST_IN_PLACE, lhs, rhs, result};
+      return new Object[] {BcInstrOpcode.PLUS_LIST_IN_PLACE, lhs, rhs, result};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.PLUS_LIST_IN_PLACE,
+          BcInstrOpcode.PLUS_LIST_IN_PLACE,
           locOffset,
           BcWriter.args(
               new int[] {lhs.encode(writeContext)},
@@ -861,13 +861,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.TYPE_IS, expr, type, result};
+      return new Object[] {BcInstrOpcode.TYPE_IS, expr, type, result};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.TYPE_IS,
+          BcInstrOpcode.TYPE_IS,
           locOffset,
           expr.encode(writeContext),
           writeContext.writer.allocString(type),
@@ -911,7 +911,7 @@ abstract class BcIrInstr {
 
     @Override
     void write(BcIrWriteContext writeContext) {
-      BcInstr.Opcode opcode = opcode();
+      BcInstrOpcode opcode = opcode();
       writeContext.writer.write(
           opcode,
           locOffset,
@@ -927,8 +927,8 @@ abstract class BcIrInstr {
       visitor.visitSlot(result);
     }
 
-    private BcInstr.Opcode opcode() {
-      return tuple ? BcInstr.Opcode.PERCENT_S_ONE_TUPLE : BcInstr.Opcode.PERCENT_S_ONE;
+    private BcInstrOpcode opcode() {
+      return tuple ? BcInstrOpcode.PERCENT_S_ONE_TUPLE : BcInstrOpcode.PERCENT_S_ONE;
     }
   }
 
@@ -943,15 +943,15 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.RETURN, value};
+      return new Object[] {BcInstrOpcode.RETURN, value};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       if (value instanceof BcIrSlot.Const && ((BcIrSlot.Const) value).value == Starlark.NONE) {
-        writeContext.writer.write(BcInstr.Opcode.RETURN, locOffset, BcSlot.NULL_FLAG);
+        writeContext.writer.write(BcInstrOpcode.RETURN, locOffset, BcSlot.NULL_FLAG);
       } else {
-        writeContext.writer.write(BcInstr.Opcode.RETURN, locOffset, value.encode(writeContext));
+        writeContext.writer.write(BcInstrOpcode.RETURN, locOffset, value.encode(writeContext));
       }
     }
 
@@ -972,7 +972,7 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.EVAL_EXCEPTION, message};
+      return new Object[] {BcInstrOpcode.EVAL_EXCEPTION, message};
     }
 
     @Override
@@ -1017,14 +1017,14 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.CALL, fn, linkSig, listArg, starArg, starStarArg, result};
+      return new Object[] {BcInstrOpcode.CALL, fn, linkSig, listArg, starArg, starStarArg, result};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       if (linkSig == StarlarkCallableLinkSig.positional(1)) {
         writeContext.writer.write(
-            BcInstr.Opcode.CALL_1,
+            BcInstrOpcode.CALL_1,
             locOffset,
             fn.encode(writeContext),
             writeContext.writer.allocObject(new BcDynCallSite(callLocs, linkSig)),
@@ -1032,7 +1032,7 @@ abstract class BcIrInstr {
             result.encode(writeContext));
       } else if (linkSig == StarlarkCallableLinkSig.positional(2)) {
         writeContext.writer.write(
-            BcInstr.Opcode.CALL_2,
+            BcInstrOpcode.CALL_2,
             locOffset,
             fn.encode(writeContext),
             writeContext.writer.allocObject(new BcDynCallSite(callLocs, linkSig)),
@@ -1053,7 +1053,7 @@ abstract class BcIrInstr {
                   result.encode(writeContext),
                 });
 
-        writeContext.writer.write(BcInstr.Opcode.CALL, locOffset, args);
+        writeContext.writer.write(BcInstrOpcode.CALL, locOffset, args);
       }
     }
 
@@ -1095,14 +1095,14 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.CALL_LINKED, fn, listArg, starArg, starStarArg, result};
+      return new Object[] {BcInstrOpcode.CALL_LINKED, fn, listArg, starArg, starStarArg, result};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       if (fn.linkSig == StarlarkCallableLinkSig.positional(1)) {
         writeContext.writer.write(
-            BcInstr.Opcode.CALL_LINKED_1,
+            BcInstrOpcode.CALL_LINKED_1,
             locOffset,
             writeContext.writer.allocObject(callLocs),
             writeContext.writer.allocObject(fn),
@@ -1110,7 +1110,7 @@ abstract class BcIrInstr {
             result.encode(writeContext));
       } else if (fn.linkSig == StarlarkCallableLinkSig.positional(2)) {
         writeContext.writer.write(
-            BcInstr.Opcode.CALL_LINKED_2,
+            BcInstrOpcode.CALL_LINKED_2,
             locOffset,
             writeContext.writer.allocObject(callLocs),
             writeContext.writer.allocObject(fn),
@@ -1129,7 +1129,7 @@ abstract class BcIrInstr {
                   starStarArg.encode(writeContext),
                   result.encode(writeContext),
                 });
-        writeContext.writer.write(BcInstr.Opcode.CALL_LINKED, locOffset, newArgs);
+        writeContext.writer.write(BcInstrOpcode.CALL_LINKED, locOffset, newArgs);
       }
     }
 
@@ -1155,13 +1155,13 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.CALL_CACHED, callCached, result};
+      return new Object[] {BcInstrOpcode.CALL_CACHED, callCached, result};
     }
 
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.CALL_CACHED,
+          BcInstrOpcode.CALL_CACHED,
           locOffset,
           writeContext.writer.allocObject(callCached),
           result.encode(writeContext));
@@ -1192,7 +1192,7 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.NEW_FUNCTION, rfn.getName(), result};
+      return new Object[] {BcInstrOpcode.NEW_FUNCTION, rfn.getName(), result};
     }
 
     @Override
@@ -1209,7 +1209,7 @@ abstract class BcIrInstr {
       args[i++] = result.encode(writeContext);
       Preconditions.checkState(i == args.length);
 
-      writeContext.writer.write(BcInstr.Opcode.NEW_FUNCTION, locOffset, args);
+      writeContext.writer.write(BcInstrOpcode.NEW_FUNCTION, locOffset, args);
     }
 
     @Override
@@ -1236,7 +1236,7 @@ abstract class BcIrInstr {
     @Override
     void write(BcIrWriteContext writeContext) {
       writeContext.writer.write(
-          BcInstr.Opcode.LOAD_STMT, locOffset, writeContext.writer.allocObject(loadStmt));
+          BcInstrOpcode.LOAD_STMT, locOffset, writeContext.writer.allocObject(loadStmt));
     }
 
     @Override
@@ -1257,7 +1257,7 @@ abstract class BcIrInstr {
 
     @Override
     protected Object[] argsForToString() {
-      return new Object[] {BcInstr.Opcode.UNPACK, rhs, lhs};
+      return new Object[] {BcInstrOpcode.UNPACK, rhs, lhs};
     }
 
     @Override
@@ -1270,7 +1270,7 @@ abstract class BcIrInstr {
         args[i++] = lhs.encode(writeContext);
       }
       Preconditions.checkState(i == args.length);
-      writeContext.writer.write(BcInstr.Opcode.UNPACK, locOffset, args);
+      writeContext.writer.write(BcInstrOpcode.UNPACK, locOffset, args);
     }
 
     @Override

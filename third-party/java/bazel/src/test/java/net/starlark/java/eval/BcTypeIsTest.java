@@ -13,7 +13,7 @@ public class BcTypeIsTest {
         + "  return type(x) == type('')\n"
         + "is_string";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.TYPE_IS, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.TYPE_IS, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 
@@ -24,7 +24,7 @@ public class BcTypeIsTest {
         + "  return type(x) == type(())\n"
         + "is_tuple";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.TYPE_IS, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.TYPE_IS, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 
@@ -35,7 +35,7 @@ public class BcTypeIsTest {
         + "  return type(1) == type(x)\n"
         + "is_int";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.TYPE_IS, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.TYPE_IS, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 
@@ -45,7 +45,7 @@ public class BcTypeIsTest {
         + "def test(x): return type(x + x) == 'xxx'\n"
         + "test";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.PLUS, BcInstr.Opcode.TYPE_IS, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.PLUS, BcInstrOpcode.TYPE_IS, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 
@@ -65,7 +65,7 @@ public class BcTypeIsTest {
         + "def f(x): return not is_tuple(x)\n"
         + "f";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.TYPE_IS, BcInstr.Opcode.NOT, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.TYPE_IS, BcInstrOpcode.NOT, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 
@@ -77,7 +77,7 @@ public class BcTypeIsTest {
         + "f";
     assertEquals(
         ImmutableList.of(
-            BcInstr.Opcode.PLUS, BcInstr.Opcode.TYPE_IS, BcInstr.Opcode.NOT, BcInstr.Opcode.RETURN),
+            BcInstrOpcode.PLUS, BcInstrOpcode.TYPE_IS, BcInstrOpcode.NOT, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 }

@@ -17,7 +17,7 @@ class BcCallCached {
     this.args = args;
     Preconditions.checkArgument(!linkSig.hasStars());
 
-    if (Bc.ASSERTIONS) {
+    if (StarlarkAssertions.ENABLED) {
       for (Object arg : args) {
         Preconditions.checkState(Starlark.isImmutable(arg));
       }

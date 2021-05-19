@@ -18,8 +18,8 @@ public class BcUnpackTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, Module.create(),
         new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT));
-    assertEquals(f.compiled.toString(), BcInstr.Opcode.LIST, f.compiled.instructions().get(0).opcode);
-    BcInstr.Decoded unpack = f.compiled.instructions().get(1);
-    assertEquals(f.compiled.toString(), BcInstr.Opcode.UNPACK, unpack.opcode);
+    assertEquals(f.compiled.toString(), BcInstrOpcode.LIST, f.compiled.instructions().get(0).opcode);
+    BcInstrOpcode.Decoded unpack = f.compiled.instructions().get(1);
+    assertEquals(f.compiled.toString(), BcInstrOpcode.UNPACK, unpack.opcode);
   }
 }

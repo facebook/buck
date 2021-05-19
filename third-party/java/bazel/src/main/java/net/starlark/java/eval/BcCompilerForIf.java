@@ -13,9 +13,9 @@ import net.starlark.java.syntax.UnaryOperatorExpression;
 /** Compile {@code if} statement. */
 class BcCompilerForIf {
 
-  private final Bc.Compiler compiler;
+  private final BcCompiler compiler;
 
-  BcCompilerForIf(Bc.Compiler compiler) {
+  BcCompilerForIf(BcCompiler compiler) {
     this.compiler = compiler;
   }
 
@@ -277,7 +277,7 @@ class BcCompilerForIf {
     elseJumps.add(jumpLabel);
   }
 
-  Bc.Compiler.StmtFlow compileIfStatement(BcIr ir, IfStatement ifStatement) {
+  BcCompiler.StmtFlow compileIfStatement(BcIr ir, IfStatement ifStatement) {
     return compileIfElse(
         ir,
         ifStatement.getCondition(),
@@ -288,14 +288,14 @@ class BcCompilerForIf {
   }
 
   interface Block {
-    Bc.Compiler.StmtFlow compileBlock(BcIr ir);
+    BcCompiler.StmtFlow compileBlock(BcIr ir);
   }
 
   void compileIf(BcIr ir, Expression condExpr, Block thenBlock) {
     compileIfElse(ir, condExpr, thenBlock, null);
   }
 
-  Bc.Compiler.StmtFlow compileIfElse(
+  BcCompiler.StmtFlow compileIfElse(
       BcIr ir, Expression condExpr, Block thenBlock, @Nullable Block elseBlock) {
     BoolExpr cond = convert(condExpr);
 
@@ -308,7 +308,7 @@ class BcCompilerForIf {
         if (elseBlock != null) {
           return elseBlock.compileBlock(ir);
         } else {
-          return Bc.Compiler.StmtFlow.GO_ON;
+          return BcCompiler.StmtFlow.GO_ON;
         }
       }
     }
@@ -319,17 +319,17 @@ class BcCompilerForIf {
     compileCond(ir, cond, false, elseAddrs, thenAddrs);
 
     ir.addJumpLabels(thenAddrs);
-    Bc.Compiler.StmtFlow thenFlow = thenBlock.compileBlock(ir);
+    BcCompiler.StmtFlow thenFlow = thenBlock.compileBlock(ir);
     if (elseBlock != null) {
       // TODO(nga): no need to jump if the last instruction is return
       BcIrInstr.JumpLabel end = ir.br(compiler.nodeToLocOffset(condExpr));
       ir.addJumpLabels(elseAddrs);
-      Bc.Compiler.StmtFlow elseFlow = elseBlock.compileBlock(ir);
+      BcCompiler.StmtFlow elseFlow = elseBlock.compileBlock(ir);
       ir.add(end);
-      return thenFlow == elseFlow ? thenFlow : Bc.Compiler.StmtFlow.GO_ON;
+      return thenFlow == elseFlow ? thenFlow : BcCompiler.StmtFlow.GO_ON;
     } else {
       ir.addJumpLabels(elseAddrs);
-      return Bc.Compiler.StmtFlow.GO_ON;
+      return BcCompiler.StmtFlow.GO_ON;
     }
   }
 
@@ -391,9 +391,9 @@ class BcCompilerForIf {
 
   /** Any other expression we know nothing about. */
   private static class OtherExpr extends BoolExpr {
-    private final Bc.Compiler.CompileExpressionResultWithIr result;
+    private final BcCompiler.CompileExpressionResultWithIr result;
 
-    private OtherExpr(Expression expr, Bc.Compiler.CompileExpressionResultWithIr result) {
+    private OtherExpr(Expression expr, BcCompiler.CompileExpressionResultWithIr result) {
       super(expr, /* maybeConst */ null, /* hasEffects */ true);
       this.result = result;
     }
@@ -511,8 +511,8 @@ class BcCompilerForIf {
       }
     }
 
-    Bc.Compiler.CompileExpressionResultWithIr result = compiler.compileExpression(expr);
-    if (result.result.value() != null && Bc.Compiler.isTruthImmutable(result.result.value())) {
+    BcCompiler.CompileExpressionResultWithIr result = compiler.compileExpression(expr);
+    if (result.result.value() != null && BcCompiler.isTruthImmutable(result.result.value())) {
       return new ConstExpr(expr, Starlark.truth(result.result.value()));
     }
     return new OtherExpr(expr, result);

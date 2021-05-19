@@ -325,7 +325,7 @@ public class BcCompilerForIfTest {
         + "    return 2\n"
         + "f";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.IF_NOT_EQ_BR, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.IF_NOT_EQ_BR, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 
@@ -337,7 +337,7 @@ public class BcCompilerForIfTest {
         + "    return 2\n"
         + "f";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.IF_IN_BR, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.IF_IN_BR, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 
@@ -349,7 +349,7 @@ public class BcCompilerForIfTest {
         + "    return 1\n"
         + "f";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.IF_NOT_TYPE_IS_BR, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.IF_NOT_TYPE_IS_BR, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 
@@ -361,7 +361,7 @@ public class BcCompilerForIfTest {
         + "    return 1\n"
         + "f";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.IF_TYPE_IS_BR, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.IF_TYPE_IS_BR, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 

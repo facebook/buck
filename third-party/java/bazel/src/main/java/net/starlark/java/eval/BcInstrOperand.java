@@ -91,7 +91,7 @@ class BcInstrOperand {
      * <p>For example, length-delimited operand may return the different number of ints depending on
      * the actual bytecode.
      */
-    protected abstract void consume(BcParser parser);
+    protected abstract void consume(BcInstrParser parser);
 
     /**
      * Get the number of integers occupied by this operands object at the given bytecode offset.
@@ -100,14 +100,14 @@ class BcInstrOperand {
      * the actual bytecode.
      */
     int codeSize(int[] text, int ip) {
-      BcParser parser = new BcParser(text, ip);
+      BcInstrParser parser = new BcInstrParser(text, ip);
       consume(parser);
       return parser.getIp() - ip;
     }
 
     /** Get both instruction count for this operand and the string representation. */
     String toStringAndCount(
-        BcParser parser,
+        BcInstrParser parser,
         List<String> strings,
         List<Object> constantRegs,
         List<Object> objects,
@@ -152,7 +152,7 @@ class BcInstrOperand {
       }
     }
 
-    abstract Decoded decode(BcParser parser);
+    abstract Decoded decode(BcInstrParser parser);
   }
 
   static class OpcodePrinterFunctionContext {
@@ -173,14 +173,14 @@ class BcInstrOperand {
   /** This class is package-private only because it is referenced from {@link Operands}. */
   private static class OpcodePrinter {
 
-    private final BcParser parser;
+    private final BcInstrParser parser;
     private final List<String> strings;
     private final List<Object> constantRegs;
     private final List<Object> objects;
     private final OpcodePrinterFunctionContext fnCtx;
     private StringBuilder sb = new StringBuilder();
 
-    private OpcodePrinter(BcParser parser, List<String> strings, List<Object> constantRegs,
+    private OpcodePrinter(BcInstrParser parser, List<String> strings, List<Object> constantRegs,
         List<Object> objects, OpcodePrinterFunctionContext fnCtx) {
       this.parser = parser;
       this.objects = objects;
@@ -197,7 +197,7 @@ class BcInstrOperand {
   /** One word operand (e. g. register). */
   private static abstract class OneWordOperand extends Operands {
     @Override
-    protected final void consume(BcParser parser) {
+    protected final void consume(BcInstrParser parser) {
       parser.nextInt();
     }
   }
@@ -217,7 +217,7 @@ class BcInstrOperand {
     }
 
     @Override
-    Decoded decode(BcParser parser) {
+    Decoded decode(BcInstrParser parser) {
       return new Decoded(parser.nextInt());
     }
   }
@@ -237,7 +237,7 @@ class BcInstrOperand {
     }
 
     @Override
-    Decoded decode(BcParser parser) {
+    Decoded decode(BcInstrParser parser) {
       return new Decoded(parser.nextInt());
     }
   }
@@ -256,7 +256,7 @@ class BcInstrOperand {
     }
 
     @Override
-    Decoded decode(BcParser parser) {
+    Decoded decode(BcInstrParser parser) {
       return new Decoded(parser.nextInt());
     }
 
@@ -325,7 +325,7 @@ class BcInstrOperand {
     }
 
     @Override
-    Decoded decode(BcParser parser) {
+    Decoded decode(BcInstrParser parser) {
       return new Decoded(parser.nextInt());
     }
   }
@@ -345,7 +345,7 @@ class BcInstrOperand {
     }
 
     @Override
-    Decoded decode(BcParser parser) {
+    Decoded decode(BcInstrParser parser) {
       return new Decoded(parser.nextTokenKind());
     }
   }
@@ -367,7 +367,7 @@ class BcInstrOperand {
     }
 
     @Override
-    Decoded decode(BcParser parser) {
+    Decoded decode(BcInstrParser parser) {
       return new Decoded(parser.nextInt());
     }
   }
@@ -389,7 +389,7 @@ class BcInstrOperand {
     }
 
     @Override
-    Decoded decode(BcParser parser) {
+    Decoded decode(BcInstrParser parser) {
       return new Decoded(parser.nextInt());
     }
   }
@@ -415,7 +415,7 @@ class BcInstrOperand {
     }
 
     @Override
-    protected void consume(BcParser parser) {
+    protected void consume(BcInstrParser parser) {
       for (Operands operand : operands) {
         operand.consume(parser);
       }
@@ -431,7 +431,7 @@ class BcInstrOperand {
     }
 
     @Override
-    Decoded decode(BcParser parser) {
+    Decoded decode(BcInstrParser parser) {
       return new Decoded(Arrays.stream(operands).map(o -> o.decode(parser))
           .collect(ImmutableList.toImmutableList()));
     }
@@ -458,7 +458,7 @@ class BcInstrOperand {
     }
 
     @Override
-    protected void consume(BcParser parser) {
+    protected void consume(BcInstrParser parser) {
       int size = parser.nextInt();
       for (int i = 0; i != size; ++i) {
         element.consume(parser);
@@ -475,7 +475,7 @@ class BcInstrOperand {
     }
 
     @Override
-    Decoded decode(BcParser parser) {
+    Decoded decode(BcInstrParser parser) {
       return new Decoded(IntStream.range(0, parser.nextInt())
           .mapToObj(i -> element.decode(parser))
           .collect(ImmutableList.toImmutableList()));
@@ -503,7 +503,7 @@ class BcInstrOperand {
     }
 
     @Override
-    protected void consume(BcParser parser) {
+    protected void consume(BcInstrParser parser) {
       int size = parser.nextInt();
       if (size >= 0) {
         for (int i = 0; i != size; ++i) {
@@ -513,7 +513,7 @@ class BcInstrOperand {
     }
 
     @Override
-    Operands.Decoded decode(BcParser parser) {
+    Operands.Decoded decode(BcInstrParser parser) {
       int size = parser.nextInt();
       if (size < 0) {
         return new Decoded(size, ArraysForStarlark.EMPTY_INT_ARRAY);

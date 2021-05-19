@@ -16,14 +16,14 @@ public class BcEvalDispatchTest {
             + Arrays.toString(BcEvalDispatch.UNIMPLEMENTED_OPCODES),
         BcEvalDispatch.UNIMPLEMENTED_OPCODES.length == 0);
 
-    ImmutableSet<BcInstr.Opcode> mapped =
+    ImmutableSet<BcInstrOpcode> mapped =
         Arrays.stream(BcOpcodeNumber.values())
-            .map(BcInstr.Opcode::fromNumber)
+            .map(BcInstrOpcode::fromNumber)
             .collect(ImmutableSet.toImmutableSet());
 
-    ImmutableSet<BcInstr.Opcode> opcodes = ImmutableSet.copyOf(BcInstr.Opcode.values());
+    ImmutableSet<BcInstrOpcode> opcodes = ImmutableSet.copyOf(BcInstrOpcode.values());
 
-    Sets.SetView<BcInstr.Opcode> unmappedOpcodes = Sets.difference(opcodes, mapped);
+    Sets.SetView<BcInstrOpcode> unmappedOpcodes = Sets.difference(opcodes, mapped);
     assertTrue(
         "Some opcodes are not mapped: " + unmappedOpcodes, unmappedOpcodes.isEmpty());
 

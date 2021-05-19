@@ -4,16 +4,16 @@ import com.google.common.base.Preconditions;
 import net.starlark.java.syntax.TokenKind;
 
 /** Utility to parse bytecode. */
-class BcParser {
+class BcInstrParser {
   private final int[] text;
   private int ip;
 
-  BcParser(int[] text, int ip) {
+  BcInstrParser(int[] text, int ip) {
     this.text = text;
     this.ip = ip;
   }
 
-  BcParser(int[] text) {
+  BcInstrParser(int[] text) {
     this(text, 0);
   }
 
@@ -76,12 +76,12 @@ class BcParser {
     }
   }
 
-  BcInstr.Opcode nextOpcode() {
-    return BcInstr.Opcode.fromInt(nextInt());
+  BcInstrOpcode nextOpcode() {
+    return BcInstrOpcode.fromInt(nextInt());
   }
 
   /** Consume next opcode if it is equal to given opcode. */
-  boolean nextOpcodeIf(BcInstr.Opcode opcode) {
+  boolean nextOpcodeIf(BcInstrOpcode opcode) {
     if (eof()) {
       return false;
     }

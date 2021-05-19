@@ -51,7 +51,7 @@ public class BcTestUtil {
     return (StarlarkFunction) evalAndFreeze(program, globals);
   }
 
-  static ImmutableList<BcInstr.Opcode> opcodes(String makeFunction) throws Exception {
+  static ImmutableList<BcInstrOpcode> opcodes(String makeFunction) throws Exception {
     StarlarkFunction function = makeFunction(makeFunction);
     return function.compiled.instructions().stream()
         .map(i -> i.opcode)

@@ -10,28 +10,28 @@ import net.starlark.java.syntax.Expression;
 
 /** Compile function calls. */
 class BcCompilerForCall {
-  private final Bc.Compiler compiler;
+  private final BcCompiler compiler;
 
-  BcCompilerForCall(Bc.Compiler compiler) {
+  BcCompilerForCall(BcCompiler compiler) {
     this.compiler = compiler;
   }
 
   /** Precompiled function and args. */
   private static class CallCompiledArguments {
     private final CallExpression callExpression;
-    private final Bc.Compiler.CompileExpressionResultWithIr fn;
+    private final BcCompiler.CompileExpressionResultWithIr fn;
     private final StarlarkCallableLinkSig linkSig;
-    private final Bc.Compiler.ListArgWithIr callArgs;
-    private final Bc.Compiler.SlotOrNullWithIr star;
-    private final Bc.Compiler.SlotOrNullWithIr starStar;
+    private final BcCompiler.ListArgWithIr callArgs;
+    private final BcCompiler.SlotOrNullWithIr star;
+    private final BcCompiler.SlotOrNullWithIr starStar;
 
     CallCompiledArguments(
         CallExpression callExpression,
-        Bc.Compiler.CompileExpressionResultWithIr fn,
+        BcCompiler.CompileExpressionResultWithIr fn,
         StarlarkCallableLinkSig linkSig,
-        Bc.Compiler.ListArgWithIr callArgs,
-        Bc.Compiler.SlotOrNullWithIr star,
-        Bc.Compiler.SlotOrNullWithIr starStar) {
+        BcCompiler.ListArgWithIr callArgs,
+        BcCompiler.SlotOrNullWithIr star,
+        BcCompiler.SlotOrNullWithIr starStar) {
       this.callExpression = callExpression;
       this.fn = fn;
       this.linkSig = linkSig;
@@ -86,14 +86,14 @@ class BcCompilerForCall {
             star != null,
             starStar != null);
 
-    Bc.Compiler.CompileExpressionResultWithIr function =
+    BcCompiler.CompileExpressionResultWithIr function =
         compiler.compileExpression(callExpression.getFunction());
 
-    Bc.Compiler.ListArgWithIr regArgsList = compiler.compileExpressionList(regArgs);
+    BcCompiler.ListArgWithIr regArgsList = compiler.compileExpressionList(regArgs);
 
-    Bc.Compiler.SlotOrNullWithIr starSlot =
+    BcCompiler.SlotOrNullWithIr starSlot =
         compiler.compileExpressionOrNull(star != null ? star.getValue() : null);
-    Bc.Compiler.SlotOrNullWithIr starStarSlot =
+    BcCompiler.SlotOrNullWithIr starStarSlot =
         compiler.compileExpressionOrNull(starStar != null ? starStar.getValue() : null);
 
     return new CallCompiledArguments(
@@ -101,7 +101,7 @@ class BcCompilerForCall {
   }
 
   @Nullable
-  private Bc.Compiler.CompileExpressionResult tryCompileSpecSafeInline(
+  private BcCompiler.CompileExpressionResult tryCompileSpecSafeInline(
       BcIr ir,
       StarlarkCallable callable,
       CallCompiledArguments compiledArguments,
@@ -130,7 +130,7 @@ class BcCompilerForCall {
   }
 
   @Nullable
-  private Bc.Compiler.CompileExpressionResult tryCompileCallCached(
+  private BcCompiler.CompileExpressionResult tryCompileCallCached(
       BcIr ir,
       StarlarkCallable callable,
       CallCompiledArguments compiledArguments,
@@ -152,14 +152,14 @@ class BcCompilerForCall {
               new BcCallCached((StarlarkFunction) callable, linkSig, regArgsResult.data()),
               resultLocal));
 
-      return new Bc.Compiler.CompileExpressionResult(resultLocal);
+      return new BcCompiler.CompileExpressionResult(resultLocal);
     }
 
     return null;
   }
 
   @Nullable
-  private Bc.Compiler.CompileExpressionResult tryInlineConst(
+  private BcCompiler.CompileExpressionResult tryInlineConst(
       BcIr ir,
       StarlarkCallable callable,
       CallCompiledArguments compiledArguments,
@@ -200,7 +200,7 @@ class BcCompilerForCall {
    * </pre>
    */
   @Nullable
-  private Bc.Compiler.CompileExpressionResult tryInlineTypeIsCall(
+  private BcCompiler.CompileExpressionResult tryInlineTypeIsCall(
       BcIr ir,
       StarlarkCallable callable,
       CallCompiledArguments compiledArguments,
@@ -223,7 +223,7 @@ class BcCompilerForCall {
 
   /** Try compile a call as a some form of linked call. */
   @Nullable
-  private Bc.Compiler.CompileExpressionResult tryCompileCallLinked(
+  private BcCompiler.CompileExpressionResult tryCompileCallLinked(
       BcIr ir, CallCompiledArguments compiledArguments, BcIrLocalOrAny result) {
 
     Object callableValue = compiledArguments.fn.result.value();
@@ -233,25 +233,25 @@ class BcCompilerForCall {
 
     StarlarkCallable callable = (StarlarkCallable) callableValue;
 
-    Bc.Compiler.CompileExpressionResult specSafeInlineResult =
+    BcCompiler.CompileExpressionResult specSafeInlineResult =
         tryCompileSpecSafeInline(ir, callable, compiledArguments, result);
     if (specSafeInlineResult != null) {
       return specSafeInlineResult;
     }
 
-    Bc.Compiler.CompileExpressionResult inlineConstResult =
+    BcCompiler.CompileExpressionResult inlineConstResult =
         tryInlineConst(ir, callable, compiledArguments, result);
     if (inlineConstResult != null) {
       return inlineConstResult;
     }
 
-    Bc.Compiler.CompileExpressionResult callCachedResult =
+    BcCompiler.CompileExpressionResult callCachedResult =
         tryCompileCallCached(ir, callable, compiledArguments, result);
     if (callCachedResult != null) {
       return callCachedResult;
     }
 
-    Bc.Compiler.CompileExpressionResult inlineTypeIsResult =
+    BcCompiler.CompileExpressionResult inlineTypeIsResult =
         tryInlineTypeIsCall(ir, callable, compiledArguments, result);
     if (inlineTypeIsResult != null) {
       return inlineTypeIsResult;
@@ -273,15 +273,15 @@ class BcCompilerForCall {
             compiledArguments.starStar.slot,
             resultLocal));
 
-    return new Bc.Compiler.CompileExpressionResult(resultLocal);
+    return new BcCompiler.CompileExpressionResult(resultLocal);
   }
 
-  Bc.Compiler.CompileExpressionResult compileCall(
+  BcCompiler.CompileExpressionResult compileCall(
       BcIr ir, CallExpression callExpression, BcIrLocalOrAny result) {
 
     CallCompiledArguments compiledArguments = compileCallArguments(callExpression);
 
-    Bc.Compiler.CompileExpressionResult callLinkedResult =
+    BcCompiler.CompileExpressionResult callLinkedResult =
         tryCompileCallLinked(ir, compiledArguments, result);
     if (callLinkedResult != null) {
       return callLinkedResult;
@@ -302,6 +302,6 @@ class BcCompilerForCall {
             compiledArguments.starStar.slot,
             resultLocal));
 
-    return new Bc.Compiler.CompileExpressionResult(resultLocal);
+    return new BcCompiler.CompileExpressionResult(resultLocal);
   }
 }

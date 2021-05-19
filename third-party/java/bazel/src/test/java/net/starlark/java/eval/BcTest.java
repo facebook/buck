@@ -17,7 +17,7 @@ public class BcTest {
         ImmutableList.of("foo", "bar"), ImmutableList.of(), ImmutableList.of()
     );
     int[] code = {
-        BcInstr.Opcode.RETURN.ordinal(),
+        BcInstrOpcode.RETURN.ordinal(),
         1 | BcSlot.LOCAL_FLAG,
     };
     assertEquals(
@@ -37,8 +37,8 @@ public class BcTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, Module.create(),
         new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT));
-    BcInstr.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
-    assertEquals(BcInstr.Opcode.RETURN, ret.opcode);
+    BcInstrOpcode.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
+    assertEquals(BcInstrOpcode.RETURN, ret.opcode);
     assertEquals(BcSlot.constValue(0), ((BcInstrOperand.Register.Decoded) ret.args).register);
     assertEquals(StarlarkInt.of(17), f.compiled.constSlots[0]);
   }
@@ -59,8 +59,8 @@ public class BcTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, Module.create(),
         thread);
-    BcInstr.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
-    assertEquals(BcInstr.Opcode.RETURN, ret.opcode);
+    BcInstrOpcode.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
+    assertEquals(BcInstrOpcode.RETURN, ret.opcode);
     assertEquals(BcSlot.constValue(0), ((BcInstrOperand.Register.Decoded) ret.args).register);
     assertEquals(StarlarkInt.of(19), f.compiled.constSlots[0]);
   }
@@ -96,8 +96,8 @@ public class BcTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, module,
         thread);
-    BcInstr.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
-    assertEquals(BcInstr.Opcode.RETURN, ret.opcode);
+    BcInstrOpcode.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
+    assertEquals(BcInstrOpcode.RETURN, ret.opcode);
     assertEquals(BcSlot.constValue(0), ((BcInstrOperand.Register.Decoded) ret.args).register);
     assertEquals(StarlarkInt.of(23), f.compiled.constSlots[0]);
   }
@@ -115,11 +115,11 @@ public class BcTest {
         FileOptions.DEFAULT,
         Module.create(),
         new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT));
-    ImmutableList<BcInstr.Decoded> callInstrs = f.compiled.instructions().stream()
-        .filter(d -> d.opcode == BcInstr.Opcode.CALL || d.opcode == BcInstr.Opcode.CALL_LINKED)
+    ImmutableList<BcInstrOpcode.Decoded> callInstrs = f.compiled.instructions().stream()
+        .filter(d -> d.opcode == BcInstrOpcode.CALL || d.opcode == BcInstrOpcode.CALL_LINKED)
         .collect(ImmutableList.toImmutableList());
     assertEquals(1, callInstrs.size());
-    assertEquals(BcInstr.Opcode.CALL_LINKED, callInstrs.get(0).opcode);
+    assertEquals(BcInstrOpcode.CALL_LINKED, callInstrs.get(0).opcode);
   }
 
   @Test
@@ -134,8 +134,8 @@ public class BcTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, module,
         thread);
-    BcInstr.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
-    assertEquals(BcInstr.Opcode.RETURN, ret.opcode);
+    BcInstrOpcode.Decoded ret = f.compiled.instructions().get(f.compiled.instructions().size() - 1);
+    assertEquals(BcInstrOpcode.RETURN, ret.opcode);
     assertEquals(BcSlot.constValue(0), ((BcInstrOperand.Register.Decoded) ret.args).register);
     assertEquals("string", f.compiled.constSlots[0]);
   }
@@ -151,9 +151,9 @@ public class BcTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, module,
         thread);
-    ImmutableList<BcInstr.Decoded> instructions = f.compiled.instructions();
+    ImmutableList<BcInstrOpcode.Decoded> instructions = f.compiled.instructions();
     assertEquals("" + f.compiled, 2, instructions.size());
-    assertEquals(BcInstr.Opcode.CALL_LINKED_1, instructions.get(0).opcode);
+    assertEquals(BcInstrOpcode.CALL_LINKED_1, instructions.get(0).opcode);
     StarlarkCallableLinked format = (StarlarkCallableLinked) f.compiled.objects[instructions.get(0).getArgObject(1)];
     assertEquals("format", format.orig.getName());
   }
@@ -180,7 +180,7 @@ public class BcTest {
     String program = ""
         + "def f(): x = x\n"
         + "f";
-    assertEquals(ImmutableList.of(BcInstr.Opcode.CP_LOCAL), BcTestUtil.opcodes(program));
+    assertEquals(ImmutableList.of(BcInstrOpcode.CP_LOCAL), BcTestUtil.opcodes(program));
   }
 
   @Test
@@ -215,6 +215,6 @@ public class BcTest {
         + "  print('never')\n"
         + "f";
     // Print call is not compiled
-    assertEquals(ImmutableList.of(BcInstr.Opcode.RETURN), BcTestUtil.opcodes(program));
+    assertEquals(ImmutableList.of(BcInstrOpcode.RETURN), BcTestUtil.opcodes(program));
   }
 }

@@ -18,8 +18,8 @@ public class BcListTest {
         ParserInput.fromString(program, "f.star"),
         FileOptions.DEFAULT, Module.create(),
         new StarlarkThread(Mutability.create(), StarlarkSemantics.DEFAULT));
-    BcInstr.Decoded list = f.compiled.instructions().get(0);
-    assertEquals(f.compiled.toString(), BcInstr.Opcode.LIST, list.opcode);
+    BcInstrOpcode.Decoded list = f.compiled.instructions().get(0);
+    assertEquals(f.compiled.toString(), BcInstrOpcode.LIST, list.opcode);
     // Assert we are assigning straight to local variable skipping the temporary slot
     assertEquals(f.compiled.toString(), 0, list.args.asFixed().operands.get(1).asRegister().register);
   }

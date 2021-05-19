@@ -3,7 +3,7 @@ package net.starlark.java.eval;
 import javax.annotation.Nullable;
 import net.starlark.java.spelling.SpellChecker;
 
-/** Cache for the {@link BcInstr.Opcode#DOT} instruction. */
+/** Cache for the {@link BcInstrOpcode#DOT} instruction. */
 class BcDotSite {
   private final String name;
 

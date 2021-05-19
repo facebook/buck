@@ -79,7 +79,7 @@ public final class StarlarkFunction extends StarlarkCallable {
     this.defaultValues = defaultValues;
     this.freevars = freevars;
 
-    this.compiled = Bc.compileFunction(thread, rfn, module, freevars);
+    this.compiled = BcCompiler.compileFunction(thread, rfn, module, freevars);
   }
 
   boolean isToplevel() {

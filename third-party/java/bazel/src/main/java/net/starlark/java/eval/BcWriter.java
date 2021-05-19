@@ -6,9 +6,6 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.FileLocations;
@@ -119,7 +116,7 @@ class BcWriter {
 
   /** Write an instruction which throws eval exception at evaluation. */
   void writeEvalException(LocOffset locOffset, String message) {
-    write(BcInstr.Opcode.EVAL_EXCEPTION, locOffset, allocString(message));
+    write(BcInstrOpcode.EVAL_EXCEPTION, locOffset, allocString(message));
   }
 
   void writeContinue(LocOffset locOffset) {
@@ -127,7 +124,7 @@ class BcWriter {
       writeEvalException(locOffset, "continue statement must be inside a for loop");
     } else {
       write(
-          BcInstr.Opcode.CONTINUE,
+          BcInstrOpcode.CONTINUE,
           locOffset,
           currentFor().nextValueSlot,
           currentFor().bodyIp,
@@ -140,13 +137,13 @@ class BcWriter {
     if (fors.isEmpty()) {
       writeEvalException(locOffset, "break statement must be inside a for loop");
     } else {
-      write(BcInstr.Opcode.BREAK, locOffset, BcWriter.FORWARD_JUMP_ADDR);
+      write(BcInstrOpcode.BREAK, locOffset, BcWriter.FORWARD_JUMP_ADDR);
       currentFor().endsToPatch.add(ip - 1);
     }
   }
 
   void writeForInit(LocOffset collectionLocOffset, int collectionSlot, int nextValueSlot) {
-    write(BcInstr.Opcode.FOR_INIT, collectionLocOffset, collectionSlot, nextValueSlot, FORWARD_JUMP_ADDR);
+    write(BcInstrOpcode.FOR_INIT, collectionLocOffset, collectionSlot, nextValueSlot, FORWARD_JUMP_ADDR);
 
     int endToPatch = ip - 1;
 
@@ -171,27 +168,27 @@ class BcWriter {
   }
 
   enum JumpCond {
-    IF(BcInstr.Opcode.IF_BR_LOCAL),
-    IF_NOT(BcInstr.Opcode.IF_NOT_BR_LOCAL),
+    IF(BcInstrOpcode.IF_BR_LOCAL),
+    IF_NOT(BcInstrOpcode.IF_NOT_BR_LOCAL),
     ;
 
-    final BcInstr.Opcode opcode;
+    final BcInstrOpcode opcode;
 
-    JumpCond(BcInstr.Opcode opcode) {
+    JumpCond(BcInstrOpcode opcode) {
       this.opcode = opcode;
     }
   }
 
   enum JumpBindCond {
-    EQ(BcInstr.Opcode.IF_EQ_BR, TokenKind.EQUALS_EQUALS),
-    NOT_EQ(BcInstr.Opcode.IF_NOT_EQ_BR, TokenKind.NOT_EQUALS),
-    IN(BcInstr.Opcode.IF_IN_BR, TokenKind.IN),
-    NOT_IN(BcInstr.Opcode.IF_NOT_IN_BR, TokenKind.NOT_IN),
+    EQ(BcInstrOpcode.IF_EQ_BR, TokenKind.EQUALS_EQUALS),
+    NOT_EQ(BcInstrOpcode.IF_NOT_EQ_BR, TokenKind.NOT_EQUALS),
+    IN(BcInstrOpcode.IF_IN_BR, TokenKind.IN),
+    NOT_IN(BcInstrOpcode.IF_NOT_IN_BR, TokenKind.NOT_IN),
     ;
-    final BcInstr.Opcode opcode;
+    final BcInstrOpcode opcode;
     final TokenKind tokenKind;
 
-    JumpBindCond(BcInstr.Opcode opcode, TokenKind tokenKind) {
+    JumpBindCond(BcInstrOpcode opcode, TokenKind tokenKind) {
       this.opcode = opcode;
       this.tokenKind = tokenKind;
     }
@@ -282,7 +279,7 @@ class BcWriter {
   }
 
   /** Write complete opcode with validation. */
-  void write(BcInstr.Opcode opcode, LocOffset locOffset, int... args) {
+  void write(BcInstrOpcode opcode, LocOffset locOffset, int... args) {
     instrToLoc.add(ip, locOffset.offset);
 
     int prevIp = ip;
@@ -296,7 +293,7 @@ class BcWriter {
     System.arraycopy(args, 0, text, ip, args.length);
     ip += args.length;
 
-    if (Bc.ASSERTIONS) {
+    if (StarlarkAssertions.ENABLED) {
       int expectedArgCount =
           opcode.operands.codeSize(
               text, prevIp + BcInstr.INSTR_HEADER_LEN);
@@ -339,10 +336,10 @@ class BcWriter {
     return ip - 1;
   }
 
-  static BcInstr.Opcode typeIsJumpOpcode(JumpCond jumpCond) {
+  static BcInstrOpcode typeIsJumpOpcode(JumpCond jumpCond) {
     switch (jumpCond) {
-      case IF: return BcInstr.Opcode.IF_TYPE_IS_BR;
-      case IF_NOT: return BcInstr.Opcode.IF_NOT_TYPE_IS_BR;
+      case IF: return BcInstrOpcode.IF_TYPE_IS_BR;
+      case IF_NOT: return BcInstrOpcode.IF_NOT_TYPE_IS_BR;
       default: throw new AssertionError("unreachable");
     }
   }
@@ -370,7 +367,7 @@ class BcWriter {
    * known.
    */
   int writeForwardJump(LocOffset locOffset) {
-    write(BcInstr.Opcode.BR, locOffset, FORWARD_JUMP_ADDR);
+    write(BcInstrOpcode.BR, locOffset, FORWARD_JUMP_ADDR);
     return ip - 1;
   }
 

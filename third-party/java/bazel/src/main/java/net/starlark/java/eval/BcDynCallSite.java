@@ -3,7 +3,7 @@ package net.starlark.java.eval;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.Location;
 
-/** Call site for {@link BcInstr.Opcode#CALL} instruction. */
+/** Call site for {@link BcInstrOpcode#CALL} instruction. */
 class BcDynCallSite {
   final BcCallLocs callLocs;
   final Location lparenLocation;

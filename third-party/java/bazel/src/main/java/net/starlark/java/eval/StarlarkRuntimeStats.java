@@ -144,7 +144,7 @@ public class StarlarkRuntimeStats {
   private ConcurrentHashMap<String, NativeCallStats> nativeCalls = new ConcurrentHashMap<>();
   private ConcurrentHashMap<String, StarlarkCallStats> starlarkCalls = new ConcurrentHashMap<>();
   private ConcurrentHashMap<String, CachedCallStats> cachedCalls = new ConcurrentHashMap<>();
-  private AtomicIntegerArray instructions = new AtomicIntegerArray(BcInstr.Opcode.values().length);
+  private AtomicIntegerArray instructions = new AtomicIntegerArray(BcInstrOpcode.values().length);
   private AtomicIntegerArray binaryOps = new AtomicIntegerArray(TokenKind.values().length);
 
   static void leaveNativeCall(String name) {
@@ -461,7 +461,7 @@ public class StarlarkRuntimeStats {
     }
 
     out.println();
-    out.println(BcInstr.Opcode.CALL_CACHED + " result counts:");
+    out.println(BcInstrOpcode.CALL_CACHED + " result counts:");
     StarlarkRuntimeStatsTable.printTable(
         out,
         ImmutableList.copyOf(CallCachedResult.values()),
@@ -522,11 +522,11 @@ public class StarlarkRuntimeStats {
   }
 
   private void printInstructionStats(PrintStream out) {
-    ImmutableList<AbstractMap.SimpleEntry<BcInstr.Opcode, Integer>> instructionsCountByOpcode =
-        Arrays.stream(BcInstr.Opcode.values())
+    ImmutableList<AbstractMap.SimpleEntry<BcInstrOpcode, Integer>> instructionsCountByOpcode =
+        Arrays.stream(BcInstrOpcode.values())
             .map(o -> new AbstractMap.SimpleEntry<>(o, this.instructions.get(o.ordinal())))
             .sorted(
-                Comparator.comparing(AbstractMap.SimpleEntry<BcInstr.Opcode, Integer>::getValue)
+                Comparator.comparing(AbstractMap.SimpleEntry<BcInstrOpcode, Integer>::getValue)
                     .reversed())
             .collect(ImmutableList.toImmutableList());
 
@@ -553,7 +553,7 @@ public class StarlarkRuntimeStats {
         binaryOpCountByOp.stream().mapToLong(AbstractMap.SimpleEntry::getValue).sum();
 
     out.println();
-    out.println("Total " + BcInstr.Opcode.BINARY + " ops: " + totalBinaryOps);
+    out.println("Total " + BcInstrOpcode.BINARY + " ops: " + totalBinaryOps);
     out.println();
     out.println("Binary ops by " + TokenKind.class.getSimpleName() + ":");
     StarlarkRuntimeStatsTable.printTable(out, binaryOpCountByOp, "bin_op", "count");

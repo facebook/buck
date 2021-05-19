@@ -144,11 +144,11 @@ class BcCompiled {
       BcInstrOperand.OpcodePrinterFunctionContext fnCtx,
       List<String> strings, List<Object> constants, List<Object> objects) {
     ImmutableList.Builder<String> ret = ImmutableList.builder();
-    BcParser parser = new BcParser(text);
+    BcInstrParser parser = new BcInstrParser(text);
     while (!parser.eof()) {
       StringBuilder sb = new StringBuilder();
       sb.append(parser.getIp()).append(": ");
-      BcInstr.Opcode opcode = parser.nextOpcode();
+      BcInstrOpcode opcode = parser.nextOpcode();
       sb.append(opcode);
       String argsString =
           opcode.operands.toStringAndCount(
@@ -165,8 +165,8 @@ class BcCompiled {
   /**
    * Instruction opcode at IP.
    */
-  BcInstr.Opcode instrOpcodeAt(int ip) {
-    return BcInstr.Opcode.values()[text[ip]];
+  BcInstrOpcode instrOpcodeAt(int ip) {
+    return BcInstrOpcode.values()[text[ip]];
   }
 
   /**
@@ -184,12 +184,12 @@ class BcCompiled {
   }
 
   @VisibleForTesting
-  ImmutableList<BcInstr.Decoded> instructions() {
-    ImmutableList.Builder<BcInstr.Decoded> instructions = ImmutableList.builder();
-    BcParser parser = new BcParser(text);
+  ImmutableList<BcInstrOpcode.Decoded> instructions() {
+    ImmutableList.Builder<BcInstrOpcode.Decoded> instructions = ImmutableList.builder();
+    BcInstrParser parser = new BcInstrParser(text);
     while (!parser.eof()) {
-      BcInstr.Opcode opcode = parser.nextOpcode();
-      instructions.add(new BcInstr.Decoded(opcode, opcode.operands.decode(parser)));
+      BcInstrOpcode opcode = parser.nextOpcode();
+      instructions.add(new BcInstrOpcode.Decoded(opcode, opcode.operands.decode(parser)));
     }
     return instructions.build();
   }

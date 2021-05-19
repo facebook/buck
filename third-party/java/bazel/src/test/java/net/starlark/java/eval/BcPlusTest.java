@@ -28,14 +28,14 @@ public class BcPlusTest {
         + "  return a + 'b'\n"
         + "f";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.PLUS_STRING, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.PLUS_STRING, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(programPlusConst));
     String programConstPlus = "" //
         + "def f(y):\n"
         + "  return 'x' + y\n"
         + "f";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.PLUS_STRING, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.PLUS_STRING, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(programConstPlus));
   }
 
@@ -64,7 +64,7 @@ public class BcPlusTest {
         + "  return x + ['c']\n"
         + "f";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.PLUS_LIST, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.PLUS_LIST, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 
@@ -84,7 +84,7 @@ public class BcPlusTest {
         + "  return x + [y]\n"
         + "f";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.PLUS_LIST, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.PLUS_LIST, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 
@@ -104,7 +104,7 @@ public class BcPlusTest {
         + "  return x + [y, 'c']\n"
         + "f";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.PLUS_LIST, BcInstr.Opcode.RETURN),
+        ImmutableList.of(BcInstrOpcode.PLUS_LIST, BcInstrOpcode.RETURN),
         BcTestUtil.opcodes(program));
   }
 
@@ -124,7 +124,7 @@ public class BcPlusTest {
         + "  x += 'a'\n"
         + "f";
     assertEquals(
-        ImmutableList.of(BcInstr.Opcode.PLUS_STRING_IN_PLACE),
+        ImmutableList.of(BcInstrOpcode.PLUS_STRING_IN_PLACE),
         BcTestUtil.opcodes(program));
   }
 
@@ -146,7 +146,7 @@ public class BcPlusTest {
         + "def f(x):\n"
         + "  x += [1]\n"
         + "f";
-    assertEquals(ImmutableList.of(BcInstr.Opcode.PLUS_LIST_IN_PLACE), BcTestUtil.opcodes(program));
+    assertEquals(ImmutableList.of(BcInstrOpcode.PLUS_LIST_IN_PLACE), BcTestUtil.opcodes(program));
   }
 
   @Test
