@@ -42,7 +42,6 @@ final class MethodDescriptor {
   private final boolean allowReturnNones;
   private final boolean useStarlarkThread;
   /** Can reuse fastcall positional arguments if parameter count matches. */
-  private final boolean canReusePositionalWithoutChecks;
   private final MethodDescriptorGenerated generated;
   private final FnPurity purity;
   /** Size of array to be passed to {@link #call(Object, Object[], StarlarkThread)}. */
@@ -77,14 +76,6 @@ final class MethodDescriptor {
     this.useStarlarkThread = useStarlarkThread;
     this.generated = generated;
     this.purity = annotation.purity();
-
-    if (extraKeywords || extraPositionals) {
-      this.canReusePositionalWithoutChecks = false;
-    } else if (!Arrays.stream(parameters).allMatch(ParamDescriptor::isPositional)) {
-      this.canReusePositionalWithoutChecks = false;
-    } else {
-      this.canReusePositionalWithoutChecks = true;
-    }
 
     this.argsSize = parameters.length + (extraPositionals ? 1 : 0) + (extraKeywords ? 1 : 0);
   }
@@ -130,6 +121,25 @@ final class MethodDescriptor {
       return call(obj, ArraysForStarlark.EMPTY_OBJECT_ARRAY, thread);
     } catch (MethodDescriptorGenerated.ArgumentBindException e) {
       throw new RuntimeException("not possible, because there are no arguments", e);
+    }
+  }
+
+  /**
+   * Call description with positional-only argument. Generated code will perform correctnes check.
+   */
+  Object callPos(Object obj, Object[] args, StarlarkThread thread)
+      throws EvalException, InterruptedException, MethodDescriptorGenerated.ArgumentBindException {
+    try {
+      return generated.invokePos(obj, args, thread);
+    } catch (MethodDescriptorGenerated.ArgumentBindException e) {
+      // handled by the `BuiltinFunction`
+      throw e;
+    } catch (EvalException | InterruptedException | RuntimeException | Error e) {
+      // Don't intercept unchecked exceptions.
+      throw e;
+    } catch (Exception e) {
+      // All other checked exceptions (e.g. LabelSyntaxException) are reported to Starlark.
+      throw new EvalException(e);
     }
   }
 
@@ -225,7 +235,4 @@ final class MethodDescriptor {
     return purity;
   }
 
-  boolean isCanReusePositionalWithoutChecks() {
-    return canReusePositionalWithoutChecks;
-  }
 }

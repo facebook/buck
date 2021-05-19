@@ -104,7 +104,7 @@ class BuiltinFunctionLinkedError {
     throw new AssertionError(
         String.format(
             "this code is meant to be called when there's linked errors, but no error found;"
-                + " fn: %s, linkSig: %s, starArgs: %s, named starStarArgs: %s",
+                + " fn: %s, linkSig: %s, starArgs: %s, starStarArgs names: %s",
             fn.getName(),
             linkSig,
             starArgs != null ? starArgs.size() : 0,

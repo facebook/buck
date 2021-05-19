@@ -22,6 +22,15 @@ public abstract class MethodDescriptorGenerated {
   public abstract Object invoke(Object receiver, Object[] args, StarlarkThread thread)
       throws Exception;
 
+  /**
+   * Invoke the generated descriptor with positional arguments.
+   *
+   * @param args is the array of positional arguments. This array may be longer or shorter than
+   *     function parameters, it's generated code responsibility to handle it.
+   */
+  public abstract Object invokePos(Object receiver, Object[] args, StarlarkThread thread)
+      throws Exception;
+
   @CheckReturnValue // don't forget to throw it
   protected NullPointerException methodInvocationReturnedNull(Object[] args) {
     return new NullPointerException(
@@ -44,6 +53,21 @@ public abstract class MethodDescriptorGenerated {
     // `ParamDescriptor.evalDefault` is package private, so this function
     // exists here to provide access to it from generated code.
     return ParamDescriptor.evalDefault(name, expr);
+  }
+
+  /** Copy/wrap remaining args into tuple. This is called from generated code. */
+  protected static Tuple tupleFromRemArgs(Object[] args, int offset) {
+    if (offset == 0) {
+      // Safe: caller won't modify the array
+      return Tuple.wrap(args);
+    } else if (offset >= args.length) {
+      // Offset can exceed args length when some arguments have defaults, for example,
+      // for a native function `def foo(x=1, *args)` and call `foo()`,
+      // `args=[]` and `offset=1`.
+      return Tuple.empty();
+    } else {
+      return Tuple.wrap(Arrays.copyOfRange(args, offset, args.length));
+    }
   }
 
   /**

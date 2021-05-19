@@ -123,11 +123,16 @@ public final class BuiltinFunction extends StarlarkCallable {
         thread.recordSideEffect();
       }
 
-      Object[] vector =
-          getArgumentVector(thread, linkSig, args, starArgs, (Dict<Object, Object>) starStarArgs);
-
       try {
-        return desc.call(obj, vector, thread);
+        if (linkSig.isPosOnly()) {
+          return desc.callPos(obj, args, thread);
+        } else {
+          Object[] vector =
+              getArgumentVector(
+                  thread, linkSig, args, starArgs, (Dict<Object, Object>) starStarArgs);
+
+          return desc.call(obj, vector, thread);
+        }
       } catch (MethodDescriptorGenerated.ArgumentBindException e) {
         throw BuiltinFunctionLinkedError.error(
             this, linkSig, args, starArgs, (Dict<Object, Object>) starStarArgs);
@@ -198,15 +203,6 @@ public final class BuiltinFunction extends StarlarkCallable {
     // No additional memory allocation occurs in the common (success) case.
 
     ParamDescriptor[] parameters = desc.getParameters();
-
-    // fast track
-    if (desc.isCanReusePositionalWithoutChecks()
-        && linkSig.namedNames.length == 0
-        && args.length == parameters.length
-        && starArgs == null
-        && starStarArgs == null) {
-      return args;
-    }
 
     int numPositionals = linkSig.numPositionals + (starArgs != null ? starArgs.size() : 0);
 

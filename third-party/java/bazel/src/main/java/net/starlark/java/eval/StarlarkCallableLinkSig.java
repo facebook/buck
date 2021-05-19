@@ -15,6 +15,9 @@ public class StarlarkCallableLinkSig {
   final boolean hasStar;
   final boolean hasStarStar;
 
+  // signature has no named args and no stars, cache
+  private final boolean isPosOnly;
+
   // cache hash code
   private final int hashCode;
 
@@ -25,12 +28,20 @@ public class StarlarkCallableLinkSig {
     this.namedNameDictHashes = DictHash.hashes(namedNames);
     this.hasStar = hasStar;
     this.hasStarStar = hasStarStar;
+
+    this.isPosOnly = namedNames.length == 0 && !hasStar && !hasStarStar;
+
     this.hashCode = Objects.hash(numPositionals, Arrays.hashCode(namedNames), hasStar, hasStarStar);
   }
 
   /** Signature has star or star-star argument. */
   boolean hasStars() {
     return hasStar || hasStarStar;
+  }
+
+  /** Positional arguments-only call, no named args, no stars. */
+  boolean isPosOnly() {
+    return isPosOnly;
   }
 
   /** Number of fixed arguments. */

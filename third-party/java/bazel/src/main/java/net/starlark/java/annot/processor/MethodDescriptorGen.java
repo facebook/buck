@@ -1,6 +1,7 @@
 package net.starlark.java.annot.processor;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.net.MediaType;
 import com.google.errorprone.annotations.FormatMethod;
 import java.io.IOException;
 import java.io.Writer;
@@ -65,9 +66,14 @@ class MethodDescriptorGen {
       sw.writeLine("public class " + builtinsName + " {");
       sw.indented(
           () -> {
+            boolean isStringModule =
+                types.isSameType(classElement.asType(), starlarkTypeNames.stringModuleType);
+            boolean isMethodLibrary =
+                types.isSameType(classElement.asType(), starlarkTypeNames.methodLibraryType);
+
             ImmutableList<Method> methods =
                 methodElements.stream()
-                    .map(e -> new Method((ExecutableElement) e))
+                    .map(e -> new Method((ExecutableElement) e, isStringModule, isMethodLibrary))
                     .collect(ImmutableList.toImmutableList());
 
             for (Method method : methods) {
@@ -165,6 +171,8 @@ class MethodDescriptorGen {
           sw.writeLine("}");
           sw.writeLine("");
           genInvoke(sw, method);
+          sw.writeLine("");
+          genInvokePos(sw, method);
         });
     sw.writeLine("}");
   }
@@ -172,10 +180,93 @@ class MethodDescriptorGen {
   private static class Method {
     private final ExecutableElement method;
     private final StarlarkMethod annotation;
+    private final boolean isStringModule;
+    private final boolean isMethodLibrary;
 
-    public Method(ExecutableElement method) {
+    Method(ExecutableElement method, boolean isStringModule, boolean isMethodLibrary) {
       this.method = method;
       this.annotation = method.getAnnotation(StarlarkMethod.class);
+      this.isStringModule = isStringModule;
+      this.isMethodLibrary = isMethodLibrary;
+    }
+
+    /** Number of positional parameters. */
+    int numPositional() {
+      Param[] parameters = annotation.parameters();
+      for (int i = 0; i < parameters.length; i++) {
+        Param parameter = parameters[i];
+        if (!parameter.positional()) {
+          return i;
+        }
+      }
+      return parameters.length;
+    }
+
+    int numPositionalWithoutSelf() {
+      return numPositional() - (isStringModule ? 1 : 0);
+    }
+
+    /** Number of required positional parameters (without default values). */
+    int numRequiredPositional() {
+      Param[] parameters = annotation.parameters();
+      for (int i = 0; i < parameters.length; i++) {
+        Param parameter = parameters[i];
+        if (!parameter.positional() || !parameter.defaultValue().isEmpty()) {
+          return i;
+        }
+      }
+      return parameters.length;
+    }
+
+    /** Number of parameter without self parameter which used for strings. */
+    int numRequiredPositionalWithoutSelf() {
+      return numRequiredPositional() - (isStringModule ? 1 : 0);
+    }
+
+    /** Number of required parameter without self parameter which used for strings. */
+    int numRequiredPositionalArgs() {
+      return numRequiredPositional() - (isStringModule ? 1 : 0);
+    }
+
+    TypeElement enclosingType() {
+      return (TypeElement) method.getEnclosingElement();
+    }
+
+    /** Index of {@code **kwargs} parameter or {@code -1}. */
+    int kwargsIndex() {
+      if (annotation.extraKeywords().name().isEmpty()) {
+        return -1;
+      }
+      int p = method.getParameters().size();
+      if (annotation.useStarlarkThread()) {
+        --p;
+      }
+      return p - 1;
+    }
+
+    /** Index of {@code **args} parameter or {@code -1}. */
+    int varargsIndex() {
+      if (annotation.extraPositionals().name().isEmpty()) {
+        return -1;
+      }
+      int p = method.getParameters().size();
+      if (annotation.useStarlarkThread()) {
+        --p;
+      }
+      if (!annotation.extraKeywords().name().isEmpty()) {
+        --p;
+      }
+      return p - 1;
+    }
+
+    /** Check if function cannot be called with positional-only arguments. */
+    boolean posOnlyAlwaysFails() {
+      for (Param param : annotation.parameters()) {
+        if (!param.positional() && param.defaultValue().isEmpty()) {
+          return true;
+        }
+      }
+      return false;
     }
   }
 
@@ -188,71 +279,58 @@ class MethodDescriptorGen {
     sw.writeLine("}");
   }
 
-  private void genInvokeBody(SourceWriter sw, Method method) throws IOException {
-    TypeElement classElement = (TypeElement) method.method.getEnclosingElement();
+  private void genInvokePos(SourceWriter sw, Method method) throws IOException {
+    sw.writeLine("@java.lang.Override");
+    sw.writeLine(
+        "public Object invokePos(java.lang.Object receiver, java.lang.Object[] args, net.starlark.java.eval.StarlarkThread thread)");
+    sw.writeLine("    throws java.lang.Exception {");
+    sw.indented(() -> genInvokePosBody(sw, method));
+    sw.writeLine("}");
+  }
 
-    StarlarkMethod starlarkMethod = method.annotation;
-
-    boolean isStringModule =
-        types.isSameType(classElement.asType(), starlarkTypeNames.stringModuleType);
-    boolean isMethodLibrary =
-        types.isSameType(classElement.asType(), starlarkTypeNames.methodLibraryType);
-
-    int argsSize =
-        method.method.getParameters().size()
-            - (starlarkMethod.useStarlarkThread() ? 1 : 0)
-            - (isStringModule ? 1 : 0);
-
-    if (isStringModule) {
+  private void writeReceiverTyped(SourceWriter sw, Method method) throws IOException {
+    if (method.isStringModule) {
       sw.writeLineF(
           "net.starlark.java.eval.StringModule receiverTyped = net.starlark.java.eval.StringModule.INSTANCE;");
-    } else if (isMethodLibrary) {
+    } else if (method.isMethodLibrary) {
       sw.writeLineF(
           "net.starlark.java.eval.MethodLibrary receiverTyped = net.starlark.java.eval.MethodLibrary.INSTANCE;");
     } else {
       sw.writeLineF(
           "%s receiverTyped = (%s) receiver;",
-          classElement.getQualifiedName(), classElement.getQualifiedName());
+          method.enclosingType().getQualifiedName(), method.enclosingType().getQualifiedName());
     }
+  }
+
+  private interface ParamWriter {
+    void write(int argIndex, int paramIndex, TypeMirror varType) throws IOException;
+  }
+
+  private void forEachParam(SourceWriter sw, Method method, ParamWriter paramWriter)
+      throws IOException {
+    StarlarkMethod starlarkMethod = method.annotation;
+
+    writeReceiverTyped(sw, method);
+
     ArrayList<String> callArgs = new ArrayList<>();
-    if (isStringModule) {
+    if (method.isStringModule) {
       callArgs.add("(String) receiver");
     }
-    for (int i = 0; i != argsSize; ++i) {
-      int paramIndex = i + (isStringModule ? 1 : 0);
+
+    int argsSize =
+        method.method.getParameters().size()
+            - (method.annotation.useStarlarkThread() ? 1 : 0)
+            - (method.isStringModule ? 1 : 0);
+
+    for (int argIndex = 0; argIndex != argsSize; ++argIndex) {
+      int paramIndex = argIndex + (method.isStringModule ? 1 : 0);
       VariableElement p = method.method.getParameters().get(paramIndex);
       TypeMirror varType = this.types.erasure(p.asType());
-      sw.writeLineF("%s a%s;", varType, i);
-      if (paramIndex < starlarkMethod.parameters().length) {
-        Param param = starlarkMethod.parameters()[paramIndex];
-        if (param.defaultValue().isEmpty()) {
-          sw.ifBlock(
-              String.format("args[%s] == null", i),
-              () -> {
-                sw.writeLine("throw new ArgumentBindException();");
-              });
-          genCheckAllowedTypes(
-              sw, starlarkMethod, varType, paramIndex, String.format("args[%s]", i));
-          sw.writeLineF("a%s = (%s) args[%s];", i, varType, i);
-        } else {
-          int ii = i;
-          sw.ifElse(
-              String.format("args[%s] == null", i),
-              () -> {
-                sw.writeLineF("a%s = P%s_DEFAULT;", ii, paramIndex);
-              },
-              () -> {
-                genCheckAllowedTypes(
-                    sw, starlarkMethod, varType, paramIndex, String.format("args[%s]", ii));
-                sw.writeLineF("a%s = (%s) args[%s];", ii, varType, ii);
-              });
-        }
-      } else {
-        // Varargs or kwargs
-        sw.writeLineF("a%s = (%s) args[%s];", i, varType, i);
-      }
-      callArgs.add(String.format("a%s", i));
+      sw.writeLineF("%s a%s;", varType, argIndex);
+      paramWriter.write(argIndex, paramIndex, varType);
+      callArgs.add(String.format("a%s", argIndex));
     }
+
     if (starlarkMethod.useStarlarkThread()) {
       callArgs.add("thread");
     }
@@ -290,6 +368,134 @@ class MethodDescriptorGen {
         sw.writeLine("return r;");
       }
     }
+  }
+
+  private void writeArgBindException(SourceWriter sw) throws IOException {
+    sw.writeLine("throw new ArgumentBindException();");
+  }
+
+  private void writeArgBinExceptionIf(SourceWriter sw, String cond, Object... args)
+      throws IOException {
+    sw.ifBlock(String.format(cond, args), () -> writeArgBindException(sw));
+  }
+
+  private void genInvokeBody(SourceWriter sw, Method method) throws IOException {
+    StarlarkMethod starlarkMethod = method.annotation;
+
+    forEachParam(
+        sw,
+        method,
+        (argIndex, paramIndex, varType) -> {
+          if (paramIndex != method.varargsIndex() && paramIndex != method.kwargsIndex()) {
+            Param param = starlarkMethod.parameters()[paramIndex];
+            if (param.defaultValue().isEmpty()) {
+              sw.ifBlock(
+                  String.format("args[%s] == null", argIndex),
+                  () -> {
+                    writeArgBindException(sw);
+                  });
+              genCheckAllowedTypes(
+                  sw, starlarkMethod, varType, paramIndex, String.format("args[%s]", argIndex));
+              sw.writeLineF("a%s = (%s) args[%s];", argIndex, varType, argIndex);
+            } else {
+              sw.ifElse(
+                  String.format("args[%s] == null", argIndex),
+                  () -> {
+                    sw.writeLineF("a%s = P%s_DEFAULT;", argIndex, paramIndex);
+                  },
+                  () -> {
+                    genCheckAllowedTypes(
+                        sw,
+                        starlarkMethod,
+                        varType,
+                        paramIndex,
+                        String.format("args[%s]", argIndex));
+                    sw.writeLineF("a%s = (%s) args[%s];", argIndex, varType, argIndex);
+                  });
+            }
+          } else {
+            // Varargs or kwargs
+            sw.writeLineF("a%s = (%s) args[%s];", argIndex, varType, argIndex);
+          }
+        });
+  }
+
+  private void genInvokePosBody(SourceWriter sw, Method method) throws IOException {
+    if (method.posOnlyAlwaysFails()) {
+      // Skip function generation if it cannot be positional only.
+      writeArgBindException(sw);
+      // We have to stop code generation here, otherwise code above will generate
+      // unreachable statements, and the java compilation will fail.
+      return;
+    }
+
+    StarlarkMethod starlarkMethod = method.annotation;
+
+    ArrayList<String> argsLengthConds = new ArrayList<>();
+    if (method.annotation.extraPositionals().name().isEmpty()) {
+      // there's no *args
+      if (method.numPositionalWithoutSelf() == method.numRequiredPositionalWithoutSelf()) {
+        argsLengthConds.add(String.format("args.length != %s", method.numPositionalWithoutSelf()));
+      } else {
+        if (method.numRequiredPositionalWithoutSelf() != 0) {
+          argsLengthConds.add(
+              String.format("args.length < %s", method.numRequiredPositionalWithoutSelf()));
+        }
+        argsLengthConds.add(String.format("args.length > %s", method.numPositionalWithoutSelf()));
+      }
+    } else {
+      // there's *args
+      if (method.numRequiredPositionalWithoutSelf() != 0) {
+        argsLengthConds.add(
+            String.format("args.length < %s", method.numRequiredPositionalWithoutSelf()));
+      }
+    }
+    if (!argsLengthConds.isEmpty()) {
+      writeArgBinExceptionIf(sw, String.join(" || ", argsLengthConds));
+    }
+
+    forEachParam(
+        sw,
+        method,
+        (argIndex, paramIndex, varType) -> {
+          if (paramIndex == method.varargsIndex()) {
+            sw.writeLineF(
+                "a%s = tupleFromRemArgs(args, %s);", argIndex, method.numPositionalWithoutSelf());
+          } else if (paramIndex == method.kwargsIndex()) {
+            sw.writeLineF("a%s = net.starlark.java.eval.Dict.of(thread.mutability());", argIndex);
+          } else {
+            Param param = starlarkMethod.parameters()[paramIndex];
+            if (!param.positional()) {
+              // named-only parameter
+              sw.writeLineF("a%s = P%s_DEFAULT;", argIndex, paramIndex);
+            } else if (paramIndex < method.numRequiredPositional()) {
+              // index is valid, checked above
+              genCheckAllowedTypes(
+                  sw, starlarkMethod, varType, paramIndex, String.format("args[%s]", argIndex));
+              sw.writeLineF("a%s = (%s) args[%s];", argIndex, varType, argIndex);
+            } else {
+              // positional parameter
+              sw.ifElse(
+                  String.format("args.length <= %s", argIndex),
+                  () -> {
+                    if (!param.defaultValue().isEmpty()) {
+                      sw.writeLineF("a%s = P%s_DEFAULT;", argIndex, paramIndex);
+                    } else {
+                      writeArgBindException(sw);
+                    }
+                  },
+                  () -> {
+                    genCheckAllowedTypes(
+                        sw,
+                        starlarkMethod,
+                        varType,
+                        paramIndex,
+                        String.format("args[%s]", argIndex));
+                    sw.writeLineF("a%s = (%s) args[%s];", argIndex, varType, argIndex);
+                  });
+            }
+          }
+        });
   }
 
   private boolean needToCallFromJava(Method method) {
