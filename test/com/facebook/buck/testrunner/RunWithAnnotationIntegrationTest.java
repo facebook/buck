@@ -51,7 +51,12 @@ public class RunWithAnnotationIntegrationTest {
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:SimpleSuiteTest");
     suiteTestResult.assertSuccess("Test should pass");
-    assertThat(suiteTestResult.getStderr(), containsString("2 Passed"));
+    assertThat(
+      suiteTestResult.getStderr(),
+      containsString("1 Passed   0 Skipped   0 Failed   com.example.Subtest1"));
+    assertThat(
+      suiteTestResult.getStderr(),
+      containsString("1 Passed   0 Skipped   0 Failed   com.example.Subtest2"));
   }
 
   @Test
@@ -62,8 +67,15 @@ public class RunWithAnnotationIntegrationTest {
 
     ProcessResult suiteTestResult = workspace.runBuckCommand("test", "//:FailingSuiteTest");
     suiteTestResult.assertTestFailure("Test should fail because of one of subtests failure");
-    assertThat(suiteTestResult.getStderr(), containsString("2 Passed"));
-    assertThat(suiteTestResult.getStderr(), containsString("1 Failed"));
+    assertThat(
+      suiteTestResult.getStderr(),
+      containsString("1 Passed   0 Skipped   0 Failed   com.example.Subtest1"));
+    assertThat(
+      suiteTestResult.getStderr(),
+      containsString("1 Passed   0 Skipped   0 Failed   com.example.Subtest2"));
+    assertThat(
+      suiteTestResult.getStderr(),
+      containsString("0 Passed   0 Skipped   1 Failed   com.example.FailingSubtest"));
   }
 
   @Test
