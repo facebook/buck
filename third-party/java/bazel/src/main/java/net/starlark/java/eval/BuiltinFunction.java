@@ -119,10 +119,6 @@ public final class BuiltinFunction extends StarlarkCallable {
     }
 
     try {
-      if (purity() == FnPurity.DEFAULT) {
-        thread.recordSideEffect();
-      }
-
       try {
         if (linkSig.isPosOnly()) {
           return desc.callPos(obj, args, thread);

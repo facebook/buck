@@ -20,6 +20,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import net.starlark.java.annot.FnPurity;
 import net.starlark.java.annot.Param;
 import net.starlark.java.annot.ParamType;
 import net.starlark.java.annot.StarlarkGeneratedFiles;
@@ -379,7 +380,15 @@ class MethodDescriptorGen {
     sw.ifBlock(String.format(cond, args), () -> writeArgBindException(sw));
   }
 
+  private void writeRecordSideEffect(SourceWriter sw, Method method) throws IOException {
+    if (method.annotation.purity() == FnPurity.DEFAULT) {
+      sw.writeLine("recordSideEffect(thread);");
+    }
+  }
+
   private void genInvokeBody(SourceWriter sw, Method method) throws IOException {
+    writeRecordSideEffect(sw, method);
+
     StarlarkMethod starlarkMethod = method.annotation;
 
     forEachParam(
@@ -428,6 +437,8 @@ class MethodDescriptorGen {
       // unreachable statements, and the java compilation will fail.
       return;
     }
+
+    writeRecordSideEffect(sw, method);
 
     StarlarkMethod starlarkMethod = method.annotation;
 

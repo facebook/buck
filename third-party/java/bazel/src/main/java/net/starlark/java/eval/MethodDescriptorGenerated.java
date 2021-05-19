@@ -71,6 +71,14 @@ public abstract class MethodDescriptorGenerated {
   }
 
   /**
+   * Call {@link StarlarkThread#recordSideEffect()}, but make this function accessible to generated
+   * code ({@link StarlarkThread#recordSideEffect()} is package-local).
+   */
+  protected static void recordSideEffect(StarlarkThread thread) {
+    thread.recordSideEffect();
+  }
+
+  /**
    * This exception is thrown by generated descriptor trampoline when some arguments are incorrect.
    * There's no details in this exception, because when it is caught, slow error handler will
    * produce detailed error message.
