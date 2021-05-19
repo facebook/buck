@@ -6,6 +6,6 @@ prebuilt_jar(
     ],
     source_jar = "compile-testing-0.19-sources.jar",
     visibility = [
-        "//third-party/java/bazel/...",
+        "//starlark/...",
     ],
 )

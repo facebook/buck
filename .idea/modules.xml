@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/third-party/java/bazel/bazel.iml" filepath="$PROJECT_DIR$/third-party/java/bazel/bazel.iml" />
       <module fileurl="file://$PROJECT_DIR$/buck.iml" filepath="$PROJECT_DIR$/buck.iml" />
       <module fileurl="file://$PROJECT_DIR$/tools/consistency_checker/consistency_checker.iml" filepath="$PROJECT_DIR$/tools/consistency_checker/consistency_checker.iml" />
       <module fileurl="file://$PROJECT_DIR$/tools/documentation_generator/documentation_generator.iml" filepath="$PROJECT_DIR$/tools/documentation_generator/documentation_generator.iml" />
@@ -10,6 +9,7 @@
       <module fileurl="file://$PROJECT_DIR$/programs/programs.iml" filepath="$PROJECT_DIR$/programs/programs.iml" />
       <module fileurl="file://$PROJECT_DIR$/python-dsl/python-dsl.iml" filepath="$PROJECT_DIR$/python-dsl/python-dsl.iml" />
       <module fileurl="file://$PROJECT_DIR$/scripts/scripts.iml" filepath="$PROJECT_DIR$/scripts/scripts.iml" />
+      <module fileurl="file://$PROJECT_DIR$/starlark/starlark.iml" filepath="$PROJECT_DIR$/starlark/starlark.iml" />
     </modules>
   </component>
 </project>

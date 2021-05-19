@@ -220,7 +220,7 @@ java_immutables_library(
         "//third-party/java/aosp:aosp",
         "//third-party/java/args4j:args4j",
         "//third-party/java/asm:asm",
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
         "//third-party/java/dd-plist:dd-plist",
         "//src/com/facebook/buck/event/utils:utils",
         "//third-party/java/guava:guava",

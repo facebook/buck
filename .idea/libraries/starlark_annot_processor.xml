@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="starlark-annot-processor">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/bazel/jars-for-idea/starlark-annot-processor.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/bazel/jars-for-idea/starlark-annot.jar!/" />
+      <root url="jar://$PROJECT_DIR$/starlark/jars-for-idea/starlark-annot-processor.jar!/" />
+      <root url="jar://$PROJECT_DIR$/starlark/jars-for-idea/starlark-annot.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

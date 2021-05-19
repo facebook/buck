@@ -291,8 +291,8 @@
 
   <path id="starlark.processorpath">
     <!-- Use prebuilt jars -->
-    <pathelement location="third-party/java/bazel/jars-for-idea/starlark-annot.jar"/>
-    <pathelement location="third-party/java/bazel/jars-for-idea/starlark-annot-processor.jar"/>
+    <pathelement location="starlark/jars-for-idea/starlark-annot.jar"/>
+    <pathelement location="starlark/jars-for-idea/starlark-annot-processor.jar"/>
     <pathelement location="third-party/java/guava/guava-25.1-jre.jar"/>
     <pathelement location="third-party/java/jsr/jsr305.jar"/>
   </path>
@@ -650,7 +650,7 @@
   <target name="compile"
           depends="compile-buck-modules-annotation-processor, compile-testrunner, compile-aosp,
                    compile-manual-gen-src, bootstrapper, buckfilesystem, package-resources,
-                   tracing-api, dx, compile-bazel"
+                   tracing-api, dx, compile-starlark"
           description="compile Java source code">
     <mkdir dir="${classes.dir}" />
 
@@ -950,7 +950,7 @@
     </jar>
   </target>
 
-  <target name="compile-bazel">
+  <target name="compile-starlark">
     <mkdir dir="${build.dir}/bazel"/>
 
     <javac destdir="${build.dir}/bazel"
@@ -959,7 +959,7 @@
       target="8">
       <compilerarg value="-processorpath"/>
       <compilerarg value="${bazel.processorpath}"/>
-      <src path="third-party/java/bazel/src/main/java"/>
+      <src path="starlark/src/main/java"/>
       <classpath>
         <pathelement location="third-party/java/guava/guava-25.1-jre.jar" />
         <pathelement location="third-party/java/jsr/jsr305.jar" />
@@ -1139,7 +1139,7 @@
     signature on the first line not the following information.
     -->
 
-  <target name="create-resources-signature" depends="copy-resources, compile, dx, compile-bazel, javac-plugin,
+  <target name="create-resources-signature" depends="copy-resources, compile, dx, compile-starlark, javac-plugin,
                                                 report-generator-jar, create-classpath">
     <delete file="${buck.signature.file}"/>
     <checksum todir="${build.dir}/checksums" totalproperty="buck.signature.value">

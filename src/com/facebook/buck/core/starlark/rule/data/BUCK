@@ -4,7 +4,7 @@ java_library(
         ["*.java"],
     ),
     plugins = [
-        "//third-party/java/bazel:starlark-annot-processor",
+        "//starlark:starlark-annot-processor",
     ],
     tests = [
         "//test/com/facebook/buck/core/starlark/rule/data:data",
@@ -16,6 +16,6 @@ java_library(
     exported_deps = [
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules/providers/collect:collect",
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
     ],
 )

@@ -2,7 +2,7 @@ java_library(
     name = "function",
     srcs = glob(["*.java"]),
     plugins = [
-        "//third-party/java/bazel:starlark-annot-processor",
+        "//starlark:starlark-annot-processor",
     ],
     visibility = ["PUBLIC"],
     deps = [
@@ -21,7 +21,7 @@ java_library(
         "//src/com/facebook/buck/skylark/parser/context:context",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/protobuf:protobuf",

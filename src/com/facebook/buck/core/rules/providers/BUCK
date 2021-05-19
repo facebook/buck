@@ -4,6 +4,6 @@ java_library(
     visibility = ["PUBLIC"],
     exported_deps = [
         "//src/com/facebook/buck/core/model:model",
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
     ],
 )

@@ -13,6 +13,6 @@
     <orderEntry type="module" module-name="buck" scope="TEST" />
     <orderEntry type="library" name="stringtemplate" level="project" />
     <orderEntry type="library" name="args4j" level="project" />
-    <orderEntry type="module" module-name="bazel" />
+    <orderEntry type="module" module-name="starlark" />
   </component>
 </module>

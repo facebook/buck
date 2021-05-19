@@ -172,7 +172,7 @@
     <orderEntry type="library" name="error_prone" level="project" />
     <orderEntry type="library" name="jsr305" level="project" />
     <orderEntry type="library" name="junixsocket" level="project" />
-    <orderEntry type="module" module-name="bazel" />
+    <orderEntry type="module" module-name="starlark" />
     <orderEntry type="module" module-name="buck" />
     <orderEntry type="library" name="compile-testing" level="project" />
     <orderEntry type="library" name="starlark-annot-processor" level="project" />

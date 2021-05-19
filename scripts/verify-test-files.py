@@ -69,10 +69,7 @@ def getTestFiles(repo_root):
             if not f.endswith(".java"):
                 continue
             # Exclude testdata and certain bazel tests
-            if (
-                "testdata" in absolute_path
-                or "/third-party/java/bazel/" in absolute_path_norm
-            ):
+            if "testdata" in absolute_path or "/starlark/" in absolute_path_norm:
                 continue
             if not containsJUnitImport(absolute_path):
                 continue

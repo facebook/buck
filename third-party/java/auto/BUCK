@@ -1,6 +1,6 @@
 # We only use auto library in Starlark implementation
 visibility = [
-    "//third-party/java/bazel/...",
+    "//starlark/...",
 ]
 
 prebuilt_jar(

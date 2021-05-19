@@ -8,6 +8,7 @@ prebuilt_jar(
     source_jar = "junit-4.13-sources.jar",
     visibility = [
         "//src/com/facebook/buck/testrunner:junit",
+        "//starlark/...",
         "//test/...",
         "//third-party/java/...",
         "//tools/...",

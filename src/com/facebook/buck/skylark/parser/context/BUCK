@@ -7,7 +7,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/core/model/label:label",
         "//src/com/facebook/buck/skylark/packages:packages",
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],

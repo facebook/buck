@@ -4,13 +4,13 @@ java_library(
         ["*.java"],
     ),
     plugins = [
-        "//third-party/java/bazel:starlark-annot-processor",
+        "//starlark:starlark-annot-processor",
     ],
     visibility = ["PUBLIC"],
     deps = [
         "//third-party/java/guava:guava",
     ],
     exported_deps = [
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
     ],
 )

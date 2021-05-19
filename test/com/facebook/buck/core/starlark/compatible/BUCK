@@ -22,7 +22,7 @@ java_library(
     visibility = ["//test/..."],
     exported_deps = [
         "//src/com/facebook/buck/core/starlark/compatible:compatible",
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
         "//third-party/java/guava:guava",
     ],
 )

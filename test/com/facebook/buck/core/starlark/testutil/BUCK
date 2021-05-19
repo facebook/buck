@@ -11,6 +11,6 @@ java_library(
         "//test/com/facebook/buck/core/starlark/compatible:testutil",
     ],
     exported_deps = [
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
     ],
 )

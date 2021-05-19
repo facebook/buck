@@ -4,7 +4,7 @@ java_library(
     visibility = ["//tools/documentation_generator/..."],
     deps = [
         "//src/com/facebook/buck/util/function:function",
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
         "//third-party/java/guava:guava",
     ],
 )

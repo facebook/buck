@@ -9,12 +9,12 @@ standard_java_test(
         "//src/com/facebook/buck/core/starlark/rule:rule",
         "//src/com/facebook/buck/core/starlark/rule/attr:attr",
         "//src/com/facebook/buck/rules/coercer:coercer",
+        "//starlark:bazel",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/skylark/function:testutil",
         "//test/com/facebook/buck/testutil:testutil",
-        "//third-party/java/bazel:bazel",
         "//third-party/java/junit:junit",
     ],
 )

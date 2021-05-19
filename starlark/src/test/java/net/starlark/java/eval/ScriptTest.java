@@ -86,7 +86,7 @@ public final class ScriptTest {
   public static Collection<Object[]> parameters() {
     File root = new File("third_party/bazel"); // blaze
     if (!root.exists()) {
-      root = new File("third-party/java/bazel"); // buck
+      root = new File("starlark"); // buck
     }
     if (!root.exists()) {
       root = new File("."); // bazel

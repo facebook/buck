@@ -3,7 +3,7 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
         "//third-party/java/guava:guava",
     ],
 )

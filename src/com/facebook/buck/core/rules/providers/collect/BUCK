@@ -5,6 +5,6 @@ java_library(
     exported_deps = [
         "//src/com/facebook/buck/core/rules/providers:providers",
         "//src/com/facebook/buck/core/rules/providers/lib:lib",
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
     ],
 )

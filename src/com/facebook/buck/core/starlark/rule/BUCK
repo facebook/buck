@@ -4,7 +4,7 @@ java_immutables_library(
     name = "rule",
     srcs = glob(["*.java"]),
     plugins = [
-        "//third-party/java/bazel:starlark-annot-processor",
+        "//starlark:starlark-annot-processor",
     ],
     visibility = ["PUBLIC"],
     deps = [
@@ -33,6 +33,6 @@ java_immutables_library(
         "//src/com/facebook/buck/core/starlark/coercer:coercer",
         "//src/com/facebook/buck/core/starlark/rule/args:args",
         "//src/com/facebook/buck/core/starlark/rule/attr:attr",
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
     ],
 )

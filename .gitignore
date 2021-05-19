@@ -3,7 +3,7 @@
 
 # IntelliJ build
 /intellij-out/
-/third-party/java/bazel/intellij-out/
+/starlark/intellij-out/
 
 # Override ignore defined in parent directories
 # Note there's also .idea/.gitignore

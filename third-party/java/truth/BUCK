@@ -5,6 +5,6 @@ prebuilt_jar(
         "LICENSE",
     ],
     visibility = [
-        "//third-party/java/bazel/...",
+        "//starlark/...",
     ],
 )

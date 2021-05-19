@@ -7,7 +7,7 @@ java_library(
         "//src/com/facebook/buck/parser/syntax:syntax",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//src/com/facebook/buck/util/types:types",
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
         "//third-party/java/jsr:jsr305",
     ],
     exported_deps = [

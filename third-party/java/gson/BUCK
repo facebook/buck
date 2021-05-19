@@ -13,9 +13,9 @@ prebuilt_jar(
         "//src-gen:downward-model",  # Standard protobuf JsonFormat depend on gson
         "//src/com/facebook/buck/features/project/intellij/targetinfo/...",  # Only uses annotations
         "//src/com/facebook/buck/worker:worker_process",  # Legacy caller which should probably use Jackson
+        "//starlark/...",
         "//test/com/facebook/buck/worker:worker",  # Legacy caller
         "//third-party/java/aosp:aosp",  # Sad transitive deps are sad
-        "//third-party/java/bazel/...",
         "//third-party/java/grpc:grpc-core",  # Legacy caller which should probably use Jackson
         "//tools/ideabuck:",  # Not inside buck
     ],

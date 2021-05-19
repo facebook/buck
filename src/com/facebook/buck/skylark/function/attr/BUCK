@@ -4,7 +4,7 @@ java_immutables_library(
     name = "attr",
     srcs = glob(["*.java"]),
     plugins = [
-        "//third-party/java/bazel:starlark-annot-processor",
+        "//starlark:starlark-annot-processor",
     ],
     visibility = ["PUBLIC"],
     deps = [
@@ -16,7 +16,7 @@ java_immutables_library(
         "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/skylark/packages:packages",
         "//src/com/facebook/buck/skylark/parser/context:context",
-        "//third-party/java/bazel:bazel",
+        "//starlark:bazel",
         "//third-party/java/guava:guava",
     ],
     exported_deps = [
