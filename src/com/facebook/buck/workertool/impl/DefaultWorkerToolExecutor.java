@@ -28,11 +28,14 @@ import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandle
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiLaunchedProcess;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
+import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.workertool.WorkerToolExecutor;
@@ -64,6 +67,12 @@ import javax.annotation.Nullable;
 public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
   private static final Logger LOG = Logger.get(DefaultWorkerToolExecutor.class);
+
+  private static final String EXECUTE_WT_COMMAND_SCOPE_PREFIX = "execute_wt_command";
+  private static final String EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX =
+      "execute_pipelining_wt_command";
+  private static final String START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX =
+      "start_next_pipelining_wt_command";
 
   private static final AtomicInteger COUNTER = new AtomicInteger();
 
@@ -196,22 +205,32 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   }
 
   @Override
-  public ResultEvent executeCommand(String actionId, AbstractMessage executeCommandMessage)
+  public ResultEvent executeCommand(
+      String actionId, AbstractMessage executeCommandMessage, IsolatedEventBus eventBus)
       throws IOException, ExecutionException, InterruptedException {
     checkState(isAlive(), "Launched process is not alive");
-    runUnderLock(
-        () -> {
-          checkThatNoActionsAreExecuting();
-          executingActions = ImmutableList.of(ExecutingAction.of(actionId));
-        });
 
-    CommandTypeMessage executeCommandTypeMessage =
-        getCommandTypeMessage(CommandTypeMessage.CommandType.EXECUTE_COMMAND);
-    ExecuteCommand executeCommand = ExecuteCommand.newBuilder().setActionId(actionId).build();
+    CommandTypeMessage executeCommandTypeMessage;
+    ExecuteCommand executeCommand;
 
-    executeCommandTypeMessage.writeDelimitedTo(outputStream);
-    executeCommand.writeDelimitedTo(outputStream);
-    executeCommandMessage.writeDelimitedTo(outputStream);
+    try (Scope ignored =
+        PerfEvents.scope(eventBus, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
+      runUnderLock(
+          () -> {
+            checkThatNoActionsAreExecuting();
+            executingActions = ImmutableList.of(ExecutingAction.of(actionId));
+          });
+
+      executeCommandTypeMessage =
+          getCommandTypeMessage(CommandTypeMessage.CommandType.EXECUTE_COMMAND);
+      executeCommand = ExecuteCommand.newBuilder().setActionId(actionId).build();
+    }
+
+    try (Scope ignored = PerfEvents.scope(eventBus, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_write")) {
+      executeCommandTypeMessage.writeDelimitedTo(outputStream);
+      executeCommand.writeDelimitedTo(outputStream);
+      executeCommandMessage.writeDelimitedTo(outputStream);
+    }
 
     LOG.debug(
         "Started execution of worker tool for for actionId: %s, worker id: %s", actionId, workerId);
@@ -219,40 +238,53 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     ExecutingAction executingAction = Iterables.getOnlyElement(executingActions);
     SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
 
-    // TODO : msemko: add timeout/heartbeat, ... ?
-    return resultEventFuture.get();
+    try (Scope ignored =
+        PerfEvents.scope(eventBus, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_waiting_for_result")) {
+      // TODO : msemko: add timeout/heartbeat, ... ?
+      return resultEventFuture.get();
+    }
   }
 
   @Override
   public ImmutableList<Future<ResultEvent>> executePipeliningCommand(
       ImmutableList<String> actionIds,
       AbstractMessage pipeliningCommand,
-      SettableFuture<Unit> pipelineFinished)
+      SettableFuture<Unit> pipelineFinished,
+      IsolatedEventBus eventBus)
       throws IOException, ExecutionException, InterruptedException {
     checkState(isAlive(), "Launched process is not alive");
 
-    StartPipelineCommand.Builder startPipeliningCommandBuilder = StartPipelineCommand.newBuilder();
-    runUnderLock(
-        () -> {
-          checkThatNoActionsAreExecuting();
+    CommandTypeMessage executeCommandTypeMessage;
+    StartPipelineCommand startPipelineCommand;
+    try (Scope ignored =
+        PerfEvents.scope(eventBus, EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX + "_preparing")) {
+      StartPipelineCommand.Builder startPipeliningCommandBuilder =
+          StartPipelineCommand.newBuilder();
+      runUnderLock(
+          () -> {
+            checkThatNoActionsAreExecuting();
 
-          ImmutableList.Builder<ExecutingAction> executingActionBuilder =
-              ImmutableList.builderWithExpectedSize(actionIds.size());
-          for (String actionId : actionIds) {
-            executingActionBuilder.add(ExecutingAction.of(actionId));
-            startPipeliningCommandBuilder.addActionId(actionId);
-          }
-          executingActions = executingActionBuilder.build();
-          this.pipelineFinished = pipelineFinished;
-        });
+            ImmutableList.Builder<ExecutingAction> executingActionBuilder =
+                ImmutableList.builderWithExpectedSize(actionIds.size());
+            for (String actionId : actionIds) {
+              executingActionBuilder.add(ExecutingAction.of(actionId));
+              startPipeliningCommandBuilder.addActionId(actionId);
+            }
+            executingActions = executingActionBuilder.build();
+            this.pipelineFinished = pipelineFinished;
+          });
 
-    CommandTypeMessage executeCommandTypeMessage =
-        getCommandTypeMessage(CommandTypeMessage.CommandType.START_PIPELINE_COMMAND);
-    StartPipelineCommand startPipelineCommand = startPipeliningCommandBuilder.build();
+      executeCommandTypeMessage =
+          getCommandTypeMessage(CommandTypeMessage.CommandType.START_PIPELINE_COMMAND);
+      startPipelineCommand = startPipeliningCommandBuilder.build();
+    }
 
-    executeCommandTypeMessage.writeDelimitedTo(outputStream);
-    startPipelineCommand.writeDelimitedTo(outputStream);
-    pipeliningCommand.writeDelimitedTo(outputStream);
+    try (Scope ignored =
+        PerfEvents.scope(eventBus, EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX + "_write")) {
+      executeCommandTypeMessage.writeDelimitedTo(outputStream);
+      startPipelineCommand.writeDelimitedTo(outputStream);
+      pipeliningCommand.writeDelimitedTo(outputStream);
+    }
 
     LOG.debug(
         "Started execution of worker tool for for pipelining actionIds: %s, worker id: %s",
@@ -263,33 +295,41 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   }
 
   @Override
-  public void startNextCommand(AbstractMessage startNextPipeliningCommand, String actionId)
+  public void startNextCommand(
+      AbstractMessage startNextPipeliningCommand, String actionId, IsolatedEventBus eventBus)
       throws IOException {
     checkState(isAlive(), "Launched process is not alive");
     checkNotNull(pipelineFinished, "Pipeline is not started.");
     checkState(!pipelineFinished.isDone(), "Pipeline is finished.");
 
-    runUnderLock(
-        () -> {
-          boolean isExecuting = false;
-          for (ExecutingAction executingAction : executingActions) {
-            if (executingAction.getActionId().equals(actionId)) {
-              isExecuting = true;
-              break;
+    CommandTypeMessage commandTypeMessage;
+    try (Scope ignored =
+        PerfEvents.scope(eventBus, START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
+      runUnderLock(
+          () -> {
+            boolean isExecuting = false;
+            for (ExecutingAction executingAction : executingActions) {
+              if (executingAction.getActionId().equals(actionId)) {
+                isExecuting = true;
+                break;
+              }
             }
-          }
-          checkState(
-              isExecuting,
-              "Action id: %s is not found among currently execution actions: %s",
-              actionId,
-              getExecutingActionIds());
-        });
+            checkState(
+                isExecuting,
+                "Action id: %s is not found among currently execution actions: %s",
+                actionId,
+                getExecutingActionIds());
+          });
 
-    CommandTypeMessage commandTypeMessage =
-        getCommandTypeMessage(CommandTypeMessage.CommandType.START_NEXT_PIPELINING_COMMAND);
+      commandTypeMessage =
+          getCommandTypeMessage(CommandTypeMessage.CommandType.START_NEXT_PIPELINING_COMMAND);
+    }
 
-    commandTypeMessage.writeDelimitedTo(outputStream);
-    startNextPipeliningCommand.writeDelimitedTo(outputStream);
+    try (Scope ignored =
+        PerfEvents.scope(eventBus, START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX + "_write")) {
+      commandTypeMessage.writeDelimitedTo(outputStream);
+      startNextPipeliningCommand.writeDelimitedTo(outputStream);
+    }
 
     LOG.debug(
         "Started next pipelining command with action id: %s has been send to worker id: %s",

@@ -18,9 +18,12 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.downward.model.ResultEvent;
+import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.workertool.WorkerToolExecutor;
@@ -89,18 +92,22 @@ public class JavaCDWorkerStepUtils {
   /** Returns {@link WorkerProcessPool.BorrowedWorkerProcess} from the passed pool. */
   public static WorkerProcessPool.BorrowedWorkerProcess<WorkerToolExecutor>
       borrowWorkerToolWithTimeout(
-          WorkerProcessPool<WorkerToolExecutor> workerToolPool, int borrowFromPoolTimeoutInSeconds)
+          WorkerProcessPool<WorkerToolExecutor> workerToolPool,
+          int borrowFromPoolTimeoutInSeconds,
+          IsolatedEventBus eventBus)
           throws InterruptedException {
-    return workerToolPool
-        .borrowWorkerProcess(borrowFromPoolTimeoutInSeconds, TimeUnit.SECONDS)
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Cannot get a worker tool from a pool of the size: "
-                        + workerToolPool.getCapacity()
-                        + ". Time out of "
-                        + borrowFromPoolTimeoutInSeconds
-                        + " seconds passed."));
+    try (Scope ignored = PerfEvents.scope(eventBus, "borrow_worker_tool ")) {
+      return workerToolPool
+          .borrowWorkerProcess(borrowFromPoolTimeoutInSeconds, TimeUnit.SECONDS)
+          .orElseThrow(
+              () ->
+                  new IllegalStateException(
+                      "Cannot get a worker tool from a pool of the size: "
+                          + workerToolPool.getCapacity()
+                          + ". Time out of "
+                          + borrowFromPoolTimeoutInSeconds
+                          + " seconds passed."));
+    }
   }
 
   /** Returns {@link WorkerProcessPool} created for the passed {@code command} */
@@ -113,13 +120,15 @@ public class JavaCDWorkerStepUtils {
         startupCommand,
         () -> {
           WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
-          return workerToolLauncher.launchWorker(
-              startupCommand,
-              ImmutableMap.of(
-                  BuckClasspath.ENV_VAR_NAME,
-                  Objects.requireNonNull(
-                      BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
-                      BuckClasspath.ENV_VAR_NAME + " env variable is not set")));
+          try (Scope ignored = PerfEvents.scope(context.getIsolatedEventBus(), "launch_worker")) {
+            return workerToolLauncher.launchWorker(
+                startupCommand,
+                ImmutableMap.of(
+                    BuckClasspath.ENV_VAR_NAME,
+                    Objects.requireNonNull(
+                        BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
+                        BuckClasspath.ENV_VAR_NAME + " env variable is not set")));
+          }
         },
         javaCDParams.getWorkerToolPoolSize());
   }

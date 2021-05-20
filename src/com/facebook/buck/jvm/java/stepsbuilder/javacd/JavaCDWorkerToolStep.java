@@ -36,11 +36,13 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
   private static final Logger LOG = Logger.get(JavaCDWorkerToolStep.class);
 
+  private static final String STEP_NAME = "javacd";
+
   private final JavaCDParams javaCDParams;
   private final BuildJavaCommand buildJavaCommand;
 
   public JavaCDWorkerToolStep(BuildJavaCommand buildJavaCommand, JavaCDParams javaCDParams) {
-    super("javacd_wt");
+    super(STEP_NAME);
     this.buildJavaCommand = buildJavaCommand;
     this.javaCDParams = javaCDParams;
   }
@@ -57,7 +59,9 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
     try (BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool =
         JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
-            workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds())) {
+            workerToolPool,
+            javaCDParams.getBorrowFromPoolTimeoutInSeconds(),
+            context.getIsolatedEventBus())) {
       WorkerToolExecutor workerToolExecutor = borrowedWorkerTool.get();
       return executeBuildJavaCommand(context, workerToolExecutor, launchJavaCDCommand);
     }
@@ -71,7 +75,9 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     String actionId = context.getActionId();
     try {
       LOG.debug("Starting execution of java compilation command with action id: %s", actionId);
-      ResultEvent resultEvent = workerToolExecutor.executeCommand(actionId, buildJavaCommand);
+      ResultEvent resultEvent =
+          workerToolExecutor.executeCommand(
+              actionId, buildJavaCommand, context.getIsolatedEventBus());
       return JavaCDWorkerStepUtils.createStepExecutionResult(
           launchJavaCDCommand, resultEvent, actionId);
     } catch (ExecutionException e) {

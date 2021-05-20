@@ -19,10 +19,10 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 import static com.facebook.buck.testutil.TestLogSink.logRecordWithMessage;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -82,7 +82,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -251,7 +250,8 @@ public class JavaCDIntegrationTest {
       BuildJavaCommand buildJavaCommand = createBuildCommand(target, workingDir.toString());
 
       ResultEvent resultEvent =
-          workerToolExecutor.executeCommand("//my_test_action_id", buildJavaCommand);
+          workerToolExecutor.executeCommand(
+              "//my_test_action_id", buildJavaCommand, executionContext.getIsolatedEventBus());
 
       assertThat(resultEvent.getActionId(), equalTo("//my_test_action_id"));
       assertThat(resultEvent.getExitCode(), equalTo(0));
@@ -263,6 +263,7 @@ public class JavaCDIntegrationTest {
     assertThat(actualStepEvents, hasSize(28));
 
     List<String> simplePerfEvents = eventBusListener.getSimplePerfEvents();
+    assertThat(simplePerfEvents, hasSize(10));
 
     SimplePerfEvent.Started buildTargetStartedEvent =
         SimplePerfEvent.started(SimplePerfEvent.PerfEventTitle.of(target));
@@ -270,9 +271,8 @@ public class JavaCDIntegrationTest {
         SimplePerfEvent.started(SimplePerfEvent.PerfEventTitle.of("javac-1"));
 
     assertThat(
-        Arrays.asList(simplePerfEvents.get(0), simplePerfEvents.get(1)),
-        containsInAnyOrder(
-            buildTargetStartedEvent.toLogMessage(), javacStartedEvent.toLogMessage()));
+        simplePerfEvents,
+        hasItems(buildTargetStartedEvent.toLogMessage(), javacStartedEvent.toLogMessage()));
   }
 
   @Test
@@ -323,7 +323,8 @@ public class JavaCDIntegrationTest {
       BuildJavaCommand buildJavaCommand = createBuildCommand(target, workingDir.toString());
 
       ResultEvent resultEvent =
-          workerToolExecutor.executeCommand("//my_test_action_id", buildJavaCommand);
+          workerToolExecutor.executeCommand(
+              "//my_test_action_id", buildJavaCommand, executionContext.getIsolatedEventBus());
 
       assertThat(resultEvent.getActionId(), equalTo("//my_test_action_id"));
       assertThat(resultEvent.getExitCode(), equalTo(1));
@@ -365,7 +366,7 @@ public class JavaCDIntegrationTest {
           hasItem(
               logRecordWithMessage(
                   stringContainsInOrder(
-                      "Cannot write shutdown command for named pipe", "Worker id: 1"))));
+                      "Cannot write shutdown command for named pipe", "Worker id: "))));
     }
   }
 

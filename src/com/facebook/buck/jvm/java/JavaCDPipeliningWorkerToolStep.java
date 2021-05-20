@@ -21,6 +21,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ResultEvent;
+import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.javacd.model.BaseCommandParams;
 import com.facebook.buck.javacd.model.BasePipeliningCommand;
 import com.facebook.buck.javacd.model.BuildTargetValue;
@@ -31,6 +33,7 @@ import com.facebook.buck.javacd.model.StartNextPipeliningCommand;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
@@ -66,6 +69,9 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
   private static final Logger LOG = Logger.get(JavaCDPipeliningWorkerToolStep.class);
 
+  private static final String STEP_NAME = "javacd_pipelining";
+  private static final String SCOPE_PREFIX = STEP_NAME + "_command";
+
   private final JavaCDParams javaCDParams;
   private final PipeliningCommand.Builder builder = PipeliningCommand.newBuilder();
   private final List<AbstractMessage> commands = new ArrayList<>();
@@ -81,7 +87,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       boolean withDownwardApi,
       BaseCommandParams.SpoolMode spoolMode,
       JavaCDParams javaCDParams) {
-    super("javacd_pipelining_wt");
+    super(STEP_NAME);
     this.javaCDParams = javaCDParams;
 
     builder
@@ -105,25 +111,32 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     ImmutableList<String> launchJavaCDCommand =
         JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams);
 
+    IsolatedEventBus eventBus = context.getIsolatedEventBus();
     if (borrowedWorkerTool == null) {
       // the first execution
       Preconditions.checkState(actionIdToResultEventMap.isEmpty());
 
-      WorkerProcessPool<WorkerToolExecutor> workerToolPool =
-          JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
-      borrowedWorkerTool =
-          JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
-              workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
+      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_get_wt")) {
+        WorkerProcessPool<WorkerToolExecutor> workerToolPool =
+            JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
+        borrowedWorkerTool =
+            JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
+                workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds(), eventBus);
+      }
 
-      try {
-        workerToolExecutor = borrowedWorkerTool.get();
-        actionIdToResultEventMap = startExecution();
-      } catch (ExecutionException e) {
-        return JavaCDWorkerStepUtils.createFailStepExecutionResult(
-            launchJavaCDCommand, actionId, e);
+      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_execution")) {
+        try {
+          workerToolExecutor = borrowedWorkerTool.get();
+          actionIdToResultEventMap = startExecution(SCOPE_PREFIX, eventBus);
+        } catch (ExecutionException e) {
+          return JavaCDWorkerStepUtils.createFailStepExecutionResult(
+              launchJavaCDCommand, actionId, e);
+        }
       }
     } else {
-      startNextPipeliningCommand(actionId);
+      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_start_next_command")) {
+        startNextPipeliningCommand(actionId, eventBus);
+      }
     }
 
     Future<ResultEvent> resultEventFuture =
@@ -132,76 +145,96 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
             String.format(
                 "Cannot find a future for actionId: %s among executing: %s",
                 actionId, actionIdToResultEventMap.keySet()));
-    try {
-      LOG.debug("Waiting for the result event associated with action id: %s", actionId);
-      ResultEvent resultEvent = resultEventFuture.get();
-      return JavaCDWorkerStepUtils.createStepExecutionResult(
-          launchJavaCDCommand, resultEvent, actionId);
-    } catch (ExecutionException e) {
-      return JavaCDWorkerStepUtils.createFailStepExecutionResult(launchJavaCDCommand, actionId, e);
+
+    try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_waiting_for_result")) {
+      try {
+        LOG.debug("Waiting for the result event associated with action id: %s", actionId);
+        ResultEvent resultEvent = resultEventFuture.get();
+        return JavaCDWorkerStepUtils.createStepExecutionResult(
+            launchJavaCDCommand, resultEvent, actionId);
+      } catch (ExecutionException e) {
+        return JavaCDWorkerStepUtils.createFailStepExecutionResult(
+            launchJavaCDCommand, actionId, e);
+      }
     }
   }
 
-  private ImmutableMap<String, Future<ResultEvent>> startExecution()
+  private ImmutableMap<String, Future<ResultEvent>> startExecution(
+      String scopePrefix, IsolatedEventBus eventBus)
       throws IOException, ExecutionException, InterruptedException {
     Preconditions.checkNotNull(workerToolExecutor);
 
     Preconditions.checkArgument(
         !commands.isEmpty() && commands.size() <= 2, "Commands size must be equal only to 1 or 2");
-    ImmutableList.Builder<String> actionsIdsBuilder = ImmutableList.builder();
 
-    // the first command could be either source-abi or library one
-    AbstractMessage command1 = commands.get(0);
-    if (command1 instanceof BasePipeliningCommand) {
-      BasePipeliningCommand abiCommand = (BasePipeliningCommand) command1;
-      builder.setAbiCommand(abiCommand);
-      actionsIdsBuilder.add(getActionId(abiCommand.getBuildTargetValue()));
-    } else {
-      Preconditions.checkState(
-          command1 instanceof LibraryPipeliningCommand, "The first command must be a library one");
-      LibraryPipeliningCommand libraryCommand = (LibraryPipeliningCommand) command1;
-      builder.clearAbiCommand();
-      builder.setLibraryCommand(libraryCommand);
-      actionsIdsBuilder.add(
-          getActionId(libraryCommand.getBasePipeliningCommand().getBuildTargetValue()));
+    ImmutableList<String> actionIds;
+    PipeliningCommand pipeliningCommand;
+
+    try (Scope ignored = PerfEvents.scope(eventBus, scopePrefix + "_preparing")) {
+
+      ImmutableList.Builder<String> actionsIdsBuilder = ImmutableList.builder();
+
+      // the first command could be either source-abi or library one
+      AbstractMessage command1 = commands.get(0);
+      if (command1 instanceof BasePipeliningCommand) {
+        BasePipeliningCommand abiCommand = (BasePipeliningCommand) command1;
+        builder.setAbiCommand(abiCommand);
+        actionsIdsBuilder.add(getActionId(abiCommand.getBuildTargetValue()));
+      } else {
+        Preconditions.checkState(
+            command1 instanceof LibraryPipeliningCommand,
+            "The first command must be a library one");
+        LibraryPipeliningCommand libraryCommand = (LibraryPipeliningCommand) command1;
+        builder.clearAbiCommand();
+        builder.setLibraryCommand(libraryCommand);
+        actionsIdsBuilder.add(
+            getActionId(libraryCommand.getBasePipeliningCommand().getBuildTargetValue()));
+      }
+
+      // the second command could be only library one
+      if (commands.size() > 1) {
+        AbstractMessage command2 = commands.get(1);
+        Preconditions.checkState(
+            command2 instanceof LibraryPipeliningCommand,
+            "The second command must be a library one");
+        LibraryPipeliningCommand libraryCommand = (LibraryPipeliningCommand) command2;
+        builder.setLibraryCommand(libraryCommand);
+        actionsIdsBuilder.add(
+            getActionId(libraryCommand.getBasePipeliningCommand().getBuildTargetValue()));
+      }
+
+      actionIds = actionsIdsBuilder.build();
+      pipeliningCommand = builder.build();
     }
 
-    // the second command could be only library one
-    if (commands.size() > 1) {
-      AbstractMessage command2 = commands.get(1);
-      Preconditions.checkState(
-          command2 instanceof LibraryPipeliningCommand, "The second command must be a library one");
-      LibraryPipeliningCommand libraryCommand = (LibraryPipeliningCommand) command2;
-      builder.setLibraryCommand(libraryCommand);
-      actionsIdsBuilder.add(
-          getActionId(libraryCommand.getBasePipeliningCommand().getBuildTargetValue()));
+    ImmutableList<Future<ResultEvent>> futures;
+    try (Scope ignored = PerfEvents.scope(eventBus, scopePrefix + "_invocation")) {
+      futures =
+          workerToolExecutor.executePipeliningCommand(actionIds, pipeliningCommand, done, eventBus);
     }
 
-    ImmutableList<String> actionIds = actionsIdsBuilder.build();
-    PipeliningCommand pipeliningCommand = builder.build();
-
-    ImmutableList<Future<ResultEvent>> futures =
-        workerToolExecutor.executePipeliningCommand(actionIds, pipeliningCommand, done);
-
-    ImmutableMap.Builder<String, Future<ResultEvent>> mapBuilder = ImmutableMap.builder();
-    for (int i = 0; i < actionIds.size(); i++) {
-      mapBuilder.put(actionIds.get(i), futures.get(i));
+    try (Scope ignored = PerfEvents.scope(eventBus, scopePrefix + "_result_map")) {
+      ImmutableMap.Builder<String, Future<ResultEvent>> mapBuilder = ImmutableMap.builder();
+      for (int i = 0; i < actionIds.size(); i++) {
+        mapBuilder.put(actionIds.get(i), futures.get(i));
+      }
+      return mapBuilder.build();
     }
-    return mapBuilder.build();
   }
 
   private String getActionId(BuildTargetValue buildTargetValue) {
     return buildTargetValue.getFullyQualifiedName();
   }
 
-  private void startNextPipeliningCommand(String actionId) throws IOException {
+  private void startNextPipeliningCommand(String actionId, IsolatedEventBus eventBus)
+      throws IOException {
     Preconditions.checkNotNull(workerToolExecutor);
     LOG.debug(
         "Sending start execution next pipelining command (action id: %s) signal to worker tool.",
         actionId);
     StartNextPipeliningCommand startNextPipeliningCommand =
         StartNextPipeliningCommand.newBuilder().setActionId(actionId).build();
-    workerToolExecutor.startNextCommand(startNextPipeliningCommand, actionId);
+    workerToolExecutor.startNextCommand(startNextPipeliningCommand, actionId, eventBus);
   }
 
   @Override
