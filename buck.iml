@@ -33,11 +33,6 @@
       <excludeFolder url="file://$MODULE_DIR$/ant-out" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/logd-out" />
-      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/buckv2/target" />
-      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice/target" />
-      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice_macros/target" />
-      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/math/target" />
-      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/target" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/java11" />
