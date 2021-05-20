@@ -29,6 +29,7 @@ import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStepsRunner;
+import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -48,6 +49,7 @@ class StepExecutionUtils {
   private StepExecutionUtils() {}
 
   static void executeSteps(
+      ClassLoaderCache classLoaderCache,
       IsolatedEventBus eventBus,
       OutputStream eventsOutputStream,
       DownwardProtocol downwardProtocol,
@@ -60,6 +62,7 @@ class StepExecutionUtils {
       ImmutableList<IsolatedStep> steps)
       throws IOException {
     executeSteps(
+        classLoaderCache,
         eventBus,
         eventsOutputStream,
         downwardProtocol,
@@ -74,6 +77,7 @@ class StepExecutionUtils {
   }
 
   static Optional<IsolatedExecutionContext> executeSteps(
+      ClassLoaderCache classLoaderCache,
       IsolatedEventBus eventBus,
       OutputStream eventsOutputStream,
       DownwardProtocol downwardProtocol,
@@ -90,6 +94,7 @@ class StepExecutionUtils {
     // create a new execution context
     IsolatedExecutionContext executionContext =
         IsolatedExecutionContext.of(
+            classLoaderCache,
             eventBus,
             console,
             platform,

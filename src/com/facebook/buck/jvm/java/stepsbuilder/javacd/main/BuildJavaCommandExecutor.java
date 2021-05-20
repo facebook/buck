@@ -22,6 +22,7 @@ import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.JavaStepsBuilder;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -36,6 +37,7 @@ class BuildJavaCommandExecutor {
   private BuildJavaCommandExecutor() {}
 
   static void executeBuildJavaCommand(
+      ClassLoaderCache classLoaderCache,
       String actionId,
       BuildJavaCommand buildJavaCommand,
       OutputStream eventsOutputStream,
@@ -52,6 +54,7 @@ class BuildJavaCommandExecutor {
     ImmutableList<IsolatedStep> steps = javaStepsBuilder.getSteps();
 
     StepExecutionUtils.executeSteps(
+        classLoaderCache,
         eventBus,
         eventsOutputStream,
         downwardProtocol,

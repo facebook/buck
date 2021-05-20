@@ -52,6 +52,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
 
   /** Returns an {@link IsolatedExecutionContext}. */
   public static IsolatedExecutionContext of(
+      ClassLoaderCache classLoaderCache,
       IsolatedEventBus eventBus,
       Console console,
       Platform platform,
@@ -59,15 +60,17 @@ public abstract class IsolatedExecutionContext implements Closeable {
       AbsPath ruleCellRoot,
       String actionId,
       Clock clock) {
-    return of(
-        eventBus,
-        console,
-        platform,
-        processExecutor,
-        ruleCellRoot,
-        actionId,
-        clock,
-        new ConcurrentHashMap<>());
+    return ImmutableIsolatedExecutionContext.builder()
+        .setIsolatedEventBus(eventBus)
+        .setConsole(console)
+        .setPlatform(platform)
+        .setProcessExecutor(processExecutor)
+        .setRuleCellRoot(ruleCellRoot)
+        .setActionId(actionId)
+        .setClock(clock)
+        .setWorkerToolPools(new ConcurrentHashMap<>())
+        .setClassLoaderCache(classLoaderCache.addRef())
+        .build();
   }
 
   /** Returns an {@link IsolatedExecutionContext}. */
@@ -78,8 +81,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
       ProcessExecutor processExecutor,
       AbsPath ruleCellRoot,
       String actionId,
-      Clock clock,
-      ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>> workerToolPools) {
+      Clock clock) {
     return ImmutableIsolatedExecutionContext.builder()
         .setIsolatedEventBus(eventBus)
         .setConsole(console)
@@ -88,7 +90,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
         .setRuleCellRoot(ruleCellRoot)
         .setActionId(actionId)
         .setClock(clock)
-        .setWorkerToolPools(workerToolPools)
+        .setWorkerToolPools(new ConcurrentHashMap<>())
         .build();
   }
 

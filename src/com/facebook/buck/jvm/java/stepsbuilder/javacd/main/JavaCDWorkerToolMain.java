@@ -30,6 +30,7 @@ import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.javacd.model.PipeliningCommand;
 import com.facebook.buck.javacd.model.StartNextPipeliningCommand;
 import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ErrorLogger;
@@ -83,14 +84,15 @@ public class JavaCDWorkerToolMain {
 
     try (NamedPipeWriter eventNamedPipe =
             NAMED_PIPE_FACTORY.connectAsWriter(workerToolParsedEnvs.getEventPipe());
-        OutputStream eventsOutputStream = eventNamedPipe.getOutputStream()) {
+        OutputStream eventsOutputStream = eventNamedPipe.getOutputStream();
+        ClassLoaderCache classLoaderCache = new ClassLoaderCache()) {
       // establish downward protocol type
       DOWNWARD_PROTOCOL_TYPE.writeDelimitedTo(eventsOutputStream);
       Logger logger = Logger.get("");
       logger.cleanHandlers();
       logger.addHandler(new ExternalLogHandler(eventsOutputStream, DOWNWARD_PROTOCOL));
 
-      handleCommands(workerToolParsedEnvs, console, eventsOutputStream);
+      handleCommands(workerToolParsedEnvs, console, eventsOutputStream, classLoaderCache);
 
     } catch (Exception e) {
       handleExceptionAndTerminate(Thread.currentThread(), console, e);
@@ -124,7 +126,10 @@ public class JavaCDWorkerToolMain {
   }
 
   private static void handleCommands(
-      WorkerToolParsedEnvs workerToolParsedEnvs, Console console, OutputStream eventsOutputStream)
+      WorkerToolParsedEnvs workerToolParsedEnvs,
+      Console console,
+      OutputStream eventsOutputStream,
+      ClassLoaderCache classLoaderCache)
       throws Exception {
 
     BuildId buildUuid = workerToolParsedEnvs.getBuildUuid();
@@ -158,6 +163,7 @@ public class JavaCDWorkerToolMain {
               LOG.debug("Start executing command with action id: %s", actionId);
 
               BuildJavaCommandExecutor.executeBuildJavaCommand(
+                  classLoaderCache,
                   actionId,
                   buildJavaCommand,
                   eventsOutputStream,
@@ -214,6 +220,7 @@ public class JavaCDWorkerToolMain {
                             processExecutor,
                             console,
                             clock,
+                            classLoaderCache,
                             startNextCommandOptional);
 
                         LOG.debug(

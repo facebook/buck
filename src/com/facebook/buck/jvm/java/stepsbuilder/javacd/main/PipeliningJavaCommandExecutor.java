@@ -52,6 +52,7 @@ import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
+import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
@@ -86,6 +87,7 @@ class PipeliningJavaCommandExecutor {
       ProcessExecutor processExecutor,
       Console console,
       Clock clock,
+      ClassLoaderCache classLoaderCache,
       Optional<SettableFuture<Unit>> startNextCommandOptional)
       throws IOException {
 
@@ -112,6 +114,7 @@ class PipeliningJavaCommandExecutor {
         boolean closeExecutionContext = !hasLibraryCommand;
         contextOptional =
             StepExecutionUtils.executeSteps(
+                classLoaderCache,
                 eventBus,
                 eventsOutputStream,
                 downwardProtocol,
@@ -156,6 +159,7 @@ class PipeliningJavaCommandExecutor {
           }
         } else {
           StepExecutionUtils.executeSteps(
+              classLoaderCache,
               eventBus,
               eventsOutputStream,
               downwardProtocol,
