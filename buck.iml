@@ -26,6 +26,8 @@
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/javacd/resources/proto" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/workertool/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/workertool/resources/proto" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/starlark/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/starlark/src/main/resources" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/.lsp-buck-out" />
@@ -111,6 +113,7 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/versioncontrol/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/util/zip/collect/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/zip/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/starlark/src/test/java" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -172,6 +175,8 @@
     <orderEntry type="library" name="error_prone" level="project" />
     <orderEntry type="library" name="jsr305" level="project" />
     <orderEntry type="library" name="junixsocket" level="project" />
+    <orderEntry type="library" name="truth" level="project" />
+    <orderEntry type="library" name="auto-common-0.10" level="project" />
     <orderEntry type="module" module-name="starlark" />
     <orderEntry type="module" module-name="buck" />
     <orderEntry type="library" name="compile-testing" level="project" />
