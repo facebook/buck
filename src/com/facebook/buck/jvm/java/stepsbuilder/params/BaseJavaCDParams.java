@@ -49,13 +49,24 @@ public abstract class BaseJavaCDParams implements AddsToRuleKey {
       inputs = IgnoredFieldInputs.class)
   public abstract int getBorrowFromPoolTimeoutInSeconds();
 
+  @ExcludeFromRuleKey(
+      reason = "javacd persistent workers flag  is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  public abstract boolean usePersistentWorkers();
+
   /** Creates {@link BaseJavaCDParams} */
   public static BaseJavaCDParams of(
       boolean hasJavaCDEnabled,
       Iterable<String> startCommandOptions,
       int workerToolPoolSize,
-      int borrowFromPoolTimeoutInSeconds) {
+      int borrowFromPoolTimeoutInSeconds,
+      boolean usePersistentWorkers) {
     return ImmutableBaseJavaCDParams.ofImpl(
-        hasJavaCDEnabled, startCommandOptions, workerToolPoolSize, borrowFromPoolTimeoutInSeconds);
+        hasJavaCDEnabled,
+        startCommandOptions,
+        workerToolPoolSize,
+        borrowFromPoolTimeoutInSeconds,
+        usePersistentWorkers);
   }
 }

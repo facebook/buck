@@ -69,4 +69,9 @@ public abstract class JavaCDBuckConfig implements ConfigView<BuckConfig> {
         .getInteger(SECTION, "borrow_from_the_pool_timeout_sec")
         .orElse(DEFAULT_BORROW_FROM_THE_POOL_TIMEOUT_IN_SECONDS);
   }
+
+  @Value.Lazy
+  public boolean usePersistentWorkers() {
+    return getDelegate().getBooleanValue(SECTION, "use_persistent_workers", true);
+  }
 }

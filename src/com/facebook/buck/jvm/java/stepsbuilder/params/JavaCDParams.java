@@ -48,6 +48,11 @@ public abstract class JavaCDParams {
     return getBaseJavaCDParams().getBorrowFromPoolTimeoutInSeconds();
   }
 
+  @Value.Derived
+  public boolean usePersistentWorkers() {
+    return getBaseJavaCDParams().usePersistentWorkers();
+  }
+
   /** Creates {@link JavaCDParams} */
   public static JavaCDParams of(
       BaseJavaCDParams baseJavaCDParams, ImmutableList<String> javaRuntimeLauncherCommand) {

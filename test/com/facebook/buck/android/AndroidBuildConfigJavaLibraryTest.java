@@ -60,7 +60,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             false,
             false,
             new FakeTool(),
-            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
+            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1, false));
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
     buildConfigJavaLibrary.addToCollector(graphBuilder, collector);
@@ -94,7 +94,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             false,
             false,
             new FakeTool(),
-            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
+            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1, false));
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
     assertEquals(fields, buildConfig.getBuildConfigFields());
