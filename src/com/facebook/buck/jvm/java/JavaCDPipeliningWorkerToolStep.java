@@ -51,6 +51,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -73,6 +75,8 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
   private static final String STEP_NAME = "javacd_pipelining";
   private static final String SCOPE_PREFIX = STEP_NAME + "_command";
+
+  private static final int MAX_WAIT_TIME_FOR_PIPELINE_FINISH_EVENT_SECONDS = 1;
 
   private final JavaCDParams javaCDParams;
   private final PipeliningCommand.Builder builder = PipeliningCommand.newBuilder();
@@ -289,7 +293,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
   private void waitWhileExecutionIsDone() {
     if (!done.isDone()) {
       try {
-        done.get();
+        done.get(MAX_WAIT_TIME_FOR_PIPELINE_FINISH_EVENT_SECONDS, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         LOG.warn(
@@ -299,13 +303,23 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       } catch (ExecutionException e) {
         Throwable cause = e.getCause();
         Throwables.throwIfUnchecked(cause);
-        throw new HumanReadableException(
-            cause,
-            "Waiting for pipelining command %s to finish has been failed. : %s",
-            actionIdToResultEventMap.keySet(),
-            cause.getMessage());
+        throw toHumanReadableException(cause, cause.getMessage());
+      } catch (TimeoutException e) {
+        throw toHumanReadableException(
+            e,
+            "timeout waiting for pipelined command of "
+                + MAX_WAIT_TIME_FOR_PIPELINE_FINISH_EVENT_SECONDS
+                + " seconds elapsed");
       }
     }
+  }
+
+  private HumanReadableException toHumanReadableException(Throwable t, String message) {
+    return new HumanReadableException(
+        t,
+        "Waiting for pipelining command %s to finish has failed. : %s",
+        actionIdToResultEventMap.keySet(),
+        message);
   }
 
   private void closeWorkerTool() {
