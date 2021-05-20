@@ -60,7 +60,7 @@ public class UnflavoredBuildTargetFactoryTest {
     Map<ParamName, Object> malformedMap = ImmutableMap.of(ParamName.bySnakeCase("name"), "bar");
 
     UnflavoredBuildTargetFactory.createFromRawNode(
-        cell.getRootCell().getRoot().getPath(),
+        cell.getRootCell().getRoot(),
         cell.getRootCell().getCanonicalName(),
         RawTargetNode.of(
             ForwardRelPath.of(base_path),
@@ -68,7 +68,7 @@ public class UnflavoredBuildTargetFactoryTest {
             ImmutableList.of(),
             ImmutableList.of(),
             TwoArraysImmutableHashMap.copyOf(malformedMap)),
-        buildFilePath.getPath());
+        buildFilePath);
   }
 
   @Test
@@ -82,7 +82,7 @@ public class UnflavoredBuildTargetFactoryTest {
     expectedException.expectMessage("malformed raw data");
 
     UnflavoredBuildTargetFactory.createFromRawNode(
-        cell.getRootCell().getRoot().getPath(),
+        cell.getRootCell().getRoot(),
         cell.getRootCell().getCanonicalName(),
         RawTargetNode.of(
             ForwardRelPath.EMPTY,
@@ -90,7 +90,7 @@ public class UnflavoredBuildTargetFactoryTest {
             ImmutableList.of(),
             ImmutableList.of(),
             TwoArraysImmutableHashMap.copyOf(malformedMap)),
-        buildFilePath.getPath());
+        buildFilePath);
   }
 
   @Test
@@ -102,7 +102,7 @@ public class UnflavoredBuildTargetFactoryTest {
 
     AbsPath buildFilePath = cell.getRootCell().getFilesystem().resolve("a/BUCK");
     UnflavoredBuildTargetFactory.createFromRawNode(
-        cell.getRootCell().getRoot().getPath(),
+        cell.getRootCell().getRoot(),
         cell.getRootCell().getCanonicalName(),
         RawTargetNode.of(
             ForwardRelPath.EMPTY,
@@ -110,6 +110,6 @@ public class UnflavoredBuildTargetFactoryTest {
             ImmutableList.of(),
             ImmutableList.of(),
             TwoArraysImmutableHashMap.copyOf(malformedMap)),
-        buildFilePath.getPath());
+        buildFilePath);
   }
 }

@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
@@ -32,7 +33,6 @@ import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,16 +53,18 @@ public class BuiltTargetVerifierTest {
   public void testVerificationThrowsWhenDataIsMalformed() {
     BuiltTargetVerifier builtTargetVerifier = new BuiltTargetVerifier();
 
+    AbsPath buildFile = cell.getRootCell().getRoot().resolve("a/b/BUCK");
+
     thrown.expect(IllegalStateException.class);
     thrown.expectMessage(
         String.format(
             "Attempting to parse build target from malformed raw data in %s: attribute->value.",
-            MorePaths.pathWithPlatformSeparators("a/b/BUCK")));
+            buildFile));
 
     builtTargetVerifier.verifyBuildTarget(
         cell.getRootCell(),
         RuleType.of("build_rule", RuleType.Kind.BUILD),
-        Paths.get("a/b/BUCK"),
+        buildFile,
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new SomeDescription(),
         RawTargetNode.copyOf(

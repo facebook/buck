@@ -236,7 +236,7 @@ class DaemonicCellState {
     for (RawTargetNode node : updated.getTargets().values()) {
       allRawNodeTargets.add(
           UnflavoredBuildTargetFactory.createFromRawNode(
-              cellRoot.getPath(), cellCanonicalName, node, buildFileAbs.getPath()));
+              cellRoot, cellCanonicalName, node, buildFileAbs));
     }
     if (updated == buildFileManifest) {
       // We now know all the nodes. They all implicitly depend on everything in
@@ -323,7 +323,7 @@ class DaemonicCellState {
       for (RawTargetNode rawNode : rawNodes.values()) {
         UnflavoredBuildTarget target =
             UnflavoredBuildTargetFactory.createFromRawNode(
-                cellRoot.getPath(), cellCanonicalName, rawNode, path.getPath());
+                cellRoot, cellCanonicalName, rawNode, path);
         LOG.debug("Invalidating target for path %s: %s", path, target);
         for (Cache<?, ?> cache : typedNodeCaches()) {
           cache.invalidateFor(target, locked);

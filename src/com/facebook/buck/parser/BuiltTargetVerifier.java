@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.FlavoredVerifier;
 import com.facebook.buck.parser.api.RawTargetNode;
 import com.google.common.base.Joiner;
-import java.nio.file.Path;
 
 /** Verifies that the {@link BuildTarget} is valid during parsing */
 public class BuiltTargetVerifier {
@@ -35,7 +34,7 @@ public class BuiltTargetVerifier {
   void verifyBuildTarget(
       Cell cell,
       RuleType buildRuleType,
-      Path buildFile,
+      AbsPath buildFile,
       UnconfiguredBuildTarget target,
       BaseDescription<?> description,
       RawTargetNode rawNode) {
@@ -45,7 +44,7 @@ public class BuiltTargetVerifier {
     UnflavoredBuildTarget unflavoredBuildTarget = target.getUnflavoredBuildTarget();
     UnflavoredBuildTarget unflavoredBuildTargetFromRawData =
         UnflavoredBuildTargetFactory.createFromRawNode(
-            cell.getRoot().getPath(), cell.getCanonicalName(), rawNode, buildFile);
+            cell.getRoot(), cell.getCanonicalName(), rawNode, buildFile);
     if (!unflavoredBuildTarget.equals(unflavoredBuildTargetFromRawData)) {
       throw new IllegalStateException(
           String.format(
@@ -54,15 +53,5 @@ public class BuiltTargetVerifier {
               unflavoredBuildTarget,
               Joiner.on(',').withKeyValueSeparator("->").join(rawNode.getAttrs())));
     }
-  }
-
-  void verifyBuildTarget(
-      Cell cell,
-      RuleType buildRuleType,
-      AbsPath buildFile,
-      UnconfiguredBuildTarget target,
-      BaseDescription<?> description,
-      RawTargetNode rawNode) {
-    verifyBuildTarget(cell, buildRuleType, buildFile.getPath(), target, description, rawNode);
   }
 }

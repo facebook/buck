@@ -133,10 +133,10 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                   UnconfiguredBuildTarget target =
                       UnconfiguredBuildTarget.of(
                           UnflavoredBuildTargetFactory.createFromRawNode(
-                              cell.getRoot().getPath(),
+                              cell.getRoot(),
                               cell.getCanonicalName(),
                               from,
-                              cell.getRoot().resolve(buildFile).getPath()),
+                              cell.getRoot().resolve(buildFile)),
                           FlavorSet.NO_FLAVORS);
                   allNodeJobs.add(
                       cache.getJobWithCacheLookup(
