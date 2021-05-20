@@ -360,7 +360,7 @@ class DaemonicCellState {
 
     // We may have been given a file that other build files depend on. Invalidate accordingly.
     Set<AbsPath> dependents = buildFileDependents.getOrDefault(path, ImmutableSet.of());
-    boolean pathIsPackageFile = PackagePipeline.isPackageFile(path.getPath());
+    boolean pathIsPackageFile = PackagePipeline.isPackageFile(path);
     LOG.verbose("Invalidating dependents for path %s: %s", path, dependents);
     for (AbsPath dependent : dependents) {
       if (dependent.equals(path)) {

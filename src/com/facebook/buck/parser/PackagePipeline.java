@@ -17,6 +17,8 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.util.log.Logger;
@@ -30,7 +32,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,7 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * caches them for reuse.
  */
 public class PackagePipeline implements AutoCloseable {
-  public static final String PACKAGE_FILE_NAME = "PACKAGE";
+  public static final FileName PACKAGE_FILE_NAME = FileName.of("PACKAGE");
   private static final Logger LOG = Logger.get(PackagePipeline.class);
 
   private final ListeningExecutorService executorService;
@@ -96,8 +97,8 @@ public class PackagePipeline implements AutoCloseable {
     return parent.resolve(PACKAGE_FILE_NAME);
   }
 
-  static boolean isPackageFile(Path path) {
-    return path.getFileName().toString().equals(PACKAGE_FILE_NAME);
+  static boolean isPackageFile(AbsPath path) {
+    return path.endsWith(PACKAGE_FILE_NAME);
   }
 
   /**
