@@ -423,7 +423,6 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
               new ManifestEntriesTypeCoercer(),
               patternTypeCoercer,
               neededCoverageSpecTypeCoercer,
-              new ConstraintTypeCoercer(),
               new VersionTypeCoercer(),
               queryTypeCoercer,
               stringWithMacrosCoercer,

@@ -1,9 +1,7 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
 
 TYPES_SRCS = [
-    "ExactConstraint.java",
     "Version.java",
-    "Constraint.java",
 ]
 
 java_immutables_library(
