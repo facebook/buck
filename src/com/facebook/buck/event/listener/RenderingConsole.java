@@ -99,10 +99,8 @@ public class RenderingConsole {
     this.delegate = delegate;
   }
 
-  private void writePendingLogLines() {
-    ImmutableList<String> lines = takePendingLogLines();
-
-    console.getStdErr().getRawStream().print(MoreStrings.linesToTextWithTrailingNewline(lines));
+  private void writeLogLines(ImmutableList<String> logLines) {
+    console.getStdErr().getRawStream().print(MoreStrings.linesToTextWithTrailingNewline(logLines));
   }
 
   private ImmutableList<String> takePendingLogLines() {
@@ -141,7 +139,7 @@ public class RenderingConsole {
       // and addition of lines to the pending queue above.
       // To deal with this race, query `isRendering` again.
       if (!isRendering) {
-        writePendingLogLines();
+        writeLogLines(takePendingLogLines());
       }
     }
   }
@@ -193,7 +191,7 @@ public class RenderingConsole {
       stdoutDirty = console.getStdOut().isDirty();
       if (stderrDirty || stdoutDirty) {
         stopRenderScheduler();
-        writePendingLogLines();
+        writeLogLines(logLines);
       } else if (shouldRender) {
         String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
         console.getStdErr().getRawStream().print(fullFrame);

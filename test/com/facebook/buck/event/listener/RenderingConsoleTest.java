@@ -121,8 +121,8 @@ public class RenderingConsoleTest {
     assertFalse(renderingConsole.isRendering());
 
     renderingConsole.logLines("postStop");
-    // TODO(cjhopman): It's a bug that "before" and "after" get lost.
-    assertStderrEquals("breaking", "postStop");
+    // TODO(nga): should be before, breaking, after, postStop
+    assertStderrEquals("breaking", "before", "after", "postStop");
   }
 
   @Test
