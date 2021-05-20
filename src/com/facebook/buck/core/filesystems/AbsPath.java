@@ -72,13 +72,26 @@ public interface AbsPath extends PathWrapper {
     return startsWith(path.getPath());
   }
 
+  /**
+   * Remove prefix from this path, return {@code null} if this path does not start with given
+   * prefix.
+   */
+  // @Nullable
+  default RelPath removePrefixIfStartsWith(AbsPath prefix) {
+    if (!this.startsWith(prefix)) {
+      return null;
+    }
+    return prefix.relativize(this);
+  }
+
   /** Remove prefix from this path, throw if this path does not start with given prefix. */
   default RelPath removePrefix(AbsPath prefix) {
-    if (!this.startsWith(prefix)) {
+    RelPath relPath = removePrefixIfStartsWith(prefix);
+    if (relPath == null) {
       throw new IllegalArgumentException(
           String.format("path %s does not start with %s", this, prefix));
     }
-    return prefix.relativize(this);
+    return relPath;
   }
 
   default AbsPath resolve(Path path) {

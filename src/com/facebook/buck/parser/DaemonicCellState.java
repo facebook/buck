@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
@@ -128,10 +129,10 @@ class DaemonicCellState {
   private final ConcurrentHashMap<AbsPath, Set<AbsPath>> packageFileDependents;
 
   /** Used as an unbounded cache to stored build file manifests by build file path. */
-  private final ConcurrentMapCache<AbsPath, BuildFileManifest> allBuildFileManifests;
+  private final ConcurrentMapCache<ForwardRelPath, BuildFileManifest> allBuildFileManifests;
 
   /** Used as an unbounded cache to stored package file manifests by package file path. */
-  private final ConcurrentMapCache<AbsPath, PackageFileManifest> allPackageFileManifests;
+  private final ConcurrentMapCache<ForwardRelPath, PackageFileManifest> allPackageFileManifests;
 
   /**
    * Contains all the unflavored build targets that were collected from all processed build file
@@ -215,8 +216,7 @@ class DaemonicCellState {
 
   Optional<BuildFileManifest> lookupBuildFileManifest(
       ForwardRelPath buildFile, DaemonicParserValidationToken validationToken) {
-    AbsPath buildFileAbs = cellRoot.resolve(buildFile);
-    BuildFileManifest manifest = allBuildFileManifests.getIfPresent(buildFileAbs);
+    BuildFileManifest manifest = allBuildFileManifests.getIfPresent(buildFile);
     return manifest != null && locks.isValid(validationToken)
         ? Optional.of(manifest)
         : Optional.empty();
@@ -232,7 +232,7 @@ class DaemonicCellState {
     AbsPath buildFileAbs = cellRoot.resolve(buildFile);
 
     BuildFileManifest updated =
-        allBuildFileManifests.putIfAbsentAndGet(buildFileAbs, buildFileManifest);
+        allBuildFileManifests.putIfAbsentAndGet(buildFile, buildFileManifest);
     for (RawTargetNode node : updated.getTargets().values()) {
       allRawNodeTargets.add(
           UnflavoredBuildTargetFactory.createFromRawNode(
@@ -263,8 +263,7 @@ class DaemonicCellState {
 
   Optional<PackageFileManifest> lookupPackageFileManifest(
       ForwardRelPath packageFile, DaemonicParserValidationToken validationToken) {
-    AbsPath packageFileAbs = cellRoot.resolve(packageFile);
-    PackageFileManifest manifest = allPackageFileManifests.getIfPresent(packageFileAbs);
+    PackageFileManifest manifest = allPackageFileManifests.getIfPresent(packageFile);
     return manifest != null && locks.isValid(validationToken)
         ? Optional.of(manifest)
         : Optional.empty();
@@ -280,7 +279,7 @@ class DaemonicCellState {
     AbsPath packageFileAbs = cellRoot.resolve(packageFile);
 
     PackageFileManifest updated =
-        allPackageFileManifests.putIfAbsentAndGet(packageFileAbs, packageFileManifest);
+        allPackageFileManifests.putIfAbsentAndGet(packageFile, packageFileManifest);
     if (updated == packageFileManifest) {
       // The package file will depend on all dependents and we keep a reverse mapping to know
       // which package files to invalidate if a dependent changes.
@@ -314,22 +313,27 @@ class DaemonicCellState {
       AbsPath path, boolean invalidateBuildTargets, AutoCloseableWriteLocked locked) {
     locked.markUsed();
 
+    RelPath relPath = path.removePrefixIfStartsWith(cellRoot);
+
     int invalidatedRawNodes = 0;
-    BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(path);
-    if (buildFileManifest != null) {
-      TwoArraysImmutableHashMap<String, RawTargetNode> rawNodes = buildFileManifest.getTargets();
-      // Increment the counter
-      invalidatedRawNodes = rawNodes.size();
-      for (RawTargetNode rawNode : rawNodes.values()) {
-        UnflavoredBuildTarget target =
-            UnflavoredBuildTargetFactory.createFromRawNode(
-                cellRoot, cellCanonicalName, rawNode, path);
-        LOG.debug("Invalidating target for path %s: %s", path, target);
-        for (Cache<?, ?> cache : typedNodeCaches()) {
-          cache.invalidateFor(target, locked);
-        }
-        if (invalidateBuildTargets) {
-          allRawNodeTargets.remove(target);
+    if (relPath != null) {
+      BuildFileManifest buildFileManifest =
+          allBuildFileManifests.getIfPresent(ForwardRelPath.ofRelPath(relPath));
+      if (buildFileManifest != null) {
+        TwoArraysImmutableHashMap<String, RawTargetNode> rawNodes = buildFileManifest.getTargets();
+        // Increment the counter
+        invalidatedRawNodes = rawNodes.size();
+        for (RawTargetNode rawNode : rawNodes.values()) {
+          UnflavoredBuildTarget target =
+              UnflavoredBuildTargetFactory.createFromRawNode(
+                  cellRoot, cellCanonicalName, rawNode, path);
+          LOG.debug("Invalidating target for path %s: %s", path, target);
+          for (Cache<?, ?> cache : typedNodeCaches()) {
+            cache.invalidateFor(target, locked);
+          }
+          if (invalidateBuildTargets) {
+            allRawNodeTargets.remove(target);
+          }
         }
       }
     }
@@ -361,8 +365,11 @@ class DaemonicCellState {
     int invalidatedRawNodes = invalidateNodesInPath(path, true, locked);
 
     if (invalidateManifests) {
-      allBuildFileManifests.invalidate(path);
-      allPackageFileManifests.invalidate(path);
+      RelPath relPath = path.removePrefixIfStartsWith(cellRoot);
+      if (relPath != null) {
+        allBuildFileManifests.invalidate(ForwardRelPath.ofRelPath(relPath));
+        allPackageFileManifests.invalidate(ForwardRelPath.ofRelPath(relPath));
+      }
     }
 
     // We may have been given a file that other build files depend on. Invalidate accordingly.

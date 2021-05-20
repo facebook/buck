@@ -29,4 +29,13 @@ public class AbsPathTest {
     assertEquals(RelPath.get("foo"), root.resolve("foo").removePrefix(root));
     assertEquals(RelPath.get("foo/bar"), root.resolve("foo/bar").removePrefix(root));
   }
+
+  @Test
+  public void removePrefixIfStartsWith() {
+    AbsPath root = AbsPath.of(Paths.get(".").toAbsolutePath());
+    assertEquals(RelPath.get(""), root.removePrefixIfStartsWith(root));
+    assertEquals(RelPath.get("foo"), root.resolve("foo").removePrefixIfStartsWith(root));
+    assertEquals(RelPath.get("foo/bar"), root.resolve("foo/bar").removePrefixIfStartsWith(root));
+    assertNull(root.resolve("foo/bar").removePrefixIfStartsWith(root.resolve("baz")));
+  }
 }
