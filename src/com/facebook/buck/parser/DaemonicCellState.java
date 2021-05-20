@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -30,6 +31,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.api.RawTargetNode;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.concurrent.AutoCloseableLocked;
@@ -94,9 +96,20 @@ class DaemonicCellState {
         throws BuildTargetException {
       readLock.markUsed();
 
+      UnflavoredBuildTarget unflavoredBuildTarget =
+          type.keyToUnflavoredBuildTargetView.apply(target);
+
+      ForwardRelPath buildFile =
+          unflavoredBuildTarget
+              .getCellRelativeBasePath()
+              .getPath()
+              .resolve(DaemonicCellState.this.buildFileName);
+
       T updatedNode = allComputedNodes.putIfAbsentAndGet(target, targetNode);
+      BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(buildFile);
       Preconditions.checkState(
-          allRawNodeTargets.contains(type.keyToUnflavoredBuildTargetView.apply(target)),
+          buildFileManifest != null
+              && buildFileManifest.getTargets().containsKey(unflavoredBuildTarget.getLocalName()),
           "Added %s to computed nodes, which isn't present in raw nodes",
           target);
       if (updatedNode.equals(targetNode)) {
@@ -113,6 +126,7 @@ class DaemonicCellState {
   private final AbsPath cellRoot;
   private final CanonicalCellName cellCanonicalName;
   private final Cell cell;
+  private final FileName buildFileName;
 
   /**
    * A mapping from dependent files (typically .bzl or PACKAGE files) to all build files which
@@ -133,16 +147,6 @@ class DaemonicCellState {
 
   /** Used as an unbounded cache to stored package file manifests by package file path. */
   private final ConcurrentMapCache<ForwardRelPath, PackageFileManifest> allPackageFileManifests;
-
-  /**
-   * Contains all the unflavored build targets that were collected from all processed build file
-   * manifests.
-   *
-   * <p>Used to verify that every build target added to individual caches ({@link
-   * Cache#allComputedNodes}) is also in {@link #allBuildFileManifests}, as we use the latter to
-   * handle invalidations.
-   */
-  private final Set<UnflavoredBuildTarget> allRawNodeTargets;
 
   /** Type-safe accessor to one of state caches */
   static class CellCacheType<K, T> {
@@ -191,12 +195,12 @@ class DaemonicCellState {
     this.cell = cell;
     this.cellRoot = cell.getRoot();
     this.cellCanonicalName = cell.getCanonicalName();
+    this.buildFileName = cell.getBuckConfigView(ParserConfig.class).getBuildFileName();
     this.locks = locks;
     this.buildFileDependents = new ConcurrentHashMap<>();
     this.packageFileDependents = new ConcurrentHashMap<>();
     this.allBuildFileManifests = new ConcurrentMapCache<>();
     this.allPackageFileManifests = new ConcurrentMapCache<>();
-    this.allRawNodeTargets = Collections.newSetFromMap(new ConcurrentHashMap<>());
     this.targetNodeCache = new Cache<>(TARGET_NODE_CACHE_TYPE);
     this.rawTargetNodeCache = new Cache<>(RAW_TARGET_NODE_CACHE_TYPE);
   }
@@ -233,11 +237,6 @@ class DaemonicCellState {
 
     BuildFileManifest updated =
         allBuildFileManifests.putIfAbsentAndGet(buildFile, buildFileManifest);
-    for (RawTargetNode node : updated.getTargets().values()) {
-      allRawNodeTargets.add(
-          UnflavoredBuildTargetFactory.createFromRawNode(
-              cellRoot, cellCanonicalName, node, buildFileAbs));
-    }
     if (updated == buildFileManifest) {
       // We now know all the nodes. They all implicitly depend on everything in
       // the "dependentsOfEveryNode" set.
@@ -309,8 +308,7 @@ class DaemonicCellState {
    *
    * @return The number of invalidated nodes.
    */
-  private int invalidateNodesInPath(
-      AbsPath path, boolean invalidateBuildTargets, AutoCloseableWriteLocked locked) {
+  private int invalidateNodesInPath(AbsPath path, AutoCloseableWriteLocked locked) {
     locked.markUsed();
 
     RelPath relPath = path.removePrefixIfStartsWith(cellRoot);
@@ -330,9 +328,6 @@ class DaemonicCellState {
           LOG.debug("Invalidating target for path %s: %s", path, target);
           for (Cache<?, ?> cache : typedNodeCaches()) {
             cache.invalidateFor(target, locked);
-          }
-          if (invalidateBuildTargets) {
-            allRawNodeTargets.remove(target);
           }
         }
       }
@@ -362,7 +357,7 @@ class DaemonicCellState {
 
     // If `path` is a build file with a valid entry in `allBuildFileManifests`, we also want to
     // invalidate the build targets in the manifest.
-    int invalidatedRawNodes = invalidateNodesInPath(path, true, locked);
+    int invalidatedRawNodes = invalidateNodesInPath(path, locked);
 
     if (invalidateManifests) {
       RelPath relPath = path.removePrefixIfStartsWith(cellRoot);
@@ -384,7 +379,7 @@ class DaemonicCellState {
         // Typically, the dependents of PACKAGE files are build files. If there is a valid entry
         // for `dependent` in `allBuildFileManifests`, invalidate the cached nodes, but not the
         // build targets contained within in.
-        invalidatedRawNodes += invalidateNodesInPath(dependent, false, locked);
+        invalidatedRawNodes += invalidateNodesInPath(dependent, locked);
       } else {
         // Recursively invalidate all cached content based on `dependent`.
         invalidatedRawNodes += invalidatePath(dependent, true, locked);
