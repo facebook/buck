@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import java.util.Collection;
+import java.util.List;
 
 /** Coerce to {@link com.google.common.collect.ImmutableSortedSet}. */
 public class SortedSetTypeCoercer<U, T extends Comparable<? super T>>
@@ -43,6 +44,28 @@ public class SortedSetTypeCoercer<U, T extends Comparable<? super T>>
     this.typeTokenUnconfigured =
         new TypeToken<ImmutableList<U>>() {}.where(
             new TypeParameter<U>() {}, elementTypeCoercer.getUnconfiguredType());
+  }
+
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return String.format(
+            "attr.set(%s, sorted=True)", elementTypeCoercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public String topLevelSpec() {
+        return String.format(
+            "attr.set(%s, sorted=True, default=[])", elementTypeCoercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public List<Class<? extends Enum<?>>> enums() {
+        return elementTypeCoercer.getSkylarkSpec().enums();
+      }
+    };
   }
 
   @Override

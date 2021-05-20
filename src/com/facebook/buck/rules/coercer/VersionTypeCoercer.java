@@ -24,6 +24,10 @@ import com.google.common.reflect.TypeToken;
 
 /** Coerce to {@link Version}. */
 class VersionTypeCoercer extends LeafUnconfiguredOnlyCoercer<Version> {
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.string()";
+  }
 
   @Override
   public TypeToken<Version> getUnconfiguredType() {

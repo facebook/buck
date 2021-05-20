@@ -48,6 +48,11 @@ public class SortedMapTypeCoercer<KU extends Comparable<KU>, VU, K extends Compa
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new MapTypeCoercer.MapStarlarkSpec<>(keyTypeCoercer, valueTypeCoercer, true);
+  }
+
+  @Override
   public TypeToken<ImmutableSortedMap<K, V>> getOutputType() {
     return typeToken;
   }

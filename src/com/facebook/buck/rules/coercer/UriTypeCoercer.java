@@ -32,6 +32,11 @@ class UriTypeCoercer extends LeafUnconfiguredOnlyCoercer<URI> {
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.string(validate=_uri)";
+  }
+
+  @Override
   public URI coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,

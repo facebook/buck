@@ -74,6 +74,11 @@ public class StringWithMacrosTypeCoercer
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.arg()";
+  }
+
+  @Override
   public TypeToken<StringWithMacros> getOutputType() {
     return TypeToken.of(StringWithMacros.class);
   }

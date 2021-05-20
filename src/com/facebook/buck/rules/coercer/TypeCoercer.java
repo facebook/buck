@@ -25,6 +25,7 @@ import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -43,6 +44,28 @@ public interface TypeCoercer<U, T> extends Concatable<T> {
   TypeToken<T> getOutputType();
 
   TypeToken<U> getUnconfiguredType();
+
+  /** Provides an attribute specification for used in buck typed udr attributes. */
+  interface SkylarkSpec {
+
+    /** The attribute spec for this attribute (ex. `attr.list(attr.string())`). */
+    String spec();
+
+    /** The spec to be used at the top-level (where default and doc and similar are supported). */
+    default String topLevelSpec() {
+      return spec();
+    }
+
+    /**
+     * A list of the enum classes referenced by this attribute. These will be used to define enum
+     * variant sets.
+     */
+    default List<Class<? extends Enum<?>>> enums() {
+      return ImmutableList.of();
+    }
+  }
+
+  SkylarkSpec getSkylarkSpec();
 
   /**
    * {@link #coerce(CellNameResolver, ProjectFilesystem, ForwardRelPath, TargetConfiguration,
@@ -131,6 +154,7 @@ public interface TypeCoercer<U, T> extends Concatable<T> {
   }
 
   interface Traversal {
+
     void traverse(Object object);
   }
 

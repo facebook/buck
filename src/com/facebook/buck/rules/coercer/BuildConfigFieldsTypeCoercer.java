@@ -32,6 +32,21 @@ import java.util.List;
 public class BuildConfigFieldsTypeCoercer extends LeafUnconfiguredOnlyCoercer<BuildConfigFields> {
 
   @Override
+  public TypeCoercer.SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return "attr.list(attr.string())";
+      }
+
+      @Override
+      public String topLevelSpec() {
+        return "attr.list(attr.string(), default=[])";
+      }
+    };
+  }
+
+  @Override
   public TypeToken<BuildConfigFields> getUnconfiguredType() {
     return TypeToken.of(BuildConfigFields.class);
   }

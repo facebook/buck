@@ -24,6 +24,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
+import java.util.List;
 
 /** Coerce to {@link com.google.common.collect.ImmutableSet}. */
 public class SetTypeCoercer<U, T>
@@ -39,6 +40,28 @@ public class SetTypeCoercer<U, T>
     this.typeTokenUnconfigured =
         new TypeToken<ImmutableSet<U>>() {}.where(
             new TypeParameter<U>() {}, elementTypeCoercer.getUnconfiguredType());
+  }
+
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return String.format(
+            "attr.set(%s, sorted=False)", elementTypeCoercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public String topLevelSpec() {
+        return String.format(
+            "attr.set(%s, sorted=False, default=[])", elementTypeCoercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public List<Class<? extends Enum<?>>> enums() {
+        return elementTypeCoercer.getSkylarkSpec().enums();
+      }
+    };
   }
 
   @Override

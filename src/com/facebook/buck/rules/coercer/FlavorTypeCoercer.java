@@ -27,6 +27,11 @@ import com.google.common.reflect.TypeToken;
 public class FlavorTypeCoercer extends LeafUnconfiguredOnlyCoercer<Flavor> {
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.string()";
+  }
+
+  @Override
   public TypeToken<Flavor> getUnconfiguredType() {
     return TypeToken.of(Flavor.class);
   }

@@ -32,6 +32,12 @@ class BuildTargetMatcherTypeCoercer extends LeafUnconfiguredOnlyCoercer<BuildTar
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    throw new UnsupportedOperationException(
+        "This shouldn't appear in a context that requires a skylark spec.");
+  }
+
+  @Override
   public BuildTargetMatcher coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,

@@ -35,6 +35,11 @@ public class NeededCoverageSpecTypeCoercer
   private final TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer;
   private final TypeCoercer<String, String> pathNameTypeCoercer;
 
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.tuple(attr.int(), attr.label(), attr.option(attr.string()))";
+  }
+
   NeededCoverageSpecTypeCoercer(
       TypeCoercer<Integer, Integer> intTypeCoercer,
       TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer,

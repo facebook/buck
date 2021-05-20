@@ -36,6 +36,12 @@ public class UnconfiguredBuildTargetTypeCoercer
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    // Don't know if this is correct.
+    return () -> "attr.configuration_label()";
+  }
+
+  @Override
   public TypeToken<UnconfiguredBuildTarget> getUnconfiguredType() {
     return new TypeToken<UnconfiguredBuildTarget>() {};
   }

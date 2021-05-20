@@ -39,6 +39,21 @@ public class ManifestEntriesTypeCoercer extends LeafUnconfiguredOnlyCoercer<Mani
           .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
   @Override
+  public TypeCoercer.SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String topLevelSpec() {
+        return "attr.dict(key=attr.string(), value=attr.any(), default={})";
+      }
+
+      @Override
+      public String spec() {
+        return "attr.dict(key=attr.string(), value=attr.any())";
+      }
+    };
+  }
+
+  @Override
   public TypeToken<ManifestEntries> getUnconfiguredType() {
     return TypeToken.of(ManifestEntries.class);
   }

@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
  */
 public class CxxLinkGroupMappingTargetCoercer
     implements TypeCoercer<UnconfiguredCxxLinkGroupMappingTarget, CxxLinkGroupMappingTarget> {
+
   private final TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer;
   private final TypeCoercer<
           CxxLinkGroupMappingTarget.Traversal, CxxLinkGroupMappingTarget.Traversal>
@@ -63,6 +64,14 @@ public class CxxLinkGroupMappingTargetCoercer
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
     this.traversalCoercer = traversalCoercer;
     this.patternTypeCoercer = patternTypeCoercer;
+  }
+
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    throw new UnsupportedOperationException(
+        String.format(
+            "%s can't be used in a context that requires a starlark spec.",
+            getClass().getSimpleName()));
   }
 
   @Override

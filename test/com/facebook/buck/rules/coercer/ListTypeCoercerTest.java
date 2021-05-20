@@ -75,6 +75,13 @@ public class ListTypeCoercerTest {
     }
 
     @Override
+    public SkylarkSpec getSkylarkSpec() {
+      return () -> {
+        throw new RuntimeException();
+      };
+    }
+
+    @Override
     public boolean hasElementClass(Class<?>... types) {
       throw new AssertionError();
     }

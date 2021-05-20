@@ -53,6 +53,11 @@ public class QueryCoercer implements TypeCoercer<UnconfiguredQuery, Query> {
   }
 
   @Override
+  public TypeCoercer.SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.query()";
+  }
+
+  @Override
   public boolean hasElementClass(Class<?>... types) {
     for (Class<?> type : types) {
       if (type.isAssignableFrom(BuildTarget.class)) {

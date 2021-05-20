@@ -51,6 +51,21 @@ public class VersionMatchedCollectionTypeCoercer<T>
   }
 
   @Override
+  public TypeCoercer.SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return String.format("attr.versioned(%s)", valueTypeCoercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public List<Class<? extends Enum<?>>> enums() {
+        return valueTypeCoercer.getSkylarkSpec().enums();
+      }
+    };
+  }
+
+  @Override
   public TypeToken<VersionMatchedCollection<T>> getOutputType() {
     return typeToken;
   }

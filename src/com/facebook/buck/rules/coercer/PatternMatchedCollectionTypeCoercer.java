@@ -52,6 +52,29 @@ public class PatternMatchedCollectionTypeCoercer<U, T>
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return String.format(
+            "attr.list(attr.tuple(attr.regex(), %s))", valueTypeCoercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public String topLevelSpec() {
+        return String.format(
+            "attr.list(attr.tuple(attr.regex(), %s), default=[])",
+            valueTypeCoercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public List<Class<? extends Enum<?>>> enums() {
+        return valueTypeCoercer.getSkylarkSpec().enums();
+      }
+    };
+  }
+
+  @Override
   public TypeToken<PatternMatchedCollection<T>> getOutputType() {
     return typeToken;
   }

@@ -38,6 +38,23 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    // Luckily, this appears to only be used for AppleAssetCatalogsCompilationOptions which doesn't
+    // have any interesting fields.
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return "attr.dict(key=attr.string(), value=attr.any())";
+      }
+
+      @Override
+      public String topLevelSpec() {
+        return "attr.dict(key=attr.string(), value=attr.any(), default={})";
+      }
+    };
+  }
+
+  @Override
   public TypeToken<T> getOutputType() {
     return TypeToken.of(constructorArgDescriptor.objectClass());
   }

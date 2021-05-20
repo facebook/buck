@@ -30,6 +30,12 @@ public class NumberTypeCoercer<T extends Number> extends LeafUnconfiguredOnlyCoe
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    // Why do we have float/double? Those aren't supported in skylark.
+    return () -> "attr.int()";
+  }
+
+  @Override
   public TypeToken<T> getUnconfiguredType() {
     return TypeToken.of(type);
   }

@@ -48,6 +48,11 @@ public class FrameworkPathTypeCoercer
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.string()";
+  }
+
+  @Override
   public TypeToken<FrameworkPath> getOutputType() {
     return TypeToken.of(FrameworkPath.class);
   }

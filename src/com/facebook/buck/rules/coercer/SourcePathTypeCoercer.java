@@ -44,6 +44,11 @@ public class SourcePathTypeCoercer extends LeafTypeNewCoercer<UnconfiguredSource
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.source()";
+  }
+
+  @Override
   public TypeToken<SourcePath> getOutputType() {
     return TypeToken.of(SourcePath.class);
   }

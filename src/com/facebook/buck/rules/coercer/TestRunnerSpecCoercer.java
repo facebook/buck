@@ -52,6 +52,11 @@ public class TestRunnerSpecCoercer
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.arg(json=True)";
+  }
+
+  @Override
   public TypeToken<TestRunnerSpec> getOutputType() {
     return TypeToken.of(TestRunnerSpec.class);
   }

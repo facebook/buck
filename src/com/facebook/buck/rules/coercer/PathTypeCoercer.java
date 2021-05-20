@@ -43,6 +43,11 @@ public class PathTypeCoercer extends LeafUnconfiguredOnlyCoercer<Path> {
                   }));
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.source()";
+  }
+
+  @Override
   public TypeToken<Path> getUnconfiguredType() {
     return TypeToken.of(Path.class);
   }

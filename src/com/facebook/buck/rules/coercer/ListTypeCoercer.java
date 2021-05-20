@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import java.util.Collection;
+import java.util.List;
 
 /** Coere to {@link com.google.common.collect.ImmutableList}. */
 public class ListTypeCoercer<U, T>
@@ -45,6 +46,27 @@ public class ListTypeCoercer<U, T>
     this.typeTokenUnconfigured =
         new TypeToken<ImmutableList<U>>() {}.where(
             new TypeParameter<U>() {}, elementTypeCoercer.getUnconfiguredType());
+  }
+
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return String.format("attr.list(%s)", elementTypeCoercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public String topLevelSpec() {
+        return String.format(
+            "attr.list(%s, default=[])", elementTypeCoercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public List<Class<? extends Enum<?>>> enums() {
+        return elementTypeCoercer.getSkylarkSpec().enums();
+      }
+    };
   }
 
   @Override

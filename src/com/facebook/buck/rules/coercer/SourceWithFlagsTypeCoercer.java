@@ -55,6 +55,11 @@ public class SourceWithFlagsTypeCoercer
   }
 
   @Override
+  public TypeCoercer.SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.one_of(attr.source(), attr.tuple(attr.source(), attr.list(attr.string())))";
+  }
+
+  @Override
   public TypeToken<SourceWithFlags> getOutputType() {
     return TypeToken.of(SourceWithFlags.class);
   }

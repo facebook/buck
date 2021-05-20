@@ -23,10 +23,13 @@ import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -49,6 +52,11 @@ public class MapTypeCoercer<KU, VU, K, V>
         new TypeToken<ImmutableMap<KU, VU>>() {}.where(
                 new TypeParameter<KU>() {}, keyTypeCoercer.getUnconfiguredType())
             .where(new TypeParameter<VU>() {}, valueTypeCoercer.getUnconfiguredType());
+  }
+
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new MapStarlarkSpec<>(keyTypeCoercer, valueTypeCoercer, false);
   }
 
   @Override
@@ -188,5 +196,43 @@ public class MapTypeCoercer<KU, VU, K, V>
     }
 
     return ImmutableMap.copyOf(result);
+  }
+
+  public static class MapStarlarkSpec<KU, VU, K, V> implements SkylarkSpec {
+    private TypeCoercer<KU, K> keyTypeCoercer;
+    private TypeCoercer<VU, V> valueTypeCoercer;
+    private final boolean sorted;
+
+    public MapStarlarkSpec(
+        TypeCoercer<KU, K> keyTypeCoercer, TypeCoercer<VU, V> valueTypeCoercer, boolean sorted) {
+      this.keyTypeCoercer = keyTypeCoercer;
+      this.valueTypeCoercer = valueTypeCoercer;
+      this.sorted = sorted;
+    }
+
+    @Override
+    public String spec() {
+      return String.format(
+          "attr.dict(key=%s, value=%s, sorted=%s)",
+          keyTypeCoercer.getSkylarkSpec().spec(),
+          valueTypeCoercer.getSkylarkSpec().spec(),
+          sorted ? "True" : "False");
+    }
+
+    @Override
+    public String topLevelSpec() {
+      return String.format(
+          "attr.dict(key=%s, value=%s, sorted=%s, default={})",
+          keyTypeCoercer.getSkylarkSpec().spec(),
+          valueTypeCoercer.getSkylarkSpec().spec(),
+          sorted ? "True" : "False");
+    }
+
+    @Override
+    public List<Class<? extends Enum<?>>> enums() {
+      return Lists.newArrayList(
+          Iterables.concat(
+              keyTypeCoercer.getSkylarkSpec().enums(), valueTypeCoercer.getSkylarkSpec().enums()));
+    }
   }
 }

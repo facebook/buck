@@ -33,6 +33,21 @@ public class PatternTypeCoercer extends LeafUnconfiguredOnlyCoercer<Pattern> {
           .build(CacheLoader.from(string -> Pattern.compile(string)));
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return "attr.regex()";
+      }
+
+      @Override
+      public String topLevelSpec() {
+        return "attr.regex(default=\"\")";
+      }
+    };
+  }
+
+  @Override
   public TypeToken<Pattern> getUnconfiguredType() {
     return TypeToken.of(Pattern.class);
   }

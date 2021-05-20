@@ -48,6 +48,21 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return "attr.named_set(attr.source(), sorted=True)";
+      }
+
+      @Override
+      public String topLevelSpec() {
+        return "attr.named_set(attr.source(), sorted=True, default=[])";
+      }
+    };
+  }
+
+  @Override
   public TypeToken<SourceSortedSet> getOutputType() {
     return TypeToken.of(SourceSortedSet.class);
   }

@@ -22,10 +22,13 @@ import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 /** Coerces from a 2-element collection into a pair. */
 public class PairTypeCoercer<FU, SU, FIRST, SECOND>
@@ -34,6 +37,26 @@ public class PairTypeCoercer<FU, SU, FIRST, SECOND>
   private TypeCoercer<SU, SECOND> secondTypeCoercer;
   private final TypeToken<Pair<FIRST, SECOND>> typeToken;
   private final TypeToken<Pair<FU, SU>> typeTokenUnconfigured;
+
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return String.format(
+            "attr.tuple(%s, %s)",
+            firstTypeCoercer.getSkylarkSpec().spec(), secondTypeCoercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public List<Class<? extends Enum<?>>> enums() {
+        return Lists.newArrayList(
+            Iterables.concat(
+                firstTypeCoercer.getSkylarkSpec().enums(),
+                secondTypeCoercer.getSkylarkSpec().enums()));
+      }
+    };
+  }
 
   public PairTypeCoercer(
       TypeCoercer<FU, FIRST> firstTypeCoercer, TypeCoercer<SU, SECOND> secondTypeCoercer) {

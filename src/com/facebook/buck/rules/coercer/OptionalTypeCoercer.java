@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -34,6 +35,26 @@ public class OptionalTypeCoercer<U, T> implements TypeCoercer<Optional<U>, Optio
   private final TypeCoercer<U, T> coercer;
   private final TypeToken<Optional<T>> typeToken;
   private final TypeToken<Optional<U>> typeTokenUnconfigured;
+
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return String.format("attr.option(%s)", coercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public String topLevelSpec() {
+        return String.format("attr.option(%s, default=None)", coercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public List<Class<? extends Enum<?>>> enums() {
+        return coercer.getSkylarkSpec().enums();
+      }
+    };
+  }
 
   public OptionalTypeCoercer(TypeCoercer<U, T> coercer) {
     Preconditions.checkArgument(

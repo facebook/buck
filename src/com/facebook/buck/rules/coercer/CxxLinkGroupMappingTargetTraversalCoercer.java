@@ -32,6 +32,14 @@ public class CxxLinkGroupMappingTargetTraversalCoercer
     extends LeafUnconfiguredOnlyCoercer<CxxLinkGroupMappingTarget.Traversal> {
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    throw new UnsupportedOperationException(
+        String.format(
+            "%s can't be used in a context that requires a starlark spec.",
+            getClass().getSimpleName()));
+  }
+
+  @Override
   public TypeToken<CxxLinkGroupMappingTarget.Traversal> getUnconfiguredType() {
     return TypeToken.of(CxxLinkGroupMappingTarget.Traversal.class);
   }

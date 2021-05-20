@@ -29,6 +29,7 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * {@link TypeCoercer} for {@link CxxLinkGroupMapping}.
@@ -58,6 +59,21 @@ public class CxxLinkGroupMappingCoercer
     this.mappingTargetsCoercer = mappingTargetCoercer;
     this.buildTargetWithTraversalTypeCoercer =
         new PairTypeCoercer<>(this.linkGroupTypeCoercer, this.mappingTargetsCoercer);
+  }
+
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return "attr.tuple(attr.string(), attr.list(attr.tuple(attr.enum(Traversal), attr.label(), attr.option(attr.string()))))";
+      }
+
+      @Override
+      public List<Class<? extends Enum<?>>> enums() {
+        return ImmutableList.of(CxxLinkGroupMappingTarget.Traversal.class);
+      }
+    };
   }
 
   @Override

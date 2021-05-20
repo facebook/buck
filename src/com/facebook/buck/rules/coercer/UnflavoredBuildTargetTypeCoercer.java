@@ -37,6 +37,12 @@ public class UnflavoredBuildTargetTypeCoercer
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    // Don't know if this is correct.
+    return () -> "attr.configuration_label()";
+  }
+
+  @Override
   public TypeToken<UnflavoredBuildTarget> getUnconfiguredType() {
     return new TypeToken<UnflavoredBuildTarget>() {};
   }

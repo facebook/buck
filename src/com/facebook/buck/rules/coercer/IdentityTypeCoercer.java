@@ -27,6 +27,12 @@ public class IdentityTypeCoercer<T> extends LeafUnconfiguredOnlyCoercer<T> {
   private final TypeToken<T> type;
   private final Class<T> rawClass;
 
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    // In real life, this is only used for bools.
+    return () -> "attr.bool()";
+  }
+
   @SuppressWarnings("unchecked")
   public IdentityTypeCoercer(TypeToken<T> type) {
     this.type = type;

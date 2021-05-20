@@ -22,9 +22,12 @@ import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /** Coerces a type to either type, trying the left type before the right. */
@@ -47,6 +50,26 @@ public class EitherTypeCoercer<LU, RU, Left, Right>
         new TypeToken<Either<LU, RU>>() {}.where(
                 new TypeParameter<LU>() {}, leftTypeCoercer.getUnconfiguredType())
             .where(new TypeParameter<RU>() {}, rightTypeCoercer.getUnconfiguredType());
+  }
+
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return String.format(
+            "attr.one_of(%s, %s)",
+            leftTypeCoercer.getSkylarkSpec().spec(), rightTypeCoercer.getSkylarkSpec().spec());
+      }
+
+      @Override
+      public List<Class<? extends Enum<?>>> enums() {
+        return Lists.newArrayList(
+            Iterables.concat(
+                leftTypeCoercer.getSkylarkSpec().enums(),
+                rightTypeCoercer.getSkylarkSpec().enums()));
+      }
+    };
   }
 
   @Override

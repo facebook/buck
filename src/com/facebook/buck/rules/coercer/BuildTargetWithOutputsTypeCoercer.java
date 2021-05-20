@@ -50,6 +50,14 @@ public class BuildTargetWithOutputsTypeCoercer
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    throw new UnsupportedOperationException(
+        String.format(
+            "%s can't be used in a context that requires a starlark spec.",
+            getClass().getSimpleName()));
+  }
+
+  @Override
   public UnconfiguredBuildTargetWithOutputs coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,

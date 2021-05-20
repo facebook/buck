@@ -19,8 +19,10 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 /** Coerce a string to java enum. */
@@ -29,6 +31,21 @@ public class EnumTypeCoercer<E extends Enum<E>> extends LeafUnconfiguredOnlyCoer
 
   public EnumTypeCoercer(Class<E> e) {
     this.enumClass = e;
+  }
+
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return String.format("attr.enum(%s)", enumClass.getSimpleName());
+      }
+
+      @Override
+      public List<Class<? extends Enum<?>>> enums() {
+        return ImmutableList.of(enumClass);
+      }
+    };
   }
 
   @Override

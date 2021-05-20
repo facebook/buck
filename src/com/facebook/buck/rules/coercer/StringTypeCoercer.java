@@ -21,6 +21,21 @@ import com.google.common.base.Joiner;
 /** Coercer that turns objects into Strings, or throws an exception */
 public class StringTypeCoercer extends IdentityTypeCoercer<String> {
 
+  @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return new SkylarkSpec() {
+      @Override
+      public String spec() {
+        return "attr.string()";
+      }
+
+      @Override
+      public String topLevelSpec() {
+        return "attr.string(default=\"\")";
+      }
+    };
+  }
+
   public StringTypeCoercer() {
     super(String.class);
   }

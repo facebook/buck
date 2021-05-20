@@ -39,6 +39,11 @@ public class BuildTargetTypeCoercer
   }
 
   @Override
+  public SkylarkSpec getSkylarkSpec() {
+    return () -> "attr.label()";
+  }
+
+  @Override
   public TypeToken<BuildTarget> getOutputType() {
     return TypeToken.of(BuildTarget.class);
   }
