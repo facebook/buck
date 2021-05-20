@@ -49,6 +49,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
@@ -244,9 +245,9 @@ public class JavaCDWorkerToolMain {
 
               // signal to pipelining runner that it could continue with pipelining command
               // execution
-              startNextCommand.set(Unit.UNIT);
+              Objects.requireNonNull(startNextCommand).set(Unit.UNIT);
               LOG.debug("Start waiting till pipelining command get executed.");
-              pipeliningCommandExecutedFuture.get();
+              Objects.requireNonNull(pipeliningCommandExecutedFuture).get();
               break;
 
             case UNKNOWN:

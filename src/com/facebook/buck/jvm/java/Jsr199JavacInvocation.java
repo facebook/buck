@@ -360,7 +360,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
         // targetEvent will be closed in startCompiler
         throw new StopCompilation();
       }
-      targetEvent.close();
+      Objects.requireNonNull(targetEvent).close();
 
       // Now start tracking the full jar
       String libraryTargetFullyQualifiedName =

@@ -126,7 +126,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
       try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_execution")) {
         try {
-          workerToolExecutor = borrowedWorkerTool.get();
+          workerToolExecutor = Objects.requireNonNull(borrowedWorkerTool).get();
           actionIdToResultEventMap = startExecution(SCOPE_PREFIX, eventBus);
         } catch (ExecutionException e) {
           return JavaCDWorkerStepUtils.createFailStepExecutionResult(

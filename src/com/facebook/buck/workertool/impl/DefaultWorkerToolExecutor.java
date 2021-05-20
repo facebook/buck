@@ -251,7 +251,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
       AbstractMessage pipeliningCommand,
       SettableFuture<Unit> pipelineFinished,
       IsolatedEventBus eventBus)
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException {
     checkState(isAlive(), "Launched process is not alive");
 
     CommandTypeMessage executeCommandTypeMessage;
