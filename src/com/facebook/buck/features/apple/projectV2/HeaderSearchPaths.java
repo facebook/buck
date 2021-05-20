@@ -41,6 +41,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
@@ -421,6 +422,25 @@ class HeaderSearchPaths {
                 SourceSortedSet.ofNamedSources(ImmutableSortedMap.of())));
       }
 
+      if (targetNodeContainsSwift(targetNode)) {
+        // Mixed libraries need to see their -Swift.h header. This is exposed through the module,
+        // but is also expected to be available in unprefixed form internally.
+        String moduleName =
+            targetNode.getConstructorArg().getModuleName().orElse(headerPathPrefix.toString());
+        String swiftHeader = moduleName + "-Swift.h";
+        BuildTarget symlinkTreeTarget =
+            NodeHelper.getModularMapTarget(
+                targetNode,
+                HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
+                getDefaultPlatformFlavor(targetNode));
+        RelPath swiftHeaderPath =
+            BuildTargetPaths.getGenPath(
+                projectFilesystem.getBuckPaths(),
+                symlinkTreeTarget,
+                "%s/" + moduleName + "/" + swiftHeader);
+        fullHeadersBuilder.put(swiftHeader, PathSourcePath.of(projectFilesystem, swiftHeaderPath));
+      }
+
       ImmutableSortedMap<String, SourcePath> fullHeaders = fullHeadersBuilder.build();
       return convertMapKeysToPaths(fullHeaders);
     } else {
@@ -649,18 +669,15 @@ class HeaderSearchPaths {
     // update this "if" statement. If, long-term, we move towards using modules for all Objective-C
     // code, the merged header map will no longer work at all.
     if (targetNodeContainsSwift(targetNode)) {
+      Flavor defaultPlatformFlavor =
+          targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
+
       visitRecursiveHeaderSymlinkTrees(
           targetNode,
           (nativeNode, headerVisibility) -> {
             if (headerVisibility.equals(HeaderVisibility.PUBLIC)) {
-              Flavor defaultPlatformFlavor =
-                  targetNode
-                      .getConstructorArg()
-                      .getDefaultPlatform()
-                      .orElse(cxxPlatform.getFlavor());
-
               // Only "modular" libraries will have a modulemap generated for them.
-              if (nativeNode != targetNode && NodeHelper.isModularAppleLibrary(nativeNode)) {
+              if (NodeHelper.isModularAppleLibrary(nativeNode)) {
                 BuildTarget flavoredModuleMapTarget =
                     NodeHelper.getModularMapTarget(
                         nativeNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, defaultPlatformFlavor);

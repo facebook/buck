@@ -584,6 +584,17 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
     assertThat(settings.get("OTHER_SWIFT_FLAGS"), not(containsString("-import-underlying-module")));
     assertThat(settings.get("OTHER_SWIFT_FLAGS"), not(containsString("-ivfsoverlay")));
+
+    RelPath swiftHeaderPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(),
+            NodeHelper.getModularMapTarget(
+                libNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, DEFAULT_PLATFORM.getFlavor()),
+            "%s/lib/lib-Swift.h");
+
+    assertThatHeaderMapWithoutSymLinksContains(
+        result.headerSymlinkTrees.get(0),
+        ImmutableMap.of("bar.h", "HeaderGroup1/bar.h", "lib-Swift.h", swiftHeaderPath.toString()));
   }
 
   @Test
