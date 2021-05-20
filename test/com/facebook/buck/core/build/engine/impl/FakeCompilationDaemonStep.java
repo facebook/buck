@@ -39,5 +39,5 @@ class FakeCompilationDaemonStep extends AbstractIsolatedExecutionStep
   public void appendStepWithCommand(AbstractMessage command) {}
 
   @Override
-  public void close() {}
+  public void close(boolean force) {}
 }

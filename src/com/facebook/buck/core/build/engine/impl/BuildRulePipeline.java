@@ -48,6 +48,7 @@ class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
   @Override
   public void run() {
     checkState(!executed);
+    boolean ok = true;
     try {
       Throwable error = null;
       for (BuildRulePipelineStage<State> stage = rootRule;
@@ -67,9 +68,11 @@ class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
         // creeping in.
         SettableFuture<Optional<BuildResult>> ruleFuture = stage.getFuture();
         checkState(ruleFuture.isDone() || ruleFuture.isCancelled());
+
+        ok &= error == null && !ruleFuture.isCancelled();
       }
     } finally {
-      stateHolder.close();
+      stateHolder.close(!ok);
       executed = true;
     }
   }

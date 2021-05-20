@@ -18,13 +18,12 @@ package com.facebook.buck.core.rules.pipeline;
 
 import com.facebook.buck.step.Step;
 import com.google.protobuf.AbstractMessage;
-import java.io.Closeable;
 
 /**
  * Interface for compilation daemon step (step that interacts with compilation daemon process). Step
  * could contain multiple commands that would be scheduled for execution at once.
  */
-public interface CompilationDaemonStep extends Step, Closeable {
+public interface CompilationDaemonStep extends Step {
 
   /** Appends existing compilation step with a new protobuf command. */
   void appendStepWithCommand(AbstractMessage command);
@@ -32,9 +31,11 @@ public interface CompilationDaemonStep extends Step, Closeable {
   /**
    * Closes compilation step after it has been executed.
    *
-   * <p>For example: In case compilation daemon uses worker tool pool, the used worker tool instance
-   * is returned back to the pool for future reuse.
+   * @param force if is set then close compilation step without waiting for any events from a
+   *     daemon.
+   *     <p>
+   *     <p>For example: In case compilation daemon uses worker tool pool, the used worker tool
+   *     instance is returned back to the pool for future reuse.
    */
-  @Override
-  void close();
+  void close(boolean force);
 }

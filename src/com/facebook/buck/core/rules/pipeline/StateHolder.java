@@ -28,7 +28,7 @@ import com.google.common.base.Preconditions;
  *
  * <p>The rules in the pipeline share state holder through that object.
  */
-public class StateHolder<State extends RulePipelineState> implements AutoCloseable {
+public class StateHolder<State extends RulePipelineState> {
 
   private final Either<State, CompilationDaemonStep> either;
   private boolean isFirstStage = false;
@@ -66,10 +66,10 @@ public class StateHolder<State extends RulePipelineState> implements AutoCloseab
     return either.getRight();
   }
 
-  @Override
-  public void close() {
+  /** Closes wrapped state object after it has been executed. */
+  public void close(boolean force) {
     if (supportsCompilationDaemon()) {
-      getCompilationDaemonStep().close();
+      getCompilationDaemonStep().close(force);
     } else {
       getState().close();
     }

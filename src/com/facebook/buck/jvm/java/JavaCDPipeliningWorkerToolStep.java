@@ -248,13 +248,13 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
   }
 
   @Override
-  public void close() {
+  public void close(boolean force) {
     boolean pipelineFinishedSuccessfully =
         !pipelineExecutionFailed
             && actionIdToResultEventMap.values().stream()
                 .allMatch(f -> f.isDone() && !f.isCancelled());
     try {
-      if (pipelineFinishedSuccessfully) {
+      if (pipelineFinishedSuccessfully && !force) {
         LOG.info(
             "Start waiting for pipeline finish event for action ids: %s",
             actionIdToResultEventMap.keySet());
