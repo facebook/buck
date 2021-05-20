@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
@@ -78,7 +78,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       BuckEventBus eventBus, State state, BuildRule buildRule, Optional<Digest> actionDigest) {
     final Started startedEvent = new Started(state, buildRule, actionDigest);
     eventBus.post(startedEvent);
-    final Scope leftEventScope = LeafEvents.scope(eventBus, state.toString().toLowerCase(), false);
+    final Scope leftEventScope =
+        PerfEvents.scope(eventBus.isolated(), state.toString().toLowerCase(), false);
     return () -> {
       leftEventScope.close();
       eventBus.post(new Finished(startedEvent));

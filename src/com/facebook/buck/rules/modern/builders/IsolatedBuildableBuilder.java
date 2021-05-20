@@ -46,7 +46,7 @@ import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -326,12 +326,12 @@ public abstract class IsolatedBuildableBuilder {
             toolchainProviderFunction.apply(Optional.empty()));
 
     BuildableAndTarget reconstructed;
-    try (Scope ignored = LeafEvents.scope(eventBus, "deserializing")) {
+    try (Scope ignored = PerfEvents.scope(eventBus, "deserializing")) {
       reconstructed =
           deserializer.deserialize(getProvider(dataRoot, hash), BuildableAndTarget.class);
     }
 
-    try (Scope ignored = LeafEvents.scope(eventBus, "steps");
+    try (Scope ignored = PerfEvents.scope(eventBus, "steps");
         CloseableWrapper<BuckEventBus> eventBusWrapper = getWaitEventsWrapper(eventBus);
         CloseableWrapper<ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>>
             workerToolPoolsWrapper =

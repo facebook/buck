@@ -48,7 +48,7 @@ import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.EventKey;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
@@ -243,7 +243,7 @@ public class ChromeTraceBuildListenerTest {
             new FileOutputStreamFactory());
     eventBus.register(listener);
 
-    LeafEvents.scope(eventBus, "testing_scope", false).close();
+    PerfEvents.scope(eventBus.isolated(), "testing_scope", false).close();
 
     listener.close();
     managerScope.close();

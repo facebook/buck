@@ -31,7 +31,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.java.version.JavaVersion;
@@ -400,7 +400,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     Set<Path> outputs;
     HashCode hash;
 
-    try (Scope ignored = LeafEvents.scope(eventBus, "serializing")) {
+    try (Scope ignored = PerfEvents.scope(eventBus, "serializing")) {
       Buildable original = rule.getBuildable();
       hash = serializer.serialize(new BuildableAndTarget(original, rule.getBuildTarget()));
     }
@@ -413,7 +413,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
     ImmutableList.Builder<UploadDataSupplier> requiredDataBuilder = ImmutableList.builder();
 
-    try (Scope ignored = LeafEvents.scope(eventBus, "constructing_inputs_tree")) {
+    try (Scope ignored = PerfEvents.scope(eventBus, "constructing_inputs_tree")) {
       getSharedFilesData(requiredDataPredicate).forEach(requiredDataBuilder::add);
 
       allNodes.add(
@@ -437,7 +437,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
           cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(METADATA_PATH)).getPath());
     }
 
-    try (Scope ignored = LeafEvents.scope(eventBus, "constructing_action_info")) {
+    try (Scope ignored = PerfEvents.scope(eventBus, "constructing_action_info")) {
       ImmutableList<String> command =
           getBuilderCommand(projectRoot, hash.toString(), consoleParams);
       ImmutableSortedMap<String, String> commandEnvironment =

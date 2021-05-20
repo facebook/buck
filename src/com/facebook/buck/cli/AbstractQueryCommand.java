@@ -17,7 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.query.EvaluatingQueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
@@ -211,7 +211,7 @@ public abstract class AbstractQueryCommand<
       expr.collectTargetPatterns(targetLiterals);
     }
 
-    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "preloading_target_patterns")) {
+    try (Scope ignored = PerfEvents.scope(params.getBuckEventBus(), "preloading_target_patterns")) {
       env.preloadTargetPatterns(targetLiterals);
     }
 
@@ -221,7 +221,7 @@ public abstract class AbstractQueryCommand<
     LinkedHashMultimap<String, NODE_TYPE> queryResultMap = LinkedHashMultimap.create();
 
     try (Scope ignored =
-        LeafEvents.scope(params.getBuckEventBus(), "evaluating_multiple_queries")) {
+        PerfEvents.scope(params.getBuckEventBus(), "evaluating_multiple_queries")) {
       for (String input : inputsFormattedAsBuildTargets) {
         String query = queryFormat.replace("%s", input);
         Set<NODE_TYPE> queryResult = env.evaluateQuery(query);
@@ -231,7 +231,7 @@ public abstract class AbstractQueryCommand<
 
     LOG.debug("Printing out %d targets", queryResultMap.size());
 
-    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "printing_multi_query_output");
+    try (Scope ignored = PerfEvents.scope(params.getBuckEventBus(), "printing_multi_query_output");
         CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
       PrintStream printStream = printStreamWrapper.get();
       printMultipleQueryOutput(params, env, queryResultMap, printStream);
@@ -243,14 +243,14 @@ public abstract class AbstractQueryCommand<
     LOG.debug("Evaluating single query");
 
     Set<NODE_TYPE> queryResult;
-    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "evaluating_single_query")) {
+    try (Scope ignored = PerfEvents.scope(params.getBuckEventBus(), "evaluating_single_query")) {
       queryResult = env.evaluateQuery(query);
     }
 
     LOG.debug("Printing out %d targets", queryResult.size());
 
     try (Scope ignored =
-            LeafEvents.scope(params.getBuckEventBus(), "printing_single_query_output");
+            PerfEvents.scope(params.getBuckEventBus(), "printing_single_query_output");
         CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
       PrintStream printStream = printStreamWrapper.get();
       printSingleQueryOutput(params, env, queryResult, printStream);

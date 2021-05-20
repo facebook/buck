@@ -17,7 +17,7 @@
 package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
@@ -88,7 +88,7 @@ public class ActionRunner {
       throws IOException, InterruptedException {
     Console console;
     Builder paramsBuilder;
-    try (Scope ignored = LeafEvents.scope(eventBus, "preparing_action")) {
+    try (Scope ignored = PerfEvents.scope(eventBus, "preparing_action")) {
       paramsBuilder = ProcessExecutorParams.builder();
       paramsBuilder.setCommand(command);
 
@@ -110,12 +110,12 @@ public class ActionRunner {
     }
 
     Result result;
-    try (Scope ignored = LeafEvents.scope(eventBus, "subprocess")) {
+    try (Scope ignored = PerfEvents.scope(eventBus, "subprocess")) {
       result = new DefaultProcessExecutor(console).launchAndExecute(paramsBuilder.build());
     }
 
     CollectedOutputs collectedOutputs;
-    try (Scope ignored = LeafEvents.scope(eventBus, "collecting_outputs")) {
+    try (Scope ignored = PerfEvents.scope(eventBus, "collecting_outputs")) {
       if (result.getExitCode() == 0) {
         // TODO(cjhopman): Should outputs be returned on failure?
         collectedOutputs =

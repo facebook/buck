@@ -36,7 +36,7 @@ import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TraversableGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
@@ -119,7 +119,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
             .flatMap(arg -> specParser.parse(cells, arg).stream())
             .collect(ImmutableSet.toImmutableSet());
     ImmutableSet<BuildTarget> rootTargets;
-    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "resolving_target_specs")) {
+    try (Scope ignored = PerfEvents.scope(params.getBuckEventBus(), "resolving_target_specs")) {
       rootTargets =
           parser.resolveTargetSpecs(perBuildState, universeSpecs, params.getTargetConfiguration())
               .stream()
@@ -138,7 +138,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
     ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache = new ConcurrentHashMap<>();
 
-    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "discovering_targets")) {
+    try (Scope ignored = PerfEvents.scope(params.getBuckEventBus(), "discovering_targets")) {
       List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
       for (BuildTarget buildTarget : rootTargets) {
         discoverNewTargetsConcurrently(
@@ -180,7 +180,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
     AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, TargetNode<?>> targetNodeTraversal =
         new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
-    try (Scope ignored = LeafEvents.scope(params.getBuckEventBus(), "building_graph")) {
+    try (Scope ignored = PerfEvents.scope(params.getBuckEventBus(), "building_graph")) {
       for (Pair<BuildTarget, TargetNode<?>> entry : targetNodeTraversal.traverse(rootTargets)) {
         TargetNode<?> node = entry.getSecond();
         graph.addNode(node);

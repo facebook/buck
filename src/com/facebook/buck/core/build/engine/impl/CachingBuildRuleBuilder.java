@@ -79,7 +79,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
@@ -524,7 +524,7 @@ class CachingBuildRuleBuilder {
         return Futures.immediateFuture(input);
       }
 
-      try (Scope ignored = LeafEvents.scope(eventBus, "finalizing_build_rule")) {
+      try (Scope ignored = PerfEvents.scope(eventBus, "finalizing_build_rule")) {
         // We shouldn't see any build fail result at this point.
         BuildRuleSuccessType success = input.getSuccess();
 
@@ -721,7 +721,7 @@ class CachingBuildRuleBuilder {
         // Push an updated manifest to the cache.
         if (manifestRuleKeyManager.useManifestCaching()) {
           // TODO(cjhopman): This should be able to use manifestKeySupplier.
-          try (Scope ignored = LeafEvents.scope(eventBus, "updating_and_storing_manifest")) {
+          try (Scope ignored = PerfEvents.scope(eventBus, "updating_and_storing_manifest")) {
             Optional<DependencyFileRuleKeyFactory.RuleKeyAndInputs> manifestKey =
                 calculateManifestKey(eventBus);
             if (manifestKey.isPresent()) {
@@ -774,7 +774,7 @@ class CachingBuildRuleBuilder {
       }
     }
 
-    try (Scope ignored = LeafEvents.scope(eventBus, "computing_output_hashes")) {
+    try (Scope ignored = PerfEvents.scope(eventBus, "computing_output_hashes")) {
       onDiskBuildInfo.calculateOutputSizeAndWriteMetadata(
           fileHashCache, getBuildInfoRecorder().getRecordedPaths(), this::shouldWriteOutputHashes);
     }
@@ -980,7 +980,7 @@ class CachingBuildRuleBuilder {
     getBuildInfoRecorder()
         .addBuildMetadata(
             BuildInfo.MetadataKey.MANIFEST_KEY, manifestKeyAndInputs.get().getRuleKey().toString());
-    try (Scope ignored = LeafEvents.scope(eventBus, "checking_cache_depfile_based")) {
+    try (Scope ignored = PerfEvents.scope(eventBus, "checking_cache_depfile_based")) {
       long start = System.currentTimeMillis();
       return Futures.transform(
           manifestRuleKeyManager.performManifestBasedCacheFetch(manifestKeyAndInputs.get()),
@@ -1352,7 +1352,7 @@ class CachingBuildRuleBuilder {
   }
 
   private <T> void doInitializeFromDisk(InitializableFromDisk<T> initializable) throws IOException {
-    try (Scope ignored = LeafEvents.scope(eventBus, "initialize_from_disk")) {
+    try (Scope ignored = PerfEvents.scope(eventBus, "initialize_from_disk")) {
       BuildOutputInitializer<T> buildOutputInitializer = initializable.getBuildOutputInitializer();
       buildOutputInitializer.initializeFromDisk(pathResolver);
     }
@@ -1544,7 +1544,7 @@ class CachingBuildRuleBuilder {
     }
 
     private ImmutableList<? extends Step> getSteps() {
-      try (Scope ignored = LeafEvents.scope(eventBus, "get_build_steps")) {
+      try (Scope ignored = PerfEvents.scope(eventBus, "get_build_steps")) {
         if (stateHolderOptional.isPresent()) {
           @SuppressWarnings("unchecked")
           SupportsPipelining<State> pipelinedRule = (SupportsPipelining<State>) rule;

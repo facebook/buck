@@ -34,7 +34,7 @@ import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -138,7 +138,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
   public HeaderPathNormalizer getHeaderPathNormalizer(BuildContext context) {
     return headerPathNormalizer.get(
         () -> {
-          try (Scope ignored = LeafEvents.scope(context.getEventBus(), "header_path_normalizer")) {
+          try (Scope ignored = PerfEvents.scope(context.getEventBus(), "header_path_normalizer")) {
             // Cache the value using the first SourcePathResolverAdapter that we're called with. We
             // expect
             // this whole object to be recreated in cases where this computation would produce

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.event.listener;
 
+import static com.facebook.buck.event.CommandEvent.*;
+
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
@@ -25,12 +27,11 @@ import com.facebook.buck.core.test.event.TestSummaryEvent;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
-import com.facebook.buck.event.CommandEvent.Finished;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.FlushConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
-import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.ParsingEvent;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
@@ -620,13 +621,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   // TODO(cjhopman): We should introduce a simple LeafEvent-like thing that everything that logs
   // step-like things can subscribe to.
   @Subscribe
-  public void simpleLeafEventStarted(LeafEvents.SimpleLeafEvent.Started started) {
-    runningStepStarted(started);
+  public void aggregationLeafEventStarted(PerfEvents.AggregationSupportedEvent.Started event) {
+    runningStepStarted(event);
   }
 
   @Subscribe
-  public void simpleLeafEventFinished(LeafEvents.SimpleLeafEvent.Finished finished) {
-    runningStepFinished(finished.getThreadId());
+  public void aggregationLeafEventFinished(PerfEvents.AggregationSupportedEvent.Finished event) {
+    runningStepFinished(event.getThreadId());
   }
 
   @Subscribe

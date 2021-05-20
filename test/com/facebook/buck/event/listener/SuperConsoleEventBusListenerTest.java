@@ -118,6 +118,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class SuperConsoleEventBusListenerTest {
+
   private static final String TARGET_ONE = "//target:one";
   private static final String TARGET_TWO = "//target:two";
   private static final String TARGET_THREE = "//target:three";
@@ -204,6 +205,7 @@ public class SuperConsoleEventBusListenerTest {
   public ImmutableSet<String> buildDetailsCommands;
 
   private static class TestRenderingConsole extends RenderingConsole {
+
     private final TestConsole testConsole;
 
     public TestRenderingConsole(Clock clock, TestConsole console) {
@@ -2413,7 +2415,6 @@ public class SuperConsoleEventBusListenerTest {
         createSuperConsole(fakeClock, eventBus, renderingConsole);
 
     eventBus.post(ConsoleEvent.info("Hello world!"));
-
     validateConsoleWithLogLines(
         listener, renderingConsole, 0L, ImmutableList.of(), ImmutableList.of("Hello world!"));
 
@@ -2669,6 +2670,7 @@ public class SuperConsoleEventBusListenerTest {
   }
 
   private static class ProgressEstimatorSynchronization {
+
     /**
      * ProgressEstimator calculates progress asynchronously, indicating that it's down with
      * ProgressEvent.ProjectGenerationProgressUpdated. We create synchronization around the event so

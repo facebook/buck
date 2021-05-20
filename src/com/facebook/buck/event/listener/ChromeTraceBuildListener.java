@@ -34,7 +34,6 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.InstallEvent;
-import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
@@ -427,36 +426,6 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         finished);
   }
 
-  // TODO(cjhopman): We should introduce a simple LeafEvent-like thing that everything that logs
-  // step-like things can subscribe to.
-  @Subscribe
-  public void simpleLeafEventStarted(LeafEvents.SimpleLeafEvent.Started started) {
-    if (!started.isLogToChromeTrace()) {
-      return;
-    }
-
-    writeChromeTraceData(
-        "buck",
-        started.getEventName(),
-        ChromeTraceData.Phase.BEGIN,
-        ImmutableMap.of("description", started.toString()),
-        started);
-  }
-
-  @Subscribe
-  public void simpleLeafEventFinished(LeafEvents.SimpleLeafEvent.Finished finished) {
-    if (!finished.isLogToChromeTrace()) {
-      return;
-    }
-
-    writeChromeTraceData(
-        "buck",
-        finished.getEventName(),
-        ChromeTraceData.Phase.END,
-        ImmutableMap.of("description", finished.toString()),
-        finished);
-  }
-
   @Subscribe
   public void parseStarted(ParseEvent.Started started) {
     writeChromeTraceData("buck", "parse", ChromeTraceData.Phase.BEGIN, ImmutableMap.of(), started);
@@ -486,6 +455,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void simplePerfEvent(SimplePerfEvent perfEvent) {
+    if (!perfEvent.isLogToChromeTrace()) {
+      return;
+    }
+
     ChromeTraceData.Phase phase;
     SimplePerfEvent.Type eventType = perfEvent.getEventType();
     switch (eventType) {
@@ -507,7 +480,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
     try {
       writeChromeTraceData(
-          perfEvent.getCategory(),
+          perfEvent.supportsAggregation() ? "buck" : perfEvent.getCategory(),
           CONVERTED_EVENT_ID_CACHE.get(perfEvent.getTitle().getValue().intern()),
           phase,
           perfEvent.getEventInfo(),

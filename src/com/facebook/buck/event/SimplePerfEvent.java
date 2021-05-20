@@ -40,7 +40,7 @@ import org.immutables.value.Value;
  * intended to be used with the trace viewer and should not be used to communicate information
  * between parts of the system.
  */
-public abstract class SimplePerfEvent extends AbstractBuckEvent {
+public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafEvent {
 
   public SimplePerfEvent(EventKey eventKey) {
     super(eventKey);
@@ -49,8 +49,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   public enum Type {
     STARTED("Started"),
     UPDATED("Updated"),
-    FINISHED("Finished"),
-    ;
+    FINISHED("Finished");
 
     private final String value;
 
@@ -78,7 +77,17 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   public abstract ImmutableMap<String, Object> getEventInfo();
 
   /** @return event's category. */
+  @Override
   public abstract String getCategory();
+
+  public boolean isLogToChromeTrace() {
+    return true;
+  }
+
+  @Override
+  public boolean supportsAggregation() {
+    return false;
+  }
 
   /**
    * Prefer using {@link SimplePerfEvent#scope(IsolatedEventBus, PerfEventTitle, ImmutableMap)} when

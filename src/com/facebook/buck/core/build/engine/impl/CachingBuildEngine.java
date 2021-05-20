@@ -50,7 +50,7 @@ import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ExperimentEvent;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.event.TopLevelRuleKeyCalculatedEvent;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
@@ -352,7 +352,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private void registerTopLevelRule(BuildRule rule, BuckEventBus eventBus) {
     unskippedRulesTracker.ifPresent(
         tracker -> {
-          try (Scope scope = LeafEvents.scope(eventBus, "register-top-level-rule")) {
+          try (Scope scope = PerfEvents.scope(eventBus, "register-top-level-rule")) {
             tracker.registerTopLevelRule(rule, eventBus);
           }
         });

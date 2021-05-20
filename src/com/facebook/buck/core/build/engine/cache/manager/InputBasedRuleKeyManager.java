@@ -26,7 +26,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.SizeLimiter;
@@ -108,7 +108,7 @@ public class InputBasedRuleKeyManager {
                 rule.getProjectFilesystem()),
         cacheResult -> {
           if (cacheResult.getType().isSuccess()) {
-            try (Scope ignored = LeafEvents.scope(eventBus, "handling_cache_result")) {
+            try (Scope ignored = PerfEvents.scope(eventBus, "handling_cache_result")) {
               return Optional.of(
                   new Pair<>(BuildRuleSuccessType.FETCHED_FROM_CACHE_INPUT_BASED, cacheResult));
             }

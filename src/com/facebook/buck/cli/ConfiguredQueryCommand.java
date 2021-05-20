@@ -21,7 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
@@ -94,7 +94,7 @@ public class ConfiguredQueryCommand
       perBuildState = parserState;
 
       try (Scope ignored =
-          LeafEvents.scope(params.getBuckEventBus(), "creating_precomputed_universe")) {
+          PerfEvents.scope(params.getBuckEventBus(), "creating_precomputed_universe")) {
         targetUniverse =
             PrecomputedTargetUniverse.createFromRootTargets(
                 rootTargetsForUniverse(), params, perBuildState);

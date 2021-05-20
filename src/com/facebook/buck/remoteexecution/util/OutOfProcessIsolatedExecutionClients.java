@@ -19,7 +19,7 @@ package com.facebook.buck.remoteexecution.util;
 import build.bazel.remote.execution.v2.ExecuteOperationMetadata;
 import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
@@ -76,7 +76,7 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
           Path buildDir = workDir.getPath().resolve(action.getInputRootDigest().getHash());
           try (Closeable ignored = () -> MostFiles.deleteRecursively(buildDir)) {
             Command command;
-            try (Scope ignored2 = LeafEvents.scope(eventBus, "materializing_inputs")) {
+            try (Scope ignored2 = PerfEvents.scope(eventBus, "materializing_inputs")) {
               command =
                   storage
                       .materializeInputs(
@@ -95,7 +95,7 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
                             .map(Paths::get)
                             .collect(ImmutableSet.toImmutableSet()),
                         buildDir);
-            try (Scope ignored2 = LeafEvents.scope(eventBus, "uploading_results")) {
+            try (Scope ignored2 = PerfEvents.scope(eventBus, "uploading_results")) {
               Futures.getUnchecked(storage.addMissing(actionResult.requiredData));
             }
             ListenableFuture<ExecutionResult> executionResult =

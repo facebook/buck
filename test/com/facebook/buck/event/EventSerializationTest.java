@@ -345,7 +345,9 @@ public class EventSerializationTest {
     assertJsonEquals(
         "{%s,"
             + "\"eventKey\":{\"value\":4242},\"category\":\"buck\",\"eventId\":\"perf_id\",\"eventType\":\"STARTED\","
-            + "\"eventInfo\":{\"value\":\"Some value\"},\"type\":\"PerfEvent.perf_id.Started\"}",
+            + "\"eventInfo\":{\"value\":\"Some value\"},"
+            + "\"logToChromeTrace\":true,"
+            + "\"type\":\"PerfEvent.perf_id.Started\"}",
         message);
   }
 
