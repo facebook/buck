@@ -214,26 +214,29 @@ class DaemonicCellState {
   }
 
   Optional<BuildFileManifest> lookupBuildFileManifest(
-      AbsPath buildFile, DaemonicParserValidationToken validationToken) {
-    BuildFileManifest manifest = allBuildFileManifests.getIfPresent(buildFile);
+      ForwardRelPath buildFile, DaemonicParserValidationToken validationToken) {
+    AbsPath buildFileAbs = cellRoot.resolve(buildFile);
+    BuildFileManifest manifest = allBuildFileManifests.getIfPresent(buildFileAbs);
     return manifest != null && locks.isValid(validationToken)
         ? Optional.of(manifest)
         : Optional.empty();
   }
 
   BuildFileManifest putBuildFileManifestIfNotPresent(
-      AbsPath buildFile,
+      ForwardRelPath buildFile,
       BuildFileManifest buildFileManifest,
       ImmutableSet<AbsPath> dependentsOfEveryNode,
       AutoCloseableReadLocked locked) {
     locked.markUsed();
 
+    AbsPath buildFileAbs = cellRoot.resolve(buildFile);
+
     BuildFileManifest updated =
-        allBuildFileManifests.putIfAbsentAndGet(buildFile, buildFileManifest);
+        allBuildFileManifests.putIfAbsentAndGet(buildFileAbs, buildFileManifest);
     for (RawTargetNode node : updated.getTargets().values()) {
       allRawNodeTargets.add(
           UnflavoredBuildTargetFactory.createFromRawNode(
-              cellRoot.getPath(), cellCanonicalName, node, buildFile.getPath()));
+              cellRoot.getPath(), cellCanonicalName, node, buildFileAbs.getPath()));
     }
     if (updated == buildFileManifest) {
       // We now know all the nodes. They all implicitly depend on everything in
@@ -241,7 +244,7 @@ class DaemonicCellState {
       for (AbsPath dependent : dependentsOfEveryNode) {
         buildFileDependents
             .computeIfAbsent(dependent, p -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
-            .add(buildFile);
+            .add(buildFileAbs);
       }
     }
     return updated;
@@ -249,7 +252,7 @@ class DaemonicCellState {
 
   @VisibleForTesting
   BuildFileManifest putBuildFileManifestIfNotPresentForTest(
-      AbsPath buildFile,
+      ForwardRelPath buildFile,
       BuildFileManifest buildFileManifest,
       ImmutableSet<AbsPath> dependentsOfEveryNode) {
     try (AutoCloseableReadLocked locked = locks.cachesLock.lockRead()) {
@@ -259,28 +262,32 @@ class DaemonicCellState {
   }
 
   Optional<PackageFileManifest> lookupPackageFileManifest(
-      AbsPath packageFile, DaemonicParserValidationToken validationToken) {
-    PackageFileManifest manifest = allPackageFileManifests.getIfPresent(packageFile);
+      ForwardRelPath packageFile, DaemonicParserValidationToken validationToken) {
+    AbsPath packageFileAbs = cellRoot.resolve(packageFile);
+    PackageFileManifest manifest = allPackageFileManifests.getIfPresent(packageFileAbs);
     return manifest != null && locks.isValid(validationToken)
         ? Optional.of(manifest)
         : Optional.empty();
   }
 
   PackageFileManifest putPackageFileManifestIfNotPresent(
-      AbsPath packageFile,
+      ForwardRelPath packageFile,
       PackageFileManifest packageFileManifest,
       ImmutableSet<AbsPath> packageDependents,
       AutoCloseableReadLocked locked) {
     locked.markUsed();
+
+    AbsPath packageFileAbs = cellRoot.resolve(packageFile);
+
     PackageFileManifest updated =
-        allPackageFileManifests.putIfAbsentAndGet(packageFile, packageFileManifest);
+        allPackageFileManifests.putIfAbsentAndGet(packageFileAbs, packageFileManifest);
     if (updated == packageFileManifest) {
       // The package file will depend on all dependents and we keep a reverse mapping to know
       // which package files to invalidate if a dependent changes.
       for (AbsPath dependent : packageDependents) {
         this.packageFileDependents
             .computeIfAbsent(dependent, p -> Collections.newSetFromMap(new ConcurrentHashMap<>()))
-            .add(packageFile);
+            .add(packageFileAbs);
       }
     }
     return updated;
@@ -288,7 +295,7 @@ class DaemonicCellState {
 
   @VisibleForTesting
   PackageFileManifest putPackageFileManifestIfNotPresentForTest(
-      AbsPath packageFile,
+      ForwardRelPath packageFile,
       PackageFileManifest packageFileManifest,
       ImmutableSet<AbsPath> packageDependents) {
     try (AutoCloseableReadLocked locked = locks.cachesLock.lockRead()) {

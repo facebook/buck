@@ -147,13 +147,12 @@ public class DaemonicParserState {
     public Optional<BuildFileManifest> lookupComputedNode(
         Cell cell, ForwardRelPath buildFile, DaemonicParserValidationToken validationToken)
         throws BuildTargetException {
-      AbsPath buildFileAbs = cell.getRoot().resolve(buildFile);
 
       DaemonicCellState state = getCellState(cell);
       if (state == null) {
         return Optional.empty();
       }
-      return state.lookupBuildFileManifest(buildFileAbs, validationToken);
+      return state.lookupBuildFileManifest(buildFile, validationToken);
     }
 
     /**
@@ -178,9 +177,6 @@ public class DaemonicParserState {
       }
 
       try {
-
-        AbsPath buildFileAbs = cell.getRoot().resolve(buildFile);
-
         ImmutableSet.Builder<AbsPath> dependentsOfEveryNode = ImmutableSet.builder();
 
         addAllIncludes(dependentsOfEveryNode, manifest.getIncludes(), cell);
@@ -197,7 +193,7 @@ public class DaemonicParserState {
 
         return getOrCreateCellState(cell, locked)
             .putBuildFileManifestIfNotPresent(
-                buildFileAbs, manifest, dependentsOfEveryNode.build(), locked);
+                buildFile, manifest, dependentsOfEveryNode.build(), locked);
       } finally {
         locked.close();
       }
@@ -213,13 +209,11 @@ public class DaemonicParserState {
         Cell cell, ForwardRelPath packageFile, DaemonicParserValidationToken validationToken)
         throws BuildTargetException {
 
-      AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
-
       DaemonicCellState state = getCellState(cell);
       if (state == null) {
         return Optional.empty();
       }
-      return state.lookupPackageFileManifest(packageFileAbs, validationToken);
+      return state.lookupPackageFileManifest(packageFile, validationToken);
     }
 
     /**
@@ -242,8 +236,6 @@ public class DaemonicParserState {
       }
 
       try {
-        AbsPath packageFileAbs = cell.getRoot().resolve(packageFile);
-
         ImmutableSet.Builder<AbsPath> packageDependents = ImmutableSet.builder();
 
         addAllIncludes(packageDependents, manifest.getIncludes(), cell);
@@ -255,7 +247,7 @@ public class DaemonicParserState {
 
         return getOrCreateCellState(cell, locked)
             .putPackageFileManifestIfNotPresent(
-                packageFileAbs, manifest, packageDependents.build(), locked);
+                packageFile, manifest, packageDependents.build(), locked);
       } finally {
         locked.close();
       }

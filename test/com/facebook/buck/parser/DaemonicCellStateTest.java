@@ -67,23 +67,8 @@ public class DaemonicCellStateTest {
   private DaemonicParserStateLocks locks;
 
   private void populateDummyRawNode(DaemonicCellState state, BuildTarget target) {
-    Cell targetCell;
-    if (target.getCell().equals(cells.getRootCell().getCanonicalName())) {
-      targetCell = cells.getRootCell();
-    } else if (target.getCell().equals(childCell.getCanonicalName())) {
-      targetCell = childCell;
-    } else {
-      throw new AssertionError();
-    }
     state.putBuildFileManifestIfNotPresentForTest(
-        targetCell
-            .getRoot()
-            .resolve(
-                target
-                    .getCellRelativeBasePath()
-                    .getPath()
-                    .toPath(filesystem.getFileSystem())
-                    .resolve("BUCK")),
+        target.getCellRelativeBasePath().getPath().resolve("BUCK"),
         BuildFileManifestFactory.create(
             ImmutableMap.of(
                 target.getShortName(),
@@ -126,8 +111,12 @@ public class DaemonicCellStateTest {
         ImmutableList.of());
   }
 
+  private ForwardRelPath dummyPackageRelPath() {
+    return ForwardRelPath.of("path/to/PACKAGE");
+  }
+
   private AbsPath dummyPackageFile() {
-    return filesystem.resolve("path/to/PACKAGE");
+    return filesystem.resolve(dummyPackageRelPath());
   }
 
   @Test
@@ -164,7 +153,8 @@ public class DaemonicCellStateTest {
     Cache<UnconfiguredBuildTarget, UnconfiguredTargetNode> cache =
         childState.getCache(DaemonicCellState.RAW_TARGET_NODE_CACHE_TYPE);
 
-    AbsPath targetPath = childCell.getRoot().resolve("path/to/BUCK");
+    ForwardRelPath targetPathRel = ForwardRelPath.of("path/to/BUCK");
+    AbsPath targetPath = childCell.getRoot().resolve(targetPathRel);
     BuildTarget target = BuildTargetFactory.newInstance("xplat//path/to:target");
 
     // Make sure the cache has a raw node for this target.
@@ -180,7 +170,7 @@ public class DaemonicCellStateTest {
         cache.lookupComputedNode(target.getUnconfiguredBuildTarget(), locks.validationToken()));
 
     childState.putBuildFileManifestIfNotPresentForTest(
-        targetPath,
+        targetPathRel,
         BuildFileManifestFactory.create(
             ImmutableMap.of(
                 "target",
@@ -202,7 +192,7 @@ public class DaemonicCellStateTest {
 
   @Test
   public void putPackageIfNotPresent() {
-    AbsPath packageFile = dummyPackageFile();
+    ForwardRelPath packageFile = dummyPackageRelPath();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
     PackageFileManifest cachedManifest =
@@ -225,7 +215,7 @@ public class DaemonicCellStateTest {
 
   @Test
   public void lookupPackage() {
-    AbsPath packageFile = dummyPackageFile();
+    ForwardRelPath packageFile = dummyPackageRelPath();
 
     Optional<PackageFileManifest> lookupManifest =
         state.lookupPackageFileManifest(packageFile, locks.validationToken());
@@ -240,7 +230,7 @@ public class DaemonicCellStateTest {
 
   @Test
   public void invalidatePackageFilePath() {
-    AbsPath packageFile = dummyPackageFile();
+    ForwardRelPath packageFile = dummyPackageRelPath();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
     state.putPackageFileManifestIfNotPresentForTest(packageFile, manifest, ImmutableSet.of());
@@ -254,7 +244,7 @@ public class DaemonicCellStateTest {
     lookupManifest = state.lookupPackageFileManifest(packageFile, locks.validationToken());
     assertTrue(lookupManifest.isPresent());
 
-    state.invalidatePathForTest(packageFile, true);
+    state.invalidatePathForTest(dummyPackageFile(), true);
 
     lookupManifest = state.lookupPackageFileManifest(packageFile, locks.validationToken());
     assertFalse(lookupManifest.isPresent());
@@ -262,7 +252,7 @@ public class DaemonicCellStateTest {
 
   @Test
   public void dependentInvalidatesPackageFileManifest() {
-    AbsPath packageFile = dummyPackageFile();
+    ForwardRelPath packageFile = dummyPackageRelPath();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
     AbsPath dependentFile = filesystem.resolve("path/to/pkg_dependent.bzl");
