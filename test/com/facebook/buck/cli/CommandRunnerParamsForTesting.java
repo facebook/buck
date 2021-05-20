@@ -186,6 +186,7 @@ public class CommandRunnerParamsForTesting {
         Optional.empty(),
         webServer,
         Maps.newConcurrentMap(),
+        Maps.newConcurrentMap(),
         config,
         new StackedFileHashCache(ImmutableList.of()),
         executors,

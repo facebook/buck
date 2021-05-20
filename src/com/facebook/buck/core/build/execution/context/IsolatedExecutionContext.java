@@ -69,6 +69,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
         .setActionId(actionId)
         .setClock(clock)
         .setWorkerToolPools(new ConcurrentHashMap<>())
+        .setPersistentWorkerToolExecutorPools(Optional.empty())
         .setClassLoaderCache(classLoaderCache.addRef())
         .build();
   }
@@ -91,6 +92,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
         .setActionId(actionId)
         .setClock(clock)
         .setWorkerToolPools(new ConcurrentHashMap<>())
+        .setPersistentWorkerToolExecutorPools(Optional.empty())
         .build();
   }
 
@@ -130,6 +132,9 @@ public abstract class IsolatedExecutionContext implements Closeable {
   public abstract Clock getClock();
 
   public abstract ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>> getWorkerToolPools();
+
+  public abstract Optional<ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>>
+      getPersistentWorkerToolExecutorPools();
 
   /**
    * Returns {@link DownwardApiProcessExecutor} created from the given {@link

@@ -56,6 +56,7 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
+import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -159,6 +160,9 @@ public class BuckGlobalStateFactory {
     ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> persistentWorkerPools =
         new ConcurrentHashMap<>();
 
+    ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>> persistentWorkerToolExecutorPools =
+        new ConcurrentHashMap<>();
+
     return new BuckGlobalState(
         cells,
         typeCoercerFactory,
@@ -170,6 +174,7 @@ public class BuckGlobalStateFactory {
         fileEventBus,
         webServer,
         persistentWorkerPools,
+        persistentWorkerToolExecutorPools,
         versionedTargetGraphCache,
         actionGraphCache,
         defaultRuleKeyFactoryCacheRecycler,

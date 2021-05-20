@@ -42,6 +42,7 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.facebook.buck.worker.DefaultWorkerProcess;
 import com.facebook.buck.worker.WorkerProcessPool;
+import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -79,6 +80,8 @@ public final class BuckGlobalState implements Closeable {
   private final Optional<WebServer> webServer;
   private final ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>>
       persistentWorkerPools;
+  private final ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>
+      persistentWorkerToolExecutorPools;
   private final VersionedTargetGraphCache versionedTargetGraphCache;
   private final ActionGraphCache actionGraphCache;
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
@@ -100,6 +103,8 @@ public final class BuckGlobalState implements Closeable {
       EventBus fileEventBus,
       Optional<WebServer> webServer,
       ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> persistentWorkerPools,
+      ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>
+          persistentWorkerToolExecutorPools,
       VersionedTargetGraphCache versionedTargetGraphCache,
       ActionGraphCache actionGraphCache,
       RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler,
@@ -118,6 +123,7 @@ public final class BuckGlobalState implements Closeable {
     this.fileEventBus = fileEventBus;
     this.webServer = webServer;
     this.persistentWorkerPools = persistentWorkerPools;
+    this.persistentWorkerToolExecutorPools = persistentWorkerToolExecutorPools;
     this.versionedTargetGraphCache = versionedTargetGraphCache;
     this.actionGraphCache = actionGraphCache;
     this.defaultRuleKeyFactoryCacheRecycler = defaultRuleKeyFactoryCacheRecycler;
@@ -182,6 +188,11 @@ public final class BuckGlobalState implements Closeable {
 
   public ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> getPersistentWorkerPools() {
     return persistentWorkerPools;
+  }
+
+  public ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>
+      getPersistentWorkerToolExecutorPools() {
+    return persistentWorkerToolExecutorPools;
   }
 
   public RuleKeyCacheRecycler<RuleKey> getDefaultRuleKeyFactoryCacheRecycler() {
@@ -255,16 +266,27 @@ public final class BuckGlobalState implements Closeable {
   @Override
   public void close() {
     shutdownPersistentWorkerPools();
+    shutdownPersistentWorkerToolExecutorPools();
     shutdownWebServer();
   }
 
   private void shutdownPersistentWorkerPools() {
     for (WorkerProcessPool<?> pool : persistentWorkerPools.values()) {
-      try {
-        pool.close();
-      } catch (Exception e) {
-        LOG.error(e);
-      }
+      shutdownWorkerProcessPool(pool);
+    }
+  }
+
+  private void shutdownPersistentWorkerToolExecutorPools() {
+    for (WorkerProcessPool<?> pool : persistentWorkerToolExecutorPools.values()) {
+      shutdownWorkerProcessPool(pool);
+    }
+  }
+
+  private void shutdownWorkerProcessPool(WorkerProcessPool<?> pool) {
+    try {
+      pool.close();
+    } catch (Exception e) {
+      LOG.error(e);
     }
   }
 

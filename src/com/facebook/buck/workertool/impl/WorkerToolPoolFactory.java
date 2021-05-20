@@ -25,6 +25,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 
 /**
@@ -48,8 +49,11 @@ public class WorkerToolPoolFactory {
     String key = String.join(" ", startupCommand);
     HashCode workerHash = Hashing.sha1().hashString(key, StandardCharsets.UTF_8);
 
+    Optional<ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>>
+        persistentWorkerToolExecutorPools = context.getPersistentWorkerToolExecutorPools();
+
     ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>> poolMap =
-        context.getWorkerToolPools();
+        persistentWorkerToolExecutorPools.orElseGet(context::getWorkerToolPools);
 
     // If the worker pool has a different hash, recreate the pool.
     WorkerProcessPool<WorkerToolExecutor> pool = poolMap.get(key);

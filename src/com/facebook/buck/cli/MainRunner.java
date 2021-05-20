@@ -939,6 +939,9 @@ public final class MainRunner {
       Optional<WebServer> webServer = buckGlobalState.getWebServer();
       ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>> persistentWorkerPools =
           buckGlobalState.getPersistentWorkerPools();
+      ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>
+          persistentWorkerToolExecutorPools =
+              buckGlobalState.getPersistentWorkerToolExecutorPools();
       TestBuckConfig testConfig = buckConfig.getView(TestBuckConfig.class);
       ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
 
@@ -1499,6 +1502,7 @@ public final class MainRunner {
                         processManager,
                         webServer,
                         persistentWorkerPools,
+                        persistentWorkerToolExecutorPools,
                         buckConfig,
                         fileHashCache,
                         executors,
