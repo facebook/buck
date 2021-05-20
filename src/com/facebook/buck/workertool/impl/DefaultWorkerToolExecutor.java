@@ -45,6 +45,7 @@ import com.facebook.buck.workertool.model.ShutdownCommand;
 import com.facebook.buck.workertool.model.StartPipelineCommand;
 import com.facebook.buck.workertool.utils.WorkerToolConstants;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -60,6 +61,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -246,7 +248,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   }
 
   @Override
-  public ImmutableList<Future<ResultEvent>> executePipeliningCommand(
+  public ImmutableList<SettableFuture<ResultEvent>> executePipeliningCommand(
       ImmutableList<String> actionIds,
       AbstractMessage pipeliningCommand,
       SettableFuture<Unit> pipelineFinished,
@@ -441,17 +443,19 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   }
 
   private void shutdownResultEventFutureIfNotDone(String errorMessage) {
+    Supplier<Exception> exceptionSupplier =
+        Suppliers.memoize(() -> new IllegalStateException(errorMessage));
+
     runUnderLock(
         () -> {
-          Exception exception = new IllegalStateException(errorMessage);
           for (ExecutingAction executingAction : executingActions) {
             SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
             if (resultEventFuture != null && !resultEventFuture.isDone()) {
-              resultEventFuture.setException(exception);
+              resultEventFuture.setException(exceptionSupplier.get());
             }
           }
           if (pipelineFinished != null) {
-            pipelineFinished.setException(exception);
+            pipelineFinished.setException(exceptionSupplier.get());
           }
         });
   }
