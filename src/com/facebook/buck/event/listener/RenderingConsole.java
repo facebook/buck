@@ -30,8 +30,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
@@ -102,18 +100,18 @@ public class RenderingConsole {
   }
 
   private void writePendingLogLines() {
-    ArrayList<String> lines = new ArrayList<>();
+    ImmutableList<String> lines = takePendingLogLines();
+
+    console.getStdErr().getRawStream().print(MoreStrings.linesToTextWithTrailingNewline(lines));
+  }
+
+  private ImmutableList<String> takePendingLogLines() {
+    ImmutableList.Builder<String> lines = ImmutableList.builder();
     String line;
     while ((line = pendingLogLines.poll()) != null) {
       lines.add(line);
     }
-    if (lines.isEmpty()) {
-      return;
-    }
-
-    Collections.reverse(lines);
-
-    console.getStdErr().getRawStream().print(MoreStrings.linesToTextWithTrailingNewline(lines));
+    return lines.build();
   }
 
   /**
@@ -174,10 +172,8 @@ public class RenderingConsole {
     ImmutableList<String> lines = delegate.createSuperLinesAtTime(clock.currentTimeMillis());
     boolean shouldRender = previousNumLinesPrinted != 0 || !lines.isEmpty();
 
-    ImmutableList.Builder<String> logLines = ImmutableList.builder();
-    String line;
-    while ((line = pendingLogLines.poll()) != null) {
-      logLines.add(line);
+    ImmutableList<String> logLines = takePendingLogLines();
+    if (!logLines.isEmpty()) {
       shouldRender = true;
     }
     lastNumLinesPrinted = lines.size();
@@ -199,7 +195,7 @@ public class RenderingConsole {
         stopRenderScheduler();
         writePendingLogLines();
       } else if (shouldRender) {
-        String fullFrame = renderFullFrame(logLines.build(), lines, previousNumLinesPrinted);
+        String fullFrame = renderFullFrame(logLines, lines, previousNumLinesPrinted);
         console.getStdErr().getRawStream().print(fullFrame);
       }
     }
