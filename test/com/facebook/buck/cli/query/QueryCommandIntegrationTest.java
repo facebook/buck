@@ -1629,18 +1629,4 @@ public class QueryCommandIntegrationTest {
             ".*");
     result.assertSuccess();
   }
-
-  @Test
-  public void ownersQueryWithFileNameExcaping() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "query_owners_with_filename_escaping", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "query",
-            "owner(%s)", "{% if generate_file == 'y' %}cheese.txt{% endif %}");
-    result.assertSuccess();
-  }
 }
