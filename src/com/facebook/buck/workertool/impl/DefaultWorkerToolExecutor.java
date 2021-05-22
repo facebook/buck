@@ -196,13 +196,16 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     }
 
     private void processPipelineFinishedEvent() {
-      LOG.debug(
-          "Received pipeline finished event. Actions: %s, worker id: %s",
-          getExecutingActionIds(), workerId);
+      runUnderLock(
+          () -> {
+            LOG.debug(
+                "Received pipeline finished event. Actions: %s, worker id: %s",
+                getExecutingActionIds(), workerId);
 
-      // signal to Step that pipeline is finished
-      checkNotNull(pipelineFinished);
-      pipelineFinished.set(Unit.UNIT);
+            // signal to Step that pipeline is finished
+            checkNotNull(pipelineFinished);
+            pipelineFinished.set(Unit.UNIT);
+          });
     }
   }
 
@@ -301,14 +304,14 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
       AbstractMessage startNextPipeliningCommand, String actionId, IsolatedEventBus eventBus)
       throws IOException {
     checkState(isAlive(), "Launched process is not alive");
-    checkNotNull(pipelineFinished, "Pipeline is not started.");
-    checkState(!pipelineFinished.isDone(), "Pipeline is finished.");
 
     CommandTypeMessage commandTypeMessage;
     try (Scope ignored =
         PerfEvents.scope(eventBus, START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
       runUnderLock(
           () -> {
+            checkNotNull(pipelineFinished, "Pipeline is not started.");
+            checkState(!pipelineFinished.isDone(), "Pipeline is finished.");
             boolean isExecuting = false;
             for (ExecutingAction executingAction : executingActions) {
               if (executingAction.getActionId().equals(actionId)) {
