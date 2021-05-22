@@ -14,7 +14,6 @@
 /.buckconfig.local
 /.buckd
 /.buckjavaargs.local
-/.buckjavaversion.local
 /.buckversion.local
 /.bucklogging.local.properties
 .fakebuckversion
