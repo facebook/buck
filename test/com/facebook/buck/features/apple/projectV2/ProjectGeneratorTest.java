@@ -2023,10 +2023,9 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals("-Wno-deprecated -Wno-conversion '-DDEBUG=1'", settings.get("OTHER_CFLAGS"));
     assertEquals(
-        "$(inherited) -Wno-deprecated -Wno-conversion '-DDEBUG=1'", settings.get("OTHER_CFLAGS"));
-    assertEquals(
-        "$(inherited) -Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1'",
+        "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1'",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
   }
 
@@ -2058,7 +2057,7 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
-        "$(inherited) -Wno-deprecated -Wno-conversion -Wno-nullability-completeness '-DDEBUG=1'",
+        "-Wno-deprecated -Wno-conversion -Wno-nullability-completeness '-DDEBUG=1'",
         settings.get("OTHER_CFLAGS[sdk=appletvos*][arch=armv7]"));
   }
 
@@ -2085,9 +2084,9 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
-        "$(inherited) -Wno-deprecated -Wno-conversion '-DDEBUG=1' -fhello -fworld",
+        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -fhello -fworld",
         settings.get("OTHER_CFLAGS"));
-    assertEquals("$(inherited) -fhello-swift", settings.get("OTHER_SWIFT_FLAGS"));
+    assertEquals("-fhello-swift", settings.get("OTHER_SWIFT_FLAGS"));
   }
 
   @Test
@@ -2118,8 +2117,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals(
-        "$(inherited) -Wno-deprecated -Wno-conversion '-DDEBUG=1'", settings.get("OTHER_CFLAGS"));
+    assertEquals("-Wno-deprecated -Wno-conversion '-DDEBUG=1'", settings.get("OTHER_CFLAGS"));
   }
 
   @Test
@@ -2141,8 +2139,7 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
-        "$(inherited) -Wno-deprecated -Wno-conversion '-DDEBUG=1' -DHELLO",
-        settings.get("OTHER_CFLAGS"));
+        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -DHELLO", settings.get("OTHER_CFLAGS"));
   }
 
   @Test
@@ -2173,8 +2170,7 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
-        "$(inherited) -Wno-deprecated -Wno-conversion '-DDEBUG=1' -DHELLO",
-        settings.get("OTHER_CFLAGS"));
+        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -DHELLO", settings.get("OTHER_CFLAGS"));
   }
 
   @Test
@@ -2198,8 +2194,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals(
-        "$(inherited) -fatal_warnings -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("-fatal_warnings -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -2258,8 +2253,7 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
         String.format(
-            "$(inherited) -fatal_warnings -ObjC -force_load %s %s",
-            generatedLibraryPath, exportedLibraryPath),
+            "-fatal_warnings -ObjC -force_load %s %s", generatedLibraryPath, exportedLibraryPath),
         settings.get("OTHER_LDFLAGS"));
   }
 
@@ -2289,7 +2283,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals("$(inherited) -fatal_warnings -ObjC", settings.get("OTHER_LDFLAGS"));
+    assertEquals("-fatal_warnings -ObjC", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -2313,8 +2307,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals(
-        "$(inherited) -fatal_warnings -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("-fatal_warnings -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -2347,8 +2340,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
-    assertEquals(
-        "$(inherited) -fatal_warnings -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
+    assertEquals("-fatal_warnings -ObjC -Xlinker -lhello", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -2374,13 +2366,11 @@ public class ProjectGeneratorTest {
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
 
     assertEquals(
-        "$(inherited) " + "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -ffoo -fbar",
-        settings.get("OTHER_CFLAGS"));
+        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -ffoo -fbar", settings.get("OTHER_CFLAGS"));
     assertEquals(
-        "$(inherited) "
-            + "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -ffoo -fbar",
+        "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -ffoo -fbar",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
-    assertEquals("$(inherited) -fatal_warnings -ObjC -lbaz", settings.get("OTHER_LDFLAGS"));
+    assertEquals("-fatal_warnings -ObjC -lbaz", settings.get("OTHER_LDFLAGS"));
   }
 
   @Test
@@ -2433,22 +2423,20 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings =
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
 
+    assertEquals("-Wno-deprecated -Wno-conversion '-DDEBUG=1'", settings.get("OTHER_CFLAGS"));
     assertEquals(
-        "$(inherited) -Wno-deprecated -Wno-conversion '-DDEBUG=1'", settings.get("OTHER_CFLAGS"));
-    assertEquals(
-        "$(inherited) " + "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1'",
+        "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1'",
         settings.get("OTHER_CPLUSPLUSFLAGS"));
-    assertEquals("$(inherited) -fatal_warnings -ObjC", settings.get("OTHER_LDFLAGS"));
+    assertEquals("-fatal_warnings -ObjC", settings.get("OTHER_LDFLAGS"));
 
     assertEquals(
-        "$(inherited) " + "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
+        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "$(inherited) "
-            + "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
+        "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "$(inherited) -fatal_warnings -ObjC -lbaz-iphone",
+        "-fatal_warnings -ObjC -lbaz-iphone",
         settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
   }
 
@@ -2473,8 +2461,7 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings =
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
     assertEquals(
-        "$(inherited) -Wno-deprecated -Wno-conversion '-DDEBUG=1' -DHELLO",
-        settings.get("OTHER_CFLAGS"));
+        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -DHELLO", settings.get("OTHER_CFLAGS"));
   }
 
   @Test
@@ -2506,7 +2493,7 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
-        "$(inherited) -Wno-deprecated -Wno-conversion '-DDEBUG=1' -DHELLO -D__APPLE__",
+        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -DHELLO -D__APPLE__",
         settings.get("OTHER_CFLAGS"));
   }
 
@@ -2557,11 +2544,10 @@ public class ProjectGeneratorTest {
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
 
     assertEquals(
-        "$(inherited) -Wno-deprecated -Wno-conversion '-DDEBUG=1' -fbar-iphone",
+        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -fbar-iphone",
         settings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "$(inherited) "
-            + "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -fbar-iphone",
+        "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertNull(settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
 
@@ -2573,11 +2559,10 @@ public class ProjectGeneratorTest {
             projectFilesystem, dependentBuildTarget, dependentTarget, "Debug");
 
     assertEquals(
-        "$(inherited) " + "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
+        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "$(inherited) "
-            + "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
+        "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertNull(dependentSettings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
   }

@@ -1562,7 +1562,10 @@ public class XcodeNativeTargetGenerator {
         isModularAppleLibrary,
         publicCxxHeaders.size() > 0,
         recursivePublicSystemIncludeDirectories,
-        appendConfigsBuilder,
+        // We want to use the extra settings here, otherwise the build configs end up with
+        // $(inherited) prefixes, which will cause duplicate build settings being passed when
+        // indexing.
+        extraSettingsBuilder,
         requiredBuildTargetsBuilder);
 
     ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();

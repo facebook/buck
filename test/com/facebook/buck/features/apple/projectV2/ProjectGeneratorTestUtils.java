@@ -166,7 +166,9 @@ public final class ProjectGeneratorTestUtils {
     HashMap<String, String> builder = new HashMap<>();
     for (String line : contents.split("\n")) {
       String[] parts = line.split(" = ");
-      builder.put(parts[0], parts[1]);
+      if (parts.length > 1) {
+        builder.put(parts[0], parts[1]);
+      }
     }
 
     return ImmutableMap.copyOf(builder);

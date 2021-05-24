@@ -46,15 +46,18 @@ public class Xcconfig {
       }
 
       String[] split = line.split(" = ");
-      if (split.length < 2) {
+      if (split.length < 1 || split.length > 2) {
         throw new ParseException("The input value is not a valid xcconfig format.", 0);
       }
 
       String key = split[0].trim();
-      ImmutableList<String> values =
-          Arrays.stream(split[1].split(" "))
-              .filter(value -> value.length() > 0)
-              .collect(ImmutableList.toImmutableList());
+      ImmutableList<String> values = ImmutableList.of();
+      if (split.length > 1) {
+        values =
+            Arrays.stream(split[1].split(" "))
+                .filter(value -> value.length() > 0)
+                .collect(ImmutableList.toImmutableList());
+      }
       contentsBuilder.put(key, values);
     }
 
