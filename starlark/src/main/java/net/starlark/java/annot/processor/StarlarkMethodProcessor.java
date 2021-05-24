@@ -136,6 +136,10 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
         methodLibraryType);
   }
 
+  private static class HasErrors {
+    boolean hasErrors = false;
+  }
+
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     StarlarkTypeNames typeNames = makeTypeNames();
@@ -143,6 +147,8 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     if (roundEnv.processingOver()) {
       return false;
     }
+
+    HasErrors hasErrors = new HasErrors();
 
     // Ensure StarlarkBuiltin-annotated classes implement StarlarkValue.
     for (Element cls : roundEnv.getElementsAnnotatedWith(StarlarkBuiltin.class)) {
@@ -152,6 +158,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
       }
       if (!types.isAssignable(cls.asType(), typeNames.starlarkValueType)) {
         errorf(
+            hasErrors,
             cls,
             "class %s has StarlarkBuiltin annotation but does not implement StarlarkValue",
             cls.getSimpleName());
@@ -165,10 +172,14 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     for (Map.Entry<Element, List<Element>> entry : methodsByEncosing.entrySet()) {
       TypeElement classElement = (TypeElement) entry.getKey();
       for (Element method : entry.getValue()) {
-        processElement(typeNames, classElement, method);
+        processElement(hasErrors, typeNames, classElement, method);
       }
 
-      methodDescriptorGen.genBuiltins(classElement, entry.getValue());
+      if (!hasErrors.hasErrors) {
+        // Only invoke generator if validated successfully,
+        // method descriptor generator relies on it.
+        methodDescriptorGen.genBuiltins(classElement, entry.getValue());
+      }
     }
 
     bcEvalDispatchGen.gen(roundEnv);
@@ -178,38 +189,45 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
   }
 
   private void processElement(
-      StarlarkTypeNames typeNames, Element classOrInterface, Element element) {
+      HasErrors hasErrors, StarlarkTypeNames typeNames, Element classOrInterface, Element element) {
     // Only methods are annotated with StarlarkMethod.
     // This is ensured by the @Target(ElementType.METHOD) annotation.
     ExecutableElement method = (ExecutableElement) element;
     if (!method.getModifiers().contains(Modifier.PUBLIC)) {
-      errorf(method, "StarlarkMethod-annotated methods must be public.");
+      errorf(hasErrors, method, "StarlarkMethod-annotated methods must be public.");
     }
 
     // Check the annotation itself.
     StarlarkMethod annot = method.getAnnotation(StarlarkMethod.class);
     if (annot.name().isEmpty()) {
-      errorf(method, "StarlarkMethod.name must be non-empty.");
+      errorf(hasErrors, method, "StarlarkMethod.name must be non-empty.");
     }
     Element cls = method.getEnclosingElement();
     if (!processedClassMethods.put(cls, annot.name())) {
-      errorf(method, "Containing class defines more than one method named '%s'.", annot.name());
+      errorf(
+          hasErrors,
+          method,
+          "Containing class defines more than one method named '%s'.",
+          annot.name());
     }
     if (annot.documented() && annot.doc().isEmpty()) {
-      errorf(method, "The 'doc' string must be non-empty if 'documented' is true.");
+      errorf(hasErrors, method, "The 'doc' string must be non-empty if 'documented' is true.");
     }
     if (annot.structField()) {
-      checkStructFieldAnnotation(method, annot);
+      checkStructFieldAnnotation(hasErrors, method, annot);
     }
     if (annot.selfCall() && !classesWithSelfcall.add(cls)) {
-      errorf(method, "Containing class has more than one selfCall method defined.");
+      errorf(hasErrors, method, "Containing class has more than one selfCall method defined.");
     }
 
     if (annot.allowReturnNones() != (method.getAnnotation(Nullable.class) != null)) {
-      errorf(method, "Method must be annotated with @Nullable iff allowReturnNones is set.");
+      errorf(
+          hasErrors,
+          method,
+          "Method must be annotated with @Nullable iff allowReturnNones is set.");
     }
 
-    checkParameters(method, annot);
+    checkParameters(hasErrors, method, annot);
 
     // Verify that result type, if final, might satisfy Starlark.fromJava.
     // (If the type is non-final we can't prove that all subclasses are invalid.)
@@ -224,6 +242,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
           && !types.isAssignable(obj, typeNames.listType)
           && !types.isAssignable(obj, typeNames.mapType)) {
         errorf(
+            hasErrors,
             method,
             "StarlarkMethod-annotated method %s returns %s, which has no legal Starlark values"
                 + " (see Starlark.fromJava)",
@@ -234,7 +253,8 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
   }
 
   // TODO(adonovan): obviate these checks by separating field/method interfaces.
-  private void checkStructFieldAnnotation(ExecutableElement method, StarlarkMethod annot) {
+  private void checkStructFieldAnnotation(
+      HasErrors hasErrors, ExecutableElement method, StarlarkMethod annot) {
     // useStructField is incompatible with special thread-related parameters,
     // because unlike a method, which is actively called within a thread,
     // a field is a passive part of a data structure that may be accessed
@@ -248,24 +268,28 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     // in favor of a tracing approach as in go.starlark.net.
     if (annot.useStarlarkThread()) {
       errorf(
+          hasErrors,
           method,
           "a StarlarkMethod-annotated method with structField=true may not also specify"
               + " useStarlarkThread");
     }
     if (!annot.extraPositionals().name().isEmpty()) {
       errorf(
+          hasErrors,
           method,
           "a StarlarkMethod-annotated method with structField=true may not also specify"
               + " extraPositionals");
     }
     if (!annot.extraKeywords().name().isEmpty()) {
       errorf(
+          hasErrors,
           method,
           "a StarlarkMethod-annotated method with structField=true may not also specify"
               + " extraKeywords");
     }
     if (annot.selfCall()) {
       errorf(
+          hasErrors,
           method,
           "a StarlarkMethod-annotated method with structField=true may not also specify"
               + " selfCall=true");
@@ -273,6 +297,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     int nparams = annot.parameters().length;
     if (nparams > 0) {
       errorf(
+          hasErrors,
           method,
           "method %s is annotated structField=true but also has %d Param annotations",
           method.getSimpleName(),
@@ -280,7 +305,8 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     }
   }
 
-  private void checkParameters(ExecutableElement method, StarlarkMethod annot) {
+  private void checkParameters(
+      HasErrors hasErrors, ExecutableElement method, StarlarkMethod annot) {
     List<? extends VariableElement> params = method.getParameters();
 
     boolean allowPositionalNext = true;
@@ -294,6 +320,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
       Param paramAnnot = paramAnnots[i];
       if (i >= params.size()) {
         errorf(
+            hasErrors,
             method,
             "method %s has %d Param annotations but only %d parameters",
             method.getSimpleName(),
@@ -303,18 +330,20 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
       }
       VariableElement param = params.get(i);
 
-      checkParameter(param, paramAnnot);
+      checkParameter(hasErrors, param, paramAnnot);
 
       // Check parameter ordering.
       if (paramAnnot.positional()) {
         if (!allowPositionalNext) {
           errorf(
+              hasErrors,
               param,
               "Positional parameter '%s' is specified after one or more non-positional parameters",
               paramAnnot.name());
         }
         if (!paramAnnot.named() && !allowPositionalOnlyNext) {
           errorf(
+              hasErrors,
               param,
               "Positional-only parameter '%s' is specified after one or more named or undocumented"
                   + " parameters",
@@ -323,6 +352,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
         if (paramAnnot.defaultValue().isEmpty()) { // There is no default value.
           if (!allowNonDefaultPositionalNext) {
             errorf(
+                hasErrors,
                 param,
                 "Positional parameter '%s' has no default value but is specified after one "
                     + "or more positional parameters with default values",
@@ -337,7 +367,11 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
         allowPositionalNext = false;
 
         if (!paramAnnot.named()) {
-          errorf(param, "Parameter '%s' must be either positional or named", paramAnnot.name());
+          errorf(
+              hasErrors,
+              param,
+              "Parameter '%s' must be either positional or named",
+              paramAnnot.name());
         }
       }
       if (!paramAnnot.documented()) {
@@ -351,21 +385,23 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
 
     if (hasUndocumentedMethods && !annot.extraKeywords().name().isEmpty()) {
       errorf(
+          hasErrors,
           method,
           "Method '%s' has undocumented parameters but also allows extra keyword parameters",
           annot.name());
     }
-    checkSpecialParams(method, annot);
+    checkSpecialParams(hasErrors, method, annot);
   }
 
   // Checks consistency of a single parameter with its Param annotation.
-  private void checkParameter(Element param, Param paramAnnot) {
+  private void checkParameter(HasErrors hasErrors, Element param, Param paramAnnot) {
     TypeMirror paramType = param.asType(); // type of the Java method parameter
 
     // Give helpful hint for parameter of type Integer.
     TypeMirror integerType = getType("java.lang.Integer");
     if (types.isSameType(paramType, integerType)) {
       errorf(
+          hasErrors,
           param,
           "use StarlarkInt, not Integer for parameter '%s' (and see Starlark.toInt)",
           paramAnnot.name());
@@ -376,6 +412,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
       TypeMirror t = getParamTypeType(paramTypeAnnot);
       if (!types.isAssignable(t, types.erasure(paramType))) {
         errorf(
+            hasErrors,
             param,
             "annotated allowedTypes entry %s of parameter '%s' is not assignable to variable of "
                 + "type %s",
@@ -392,6 +429,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
       for (TypeMirror typeArg : declaredType.getTypeArguments()) {
         if (!(typeArg instanceof WildcardType)) {
           errorf(
+              hasErrors,
               param,
               "parameter '%s' has generic type %s, but only wildcard type parameters are"
                   + " allowed. Type inference in a Starlark-exposed method is unsafe. See"
@@ -405,7 +443,10 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     // Ensure positional arguments are documented.
     if (!paramAnnot.documented() && paramAnnot.positional()) {
       errorf(
-          param, "Parameter '%s' must be documented because it is positional.", paramAnnot.name());
+          hasErrors,
+          param,
+          "Parameter '%s' must be documented because it is positional.",
+          paramAnnot.name());
     }
   }
 
@@ -425,7 +466,8 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     }
   }
 
-  private void checkSpecialParams(ExecutableElement method, StarlarkMethod annot) {
+  private void checkSpecialParams(
+      HasErrors hasErrors, ExecutableElement method, StarlarkMethod annot) {
     List<? extends VariableElement> params = method.getParameters();
     int index = annot.parameters().length;
 
@@ -433,6 +475,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     int special = numExpectedSpecialParams(annot);
     if (index + special > params.size()) {
       errorf(
+          hasErrors,
           method,
           "method %s is annotated with %d Params plus %d special parameters, but has only %d"
               + " parameter variables",
@@ -450,6 +493,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
           types.getDeclaredType(elements.getTypeElement("net.starlark.java.eval.Tuple"));
       if (!types.isAssignable(tupleType, param.asType())) {
         errorf(
+            hasErrors,
             param,
             "extraPositionals special parameter '%s' has type %s, to which a Tuple cannot be"
                 + " assigned",
@@ -468,6 +512,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
               getType("java.lang.Object"));
       if (!types.isAssignable(dictOfStringObjectType, param.asType())) {
         errorf(
+            hasErrors,
             param,
             "extraKeywords special parameter '%s' has type %s, to which Dict<String, Object>"
                 + " cannot be assigned",
@@ -481,6 +526,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
       TypeMirror threadType = getType("net.starlark.java.eval.StarlarkThread");
       if (!types.isSameType(threadType, param.asType())) {
         errorf(
+            hasErrors,
             param,
             "for useStarlarkThread special parameter '%s', got type %s, want StarlarkThread",
             param.getSimpleName(),
@@ -491,6 +537,7 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
     // surplus parameters?
     if (index < params.size()) {
       errorf(
+          hasErrors,
           params.get(index), // first surplus parameter
           "method %s is annotated with %d Params plus %d special parameters, yet has %d parameter"
               + " variables",
@@ -511,7 +558,8 @@ public class StarlarkMethodProcessor extends AbstractProcessor {
 
   // Reports a (formatted) error and fails the compilation.
   @FormatMethod
-  private void errorf(Element e, String format, Object... args) {
+  private void errorf(HasErrors hasErrors, Element e, String format, Object... args) {
+    hasErrors.hasErrors = true;
     messager.printMessage(Diagnostic.Kind.ERROR, String.format(format, args), e);
   }
 }

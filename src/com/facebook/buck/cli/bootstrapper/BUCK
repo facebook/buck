@@ -14,7 +14,7 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = [
         "//src/com/facebook/buck/externalactions/android:android_external_actions",
-        "//starlark:tests",
+        "//starlark/...",
         "//test/...",
         "//third-party/java/aosp:aosp",
         "//tools/...",

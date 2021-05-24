@@ -78,18 +78,42 @@ java_library(
 )
 
 java_test(
+    name = "annot-processor-tests",
+    srcs = glob(
+        [
+            "src/test/java/net/starlark/java/annot/processor/**/*.java",
+        ],
+        exclude = [
+            "src/test/java/net/starlark/java/annot/processor/testsources/**/*.java",
+        ],
+    ),
+    env = {
+        "STARLARK_ASSERTIONS": "1",
+    },
+    resources = glob([
+        "src/test/java/net/starlark/java/annot/processor/testsources/**/*.java",
+    ]),
+    resources_root = "src/test/java",
+    deps = [
+        ":bazel",
+        "//third-party/java/compile-testing:compile-testing",
+        "//third-party/java/errorprone:error-prone-annotations",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+        "//third-party/java/protobuf:protobuf",
+        "//third-party/java/truth:truth",
+    ],
+)
+
+java_test(
     name = "tests",
     srcs = glob(
         [
             "src/test/java/**/*.java",
         ],
         exclude = [
-            "src/test/java/net/starlark/java/annot/processor/testsources/**/*.java",
-            # This test does not work on Windows for unknown reason,
-            # but we don't really care because
-            # * we don't have local patches to Starlark
-            # * we don't use annotation processor
-            "src/test/java/net/starlark/java/annot/processor/StarlarkMethodProcessorTest.java",
+            "src/test/java/net/starlark/java/annot/processor/**/*.java",
         ],
     ),
     env = {
@@ -98,10 +122,6 @@ java_test(
     plugins = [
         ":starlark-annot-processor",
     ],
-    resources = glob([
-        "src/test/java/net/starlark/java/annot/processor/testsources/**/*.java",
-    ]),
-    resources_root = "src/test/java",
     deps = [
         ":bazel",
         "//third-party/java/compile-testing:compile-testing",
