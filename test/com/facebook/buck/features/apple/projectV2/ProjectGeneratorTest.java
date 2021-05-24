@@ -643,6 +643,7 @@ public class ProjectGeneratorTest {
                 + projectFilesystem.resolve(exportedHeadersPath)
                 + " -Xcc -ivfsoverlay"
                 + projectFilesystem.resolve(vfsOverlayPath)));
+    assertThat(settings.get("OTHER_CFLAGS"), containsString("-fmodule-name=lib"));
   }
 
   @Test

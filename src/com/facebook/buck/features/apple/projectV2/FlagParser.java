@@ -19,7 +19,9 @@ package com.facebook.buck.features.apple.projectV2;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
+import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleLibraryDescription;
+import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.core.cell.Cell;
@@ -171,19 +173,32 @@ class FlagParser {
                         requiredBuildTargetsBuilder))
             .orElse(ImmutableList.of()));
 
-    if (containsSwiftCode && isModularAppleLibrary && hasPublicCxxHeaders) {
-      targetSpecificSwiftFlags.addAll(collectMixedSwiftModuleFlags(targetNode));
-    }
-
     // Explicitly add system include directories to compile flags to mute warnings,
     // XCode seems to not support system include directories directly.
     // But even if headers dirs are passed as flags, we still need to add
     // them to `HEADER_SEARCH_PATH` otherwise header generation for Swift interop
     // won't work (it doesn't use `OTHER_XXX_FLAGS`).
-    Iterable<String> systemIncludeDirectoryFlags =
+    ImmutableList.Builder<String> cFlagsBuilder = ImmutableList.builder();
+    cFlagsBuilder.addAll(
         StreamSupport.stream(recursivePublicSystemIncludeDirectories.spliterator(), false)
             .map(path -> "-isystem" + path)
-            .collect(Collectors.toList());
+            .collect(Collectors.toList()));
+
+    if (containsSwiftCode && isModularAppleLibrary && hasPublicCxxHeaders) {
+      // The C code needs to specify the module it belongs to to avoid duplicate definition errors.
+      String moduleName =
+          targetNode
+              .getConstructorArg()
+              .getModuleName()
+              .orElse(
+                  AppleDescriptions.getHeaderPathPrefix(
+                          (AppleNativeTargetDescriptionArg) targetNode.getConstructorArg(),
+                          targetNode.getBuildTarget())
+                      .toString());
+      cFlagsBuilder.add("-fmodule-name=" + moduleName);
+      targetSpecificSwiftFlags.addAll(collectMixedSwiftModuleFlags(targetNode));
+    }
+    ImmutableList<String> cFlags = cFlagsBuilder.build();
 
     Iterable<String> otherSwiftFlags =
         Utils.distinctUntilChanged(
@@ -214,7 +229,7 @@ class FlagParser {
                         targetNode,
                         collectRecursiveSystemPreprocessorFlags(targetNode),
                         requiredBuildTargetsBuilder))
-                .addAll(systemIncludeDirectoryFlags)
+                .addAll(cFlags)
                 .build());
 
     Iterable<String> targetCxxFlags =
@@ -240,7 +255,7 @@ class FlagParser {
                         targetNode,
                         collectRecursiveSystemPreprocessorFlags(targetNode),
                         requiredBuildTargetsBuilder))
-                .addAll(systemIncludeDirectoryFlags)
+                .addAll(cFlags)
                 .build());
 
     flagsBuilder
