@@ -33,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.syntax.Location;
@@ -222,29 +221,24 @@ public final class StarlarkFunction extends StarlarkCallable {
   }
 
   private StarlarkCallableLinked linkCallImpl(StarlarkCallableLinkSig sig) {
-    // nparams is the number of ordinary parameters.
-    int nparams = numNonStarParams;
-
     // numPositionalParams is the number of non-kwonly parameters.
-    int numPositionalParams = nparams - numKeywordOnlyParams;
+    int numPositionalParams = numNonStarParams - numKeywordOnlyParams;
 
-    if (sig.namedNames.length == 0 && !sig.hasStar && !sig.hasStarStar) {
+    if (sig.isPosOnly()) {
       if (!hasVarargs()
           && !hasKwargs()
           && numKeywordOnlyParams == 0
-          && nparams == sig.numPositionals) {
+          && numNonStarParams == sig.numPositionals) {
         // positional-only invocation
         return new StarlarkFunctionLinkedPos(sig, this);
       }
     }
 
-    int[] paramFromArg = new int[nparams];
+    int[] paramFromArg = new int[numNonStarParams];
     Arrays.fill(paramFromArg, Integer.MIN_VALUE);
     IntArrayBuilder argToStar = new IntArrayBuilder();
     IntArrayBuilder argToStarStar = new IntArrayBuilder();
     ArrayList<String> argToStarStarName = new ArrayList<>();
-
-    List<String> unexpected = null;
 
     for (int argIndex = 0; argIndex < sig.numPositionals; ++argIndex) {
       if (argIndex < numPositionalParams) {
@@ -256,11 +250,11 @@ public final class StarlarkFunction extends StarlarkCallable {
       }
     }
 
-    for (int i = 0, namedLength = sig.namedNames.length; i < namedLength; i++) {
+    for (int i = 0; i < sig.namedNames.length; i++) {
       int argIndex = sig.numPositionals + i;
       String argName = sig.namedNames[i];
       int paramIndex = parameterNames.indexOf(argName);
-      if (paramIndex >= 0 && paramIndex < nparams) {
+      if (paramIndex >= 0 && paramIndex < numNonStarParams) {
         // duplicate named param
         if (paramFromArg[paramIndex] == Integer.MIN_VALUE) {
           paramFromArg[paramIndex] = argIndex;
@@ -271,17 +265,8 @@ public final class StarlarkFunction extends StarlarkCallable {
         argToStarStar.add(argIndex);
         argToStarStarName.add(argName);
       } else {
-        if (unexpected == null) {
-          unexpected = new ArrayList<>();
-        }
-        unexpected.add(argName);
+        return new StarlarkFunctionLinkedError(this, sig);
       }
-    }
-
-    if (unexpected != null) {
-      // Give a spelling hint if there is exactly one.
-      // More than that suggests the wrong function was called.
-      return new StarlarkFunctionLinkedError(this, sig);
     }
 
     return new StarlarkFunctionLinked(
