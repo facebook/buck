@@ -29,6 +29,7 @@
 // limitations under the License.
 package net.starlark.java.eval;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,8 +62,8 @@ public final class StarlarkFunction extends StarlarkCallable {
   // Default values of optional parameters.
   // Indices correspond to the subsequence of parameters after the initial
   // required parameters and before *args/**kwargs.
-  // Contain MANDATORY for the required keyword-only parameters.
-  final Tuple defaultValues;
+  // Contains nulls for the required keyword-only parameters.
+  private final Object[] defaultValues;
 
   // Cells (shared locals) of enclosing functions.
   // Indexed by Resolver.Binding(FREE).index values.
@@ -92,38 +93,51 @@ public final class StarlarkFunction extends StarlarkCallable {
     this.location = rfn.getLocation();
 
     this.module = module;
-    this.defaultValues = defaultValues;
+    this.defaultValues = defaultValuesArray(defaultValues);
+    Preconditions.checkArgument(
+        this.defaultValues.length <= numNonStarParams,
+        "defaultValues array length is inconsistent with function signature");
     this.freevars = freevars;
 
     this.compiled = BcCompiler.compileFunction(thread, rfn, module, freevars);
+  }
+
+  /** Replace {@link #MANDATORY} with {@code null}. */
+  private static Object[] defaultValuesArray(Tuple defaultValues) {
+    Object[] defaultValuesArray = defaultValues.toArray();
+    for (int i = 0; i < defaultValuesArray.length; i++) {
+      if (defaultValuesArray[i] == MANDATORY) {
+        defaultValuesArray[i] = null;
+      }
+    }
+    return defaultValuesArray;
   }
 
   boolean isToplevel() {
     return isTopLevel;
   }
 
-  // TODO(adonovan): many functions would be simpler if
-  // parameterNames excluded the *args and **kwargs parameters,
-  // (whose names are immaterial to the callee anyway). Do that.
-  // Also, reject getDefaultValue for varargs and kwargs.
-
   /**
-   * Returns the default value of the ith parameter ({@code 0 <= i < getParameterNames().size()}),
-   * or null if the parameter is required. Residual parameters, if any, are always last, and have no
-   * default value.
+   * Returns the default value of the ith parameter ({@code 0 <= i < numNonStarParams}), or null if
+   * the parameter is required. Residual parameters, if any, are always last, and have no default
+   * value.
    */
   @Nullable
   public Object getDefaultValue(int i) {
-    int nparams = numNonStarParams;
-    int prefix = nparams - defaultValues.size();
-    if (i < prefix) {
-      return null; // implicit prefix of mandatory parameters
+    if (StarlarkAssertions.ENABLED) {
+      Preconditions.checkArgument(
+          i >= 0 && i < numNonStarParams,
+          "parameter %s is out of bound for function %s",
+          i,
+          getName());
     }
-    if (i < nparams) {
-      Object v = defaultValues.get(i - prefix);
-      return v == MANDATORY ? null : v;
+
+    int arrayIndex = defaultValues.length - numNonStarParams + i;
+    if (arrayIndex >= 0) {
+      return defaultValues[arrayIndex];
+    } else {
+      return null;
     }
-    return null; // *args or *kwargs
   }
 
   /**

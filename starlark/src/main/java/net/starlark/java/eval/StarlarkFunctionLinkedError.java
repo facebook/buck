@@ -145,7 +145,6 @@ class StarlarkFunctionLinkedError extends StarlarkFunctionLinkedBase {
     }
 
     // Apply defaults and report errors for missing required arguments.
-    int m = nparams - fn().defaultValues.size(); // first default
     MissingParams missing = null;
     for (int i = n; i < nparams; i++) {
       // provided?
@@ -154,12 +153,10 @@ class StarlarkFunctionLinkedError extends StarlarkFunctionLinkedBase {
       }
 
       // optional?
-      if (i >= m) {
-        Object dflt = fn().defaultValues.get(i - m);
-        if (dflt != StarlarkFunction.MANDATORY) {
-          arguments[i] = dflt;
-          continue;
-        }
+      Object dflt = fn().getDefaultValue(i);
+      if (dflt != null) {
+        arguments[i] = dflt;
+        continue;
       }
 
       if (missing == null) {

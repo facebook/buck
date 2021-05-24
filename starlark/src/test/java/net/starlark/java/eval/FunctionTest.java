@@ -55,7 +55,7 @@ public final class FunctionTest {
     assertThat(f.hasVarargs()).isTrue();
     assertThat(f.hasKwargs()).isTrue();
     assertThat(getDefaults(f))
-        .containsExactly(null, StarlarkInt.of(1), null, StarlarkInt.of(2), null, null)
+        .containsExactly(null, StarlarkInt.of(1), null, StarlarkInt.of(2))
         .inOrder();
 
     // same, sans varargs
@@ -65,13 +65,16 @@ public final class FunctionTest {
     assertThat(g.hasVarargs()).isFalse();
     assertThat(g.hasKwargs()).isTrue();
     assertThat(getDefaults(g))
-        .containsExactly(null, StarlarkInt.of(1), null, StarlarkInt.of(2), null)
+        .containsExactly(null, StarlarkInt.of(1), null, StarlarkInt.of(2))
         .inOrder();
   }
 
   private static List<Object> getDefaults(StarlarkFunction fn) {
     List<Object> defaults = new ArrayList<>();
     for (int i = 0; i < fn.getParameterNames().size(); i++) {
+      if (i == fn.numNonStarParams) {
+        break;
+      }
       defaults.add(fn.getDefaultValue(i));
     }
     return defaults;

@@ -120,7 +120,6 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
     // This variable is used only if a function has `**kwargs` param.
     BoundKeys boundKeys = null;
 
-    int numParamsWithoutDefault = fn.numNonStarParams - fn.defaultValues.size();
     int numPositionalParams = fn.numNonStarParams - fn.numKeywordOnlyParams;
 
     for (int paramIndex = 0; paramIndex < paramFromArg.length; ++paramIndex) {
@@ -151,12 +150,10 @@ class StarlarkFunctionLinked extends StarlarkFunctionLinkedBase {
         }
       }
 
-      if (paramIndex >= numParamsWithoutDefault) {
-        Object defaultValue = fn.defaultValues.get(paramIndex - numParamsWithoutDefault);
-        if (defaultValue != StarlarkFunction.MANDATORY) {
-          locals[paramIndex] = defaultValue;
-          continue;
-        }
+      Object defaultValue = fn.getDefaultValue(paramIndex);
+      if (defaultValue != null) {
+        locals[paramIndex] = defaultValue;
+        continue;
       }
 
       throw StarlarkFunctionLinkedError.error(fn, linkSig, args, starArgs, starStarArgs);
