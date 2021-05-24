@@ -890,87 +890,94 @@ class BuckTool(object):
             buckd_transport_file_path = (
                 self._buck_project.get_buckd_transport_file_path()
             )
-            if os.name == "nt":
-                # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx#DETACHED_PROCESS
-                DETACHED_PROCESS = 0x00000008
-                creationflags = DETACHED_PROCESS
-                # do not redirect output for Windows as it deadlocks
-                stdin = None
-                stdout = None
-                stderr = None
-                close_fds = True
-            else:
-                """
-                Change the process group of the child buckd process so that when this
-                script is interrupted, it does not kill buckd.
-                """
-                creationflags = 0
-                stdin = open(os.devnull, mode="r")
-                stdout = open(
-                    self._buck_project.get_buckd_stdout(), mode="w+b", buffering=0
+            stdin = stdout = stderr = None
+            try:
+                if os.name == "nt":
+                    # https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863.aspx#DETACHED_PROCESS
+                    DETACHED_PROCESS = 0x00000008
+                    creationflags = DETACHED_PROCESS
+                    # do not redirect output for Windows as it deadlocks
+                    close_fds = True
+                else:
+                    """
+                    Change the process group of the child buckd process so that when this
+                    script is interrupted, it does not kill buckd.
+                    """
+                    creationflags = 0
+                    stdin = open(os.devnull, mode="r")
+                    stdout = open(
+                        self._buck_project.get_buckd_stdout(), mode="w+b", buffering=0
+                    )
+                    stderr = open(
+                        self._buck_project.get_buckd_stderr(), mode="w+b", buffering=0
+                    )
+                    close_fds = False
+
+                logging.debug(
+                    "Spawning a process:\n  exe=%s\n  command=%s\n  env=%s\n  cwd=%s",
+                    java_path,
+                    command,
+                    self._environ_for_buck(),
+                    self._buck_project.root,
                 )
-                stderr = open(
-                    self._buck_project.get_buckd_stderr(), mode="w+b", buffering=0
+                process = subprocess.Popen(
+                    command,
+                    executable=java_path,
+                    cwd=self._buck_project.root,
+                    env=self._environ_for_buck(),
+                    creationflags=creationflags,
+                    close_fds=close_fds,
+                    stdin=stdin,
+                    stdout=stdout,
+                    stderr=stderr,
                 )
-                close_fds = False
 
-            logging.debug(
-                "Spawning a process:\n  exe=%s\n  command=%s\n  env=%s\n  cwd=%s",
-                java_path,
-                command,
-                self._environ_for_buck(),
-                self._buck_project.root,
-            )
-            process = subprocess.Popen(
-                command,
-                executable=java_path,
-                cwd=self._buck_project.root,
-                env=self._environ_for_buck(),
-                creationflags=creationflags,
-                close_fds=close_fds,
-                stdin=stdin,
-                stdout=stdout,
-                stderr=stderr,
-            )
+                self._buck_project.save_buckd_version(buck_version_uid)
+                self._buck_project.save_buckd_jvm_args(
+                    self._get_java_args(buck_version_uid)
+                )
 
-            self._buck_project.save_buckd_version(buck_version_uid)
-            self._buck_project.save_buckd_jvm_args(
-                self._get_java_args(buck_version_uid)
-            )
+                # Give Java some time to create the listening socket.
 
-            # Give Java some time to create the listening socket.
+                wait_seconds = 0.01
+                repetitions = int(BUCKD_STARTUP_TIMEOUT_MILLIS / 1000.0 / wait_seconds)
+                for _idx in range(repetitions):
+                    if transport_exists(buckd_transport_file_path):
+                        break
+                    time.sleep(wait_seconds)
 
-            wait_seconds = 0.01
-            repetitions = int(BUCKD_STARTUP_TIMEOUT_MILLIS / 1000.0 / wait_seconds)
-            for _idx in range(repetitions):
-                if transport_exists(buckd_transport_file_path):
-                    break
-                time.sleep(wait_seconds)
+                if not transport_exists(buckd_transport_file_path):
+                    message = (
+                        "Transport file {} did not exist while starting buck.\n"
+                        "Buck command was {}"
+                    ).format(buckd_transport_file_path, "  \n".join(command))
+                    logging.debug(message)
+                    return False
 
-            if not transport_exists(buckd_transport_file_path):
-                message = (
-                    "Transport file {} did not exist while starting buck.\n"
-                    "Buck command was {}"
-                ).format(buckd_transport_file_path, "  \n".join(command))
-                logging.debug(message)
-                return False
+                returncode = process.poll()
 
-            returncode = process.poll()
+                # If the process has exited then daemon failed to start
+                if returncode is not None:
+                    message = (
+                        "Buckd stopped early with code {}\nBuck command was {}"
+                    ).format(returncode, "  \n".join(command))
+                    logging.debug(message)
+                    return False
 
-            # If the process has exited then daemon failed to start
-            if returncode is not None:
-                message = (
-                    "Buckd stopped early with code {}\nBuck command was {}"
-                ).format(returncode, "  \n".join(command))
-                logging.debug(message)
-                return False
+                # Save pid of running daemon
+                self._buck_project.save_buckd_pid(process.pid)
 
-            # Save pid of running daemon
-            self._buck_project.save_buckd_pid(process.pid)
+                logging.info("Buck daemon started.")
 
-            logging.info("Buck daemon started.")
-
-            return True
+                return True
+            finally:
+                # We have to close these or warnings get emmitted
+                if stdin:
+                    stdin.close()
+                if stdout:
+                    stdout.close()
+                if stderr:
+                    stderr.close()
 
     def _get_repository(self):
         arcconfig = os.path.join(self._buck_project.root, ".arcconfig")
