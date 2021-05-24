@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.downward.model.ResultEvent;
-import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
@@ -92,22 +91,18 @@ public class JavaCDWorkerStepUtils {
   /** Returns {@link WorkerProcessPool.BorrowedWorkerProcess} from the passed pool. */
   public static WorkerProcessPool.BorrowedWorkerProcess<WorkerToolExecutor>
       borrowWorkerToolWithTimeout(
-          WorkerProcessPool<WorkerToolExecutor> workerToolPool,
-          int borrowFromPoolTimeoutInSeconds,
-          IsolatedEventBus eventBus)
+          WorkerProcessPool<WorkerToolExecutor> workerToolPool, int borrowFromPoolTimeoutInSeconds)
           throws InterruptedException {
-    try (Scope ignored = PerfEvents.scope(eventBus, "borrow_worker_tool ")) {
-      return workerToolPool
-          .borrowWorkerProcess(borrowFromPoolTimeoutInSeconds, TimeUnit.SECONDS)
-          .orElseThrow(
-              () ->
-                  new IllegalStateException(
-                      "Cannot get a worker tool from a pool of the size: "
-                          + workerToolPool.getCapacity()
-                          + ". Time out of "
-                          + borrowFromPoolTimeoutInSeconds
-                          + " seconds passed."));
-    }
+    return workerToolPool
+        .borrowWorkerProcess(borrowFromPoolTimeoutInSeconds, TimeUnit.SECONDS)
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "Cannot get a worker tool from a pool of the size: "
+                        + workerToolPool.getCapacity()
+                        + ". Time out of "
+                        + borrowFromPoolTimeoutInSeconds
+                        + " seconds passed."));
   }
 
   /** Returns {@link WorkerProcessPool} created for the passed {@code command} */

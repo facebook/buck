@@ -243,7 +243,7 @@ public class ChromeTraceBuildListenerTest {
             new FileOutputStreamFactory());
     eventBus.register(listener);
 
-    PerfEvents.scope(eventBus.isolated(), "testing_scope", false).close();
+    PerfEvents.scope(eventBus.isolated(), "testing_scope", false, false).close();
 
     listener.close();
     managerScope.close();

@@ -28,20 +28,25 @@ public class PerfEvents {
 
   /** Creates a simple scoped leaf event that will be logged to superconsole, chrome traces, etc. */
   public static Scope scope(BuckEventBus eventBus, String category) {
-    return scope(eventBus.isolated(), category);
+    return scope(eventBus.isolated(), category, true, true);
   }
 
-  /** Creates a simple scoped leaf event that will be logged to superconsole, chrome traces, etc. */
+  /** Creates a simple scoped leaf event that will be aggregated in scuba. */
   public static Scope scope(IsolatedEventBus eventBus, String category) {
-    return scope(eventBus, category, true);
+    return scope(eventBus, category, false, false);
   }
 
   /**
    * @param category the name of the category.
    * @param logToChromeTrace if it should be logged to the ChromeTrace or not.
    */
-  public static Scope scope(IsolatedEventBus eventBus, String category, boolean logToChromeTrace) {
-    Started started = new Started(EventKey.unique(), category, logToChromeTrace);
+  public static Scope scope(
+      IsolatedEventBus eventBus,
+      String category,
+      boolean logToChromeTrace,
+      boolean showOnSuperConsole) {
+    Started started =
+        new Started(EventKey.unique(), category, logToChromeTrace, showOnSuperConsole);
     eventBus.post(started);
     return () -> eventBus.post(new Finished(started));
   }
@@ -50,13 +55,19 @@ public class PerfEvents {
   public abstract static class AggregationSupportedEvent extends SimplePerfEvent {
     private final String category;
     private final boolean logToChromeTrace;
+    private final boolean showOnSuperConsole;
     private final Type eventType;
 
     private AggregationSupportedEvent(
-        EventKey eventKey, String category, boolean logToChromeTrace, Type eventType) {
+        EventKey eventKey,
+        String category,
+        boolean logToChromeTrace,
+        boolean showOnSuperConsole,
+        Type eventType) {
       super(eventKey);
       this.category = category;
       this.logToChromeTrace = logToChromeTrace;
+      this.showOnSuperConsole = showOnSuperConsole;
       this.eventType = eventType;
     }
 
@@ -73,6 +84,10 @@ public class PerfEvents {
     @Override
     public final boolean isLogToChromeTrace() {
       return logToChromeTrace;
+    }
+
+    public boolean isShowOnSuperConsole() {
+      return showOnSuperConsole;
     }
 
     @Override
@@ -102,8 +117,12 @@ public class PerfEvents {
 
     /** Started event for {@link AggregationSupportedEvent}. */
     public static class Started extends AggregationSupportedEvent {
-      private Started(EventKey eventKey, String category, boolean logToChromeTrace) {
-        super(eventKey, category, logToChromeTrace, Type.STARTED);
+      private Started(
+          EventKey eventKey,
+          String category,
+          boolean logToChromeTrace,
+          boolean showOnSuperConsole) {
+        super(eventKey, category, logToChromeTrace, showOnSuperConsole, Type.STARTED);
       }
     }
 
@@ -114,6 +133,7 @@ public class PerfEvents {
             started.getEventKey(),
             started.getCategory(),
             started.isLogToChromeTrace(),
+            started.isShowOnSuperConsole(),
             Type.FINISHED);
       }
     }

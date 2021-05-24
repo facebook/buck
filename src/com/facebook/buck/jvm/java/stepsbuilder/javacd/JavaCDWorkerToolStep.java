@@ -19,11 +19,14 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ResultEvent;
+import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.jvm.java.JavaCDWorkerStepUtils;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
+import com.facebook.buck.util.Scope;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.workertool.WorkerToolExecutor;
@@ -37,6 +40,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   private static final Logger LOG = Logger.get(JavaCDWorkerToolStep.class);
 
   private static final String STEP_NAME = "javacd";
+  private static final String SCOPE_PREFIX = STEP_NAME + "_command";
 
   private final JavaCDParams javaCDParams;
   private final BuildJavaCommand buildJavaCommand;
@@ -50,6 +54,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
+    IsolatedEventBus eventBus = context.getIsolatedEventBus();
 
     ImmutableList<String> launchJavaCDCommand =
         JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams);
@@ -57,13 +62,21 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     WorkerProcessPool<WorkerToolExecutor> workerToolPool =
         JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
 
-    try (BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool =
-        JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
-            workerToolPool,
-            javaCDParams.getBorrowFromPoolTimeoutInSeconds(),
-            context.getIsolatedEventBus())) {
-      WorkerToolExecutor workerToolExecutor = borrowedWorkerTool.get();
-      return executeBuildJavaCommand(context, workerToolExecutor, launchJavaCDCommand);
+    BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool = null;
+    try {
+      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_get_wt")) {
+        borrowedWorkerTool =
+            JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
+                workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
+      }
+
+      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_execution")) {
+        return executeBuildJavaCommand(context, borrowedWorkerTool.get(), launchJavaCDCommand);
+      }
+    } finally {
+      if (borrowedWorkerTool != null) {
+        borrowedWorkerTool.close();
+      }
     }
   }
 

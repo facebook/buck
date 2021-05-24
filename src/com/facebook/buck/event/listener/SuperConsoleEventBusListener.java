@@ -622,12 +622,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   // step-like things can subscribe to.
   @Subscribe
   public void aggregationLeafEventStarted(PerfEvents.AggregationSupportedEvent.Started event) {
-    runningStepStarted(event);
+    if (event.isShowOnSuperConsole()) {
+      runningStepStarted(event);
+    }
   }
 
   @Subscribe
   public void aggregationLeafEventFinished(PerfEvents.AggregationSupportedEvent.Finished event) {
-    runningStepFinished(event.getThreadId());
+    if (event.isShowOnSuperConsole()) {
+      runningStepFinished(event.getThreadId());
+    }
   }
 
   @Subscribe
