@@ -291,10 +291,7 @@ public class DaemonicParserState {
             : cellPathResolver.getCellNameResolver().getName(Optional.of(cellName));
 
     String includePath = matcher.group(2);
-    return cellPathResolver
-        .getCellPath(canonicalCellName)
-        .map(cellPath -> cellPath.resolve(includePath))
-        .orElseGet(() -> cell.getFilesystem().resolve(includePath));
+    return cellPathResolver.getCellPathOrThrow(canonicalCellName).resolve(includePath);
   }
 
   /**
