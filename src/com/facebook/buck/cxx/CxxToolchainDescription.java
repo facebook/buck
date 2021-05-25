@@ -300,6 +300,27 @@ public class CxxToolchainDescription
     cxxPlatform.setRequiresArchives(args.getRequiresArchives());
 
     cxxPlatform.setStrip(ToolProviders.getToolProvider(args.getStrip()));
+    args.getStripDebugFlags()
+        .ifPresent(
+            flags ->
+                cxxPlatform.setStripDebugFlags(
+                    flags.stream()
+                        .map(macrosConverter::convert)
+                        .collect(ImmutableList.toImmutableList())));
+    args.getStripNonGlobalFlags()
+        .ifPresent(
+            flags ->
+                cxxPlatform.setStripNonGlobalFlags(
+                    flags.stream()
+                        .map(macrosConverter::convert)
+                        .collect(ImmutableList.toImmutableList())));
+    args.getStripAllFlags()
+        .ifPresent(
+            flags ->
+                cxxPlatform.setStripAllFlags(
+                    flags.stream()
+                        .map(macrosConverter::convert)
+                        .collect(ImmutableList.toImmutableList())));
 
     cxxPlatform.setRanlib(args.getRanlib().map(ToolProviders::getToolProvider));
     cxxPlatform.setRanlibflags(
@@ -565,6 +586,15 @@ public class CxxToolchainDescription
 
     /** Strip binary. */
     SourcePath getStrip();
+
+    /** The flags to use when applying DEBUGGING_SYMBOLS strip style. */
+    Optional<ImmutableList<StringWithMacros>> getStripDebugFlags();
+
+    /** The flags to use when applying NON_GLOBAL_SYMBOLS strip style. */
+    Optional<ImmutableList<StringWithMacros>> getStripNonGlobalFlags();
+
+    /** The flags to use when applying ALL_SYMBOLS strip style. */
+    Optional<ImmutableList<StringWithMacros>> getStripAllFlags();
 
     /** Ranlib binary. */
     Optional<SourcePath> getRanlib();

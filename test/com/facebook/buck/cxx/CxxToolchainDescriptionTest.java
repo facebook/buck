@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
@@ -93,6 +94,10 @@ public class CxxToolchainDescriptionTest {
         .setLinkerType(LinkerProvider.Type.GNU)
         .setCxxCompiler(pathToolPath)
         .setStrip(binaryToolPath)
+        .setStripDebugFlags(ImmutableList.of(StringWithMacros.ofConstantString("-debug_flag")))
+        .setStripNonGlobalFlags(
+            ImmutableList.of(StringWithMacros.ofConstantString("-non_global_flag")))
+        .setStripAllFlags(ImmutableList.of(StringWithMacros.ofConstantString("-all_flag")))
         .setSharedLibraryInterfaceType(SharedLibraryInterfaceParams.Type.ENABLED)
         .setObjcopyForSharedLibraryInterface(binaryToolPath)
         .setUseHeaderMap(true);
@@ -144,6 +149,11 @@ public class CxxToolchainDescriptionTest {
         ImmutableList.of("-Wl,--build-id", "linker", "flags"),
         Arg.stringify(platform.getLdflags(), resolver));
     assertEquals(ImmutableList.of("c", "flags"), Arg.stringify(platform.getCflags(), resolver));
+
+    assertEquals(ImmutableList.of(StringArg.of("-debug_flag")), platform.getStripDebugFlags());
+    assertEquals(
+        ImmutableList.of(StringArg.of("-non_global_flag")), platform.getStripNonGlobalFlags());
+    assertEquals(ImmutableList.of(StringArg.of("-all_flag")), platform.getStripAllFlags());
   }
 
   private void assertIsBinaryTool(SourcePathResolverAdapter resolver, Tool expected, Tool other) {
