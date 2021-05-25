@@ -155,6 +155,14 @@ public class ForwardRelPath implements Comparable<ForwardRelPath> {
     return new ForwardRelPath(Arrays.copyOf(this.segments, segments.length - 1));
   }
 
+  /** Get file name, throw if path is empty. */
+  public Optional<FileName> getFileName() {
+    if (isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(FileName.ofUnchecked(segments[segments.length - 1]));
+  }
+
   private static class Substring {
     private final String string;
     private final int offset;

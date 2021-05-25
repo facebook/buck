@@ -33,6 +33,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
+import com.facebook.buck.parser.implicit.ImplicitIncludePath;
 import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.google.common.base.Preconditions;
@@ -40,6 +41,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -138,11 +140,13 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    * evaluating a build file.
    */
   @Value.Lazy
-  public ImmutableList<String> getDefaultIncludes() {
+  public ImmutableList<ImplicitIncludePath> getDefaultIncludes() {
     ImmutableMap<String, String> entries =
         getDelegate().getEntriesForSection(BUILDFILE_SECTION_NAME);
     String includes = Strings.nullToEmpty(entries.get(INCLUDES_PROPERTY_NAME));
-    return ImmutableList.copyOf(Splitter.on(' ').trimResults().omitEmptyStrings().split(includes));
+    return Streams.stream(Splitter.on(' ').trimResults().omitEmptyStrings().split(includes))
+        .map(ImplicitIncludePath::parse)
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Value.Lazy

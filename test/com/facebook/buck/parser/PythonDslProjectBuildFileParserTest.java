@@ -46,6 +46,7 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.UserDefinedRuleLoader;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.implicit.ImplicitIncludePath;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -727,7 +728,8 @@ public class PythonDslProjectBuildFileParserTest {
           .setAllowEmptyGlobs(ParserConfig.DEFAULT_ALLOW_EMPTY_GLOBS)
           .setIgnorePaths(ImmutableSet.of())
           .setBuildFileName(DEFAULT_BUILD_FILE_NAME)
-          .setDefaultIncludes(ImmutableSet.of("//java/com/facebook/defaultIncludeFile"))
+          .setDefaultIncludes(
+              ImmutableList.of(ImplicitIncludePath.parse("//java/com/facebook/defaultIncludeFile")))
           .setDescriptions(ruleTypes.getDescriptions())
           .setUserDefinedRulesState(UserDefinedRulesState.ENABLED)
           .build();

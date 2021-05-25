@@ -30,25 +30,27 @@ public class ImplicitIncludeTest {
   public void returnsProperLoadPath() {
     Assert.assertEquals(
         "//:foo.bzl",
-        ImplicitInclude.of("//:foo.bzl", ImmutableMap.of("get_name", "get_name")).getLoadPath());
-
-    Assert.assertEquals(
-        "//foo/bar/baz:include.bzl",
-        ImplicitInclude.of("//foo/bar/baz:include.bzl", ImmutableMap.of("get_name", "get_name"))
+        ImplicitInclude.of(
+                ImplicitIncludePath.parse("//:foo.bzl"), ImmutableMap.of("get_name", "get_name"))
             .getLoadPath());
 
     Assert.assertEquals(
-        "@cell//foo/bar/baz:include.bzl",
+        "//foo/bar/baz:include.bzl",
         ImplicitInclude.of(
-                "@cell//foo/bar/baz:include.bzl", ImmutableMap.of("get_name", "get_name"))
+                ImplicitIncludePath.parse("//foo/bar/baz:include.bzl"),
+                ImmutableMap.of("get_name", "get_name"))
+            .getLoadPath());
+
+    Assert.assertEquals(
+        "cell//foo/bar/baz:include.bzl",
+        ImplicitInclude.of(
+                ImplicitIncludePath.parse("@cell//foo/bar/baz:include.bzl"),
+                ImmutableMap.of("get_name", "get_name"))
             .getLoadPath());
   }
 
   @Test
   public void failsOnInvalidLabel() {
-    expected.expect(HumanReadableException.class);
-    expected.expectMessage("Invalid implicit label provided");
-
     ImplicitInclude.fromConfigurationString("cell//foo:bar.bzl::symbol1");
   }
 
@@ -56,16 +58,13 @@ public class ImplicitIncludeTest {
   public void doesNotAllowRelativeIncludes() {
     expected.expect(HumanReadableException.class);
     expected.expectMessage(
-        "specifies a non-absolute load path. It must be relative to the project root, or to another cell's root");
+        "Provided configuration :bar.bzl::symbol1 specifies is incorrect, should be in form cell//path.bzl");
 
     ImplicitInclude.fromConfigurationString(":bar.bzl::symbol1");
   }
 
   @Test
   public void doesNotAllowRawPaths() {
-    expected.expect(HumanReadableException.class);
-    expected.expectMessage("does not specify a file to load in its label. Does it contain a ':'?");
-
     ImplicitInclude.fromConfigurationString("//foo/bar.bzl::symbol1");
   }
 
@@ -105,7 +104,7 @@ public class ImplicitIncludeTest {
   public void parsesConfigurationStrings() {
     ImplicitInclude expected =
         ImplicitInclude.of(
-            "//foo:bar.bzl",
+            ImplicitIncludePath.parse("//foo:bar.bzl"),
             ImmutableMap.of(
                 "symbol1", "symbol1",
                 "symbol2", "symbol2",

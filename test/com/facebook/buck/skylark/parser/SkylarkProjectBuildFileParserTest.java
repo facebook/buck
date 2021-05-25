@@ -51,6 +51,7 @@ import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
+import com.facebook.buck.parser.implicit.ImplicitIncludePath;
 import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.options.UserDefinedRulesState;
@@ -1405,7 +1406,7 @@ public class SkylarkProjectBuildFileParserTest {
                             "//src/foo:get_name.bzl::get_rule_name"),
                         "src/alias",
                         ImplicitInclude.of(
-                            "//src/alias:get_name.bzl",
+                            ImplicitIncludePath.parse("//src/alias:get_name.bzl"),
                             ImmutableMap.of("get_rule_name", "get_rule_name_alias"))))
                 .build());
 

@@ -322,4 +322,11 @@ public class ForwardRelPathTest {
         ImmutableList.of(FileName.of("foo"), FileName.of("bar")),
         ForwardRelPath.of("foo/bar").nameComponents());
   }
+
+  @Test
+  public void getFileName() {
+    assertEquals(Optional.empty(), ForwardRelPath.of("").getFileName());
+    assertEquals(Optional.of(FileName.of("x")), ForwardRelPath.of("x").getFileName());
+    assertEquals(Optional.of(FileName.of("y")), ForwardRelPath.of("x/y").getFileName());
+  }
 }

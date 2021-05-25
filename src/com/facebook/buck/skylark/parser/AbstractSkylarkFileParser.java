@@ -132,7 +132,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     ExtensionData data =
         loadExtensionFromImport(
             ImmutableLoadImport.ofImpl(
-                containingLabel, implicitInclude.get().getLoadPath(), Location.BUILTIN),
+                containingLabel,
+                implicitInclude.get().getRawImportLabel().reconstructWithAtAndColon(),
+                Location.BUILTIN),
             loadStack);
     LoadedModule symbols = data.getExtension();
     ImmutableMap<String, String> expectedSymbols = implicitInclude.get().getSymbols();

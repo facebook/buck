@@ -17,8 +17,6 @@
 package com.facebook.buck.parser.implicit;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.label.Label;
-import com.facebook.buck.core.model.label.LabelSyntaxException;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -32,17 +30,7 @@ import org.immutables.value.Value;
 @BuckStyleValue
 public abstract class ImplicitInclude {
   @JsonIgnore
-  abstract String getRawImportLabel();
-
-  /** Validate raw import label. */
-  @Value.Check
-  protected void check() {
-    try {
-      Label.parseAbsolute(getRawImportLabel());
-    } catch (LabelSyntaxException e) {
-      throw new HumanReadableException("Invalid implicit label provided: " + e.getMessage());
-    }
-  }
+  public abstract ImplicitIncludePath getRawImportLabel();
 
   @JsonProperty("load_symbols")
   public abstract ImmutableMap<String, String> getSymbols();
@@ -57,7 +45,7 @@ public abstract class ImplicitInclude {
   @JsonIgnore
   @Value.Derived
   public String getLoadPath() {
-    return getRawImportLabel();
+    return getRawImportLabel().reconstructWithColon();
   }
 
   /**
@@ -84,7 +72,7 @@ public abstract class ImplicitInclude {
           configurationString);
     }
 
-    String rawLabel = validateLabelFromConfiguration(parts.get(0), configurationString);
+    ImplicitIncludePath rawLabel = ImplicitIncludePath.parse(parts.get(0), configurationString);
     ImmutableMap<String, String> symbols =
         parseAllSymbolsFromConfiguration(parts.subList(1, parts.size()), configurationString);
 
@@ -102,23 +90,6 @@ public abstract class ImplicitInclude {
       parseSymbolsFromConfiguration(symbolString, symbolBuilder, configurationString);
     }
     return symbolBuilder.build();
-  }
-
-  private static String validateLabelFromConfiguration(
-      String rawLabel, String configurationString) {
-    if (!rawLabel.contains("//")) {
-      throw new HumanReadableException(
-          "Provided configuration %s specifies a non-absolute load path. It must be relative to "
-              + "the project root, or to another cell's root",
-          configurationString);
-    }
-    if (!rawLabel.contains(":")) {
-      throw new HumanReadableException(
-          "Provided configuration %s does not specify a file to load in its label. Does it "
-              + "contain a ':'?",
-          configurationString);
-    }
-    return rawLabel;
   }
 
   static void parseSymbolsFromConfiguration(
@@ -144,7 +115,8 @@ public abstract class ImplicitInclude {
     symbolBuilder.put(alias, symbol);
   }
 
-  public static ImplicitInclude of(String rawImportLabel, Map<String, ? extends String> symbols) {
+  public static ImplicitInclude of(
+      ImplicitIncludePath rawImportLabel, Map<String, ? extends String> symbols) {
     return ImmutableImplicitInclude.ofImpl(rawImportLabel, symbols);
   }
 }

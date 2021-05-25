@@ -26,6 +26,7 @@ import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
+import com.facebook.buck.parser.implicit.ImplicitIncludePath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
@@ -48,7 +49,7 @@ public abstract class ProjectBuildFileParserOptions {
 
   public abstract FileName getBuildFileName();
 
-  public abstract List<String> getDefaultIncludes();
+  public abstract List<ImplicitIncludePath> getDefaultIncludes();
 
   public abstract ImmutableMap<String, ImplicitInclude> getPackageImplicitIncludes();
 

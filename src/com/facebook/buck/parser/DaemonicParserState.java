@@ -39,6 +39,7 @@ import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.implicit.ImplicitIncludePath;
 import com.facebook.buck.util.concurrent.AutoCloseableReadLocked;
 import com.facebook.buck.util.concurrent.AutoCloseableWriteLocked;
 import com.google.common.annotations.VisibleForTesting;
@@ -61,18 +62,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /** Persistent parsing data, that can exist between invocations of the {@link Parser}. */
 public class DaemonicParserState {
 
   private static final Logger LOG = Logger.get(DaemonicParserState.class);
-
-  // pattern all implicit include paths from build file includes should match
-  // this should be kept in sync with pattern used in buck.py
-  private static final Pattern INCLUDE_PATH_PATTERN = Pattern.compile("^([A-Za-z0-9_]*)//(.*)$");
 
   /** Stateless view of caches on object that conforms to {@link PipelineNodeCache.Cache}. */
   private class DaemonicCacheView<K, T> implements PipelineNodeCache.Cache<K, T> {
@@ -267,8 +262,9 @@ public class DaemonicParserState {
     // the default includes of the ParserConfig, it is not required and this assumption may not
     // always hold.
     BuckConfig buckConfig = cell.getBuckConfig();
-    Iterable<String> defaultIncludes = buckConfig.getView(ParserConfig.class).getDefaultIncludes();
-    for (String include : defaultIncludes) {
+    ImmutableList<ImplicitIncludePath> defaultIncludes =
+        buckConfig.getView(ParserConfig.class).getDefaultIncludes();
+    for (ImplicitIncludePath include : defaultIncludes) {
       dependents.add(resolveIncludePath(cell, include, cell.getCellPathResolver()));
     }
   }
@@ -277,21 +273,18 @@ public class DaemonicParserState {
    * Resolves a path of an include string like {@code repo//foo/macro_defs} to a filesystem path.
    */
   private static AbsPath resolveIncludePath(
-      Cell cell, String include, CellPathResolver cellPathResolver) {
+      Cell cell, ImplicitIncludePath include, CellPathResolver cellPathResolver) {
     // Default includes are given as "cell//path/to/file". They look like targets
     // but they are not. However, I bet someone will try and treat it like a
     // target, so find the owning cell if necessary, and then fully resolve
     // the path against the owning cell's root.
-    Matcher matcher = INCLUDE_PATH_PATTERN.matcher(include);
-    Preconditions.checkState(matcher.matches());
-    String cellName = matcher.group(1);
+    String cellName = include.getCellName();
     CanonicalCellName canonicalCellName =
         (Objects.isNull(cellName) || cellName.isEmpty())
             ? cell.getCanonicalName()
             : cellPathResolver.getCellNameResolver().getName(Optional.of(cellName));
 
-    String includePath = matcher.group(2);
-    return cellPathResolver.getCellPathOrThrow(canonicalCellName).resolve(includePath);
+    return cellPathResolver.getCellPathOrThrow(canonicalCellName).resolve(include.getCellRelPath());
   }
 
   /**

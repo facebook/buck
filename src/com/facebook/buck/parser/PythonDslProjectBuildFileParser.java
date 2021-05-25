@@ -39,6 +39,7 @@ import com.facebook.buck.parser.api.UserDefinedRuleLoader;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.implicit.ImplicitIncludePath;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
@@ -353,9 +354,9 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     argBuilder.add("--quiet");
 
     // Add the --include flags.
-    for (String include : options.getDefaultIncludes()) {
+    for (ImplicitIncludePath include : options.getDefaultIncludes()) {
       argBuilder.add("--include");
-      argBuilder.add(include);
+      argBuilder.add(include.reconstructWithSlash());
     }
 
     // Add all config settings.
