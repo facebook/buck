@@ -116,6 +116,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
       "enable_all_watch_simulator_flavors";
 
   private static final String PROJECT_GENERATOR_SWIFT_LABELS = "project_generator_swift_labels";
+  private static final String PROJECT_GENERATOR_INDEX_VIA_BUILD_FLAGS =
+      "project_generator_index_via_build_flags";
 
   private final BuckConfig delegate;
 
@@ -670,6 +672,15 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public ImmutableList<String> getProjectGeneratorSwiftLabels() {
     return delegate.getListWithoutComments(APPLE_SECTION, PROJECT_GENERATOR_SWIFT_LABELS);
+  }
+
+  /**
+   * @return If true inject Xcode indexing flags via OTHER_CFLAGS and OTHER_SWIFT_FLAGS instead of
+   *     using HEADER_SEARCH_PATHS and SWIFT_INDEX_PATHS. This allows for a single pass to generate
+   *     all indexing flags including Swift mixed module support.
+   */
+  public boolean getProjectGeneratorIndexViaBuildFlags() {
+    return delegate.getBooleanValue(APPLE_SECTION, PROJECT_GENERATOR_INDEX_VIA_BUILD_FLAGS, false);
   }
 
   @BuckStyleValue

@@ -18,6 +18,7 @@ package com.facebook.buck.features.apple.projectV2;
 
 import static com.facebook.buck.apple.AppleBundleDescription.WATCH_OS_FLAVOR;
 import static com.facebook.buck.apple.AppleDescriptions.SWIFT_COMPILE_FLAVOR;
+import static com.facebook.buck.apple.AppleDescriptions.SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR;
 import static com.facebook.buck.apple.AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR;
 import static com.facebook.buck.apple.AppleVFSOverlayBuildRule.VFS_OVERLAY_FILENAME;
 import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR;
@@ -644,6 +645,81 @@ public class ProjectGeneratorTest {
                 + " -Xcc -ivfsoverlay"
                 + projectFilesystem.resolve(vfsOverlayPath)));
     assertThat(settings.get("OTHER_CFLAGS"), containsString("-fmodule-name=lib"));
+  }
+
+  @Test
+  public void testModularLibraryMixedSourcesFlagsWithIndexViaBuildFlags()
+      throws IOException, InterruptedException {
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of(
+            "apple",
+            ImmutableMap.of(
+                "force_dsym_mode_in_build_with_buck",
+                "false",
+                "project_generator_index_via_build_flags",
+                "true",
+                AppleConfig.BUILD_SCRIPT,
+                AppleProjectHelper.getBuildScriptPath(projectFilesystem).toString()));
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder().setFilesystem(projectFilesystem).setSections(sections).build();
+    appleConfig = buckConfig.getView(AppleConfig.class);
+
+    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
+
+    TargetNode<?> libNode =
+        AppleLibraryBuilder.createBuilder(libTarget, projectFilesystem)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("HeaderGroup1/bar.h")))
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSwiftVersion(Optional.of("3"))
+            .setModular(true)
+            .build();
+
+    ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(libNode), libTarget);
+
+    ProjectGenerator.Result result =
+        projectGenerator.createXcodeProject(
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
+    PBXProject project = result.generatedProject;
+    assertNotNull(project);
+    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
+
+    RelPath exportedHeadersPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(),
+            libTarget.withAppendedFlavors(
+                CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
+                DEFAULT_PLATFORM.getFlavor(),
+                HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor()),
+            "%s");
+
+    RelPath vfsOverlayPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(),
+            libTarget.withAppendedFlavors(
+                SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR, DEFAULT_PLATFORM.getFlavor()),
+            "%s/" + VFS_OVERLAY_FILENAME);
+
+    RelPath swiftHeaderMapPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(),
+            libTarget.withAppendedFlavors(
+                SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR, DEFAULT_PLATFORM.getFlavor()),
+            "%s.hmap");
+
+    ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
+    assertFalse(settings.containsKey("HEADER_SEARCH_PATHS"));
+    assertFalse(settings.containsKey("SWIFT_INDEX_PATHS"));
+    assertThat(settings.get("OTHER_SWIFT_FLAGS"), containsString("-import-underlying-module"));
+    assertThat(
+        settings.get("OTHER_SWIFT_FLAGS"),
+        containsString(" -Xcc -ivfsoverlay" + projectFilesystem.resolve(vfsOverlayPath)));
+    assertThat(
+        settings.get("OTHER_SWIFT_FLAGS"),
+        containsString(" -Xcc -I" + projectFilesystem.resolve(exportedHeadersPath)));
+    assertThat(
+        settings.get("OTHER_CFLAGS"),
+        containsString("-I" + projectFilesystem.resolve(swiftHeaderMapPath)));
   }
 
   @Test

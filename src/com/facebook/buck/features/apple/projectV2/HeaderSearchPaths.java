@@ -16,9 +16,12 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
+import static com.facebook.buck.apple.AppleDescriptions.SWIFT_COMPILE_FLAVOR;
+import static com.facebook.buck.apple.AppleDescriptions.SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR;
 import static com.facebook.buck.apple.AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR;
 import static com.facebook.buck.apple.AppleVFSOverlayBuildRule.VFS_OVERLAY_FILENAME;
 
+import com.facebook.buck.apple.AppleBinaryDescriptionArg;
 import com.facebook.buck.apple.AppleBuildRules;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleDependenciesCache;
@@ -98,7 +101,7 @@ class HeaderSearchPaths {
   private final PathRelativizer pathRelativizer;
   private final SwiftAttributeParser swiftAttributeParser;
   private final ImmutableSet<String> swiftLabels;
-
+  private final boolean indexViaBuildFlags;
   private final ProjectFilesystem projectFilesystem;
 
   HeaderSearchPaths(
@@ -128,7 +131,7 @@ class HeaderSearchPaths {
     this.pathRelativizer = pathRelativizer;
     this.swiftAttributeParser = swiftAttributeParser;
     this.swiftLabels = ImmutableSet.copyOf(appleConfig.getProjectGeneratorSwiftLabels());
-
+    this.indexViaBuildFlags = appleConfig.getProjectGeneratorIndexViaBuildFlags();
     this.projectFilesystem = projectCell.getFilesystem();
   }
 
@@ -170,7 +173,168 @@ class HeaderSearchPaths {
     ImmutableSet<Path> swiftIncludePaths = collectRecursiveSwiftIncludePaths(targetNode);
     builder.setSwiftIncludePaths(swiftIncludePaths);
 
+    if (indexViaBuildFlags) {
+      getIncludeFlags(targetNode, builder);
+    }
+
     return builder.build();
+  }
+
+  private void getIncludeFlags(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
+      ImmutableHeaderSearchPathAttributes.Builder headerSearchPathsBuilder) {
+    ImmutableList.Builder<String> includeFlags = ImmutableList.builder();
+    ImmutableList.Builder<String> swiftIncludeFlags = ImmutableList.builder();
+    ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
+
+    // Paths need to be absolute as the Swift indexing system will override -working-directory
+    visitRecursiveHeaderSymlinkTrees(
+        targetNode,
+        (depNativeNode, headerVisibility) -> {
+          if (headerVisibility == HeaderVisibility.PUBLIC) {
+            addPublicHeaderIncludes(
+                depNativeNode, includeFlags, swiftIncludeFlags, requiredBuildTargets);
+          } else {
+            addPrivateHeaderIncludes(
+                depNativeNode, includeFlags, swiftIncludeFlags, requiredBuildTargets);
+          }
+        });
+
+    // Header maps use buck-out as the base path, so this include needs to happen after all
+    // the header maps have been included.
+    includeFlags.add("-I" + projectFilesystem.resolve("buck-out"));
+
+    // We need the same header search paths for Swift code too
+    for (String flag : includeFlags.build()) {
+      swiftIncludeFlags.add("-Xcc", flag);
+    }
+
+    // We need to set the current module name to avoid importing our own module. This cannot be
+    // set for Swift code, the underlying module will fail to generate.
+    includeFlags.add("-fmodule-name=" + getModuleName(targetNode));
+
+    headerSearchPathsBuilder.setIncludeFlags(includeFlags.build());
+    headerSearchPathsBuilder.setSwiftIncludeFlags(swiftIncludeFlags.build());
+    headerSearchPathsBuilder.setRequiredBuildTargets(requiredBuildTargets.build());
+  }
+
+  private void addPrivateHeaderIncludes(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
+      ImmutableList.Builder<String> includeFlags,
+      ImmutableList.Builder<String> swiftIncludeFlags,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargets) {
+    BuildTarget buildTarget =
+        targetNode
+            .getBuildTarget()
+            .withAppendedFlavors(
+                CxxLibraryDescription.Type.HEADERS.getFlavor(),
+                getDefaultPlatformFlavor(targetNode));
+    ProjectFilesystem targetFilesystem = getFilesystemForTarget(Optional.of(buildTarget));
+    RelPath includePath =
+        BuildTargetPaths.getGenPath(targetFilesystem.getBuckPaths(), buildTarget, "%s.hmap");
+    includeFlags.add("-I" + targetFilesystem.resolve(includePath));
+    requiredBuildTargets.add(buildTarget);
+
+    // If the module is mixed then we need to import the VFS overlay and the -Swift.h header hmap
+    if (targetNodeContainsSwift(targetNode)
+        && !targetNode.getConstructorArg().getExportedHeaders().isEmpty()) {
+      BuildTarget privateSwiftHeaderMapTarget =
+          targetNode
+              .getBuildTarget()
+              .withAppendedFlavors(
+                  SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR,
+                  getDefaultPlatformFlavor(targetNode));
+      RelPath privateSwiftHeaderMapPath =
+          BuildTargetPaths.getGenPath(
+              projectFilesystem.getBuckPaths(), privateSwiftHeaderMapTarget, "%s.hmap");
+      includeFlags.add("-I" + targetFilesystem.resolve(privateSwiftHeaderMapPath));
+      requiredBuildTargets.add(privateSwiftHeaderMapTarget);
+
+      BuildTarget vfsOverlayTarget =
+          targetNode
+              .getBuildTarget()
+              .withAppendedFlavors(
+                  SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR, getDefaultPlatformFlavor(targetNode));
+      RelPath vfsOverlayPath =
+          BuildTargetPaths.getGenPath(
+              targetFilesystem.getBuckPaths(), vfsOverlayTarget, "%s/" + VFS_OVERLAY_FILENAME);
+      swiftIncludeFlags.add(
+          "-import-underlying-module",
+          "-Xcc",
+          "-ivfsoverlay" + targetFilesystem.resolve(vfsOverlayPath));
+      requiredBuildTargets.add(vfsOverlayTarget);
+    }
+  }
+
+  private void addPublicHeaderIncludes(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
+      ImmutableList.Builder<String> includeFlags,
+      ImmutableList.Builder<String> swiftIncludeFlags,
+      ImmutableSet.Builder<BuildTarget> requiredBuildTargets) {
+    // apple_binary do not have public headers
+    if (TargetNodes.castArg(targetNode, AppleBinaryDescriptionArg.class).isPresent()) {
+      return;
+    }
+
+    BuildTarget buildTarget =
+        targetNode
+            .getBuildTarget()
+            .withAppendedFlavors(CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor());
+    ProjectFilesystem targetFilesystem = getFilesystemForTarget(Optional.of(buildTarget));
+    RelPath includePath;
+    if (NodeHelper.isModularAppleLibrary(targetNode)) {
+      // Include the path to the libraries modulemap
+      buildTarget =
+          buildTarget.withAppendedFlavors(
+              HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor(),
+              getDefaultPlatformFlavor(targetNode));
+      includePath = BuildTargetPaths.getGenPath(targetFilesystem.getBuckPaths(), buildTarget, "%s");
+    } else {
+      // Include the libraries public hmap
+      buildTarget = buildTarget.withAppendedFlavors(HeaderMode.HEADER_MAP_ONLY.getFlavor());
+      includePath =
+          BuildTargetPaths.getGenPath(targetFilesystem.getBuckPaths(), buildTarget, "%s.hmap");
+    }
+    includeFlags.add("-I" + targetFilesystem.resolve(includePath));
+    requiredBuildTargets.add(buildTarget);
+
+    if (targetNodeContainsSwift(targetNode)) {
+      // Swift libraries also need to include their dependent libraries swiftmodule files
+      BuildTarget swiftCompileTarget =
+          targetNode
+              .getBuildTarget()
+              .withFlavors(SWIFT_COMPILE_FLAVOR, getDefaultPlatformFlavor(targetNode));
+      swiftIncludeFlags.add(
+          "-I",
+          targetFilesystem
+              .resolve(
+                  BuildTargetPaths.getGenPath(
+                      targetFilesystem.getBuckPaths(), swiftCompileTarget, "%s"))
+              .toString());
+      requiredBuildTargets.add(swiftCompileTarget);
+    }
+
+    // Targets can also define public include paths that need to be included
+    AbsPath basePath = targetFilesystem.resolve(buildTarget.getCellRelativeBasePath().getPath());
+    for (String publicIncludeDirectory :
+        targetNode.getConstructorArg().getPublicIncludeDirectories()) {
+      includeFlags.add("-I" + basePath.resolve(publicIncludeDirectory));
+    }
+    for (String systemIncludeDirctory :
+        targetNode.getConstructorArg().getPublicSystemIncludeDirectories()) {
+      includeFlags.add("-isystem" + basePath.resolve(systemIncludeDirctory));
+    }
+  }
+
+  public String getModuleName(TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
+    return targetNode
+        .getConstructorArg()
+        .getModuleName()
+        .orElse(
+            AppleDescriptions.getHeaderPathPrefix(
+                    (AppleNativeTargetDescriptionArg) targetNode.getConstructorArg(),
+                    targetNode.getBuildTarget())
+                .toString());
   }
 
   /**

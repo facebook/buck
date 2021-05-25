@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
@@ -77,6 +78,24 @@ abstract class HeaderSearchPathAttributes {
   /** Swift include paths for the target. */
   @Value.Default
   ImmutableSet<Path> swiftIncludePaths() {
+    return ImmutableSet.of();
+  }
+
+  /** C flags to use for the target that include all search paths and module flags */
+  @Value.Default
+  ImmutableList<String> includeFlags() {
+    return ImmutableList.of();
+  }
+
+  /** Swift flags to use for the target that include all search paths and VFS overlays */
+  @Value.Default
+  ImmutableList<String> swiftIncludeFlags() {
+    return ImmutableList.of();
+  }
+
+  /** Build targets required to generate header maps, module maps, swiftmodules and VFS overlays */
+  @Value.Default
+  ImmutableSet<BuildTarget> requiredBuildTargets() {
     return ImmutableSet.of();
   }
 }

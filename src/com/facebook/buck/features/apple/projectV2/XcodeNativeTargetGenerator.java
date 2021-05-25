@@ -1535,23 +1535,27 @@ public class XcodeNativeTargetGenerator {
     appendConfigsBuilder.putAll(
         getFrameworkAndLibrarySearchPathConfigs(
             targetNode, xcodeNativeTargetAttributesBuilder, includeFrameworks));
-    appendConfigsBuilder.put(
-        "HEADER_SEARCH_PATHS",
-        Joiner.on(' ')
-            .join(
-                Iterables.concat(
-                    headerSearchPathAttributes.recursiveHeaderSearchPaths(),
-                    recursivePublicSystemIncludeDirectories,
-                    headerSearchPathAttributes.recursivePublicIncludeDirectories(),
-                    headerSearchPathAttributes.includeDirectories())));
-    if (hasSwiftVersionArg) {
-      Stream<String> allValues =
-          Streams.concat(
-              Stream.of("$BUILT_PRODUCTS_DIR"),
-              Streams.stream(headerSearchPathAttributes.swiftIncludePaths())
-                  .map((path) -> path.toString())
-                  .map(Escaper.BASH_ESCAPER));
-      appendConfigsBuilder.put("SWIFT_INCLUDE_PATHS", allValues.collect(Collectors.joining(" ")));
+
+    if (!appleConfig.getProjectGeneratorIndexViaBuildFlags()) {
+      appendConfigsBuilder.put(
+          "HEADER_SEARCH_PATHS",
+          Joiner.on(' ')
+              .join(
+                  Iterables.concat(
+                      headerSearchPathAttributes.recursiveHeaderSearchPaths(),
+                      recursivePublicSystemIncludeDirectories,
+                      headerSearchPathAttributes.recursivePublicIncludeDirectories(),
+                      headerSearchPathAttributes.includeDirectories())));
+
+      if (hasSwiftVersionArg) {
+        Stream<String> allValues =
+            Streams.concat(
+                Stream.of("$BUILT_PRODUCTS_DIR"),
+                Streams.stream(headerSearchPathAttributes.swiftIncludePaths())
+                    .map((path) -> path.toString())
+                    .map(Escaper.BASH_ESCAPER));
+        appendConfigsBuilder.put("SWIFT_INCLUDE_PATHS", allValues.collect(Collectors.joining(" ")));
+      }
     }
 
     flagParser.parseFlags(
@@ -1561,7 +1565,7 @@ public class XcodeNativeTargetGenerator {
         containsSwiftCode,
         isModularAppleLibrary,
         publicCxxHeaders.size() > 0,
-        recursivePublicSystemIncludeDirectories,
+        headerSearchPathAttributes,
         // We want to use the extra settings here, otherwise the build configs end up with
         // $(inherited) prefixes, which will cause duplicate build settings being passed when
         // indexing.
@@ -1849,15 +1853,17 @@ public class XcodeNativeTargetGenerator {
     defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", "$BUILT_PRODUCTS_DIR");
     defaultSettingsBuilder.put("EXECUTABLE_PREFIX", "lib");
 
-    appendConfigsBuilder.put(
-        "HEADER_SEARCH_PATHS",
-        Joiner.on(' ')
-            .join(
-                Iterables.concat(
-                    headerSearchPathAttributes.recursiveHeaderSearchPaths(),
-                    headerSearchPathAttributes.recursivePublicSystemIncludeDirectories(),
-                    headerSearchPathAttributes.recursivePublicIncludeDirectories(),
-                    headerSearchPathAttributes.includeDirectories())));
+    if (!appleConfig.getProjectGeneratorIndexViaBuildFlags()) {
+      appendConfigsBuilder.put(
+          "HEADER_SEARCH_PATHS",
+          Joiner.on(' ')
+              .join(
+                  Iterables.concat(
+                      headerSearchPathAttributes.recursiveHeaderSearchPaths(),
+                      headerSearchPathAttributes.recursivePublicSystemIncludeDirectories(),
+                      headerSearchPathAttributes.recursivePublicIncludeDirectories(),
+                      headerSearchPathAttributes.includeDirectories())));
+    }
   }
 
   private void addDepFilesToNativeTarget(
