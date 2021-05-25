@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -42,11 +43,11 @@ public class ParserImplicitPackageIncludesIntegrationTest {
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> getParsers() {
-    return ImmutableList.of(new String[] {"python_dsl"}, new String[] {"skylark"});
+    return ImmutableList.of(new Object[] {Syntax.PYTHON_DSL}, new Object[] {Syntax.SKYLARK});
   }
 
   @Parameterized.Parameter(value = 0)
-  public String parser;
+  public Syntax parser;
 
   @Test
   public void implicitPackageSymbolsAreVisible() throws IOException {
