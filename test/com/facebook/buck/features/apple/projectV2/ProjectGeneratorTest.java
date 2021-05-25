@@ -684,28 +684,27 @@ public class ProjectGeneratorTest {
     assertNotNull(project);
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
 
+    BuildTarget exportedHeadersTarget =
+        libTarget.withAppendedFlavors(
+            CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
+            DEFAULT_PLATFORM.getFlavor(),
+            HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor());
     RelPath exportedHeadersPath =
-        BuildTargetPaths.getGenPath(
-            projectFilesystem.getBuckPaths(),
-            libTarget.withAppendedFlavors(
-                CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
-                DEFAULT_PLATFORM.getFlavor(),
-                HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor()),
-            "%s");
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), exportedHeadersTarget, "%s");
 
+    BuildTarget vfsOverlayTarget =
+        libTarget.withAppendedFlavors(
+            SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR, DEFAULT_PLATFORM.getFlavor());
     RelPath vfsOverlayPath =
         BuildTargetPaths.getGenPath(
-            projectFilesystem.getBuckPaths(),
-            libTarget.withAppendedFlavors(
-                SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR, DEFAULT_PLATFORM.getFlavor()),
-            "%s/" + VFS_OVERLAY_FILENAME);
+            projectFilesystem.getBuckPaths(), vfsOverlayTarget, "%s/" + VFS_OVERLAY_FILENAME);
 
+    BuildTarget generatedSwiftHeaderMapTarget =
+        libTarget.withAppendedFlavors(
+            SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR, DEFAULT_PLATFORM.getFlavor());
     RelPath swiftHeaderMapPath =
         BuildTargetPaths.getGenPath(
-            projectFilesystem.getBuckPaths(),
-            libTarget.withAppendedFlavors(
-                SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR, DEFAULT_PLATFORM.getFlavor()),
-            "%s.hmap");
+            projectFilesystem.getBuckPaths(), generatedSwiftHeaderMapTarget, "%s.hmap");
 
     ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
     assertFalse(settings.containsKey("HEADER_SEARCH_PATHS"));
@@ -720,6 +719,22 @@ public class ProjectGeneratorTest {
     assertThat(
         settings.get("OTHER_CFLAGS"),
         containsString("-I" + projectFilesystem.resolve(swiftHeaderMapPath)));
+
+    BuildTarget privateHeadersTarget =
+        libTarget.withAppendedFlavors(
+            DEFAULT_PLATFORM.getFlavor(), CxxLibraryDescription.Type.HEADERS.getFlavor());
+    BuildTarget swiftCompileTarget =
+        libTarget.withAppendedFlavors(SWIFT_COMPILE_FLAVOR, DEFAULT_PLATFORM.getFlavor());
+
+    assertEquals(
+        result.requiredBuildTargets,
+        ImmutableSet.of(
+            privateHeadersTarget,
+            generatedSwiftHeaderMapTarget,
+            vfsOverlayTarget,
+            exportedHeadersTarget,
+            privateHeadersTarget,
+            swiftCompileTarget));
   }
 
   @Test

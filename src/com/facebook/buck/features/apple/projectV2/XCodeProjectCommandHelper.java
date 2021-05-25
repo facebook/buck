@@ -404,6 +404,7 @@ public class XCodeProjectCommandHelper {
                 appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries())
             .setShouldUseShortNamesForTargets(true)
             .setShouldGenerateProjectSchemes(createProjectSchemes)
+            .setShouldBuildModularDepdenencyHeaders(getBuildModularDependencyHeaders(buckConfig))
             .build();
 
     LOG.debug("Xcode project generation: Generates workspaces for targets");
@@ -568,8 +569,7 @@ public class XCodeProjectCommandHelper {
               cxxBuckConfig,
               appleConfig,
               swiftBuckConfig,
-              sharedLibraryToBundle,
-              getBuildModularDependencyHeaders(buckConfig));
+              sharedLibraryToBundle);
       Objects.requireNonNull(
           executorService, "CommandRunnerParams does not have executor for PROJECT pool");
       WorkspaceAndProjectGenerator.Result result =

@@ -76,6 +76,12 @@ public interface ProjectGeneratorOptions {
     return false;
   }
 
+  /** If dependency headers should be built as part of project generation */
+  @Value.Default
+  default boolean shouldBuildModularDepdenencyHeaders() {
+    return true;
+  }
+
   static Builder builder() {
     return new Builder();
   }

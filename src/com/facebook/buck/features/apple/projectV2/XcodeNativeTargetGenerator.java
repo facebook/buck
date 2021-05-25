@@ -527,6 +527,9 @@ public class XcodeNativeTargetGenerator {
 
     XCodeNativeTargetAttributes nativeTargetAttributes = nativeTargetBuilder.build();
     addRequiredBuildTargetsFromAttributes(nativeTargetAttributes, requiredBuildTargetsBuilder);
+    if (options.shouldBuildModularDepdenencyHeaders() && headerSearchPathAttributes != null) {
+      requiredBuildTargetsBuilder.addAll(headerSearchPathAttributes.requiredBuildTargets());
+    }
 
     return new Result(
         targetNode,

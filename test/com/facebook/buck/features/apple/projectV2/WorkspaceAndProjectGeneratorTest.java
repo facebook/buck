@@ -272,8 +272,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
     WorkspaceAndProjectGenerator.Result result =
         generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
@@ -308,8 +307,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
     WorkspaceAndProjectGenerator.Result result =
         generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
@@ -345,8 +343,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
 
     generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
     assertEquals(generator.getSchemeGenerators().size(), 1);
@@ -427,8 +424,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
 
     generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
     assertEquals(generator.getRequiredBuildTargets(), ImmutableSet.of(genruleTarget));
@@ -571,8 +567,8 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
+
     WorkspaceAndProjectGenerator.Result result =
         generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
@@ -661,8 +657,8 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
+
     WorkspaceAndProjectGenerator.Result result =
         generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
@@ -728,8 +724,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
     generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     BuildTarget expectedTarget =
@@ -769,6 +764,7 @@ public class WorkspaceAndProjectGeneratorTest {
             ProjectGeneratorOptions.builder()
                 .setShouldIncludeTests(true)
                 .setShouldIncludeDependenciesTests(true)
+                .setShouldBuildModularDepdenencyHeaders(false)
                 .build(),
             FocusedTargetMatcher.noFocus(),
             false /* parallelizeBuild */,
@@ -782,8 +778,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            false);
+            Optional.empty());
     generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     assertTrue(generator.getRequiredBuildTargets().isEmpty());
@@ -853,8 +848,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
     generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     assertThat(
@@ -934,8 +928,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
     generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
@@ -993,8 +986,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
     generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
@@ -1056,8 +1048,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
     generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
 
     XCScheme mainScheme = generator.getSchemeGenerators().get("workspace").getOutputScheme().get();
@@ -1142,8 +1133,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
 
     WorkspaceAndProjectGenerator.Result result =
         generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());
@@ -1223,8 +1213,7 @@ public class WorkspaceAndProjectGeneratorTest {
             cxxBuckConfig,
             appleConfig,
             swiftBuckConfig,
-            Optional.empty(),
-            true);
+            Optional.empty());
 
     WorkspaceAndProjectGenerator.Result result =
         generator.generateWorkspaceAndDependentProjects(MoreExecutors.newDirectExecutorService());

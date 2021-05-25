@@ -97,7 +97,6 @@ public class WorkspaceAndProjectGenerator {
   private final boolean parallelizeBuild;
   private final CxxPlatform defaultCxxPlatform;
   private final ImmutableSet<Flavor> appleCxxFlavors;
-  private final boolean buildModularDependencyHeaders;
 
   private final Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
   private final String buildFileName;
@@ -153,8 +152,7 @@ public class WorkspaceAndProjectGenerator {
       CxxBuckConfig cxxBuckConfig,
       AppleConfig appleConfig,
       SwiftBuckConfig swiftBuckConfig,
-      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle,
-      boolean buildModularDependencyHeaders) {
+      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle) {
     this.xcodeDescriptions = xcodeDescriptions;
     this.cells = cells;
     this.rootCell = cell;
@@ -176,7 +174,6 @@ public class WorkspaceAndProjectGenerator {
     this.cxxBuckConfig = cxxBuckConfig;
     this.appleConfig = appleConfig;
     this.sharedLibraryToBundle = sharedLibraryToBundle;
-    this.buildModularDependencyHeaders = buildModularDependencyHeaders;
 
     this.focusedTargetMatcher = focusedTargetMatcher;
     // Add the workspace target to the focused target matcher.
@@ -311,7 +308,7 @@ public class WorkspaceAndProjectGenerator {
         targetToProjectPathMap,
         buildTargetToPBXTarget);
 
-    if (buildModularDependencyHeaders) {
+    if (projectGeneratorOptions.shouldBuildModularDepdenencyHeaders()) {
       requiredBuildTargetsBuilder.addAll(getModularNodesToGenerate());
     }
 

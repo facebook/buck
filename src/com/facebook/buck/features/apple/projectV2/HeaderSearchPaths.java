@@ -226,7 +226,7 @@ class HeaderSearchPaths {
     BuildTarget buildTarget =
         targetNode
             .getBuildTarget()
-            .withAppendedFlavors(
+            .withFlavors(
                 CxxLibraryDescription.Type.HEADERS.getFlavor(),
                 getDefaultPlatformFlavor(targetNode));
     ProjectFilesystem targetFilesystem = getFilesystemForTarget(Optional.of(buildTarget));
@@ -241,7 +241,7 @@ class HeaderSearchPaths {
       BuildTarget privateSwiftHeaderMapTarget =
           targetNode
               .getBuildTarget()
-              .withAppendedFlavors(
+              .withFlavors(
                   SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR,
                   getDefaultPlatformFlavor(targetNode));
       RelPath privateSwiftHeaderMapPath =
@@ -253,7 +253,7 @@ class HeaderSearchPaths {
       BuildTarget vfsOverlayTarget =
           targetNode
               .getBuildTarget()
-              .withAppendedFlavors(
+              .withFlavors(
                   SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR, getDefaultPlatformFlavor(targetNode));
       RelPath vfsOverlayPath =
           BuildTargetPaths.getGenPath(
@@ -279,7 +279,7 @@ class HeaderSearchPaths {
     BuildTarget buildTarget =
         targetNode
             .getBuildTarget()
-            .withAppendedFlavors(CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor());
+            .withFlavors(CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor());
     ProjectFilesystem targetFilesystem = getFilesystemForTarget(Optional.of(buildTarget));
     RelPath includePath;
     if (NodeHelper.isModularAppleLibrary(targetNode)) {
