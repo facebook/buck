@@ -287,7 +287,7 @@ public class DaemonicParserState {
     String cellName = matcher.group(1);
     CanonicalCellName canonicalCellName =
         (Objects.isNull(cellName) || cellName.isEmpty())
-            ? CanonicalCellName.rootCell()
+            ? cell.getCanonicalName()
             : cellPathResolver.getCellNameResolver().getName(Optional.of(cellName));
 
     String includePath = matcher.group(2);
