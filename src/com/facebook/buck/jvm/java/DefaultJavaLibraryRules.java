@@ -290,14 +290,30 @@ public abstract class DefaultJavaLibraryRules {
   private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("^(1\\.)*(?<version>\\d)$");
 
   private boolean isDesugarRequired() {
-    String sourceLevel = getJavacOptions().getLanguageLevelOptions().getSourceLevel();
-    Matcher matcher = JAVA_VERSION_PATTERN.matcher(sourceLevel);
-    if (!matcher.find()) {
-      return false;
-    }
-    int version = Integer.parseInt(matcher.group("version"));
+    String rawJavaSourceLevel = getJavacOptions().getLanguageLevelOptions().getSourceLevel();
+    String rawKotlinSourceLevel =
+        Optional.ofNullable(getArgs()).flatMap(JvmLibraryArg::getTarget).orElse(null);
+    Integer javaSourceLevel = extractSourceLevel(rawJavaSourceLevel);
+    Integer kotlinSourceLevel = extractSourceLevel(rawKotlinSourceLevel);
+    return shouldApplyDesugaringToSourceLevel(javaSourceLevel)
+        || shouldApplyDesugaringToSourceLevel(kotlinSourceLevel);
+  }
+
+  private static boolean shouldApplyDesugaringToSourceLevel(@Nullable Integer sourceLevel) {
     // Currently only java 8+ requires desugaring on Android
-    return version > 7;
+    return sourceLevel != null && sourceLevel > 7;
+  }
+
+  private static @Nullable Integer extractSourceLevel(@Nullable String rawSourceLevel) {
+    if (rawSourceLevel == null) {
+      return null;
+    }
+
+    Matcher matcher = JAVA_VERSION_PATTERN.matcher(rawSourceLevel);
+    if (!matcher.find()) {
+      return null;
+    }
+    return Integer.parseInt(matcher.group("version"));
   }
 
   @Value.Lazy
