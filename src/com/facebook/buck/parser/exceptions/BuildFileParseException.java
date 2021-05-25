@@ -58,6 +58,11 @@ public class BuildFileParseException extends HumanReadableException {
   }
 
   public static BuildFileParseException createForUnknownParseError(
+      Throwable cause, String message) {
+    return new BuildFileParseException(cause, message);
+  }
+
+  public static BuildFileParseException createForUnknownParseError(
       DependencyStack dependencyStack, String message, Object... args) {
     return new BuildFileParseException(dependencyStack, message, args);
   }

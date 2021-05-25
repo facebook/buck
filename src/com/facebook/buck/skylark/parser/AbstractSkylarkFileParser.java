@@ -205,7 +205,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     } catch (EvalException e) {
       String whatFormatted = String.format(what, whatArgs);
       throw BuildFileParseException.createForUnknownParseError(
-          "Cannot evaluate " + whatFormatted + "\n" + e.getMessageWithStack());
+          e, "Cannot evaluate " + whatFormatted + "\n" + e.getMessageWithStack());
     } catch (InterruptedException | BuildFileParseException e) {
       throw e;
     } catch (Exception e) {

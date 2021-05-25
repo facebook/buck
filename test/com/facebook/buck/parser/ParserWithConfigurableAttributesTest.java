@@ -28,6 +28,7 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesRegex;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -90,6 +91,7 @@ import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.io.watchman.WatchmanWatcherOneBigEvent;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.config.ParserConfig.ApplyDefaultFlavorsMode;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
@@ -172,6 +174,9 @@ public class ParserWithConfigurableAttributesTest {
   @Parameterized.Parameter(1)
   public boolean parallelParsing;
 
+  @Parameterized.Parameter(2)
+  public Syntax syntax;
+
   private BuildTarget buildTarget;
   private AbsPath defaultIncludeFile;
   private AbsPath includedByIncludeFile;
@@ -189,18 +194,23 @@ public class ParserWithConfigurableAttributesTest {
   private ExecutableFinder executableFinder;
   private ParsingContext parsingContext;
 
-  @Parameterized.Parameters(name = "project.parsing_threads={0}, project.parallel_parsing={1}")
+  @Parameterized.Parameters(
+      name =
+          "project.parsing_threads={0}, project.parallel_parsing={1}, parser.default_build_file_syntax={2}")
   public static Collection<Object[]> generateData() {
     return Arrays.asList(
         new Object[][] {
           {
-            1, false,
+            2, true, Syntax.SKYLARK,
           },
           {
-            1, true,
+            1, false, Syntax.PYTHON_DSL,
           },
           {
-            2, true,
+            1, true, Syntax.PYTHON_DSL,
+          },
+          {
+            2, true, Syntax.PYTHON_DSL,
           },
         });
   }
@@ -249,7 +259,8 @@ public class ParserWithConfigurableAttributesTest {
     includedByBuildFile = tempDir.newFile("java/com/facebook/includedByBuildFile").toRealPath();
     Files.write(
         includedByBuildFile.getPath(),
-        "load('//:java/com/facebook/includedByIncludeFile', 'BAR')\n".getBytes(UTF_8));
+        ("load('//:java/com/facebook/includedByIncludeFile', _BAR='BAR')\n" + "BAR = _BAR\n")
+            .getBytes(UTF_8));
 
     testBuildFile = tempDir.newFile("java/com/facebook/BUCK").toRealPath();
     Files.write(
@@ -283,6 +294,8 @@ public class ParserWithConfigurableAttributesTest {
     configSectionsBuilder.put(
         "buildfile", ImmutableMap.of("includes", "//java/com/facebook/defaultIncludeFile"));
     configSectionsBuilder.put("project", projectSectionBuilder.build());
+    configSectionsBuilder.put(
+        "parser", ImmutableMap.of("default_build_file_syntax", syntax.name()));
 
     BuckConfig config =
         FakeBuckConfig.builder()
@@ -445,7 +458,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void shouldThrowAnExceptionIfADepIsInAFileThatCannotBeParsed()
       throws IOException, InterruptedException, BuildFileParseException {
-    thrown.expectMessage("Buck wasn't able to parse");
+    thrown.expectMessage(matchesRegex("(?s).*Buck wasn't able to parse .*|.*Cannot parse .*"));
     thrown.expectMessage(Paths.get("foo/BUCK").toString());
 
     AbsPath buckFile = cellRoot.resolve("BUCK");
@@ -465,7 +478,9 @@ public class ParserWithConfigurableAttributesTest {
   public void shouldThrowAnExceptionIfMultipleTargetsAreDefinedWithTheSameName()
       throws IOException, BuildFileParseException {
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Duplicate rule definition 'cake' found.");
+    thrown.expectMessage(
+        matchesRegex(
+            "(?s).*Duplicate rule definition 'cake' found.*|.*Cannot register rule :cake of type genrule with.*"));
 
     AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(
@@ -497,7 +512,9 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void shouldThrowAnExceptionIfNameIsNone() throws IOException, BuildFileParseException {
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("rules 'name' field must be a string.  Found None.");
+    thrown.expectMessage(
+        matchesRegex(
+            "(?s).*rules 'name' field must be a string.  Found None.*|.*rule without a name.*"));
 
     AbsPath buckFile = cellRoot.resolve("BUCK");
     Files.write(

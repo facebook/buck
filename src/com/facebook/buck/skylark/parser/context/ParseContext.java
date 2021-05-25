@@ -23,7 +23,6 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import javax.annotation.Nullable;
 import net.starlark.java.eval.EvalException;
 import net.starlark.java.eval.StarlarkThread;
@@ -57,11 +56,12 @@ public class ParseContext {
   /** Records the parsed {@code rawRule}. */
   public void recordRule(RecordedRule rawRule) throws EvalException {
     Preconditions.checkState(pkg == null, "Build files cannot contain package definitions.");
-    Object nameObject =
-        Objects.requireNonNull(
-            rawRule.getRawRule().get(CommonParamNames.NAME), "Every target must have a name.");
+    Object nameObject = rawRule.getRawRule().get(CommonParamNames.NAME);
+    if (nameObject == null) {
+      throw new EvalException("rule without a name");
+    }
     if (!(nameObject instanceof String)) {
-      throw new IllegalArgumentException(
+      throw new EvalException(
           "Target name must be string, it is "
               + nameObject
               + " ("
