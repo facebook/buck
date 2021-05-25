@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.label.PackageIdentifier;
 import com.facebook.buck.core.model.label.PathFragment;
 import com.facebook.buck.core.model.label.RepositoryName;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
-import com.facebook.buck.core.starlark.compatible.BuckStarlarkModule;
 import com.facebook.buck.core.starlark.compatible.BuckStarlarkPrintHandler;
 import com.facebook.buck.core.starlark.compatible.StarlarkExportable;
 import com.facebook.buck.core.starlark.eventhandler.Event;
@@ -184,7 +183,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               implicitLoad.getExtensionData());
 
       Module module = new Module(buildFileAst.getModule());
-      BuckStarlarkModule.setClientData(module, containingLabel);
       exec(buildFileAst, module, envData.getEnvironment(), "file %s", parseFile);
 
       ImmutableList.Builder<String> loadedPaths =
@@ -726,7 +724,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // Must be already frozen, but freeze again to be safe.
       resolverModule.freeze();
       Module module = new Module(resolverModule);
-      BuckStarlarkModule.setClientData(module, load.getLabel());
       makeModule(FileKind.BZL);
       exec(
           ast,

@@ -323,14 +323,8 @@ public final class StarlarkFunction extends StarlarkCallable {
 
   @Override
   public void repr(Printer printer) {
-    // TODO(adonovan): use the file name instead. But that's a breaking Bazel change.
-    Object clientData = module.getClientData();
-
-    printer.append("<function " + getName());
-    if (clientData != null) {
-      printer.append(" from " + clientData);
-    }
-    printer.append(">");
+    // TODO(adonovan): use the file name
+    printer.append("<function " + getName() + ">");
   }
 
   static String plural(int n) {

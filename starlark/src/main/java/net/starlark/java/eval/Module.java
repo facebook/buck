@@ -92,11 +92,6 @@ public final class Module {
     }
   }
 
-  // An optional piece of metadata associated with the module/file.
-  // May be set after construction (too obscure to burden the constructors).
-  // Its toString appears to Starlark in str(function): "<function f from ...>".
-  @Nullable private Object clientData;
-
   /**
    * Returns a map in which each semantics-enabled FlagGuardedValue has been replaced by the value
    * it guards. Disabled FlagGuardedValues are left in place, and should be treated as unavailable.
@@ -109,23 +104,6 @@ public final class Module {
       filtered.put(bind.getKey(), v);
     }
     return filtered.build();
-  }
-
-  /**
-   * Sets the client data (an arbitrary application-specific value) associated with the module. It
-   * may be retrieved using {@link #getClientData}. Its {@code toString} form appears in the result
-   * of {@code str(fn)} where {@code fn} is a StarlarkFunction: "<function f from ...>".
-   */
-  public void setClientData(@Nullable Object clientData) {
-    this.clientData = clientData;
-  }
-
-  /**
-   * Returns the client data associated with this module by a prior call to {@link #setClientData}.
-   */
-  @Nullable
-  public Object getClientData() {
-    return clientData;
   }
 
   /**
@@ -184,10 +162,5 @@ public final class Module {
       globals = Arrays.copyOf(globals, Math.max(indexOfGlobal + 1, globals.length << 1));
     }
     setGlobalByIndex(indexOfGlobal, value);
-  }
-
-  @Override
-  public String toString() {
-    return String.format("<module %s>", clientData == null ? "?" : clientData);
   }
 }
