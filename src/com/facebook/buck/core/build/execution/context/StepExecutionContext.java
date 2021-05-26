@@ -52,8 +52,6 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
         .setProcessExecutor(executionContext.getProcessExecutor())
         .setAndroidDevicesHelper(executionContext.getAndroidDevicesHelper())
         .setPersistentWorkerPools(executionContext.getPersistentWorkerPools())
-        .setPersistentWorkerToolExecutorPools(
-            executionContext.getPersistentWorkerToolExecutorPools())
         .setBuildCellRootPath(executionContext.getBuildCellRootPath())
         .setProjectFilesystemFactory(executionContext.getProjectFilesystemFactory())
         .setClassLoaderCache(executionContext.getClassLoaderCache())

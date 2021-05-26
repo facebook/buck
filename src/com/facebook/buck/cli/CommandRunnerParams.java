@@ -113,9 +113,6 @@ public abstract class CommandRunnerParams {
   public abstract ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>>
       getPersistentWorkerPools();
 
-  public abstract ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>
-      getPersistentWorkerToolExecutorPools();
-
   public abstract BuckConfig getBuckConfig();
 
   public abstract StackedFileHashCache getFileHashCache();
@@ -214,7 +211,6 @@ public abstract class CommandRunnerParams {
         getProcessManager(),
         getWebServer(),
         getPersistentWorkerPools(),
-        getPersistentWorkerToolExecutorPools(),
         getBuckConfig(),
         getFileHashCache(),
         getExecutors(),
@@ -264,7 +260,6 @@ public abstract class CommandRunnerParams {
         getProcessManager(),
         getWebServer(),
         getPersistentWorkerPools(),
-        getPersistentWorkerToolExecutorPools(),
         buckConfig,
         getFileHashCache(),
         getExecutors(),

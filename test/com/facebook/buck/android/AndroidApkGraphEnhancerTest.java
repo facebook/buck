@@ -810,7 +810,7 @@ public class AndroidApkGraphEnhancerTest {
             false,
             false,
             new FakeTool(),
-            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1, false));
+            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams =

@@ -792,8 +792,7 @@ public abstract class DefaultJavaLibraryRules {
         javaBuckConfig.isJavaCDEnabled(),
         javaCDBuckConfig.getJvmFlags(),
         javaCDBuckConfig.getWorkerToolSize(),
-        javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds(),
-        javaCDBuckConfig.usePersistentWorkers());
+        javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
   }
 
   @org.immutables.builder.Builder.AccessibleFields

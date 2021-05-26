@@ -38,23 +38,18 @@ public class WorkerToolPoolFactory {
   /**
    * Returns an existing {@link WorkerProcessPool} for the given {@code startupCommand} if one
    * exists, otherwise creates a new one.
-   *
-   * <p>If {@code usePersistentWorkers} is true, then keep worker pool inside the global state of
-   * Buck which is kept between invocations of Buck commands. Otherwise keep worker pool only for
-   * execution command and close it when command finished.
    */
   public static WorkerProcessPool<WorkerToolExecutor> getPool(
       IsolatedExecutionContext context,
       ImmutableList<String> startupCommand,
       ThrowingSupplier<WorkerToolExecutor, IOException> startWorkerProcess,
-      int capacity,
-      boolean usePersistentWorkers) {
+      int capacity) {
 
     String key = String.join(" ", startupCommand);
     HashCode workerHash = Hashing.sha1().hashString(key, StandardCharsets.UTF_8);
 
     ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>> poolMap =
-        getPoolFromContext(context, usePersistentWorkers);
+        context.getWorkerToolPools();
 
     // If the worker pool has a different hash, recreate the pool.
     WorkerProcessPool<WorkerToolExecutor> pool = poolMap.get(key);
@@ -69,14 +64,6 @@ public class WorkerToolPoolFactory {
       pool = createPool(poolMap, capacity, key, workerHash, startWorkerProcess);
     }
     return pool;
-  }
-
-  private static ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>> getPoolFromContext(
-      IsolatedExecutionContext context, boolean usePersistentWorkers) {
-    if (!usePersistentWorkers) {
-      return context.getWorkerToolPools();
-    }
-    return context.getPersistentWorkerToolExecutorPools().orElseGet(context::getWorkerToolPools);
   }
 
   private static WorkerProcessPool<WorkerToolExecutor> createPool(

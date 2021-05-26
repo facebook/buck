@@ -125,9 +125,6 @@ public abstract class ExecutionContext implements Closeable {
   public abstract Optional<ConcurrentMap<String, WorkerProcessPool<DefaultWorkerProcess>>>
       getPersistentWorkerPools();
 
-  public abstract Optional<ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>>>
-      getPersistentWorkerToolExecutorPools();
-
   public abstract CellPathResolver getCellPathResolver();
 
   /** See {@link com.facebook.buck.core.build.context.BuildContext#getBuildCellRootPath}. */
