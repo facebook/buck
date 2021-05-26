@@ -222,7 +222,7 @@ public class VersionControlStatsGenerator {
           versionControlStatsBuilder.setDiff(diff);
         }
       } catch (VersionControlCommandFailedException e) {
-        LOG.warn("Failed to gather some source control stats.");
+        LOG.warn(e, "Failed to gather some source control stats.");
       }
       versionControlStats = versionControlStatsBuilder.build();
       LOG.info("Version Control Stats generated successfully.");
