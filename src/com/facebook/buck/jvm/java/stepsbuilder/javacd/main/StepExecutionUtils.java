@@ -100,7 +100,7 @@ class StepExecutionUtils {
             platform,
             processExecutor,
             ruleCellRoot,
-            "javacd_action_id_" + actionId,
+            actionId,
             clock);
 
     // use newly created execution context to execute steps
