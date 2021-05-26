@@ -123,8 +123,6 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
     final ImmutableSet.Builder<SourcePath> sourcePaths = ImmutableSet.builder();
     final ImmutableSet.Builder<DependencyFileEntry> accountedEntries = ImmutableSet.builder();
 
-    private final SizeLimiter sizeLimiter = new SizeLimiter(inputSizeLimit);
-
     private Builder(
         SupportsDependencyFileRuleKey rule,
         KeyType keyType,
@@ -193,8 +191,9 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
 
     @Override
     public Builder<RULE_KEY> setPath(Path absolutePath, Path ideallyRelative) throws IOException {
-      if (inputSizeLimit != Long.MAX_VALUE) {
-        sizeLimiter.add(fileHashLoader.getSize(absolutePath));
+      if (inputSizeLimit != Long.MAX_VALUE
+          && fileHashLoader.getSize(absolutePath) > inputSizeLimit) {
+        throw new SizeLimitException();
       }
       super.setPath(absolutePath, ideallyRelative);
       return this;
@@ -203,8 +202,9 @@ public final class DefaultDependencyFileRuleKeyFactory implements DependencyFile
     @Override
     protected Builder<RULE_KEY> setPath(ProjectFilesystem filesystem, Path relativePath)
         throws IOException {
-      if (inputSizeLimit != Long.MAX_VALUE) {
-        sizeLimiter.add(fileHashLoader.getSize(filesystem, relativePath));
+      if (inputSizeLimit != Long.MAX_VALUE
+          && fileHashLoader.getSize(filesystem, relativePath) > inputSizeLimit) {
+        throw new SizeLimitException();
       }
       super.setPath(filesystem, relativePath);
       return this;

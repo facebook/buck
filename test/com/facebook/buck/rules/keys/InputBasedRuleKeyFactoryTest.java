@@ -489,7 +489,7 @@ public class InputBasedRuleKeyFactoryTest {
   }
 
   @Test
-  public void ruleKeyNotCalculatedIfSizeLimitHitWithMultipleInputs() throws IOException {
+  public void ruleKeySizeLimitNotHitFromSumOfMultipleInputs() throws IOException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
@@ -516,8 +516,7 @@ public class InputBasedRuleKeyFactoryTest {
                     PathSourcePath.of(filesystem, input1), PathSourcePath.of(filesystem, input2)))
             .build(graphBuilder, filesystem);
 
-    // Verify rule key isn't calculated.
-    expectedException.expect(SizeLimitException.class);
+    // Verify rule key is calculated.
     new TestInputBasedRuleKeyFactory(fieldLoader, hashCache, graphBuilder, 200).build(rule);
   }
 

@@ -165,7 +165,6 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
   /* package */ class Builder<RULE_KEY> extends RuleKeyBuilder<RULE_KEY> {
 
     private final ImmutableList.Builder<Iterable<BuildRule>> deps = ImmutableList.builder();
-    private final SizeLimiter sizeLimiter = new SizeLimiter(inputSizeLimit);
 
     public Builder(RuleKeyHasher<RULE_KEY> hasher) {
       super(ruleFinder, fileHashLoader, hasher);
@@ -183,8 +182,9 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     public Builder<RULE_KEY> setPath(Path absolutePath, Path ideallyRelative) throws IOException {
       // TODO(plamenko): this check should not be necessary, but otherwise some tests fail due to
       // FileHashLoader throwing NoSuchFileException which doesn't get correctly propagated.
-      if (inputSizeLimit != Long.MAX_VALUE) {
-        sizeLimiter.add(fileHashLoader.getSize(absolutePath));
+      if (inputSizeLimit != Long.MAX_VALUE
+          && fileHashLoader.getSize(absolutePath) > inputSizeLimit) {
+        throw new SizeLimitException();
       }
       super.setPath(absolutePath, ideallyRelative);
       return this;
@@ -195,8 +195,9 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
         throws IOException {
       // TODO(plamenko): this check should not be necessary, but otherwise some tests fail due to
       // FileHashLoader throwing NoSuchFileException which doesn't get correctly propagated.
-      if (inputSizeLimit != Long.MAX_VALUE) {
-        sizeLimiter.add(fileHashLoader.getSize(filesystem, relativePath));
+      if (inputSizeLimit != Long.MAX_VALUE
+          && fileHashLoader.getSize(filesystem, relativePath) > inputSizeLimit) {
+        throw new SizeLimitException();
       }
       super.setPath(filesystem, relativePath);
       return this;
