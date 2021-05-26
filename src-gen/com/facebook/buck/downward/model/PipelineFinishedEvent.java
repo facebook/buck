@@ -22,6 +22,7 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private PipelineFinishedEvent() {
+    actionId_ = "";
   }
 
   @java.lang.Override
@@ -37,6 +38,7 @@ private static final long serialVersionUID = 0L;
     if (extensionRegistry == null) {
       throw new java.lang.NullPointerException();
     }
+    int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields =
         com.google.protobuf.UnknownFieldSet.newBuilder();
     try {
@@ -47,6 +49,12 @@ private static final long serialVersionUID = 0L;
           case 0:
             done = true;
             break;
+          case 10: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            actionId_ = s;
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -79,6 +87,40 @@ private static final long serialVersionUID = 0L;
             com.facebook.buck.downward.model.PipelineFinishedEvent.class, com.facebook.buck.downward.model.PipelineFinishedEvent.Builder.class);
   }
 
+  public static final int ACTION_ID_FIELD_NUMBER = 1;
+  private volatile java.lang.Object actionId_;
+  /**
+   * <code>string action_id = 1;</code>
+   */
+  public java.lang.String getActionId() {
+    java.lang.Object ref = actionId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      actionId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <code>string action_id = 1;</code>
+   */
+  public com.google.protobuf.ByteString
+      getActionIdBytes() {
+    java.lang.Object ref = actionId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      actionId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -93,6 +135,9 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
+    if (!getActionIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, actionId_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -102,6 +147,9 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
+    if (!getActionIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, actionId_);
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -117,6 +165,8 @@ private static final long serialVersionUID = 0L;
     }
     com.facebook.buck.downward.model.PipelineFinishedEvent other = (com.facebook.buck.downward.model.PipelineFinishedEvent) obj;
 
+    if (!getActionId()
+        .equals(other.getActionId())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -128,6 +178,8 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
+    hash = (37 * hash) + ACTION_ID_FIELD_NUMBER;
+    hash = (53 * hash) + getActionId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -265,6 +317,8 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
+      actionId_ = "";
+
       return this;
     }
 
@@ -291,6 +345,7 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.facebook.buck.downward.model.PipelineFinishedEvent buildPartial() {
       com.facebook.buck.downward.model.PipelineFinishedEvent result = new com.facebook.buck.downward.model.PipelineFinishedEvent(this);
+      result.actionId_ = actionId_;
       onBuilt();
       return result;
     }
@@ -339,6 +394,10 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(com.facebook.buck.downward.model.PipelineFinishedEvent other) {
       if (other == com.facebook.buck.downward.model.PipelineFinishedEvent.getDefaultInstance()) return this;
+      if (!other.getActionId().isEmpty()) {
+        actionId_ = other.actionId_;
+        onChanged();
+      }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
       return this;
@@ -365,6 +424,75 @@ private static final long serialVersionUID = 0L;
           mergeFrom(parsedMessage);
         }
       }
+      return this;
+    }
+
+    private java.lang.Object actionId_ = "";
+    /**
+     * <code>string action_id = 1;</code>
+     */
+    public java.lang.String getActionId() {
+      java.lang.Object ref = actionId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        actionId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <code>string action_id = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getActionIdBytes() {
+      java.lang.Object ref = actionId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        actionId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <code>string action_id = 1;</code>
+     */
+    public Builder setActionId(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      actionId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string action_id = 1;</code>
+     */
+    public Builder clearActionId() {
+      
+      actionId_ = getDefaultInstance().getActionId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>string action_id = 1;</code>
+     */
+    public Builder setActionIdBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      actionId_ = value;
+      onChanged();
       return this;
     }
     @java.lang.Override

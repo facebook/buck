@@ -8,4 +8,14 @@ package com.facebook.buck.downward.model;
 public interface PipelineFinishedEventOrBuilder extends
     // @@protoc_insertion_point(interface_extends:downward.api.v1.PipelineFinishedEvent)
     com.google.protobuf.MessageOrBuilder {
+
+  /**
+   * <code>string action_id = 1;</code>
+   */
+  java.lang.String getActionId();
+  /**
+   * <code>string action_id = 1;</code>
+   */
+  com.google.protobuf.ByteString
+      getActionIdBytes();
 }

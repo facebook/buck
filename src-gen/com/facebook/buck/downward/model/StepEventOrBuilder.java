@@ -72,4 +72,14 @@ public interface StepEventOrBuilder extends
    * <code>.google.protobuf.Duration duration = 5;</code>
    */
   com.google.protobuf.DurationOrBuilder getDurationOrBuilder();
+
+  /**
+   * <code>string action_id = 6;</code>
+   */
+  java.lang.String getActionId();
+  /**
+   * <code>string action_id = 6;</code>
+   */
+  com.google.protobuf.ByteString
+      getActionIdBytes();
 }
