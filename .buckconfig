@@ -19,9 +19,9 @@
     # (instead of as a separate step), this can become an error again:
     source_abi_verification_mode = fail
     compile_against_abis = True
-    javacd_enabled = false
+    javacd_enabled = True
 [javacd]
-  jvm_args = -Dfile.encoding=UTF-8, -Xms288m, -XX:+UseG1GC, -XX:StringTableSize=1000003, -XX:+HeapDumpOnOutOfMemoryError, -XX:HeapDumpPath=buck-out/log
+  jvm_args = -Dfile.encoding=UTF-8, -Xms128m, -XX:+UseG1GC, -XX:StringTableSize=1000003, -XX:+HeapDumpOnOutOfMemoryError, -XX:HeapDumpPath=buck-out/log
 
 [kotlin]
   # TODO: Put this in a shared location so Kotlin code under src/
