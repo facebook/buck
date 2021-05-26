@@ -22,7 +22,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -42,9 +41,6 @@ public class ParserImplicitIncludesIntegrationTest {
 
   @Test
   public void smoke() throws Exception {
-    // TODO(nga): implicit includes are not implemented in Starlark
-    Assume.assumeTrue(syntax != Syntax.SKYLARK);
-
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "parser_implicit_includes", temporaryFolder);

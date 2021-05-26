@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.label.Label;
@@ -35,6 +36,7 @@ import com.facebook.buck.parser.api.FileManifest;
 import com.facebook.buck.parser.api.FileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
+import com.facebook.buck.parser.implicit.ImplicitIncludePath;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.function.LoadSymbolsContext;
@@ -62,10 +64,12 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import net.starlark.java.eval.EvalException;
@@ -92,6 +96,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private final ConcurrentHashMap<AbsPath, Either<Program, ExtensionData>> extensionCache;
   private final ConcurrentHashMap<Label, IncludesData> includesDataCache;
   private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
+  private final AtomicReference<ImplicitlyLoadedExtension> globalImplicitIncludes =
+      new AtomicReference<>();
 
   AbstractSkylarkFileParser(
       ProjectBuildFileParserOptions options, BuckGlobals buckGlobals, EventHandler eventHandler) {
@@ -118,26 +124,58 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
   abstract Globber getGlobber(AbsPath parseFile);
 
+  private ImplicitlyLoadedExtension loadImplicitInclude(ImplicitIncludePath path)
+      throws IOException, InterruptedException {
+    ExtensionData extensionData =
+        loadExtensionFromImport(
+            ImmutableLoadImport.ofImpl(
+                implicitIncludeContainingLabel(),
+                path.reconstructWithAtAndColon(),
+                Location.BUILTIN),
+            LoadStack.EMPTY);
+    return ImmutableImplicitlyLoadedExtension.ofImpl(
+        extensionData.getLoadTransitiveClosure(), extensionData.getExtension().getSymbols());
+  }
+
+  private ImplicitlyLoadedExtension loadGlobalImplicitIncludes()
+      throws IOException, InterruptedException {
+    ImplicitlyLoadedExtension globalImplicitIncludes = this.globalImplicitIncludes.get();
+    if (globalImplicitIncludes != null) {
+      return globalImplicitIncludes;
+    }
+
+    ImmutableList.Builder<ImplicitlyLoadedExtension> extensions = ImmutableList.builder();
+    for (ImplicitIncludePath defaultInclude : options.getDefaultIncludes()) {
+      extensions.add(loadImplicitInclude(defaultInclude));
+    }
+
+    ImplicitlyLoadedExtension mergedExtensions =
+        ImplicitlyLoadedExtension.merge(extensions.build());
+
+    for (; ; ) {
+      ImplicitlyLoadedExtension get = this.globalImplicitIncludes.get();
+      if (get != null) {
+        return get;
+      }
+      if (this.globalImplicitIncludes.compareAndSet(null, mergedExtensions)) {
+        return mergedExtensions;
+      }
+    }
+  }
+
   private ImplicitlyLoadedExtension loadImplicitExtension(
       ForwardRelPath basePath, LoadStack loadStack) throws IOException, InterruptedException {
     Optional<ImplicitInclude> implicitInclude =
         packageImplicitIncludeFinder.findIncludeForBuildFile(basePath);
     if (!implicitInclude.isPresent()) {
-      return ImplicitlyLoadedExtension.empty();
+      return loadGlobalImplicitIncludes();
     }
-
-    Label containingLabel =
-        Label.createUnvalidated(
-            PackageIdentifier.create(
-                RepositoryName.createFromValidStrippedName(options.getCellName()),
-                PathFragment.EMPTY_FRAGMENT),
-            "BUCK");
 
     // Only export requested symbols, and ensure that all requsted symbols are present.
     ExtensionData data =
         loadExtensionFromImport(
             ImmutableLoadImport.ofImpl(
-                containingLabel,
+                implicitIncludeContainingLabel(),
                 implicitInclude.get().getRawImportLabel().reconstructWithAtAndColon(),
                 Location.BUILTIN),
             loadStack);
@@ -154,8 +192,20 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       }
       loaded.put(kvp.getKey(), symbol);
     }
-    return ImmutableImplicitlyLoadedExtension.ofImpl(
-        data.getLoadTransitiveClosure(), loaded.build());
+
+    return ImplicitlyLoadedExtension.merge(
+        ImmutableList.of(
+            loadGlobalImplicitIncludes(),
+            ImmutableImplicitlyLoadedExtension.ofImpl(
+                data.getLoadTransitiveClosure(), loaded.build())));
+  }
+
+  private Label implicitIncludeContainingLabel() {
+    return Label.createUnvalidated(
+        PackageIdentifier.create(
+            RepositoryName.createFromValidStrippedName(options.getCellName()),
+            PathFragment.EMPTY_FRAGMENT),
+        "BUCK");
   }
 
   /** @return The parsed result defined in {@code parseFile}. */
@@ -171,7 +221,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         parseSkylarkFile(
             parseFile,
             LoadStack.top(Location.fromFile(parseFile.toString())),
-            getBuckOrPackage().fileKind);
+            getBuckOrPackage().fileKind,
+            implicitLoad.getLoadedSymbols());
     Globber globber = getGlobber(parseFile);
     PackageContext packageContext =
         createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
@@ -312,13 +363,22 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     return file;
   }
 
-  private ResolverModule makeModule(FileKind fileKind) {
-    return fileKind == FileKind.BZL
-        ? buckGlobals.makeBuckLoadContextGlobals()
-        : buckGlobals.makeBuckBuildFileContextGlobals();
+  private ResolverModule makeModule(
+      FileKind fileKind, ImmutableMap<String, Object> implicitIncludes) {
+    if (fileKind == FileKind.BZL) {
+      Preconditions.checkArgument(
+          implicitIncludes.isEmpty(), "cannot use implicit includes when loading .bzl");
+      return buckGlobals.makeBuckLoadContextGlobals();
+    } else {
+      return buckGlobals.makeBuckBuildFileContextGlobals(implicitIncludes);
+    }
   }
 
-  private Program parseSkylarkFile(AbsPath path, LoadStack loadStack, FileKind fileKind)
+  private Program parseSkylarkFile(
+      AbsPath path,
+      LoadStack loadStack,
+      FileKind fileKind,
+      ImmutableMap<String, Object> implicitIncludes)
       throws BuildFileParseException, IOException {
     StarlarkFile starlarkFile;
     try {
@@ -348,7 +408,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     Program result;
     try {
-      ResolverModule module = makeModule(fileKind);
+      ResolverModule module = makeModule(fileKind, implicitIncludes);
       result = Program.compileFile(starlarkFile, module);
       module.freeze();
     } catch (SyntaxError.Exception e) {
@@ -386,7 +446,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     Label label = loadImport.getLabel();
     AbsPath filePath = getImportPath(label, loadImport.getImport());
 
-    Program fileAst = parseSkylarkFile(filePath, loadStack, FileKind.BZL);
+    Program fileAst = parseSkylarkFile(filePath, loadStack, FileKind.BZL, ImmutableMap.of());
     ImmutableList<IncludesData> dependencies =
         loadIncludes(label, getImports(fileAst, label), loadStack);
 
@@ -624,7 +684,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       return either;
     }
 
-    Program program = parseSkylarkFile(path, loadStack, FileKind.BZL);
+    Program program = parseSkylarkFile(path, loadStack, FileKind.BZL, ImmutableMap.of());
     either = Either.ofLeft(program);
     Either<Program, ExtensionData> prev = extensionCache.putIfAbsent(path, either);
     if (prev != null) {
@@ -879,7 +939,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, LoadStack.EMPTY);
     Program buildFileAst =
-        parseSkylarkFile(parseFile, LoadStack.EMPTY, getBuckOrPackage().fileKind);
+        parseSkylarkFile(
+            parseFile,
+            LoadStack.EMPTY,
+            getBuckOrPackage().fileKind,
+            implicitLoad.getLoadedSymbols());
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, getImports(buildFileAst, containingLabel), LoadStack.EMPTY);
 
@@ -941,6 +1005,29 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     static ImplicitlyLoadedExtension empty() {
       return EmptyHolder.EMPTY;
+    }
+
+    static ImplicitlyLoadedExtension merge(List<ImplicitlyLoadedExtension> extensions) {
+      if (extensions.isEmpty()) {
+        return empty();
+      } else if (extensions.size() == 1) {
+        return extensions.get(0);
+      } else {
+        ImmutableSet.Builder<String> loadTransitiveClosure = ImmutableSet.builder();
+        HashMap<String, Object> loadedSymbols = new HashMap<>();
+        for (ImplicitlyLoadedExtension extension : extensions) {
+          loadTransitiveClosure.addAll(extension.getLoadTransitiveClosure());
+          for (Entry<String, Object> entry : extension.getLoadedSymbols().entrySet()) {
+            Object prevValue = loadedSymbols.put(entry.getKey(), entry.getValue());
+            if (prevValue != null) {
+              throw new HumanReadableException(
+                  "non-unique symbol in implicit include: %s", entry.getKey());
+            }
+          }
+        }
+        return ImmutableImplicitlyLoadedExtension.ofImpl(
+            loadTransitiveClosure.build(), ImmutableMap.copyOf(loadedSymbols));
+      }
     }
   }
 }

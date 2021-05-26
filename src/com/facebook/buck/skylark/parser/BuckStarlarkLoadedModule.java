@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.Map;
@@ -50,5 +51,17 @@ class BuckStarlarkLoadedModule implements LoadedModule {
     names.addAll(module.getGlobals().keySet());
     names.addAll(loadSymbolsSymbols.keySet());
     return names.build();
+  }
+
+  public ImmutableMap<String, Object> getSymbols() {
+    if (loadSymbolsSymbols.isEmpty()) {
+      return module.getGlobals();
+    }
+    ImmutableMap.Builder<String, Object> builder =
+        ImmutableMap.builderWithExpectedSize(
+            module.getGlobals().size() + loadSymbolsSymbols.size());
+    builder.putAll(module.getGlobals());
+    builder.putAll(loadSymbolsSymbols);
+    return builder.build();
   }
 }

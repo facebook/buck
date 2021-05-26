@@ -98,8 +98,8 @@ public abstract class BuckGlobals {
   }
 
   /** {@code BUCK} file initial contents. */
-  @Lazy
-  protected ImmutableMap<String, Object> getMakeBuckBuildFileContextGlobals() {
+  protected ImmutableMap<String, Object> getMakeBuckBuildFileContextGlobals(
+      ImmutableMap<String, Object> implicitIncludes) {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     addBuckGlobals(builder);
     if (getImplicitNativeRulesState() == ImplicitNativeRulesState.ENABLED) {
@@ -107,12 +107,14 @@ public abstract class BuckGlobals {
     }
     builder.put("native", getSkylarkFunctionModule());
     addNativeModuleFunctions(builder);
+    builder.putAll(implicitIncludes);
     return builder.build();
   }
 
   /** Disable implicit native rules depending on configuration. */
-  ResolverModule makeBuckBuildFileContextGlobals() {
-    return new ResolverModule(getMakeBuckBuildFileContextGlobals(), Starlark.UNIVERSE_OBJECTS);
+  ResolverModule makeBuckBuildFileContextGlobals(ImmutableMap<String, Object> implicitIncludes) {
+    return new ResolverModule(
+        getMakeBuckBuildFileContextGlobals(implicitIncludes), Starlark.UNIVERSE_OBJECTS);
   }
 
   /**
