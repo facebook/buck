@@ -74,10 +74,10 @@ class ProguardTextOutput extends AbstractBuildRule {
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(), getProjectFilesystem(), getOutputPath())));
-    for (String file : ImmutableList.of("configuration.txt", "mapping.txt")) {
-      builder.add(
-          CopyStep.forFile(configPath.resolve(file).getPath(), getOutputPath().resolve(file)));
-    }
+
+    builder.add(
+        CopyStep.forDirectory(
+            configPath.getPath(), getOutputPath().getPath(), CopyStep.DirectoryMode.CONTENTS_ONLY));
     buildableContext.recordArtifact(getOutputPath().getPath());
     return builder.build();
   }
