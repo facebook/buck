@@ -119,13 +119,19 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   abstract Globber getGlobber(AbsPath parseFile);
 
   private ImplicitlyLoadedExtension loadImplicitExtension(
-      ForwardRelPath basePath, Label containingLabel, LoadStack loadStack)
-      throws IOException, InterruptedException {
+      ForwardRelPath basePath, LoadStack loadStack) throws IOException, InterruptedException {
     Optional<ImplicitInclude> implicitInclude =
         packageImplicitIncludeFinder.findIncludeForBuildFile(basePath);
     if (!implicitInclude.isPresent()) {
       return ImplicitlyLoadedExtension.empty();
     }
+
+    Label containingLabel =
+        Label.createUnvalidated(
+            PackageIdentifier.create(
+                RepositoryName.createFromValidStrippedName(options.getCellName()),
+                PathFragment.EMPTY_FRAGMENT),
+            "BUCK");
 
     // Only export requested symbols, and ensure that all requsted symbols are present.
     ExtensionData data =
@@ -159,8 +165,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     ForwardRelPath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad =
-        loadImplicitExtension(
-            basePath, containingLabel, LoadStack.top(Location.fromFile(parseFile.toString())));
+        loadImplicitExtension(basePath, LoadStack.top(Location.fromFile(parseFile.toString())));
 
     Program buildFileAst =
         parseSkylarkFile(
@@ -872,8 +877,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     ForwardRelPath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
-    ImplicitlyLoadedExtension implicitLoad =
-        loadImplicitExtension(basePath, containingLabel, LoadStack.EMPTY);
+    ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, LoadStack.EMPTY);
     Program buildFileAst =
         parseSkylarkFile(parseFile, LoadStack.EMPTY, getBuckOrPackage().fileKind);
     ImmutableList<IncludesData> dependencies =
