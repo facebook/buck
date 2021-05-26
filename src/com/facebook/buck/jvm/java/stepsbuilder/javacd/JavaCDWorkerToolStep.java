@@ -31,6 +31,7 @@ import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
@@ -70,9 +71,8 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
                 workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
       }
 
-      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_execution")) {
-        return executeBuildJavaCommand(context, borrowedWorkerTool.get(), launchJavaCDCommand);
-      }
+      return executeBuildJavaCommand(context, borrowedWorkerTool.get(), launchJavaCDCommand);
+
     } finally {
       if (borrowedWorkerTool != null) {
         borrowedWorkerTool.close();
@@ -86,11 +86,19 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
       ImmutableList<String> launchJavaCDCommand)
       throws IOException, InterruptedException {
     String actionId = context.getActionId();
+    IsolatedEventBus eventBus = context.getIsolatedEventBus();
     try {
       LOG.debug("Starting execution of java compilation command with action id: %s", actionId);
-      ResultEvent resultEvent =
-          workerToolExecutor.executeCommand(
-              actionId, buildJavaCommand, context.getIsolatedEventBus());
+      SettableFuture<ResultEvent> resultEventFuture;
+      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_execution")) {
+        resultEventFuture = workerToolExecutor.executeCommand(actionId, buildJavaCommand, eventBus);
+      }
+
+      ResultEvent resultEvent;
+      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_waiting_for_result")) {
+        resultEvent = resultEventFuture.get();
+      }
+
       return JavaCDWorkerStepUtils.createStepExecutionResult(
           launchJavaCDCommand, resultEvent, actionId);
     } catch (ExecutionException e) {

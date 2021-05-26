@@ -33,7 +33,7 @@ import java.util.concurrent.ExecutionException;
 public interface WorkerToolExecutor extends WorkerProcess {
 
   /** Send an execution command to a worker tool instance and wait till the command executed. */
-  ResultEvent executeCommand(
+  SettableFuture<ResultEvent> executeCommand(
       String actionId, AbstractMessage executeCommandMessage, IsolatedEventBus eventBus)
       throws IOException, ExecutionException, InterruptedException;
 

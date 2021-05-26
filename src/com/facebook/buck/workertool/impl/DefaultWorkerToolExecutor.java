@@ -210,7 +210,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   }
 
   @Override
-  public ResultEvent executeCommand(
+  public SettableFuture<ResultEvent> executeCommand(
       String actionId, AbstractMessage executeCommandMessage, IsolatedEventBus eventBus)
       throws IOException, ExecutionException, InterruptedException {
     checkState(isAlive(), "Launched process is not alive");
@@ -242,14 +242,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
     LOG.debug(
         "Started execution of worker tool for for actionId: %s, worker id: %s", actionId, workerId);
-
-    SettableFuture<ResultEvent> resultEventFuture =
-        executingActionReference.get().getResultEventFuture();
-    try (Scope ignored =
-        PerfEvents.scope(eventBus, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_waiting_for_result")) {
-      // TODO : msemko: add timeout/heartbeat, ... ?
-      return resultEventFuture.get();
-    }
+    return executingActionReference.get().getResultEventFuture();
   }
 
   @Override

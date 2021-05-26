@@ -250,8 +250,10 @@ public class JavaCDIntegrationTest {
       BuildJavaCommand buildJavaCommand = createBuildCommand(target, workingDir.toString());
 
       ResultEvent resultEvent =
-          workerToolExecutor.executeCommand(
-              "//my_test_action_id", buildJavaCommand, executionContext.getIsolatedEventBus());
+          workerToolExecutor
+              .executeCommand(
+                  "//my_test_action_id", buildJavaCommand, executionContext.getIsolatedEventBus())
+              .get();
 
       assertThat(resultEvent.getActionId(), equalTo("//my_test_action_id"));
       assertThat(resultEvent.getExitCode(), equalTo(0));
@@ -263,7 +265,7 @@ public class JavaCDIntegrationTest {
     assertThat(actualStepEvents, hasSize(28));
 
     List<String> simplePerfEvents = eventBusListener.getSimplePerfEvents();
-    assertThat(simplePerfEvents, hasSize(10));
+    assertThat(simplePerfEvents, hasSize(8));
 
     SimplePerfEvent.Started buildTargetStartedEvent =
         SimplePerfEvent.started(SimplePerfEvent.PerfEventTitle.of(target));
@@ -323,8 +325,10 @@ public class JavaCDIntegrationTest {
       BuildJavaCommand buildJavaCommand = createBuildCommand(target, workingDir.toString());
 
       ResultEvent resultEvent =
-          workerToolExecutor.executeCommand(
-              "//my_test_action_id", buildJavaCommand, executionContext.getIsolatedEventBus());
+          workerToolExecutor
+              .executeCommand(
+                  "//my_test_action_id", buildJavaCommand, executionContext.getIsolatedEventBus())
+              .get();
 
       assertThat(resultEvent.getActionId(), equalTo("//my_test_action_id"));
       assertThat(resultEvent.getExitCode(), equalTo(1));
