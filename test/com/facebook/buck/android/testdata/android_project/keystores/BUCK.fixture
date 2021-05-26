@@ -4,3 +4,14 @@ keystore(
     store = "debug.keystore",
     visibility = ["PUBLIC"],
 )
+
+genrule(
+    name = "copy_keystore",
+    out = "copy.keystore",
+    cmd = "cp $(location :debug#keystore) $OUT",
+)
+genrule(
+    name = "copy_keystore_properties",
+    out = "copy.properties",
+    cmd = "cp $(location :debug#properties) $OUT",
+)
