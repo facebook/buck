@@ -79,7 +79,12 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     final Started startedEvent = new Started(state, buildRule, actionDigest);
     eventBus.post(startedEvent);
     final Scope leftEventScope =
-        PerfEvents.scope(eventBus.isolated(), state.toString().toLowerCase(), false, false);
+        PerfEvents.scope(
+            eventBus.isolated(),
+            buildRule.getBuildTarget().getFullyQualifiedName(),
+            state.toString().toLowerCase(),
+            false,
+            false);
     return () -> {
       leftEventScope.close();
       eventBus.post(new Finished(startedEvent));

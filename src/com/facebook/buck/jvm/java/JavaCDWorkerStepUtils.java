@@ -115,7 +115,9 @@ public class JavaCDWorkerStepUtils {
         startupCommand,
         () -> {
           WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
-          try (Scope ignored = PerfEvents.scope(context.getIsolatedEventBus(), "launch_worker")) {
+          try (Scope ignored =
+              PerfEvents.scope(
+                  context.getIsolatedEventBus(), context.getActionId(), "launch_worker")) {
             return workerToolLauncher.launchWorker(
                 startupCommand,
                 ImmutableMap.of(

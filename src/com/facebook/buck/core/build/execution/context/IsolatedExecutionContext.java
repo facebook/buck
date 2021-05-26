@@ -23,7 +23,6 @@ import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandle
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
-import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.event.ThrowableConsoleEvent;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -203,10 +202,6 @@ public abstract class IsolatedExecutionContext implements Closeable {
   }
 
   public void postEvent(ConsoleEvent event) {
-    getIsolatedEventBus().post(event);
-  }
-
-  public void postEvent(StepEvent event) {
     getIsolatedEventBus().post(event);
   }
 

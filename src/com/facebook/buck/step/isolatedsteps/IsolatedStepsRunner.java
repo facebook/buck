@@ -87,7 +87,8 @@ public class IsolatedStepsRunner {
 
     StepEvent.Started started = StepEvent.started(step.getShortName(), stepDescription);
     IsolatedEventBus isolatedEventBus = context.getIsolatedEventBus();
-    isolatedEventBus.post(started);
+    String actionId = context.getActionId();
+    isolatedEventBus.post(started, actionId);
     StepExecutionResult executionResult = StepExecutionResults.ERROR;
     try {
       executionResult = step.executeIsolatedStep(context);
@@ -95,7 +96,7 @@ public class IsolatedStepsRunner {
       throw StepFailedException.createForFailingStepWithException(
           step, descriptionForStep(step, context), e);
     } finally {
-      isolatedEventBus.post(StepEvent.finished(started, executionResult.getExitCode()));
+      isolatedEventBus.post(StepEvent.finished(started, executionResult.getExitCode()), actionId);
     }
     if (!executionResult.isSuccess()) {
       throw StepFailedException.createForFailingIsolatedStepWithExitCode(

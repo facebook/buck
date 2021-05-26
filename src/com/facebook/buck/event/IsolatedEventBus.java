@@ -39,36 +39,36 @@ public interface IsolatedEventBus extends Closeable {
   void post(ExternalEvent event, long threadId);
 
   /** Post a {@link StepEvent} to the this event bus. */
-  void post(StepEvent event);
+  void post(StepEvent event, String actionId);
 
   /** Post a {@link StepEvent} that occurred in the given {@code threadId} to this event bus. */
-  void post(StepEvent event, long threadId);
+  void post(StepEvent event, String actionId, long threadId);
 
   /**
    * Post a {@link StepEvent}t that occurred in the given {@code threadId} to this event bus using
    * the given {@code atTime} timestamp.
    */
-  void post(StepEvent event, Instant atTime, long threadId);
+  void post(StepEvent event, String actionId, Instant atTime, long threadId);
 
   /** Post a {@link SimplePerfEvent} to the this event bus. */
-  void post(SimplePerfEvent event);
+  void post(SimplePerfEvent event, String actionId);
 
   /** Post a {@link SimplePerfEvent} to this event bus using the given {@code atTime} timestamp. */
-  void post(SimplePerfEvent event, Instant atTime);
+  void post(SimplePerfEvent event, String actionId, Instant atTime);
 
   /**
    * Post a {@link SimplePerfEvent} that occurred in the given {@code threadId} to this event bus.
    */
-  void post(SimplePerfEvent event, long threadId);
+  void post(SimplePerfEvent event, String actionId, long threadId);
 
   /**
    * Post a {@link SimplePerfEvent}t that occurred in the given {@code threadId} to this event bus
    * using the given {@code atTime} timestamp.
    */
-  void post(SimplePerfEvent event, Instant atTime, long threadId);
+  void post(SimplePerfEvent event, String actionId, Instant atTime, long threadId);
 
   /** Post an already configured {@link SimplePerfEvent} to this event bus. */
-  void postWithoutConfiguring(SimplePerfEvent event);
+  void postWithoutConfiguring(SimplePerfEvent event, String actionId);
 
   /**
    * Timestamp the given {@link ConsoleEvent} that occurred in the current thread. A timestamped

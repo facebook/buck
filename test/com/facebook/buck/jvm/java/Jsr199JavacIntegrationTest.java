@@ -134,7 +134,8 @@ public class Jsr199JavacIntegrationTest {
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getIsolatedEventBus()),
+            new JavacEventSinkToBuckEventBusBridge(
+                executionContext.getIsolatedEventBus(), executionContext.getActionId()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
@@ -190,7 +191,8 @@ public class Jsr199JavacIntegrationTest {
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getIsolatedEventBus()),
+            new JavacEventSinkToBuckEventBusBridge(
+                executionContext.getIsolatedEventBus(), executionContext.getActionId()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
@@ -299,7 +301,8 @@ public class Jsr199JavacIntegrationTest {
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getIsolatedEventBus()),
+            new JavacEventSinkToBuckEventBusBridge(
+                executionContext.getIsolatedEventBus(), executionContext.getActionId()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),
@@ -402,7 +405,8 @@ public class Jsr199JavacIntegrationTest {
     BuckPaths buckPaths = projectFilesystem.getBuckPaths();
     JavacExecutionContext javacExecutionContext =
         ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(executionContext.getIsolatedEventBus()),
+            new JavacEventSinkToBuckEventBusBridge(
+                executionContext.getIsolatedEventBus(), executionContext.getActionId()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
             executionContext.getVerbosity(),

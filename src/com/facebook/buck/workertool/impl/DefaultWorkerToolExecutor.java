@@ -53,6 +53,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -198,9 +199,12 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     private void processPipelineFinishedEvent(PipelineFinishedEvent pipelineFinishedEvent) {
       runUnderLock(
           () -> {
+            String actionId =
+                Objects.requireNonNull(
+                    pipelineFinishedEvent.getActionId(), "action id has to be set");
             LOG.debug(
-                "Received pipeline finished event. Actions: %s, worker id: %s",
-                getExecutingActionIds(), workerId);
+                "Received pipeline finished event with action id: %s. Actions: %s, worker id: %s",
+                actionId, getExecutingActionIds(), workerId);
 
             // signal to Step that pipeline is finished
             checkNotNull(pipelineFinished);
@@ -220,7 +224,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     AtomicReference<ExecutingAction> executingActionReference = new AtomicReference<>();
 
     try (Scope ignored =
-        PerfEvents.scope(eventBus, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
+        PerfEvents.scope(eventBus, actionId, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
       runUnderLock(
           () -> {
             checkThatNoActionsAreExecuting();
@@ -234,7 +238,8 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
       executeCommand = ExecuteCommand.newBuilder().setActionId(actionId).build();
     }
 
-    try (Scope ignored = PerfEvents.scope(eventBus, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_write")) {
+    try (Scope ignored =
+        PerfEvents.scope(eventBus, actionId, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_write")) {
       executeCommandTypeMessage.writeDelimitedTo(outputStream);
       executeCommand.writeDelimitedTo(outputStream);
       executeCommandMessage.writeDelimitedTo(outputStream);
@@ -254,10 +259,13 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
       throws IOException {
     checkState(isAlive(), "Launched process is not alive");
 
+    String firstActionId = actionIds.iterator().next();
+
     CommandTypeMessage executeCommandTypeMessage;
     StartPipelineCommand startPipelineCommand;
     try (Scope ignored =
-        PerfEvents.scope(eventBus, EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX + "_preparing")) {
+        PerfEvents.scope(
+            eventBus, firstActionId, EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX + "_preparing")) {
       StartPipelineCommand.Builder startPipeliningCommandBuilder =
           StartPipelineCommand.newBuilder();
       runUnderLock(
@@ -280,7 +288,8 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     }
 
     try (Scope ignored =
-        PerfEvents.scope(eventBus, EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX + "_write")) {
+        PerfEvents.scope(
+            eventBus, firstActionId, EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX + "_write")) {
       executeCommandTypeMessage.writeDelimitedTo(outputStream);
       startPipelineCommand.writeDelimitedTo(outputStream);
       pipeliningCommand.writeDelimitedTo(outputStream);
@@ -302,7 +311,8 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
     CommandTypeMessage commandTypeMessage;
     try (Scope ignored =
-        PerfEvents.scope(eventBus, START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
+        PerfEvents.scope(
+            eventBus, actionId, START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
       runUnderLock(
           () -> {
             checkNotNull(pipelineFinished, "Pipeline is not started.");
@@ -326,7 +336,8 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     }
 
     try (Scope ignored =
-        PerfEvents.scope(eventBus, START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX + "_write")) {
+        PerfEvents.scope(
+            eventBus, actionId, START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX + "_write")) {
       commandTypeMessage.writeDelimitedTo(outputStream);
       startNextPipeliningCommand.writeDelimitedTo(outputStream);
     }

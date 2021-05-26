@@ -159,7 +159,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
                 buildTarget,
                 DependencyStack.root(),
                 node,
-                id -> SimplePerfEvent.scope(Optional.empty(), null, null))
+                id -> SimplePerfEvent.scope(Optional.empty(), id.getValue()))
             .assertGetTargetNode(DependencyStack.root());
 
     assertEquals(JavaLibraryDescription.class, targetNode.getDescription().getClass());

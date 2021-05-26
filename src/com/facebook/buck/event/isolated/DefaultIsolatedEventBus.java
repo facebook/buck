@@ -104,7 +104,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   @Override
   public void post(ConsoleEvent event, long threadId) {
-    timestamp(event, threadId);
+    configureWithTimestamp(event, threadId);
     writeConsoleEvent(event);
   }
 
@@ -115,63 +115,63 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   @Override
   public void post(ExternalEvent event, long threadId) {
-    timestamp(event, threadId);
+    configureWithTimestamp(event, threadId);
     writeExternalEvent(event);
   }
 
   @Override
-  public void post(StepEvent event) {
-    post(event, Thread.currentThread().getId());
+  public void post(StepEvent event, String actionId) {
+    post(event, actionId, Thread.currentThread().getId());
   }
 
   @Override
-  public void post(StepEvent event, long threadId) {
-    timestamp(event, threadId);
-    writeStepEvent(event);
+  public void post(StepEvent event, String actionId, long threadId) {
+    configureWithTimestamp(event, threadId);
+    writeStepEvent(event, actionId);
   }
 
   @Override
-  public void post(StepEvent event, Instant atTime, long threadId) {
+  public void post(StepEvent event, String actionId, Instant atTime, long threadId) {
     EventBusUtils.configureEvent(event, atTime, threadId, clock, buildId);
-    writeStepEvent(event);
+    writeStepEvent(event, actionId);
   }
 
   @Override
-  public void post(SimplePerfEvent event) {
-    post(event, Thread.currentThread().getId());
+  public void post(SimplePerfEvent event, String actionId) {
+    post(event, actionId, Thread.currentThread().getId());
   }
 
   @Override
-  public void post(SimplePerfEvent event, Instant atTime) {
-    post(event, atTime, Thread.currentThread().getId());
+  public void post(SimplePerfEvent event, String actionId, Instant atTime) {
+    post(event, actionId, atTime, Thread.currentThread().getId());
   }
 
   @Override
-  public void post(SimplePerfEvent event, long threadId) {
+  public void post(SimplePerfEvent event, String actionId, long threadId) {
     timestamp(event, threadId);
-    writeChromeTraceEvent(event);
+    writeChromeTraceEvent(event, actionId);
   }
 
   @Override
-  public void post(SimplePerfEvent event, Instant atTime, long threadId) {
+  public void post(SimplePerfEvent event, String actionId, Instant atTime, long threadId) {
     EventBusUtils.configureEvent(event, atTime, threadId, clock, buildId);
-    writeChromeTraceEvent(event);
+    writeChromeTraceEvent(event, actionId);
   }
 
   @Override
-  public void postWithoutConfiguring(SimplePerfEvent event) {
+  public void postWithoutConfiguring(SimplePerfEvent event, String actionId) {
     Preconditions.checkState(event.isConfigured(), "Event must be configured");
-    writeChromeTraceEvent(event);
+    writeChromeTraceEvent(event, actionId);
   }
 
   @Override
   public void timestamp(ConsoleEvent event) {
-    timestamp(event, Thread.currentThread().getId());
+    configureWithTimestamp(event, Thread.currentThread().getId());
   }
 
   @Override
   public void timestamp(StepEvent event) {
-    timestamp(event, Thread.currentThread().getId());
+    configureWithTimestamp(event, Thread.currentThread().getId());
   }
 
   @Override
@@ -181,13 +181,13 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   @Override
   public void timestamp(SimplePerfEvent event, long threadId) {
-    timestamp((BuckEvent) event, threadId);
+    configureWithTimestamp(event, threadId);
   }
 
   @Override
   public void close() {}
 
-  private void timestamp(BuckEvent event, long threadId) {
+  private void configureWithTimestamp(BuckEvent event, long threadId) {
     event.configure(
         clock.currentTimeMillis(),
         clock.nanoTime(),
@@ -217,7 +217,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
     writeToNamedPipe(eventTypeMessage, consoleEvent);
   }
 
-  private void writeStepEvent(StepEvent event) {
+  private void writeStepEvent(StepEvent event, String actionId) {
     EventTypeMessage eventTypeMessage =
         EventTypeMessage.newBuilder().setEventType(EventType.STEP_EVENT).build();
     com.facebook.buck.downward.model.StepEvent stepEvent =
@@ -227,6 +227,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
             .setStepType(event.getShortStepName())
             .setDescription(event.getDescription())
             .setDuration(getDuration(event))
+            .setActionId(actionId)
             .build();
     writeToNamedPipe(eventTypeMessage, stepEvent);
   }
@@ -235,7 +236,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
     return (int) event.getEventKey().getValue();
   }
 
-  private void writeChromeTraceEvent(SimplePerfEvent event) {
+  private void writeChromeTraceEvent(SimplePerfEvent event, String actionId) {
     EventTypeMessage eventTypeMessage =
         EventTypeMessage.newBuilder().setEventType(EventType.CHROME_TRACE_EVENT).build();
     ChromeTraceEventStatus eventStatus = convertEventType(event.getEventType());
@@ -247,6 +248,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
             .setStatus(eventStatus)
             .putAllData(Maps.transformValues(event.getEventInfo(), Object::toString))
             .setDuration(getDuration(event))
+            .setActionId(actionId)
             .build();
     writeToNamedPipe(eventTypeMessage, chromeTraceEvent);
   }

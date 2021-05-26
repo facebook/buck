@@ -28,12 +28,12 @@ public class PerfEvents {
 
   /** Creates a simple scoped leaf event that will be logged to superconsole, chrome traces, etc. */
   public static Scope scope(BuckEventBus eventBus, String category) {
-    return scope(eventBus.isolated(), category, true, true);
+    return scope(eventBus.isolated(), category, category, true, true);
   }
 
   /** Creates a simple scoped leaf event that will be aggregated in scuba. */
-  public static Scope scope(IsolatedEventBus eventBus, String category) {
-    return scope(eventBus, category, false, false);
+  public static Scope scope(IsolatedEventBus eventBus, String actionId, String category) {
+    return scope(eventBus, actionId, category, false, false);
   }
 
   /**
@@ -42,13 +42,14 @@ public class PerfEvents {
    */
   public static Scope scope(
       IsolatedEventBus eventBus,
+      String actionId,
       String category,
       boolean logToChromeTrace,
       boolean showOnSuperConsole) {
     Started started =
         new Started(EventKey.unique(), category, logToChromeTrace, showOnSuperConsole);
-    eventBus.post(started);
-    return () -> eventBus.post(new Finished(started));
+    eventBus.post(started, actionId);
+    return () -> eventBus.post(new Finished(started), actionId);
   }
 
   /** Base class that extends {@link SimplePerfEvent} and supports aggregation. */

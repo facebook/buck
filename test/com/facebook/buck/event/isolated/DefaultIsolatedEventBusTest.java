@@ -74,6 +74,8 @@ public class DefaultIsolatedEventBusTest {
       Instant.parse("2020-12-15T12:13:14.123456789Z").toEpochMilli();
   private static final int CLOCK_SHIFT_IN_SECONDS = 4242;
 
+  private static final String TEST_ACTION_ID = "test-action-id";
+
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   @Rule public final ExpectedException exception = ExpectedException.none();
 
@@ -136,6 +138,7 @@ public class DefaultIsolatedEventBusTest {
 
     testEventBus.post(
         stepEvent,
+        TEST_ACTION_ID,
         Instant.ofEpochMilli(
             NOW_MILLIS + TimeUnit.SECONDS.toMillis(secondsElapsedTillEventOccurred)),
         Thread.currentThread().getId());
@@ -151,8 +154,9 @@ public class DefaultIsolatedEventBusTest {
   public void perfEventCanBeWrittenToOutputStream() throws Exception {
     // Creating a scope sends a start event
     SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(
+        SimplePerfEvent.scopeWithActionId(
             testEventBus,
+            TEST_ACTION_ID,
             SimplePerfEvent.PerfEventTitle.of("my_event"),
             ImmutableMap.of("my_path_key", Paths.get("my_path_value")));
     // Closing the scope sends a finish event

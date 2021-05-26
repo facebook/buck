@@ -26,14 +26,18 @@ import java.util.Map;
 
 /** Bridges the {@link BuckTracing} API (in the system ClassLoader) with {@link BuckEventBus}. */
 public class BuckTracingEventBusBridge implements BuckTracingInterface {
+
   private static final Logger LOG = Logger.get(BuckTracingEventBusBridge.class);
 
   private final IsolatedEventBus eventBus;
+  private final String actionId;
   private final String buildTargetName;
   private final Deque<CompilerPluginDurationEvent.Started> eventStack = new ArrayDeque<>();
 
-  public BuckTracingEventBusBridge(IsolatedEventBus eventBus, String buildTargetName) {
+  public BuckTracingEventBusBridge(
+      IsolatedEventBus eventBus, String actionId, String buildTargetName) {
     this.eventBus = eventBus;
+    this.actionId = actionId;
     this.buildTargetName = buildTargetName;
   }
 
@@ -45,7 +49,7 @@ public class BuckTracingEventBusBridge implements BuckTracingInterface {
 
     eventStack.push(startedEvent);
 
-    eventBus.post(startedEvent);
+    eventBus.post(startedEvent, actionId);
   }
 
   @Override
@@ -58,6 +62,6 @@ public class BuckTracingEventBusBridge implements BuckTracingInterface {
     CompilerPluginDurationEvent.Finished finishedEvent =
         CompilerPluginDurationEvent.finished(eventStack.pop(), ImmutableMap.copyOf(args));
 
-    eventBus.post(finishedEvent);
+    eventBus.post(finishedEvent, actionId);
   }
 }

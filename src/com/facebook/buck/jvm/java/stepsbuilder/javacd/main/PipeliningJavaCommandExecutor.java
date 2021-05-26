@@ -62,6 +62,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -172,7 +173,8 @@ class PipeliningJavaCommandExecutor {
         }
       }
     }
-    StepExecutionUtils.writePipelineFinishedEvent(downwardProtocol, eventsOutputStream);
+    StepExecutionUtils.writePipelineFinishedEvent(
+        downwardProtocol, eventsOutputStream, Iterators.getLast(actionIds.iterator()));
   }
 
   private static boolean waitForNextCommandSignal(

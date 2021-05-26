@@ -65,7 +65,8 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
     BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool = null;
     try {
-      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_get_wt")) {
+      try (Scope ignored =
+          PerfEvents.scope(eventBus, context.getActionId(), SCOPE_PREFIX + "_get_wt")) {
         borrowedWorkerTool =
             JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
                 workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
@@ -90,12 +91,13 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     try {
       LOG.debug("Starting execution of java compilation command with action id: %s", actionId);
       SettableFuture<ResultEvent> resultEventFuture;
-      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_execution")) {
+      try (Scope ignored = PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_execution")) {
         resultEventFuture = workerToolExecutor.executeCommand(actionId, buildJavaCommand, eventBus);
       }
 
       ResultEvent resultEvent;
-      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_waiting_for_result")) {
+      try (Scope ignored =
+          PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_waiting_for_result")) {
         resultEvent = resultEventFuture.get();
       }
 

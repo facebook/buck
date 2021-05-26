@@ -55,42 +55,42 @@ public class ForwardingIsolatedEventBus implements IsolatedEventBus {
   }
 
   @Override
-  public void post(StepEvent event) {
+  public void post(StepEvent event, String actionId) {
     buckEventBus.post(event);
   }
 
   @Override
-  public void post(StepEvent event, long threadId) {
+  public void post(StepEvent event, String actionId, long threadId) {
     buckEventBus.post(event, threadId);
   }
 
   @Override
-  public void post(StepEvent event, Instant atTime, long threadId) {
+  public void post(StepEvent event, String actionId, Instant atTime, long threadId) {
     buckEventBus.post(event, atTime, threadId);
   }
 
   @Override
-  public void post(SimplePerfEvent event) {
+  public void post(SimplePerfEvent event, String actionId) {
     buckEventBus.post(event);
   }
 
   @Override
-  public void post(SimplePerfEvent event, Instant atTime) {
+  public void post(SimplePerfEvent event, String actionId, Instant atTime) {
     buckEventBus.post(event, atTime);
   }
 
   @Override
-  public void post(SimplePerfEvent event, long threadId) {
+  public void post(SimplePerfEvent event, String actionId, long threadId) {
     buckEventBus.post(event, threadId);
   }
 
   @Override
-  public void post(SimplePerfEvent event, Instant atTime, long threadId) {
+  public void post(SimplePerfEvent event, String actionId, Instant atTime, long threadId) {
     buckEventBus.post(event, atTime, threadId);
   }
 
   @Override
-  public void postWithoutConfiguring(SimplePerfEvent event) {
+  public void postWithoutConfiguring(SimplePerfEvent event, String actionId) {
     buckEventBus.postWithoutConfiguring(event);
   }
 

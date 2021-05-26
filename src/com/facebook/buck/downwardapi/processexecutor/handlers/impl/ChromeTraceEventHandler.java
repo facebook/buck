@@ -36,6 +36,7 @@ enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
     ImmutableMap<String, Object> attributes =
         ImmutableMap.<String, Object>builder().putAll(event.getDataMap()).build();
     int eventId = event.getEventId();
+    String actionId = Objects.requireNonNull(event.getActionId(), "action id has to be set");
 
     SimplePerfEvent.Started started;
     switch (event.getStatus()) {
@@ -43,7 +44,7 @@ enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
         PerfEventTitle perfEventId = PerfEventTitle.of(event.getTitle());
         started = SimplePerfEvent.started(perfEventId, event.getCategory(), attributes);
         context.registerStartChromeEvent(eventId, started);
-        context.postEvent(started, timestamp);
+        context.postEvent(started, actionId, timestamp);
         break;
 
       case END:
@@ -52,7 +53,7 @@ enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
                 context.getChromeTraceStartedEvent(eventId),
                 "Started chrome trace event for event id: " + eventId + " is not found");
         SimplePerfEvent finishedEvent = started.createFinishedEvent(attributes);
-        context.postEvent(finishedEvent, timestamp);
+        context.postEvent(finishedEvent, actionId, timestamp);
         break;
 
       case UNKNOWN:

@@ -135,7 +135,8 @@ public class JavacPipelineState implements RulePipelineState {
 
       JavacExecutionContext javacExecutionContext =
           ImmutableJavacExecutionContext.ofImpl(
-              new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getIsolatedEventBus()),
+              new JavacEventSinkToBuckEventBusBridge(
+                  firstOrderContext.getIsolatedEventBus(), firstOrderContext.getActionId()),
               stderr,
               firstOrderContext.getClassLoaderCache(),
               verbosity,

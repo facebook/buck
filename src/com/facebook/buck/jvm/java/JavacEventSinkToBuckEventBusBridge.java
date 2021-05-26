@@ -40,13 +40,14 @@ import java.util.logging.Level;
 public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
 
   private final IsolatedEventBus eventBus;
+  private final String actionId;
   private final LoadingCache<String, BuckTracingEventBusBridge> buckTracingBridgeCache =
       CacheBuilder.newBuilder()
           .build(
               new CacheLoader<String, BuckTracingEventBusBridge>() {
                 @Override
                 public BuckTracingEventBusBridge load(String target) {
-                  return new BuckTracingEventBusBridge(eventBus, target);
+                  return new BuckTracingEventBusBridge(eventBus, actionId, target);
                 }
               });
   private final Map<Pair<String, JavacPhaseEvent.Phase>, JavacPhaseEvent.Started>
@@ -55,8 +56,9 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
   private final Map<String, EventKey> startedAnnotationProcessingEvents = new ConcurrentHashMap<>();
   private final Map<Long, SimplePerfEvent.Scope> perfEventScopes = new ConcurrentHashMap<>();
 
-  public JavacEventSinkToBuckEventBusBridge(IsolatedEventBus eventBus) {
+  public JavacEventSinkToBuckEventBusBridge(IsolatedEventBus eventBus, String actionId) {
     this.eventBus = eventBus;
+    this.actionId = actionId;
   }
 
   @Override
@@ -104,7 +106,7 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
     Assertions.assertCondition(currentJavacPhaseEvents.get(key) == null);
     currentJavacPhaseEvents.put(key, startedEvent);
 
-    eventBus.post(startedEvent);
+    eventBus.post(startedEvent, actionId);
   }
 
   @Override
@@ -116,7 +118,7 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
         JavacPhaseEvent.finished(Assertions.assertNotNull(currentJavacPhaseEvents.get(key)), args);
     currentJavacPhaseEvents.remove(key);
 
-    eventBus.post(finishedEvent);
+    eventBus.post(finishedEvent, actionId);
   }
 
   @Override
@@ -137,7 +139,7 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
         getKeyForAnnotationProcessingEvent(
             buildTargetName, annotationProcessorName, operationAsString, round, isLastRound),
         started.getEventKey());
-    eventBus.post(started);
+    eventBus.post(started, actionId);
   }
 
   @Override
@@ -159,7 +161,7 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
             Operation.valueOf(operationAsString),
             round,
             isLastRound);
-    eventBus.post(finished);
+    eventBus.post(finished, actionId);
   }
 
   private String getKeyForAnnotationProcessingEvent(
@@ -174,7 +176,7 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
 
   @Override
   public void startSimplePerfEvent(String name, long uniqueKey) {
-    SimplePerfEvent.Scope scope = SimplePerfEvent.scope(eventBus, name);
+    SimplePerfEvent.Scope scope = SimplePerfEvent.scopeWithActionId(eventBus, actionId, name);
     perfEventScopes.put(uniqueKey, scope);
   }
 

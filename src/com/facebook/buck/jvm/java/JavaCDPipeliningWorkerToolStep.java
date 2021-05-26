@@ -157,7 +157,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
       LOG.debug(
           "The first step execution. Obtaining worker tool from the pool. Action id: %s", actionId);
-      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_get_wt")) {
+      try (Scope ignored = PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_get_wt")) {
         WorkerProcessPool<WorkerToolExecutor> workerToolPool =
             JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
         borrowedWorkerTool =
@@ -165,7 +165,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
                 workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
       }
 
-      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_execution")) {
+      try (Scope ignored = PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_execution")) {
         try {
           workerToolExecutor = Objects.requireNonNull(borrowedWorkerTool).get();
           actionIdToResultEventMap = startExecution(eventBus);
@@ -175,7 +175,8 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
         }
       }
     } else {
-      try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_start_next_command")) {
+      try (Scope ignored =
+          PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_start_next_command")) {
         startNextPipeliningCommand(actionId, eventBus);
       }
     }
@@ -187,7 +188,8 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
                 "Cannot find a future for actionId: %s among executing: %s",
                 actionId, actionIdToResultEventMap.keySet()));
 
-    try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_waiting_for_result")) {
+    try (Scope ignored =
+        PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_waiting_for_result")) {
       try {
         LOG.debug("Waiting for the result event associated with action id: %s", actionId);
         ResultEvent resultEvent = resultEventFuture.get();

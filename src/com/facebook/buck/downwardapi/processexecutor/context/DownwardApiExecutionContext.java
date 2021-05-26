@@ -77,22 +77,22 @@ public final class DownwardApiExecutionContext {
     isolatedEventBus.post(event, invokingThreadId);
   }
 
-  public void postEvent(StepEvent event) {
-    isolatedEventBus.post(event, invokingThreadId);
+  public void postEvent(StepEvent event, String actionId) {
+    isolatedEventBus.post(event, actionId, invokingThreadId);
   }
 
-  public void postEvent(StepEvent event, Instant atTime) {
-    isolatedEventBus.post(event, atTime, invokingThreadId);
+  public void postEvent(StepEvent event, String actionId, Instant atTime) {
+    isolatedEventBus.post(event, actionId, atTime, invokingThreadId);
   }
 
   /** Posts events into buck event bus. */
-  public void postEvent(SimplePerfEvent event) {
-    isolatedEventBus.post(event, invokingThreadId);
+  public void postEvent(SimplePerfEvent event, String actionId) {
+    isolatedEventBus.post(event, actionId, invokingThreadId);
   }
 
   /** Posts events into buck event bus that occurred at {@code atTime}. */
-  public void postEvent(SimplePerfEvent event, Instant atTime) {
-    isolatedEventBus.post(event, atTime, invokingThreadId);
+  public void postEvent(SimplePerfEvent event, String actionId, Instant atTime) {
+    isolatedEventBus.post(event, actionId, atTime, invokingThreadId);
   }
 
   /** Creates {@link DownwardApiExecutionContext} */

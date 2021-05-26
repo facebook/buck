@@ -34,12 +34,13 @@ enum StepEventHandler implements EventHandler<StepEvent> {
   public void handleEvent(DownwardApiExecutionContext context, StepEvent event) {
     Instant timestamp = EventHandlerUtils.getTimestamp(context, event.getDuration());
     int eventId = event.getEventId();
+    String actionId = Objects.requireNonNull(event.getActionId(), "action id has to be set");
 
     switch (event.getStepStatus()) {
       case STARTED:
         Started startedEvent = started(event.getStepType(), event.getDescription());
         context.registerStartStepEvent(eventId, startedEvent);
-        context.postEvent(startedEvent, timestamp);
+        context.postEvent(startedEvent, actionId, timestamp);
         break;
 
       case FINISHED:
@@ -47,7 +48,7 @@ enum StepEventHandler implements EventHandler<StepEvent> {
             Objects.requireNonNull(
                 context.getStepStartedEvent(eventId),
                 "Started step with event id: " + eventId + " is not found");
-        context.postEvent(finished(started, 0), timestamp);
+        context.postEvent(finished(started, 0), actionId, timestamp);
         break;
 
       case UNKNOWN:
