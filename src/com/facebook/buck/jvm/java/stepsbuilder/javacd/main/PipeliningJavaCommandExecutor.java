@@ -58,7 +58,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Pair;
-import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -88,7 +87,7 @@ class PipeliningJavaCommandExecutor {
       Console console,
       Clock clock,
       ClassLoaderCache classLoaderCache,
-      Optional<SettableFuture<Unit>> startNextCommandOptional)
+      Optional<SettableFuture<String>> startNextCommandOptional)
       throws IOException {
 
     BaseJavacToJarStepFactory javacToJarStepFactory =
@@ -179,13 +178,13 @@ class PipeliningJavaCommandExecutor {
   private static boolean waitForNextCommandSignal(
       OutputStream eventsOutputStream,
       DownwardProtocol downwardProtocol,
-      Optional<SettableFuture<Unit>> startNextCommandOptional,
+      Optional<SettableFuture<String>> startNextCommandOptional,
       String libraryActionId)
       throws IOException {
     Preconditions.checkState(
         startNextCommandOptional.isPresent(),
         "`startNextCommandOptional` has to be present if pipelining command contains more than one command.");
-    Future<?> waitForTheNextCommandFuture = startNextCommandOptional.get();
+    Future<String> waitForTheNextCommandFuture = startNextCommandOptional.get();
 
     Optional<String> errorMessageOptional =
         waitForFuture(libraryActionId, waitForTheNextCommandFuture);
@@ -205,10 +204,14 @@ class PipeliningJavaCommandExecutor {
   }
 
   private static Optional<String> waitForFuture(
-      String libraryActionId, Future<?> waitForTheNextCommandFuture) {
+      String libraryActionId, Future<String> waitForTheNextCommandFuture) {
     String errorMessage = null;
     try {
-      waitForTheNextCommandFuture.get();
+      String actionId = waitForTheNextCommandFuture.get();
+      if (!actionId.equals(libraryActionId)) {
+        errorMessage =
+            "Received action id: " + actionId + " not equals to excepted one: " + libraryActionId;
+      }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       errorMessage =

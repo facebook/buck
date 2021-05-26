@@ -16,6 +16,9 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
@@ -45,14 +48,13 @@ import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
 import com.facebook.buck.workertool.model.StartPipelineCommand;
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -138,8 +140,7 @@ public class JavaCDWorkerToolMain {
     // no need to measure thread CPU time as this is an external process and we do not pass thread
     // time back to buck with Downward API
     Clock clock = new DefaultClock(false);
-    SettableFuture<Unit> startNextCommand = null;
-    Future<Unit> pipeliningCommandExecutedFuture = null;
+    Map<String, SettableFuture<String>> startNextCommandMap = new HashMap<>();
 
     try (IsolatedEventBus eventBus =
         new DefaultIsolatedEventBus(buildUuid, eventsOutputStream, clock, DOWNWARD_PROTOCOL)) {
@@ -157,22 +158,27 @@ public class JavaCDWorkerToolMain {
             case EXECUTE_COMMAND:
               ExecuteCommand executeCommand =
                   ExecuteCommand.parseDelimitedFrom(commandsInputStream);
-              String actionId = executeCommand.getActionId();
+              String executeCommandActionId = executeCommand.getActionId();
               BuildJavaCommand buildJavaCommand =
                   BuildJavaCommand.parseDelimitedFrom(commandsInputStream);
-              LOG.debug("Start executing command with action id: %s", actionId);
+              LOG.debug("Start executing command with action id: %s", executeCommandActionId);
 
-              BuildJavaCommandExecutor.executeBuildJavaCommand(
-                  classLoaderCache,
-                  actionId,
-                  buildJavaCommand,
-                  eventsOutputStream,
-                  DOWNWARD_PROTOCOL,
-                  eventBus,
-                  platform,
-                  processExecutor,
-                  console,
-                  clock);
+              THREAD_POOL.submit(
+                  () -> {
+                    BuildJavaCommandExecutor.executeBuildJavaCommand(
+                        classLoaderCache,
+                        executeCommandActionId,
+                        buildJavaCommand,
+                        eventsOutputStream,
+                        DOWNWARD_PROTOCOL,
+                        eventBus,
+                        platform,
+                        processExecutor,
+                        console,
+                        clock);
+
+                    return Unit.UNIT;
+                  });
               break;
 
             case SHUTDOWN_COMMAND:
@@ -190,71 +196,54 @@ public class JavaCDWorkerToolMain {
                   PipeliningCommand.parseDelimitedFrom(commandsInputStream);
               LOG.debug("Start executing pipelining command with action ids: %s", actionIds);
 
-              Optional<SettableFuture<Unit>> startNextCommandOptional;
+              Optional<SettableFuture<String>> startNextCommandOptional = Optional.empty();
               if (actionIds.size() > 1) {
-                checkFutureIsNullOrDone(
-                    startNextCommand, "Previous `startNextCommand` is not yet done!");
-                startNextCommand = SettableFuture.create();
-                startNextCommandOptional = Optional.of(startNextCommand);
-              } else {
-                startNextCommandOptional = Optional.empty();
+                String libraryActionId = actionIds.get(1);
+                checkState(!startNextCommandMap.containsKey(libraryActionId));
+                SettableFuture<String> startNextCommandFuture = SettableFuture.create();
+                startNextCommandMap.put(libraryActionId, startNextCommandFuture);
+                startNextCommandOptional = Optional.of(startNextCommandFuture);
               }
 
-              checkFutureIsNullOrDone(
-                  pipeliningCommandExecutedFuture,
-                  "Previous `pipeliningCommandExecutedFuture` is not yet done!");
-              pipeliningCommandExecutedFuture =
-                  THREAD_POOL.submit(
-                      () -> {
-                        LOG.debug(
-                            "Starting execution of pipelining command with action ids: %s",
-                            actionIds);
+              Optional<SettableFuture<String>> finalStartNextCommandOptional =
+                  startNextCommandOptional;
+              THREAD_POOL.submit(
+                  () -> {
+                    LOG.debug(
+                        "Starting execution of pipelining command with action ids: %s", actionIds);
 
-                        PipeliningJavaCommandExecutor.executePipeliningJavaCommand(
-                            actionIds,
-                            pipeliningCommand,
-                            eventsOutputStream,
-                            DOWNWARD_PROTOCOL,
-                            eventBus,
-                            platform,
-                            processExecutor,
-                            console,
-                            clock,
-                            classLoaderCache,
-                            startNextCommandOptional);
+                    PipeliningJavaCommandExecutor.executePipeliningJavaCommand(
+                        actionIds,
+                        pipeliningCommand,
+                        eventsOutputStream,
+                        DOWNWARD_PROTOCOL,
+                        eventBus,
+                        platform,
+                        processExecutor,
+                        console,
+                        clock,
+                        classLoaderCache,
+                        finalStartNextCommandOptional);
 
-                        LOG.debug(
-                            "Pipelining command has been executed. Action ids: %s", actionIds);
+                    LOG.debug("Pipelining command has been executed. Action ids: %s", actionIds);
 
-                        return Unit.UNIT;
-                      });
-
-              // if only 1 command, then wait till it get executed
-              if (actionIds.size() == 1) {
-                LOG.debug("Start waiting till pipelining command get executed.");
-                pipeliningCommandExecutedFuture.get();
-              }
+                    return Unit.UNIT;
+                  });
               break;
 
             case START_NEXT_PIPELINING_COMMAND:
               StartNextPipeliningCommand startNextPipeliningCommand =
                   StartNextPipeliningCommand.parseDelimitedFrom(commandsInputStream);
+              String startNextPipeliningCommandActionId = startNextPipeliningCommand.getActionId();
               LOG.debug(
                   "Received start next pipelining command with action id: %s",
-                  startNextPipeliningCommand.getActionId());
+                  startNextPipeliningCommandActionId);
 
-              checkFutureNotDone(
-                  startNextCommand,
-                  "`startNextCommand` must wait for a signal of the next pipelining command");
-              checkFutureNotDone(
-                  pipeliningCommandExecutedFuture,
-                  "`pipeliningCommandExecutedFuture` must wait for a signal of the next pipelining command");
-
+              SettableFuture<String> startNextCommand =
+                  checkNotNull(startNextCommandMap.remove(startNextPipeliningCommandActionId));
               // signal to pipelining runner that it could continue with pipelining command
               // execution
-              Objects.requireNonNull(startNextCommand).set(Unit.UNIT);
-              LOG.debug("Start waiting till pipelining command get executed.");
-              Objects.requireNonNull(pipeliningCommandExecutedFuture).get();
+              startNextCommand.set(startNextPipeliningCommandActionId);
               break;
 
             case UNKNOWN:
@@ -265,17 +254,5 @@ public class JavaCDWorkerToolMain {
         }
       }
     }
-  }
-
-  private static void checkFutureNotDone(Future<Unit> future, String message) {
-    Preconditions.checkState(!isNullOrDone(future), message);
-  }
-
-  private static void checkFutureIsNullOrDone(Future<Unit> future, String message) {
-    Preconditions.checkState(isNullOrDone(future), message);
-  }
-
-  private static boolean isNullOrDone(Future<Unit> future) {
-    return future == null || future.isDone();
   }
 }
