@@ -23,6 +23,7 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EventTypeMessage.EventType;
+import com.facebook.buck.downward.model.PipelineFinishedEvent;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandler;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiLaunchedProcess;
@@ -37,7 +38,6 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
@@ -49,7 +49,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
@@ -60,6 +59,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -95,7 +95,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private final Future<?> waitForLaunchedProcessFuture;
 
   private ImmutableList<ExecutingAction> executingActions = ImmutableList.of();
-  @Nullable private SettableFuture<Unit> pipelineFinished;
+  @Nullable private SettableFuture<PipelineFinishedEvent> pipelineFinished;
 
   /** Holds execution action details */
   @BuckStyleValue
@@ -182,7 +182,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
       if (eventType == EventType.RESULT_EVENT) {
         processResultEvent((ResultEvent) event);
       } else if (eventType == EventType.PIPELINE_FINISHED_EVENT) {
-        processPipelineFinishedEvent();
+        processPipelineFinishedEvent((PipelineFinishedEvent) event);
       } else {
         super.processEvent(eventType, event);
       }
@@ -195,7 +195,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
       receiveResultEvent(resultEvent);
     }
 
-    private void processPipelineFinishedEvent() {
+    private void processPipelineFinishedEvent(PipelineFinishedEvent pipelineFinishedEvent) {
       runUnderLock(
           () -> {
             LOG.debug(
@@ -204,7 +204,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
             // signal to Step that pipeline is finished
             checkNotNull(pipelineFinished);
-            pipelineFinished.set(Unit.UNIT);
+            pipelineFinished.set(pipelineFinishedEvent);
           });
     }
   }
@@ -217,13 +217,16 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
     CommandTypeMessage executeCommandTypeMessage;
     ExecuteCommand executeCommand;
+    AtomicReference<ExecutingAction> executingActionReference = new AtomicReference<>();
 
     try (Scope ignored =
         PerfEvents.scope(eventBus, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
       runUnderLock(
           () -> {
             checkThatNoActionsAreExecuting();
-            executingActions = ImmutableList.of(ExecutingAction.of(actionId));
+            ExecutingAction executingAction = ExecutingAction.of(actionId);
+            executingActionReference.set(executingAction);
+            executingActions = ImmutableList.of(executingAction);
           });
 
       executeCommandTypeMessage =
@@ -240,9 +243,8 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     LOG.debug(
         "Started execution of worker tool for for actionId: %s, worker id: %s", actionId, workerId);
 
-    ExecutingAction executingAction = Iterables.getOnlyElement(executingActions);
-    SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
-
+    SettableFuture<ResultEvent> resultEventFuture =
+        executingActionReference.get().getResultEventFuture();
     try (Scope ignored =
         PerfEvents.scope(eventBus, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_waiting_for_result")) {
       // TODO : msemko: add timeout/heartbeat, ... ?
@@ -254,7 +256,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   public ImmutableList<SettableFuture<ResultEvent>> executePipeliningCommand(
       ImmutableList<String> actionIds,
       AbstractMessage pipeliningCommand,
-      SettableFuture<Unit> pipelineFinished,
+      SettableFuture<PipelineFinishedEvent> pipelineFinished,
       IsolatedEventBus eventBus)
       throws IOException {
     checkState(isAlive(), "Launched process is not alive");
@@ -349,11 +351,22 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private void prepareForTheNextCommand() {
     runUnderLock(
         () -> {
+          verifyAllActionsAreDone();
           // Set `executingActions` to an empty list that signals that new command could be
           // executed.
           executingActions = ImmutableList.of();
           pipelineFinished = null;
         });
+  }
+
+  private void verifyAllActionsAreDone() {
+    for (ExecutingAction executingAction : executingActions) {
+      SettableFuture<ResultEvent> future = executingAction.getResultEventFuture();
+      if (!future.isDone()) {
+        throw new IllegalStateException(
+            executingAction.getActionId() + " associated future is not yet done");
+      }
+    }
   }
 
   /**
@@ -453,7 +466,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
         () -> {
           for (ExecutingAction executingAction : executingActions) {
             SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
-            if (resultEventFuture != null && !resultEventFuture.isDone()) {
+            if (!resultEventFuture.isDone()) {
               resultEventFuture.setException(exceptionSupplier.get());
             }
           }

@@ -67,7 +67,7 @@ class BuildRulePipeline<State extends RulePipelineState> implements Runnable {
         // complete before we start the next one. Just a sanity check against weird behavior
         // creeping in.
         SettableFuture<Optional<BuildResult>> ruleFuture = stage.getFuture();
-        checkState(ruleFuture.isDone() || ruleFuture.isCancelled());
+        checkState(ruleFuture.isDone());
 
         ok &= error == null && !ruleFuture.isCancelled();
       }

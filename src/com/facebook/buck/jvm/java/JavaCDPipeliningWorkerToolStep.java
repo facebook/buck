@@ -16,10 +16,13 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
+
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downward.model.PipelineFinishedEvent;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.PerfEvents;
@@ -34,7 +37,6 @@ import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
 import com.facebook.buck.util.Scope;
-import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.workertool.WorkerToolExecutor;
@@ -43,16 +45,20 @@ import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -86,8 +92,9 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       ImmutableMap.of();
   @Nullable private BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool;
   @Nullable private WorkerToolExecutor workerToolExecutor;
-  private final SettableFuture<Unit> done = SettableFuture.create();
-  private boolean pipelineExecutionFailed = false;
+  private final SettableFuture<PipelineFinishedEvent> pipelineFinished;
+  private final AtomicBoolean pipelineExecutionFailed = new AtomicBoolean(false);
+  private boolean closed = false;
 
   public JavaCDPipeliningWorkerToolStep(
       PipelineState pipeliningState,
@@ -104,6 +111,20 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
         .setWithDownwardApi(withDownwardApi)
         .setSpoolMode(spoolMode);
     builder.setPipeliningState(pipeliningState);
+
+    pipelineFinished = SettableFuture.create();
+    Futures.addCallback(
+        pipelineFinished,
+        new FutureCallback<PipelineFinishedEvent>() {
+          @Override
+          public void onSuccess(PipelineFinishedEvent resultEvent) {}
+
+          @Override
+          public void onFailure(Throwable t) {
+            pipelineExecutionFailed.set(true);
+          }
+        },
+        directExecutor());
   }
 
   @Override
@@ -115,21 +136,27 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
     StepExecutionResult result = execute(context);
-    pipelineExecutionFailed = !result.isSuccess();
+    pipelineExecutionFailed.set(!result.isSuccess());
     return result;
   }
 
   private StepExecutionResult execute(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
     String actionId = context.getActionId();
+    LOG.debug("Start execution for action id: %s", actionId);
     ImmutableList<String> launchJavaCDCommand =
         JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams);
 
     IsolatedEventBus eventBus = context.getIsolatedEventBus();
     if (borrowedWorkerTool == null) {
       // the first execution
-      Preconditions.checkState(actionIdToResultEventMap.isEmpty());
+      Preconditions.checkState(
+          actionIdToResultEventMap.isEmpty(),
+          "Some actions are executing at the moment: %s",
+          actionIdToResultEventMap.keySet());
 
+      LOG.debug(
+          "The first step execution. Obtaining worker tool from the pool. Action id: %s", actionId);
       try (Scope ignored = PerfEvents.scope(eventBus, SCOPE_PREFIX + "_get_wt")) {
         WorkerProcessPool<WorkerToolExecutor> workerToolPool =
             JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
@@ -164,6 +191,9 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       try {
         LOG.debug("Waiting for the result event associated with action id: %s", actionId);
         ResultEvent resultEvent = resultEventFuture.get();
+        LOG.debug(
+            "Result event (exit code = %s) for action id: %s has been received",
+            resultEvent.getExitCode(), actionId);
         return JavaCDWorkerStepUtils.createStepExecutionResult(
             launchJavaCDCommand, resultEvent, actionId);
       } catch (ExecutionException e) {
@@ -215,12 +245,27 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     actionIds = actionsIdsBuilder.build();
     pipeliningCommand = builder.build();
 
+    LOG.debug("Starting execution for action ids: %s", actionIds);
     ImmutableList<SettableFuture<ResultEvent>> futures =
-        workerToolExecutor.executePipeliningCommand(actionIds, pipeliningCommand, done, eventBus);
+        workerToolExecutor.executePipeliningCommand(
+            actionIds, pipeliningCommand, pipelineFinished, eventBus);
     ImmutableMap.Builder<String, SettableFuture<ResultEvent>> mapBuilder =
         ImmutableMap.builderWithExpectedSize(actionIds.size());
     for (int i = 0; i < actionIds.size(); i++) {
-      mapBuilder.put(actionIds.get(i), futures.get(i));
+      SettableFuture<ResultEvent> resultEventSettableFuture = futures.get(i);
+      Futures.addCallback(
+          resultEventSettableFuture,
+          new FutureCallback<ResultEvent>() {
+            @Override
+            public void onSuccess(ResultEvent resultEvent) {}
+
+            @Override
+            public void onFailure(Throwable t) {
+              pipelineExecutionFailed.set(true);
+            }
+          },
+          directExecutor());
+      mapBuilder.put(actionIds.get(i), resultEventSettableFuture);
     }
     return mapBuilder.build();
   }
@@ -242,12 +287,16 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
   @Override
   public void close(boolean force) {
-    boolean pipelineFinishedSuccessfully =
-        !pipelineExecutionFailed
-            && actionIdToResultEventMap.values().stream()
-                .allMatch(f -> f.isDone() && !f.isCancelled());
+    LOG.debug(
+        "Closing pipelining step with force flag = %s. Action ids: %s",
+        force, actionIdToResultEventMap.keySet());
+    Preconditions.checkState(!closed, "Step has been already closed");
+    Preconditions.checkState(!actionIdToResultEventMap.isEmpty(), "No actions are executing.");
+
+    boolean pipelineFinishedSuccessfully = !pipelineExecutionFailed.get() && isNotCancelled();
     try {
       if (pipelineFinishedSuccessfully && !force) {
+        verifyAllActionsAreDone();
         LOG.info(
             "Start waiting for pipeline finish event for action ids: %s",
             actionIdToResultEventMap.keySet());
@@ -259,9 +308,28 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       }
     } finally {
       shutdownResultEventFuturesIfNotDone();
+      shutdownPipelineResultEventFutureIfNotDone();
       closeWorkerTool();
       actionIdToResultEventMap = ImmutableMap.of();
+      commands.clear();
+      builder.clear();
+      closed = true;
     }
+  }
+
+  private void verifyAllActionsAreDone() {
+    for (Map.Entry<String, SettableFuture<ResultEvent>> executingAction :
+        actionIdToResultEventMap.entrySet()) {
+      SettableFuture<ResultEvent> future = executingAction.getValue();
+      if (!future.isDone()) {
+        throw new IllegalStateException(
+            executingAction.getKey() + " associated future is not yet done");
+      }
+    }
+  }
+
+  private boolean isNotCancelled() {
+    return actionIdToResultEventMap.values().stream().noneMatch(Future::isCancelled);
   }
 
   private void shutdownResultEventFuturesIfNotDone() {
@@ -273,16 +341,29 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
                         "No result events have been received for action ids: %s",
                         actionIdToResultEventMap.keySet())));
     for (SettableFuture<ResultEvent> resultEventFuture : actionIdToResultEventMap.values()) {
-      if (resultEventFuture != null && !resultEventFuture.isDone()) {
+      if (!resultEventFuture.isDone()) {
         resultEventFuture.setException(exceptionSupplier.get());
       }
     }
   }
 
+  private void shutdownPipelineResultEventFutureIfNotDone() {
+    Supplier<Exception> exceptionSupplier =
+        Suppliers.memoize(
+            () ->
+                new IllegalStateException(
+                    String.format(
+                        "No pipeline result event has been received for action ids: %s",
+                        actionIdToResultEventMap.keySet())));
+    if (!pipelineFinished.isDone()) {
+      pipelineFinished.setException(exceptionSupplier.get());
+    }
+  }
+
   private void waitWhileExecutionIsDone() {
-    if (!done.isDone()) {
+    if (!pipelineFinished.isDone()) {
       try {
-        done.get(MAX_WAIT_TIME_FOR_PIPELINE_FINISH_EVENT_SECONDS, TimeUnit.SECONDS);
+        pipelineFinished.get(MAX_WAIT_TIME_FOR_PIPELINE_FINISH_EVENT_SECONDS, TimeUnit.SECONDS);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
         LOG.warn(
