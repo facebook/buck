@@ -510,7 +510,15 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
                 cPreprocessor,
                 Optional.empty())
             .getAllFlags();
-    args.addAll(Arg.stringify(argsFromDeps, resolver));
+    for (Arg arg : argsFromDeps) {
+      if (arg instanceof SourcePathArg) {
+        // Use relative paths for SourcePathArg, eg the VFS overlay build rule output
+        ((SourcePathArg) arg)
+            .appendToCommandLineRel(args::add, getBuildTarget().getCell(), resolver, false);
+      } else {
+        arg.appendToCommandLine(args::add, resolver);
+      }
+    }
 
     if (bridgingHeader.isPresent()) {
       for (HeaderVisibility headerVisibility : HeaderVisibility.values()) {
