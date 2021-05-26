@@ -148,7 +148,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       }
       loaded.put(kvp.getKey(), symbol);
     }
-    return ImmutableImplicitlyLoadedExtension.ofImpl(data, loaded.build());
+    return ImmutableImplicitlyLoadedExtension.ofImpl(
+        data.getLoadTransitiveClosure(), loaded.build());
   }
 
   /** @return The parsed result defined in {@code parseFile}. */
@@ -180,7 +181,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               mutability,
               parseContext,
               readConfigContext,
-              implicitLoad.getExtensionData());
+              implicitLoad.getLoadTransitiveClosure());
 
       Module module = new Module(buildFileAst.getModule());
       exec(buildFileAst, module, envData.getEnvironment(), "file %s", parseFile);
@@ -227,7 +228,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       Mutability mutability,
       ParseContext parseContext,
       ReadConfigContext readConfigContext,
-      @Nullable ExtensionData implicitLoadExtensionData)
+      ImmutableSet<String> implicitLoadExtensionTransitiveClosure)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableMap<String, ExtensionData> dependencies =
         loadExtensions(containingLabel, getImports(buildFileAst, containingLabel), LoadStack.EMPTY);
@@ -239,7 +240,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     readConfigContext.setup(env);
 
     return ImmutableEnvironmentData.ofImpl(
-        env, toLoadedPaths(buildFilePath, dependencies.values(), implicitLoadExtensionData));
+        env,
+        toLoadedPaths(
+            buildFilePath, dependencies.values(), implicitLoadExtensionTransitiveClosure));
   }
 
   private PackageContext createPackageContext(
@@ -272,12 +275,10 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private ImmutableList<String> toLoadedPaths(
       AbsPath containingPath,
       ImmutableCollection<ExtensionData> dependencies,
-      @Nullable ExtensionData implicitLoadExtensionData) {
+      ImmutableSet<String> implicitLoadExtensionTransitiveClosure) {
     // expected size is used to reduce the number of unnecessary resize invocations
     int expectedSize = 1;
-    if (implicitLoadExtensionData != null) {
-      expectedSize += implicitLoadExtensionData.getLoadTransitiveClosure().size();
-    }
+    expectedSize += implicitLoadExtensionTransitiveClosure.size();
     for (ExtensionData dependency : dependencies) {
       expectedSize += dependency.getLoadTransitiveClosure().size();
     }
@@ -288,9 +289,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     for (ExtensionData dependency : dependencies) {
       loadedPathsBuilder.addAll(dependency.getLoadTransitiveClosure());
     }
-    if (implicitLoadExtensionData != null) {
-      loadedPathsBuilder.addAll(implicitLoadExtensionData.getLoadTransitiveClosure());
-    }
+    loadedPathsBuilder.addAll(implicitLoadExtensionTransitiveClosure);
     return loadedPathsBuilder.build();
   }
 
@@ -387,7 +386,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         loadIncludes(label, getImports(fileAst, label), loadStack);
 
     return ImmutableIncludesData.ofImpl(
-        filePath, dependencies, toIncludedPaths(filePath.toString(), dependencies, null));
+        filePath,
+        dependencies,
+        toIncludedPaths(filePath.toString(), dependencies, ImmutableSet.of()));
   }
 
   /**
@@ -434,16 +435,14 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private ImmutableSet<String> toIncludedPaths(
       String containingPath,
       ImmutableList<IncludesData> dependencies,
-      @Nullable ExtensionData implicitLoadExtensionData) {
+      ImmutableSet<String> implicitLoadExtensionTransitiveClosure) {
     ImmutableSet.Builder<String> includedPathsBuilder = ImmutableSet.builder();
     includedPathsBuilder.add(containingPath);
     // for loop is used instead of foreach to avoid iterator overhead, since it's a hot spot
     for (int i = 0; i < dependencies.size(); ++i) {
       includedPathsBuilder.addAll(dependencies.get(i).getLoadTransitiveClosure());
     }
-    if (implicitLoadExtensionData != null) {
-      includedPathsBuilder.addAll(implicitLoadExtensionData.getLoadTransitiveClosure());
-    }
+    includedPathsBuilder.addAll(implicitLoadExtensionTransitiveClosure);
     return includedPathsBuilder.build();
   }
 
@@ -741,7 +740,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         loadedExtension,
         load.getPath(),
         dependencies.values(),
-        toLoadedPaths(load.getPath(), dependencies.values(), null));
+        toLoadedPaths(load.getPath(), dependencies.values(), ImmutableSet.of()));
   }
 
   /**
@@ -884,7 +883,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     // merge sorted lists as we aggregate transitive close up
     // But Guava does not seem to have a built-in way of merging sorted lists/sets
     return ImmutableSortedSet.copyOf(
-        toIncludedPaths(parseFile.toString(), dependencies, implicitLoad.getExtensionData()));
+        toIncludedPaths(
+            parseFile.toString(), dependencies, implicitLoad.getLoadTransitiveClosure()));
   }
 
   @Override
@@ -926,13 +926,17 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    */
   @BuckStyleValue
   abstract static class ImplicitlyLoadedExtension {
-    abstract @Nullable ExtensionData getExtensionData();
+    abstract ImmutableSet<String> getLoadTransitiveClosure();
 
     abstract ImmutableMap<String, Object> getLoadedSymbols();
 
-    @Value.Lazy
+    private static class EmptyHolder {
+      static ImplicitlyLoadedExtension EMPTY =
+          ImmutableImplicitlyLoadedExtension.ofImpl(ImmutableSet.of(), ImmutableMap.of());
+    }
+
     static ImplicitlyLoadedExtension empty() {
-      return ImmutableImplicitlyLoadedExtension.ofImpl(null, ImmutableMap.of());
+      return EmptyHolder.EMPTY;
     }
   }
 }
