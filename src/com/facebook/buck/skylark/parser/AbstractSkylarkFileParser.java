@@ -724,7 +724,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // Must be already frozen, but freeze again to be safe.
       resolverModule.freeze();
       Module module = new Module(resolverModule);
-      makeModule(FileKind.BZL);
       exec(
           ast,
           module,
