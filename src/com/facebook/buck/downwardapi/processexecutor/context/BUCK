@@ -8,6 +8,7 @@ java_library(
         "//test/com/facebook/buck/downwardapi/processexecutor/...",
     ],
     deps = [
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/timing:timing",

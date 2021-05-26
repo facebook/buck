@@ -16,13 +16,13 @@
 
 package com.facebook.buck.downwardapi.processexecutor.context;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ExternalEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StepEvent;
 import com.facebook.buck.util.timing.Clock;
-import com.google.common.base.Preconditions;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +30,8 @@ import javax.annotation.Nullable;
 
 /** Downward API execution context. */
 public final class DownwardApiExecutionContext {
+
+  private static final Logger LOG = Logger.get(DownwardApiExecutionContext.class);
 
   private final Instant startExecutionInstant;
   private final IsolatedEventBus isolatedEventBus;
@@ -108,7 +110,13 @@ public final class DownwardApiExecutionContext {
   public static DownwardApiExecutionContext from(
       DownwardApiExecutionContext context, long threadId) {
     int eventsSize = context.chromeTraceStartedEvents.size() + context.stepStartedEvents.size();
-    Preconditions.checkState(eventsSize == 0, "There are " + eventsSize + " unprocessed events.");
+    if (eventsSize > 0) {
+      // TODO: msemko : remove this when the issue with switchover would be fixed
+      LOG.error("There are " + eventsSize + " unprocessed events.");
+      LOG.info(
+          "Unprocessed events: stepStarted: %s, chromeTraceStarted: %s",
+          context.stepStartedEvents.values(), context.chromeTraceStartedEvents.values());
+    }
 
     return new DownwardApiExecutionContext(
         context.getStartExecutionInstant(), context.isolatedEventBus, threadId);
