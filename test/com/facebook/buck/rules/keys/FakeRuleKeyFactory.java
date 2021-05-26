@@ -45,7 +45,7 @@ public class FakeRuleKeyFactory
   @Override
   public RuleKey build(BuildEngineAction action) {
     if (oversized.contains(action.getBuildTarget())) {
-      throw new SizeLimiter.SizeLimitException();
+      throw new SizeLimitException();
     }
     return ruleKeys.get(action.getBuildTarget());
   }

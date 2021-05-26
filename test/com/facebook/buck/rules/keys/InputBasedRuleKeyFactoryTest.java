@@ -455,7 +455,7 @@ public class InputBasedRuleKeyFactoryTest {
         };
 
     // Verify rule key isn't calculated.
-    expectedException.expect(SizeLimiter.SizeLimitException.class);
+    expectedException.expect(SizeLimitException.class);
     new TestInputBasedRuleKeyFactory(fieldLoader, hashCache, resolver, 200).build(rule);
   }
 
@@ -484,7 +484,7 @@ public class InputBasedRuleKeyFactoryTest {
             .build(graphBuilder, filesystem);
 
     // Verify rule key isn't calculated.
-    expectedException.expect(SizeLimiter.SizeLimitException.class);
+    expectedException.expect(SizeLimitException.class);
     new TestInputBasedRuleKeyFactory(fieldLoader, hashCache, graphBuilder, 200).build(rule);
   }
 
@@ -517,7 +517,7 @@ public class InputBasedRuleKeyFactoryTest {
             .build(graphBuilder, filesystem);
 
     // Verify rule key isn't calculated.
-    expectedException.expect(SizeLimiter.SizeLimitException.class);
+    expectedException.expect(SizeLimitException.class);
     new TestInputBasedRuleKeyFactory(fieldLoader, hashCache, graphBuilder, 200).build(rule);
   }
 
@@ -548,7 +548,7 @@ public class InputBasedRuleKeyFactoryTest {
             .build(graphBuilder, filesystem);
 
     // Verify rule key isn't calculated.
-    expectedException.expect(SizeLimiter.SizeLimitException.class);
+    expectedException.expect(SizeLimitException.class);
     new TestInputBasedRuleKeyFactory(fieldLoader, hashCache, graphBuilder, 200).build(rule);
   }
 
@@ -578,7 +578,7 @@ public class InputBasedRuleKeyFactoryTest {
             .setOut("out")
             .setSrc(PathSourcePath.of(filesystem, tooLargeInput))
             .build(graphBuilder, filesystem);
-    expectedException.expect(SizeLimiter.SizeLimitException.class);
+    expectedException.expect(SizeLimitException.class);
     factory.build(tooLargeRule);
   }
 

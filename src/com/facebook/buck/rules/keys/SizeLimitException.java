@@ -16,20 +16,4 @@
 
 package com.facebook.buck.rules.keys;
 
-/** A class that keeps track of size and throws an exception if the size limit is exceeded. */
-public class SizeLimiter {
-
-  private final long sizeLimit;
-  private long currentSize;
-
-  SizeLimiter(long sizeLimit) {
-    this.sizeLimit = sizeLimit;
-  }
-
-  public void add(long size) {
-    currentSize += size;
-    if (currentSize > sizeLimit) {
-      throw new SizeLimitException();
-    }
-  }
-}
+public class SizeLimitException extends RuntimeException {}

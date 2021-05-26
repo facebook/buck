@@ -90,7 +90,7 @@ public abstract class RuleKeyFactories {
         RuleKeyCalculationEvent.scope(
             eventBus, RuleKeyCalculationEvent.Type.MANIFEST, rule.getBuildTarget())) {
       return Optional.of(getDepFileRuleKeyFactory().buildManifestKey(rule));
-    } catch (SizeLimiter.SizeLimitException ex) {
+    } catch (SizeLimitException ex) {
       return Optional.empty();
     }
   }

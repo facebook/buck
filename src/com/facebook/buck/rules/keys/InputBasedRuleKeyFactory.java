@@ -108,7 +108,7 @@ public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
     // exceptions are currently handled (e.g. LoadingCache wraps them with ExecutionException),
     // we need to iterate through the cause chain to check if a SizeLimitException is wrapped.
     Throwables.getCausalChain(throwable).stream()
-        .filter(t -> t instanceof SizeLimiter.SizeLimitException)
+        .filter(t -> t instanceof SizeLimitException)
         .findFirst()
         .ifPresent(Throwables::throwIfUnchecked);
   }

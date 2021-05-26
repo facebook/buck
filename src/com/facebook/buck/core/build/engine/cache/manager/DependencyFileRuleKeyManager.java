@@ -28,7 +28,7 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
-import com.facebook.buck.rules.keys.SizeLimiter;
+import com.facebook.buck.rules.keys.SizeLimitException;
 import com.facebook.buck.util.Discardable;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -115,7 +115,7 @@ public class DependencyFileRuleKeyManager {
           ruleKeyFactories
               .getDepFileRuleKeyFactory()
               .build(((SupportsDependencyFileRuleKey) rule), inputs));
-    } catch (SizeLimiter.SizeLimitException ex) {
+    } catch (SizeLimitException ex) {
       return Optional.empty();
     } catch (Exception e) {
       // TODO(plamenko): fix exception propagation in RuleKeyBuilder

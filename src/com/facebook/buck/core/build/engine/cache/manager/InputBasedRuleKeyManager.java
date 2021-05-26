@@ -29,7 +29,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
-import com.facebook.buck.rules.keys.SizeLimiter;
+import com.facebook.buck.rules.keys.SizeLimitException;
 import com.facebook.buck.util.Discardable;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.types.Pair;
@@ -77,7 +77,7 @@ public class InputBasedRuleKeyManager {
         RuleKeyCalculationEvent.scope(
             eventBus, RuleKeyCalculationEvent.Type.INPUT, rule.getBuildTarget())) {
       return Optional.of(ruleKeyFactories.getInputBasedRuleKeyFactory().build(rule));
-    } catch (SizeLimiter.SizeLimitException ex) {
+    } catch (SizeLimitException ex) {
       return Optional.empty();
     }
   }
