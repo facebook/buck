@@ -79,6 +79,7 @@ message StepEvent {
     string description = 4;
     // relative time duration from the beginning of the tool invocation
     google.protobuf.Duration duration = 5;
+    string action_id = 6;
 
     enum StepStatus {
         UNKNOWN = 0;
@@ -99,6 +100,7 @@ message ChromeTraceEvent {
     // relative time duration from the beginning of the tool invocation
     google.protobuf.Duration duration = 5;
     string title = 6;
+    string action_id = 7;
 
     enum ChromeTraceEventStatus {
         UNKNOWN = 0;
@@ -127,4 +129,5 @@ message ResultEvent {
 
 // Event used to notify buck that pipelining task has been finished.
 message PipelineFinishedEvent {
+    string action_id = 1;
 }
