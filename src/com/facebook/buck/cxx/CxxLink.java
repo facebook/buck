@@ -209,9 +209,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     this.ruleScheduleInfo = ruleScheduleInfo;
     this.incremental = linkStrategy.isIncremental();
     this.remoteExecutionEnabled = !this.incremental;
-    // Incremental (i.e., relinkable) rules should never be cached in order to guard
-    // against correctness issues
-    this.cacheable = cacheable && !this.incremental;
+    this.cacheable = cacheable;
     this.extraOutputs = extraOutputs;
     this.pathNormalizationPrefix =
         linker.pathNormalizationPrefix(getCellRootMap(cellRoots, projectFilesystem));
