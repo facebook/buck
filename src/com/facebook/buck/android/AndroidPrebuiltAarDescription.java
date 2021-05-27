@@ -257,7 +257,7 @@ public class AndroidPrebuiltAarDescription
         args.getMavenCoords(),
         args.isUseSystemLibraryLoader(),
         withDownwardApi,
-        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+        javaBuckConfig.getBucksJavaOptions().getJavaRuntime(),
         DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 

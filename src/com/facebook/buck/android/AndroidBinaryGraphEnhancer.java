@@ -322,7 +322,7 @@ public class AndroidBinaryGraphEnhancer {
             resourceStableIds,
             downwardApiConfig.isEnabledForAndroid(),
             buildBuckConfig.areExternalActionsEnabled(),
-            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
+            javaBuckConfig.getBucksJavaOptions().getJavaRuntime());
     this.apkModuleGraph = apkModuleGraph;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
@@ -485,7 +485,7 @@ public class AndroidBinaryGraphEnhancer {
                   .getDelegate()
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
-              javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
+              javaBuckConfig.getBucksJavaOptions().getJavaRuntime(),
               DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }

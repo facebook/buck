@@ -123,6 +123,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate;
   }
 
+  public JavaOptions getBucksJavaOptions() {
+    return DEFAULT_JAVA_OPTIONS;
+  }
+
   public JavaOptions getDefaultJavaOptions() {
     return getToolForExecutable("java").map(JavaOptions::of).orElse(DEFAULT_JAVA_OPTIONS);
   }
