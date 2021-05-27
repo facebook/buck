@@ -203,4 +203,7 @@ public final class StarlarkSemantics {
    * unconditionally prohibits recursion.
    */
   public static final String ALLOW_RECURSION = "-allow_recursion";
+
+  /** When disabled, any float operation results in evaluation error. */
+  public static final String ALLOW_FLOATS = "+allow_floats";
 }

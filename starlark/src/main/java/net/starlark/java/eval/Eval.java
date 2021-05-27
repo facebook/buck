@@ -140,7 +140,7 @@ final class Eval {
       list.addElements((StarlarkList<Object>) y);
       return list;
     }
-    return EvalUtils.binaryPlus(x, y, thread.mutability());
+    return EvalUtils.binaryPlus(x, y, thread);
   }
 
   // ---- expressions ----

@@ -37,7 +37,6 @@ import net.starlark.java.annot.StarlarkBuiltin;
 import net.starlark.java.annot.StarlarkMethod;
 import net.starlark.java.eval.Dict;
 import net.starlark.java.eval.EvalException;
-import net.starlark.java.eval.Mutability;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkFloat;
 import net.starlark.java.eval.StarlarkInt;
@@ -310,7 +309,7 @@ public final class Json extends StarlarkValue {
       parameters = {@Param(name = "x")},
       useStarlarkThread = true)
   public Object decode(String x, StarlarkThread thread) throws EvalException {
-    return new Decoder(thread.mutability(), x).decode();
+    return new Decoder(thread, x).decode();
   }
 
   private static final class Decoder {
@@ -320,12 +319,12 @@ public final class Json extends StarlarkValue {
     // In principle, we could parameterize it to allow the caller to
     // control the returned types, but there's no compelling need yet.
 
-    private final Mutability mu;
+    private final StarlarkThread thread;
     private final String s; // the input string
     private int i = 0; // current index in s
 
-    private Decoder(Mutability mu, String s) {
-      this.mu = mu;
+    private Decoder(StarlarkThread thread, String s) {
+      this.thread = thread;
       this.s = s;
     }
 
@@ -375,7 +374,7 @@ public final class Json extends StarlarkValue {
 
         case '[':
           // array
-          StarlarkList<Object> list = StarlarkList.newList(mu);
+          StarlarkList<Object> list = StarlarkList.newList(thread.mutability());
 
           i++; // '['
           c = next();
@@ -398,7 +397,7 @@ public final class Json extends StarlarkValue {
 
         case '{':
           // object
-          Dict<String, Object> dict = Dict.of(mu);
+          Dict<String, Object> dict = Dict.of(thread.mutability());
 
           i++; // '{'
           c = next();
@@ -561,7 +560,7 @@ public final class Json extends StarlarkValue {
       try {
         if (isfloat) {
           double x = Double.parseDouble(num);
-          return StarlarkFloat.of(x);
+          return StarlarkFloat.of(x, thread.getSemantics());
         } else {
           return StarlarkInt.parse(num, 10);
         }

@@ -780,4 +780,12 @@ public final class MethodLibraryTest {
   public void starlarkDebugFrame() throws Exception {
     ev.new Scenario().testExpression("starlark_debug_frame()", Starlark.NONE);
   }
+
+  @Test
+  public void floatWhenDisabled() throws Exception {
+    ev
+        .new Scenario(
+            StarlarkSemantics.builder().setBool(StarlarkSemantics.ALLOW_FLOATS, false).build())
+        .testIfErrorContains("floats are disabled by semantics", "float(1)");
+  }
 }

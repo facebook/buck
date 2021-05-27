@@ -47,8 +47,17 @@ public final class StarlarkFloat extends StarlarkValue implements Comparable<Sta
   }
 
   /** Returns the Starlark float value that represents x. */
-  public static StarlarkFloat of(double v) {
+  public static StarlarkFloat ofUnchecked(double v) {
     return new StarlarkFloat(v);
+  }
+
+  /** Returns the Starlark float or throw exception if floats are disabled. */
+  public static StarlarkFloat of(double v, StarlarkSemantics semantics) throws EvalException {
+    if (semantics.getBool(StarlarkSemantics.ALLOW_FLOATS)) {
+      return ofUnchecked(v);
+    } else {
+      throw Starlark.errorf("floats are disabled by semantics");
+    }
   }
 
   /** Returns the value of this float. */
@@ -214,23 +223,24 @@ public final class StarlarkFloat extends StarlarkValue implements Comparable<Sta
   }
 
   /** Returns x // y (floor of division). */
-  static StarlarkFloat floordiv(double x, double y) throws EvalException {
+  static StarlarkFloat floordiv(double x, double y, StarlarkSemantics semantics)
+      throws EvalException {
     if (y == 0.0) {
       throw Starlark.errorf("integer division by zero");
     }
-    return StarlarkFloat.of(Math.floor(x / y));
+    return StarlarkFloat.of(Math.floor(x / y), semantics);
   }
 
   /** Returns x / y (floating-point division). */
-  static StarlarkFloat div(double x, double y) throws EvalException {
+  static StarlarkFloat div(double x, double y, StarlarkSemantics semantics) throws EvalException {
     if (y == 0.0) {
       throw Starlark.errorf("floating-point division by zero");
     }
-    return StarlarkFloat.of(x / y);
+    return StarlarkFloat.of(x / y, semantics);
   }
 
   /** Returns x % y (floating-point remainder). */
-  static StarlarkFloat mod(double x, double y) throws EvalException {
+  static StarlarkFloat mod(double x, double y, StarlarkSemantics semantics) throws EvalException {
     if (y == 0.0) {
       throw Starlark.errorf("floating-point modulo by zero");
     }
@@ -239,7 +249,7 @@ public final class StarlarkFloat extends StarlarkValue implements Comparable<Sta
     if ((x < 0) != (y < 0) && z != 0) {
       z += y;
     }
-    return StarlarkFloat.of(z);
+    return StarlarkFloat.of(z, semantics);
   }
 
   /**

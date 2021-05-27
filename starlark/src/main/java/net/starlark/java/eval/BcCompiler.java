@@ -649,7 +649,14 @@ class BcCompiler {
     } else if (expression instanceof IntLiteral) {
       return compileIntLiteral((IntLiteral) expression);
     } else if (expression instanceof FloatLiteral) {
-      return compileConstant(StarlarkFloat.of(((FloatLiteral) expression).getValue()));
+      if (thread.getSemantics().getBool(StarlarkSemantics.ALLOW_FLOATS)) {
+        return compileConstant(StarlarkFloat.ofUnchecked(((FloatLiteral) expression).getValue()));
+      } else {
+        ir.add(
+            new BcIrInstr.EvalException(
+                nodeToLocOffset(expression), "floats are disabled by semantics"));
+        return new CompileExpressionResult(new BcIrSlot.LazyLocal("unreachable"));
+      }
     } else {
       int savedSize = ir.size();
       CompileExpressionResult compileExpressionResult =
@@ -1178,11 +1185,7 @@ class BcCompiler {
       try {
         Object constResult =
             EvalUtils.binaryOp(
-                expression.getOperator(),
-                x.valueImmutable(),
-                y.valueImmutable(),
-                thread.getSemantics(),
-                thread.mutability());
+                expression.getOperator(), x.valueImmutable(), y.valueImmutable(), thread);
         // For example, `[] + []` returns new list
         // so we cannot compile it to constant if result is mutable.
         if (Starlark.isImmutable(constResult)) {

@@ -203,7 +203,8 @@ public final class Starlark {
       } else if (x instanceof BigInteger) {
         return StarlarkInt.of((BigInteger) x);
       } else if (x instanceof Double) {
-        return StarlarkFloat.of((double) x);
+        // TODO(nga): verify floats are allowed or get rid of `fromJava` altogether
+        return StarlarkFloat.ofUnchecked((double) x);
       }
     } else if (x instanceof List) {
       return StarlarkList.copyOf(mutability, (List<?>) x);

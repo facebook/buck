@@ -776,7 +776,7 @@ class BcEval {
   void unary() throws EvalException {
     Object value = getSlot(nextOperand());
     TokenKind op = TOKENS[nextOperand()];
-    setSlot(nextOperand(), EvalUtils.unaryOp(op, value));
+    setSlot(nextOperand(), EvalUtils.unaryOp(op, value, thread.getSemantics()));
   }
 
   /**
@@ -792,8 +792,7 @@ class BcEval {
     if (StarlarkRuntimeStats.ENABLED) {
       StarlarkRuntimeStats.recordBinaryOp(op);
     }
-    setSlot(
-        nextOperand(), EvalUtils.binaryOp(op, x, y, thread.getSemantics(), thread.mutability()));
+    setSlot(nextOperand(), EvalUtils.binaryOp(op, x, y, thread));
   }
 
   /** {@code +=} operator. */
@@ -945,7 +944,7 @@ class BcEval {
     int resultSlot = nextOperand();
     Object lhs = getSlot(lhsSlot);
     Object rhs = getSlot(rhsSlot);
-    setSlot(resultSlot, EvalUtils.binaryPlus(lhs, rhs, thread.mutability()));
+    setSlot(resultSlot, EvalUtils.binaryPlus(lhs, rhs, thread));
   }
 
   /** a + b where a and b are likely strings. */
@@ -960,7 +959,7 @@ class BcEval {
     if (lhs instanceof String && rhs instanceof String) {
       result = (String) lhs + (String) rhs;
     } else {
-      result = EvalUtils.binaryPlus(lhs, rhs, thread.mutability());
+      result = EvalUtils.binaryPlus(lhs, rhs, thread);
     }
     setSlot(resultSlot, result);
   }
@@ -975,9 +974,7 @@ class BcEval {
       result = StarlarkList.concat((StarlarkList<?>) lhs, rhs, thread.mutability());
     } else {
       Object[] rhs = nextNSlotsListUnsharedArray();
-      result =
-          EvalUtils.binaryPlus(
-              lhs, StarlarkList.wrap(thread.mutability(), rhs), thread.mutability());
+      result = EvalUtils.binaryPlus(lhs, StarlarkList.wrap(thread.mutability(), rhs), thread);
     }
     int resultSlot = nextOperand();
     setSlot(resultSlot, result);

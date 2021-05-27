@@ -369,8 +369,10 @@ class MethodLibrary {
       parameters = {
         @Param(name = "x", doc = "The value to convert.", defaultValue = "unbound"),
       },
-      purity = FnPurity.SPEC_SAFE)
-  public static StarlarkFloat floatForStarlark(Object x) throws EvalException {
+      purity = FnPurity.SPEC_SAFE,
+      useStarlarkThread = true)
+  public static StarlarkFloat floatForStarlark(Object x, StarlarkThread thread)
+      throws EvalException {
     if (x instanceof String) {
       String s = (String) x;
       if (s.isEmpty()) {
@@ -412,19 +414,19 @@ class MethodLibrary {
           }
           break;
       } // switch
-      return StarlarkFloat.of(d);
+      return StarlarkFloat.of(d, thread.getSemantics());
 
     } else if (x instanceof Boolean) {
-      return StarlarkFloat.of(((Boolean) x).booleanValue() ? 1 : 0);
+      return StarlarkFloat.of(((Boolean) x).booleanValue() ? 1 : 0, thread.getSemantics());
 
     } else if (x instanceof StarlarkInt) {
-      return StarlarkFloat.of(((StarlarkInt) x).toFiniteDouble());
+      return StarlarkFloat.of(((StarlarkInt) x).toFiniteDouble(), thread.getSemantics());
 
     } else if (x instanceof StarlarkFloat) {
       return (StarlarkFloat) x;
 
     } else if (x == Starlark.UNBOUND) {
-      return StarlarkFloat.of(0.0);
+      return StarlarkFloat.of(0.0, thread.getSemantics());
 
     } else {
       throw Starlark.errorf("got %s, want string, int, float, or bool", Starlark.type(x));

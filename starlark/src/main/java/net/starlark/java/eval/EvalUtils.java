@@ -85,12 +85,11 @@ final class EvalUtils {
   }
 
   /** Evaluates an eager binary operation, {@code x op y}. (Excludes AND and OR.) */
-  static Object binaryOp(
-      TokenKind op, Object x, Object y, StarlarkSemantics semantics, Mutability mu)
+  static Object binaryOp(TokenKind op, Object x, Object y, StarlarkThread thread)
       throws EvalException {
     switch (op) {
       case PLUS:
-        return binaryPlus(x, y, mu);
+        return binaryPlus(x, y, thread);
 
       case PIPE:
         if (x instanceof StarlarkInt) {
@@ -137,7 +136,7 @@ final class EvalUtils {
           } else if (y instanceof StarlarkFloat) {
             // int - float
             double z = ((StarlarkInt) x).toFiniteDouble() - ((StarlarkFloat) y).toDouble();
-            return StarlarkFloat.of(z);
+            return StarlarkFloat.of(z, thread.getSemantics());
           }
 
         } else if (x instanceof StarlarkFloat) {
@@ -145,11 +144,11 @@ final class EvalUtils {
           if (y instanceof StarlarkFloat) {
             // float - float
             double z = xf - ((StarlarkFloat) y).toDouble();
-            return StarlarkFloat.of(z);
+            return StarlarkFloat.of(z, thread.getSemantics());
           } else if (y instanceof StarlarkInt) {
             // float - int
             double z = xf - ((StarlarkInt) y).toFiniteDouble();
-            return StarlarkFloat.of(z);
+            return StarlarkFloat.of(z, thread.getSemantics());
           }
         }
         break;
@@ -168,11 +167,11 @@ final class EvalUtils {
             return ((Tuple) y).repeat(xi);
           } else if (y instanceof StarlarkList) {
             // int * list
-            return ((StarlarkList<?>) y).repeat(xi, mu);
+            return ((StarlarkList<?>) y).repeat(xi, ((StarlarkList) y).mutability());
           } else if (y instanceof StarlarkFloat) {
             // int * float
             double z = xi.toFiniteDouble() * ((StarlarkFloat) y).toDouble();
-            return StarlarkFloat.of(z);
+            return StarlarkFloat.of(z, thread.getSemantics());
           }
 
         } else if (x instanceof String) {
@@ -190,17 +189,17 @@ final class EvalUtils {
         } else if (x instanceof StarlarkList) {
           if (y instanceof StarlarkInt) {
             // list * int
-            return ((StarlarkList<?>) x).repeat((StarlarkInt) y, mu);
+            return ((StarlarkList<?>) x).repeat((StarlarkInt) y, ((StarlarkList) x).mutability());
           }
 
         } else if (x instanceof StarlarkFloat) {
           double xf = ((StarlarkFloat) x).toDouble();
           if (y instanceof StarlarkFloat) {
             // float * float
-            return StarlarkFloat.of(xf * ((StarlarkFloat) y).toDouble());
+            return StarlarkFloat.of(xf * ((StarlarkFloat) y).toDouble(), thread.getSemantics());
           } else if (y instanceof StarlarkInt) {
             // float * int
-            return StarlarkFloat.of(xf * ((StarlarkInt) y).toFiniteDouble());
+            return StarlarkFloat.of(xf * ((StarlarkInt) y).toFiniteDouble(), thread.getSemantics());
           }
         }
         break;
@@ -210,20 +209,20 @@ final class EvalUtils {
           double xf = ((StarlarkInt) x).toFiniteDouble();
           if (y instanceof StarlarkInt) {
             // int / int
-            return StarlarkFloat.div(xf, ((StarlarkInt) y).toFiniteDouble());
+            return StarlarkFloat.div(xf, ((StarlarkInt) y).toFiniteDouble(), thread.getSemantics());
           } else if (y instanceof StarlarkFloat) {
             // int / float
-            return StarlarkFloat.div(xf, ((StarlarkFloat) y).toDouble());
+            return StarlarkFloat.div(xf, ((StarlarkFloat) y).toDouble(), thread.getSemantics());
           }
 
         } else if (x instanceof StarlarkFloat) {
           double xf = ((StarlarkFloat) x).toDouble();
           if (y instanceof StarlarkFloat) {
             // float / float
-            return StarlarkFloat.div(xf, ((StarlarkFloat) y).toDouble());
+            return StarlarkFloat.div(xf, ((StarlarkFloat) y).toDouble(), thread.getSemantics());
           } else if (y instanceof StarlarkInt) {
             // float / int
-            return StarlarkFloat.div(xf, ((StarlarkInt) y).toFiniteDouble());
+            return StarlarkFloat.div(xf, ((StarlarkInt) y).toFiniteDouble(), thread.getSemantics());
           }
         }
         break;
@@ -237,17 +236,19 @@ final class EvalUtils {
             // int // float
             double xf = ((StarlarkInt) x).toFiniteDouble();
             double yf = ((StarlarkFloat) y).toDouble();
-            return StarlarkFloat.floordiv(xf, yf);
+            return StarlarkFloat.floordiv(xf, yf, thread.getSemantics());
           }
 
         } else if (x instanceof StarlarkFloat) {
           double xf = ((StarlarkFloat) x).toDouble();
           if (y instanceof StarlarkFloat) {
             // float // float
-            return StarlarkFloat.floordiv(xf, ((StarlarkFloat) y).toDouble());
+            return StarlarkFloat.floordiv(
+                xf, ((StarlarkFloat) y).toDouble(), thread.getSemantics());
           } else if (y instanceof StarlarkInt) {
             // float // int
-            return StarlarkFloat.floordiv(xf, ((StarlarkInt) y).toFiniteDouble());
+            return StarlarkFloat.floordiv(
+                xf, ((StarlarkInt) y).toFiniteDouble(), thread.getSemantics());
           }
         }
         break;
@@ -262,7 +263,7 @@ final class EvalUtils {
             // int % float
             double xf = ((StarlarkInt) x).toFiniteDouble();
             double yf = ((StarlarkFloat) y).toDouble();
-            return StarlarkFloat.mod(xf, yf);
+            return StarlarkFloat.mod(xf, yf, thread.getSemantics());
           }
 
         } else if (x instanceof String) {
@@ -282,10 +283,10 @@ final class EvalUtils {
           double xf = ((StarlarkFloat) x).toDouble();
           if (y instanceof StarlarkFloat) {
             // float % float
-            return StarlarkFloat.mod(xf, ((StarlarkFloat) y).toDouble());
+            return StarlarkFloat.mod(xf, ((StarlarkFloat) y).toDouble(), thread.getSemantics());
           } else if (y instanceof StarlarkInt) {
             // float % int
-            return StarlarkFloat.mod(xf, ((StarlarkInt) y).toFiniteDouble());
+            return StarlarkFloat.mod(xf, ((StarlarkInt) y).toFiniteDouble(), thread.getSemantics());
           }
         }
         break;
@@ -309,10 +310,10 @@ final class EvalUtils {
         return compare(x, y) >= 0;
 
       case IN:
-        return binaryIn(x, y, semantics);
+        return binaryIn(x, y, thread.getSemantics());
 
       case NOT_IN:
-        return !binaryIn(x, y, semantics);
+        return !binaryIn(x, y, thread.getSemantics());
 
       default:
         throw new AssertionError("not a binary operator: " + op);
@@ -335,7 +336,7 @@ final class EvalUtils {
     }
   }
 
-  static Object binaryPlus(Object x, Object y, Mutability mu) throws EvalException {
+  static Object binaryPlus(Object x, Object y, StarlarkThread thread) throws EvalException {
     if (x instanceof StarlarkInt) {
       if (y instanceof StarlarkInt) {
         // int + int
@@ -343,7 +344,7 @@ final class EvalUtils {
       } else if (y instanceof StarlarkFloat) {
         // int + float
         double z = ((StarlarkInt) x).toFiniteDouble() + ((StarlarkFloat) y).toDouble();
-        return StarlarkFloat.of(z);
+        return StarlarkFloat.of(z, thread.getSemantics());
       }
 
     } else if (x instanceof String) {
@@ -361,7 +362,7 @@ final class EvalUtils {
     } else if (x instanceof StarlarkList) {
       if (y instanceof StarlarkList) {
         // list + list
-        return StarlarkList.concat((StarlarkList<?>) x, (StarlarkList<?>) y, mu);
+        return StarlarkList.concat((StarlarkList<?>) x, (StarlarkList<?>) y, thread.mutability());
       }
 
     } else if (x instanceof StarlarkFloat) {
@@ -369,11 +370,11 @@ final class EvalUtils {
       if (y instanceof StarlarkFloat) {
         // float + float
         double z = xf + ((StarlarkFloat) y).toDouble();
-        return StarlarkFloat.of(z);
+        return StarlarkFloat.of(z, thread.getSemantics());
       } else if (y instanceof StarlarkInt) {
         // float + int
         double z = xf + ((StarlarkInt) y).toFiniteDouble();
-        return StarlarkFloat.of(z);
+        return StarlarkFloat.of(z, thread.getSemantics());
       }
     }
 
@@ -415,7 +416,7 @@ final class EvalUtils {
   }
 
   /** Evaluates a unary operation. */
-  static Object unaryOp(TokenKind op, Object x) throws EvalException {
+  static Object unaryOp(TokenKind op, Object x, StarlarkSemantics semantics) throws EvalException {
     switch (op) {
       case NOT:
         return !Starlark.truth(x);
@@ -424,7 +425,7 @@ final class EvalUtils {
         if (x instanceof StarlarkInt) {
           return StarlarkInt.uminus((StarlarkInt) x); // -int
         } else if (x instanceof StarlarkFloat) {
-          return StarlarkFloat.of(-((StarlarkFloat) x).toDouble()); // -float
+          return StarlarkFloat.of(-((StarlarkFloat) x).toDouble(), semantics); // -float
         }
         break;
 
