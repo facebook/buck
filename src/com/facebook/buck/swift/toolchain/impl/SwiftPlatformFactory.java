@@ -139,10 +139,10 @@ public class SwiftPlatformFactory {
     }
 
     // Currently Xcode includes swift and swift-5.0 directories, and each contains different
-    // contents. Specifically, swift/platform contains the libswiftCompatibility50 and
+    // contents. Specifically, swift/platform contains the libswiftCompatibility51 and
     // libswiftCompatibilityDynamicReplacements libraries which are *also* necessary.
     Path swiftRuntimePath = toolchainPath.resolve("usr/lib/swift").resolve(platformName);
-    String libSwiftCompatibilityLibraryName = "libswiftCompatibility50.a";
+    String libSwiftCompatibilityLibraryName = "libswiftCompatibility51.a";
     LOG.debug("Searching for swift compatibility toolchain in %s", toolchainPath.toString());
     if (Files.exists(swiftRuntimePath.resolve(libSwiftCompatibilityLibraryName))) {
       LOG.debug("Found swift compatibility toolchain at %s", toolchainPath.toString());

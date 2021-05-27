@@ -1863,7 +1863,7 @@ public class XcodeNativeTargetGenerator {
       // folder changes in a future release this can be revisited.
       librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
       if (options.shouldLinkSystemSwift()) {
-        librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift-5.0/$PLATFORM_NAME");
+        librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift-5.2/$PLATFORM_NAME");
       }
     }
 

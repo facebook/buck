@@ -1,0 +1,14 @@
+android_library(
+    name = "src_release",
+    srcs = glob([
+        "OnDemandKotlinFeatureActivity.kt",
+    ]),
+    manifest = "AndroidManifest.xml",
+    language = "KOTLIN",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/dynamic_features/on_demand/kotlin:kotlin",
+    ],
+)

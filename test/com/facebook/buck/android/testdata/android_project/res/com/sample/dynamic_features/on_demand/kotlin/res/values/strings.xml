@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<resources>
+    <string name='on_demand_kotlin_text'>String from kotlin on-demand module</string>
+</resources>
