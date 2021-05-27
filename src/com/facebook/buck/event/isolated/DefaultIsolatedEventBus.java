@@ -59,10 +59,16 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   private final DownwardProtocol downwardProtocol;
   private final Phaser phaser;
   private final boolean measureWaitedTime;
+  private final String defaultActionId;
 
   public DefaultIsolatedEventBus(
-      BuildId buildId, OutputStream outputStream, Clock clock, DownwardProtocol downwardProtocol) {
-    this(buildId, outputStream, clock, clock.currentTimeMillis(), downwardProtocol);
+      BuildId buildId,
+      OutputStream outputStream,
+      Clock clock,
+      DownwardProtocol downwardProtocol,
+      String defaultActionId) {
+    this(
+        buildId, outputStream, clock, clock.currentTimeMillis(), downwardProtocol, defaultActionId);
   }
 
   @VisibleForTesting
@@ -71,8 +77,16 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
       OutputStream outputStream,
       Clock clock,
       long startExecutionEpochMillis,
-      DownwardProtocol downwardProtocol) {
-    this(buildId, outputStream, clock, startExecutionEpochMillis, downwardProtocol, false);
+      DownwardProtocol downwardProtocol,
+      String defaultActionId) {
+    this(
+        buildId,
+        outputStream,
+        clock,
+        startExecutionEpochMillis,
+        downwardProtocol,
+        false,
+        defaultActionId);
   }
 
   @VisibleForTesting
@@ -82,12 +96,14 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
       Clock clock,
       long startExecutionEpochMillis,
       DownwardProtocol downwardProtocol,
-      boolean measureWaitedTime) {
+      boolean measureWaitedTime,
+      String defaultActionId) {
     this.buildId = buildId;
     this.outputStream = outputStream;
     this.clock = clock;
     this.startExecutionEpochMillis = startExecutionEpochMillis;
     this.downwardProtocol = downwardProtocol;
+    this.defaultActionId = defaultActionId;
     this.phaser = new Phaser();
     this.measureWaitedTime = measureWaitedTime;
   }
@@ -227,7 +243,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
             .setStepType(event.getShortStepName())
             .setDescription(event.getDescription())
             .setDuration(getDuration(event))
-            .setActionId(actionId)
+            .setActionId(actionId != null ? actionId : defaultActionId)
             .build();
     writeToNamedPipe(eventTypeMessage, stepEvent);
   }
@@ -248,7 +264,7 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
             .setStatus(eventStatus)
             .putAllData(Maps.transformValues(event.getEventInfo(), Object::toString))
             .setDuration(getDuration(event))
-            .setActionId(actionId)
+            .setActionId(actionId != null ? actionId : defaultActionId)
             .build();
     writeToNamedPipe(eventTypeMessage, chromeTraceEvent);
   }

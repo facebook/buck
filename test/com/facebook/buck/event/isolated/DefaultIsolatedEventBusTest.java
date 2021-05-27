@@ -24,6 +24,7 @@ import static org.hamcrest.Matchers.is;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
+import com.facebook.buck.downward.model.EventTypeMessage.EventType;
 import com.facebook.buck.downward.model.LogLevel;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
@@ -96,7 +97,8 @@ public class DefaultIsolatedEventBusTest {
             outputStream,
             FakeClock.of(NOW_MILLIS + TimeUnit.SECONDS.toMillis(CLOCK_SHIFT_IN_SECONDS), 0),
             NOW_MILLIS,
-            DownwardProtocolType.BINARY.getDownwardProtocol());
+            DownwardProtocolType.BINARY.getDownwardProtocol(),
+            "default-action-id");
   }
 
   @After
@@ -116,11 +118,11 @@ public class DefaultIsolatedEventBusTest {
             .build();
 
     testEventBus.post(consoleEvent);
-    EventTypeMessage.EventType actualEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
+    EventType actualEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
     com.facebook.buck.downward.model.ConsoleEvent actualConsoleEvent =
         DOWNWARD_PROTOCOL.readEvent(inputStream, actualEventType);
 
-    assertThat(actualEventType, equalTo(EventTypeMessage.EventType.CONSOLE_EVENT));
+    assertThat(actualEventType, equalTo(EventType.CONSOLE_EVENT));
     assertThat(actualConsoleEvent, equalTo(expectedConsoleEvent));
   }
 
@@ -134,20 +136,34 @@ public class DefaultIsolatedEventBusTest {
             .setStepType("short_name")
             .setStepStatus(com.facebook.buck.downward.model.StepEvent.StepStatus.STARTED)
             .setDuration(Duration.newBuilder().setSeconds(secondsElapsedTillEventOccurred).build())
+            .setActionId(TEST_ACTION_ID)
             .build();
 
-    testEventBus.post(
-        stepEvent,
-        TEST_ACTION_ID,
+    long threadId = Thread.currentThread().getId();
+    Instant atTime =
         Instant.ofEpochMilli(
-            NOW_MILLIS + TimeUnit.SECONDS.toMillis(secondsElapsedTillEventOccurred)),
-        Thread.currentThread().getId());
-    EventTypeMessage.EventType actualEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
+            NOW_MILLIS + TimeUnit.SECONDS.toMillis(secondsElapsedTillEventOccurred));
+    testEventBus.post(stepEvent, TEST_ACTION_ID, atTime, threadId);
+    EventType actualEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
     com.facebook.buck.downward.model.StepEvent actualStepEvent =
         DOWNWARD_PROTOCOL.readEvent(inputStream, actualEventType);
 
-    assertThat(actualEventType, equalTo(EventTypeMessage.EventType.STEP_EVENT));
+    assertThat(actualEventType, equalTo(EventType.STEP_EVENT));
     assertThat(actualStepEvent, StepEventMatcher.equalsStepEvent(expectedStepEvent));
+
+    // do not pass action id
+    testEventBus.post(StepEvent.started("short_name", "my_description"), null, atTime, threadId);
+    EventType actualEventType2 = DOWNWARD_PROTOCOL.readEventType(inputStream);
+    com.facebook.buck.downward.model.StepEvent actualStepEvent2 =
+        DOWNWARD_PROTOCOL.readEvent(inputStream, actualEventType2);
+    assertThat(actualEventType2, equalTo(EventType.STEP_EVENT));
+    assertThat(
+        actualStepEvent2,
+        StepEventMatcher.equalsStepEvent(
+            com.facebook.buck.downward.model.StepEvent.newBuilder()
+                .mergeFrom(expectedStepEvent)
+                .setActionId("default-action-id")
+                .build()));
   }
 
   @Test
@@ -172,6 +188,7 @@ public class DefaultIsolatedEventBusTest {
             .setCategory("buck")
             .putData("my_path_key", Paths.get("my_path_value").toString())
             .setDuration(Duration.newBuilder().setSeconds(secondsElapsedTillEventOccurred).build())
+            .setActionId(TEST_ACTION_ID)
             .build();
     ChromeTraceEvent expectedFinishEvent =
         ChromeTraceEvent.newBuilder()
@@ -180,18 +197,19 @@ public class DefaultIsolatedEventBusTest {
             .setTitle("my_event")
             .setCategory("buck")
             .setDuration(Duration.newBuilder().setSeconds(secondsElapsedTillEventOccurred).build())
+            .setActionId(TEST_ACTION_ID)
             .build();
 
-    EventTypeMessage.EventType actualStartEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
+    EventType actualStartEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
     ChromeTraceEvent actualStartEvent =
         DOWNWARD_PROTOCOL.readEvent(inputStream, actualStartEventType);
-    assertThat(actualStartEventType, equalTo(EventTypeMessage.EventType.CHROME_TRACE_EVENT));
+    assertThat(actualStartEventType, equalTo(EventType.CHROME_TRACE_EVENT));
     assertThat(actualStartEvent, ChromeTraceEventMatcher.equalsTraceEvent(expectedStartEvent));
 
-    EventTypeMessage.EventType actualFinishEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
+    EventType actualFinishEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);
     ChromeTraceEvent actualFinishEvent =
         DOWNWARD_PROTOCOL.readEvent(inputStream, actualFinishEventType);
-    assertThat(actualFinishEventType, equalTo(EventTypeMessage.EventType.CHROME_TRACE_EVENT));
+    assertThat(actualFinishEventType, equalTo(EventType.CHROME_TRACE_EVENT));
     assertThat(actualFinishEvent, ChromeTraceEventMatcher.equalsTraceEvent(expectedFinishEvent));
 
     assertThat(actualStartEvent.getEventId(), equalTo(actualFinishEvent.getEventId()));
@@ -214,7 +232,8 @@ public class DefaultIsolatedEventBusTest {
             FakeClock.of(NOW_MILLIS, 0),
             NOW_MILLIS,
             DownwardProtocolType.BINARY.getDownwardProtocol(),
-            true) {
+            true,
+            TEST_ACTION_ID) {
 
           @Override
           void writeIntoStream(EventTypeMessage eventType, AbstractMessage payload) {

@@ -46,7 +46,8 @@ public class StepEventMatcher extends BaseMatcher<StepEvent> {
     return expected.getDescription().equals(stepEvent.getDescription())
         && expected.getStepStatus().equals(stepEvent.getStepStatus())
         && expected.getStepType().equals(stepEvent.getStepType())
-        && expected.getDuration().equals(stepEvent.getDuration());
+        && expected.getDuration().equals(stepEvent.getDuration())
+        && expected.getActionId().equals(stepEvent.getActionId());
   }
 
   @Override

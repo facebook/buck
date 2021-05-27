@@ -144,9 +144,10 @@ public class ExternalActionsExecutableMain {
     // no need to measure thread CPU time as this is an external process and we do not pass thread
     // time back to buck with Downward API
     Clock clock = new DefaultClock(false);
+    String actionId = parsedEnvVars.getActionId();
     try (IsolatedEventBus eventBus =
             new DefaultIsolatedEventBus(
-                parsedEnvVars.getBuildUuid(), outputStream, clock, DOWNWARD_PROTOCOL);
+                parsedEnvVars.getBuildUuid(), outputStream, clock, DOWNWARD_PROTOCOL, actionId);
         IsolatedExecutionContext executionContext =
             IsolatedExecutionContext.of(
                 eventBus,
@@ -154,7 +155,7 @@ public class ExternalActionsExecutableMain {
                 Platform.detect(),
                 new DefaultProcessExecutor(console),
                 parsedEnvVars.getRuleCellRoot(),
-                parsedEnvVars.getActionId(),
+                actionId,
                 clock)) {
       return IsolatedStepsRunner.execute(stepsToExecute, executionContext);
     }

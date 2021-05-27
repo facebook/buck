@@ -143,7 +143,8 @@ public class JavaCDWorkerToolMain {
     Map<String, SettableFuture<String>> startNextCommandMap = new HashMap<>();
 
     try (IsolatedEventBus eventBus =
-        new DefaultIsolatedEventBus(buildUuid, eventsOutputStream, clock, DOWNWARD_PROTOCOL)) {
+        new DefaultIsolatedEventBus(
+            buildUuid, eventsOutputStream, clock, DOWNWARD_PROTOCOL, "javacd_action_id")) {
 
       try (NamedPipeReader commandsNamedPipe =
               NAMED_PIPE_FACTORY.connectAsReader(workerToolParsedEnvs.getCommandPipe());

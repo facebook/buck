@@ -47,7 +47,8 @@ public class ChromeTraceEventMatcher extends BaseMatcher<ChromeTraceEvent> {
         && expected.getTitle().equals(chromeTraceEvent.getTitle())
         && expected.getDataMap().equals(chromeTraceEvent.getDataMap())
         && expected.getStatus().equals(chromeTraceEvent.getStatus())
-        && expected.getDuration().equals(chromeTraceEvent.getDuration());
+        && expected.getDuration().equals(chromeTraceEvent.getDuration())
+        && expected.getActionId().equals(chromeTraceEvent.getActionId());
   }
 
   @Override

@@ -287,7 +287,8 @@ public class IsolatedStepsRunnerTest {
             FakeClock.of(
                 startExecutionMillis + TimeUnit.SECONDS.toMillis(CLOCK_SHIFT_IN_SECONDS), 0),
             startExecutionMillis,
-            DOWNWARD_PROTOCOL);
+            DOWNWARD_PROTOCOL,
+            ACTION_ID);
     Console console = new Console(VERBOSITY_FOR_TEST, System.out, System.err, ANSI_FOR_TEST);
     ProcessExecutor defaultProcessExecutor = new DefaultProcessExecutor(console);
 
@@ -314,6 +315,7 @@ public class IsolatedStepsRunnerTest {
             .setStepType(step.getShortName())
             .setStepStatus(stepStatus)
             .setDuration(Duration.newBuilder().setSeconds(CLOCK_SHIFT_IN_SECONDS).build())
+            .setActionId(ACTION_ID)
             .build();
     EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
     StepEvent actualEvent = protocol.readEvent(inputStream, actualEventType);
