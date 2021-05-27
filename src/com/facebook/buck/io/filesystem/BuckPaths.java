@@ -96,8 +96,8 @@ public abstract class BuckPaths {
   }
 
   @Value.Derived
-  public Path getLogDir() {
-    return getBuckOut().resolve("log");
+  public RelPath getLogDir() {
+    return getBuckOut().resolveRel("log");
   }
 
   @Value.Derived

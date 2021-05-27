@@ -151,7 +151,7 @@ public class BuildTraces {
     List<Path> allTraces = new ArrayList<>();
 
     projectFilesystem.walkFileTree(
-        projectFilesystem.getBuckPaths().getLogDir(),
+        projectFilesystem.getBuckPaths().getLogDir().getPath(),
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)

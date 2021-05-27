@@ -43,7 +43,7 @@ public class LogFileHandlerTest {
     workspace.setUp();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
-    logDir = filesystem.resolve(filesystem.getBuckPaths().getLogDir());
+    logDir = filesystem.resolve(filesystem.getBuckPaths().getLogDir().getPath());
   }
 
   @Test

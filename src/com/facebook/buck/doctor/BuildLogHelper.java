@@ -200,7 +200,7 @@ public class BuildLogHelper {
   private Collection<Path> getAllBuckLogFiles() throws IOException {
     List<Path> logfiles = new ArrayList<>();
     projectFilesystem.walkRelativeFileTree(
-        projectFilesystem.getBuckPaths().getLogDir(),
+        projectFilesystem.getBuckPaths().getLogDir().getPath(),
         EnumSet.noneOf(FileVisitOption.class),
         new FileVisitor<Path>() {
           @Override

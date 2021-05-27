@@ -216,7 +216,7 @@ public class BuildTracesTest {
             commandName,
             ImmutableList.of(),
             ImmutableList.of(),
-            fs.getBuckPaths().getLogDir(),
+            fs.getBuckPaths().getLogDir().getPath(),
             false,
             "repository",
             "",

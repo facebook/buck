@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener.integration;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
@@ -29,7 +30,7 @@ class EventBusListenerIntegrationTestsUtils {
   private EventBusListenerIntegrationTestsUtils() {}
 
   static Path getLastBuildCommandLogDir(ProjectWorkspace workspace) throws IOException {
-    Path logDir = workspace.getBuckPaths().getLogDir();
+    RelPath logDir = workspace.getBuckPaths().getLogDir();
     List<Path> pathList =
         Files.list(workspace.resolve(logDir))
             .filter(Files::isDirectory)

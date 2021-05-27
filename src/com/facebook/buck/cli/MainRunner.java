@@ -956,7 +956,7 @@ public final class MainRunner {
               command.getSubCommandNameForLogging(),
               filteredArgsForLogging,
               filteredUnexpandedArgsForLogging,
-              filesystem.getBuckPaths().getLogDir(),
+              filesystem.getBuckPaths().getLogDir().getPath(),
               isRemoteExecutionBuild,
               cacheBuckConfig.getRepository(),
               watchman.getVersion());
