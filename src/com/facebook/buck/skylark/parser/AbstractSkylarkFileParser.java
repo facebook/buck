@@ -214,15 +214,12 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     ForwardRelPath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
-    ImplicitlyLoadedExtension implicitLoad =
-        loadImplicitExtension(basePath, LoadStack.top(Location.fromFile(parseFile.toString())));
+    LoadStack loadStack = LoadStack.top(Location.fromFile(parseFile.toString()));
+    ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, loadStack);
 
     Program buildFileAst =
         parseSkylarkFile(
-            parseFile,
-            LoadStack.top(Location.fromFile(parseFile.toString())),
-            getBuckOrPackage().fileKind,
-            implicitLoad.getLoadedSymbols());
+            parseFile, loadStack, getBuckOrPackage().fileKind, implicitLoad.getLoadedSymbols());
     Globber globber = getGlobber(parseFile);
     PackageContext packageContext =
         createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
@@ -240,7 +237,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               implicitLoad.getLoadTransitiveClosure());
 
       Module module = new Module(buildFileAst.getModule());
-      exec(buildFileAst, module, envData.getEnvironment(), "file %s", parseFile);
+      exec(loadStack, buildFileAst, module, envData.getEnvironment(), "file %s", parseFile);
 
       ImmutableList.Builder<String> loadedPaths =
           ImmutableList.builderWithExpectedSize(envData.getLoadedPaths().size() + 1);
@@ -253,14 +250,21 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   private void exec(
-      Program program, Module module, StarlarkThread thread, String what, Object... whatArgs)
+      LoadStack loadStack,
+      Program program,
+      Module module,
+      StarlarkThread thread,
+      String what,
+      Object... whatArgs)
       throws InterruptedException {
     try {
       Starlark.execFileProgram(program, module, thread);
     } catch (EvalException e) {
       String whatFormatted = String.format(what, whatArgs);
       throw BuildFileParseException.createForUnknownParseError(
-          e, "Cannot evaluate " + whatFormatted + "\n" + e.getMessageWithStack());
+          e,
+          loadStack.toDependencyStack(),
+          "Cannot evaluate " + whatFormatted + "\n" + e.getMessageWithStack());
     } catch (InterruptedException | BuildFileParseException e) {
       throw e;
     } catch (Exception e) {
@@ -789,6 +793,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       resolverModule.freeze();
       Module module = new Module(resolverModule);
       exec(
+          load.loadStack,
           ast,
           module,
           extensionEnv,

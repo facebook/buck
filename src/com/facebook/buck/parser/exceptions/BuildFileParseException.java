@@ -36,6 +36,10 @@ public class BuildFileParseException extends HumanReadableException {
     super(dependencyStack, message);
   }
 
+  public BuildFileParseException(Throwable cause, DependencyStack dependencyStack, String message) {
+    super(cause, dependencyStack, message);
+  }
+
   protected BuildFileParseException(String message, Object... args) {
     super(message, args);
   }
@@ -65,6 +69,11 @@ public class BuildFileParseException extends HumanReadableException {
   public static BuildFileParseException createForUnknownParseError(
       DependencyStack dependencyStack, String message, Object... args) {
     return new BuildFileParseException(dependencyStack, message, args);
+  }
+
+  public static BuildFileParseException createForUnknownParseError(
+      Throwable cause, DependencyStack dependencyStack, String message, Object... args) {
+    return new BuildFileParseException(cause, dependencyStack, String.format(message, args));
   }
 
   public static BuildFileParseException createForBuildFileParseError(
