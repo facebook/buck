@@ -75,9 +75,10 @@ public class JavaCDWorkerStepUtils {
     ImmutableList<String> startCommandOptions = javaCDParams.getStartCommandOptions();
 
     return ImmutableList.<String>builderWithExpectedSize(
-            javaRuntimeLauncherCommand.size() + startCommandOptions.size() + 4)
+            javaRuntimeLauncherCommand.size() + startCommandOptions.size() + 5)
         .addAll(javaRuntimeLauncherCommand)
         .addAll(startCommandOptions)
+        .add("-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"))
         .add("-cp")
         .add(
             Objects.requireNonNull(

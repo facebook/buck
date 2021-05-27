@@ -139,8 +139,9 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   }
 
   private ImmutableList<String> getCommand(Path buildableCommandPath) {
-    return ImmutableList.<String>builderWithExpectedSize(javaRuntimeLauncherCommand.size() + 5)
+    return ImmutableList.<String>builderWithExpectedSize(javaRuntimeLauncherCommand.size() + 6)
         .addAll(javaRuntimeLauncherCommand)
+        .add("-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"))
         .add("-cp")
         .add(
             Objects.requireNonNull(
