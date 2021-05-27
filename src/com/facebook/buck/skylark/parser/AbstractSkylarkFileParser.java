@@ -165,6 +165,10 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
   private ImplicitlyLoadedExtension loadImplicitExtension(
       ForwardRelPath basePath, LoadStack loadStack) throws IOException, InterruptedException {
+    if (getBuckOrPackage() != BuckOrPackage.BUCK) {
+      return ImplicitlyLoadedExtension.empty();
+    }
+
     Optional<ImplicitInclude> implicitInclude =
         packageImplicitIncludeFinder.findIncludeForBuildFile(basePath);
     if (!implicitInclude.isPresent()) {
