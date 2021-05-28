@@ -150,7 +150,7 @@ public class JavaCDWorkerToolMain {
             eventsOutputStream,
             clock,
             DOWNWARD_PROTOCOL,
-            ActionId.of("javacd_action_id"))) {
+            workerToolParsedEnvs.getActionId())) {
 
       try (NamedPipeReader commandsNamedPipe =
               NAMED_PIPE_FACTORY.connectAsReader(workerToolParsedEnvs.getCommandPipe());

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.downwardapi.utils.DownwardApiConstants;
@@ -36,7 +37,7 @@ public abstract class WorkerToolParsedEnvs {
 
   public abstract BuildId getBuildUuid();
 
-  public abstract String getActionId();
+  public abstract ActionId getActionId();
 
   public abstract Path getEventPipe();
 
@@ -48,7 +49,7 @@ public abstract class WorkerToolParsedEnvs {
         Verbosity.valueOf(getNonNullValue(envs, DownwardApiConstants.ENV_VERBOSITY)),
         Boolean.parseBoolean(getNonNullValue(envs, DownwardApiConstants.ENV_ANSI_ENABLED)),
         new BuildId(getNonNullValue(envs, DownwardApiConstants.ENV_BUILD_UUID)),
-        getNonNullValue(envs, DownwardApiConstants.ENV_ACTION_ID),
+        ActionId.of(getNonNullValue(envs, DownwardApiConstants.ENV_ACTION_ID)),
         Paths.get(getNonNullValue(envs, DownwardApiConstants.ENV_EVENT_PIPE)),
         Paths.get(getNonNullValue(envs, WorkerToolConstants.ENV_COMMAND_PIPE)));
   }

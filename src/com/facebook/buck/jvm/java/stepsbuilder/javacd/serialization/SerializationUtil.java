@@ -24,8 +24,4 @@ class SerializationUtil {
   static RuntimeException createNotSupportedException(Enum<?> value) {
     return new IllegalStateException(value.name() + " enum value is not supported!");
   }
-
-  static RuntimeException createNotSupportedException(Class<?> value) {
-    return new IllegalStateException(value + " class is not supported!");
-  }
 }
