@@ -23,6 +23,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.util.stream.RichStream;
@@ -54,6 +55,8 @@ final class OwnersReport<N extends Comparable<N>> {
   final ImmutableSet<Path> inputsWithNoOwners;
   final ImmutableSet<String> nonExistentInputs;
   final ImmutableSet<String> nonFileInputs;
+
+  private static final Logger LOG = Logger.get(OwnersReport.class);
 
   private OwnersReport(
       ImmutableSetMultimap<N, Path> owners,
@@ -245,10 +248,20 @@ final class OwnersReport<N extends Comparable<N>> {
 
       Map<Optional<Cell>, List<Path>> argumentsByCell =
           RichStream.from(arguments)
-              // Assume paths given are relative to client's working directory.
-              .map(clientWorkingDir::resolve)
               // Filter out any non-existent paths.
-              .filter(Files::exists)
+              .flatMap(
+                  (path) -> {
+                    // Assume paths given are relative to client's working directory.
+                    Path resolvedPath = clientWorkingDir.resolve(path);
+                    if (Files.exists(resolvedPath)) {
+                      return RichStream.of(resolvedPath);
+                    } else {
+                      LOG.warn(
+                          "path %s doesn't exist when resolved against the current working dir",
+                          path);
+                      return RichStream.empty();
+                    }
+                  })
               // Resolve them all to absolute paths.
               .map(
                   pathString -> {
