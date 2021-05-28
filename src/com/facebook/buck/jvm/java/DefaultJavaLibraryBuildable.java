@@ -161,7 +161,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
     JavaCompileStepsBuilderFactory javaCompileStepsBuilderFactory =
-        getJavaCompileStepsBuilderFactory(sourcePathResolver);
+        getJavaCompileStepsBuilderFactory(sourcePathResolver, filesystem);
     LibraryJarStepsBuilder stepsBuilder = javaCompileStepsBuilderFactory.getLibraryJarBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
@@ -179,9 +179,10 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   }
 
   private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
-      SourcePathResolverAdapter sourcePathResolver) {
+      SourcePathResolverAdapter sourcePathResolver, ProjectFilesystem projectFilesystem) {
     return JavaCompileStepsBuilderFactoryCreator.createFactory(
-        jarBuildStepsFactory.getConfiguredCompiler(), createJavaCDParams(sourcePathResolver));
+        jarBuildStepsFactory.getConfiguredCompiler(),
+        createJavaCDParams(sourcePathResolver, projectFilesystem));
   }
 
   @Override
@@ -371,8 +372,10 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps
   }
 
-  private JavaCDParams createJavaCDParams(SourcePathResolverAdapter sourcePathResolver) {
-    return JavaCDParams.of(javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver));
+  private JavaCDParams createJavaCDParams(
+      SourcePathResolverAdapter sourcePathResolver, ProjectFilesystem filesystem) {
+    return JavaCDParams.of(
+        javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver), filesystem);
   }
 
   private void maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(

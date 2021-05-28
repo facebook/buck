@@ -16,6 +16,8 @@
 
 package com.facebook.buck.step.buildables;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
@@ -139,18 +141,33 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   }
 
   private ImmutableList<String> getCommand(Path buildableCommandPath) {
-    return ImmutableList.<String>builderWithExpectedSize(javaRuntimeLauncherCommand.size() + 6)
+    ImmutableList<String> commonJvmParams = getCommonJvmParams();
+
+    String classpath =
+        Objects.requireNonNull(
+            BuckClasspath.getBuckBootstrapClasspathFromEnvVarOrNull(),
+            BuckClasspath.BOOTSTRAP_ENV_VAR_NAME + " env variable is not set");
+    ImmutableList<String> command =
+        ImmutableList.of(
+            "-cp",
+            classpath,
+            BuckClasspath.BOOTSTRAP_MAIN_CLASS,
+            mainClass,
+            buildableCommandPath.toString());
+
+    return ImmutableList.<String>builderWithExpectedSize(
+            javaRuntimeLauncherCommand.size() + commonJvmParams.size() + command.size())
         .addAll(javaRuntimeLauncherCommand)
-        .add("-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"))
-        .add("-cp")
-        .add(
-            Objects.requireNonNull(
-                BuckClasspath.getBuckBootstrapClasspathFromEnvVarOrNull(),
-                BuckClasspath.BOOTSTRAP_ENV_VAR_NAME + " env variable is not set"))
-        .add(BuckClasspath.BOOTSTRAP_MAIN_CLASS)
-        .add(mainClass)
-        .add(buildableCommandPath.toString())
+        .addAll(commonJvmParams)
+        .addAll(command)
         .build();
+  }
+
+  @VisibleForTesting
+  public static ImmutableList<String> getCommonJvmParams() {
+    return ImmutableList.of(
+        "-Dfile.encoding=" + UTF_8.name(),
+        "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"));
   }
 
   private ImmutableMap<String, String> getEnvs() {

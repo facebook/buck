@@ -16,7 +16,9 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.params;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
@@ -48,9 +50,14 @@ public abstract class JavaCDParams {
     return getBaseJavaCDParams().getBorrowFromPoolTimeoutInSeconds();
   }
 
+  public abstract RelPath getLogDirectory();
+
   /** Creates {@link JavaCDParams} */
   public static JavaCDParams of(
-      BaseJavaCDParams baseJavaCDParams, ImmutableList<String> javaRuntimeLauncherCommand) {
-    return ImmutableJavaCDParams.ofImpl(baseJavaCDParams, javaRuntimeLauncherCommand);
+      BaseJavaCDParams baseJavaCDParams,
+      ImmutableList<String> javaRuntimeLauncherCommand,
+      ProjectFilesystem projectFilesystem) {
+    return ImmutableJavaCDParams.ofImpl(
+        baseJavaCDParams, javaRuntimeLauncherCommand, projectFilesystem.getBuckPaths().getLogDir());
   }
 }

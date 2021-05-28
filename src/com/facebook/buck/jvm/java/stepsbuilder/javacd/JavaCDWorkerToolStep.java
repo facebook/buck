@@ -44,8 +44,8 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   private static final String STEP_NAME = "javacd";
   private static final String SCOPE_PREFIX = STEP_NAME + "_command";
 
-  private final JavaCDParams javaCDParams;
   private final BuildJavaCommand buildJavaCommand;
+  private final JavaCDParams javaCDParams;
 
   public JavaCDWorkerToolStep(BuildJavaCommand buildJavaCommand, JavaCDParams javaCDParams) {
     super(STEP_NAME);
@@ -59,7 +59,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     IsolatedEventBus eventBus = context.getIsolatedEventBus();
 
     ImmutableList<String> launchJavaCDCommand =
-        JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams);
+        JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams, context.getRuleCellRoot());
 
     WorkerProcessPool<WorkerToolExecutor> workerToolPool =
         JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);

@@ -151,7 +151,7 @@ public class CalculateSourceAbi
         BuildCellRelativePathFactory buildCellPathFactory) {
       SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
       AbiJarStepsBuilder stepsBuilder =
-          getJavaCompileStepsBuilderFactory(sourcePathResolver).getAbiJarBuilder();
+          getJavaCompileStepsBuilderFactory(sourcePathResolver, filesystem).getAbiJarBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
           filesystem,
@@ -259,14 +259,16 @@ public class CalculateSourceAbi
     }
 
     private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
-        SourcePathResolverAdapter sourcePathResolver) {
+        SourcePathResolverAdapter sourcePathResolver, ProjectFilesystem filesystem) {
       return JavaCompileStepsBuilderFactoryCreator.createFactory(
-          jarBuildStepsFactory.getConfiguredCompiler(), createJavaCDParams(sourcePathResolver));
+          jarBuildStepsFactory.getConfiguredCompiler(),
+          createJavaCDParams(sourcePathResolver, filesystem));
     }
 
-    private JavaCDParams createJavaCDParams(SourcePathResolverAdapter sourcePathResolver) {
+    private JavaCDParams createJavaCDParams(
+        SourcePathResolverAdapter sourcePathResolver, ProjectFilesystem filesystem) {
       return JavaCDParams.of(
-          javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver));
+          javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver), filesystem);
     }
 
     public boolean supportsCompilationDaemon() {

@@ -20,7 +20,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
-import java.nio.charset.StandardCharsets;
 import org.immutables.value.Value;
 
 /** javacd configuration */
@@ -44,11 +43,7 @@ public abstract class JavaCDBuckConfig implements ConfigView<BuckConfig> {
   /** Returns jvm flags that would be used to launch javacd. */
   @Value.Lazy
   public ImmutableList<String> getJvmFlags() {
-    ImmutableList<String> args = getDelegate().getListWithoutComments(SECTION, "jvm_args");
-    if (args.isEmpty()) {
-      return ImmutableList.of("-Dfile.encoding=" + StandardCharsets.UTF_8.name());
-    }
-    return args;
+    return getDelegate().getListWithoutComments(SECTION, "jvm_args");
   }
 
   /** Returns worker tool pool size. */

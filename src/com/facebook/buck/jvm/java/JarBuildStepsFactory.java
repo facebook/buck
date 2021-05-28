@@ -753,12 +753,14 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
           hasAnnotationProcessing(),
           withDownwardApi,
           configuredCompiler.getSpoolMode(),
-          createJavaCDParams(context.getSourcePathResolver()));
+          createJavaCDParams(context.getSourcePathResolver(), projectFilesystem));
     };
   }
 
-  private JavaCDParams createJavaCDParams(SourcePathResolverAdapter sourcePathResolver) {
-    return JavaCDParams.of(javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver));
+  private JavaCDParams createJavaCDParams(
+      SourcePathResolverAdapter sourcePathResolver, ProjectFilesystem filesystem) {
+    return JavaCDParams.of(
+        javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver), filesystem);
   }
 
   boolean hasAnnotationProcessing() {

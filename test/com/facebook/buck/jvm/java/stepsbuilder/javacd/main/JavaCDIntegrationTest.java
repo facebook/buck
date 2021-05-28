@@ -584,15 +584,17 @@ public class JavaCDIntegrationTest {
         .build();
   }
 
-  private ImmutableList<String> getLaunchJavaCDCommand() {
-    return ImmutableList.of(
-        JavaBuckConfig.getJavaBinCommand(),
-        "-Dfile.encoding=" + UTF_8.name(),
-        "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"),
-        "-cp",
-        testBinary.toString(),
-        BuckClasspath.BOOTSTRAP_MAIN_CLASS,
-        JavaCDWorkerStepUtils.JAVACD_MAIN_CLASS);
+  private ImmutableList<String> getLaunchJavaCDCommand() throws IOException {
+    return ImmutableList.<String>builder()
+        .add(JavaBuckConfig.getJavaBinCommand())
+        .addAll(
+            JavaCDWorkerStepUtils.getCommonJvmParams(
+                AbsPath.of(temporaryFolder.newFolder("log").getPath())))
+        .add("-cp")
+        .add(testBinary.toString())
+        .add(BuckClasspath.BOOTSTRAP_MAIN_CLASS)
+        .add(JavaCDWorkerStepUtils.JAVACD_MAIN_CLASS)
+        .build();
   }
 
   private ImmutableMap<String, String> getEnvs() {

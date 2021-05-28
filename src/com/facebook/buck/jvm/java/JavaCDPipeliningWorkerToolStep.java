@@ -146,7 +146,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     ActionId actionId = context.getActionId();
     LOG.debug("Start execution for action id: %s", actionId);
     ImmutableList<String> launchJavaCDCommand =
-        JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams);
+        JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams, context.getRuleCellRoot());
 
     IsolatedEventBus eventBus = context.getIsolatedEventBus();
     if (borrowedWorkerTool == null) {

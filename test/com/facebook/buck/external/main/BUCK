@@ -25,6 +25,8 @@ java_test(
         "//src/com/facebook/buck/io/namedpipes:namedpipes",
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/rules/modern:modern",
+        "//src/com/facebook/buck/step/buildables:buildables",
+        "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/util/env:env",
         "//test/com/facebook/buck/downwardapi/testutil:testutil",
         "//test/com/facebook/buck/event:testutil",

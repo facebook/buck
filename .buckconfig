@@ -21,7 +21,7 @@
     compile_against_abis = True
     javacd_enabled = True
 [javacd]
-  jvm_args = -Dfile.encoding=UTF-8, -Xms128m, -XX:+UseG1GC, -XX:StringTableSize=1000003, -XX:+HeapDumpOnOutOfMemoryError, -XX:HeapDumpPath=buck-out/log
+  jvm_args = -Xms128m
 
 [kotlin]
   # TODO: Put this in a shared location so Kotlin code under src/

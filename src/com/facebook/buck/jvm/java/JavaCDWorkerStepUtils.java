@@ -16,8 +16,11 @@
 
 package com.facebook.buck.jvm.java;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
@@ -30,6 +33,7 @@ import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.WorkerToolLauncher;
 import com.facebook.buck.workertool.impl.DefaultWorkerToolLauncher;
 import com.facebook.buck.workertool.impl.WorkerToolPoolFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Objects;
@@ -71,23 +75,40 @@ public class JavaCDWorkerStepUtils {
   }
 
   /** Returns the startup command for launching javacd process. */
-  public static ImmutableList<String> getLaunchJavaCDCommand(JavaCDParams javaCDParams) {
+  public static ImmutableList<String> getLaunchJavaCDCommand(
+      JavaCDParams javaCDParams, AbsPath ruleCellRoot) {
     ImmutableList<String> javaRuntimeLauncherCommand = javaCDParams.getJavaRuntimeLauncherCommand();
     ImmutableList<String> startCommandOptions = javaCDParams.getStartCommandOptions();
+    ImmutableList<String> commonJvmParams =
+        getCommonJvmParams(ruleCellRoot.resolve(javaCDParams.getLogDirectory()));
+
+    String classpath =
+        Objects.requireNonNull(
+            BuckClasspath.getBuckBootstrapClasspathFromEnvVarOrNull(),
+            BuckClasspath.BOOTSTRAP_ENV_VAR_NAME + " env variable is not set");
+    ImmutableList<String> command =
+        ImmutableList.of("-cp", classpath, BuckClasspath.BOOTSTRAP_MAIN_CLASS, JAVACD_MAIN_CLASS);
 
     return ImmutableList.<String>builderWithExpectedSize(
-            javaRuntimeLauncherCommand.size() + startCommandOptions.size() + 5)
+            javaRuntimeLauncherCommand.size()
+                + commonJvmParams.size()
+                + startCommandOptions.size()
+                + command.size())
         .addAll(javaRuntimeLauncherCommand)
+        .addAll(commonJvmParams)
         .addAll(startCommandOptions)
-        .add("-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"))
-        .add("-cp")
-        .add(
-            Objects.requireNonNull(
-                BuckClasspath.getBuckBootstrapClasspathFromEnvVarOrNull(),
-                BuckClasspath.BOOTSTRAP_ENV_VAR_NAME + " env variable is not set"))
-        .add(BuckClasspath.BOOTSTRAP_MAIN_CLASS)
-        .add(JAVACD_MAIN_CLASS)
+        .addAll(command)
         .build();
+  }
+
+  /** Returns common jvm params for javacd */
+  @VisibleForTesting
+  public static ImmutableList<String> getCommonJvmParams(AbsPath logDirectory) {
+    return ImmutableList.of(
+        "-Dfile.encoding=" + UTF_8.name(),
+        "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"),
+        "-XX:+HeapDumpOnOutOfMemoryError",
+        "-XX:HeapDumpPath=" + logDirectory.toString());
   }
 
   /** Returns {@link WorkerProcessPool.BorrowedWorkerProcess} from the passed pool. */
