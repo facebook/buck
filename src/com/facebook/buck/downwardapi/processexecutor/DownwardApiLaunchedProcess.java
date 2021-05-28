@@ -84,10 +84,20 @@ public class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
   }
 
   /**
-   * Updates thread id that would be set into events received from named pipe by the current
-   * launched process.
+   * Register action id with this process.
+   *
+   * <p>Named pipe event handler is created together with launched process. Launched process could
+   * be reused by multiple building threads. Handler has to set a valid value of thread id into
+   * every event processed by downward API execution. By registering action id with this handler,
+   * downward API execution would know about invoking thread id and would set it to every event that
+   * has this action id.
    */
-  public void updateThreadId() {
-    namedPipeEventHandler.updateThreadId();
+  public void registerActionId(String actionId) {
+    namedPipeEventHandler.registerActionId(actionId);
+  }
+
+  /** Signal to Named pipe event handler that process would be used by new thread. */
+  public void prepareForReuse() {
+    namedPipeEventHandler.prepareForReuse();
   }
 }

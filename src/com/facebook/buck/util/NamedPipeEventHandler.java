@@ -32,12 +32,16 @@ public interface NamedPipeEventHandler {
       throws CancellationException, InterruptedException, ExecutionException, TimeoutException;
 
   /**
-   * Updates thread id that would be set into events handled by the current event handler.
+   * Register action id with this handler.
    *
-   * <p>Named pipe event handler is created together with launched process. If launched process is
-   * reused by multiple building threads that means that thread id set into downward API execution
-   * context is no longer a valid one. Thread id is set into events processed by named pipe event
-   * handler and that is why it should be updated in case of thread switching.
+   * <p>Named pipe event handler is created together with launched process. Launched process could
+   * be reused by multiple building threads. Handler has to set a valid value of thread id into
+   * every event processed by downward API execution. By registering action id with this handler,
+   * downward API execution would know about invoking thread id and would set it to every event that
+   * has this action id.
    */
-  void updateThreadId();
+  void registerActionId(String actionId);
+
+  /** Signals that handler would work with the new thread. */
+  void prepareForReuse();
 }

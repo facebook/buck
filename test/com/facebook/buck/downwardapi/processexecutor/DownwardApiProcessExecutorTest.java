@@ -266,6 +266,11 @@ public class DownwardApiProcessExecutorTest {
 
     long currentThreadId = Thread.currentThread().getId();
     for (BuckEvent buckEvent : events.values()) {
+      if (!(buckEvent instanceof com.facebook.buck.event.StepEvent
+          || buckEvent instanceof SimplePerfEvent)) {
+        // we care about thread id only for step and chrome trace events.
+        continue;
+      }
       assertEquals(
           "Thread id for events has to be equals to thread id of the invoking thread. Failed event: "
               + buckEvent,
@@ -747,6 +752,7 @@ public class DownwardApiProcessExecutorTest {
             .setStepType("crazy_stuff")
             .setDescription(description)
             .setDuration(Duration.newBuilder().setSeconds(-durationSeconds).setNanos(-10).build())
+            .setActionId(TEST_ACTION_ID)
             .build();
 
     return write(downwardProtocol, STEP_EVENT, stepEvent);
@@ -802,6 +808,7 @@ public class DownwardApiProcessExecutorTest {
             .setStatus(status)
             .setDuration(Duration.newBuilder().setSeconds(-durationInSeconds).setNanos(-10).build())
             .putAllData(attributes)
+            .setActionId(TEST_ACTION_ID)
             .build();
 
     return write(downwardProtocol, CHROME_TRACE_EVENT, chromeTraceEvent);

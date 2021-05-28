@@ -68,7 +68,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.LogRecord;
@@ -113,7 +112,7 @@ public class ExternalActionsIntegrationTest {
   private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
       new TestWindowsHandleFactory();
 
-  @Rule public Timeout globalTestTimeout = Timeout.seconds(60);
+  @Rule public Timeout globalTestTimeout = Timeout.seconds(180);
 
   @BeforeClass
   public static void beforeClass() throws Exception {
@@ -364,10 +363,6 @@ public class ExternalActionsIntegrationTest {
 
   private ProcessExecutorParams createProcessExecutorParams(ImmutableList<String> command) {
     String ruleCellRoot = temporaryFolder.getRoot().toString();
-    String buckClassPath =
-        Objects.requireNonNull(
-            BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
-            BuckClasspath.ENV_VAR_NAME + " env variable is not set");
 
     return ProcessExecutorParams.builder()
         .setCommand(command)
@@ -377,7 +372,7 @@ public class ExternalActionsIntegrationTest {
                     ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT,
                     ruleCellRoot,
                     BuckClasspath.ENV_VAR_NAME,
-                    buckClassPath)))
+                    testBinary.toString())))
         .build();
   }
 

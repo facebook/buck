@@ -35,15 +35,15 @@ public final class DownwardApiExecutionContext {
 
   private final Instant startExecutionInstant;
   private final IsolatedEventBus isolatedEventBus;
-  private final long invokingThreadId;
   private final Map<Integer, SimplePerfEvent.Started> chromeTraceStartedEvents = new HashMap<>();
   private final Map<Integer, StepEvent.Started> stepStartedEvents = new HashMap<>();
+  private final Map<String, Long> actionToThreadIdMap = new HashMap<>();
 
   private DownwardApiExecutionContext(
-      Instant startExecutionInstant, IsolatedEventBus isolatedEventBus, long invokingThreadId) {
+      Instant startExecutionInstant, IsolatedEventBus isolatedEventBus, String actionId) {
     this.startExecutionInstant = startExecutionInstant;
     this.isolatedEventBus = isolatedEventBus;
-    this.invokingThreadId = invokingThreadId;
+    registerActionId(actionId);
   }
 
   /** Returns {@code Instant} when execution started. */
@@ -70,55 +70,81 @@ public final class DownwardApiExecutionContext {
   }
 
   public void postEvent(ExternalEvent event) {
-    isolatedEventBus.post(event, invokingThreadId);
+    isolatedEventBus.post(event);
   }
 
   public void postEvent(ConsoleEvent event) {
-    isolatedEventBus.post(event, invokingThreadId);
+    isolatedEventBus.post(event);
   }
 
   public void postEvent(StepEvent event, String actionId) {
-    isolatedEventBus.post(event, actionId, invokingThreadId);
+    isolatedEventBus.post(event, actionId, getThreadId(actionId));
   }
 
   public void postEvent(StepEvent event, String actionId, Instant atTime) {
-    isolatedEventBus.post(event, actionId, atTime, invokingThreadId);
+    isolatedEventBus.post(event, actionId, atTime, getThreadId(actionId));
   }
 
   /** Posts events into buck event bus. */
   public void postEvent(SimplePerfEvent event, String actionId) {
-    isolatedEventBus.post(event, actionId, invokingThreadId);
+    isolatedEventBus.post(event, actionId, getThreadId(actionId));
   }
 
   /** Posts events into buck event bus that occurred at {@code atTime}. */
   public void postEvent(SimplePerfEvent event, String actionId, Instant atTime) {
-    isolatedEventBus.post(event, actionId, atTime, invokingThreadId);
+    isolatedEventBus.post(event, actionId, atTime, getThreadId(actionId));
+  }
+
+  private long getThreadId(String actionId) {
+    Long threadId = actionToThreadIdMap.get(actionId);
+    if (threadId == null) {
+      LOG.warn("No thread id registered for action id: %s", actionId);
+      return Thread.currentThread().getId();
+    }
+
+    return threadId;
   }
 
   /** Creates {@link DownwardApiExecutionContext} */
-  public static DownwardApiExecutionContext of(IsolatedEventBus buckEventBus, Clock clock) {
+  public static DownwardApiExecutionContext of(
+      IsolatedEventBus buckEventBus, Clock clock, String actionId) {
     return new DownwardApiExecutionContext(
-        Instant.ofEpochMilli(clock.currentTimeMillis()),
-        buckEventBus,
-        Thread.currentThread().getId());
+        Instant.ofEpochMilli(clock.currentTimeMillis()), buckEventBus, actionId);
   }
 
-  /**
-   * Creates {@link DownwardApiExecutionContext} from the existing {@code context}, but with a new
-   * {@code threadId}
-   */
-  public static DownwardApiExecutionContext from(
-      DownwardApiExecutionContext context, long threadId) {
-    int eventsSize = context.chromeTraceStartedEvents.size() + context.stepStartedEvents.size();
-    if (eventsSize > 0) {
+  /** Register action id with this context. Stores mapping between action id and invoking thread. */
+  public void registerActionId(String actionId) {
+    long threadId = Thread.currentThread().getId();
+    Long previousThreadId = actionToThreadIdMap.put(actionId, threadId);
+    if (previousThreadId != null && !previousThreadId.equals(threadId)) {
+      LOG.warn(
+          "Action id to thread id mapping overwritten. Action id: %s, prev thread id: %s, new thread id: %s",
+          actionId, previousThreadId, threadId);
+    }
+  }
+
+  /** Preparation before switching to another thread. */
+  public void prepareForReuse() {
+    // verify that all events processed.
+    boolean hasUnprocessed = verifyAllEventsProcessed();
+
+    if (hasUnprocessed) {
+      // clean maps with unprocessed events
+      stepStartedEvents.clear();
+      chromeTraceStartedEvents.clear();
+    }
+  }
+
+  private boolean verifyAllEventsProcessed() {
+    int eventsSize = chromeTraceStartedEvents.size() + stepStartedEvents.size();
+    boolean hasUnprocessed = eventsSize > 0;
+    if (hasUnprocessed) {
       // TODO: msemko : remove this when the issue with switchover would be fixed
       LOG.error("There are " + eventsSize + " unprocessed events.");
       LOG.info(
           "Unprocessed events: stepStarted: %s, chromeTraceStarted: %s",
-          context.stepStartedEvents.values(), context.chromeTraceStartedEvents.values());
+          stepStartedEvents.values(), chromeTraceStartedEvents.values());
     }
-
-    return new DownwardApiExecutionContext(
-        context.getStartExecutionInstant(), context.isolatedEventBus, threadId);
+    return hasUnprocessed;
   }
 }

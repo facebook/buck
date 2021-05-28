@@ -59,9 +59,9 @@ public class FakeBuckEventWritingAction implements ExternalAction {
     public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context) {
       IsolatedEventBus isolatedEventBus = context.getIsolatedEventBus();
       LOG.info("Starting ConsoleEventStep execution for message %s!", message);
-      try (SimplePerfEvent.Scope scope =
-          SimplePerfEvent.scope(
-              isolatedEventBus, SimplePerfEvent.PerfEventTitle.of("test_perf_event_title"))) {
+      try (SimplePerfEvent.Scope ignore =
+          SimplePerfEvent.scopeWithActionId(
+              isolatedEventBus, context.getActionId(), "test_perf_event_title")) {
         isolatedEventBus.post(ConsoleEvent.info(message));
       }
       LOG.info("Finished ConsoleEventStep execution for message %s!", message);

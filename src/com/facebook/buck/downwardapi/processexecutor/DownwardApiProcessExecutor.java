@@ -139,7 +139,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
     NamedPipeEventHandler namedPipeEventHandler =
         namedPipeEventHandlerFactory.create(
-            namedPipe, DownwardApiExecutionContext.of(buckEventBus, clock));
+            namedPipe, DownwardApiExecutionContext.of(buckEventBus, clock, actionId));
     namedPipeEventHandler.runOn(DOWNWARD_API_READER_THREAD_POOL);
 
     ProcessExecutorParams updatedParams =

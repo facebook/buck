@@ -90,7 +90,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   @VisibleForTesting static final Logger LOGGER = Logger.get(BaseNamedPipeEventHandler.class);
 
   private final NamedPipeReader namedPipe;
-  private volatile DownwardApiExecutionContext context;
+  private final DownwardApiExecutionContext context;
   private final SettableFuture<Void> done = SettableFuture.create();
 
   @Nullable private volatile DownwardProtocol downwardProtocol = null;
@@ -101,8 +101,13 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   }
 
   @Override
-  public synchronized void updateThreadId() {
-    this.context = DownwardApiExecutionContext.from(context, Thread.currentThread().getId());
+  public void registerActionId(String actionId) {
+    context.registerActionId(actionId);
+  }
+
+  @Override
+  public synchronized void prepareForReuse() {
+    context.prepareForReuse();
   }
 
   @Override

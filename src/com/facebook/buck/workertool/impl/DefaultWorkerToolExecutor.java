@@ -218,6 +218,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
       String actionId, AbstractMessage executeCommandMessage, IsolatedEventBus eventBus)
       throws IOException, ExecutionException, InterruptedException {
     checkState(isAlive(), "Launched process is not alive");
+    launchedProcess.registerActionId(actionId);
 
     CommandTypeMessage executeCommandTypeMessage;
     ExecuteCommand executeCommand;
@@ -258,6 +259,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
       IsolatedEventBus eventBus)
       throws IOException {
     checkState(isAlive(), "Launched process is not alive");
+    actionIds.forEach(launchedProcess::registerActionId);
 
     String firstActionId = actionIds.iterator().next();
 
@@ -603,7 +605,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   @Override
   public void prepareForReuse() {
     prepareForTheNextCommand();
-    launchedProcess.updateThreadId();
+    launchedProcess.prepareForReuse();
   }
 
   @Override
