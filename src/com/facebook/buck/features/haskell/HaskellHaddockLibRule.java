@@ -240,7 +240,9 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
                 preprocessor,
                 /* pch */ Optional.empty());
     return MoreIterables.zipAndConcat(
-        Iterables.cycle("-optP"), Arg.stringify(cxxToolFlags.getAllFlags(), resolver));
+        Iterables.cycle("--optghc"),
+        MoreIterables.zipAndConcat(
+            Iterables.cycle("-optP"), Arg.stringify(cxxToolFlags.getAllFlags(), resolver)));
   }
 
   private Iterable<String> getSourceArguments(SourcePathResolverAdapter resolver) {
@@ -260,11 +262,12 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
     @Override
     public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
       getProjectFilesystem().createParentDirs(getArgsfile());
       getProjectFilesystem()
           .writeLinesToPath(
               Iterables.transform(
-                  getSourceArguments(buildContext.getSourcePathResolver()),
+                  Iterables.concat(getPreprocessorFlags(resolver), getSourceArguments(resolver)),
                   Escaper.ARGFILE_ESCAPER::apply),
               getArgsfile().getPath());
       return StepExecutionResults.SUCCESS;
@@ -346,7 +349,6 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
       cmdArgs.addAll(compilerFlags.getPackageFlags(platform, resolver));
       cmdArgs.addAll(linkerFlags);
-      cmdArgs.addAll(getPreprocessorFlags(resolver));
       // Tell GHC where to place build files for TemplateHaskell
       cmdArgs.add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString());
       cmdArgs.add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString());
@@ -379,6 +381,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       if (platform.shouldUseArgsfile()) {
         builder.add("@" + getArgsfile());
       } else {
+        builder.addAll(getPreprocessorFlags(resolver));
         builder.addAll(getSourceArguments(resolver));
       }
 

@@ -254,7 +254,6 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
             MoreIterables.zipAndConcat(
                 Iterables.cycle("-main-is"), RichStream.from(main).toOnceIterable()))
         .addAll(getPackageNameArgs())
-        .addAll(getPreprocessorFlags(resolver))
         .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
         .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
         .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
@@ -264,6 +263,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     if (platform.shouldUseArgsfile()) {
       builder.add("@" + getArgsfile());
     } else {
+      builder.addAll(getPreprocessorFlags(resolver));
       builder.addAll(getSourceArguments(resolver));
     }
 
@@ -280,16 +280,18 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     @Override
     public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+      SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
       getProjectFilesystem().createParentDirs(getArgsfile());
-      // we write the source file arguments to @ghc.argsfile as this is the
-      // problematic part when we exceed the argument size limit.
+      // we write the preprocessor flags and source file arguments to
+      // @ghc.argsfile as these are the problematic parts when we exceed the
+      // argument size limit.
       // we pass the other flags as they are directly, so that if we have a
       // wrapper script that preprocess compiler flags, it will get a chance to
       // mutate those flags while passing @ghc.argsfile as it is.
       getProjectFilesystem()
           .writeLinesToPath(
               Iterables.transform(
-                  getSourceArguments(buildContext.getSourcePathResolver()),
+                  Iterables.concat(getPreprocessorFlags(resolver), getSourceArguments(resolver)),
                   Escaper.ARGFILE_ESCAPER::apply),
               getArgsfile().getPath());
       return StepExecutionResults.SUCCESS;
