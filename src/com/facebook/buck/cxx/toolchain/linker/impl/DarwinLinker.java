@@ -100,18 +100,32 @@ public class DarwinLinker extends DelegatingTool
       Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap,
       Optional<AbsPath> focusedTargetsPath) {
     if (cacheLinks) {
-      FileScrubber uuidScrubber = new LcUuidContentsScrubber(scrubConcurrently);
-      if (usePathNormalizationArgs) {
-        // Path normalization would happen via pathNormalizationArgs()
-        return ImmutableList.of(uuidScrubber);
+      if (focusedTargetsPath.isPresent()) {
+        // If we're caching link outputs and using focused debugging, scrub the debug symbols
+        // using focused debug targets.
+        // For builds that generate cached artifacts, we don't provide any focused targets and
+        // the link outputs will be stripped of all OSO paths. For local builds with focused
+        // targets, we don't upload to remote cache despite `cxx.cache_links=true`.
+        return getFocusedDebugSymbolScrubbers(focusedTargetsPath, targetToOutputPathMap);
+      } else {
+        // If we aren't using focused debugging, scrub all absolute OSO paths into relative paths.
+        FileScrubber uuidScrubber = new LcUuidContentsScrubber(scrubConcurrently);
+        if (usePathNormalizationArgs) {
+          // Path normalization would happen via pathNormalizationArgs()
+          return ImmutableList.of(uuidScrubber);
+        }
+        return ImmutableList.of(new OsoSymbolsContentsScrubber(cellRootMap), uuidScrubber);
       }
-      return ImmutableList.of(new OsoSymbolsContentsScrubber(cellRootMap), uuidScrubber);
-    } else if (focusedBuildOutputPaths.isPresent()) {
-      return getFocusedDebugSymbolScrubbers(focusedBuildOutputPaths.get());
-    } else if (focusedTargetsPath.isPresent()) {
-      return getFocusedDebugSymbolScrubbers(focusedTargetsPath, targetToOutputPathMap);
     } else {
-      return ImmutableList.of();
+      // If we aren't uploading linked output to remote cache, scrub the linked binaries based
+      // on the focused targets info available.
+      if (focusedTargetsPath.isPresent()) {
+        return getFocusedDebugSymbolScrubbers(focusedTargetsPath, targetToOutputPathMap);
+      } else if (focusedBuildOutputPaths.isPresent()) {
+        return getFocusedDebugSymbolScrubbers(focusedBuildOutputPaths.get());
+      } else {
+        return ImmutableList.of();
+      }
     }
   }
 
