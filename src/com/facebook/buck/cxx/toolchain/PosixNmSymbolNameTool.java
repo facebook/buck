@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -181,7 +182,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
           new IsolatedStep() {
 
             private final AbsPath symsFile =
-                context.getBuildCellRootPath().resolve(output.getPath());
+                getProjectFilesystem().resolve(ForwardRelPath.ofPath(output.getPath()));
             private final ImmutableMap<String, String> env =
                 nm.getEnvironment(context.getSourcePathResolver());
             private final ImmutableList<String> cmd =
