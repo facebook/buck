@@ -56,7 +56,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -217,7 +216,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   @Override
   public SettableFuture<ResultEvent> executeCommand(
       ActionId actionId, AbstractMessage executeCommandMessage, IsolatedEventBus eventBus)
-      throws IOException, ExecutionException, InterruptedException {
+      throws IOException {
     checkState(isAlive(), "Launched process is not alive");
     launchedProcess.registerActionId(actionId);
 

@@ -75,7 +75,9 @@ import com.facebook.buck.workertool.impl.DefaultWorkerToolExecutor;
 import com.facebook.buck.workertool.impl.DefaultWorkerToolLauncher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -85,7 +87,14 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -109,8 +118,6 @@ public class JavaCDIntegrationTest {
   private static WindowsHandleFactory initialWindowsHandleFactory;
   private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
       new TestWindowsHandleFactory();
-
-  private static final ActionId TEST_ACTION_ID = ActionId.of("test_action_id");
 
   private BuckEventBus eventBusForTests;
   private BuckEventBusForTests.CapturingEventListener eventBusListener;
@@ -161,7 +168,6 @@ public class JavaCDIntegrationTest {
     eventBusForTests = BuckEventBusForTests.newInstance();
     eventBusListener = new BuckEventBusForTests.CapturingEventListener();
     eventBusForTests.register(eventBusListener);
-
     Console console =
         new Console(Verbosity.STANDARD_INFORMATION, System.out, System.err, Ansi.forceTty());
 
@@ -172,7 +178,7 @@ public class JavaCDIntegrationTest {
             Platform.detect(),
             new DefaultProcessExecutor(console),
             AbsPath.get(temporaryFolder.getRoot().toString()),
-            TEST_ACTION_ID,
+            ActionId.of("default_action_id"),
             FakeClock.doNotCare());
   }
 
@@ -212,6 +218,7 @@ public class JavaCDIntegrationTest {
   public void javacdTest() throws Exception {
     String target = "//src/com/facebook/buck/core/test_target:test_target";
 
+    AtomicLong threadIdReference = new AtomicLong();
     WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(executionContext);
     try (WorkerToolExecutor workerToolExecutor =
         workerToolLauncher.launchWorker(getLaunchJavaCDCommand(), getEnvs())) {
@@ -250,16 +257,34 @@ public class JavaCDIntegrationTest {
 
       BuildJavaCommand buildJavaCommand = createBuildCommand(target, workingDir.toString());
 
-      ResultEvent resultEvent =
-          workerToolExecutor
-              .executeCommand(
-                  ActionId.of("//my_test_action_id"),
-                  buildJavaCommand,
-                  executionContext.getIsolatedEventBus())
-              .get();
+      AtomicReference<SettableFuture<ResultEvent>> resultEventFutureReference =
+          new AtomicReference<>();
+      // Run in thread that is different from main thread's. Would create a mapping between thread
+      // id and action id.
+      ExecutorService executorService = Executors.newSingleThreadExecutor();
+      try {
+        Future<Void> f =
+            executorService.submit(
+                () -> {
+                  threadIdReference.set(Thread.currentThread().getId());
 
-      assertThat(resultEvent.getActionId(), equalTo("//my_test_action_id"));
-      assertThat(resultEvent.getExitCode(), equalTo(0));
+                  resultEventFutureReference.set(
+                      workerToolExecutor.executeCommand(
+                          ActionId.of("//my_test_action_id"),
+                          buildJavaCommand,
+                          executionContext.getIsolatedEventBus()));
+
+                  return null;
+                });
+        f.get(1, TimeUnit.SECONDS);
+      } finally {
+        executorService.shutdownNow();
+      }
+
+      SettableFuture<ResultEvent> resultEventSettableFuture = resultEventFutureReference.get();
+      ResultEvent event = resultEventSettableFuture.get();
+      assertThat(event.getActionId(), equalTo("//my_test_action_id"));
+      assertThat(event.getExitCode(), equalTo(0));
     }
 
     waitTillEventsProcessed();
@@ -278,6 +303,12 @@ public class JavaCDIntegrationTest {
     assertThat(
         simplePerfEvents,
         hasItems(buildTargetStartedEvent.toLogMessage(), javacStartedEvent.toLogMessage()));
+
+    Set<Long> eventsThreadIds = eventBusListener.getEventsThreadIds();
+    assertThat(eventsThreadIds, hasSize(1));
+    long threadId = threadIdReference.get();
+    assertThat(threadId, not(equalTo(Thread.currentThread().getId())));
+    assertThat(Iterables.getOnlyElement(eventsThreadIds), equalTo(threadId));
   }
 
   @Test

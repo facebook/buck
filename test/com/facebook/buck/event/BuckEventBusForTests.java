@@ -21,10 +21,14 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Streams;
 import com.google.common.eventbus.Subscribe;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Factory to create a {@link BuckEventBus} for tests.
@@ -106,6 +110,12 @@ public class BuckEventBusForTests {
 
     private List<String> toLogMessages(List<? extends AbstractBuckEvent> events) {
       return events.stream().map(Object::toString).collect(ImmutableList.toImmutableList());
+    }
+
+    public Set<Long> getEventsThreadIds() {
+      Stream<Long> stream1 = stepEvents.stream().map(AbstractBuckEvent::getThreadId);
+      Stream<Long> stream2 = simplePerfEvents.stream().map(AbstractBuckEvent::getThreadId);
+      return Streams.concat(stream1, stream2).collect(Collectors.toSet());
     }
   }
 }

@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
-import java.util.concurrent.ExecutionException;
 
 /**
  * Interface for WorkerTool executor that implements that WTv2 protocol. It executes commands by
@@ -36,7 +35,7 @@ public interface WorkerToolExecutor extends WorkerProcess {
   /** Send an execution command to a worker tool instance and wait till the command executed. */
   SettableFuture<ResultEvent> executeCommand(
       ActionId actionId, AbstractMessage executeCommandMessage, IsolatedEventBus eventBus)
-      throws IOException, ExecutionException, InterruptedException;
+      throws IOException;
 
   /**
    * Send an execution pipelining command to a worker tool instance and immediately return a list of
@@ -47,7 +46,7 @@ public interface WorkerToolExecutor extends WorkerProcess {
       AbstractMessage executeCommandMessage,
       SettableFuture<PipelineFinishedEvent> pipelineFinished,
       IsolatedEventBus eventBus)
-      throws IOException, ExecutionException, InterruptedException;
+      throws IOException;
 
   /**
    * Sends a signal to worker tool that it could start execution the next pipelining command.
