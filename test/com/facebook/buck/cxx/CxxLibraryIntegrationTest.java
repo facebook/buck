@@ -135,7 +135,9 @@ public class CxxLibraryIntegrationTest {
                     BuildTargetFactory.newInstance("//subdir:library")
                         .withFlavors(
                             DefaultCxxPlatforms.FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR),
-                    "%s/libsubdir_library.so"))));
+                    Platform.detect() == Platform.LINUX
+                        ? "%s/libsubdir_library.so"
+                        : "%s/libsubdir_library.dylib"))));
     result.assertSuccess();
   }
 
