@@ -32,7 +32,8 @@ public class BuckBuildLogTest {
             "735 INFO  BuildRuleFinished(//example/base:two): "
                 + "FAIL MISS MISSING 489e1b85f804dc0f66545f2ce06f57ee85204747",
             "735 INFO  BuildRuleFinished(//example/base:three): "
-                + "SUCCESS MISS MATCHING_RULE_KEY 489e1b85f804dc0f66545f2ce06f57ee85204747");
+                + "SUCCESS MISS MATCHING_RULE_KEY 489e1b85f804dc0f66545f2ce06f57ee85204747",
+            "2021-05-27T16:35:05.086 INFO    Build finished");
 
     BuckBuildLog buildLog = BuckBuildLog.fromLogContents(Paths.get("/spoof"), buildLogLines);
     buildLog.assertTargetBuiltLocally("//example/base:one");

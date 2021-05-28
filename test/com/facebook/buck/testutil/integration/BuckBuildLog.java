@@ -19,7 +19,9 @@ package com.facebook.buck.testutil.integration;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.artifact_cache.CacheResult;
@@ -41,6 +43,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class BuckBuildLog {
+
+  private static final Pattern BUILD_FINISHED_REGEX = Pattern.compile(".*Build finished");
 
   private static final Pattern BUILD_LOG_FINISHED_RULE_REGEX =
       Pattern.compile(
@@ -138,7 +142,13 @@ public class BuckBuildLog {
   public static BuckBuildLog fromLogContents(Path root, List<String> logContents) {
     ImmutableMap.Builder<BuildTarget, BuildLogEntry> builder = ImmutableMap.builder();
 
+    boolean buildFinished = false;
     for (String line : logContents) {
+      if (BUILD_FINISHED_REGEX.matcher(line).matches()) {
+        assertFalse("build cannot be finished twice", buildFinished);
+        buildFinished = true;
+      }
+
       Matcher matcher = BUILD_LOG_FINISHED_RULE_REGEX.matcher(line);
       if (!matcher.matches()) {
         continue;
@@ -169,6 +179,8 @@ public class BuckBuildLog {
           new BuildLogEntry(
               status, Optional.ofNullable(successType), Optional.ofNullable(cacheResult), ruleKey));
     }
+
+    assertTrue("build is not finished according to log", buildFinished);
 
     return new BuckBuildLog(root, builder.build());
   }
