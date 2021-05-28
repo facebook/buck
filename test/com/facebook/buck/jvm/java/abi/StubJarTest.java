@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -7119,7 +7120,7 @@ public class StubJarTest {
                   jarBuilder,
                   new JavacEventSinkToBuckEventBusBridge(
                       new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()).isolated(),
-                      "test-action-id"),
+                      ActionId.of("test-action-id")),
                   AbiGenerationMode.CLASS,
                   additionalOptions.contains("-parameters"));
 

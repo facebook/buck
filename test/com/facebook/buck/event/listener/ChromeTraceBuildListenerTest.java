@@ -32,6 +32,7 @@ import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildId;
@@ -243,7 +244,9 @@ public class ChromeTraceBuildListenerTest {
             new FileOutputStreamFactory());
     eventBus.register(listener);
 
-    PerfEvents.scope(eventBus.isolated(), "test_action_id", "testing_scope", false, false).close();
+    PerfEvents.scope(
+            eventBus.isolated(), ActionId.of("test_action_id"), "testing_scope", false, false)
+        .close();
 
     listener.close();
     managerScope.close();

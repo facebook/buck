@@ -82,6 +82,7 @@ java_immutables_library(
     visibility = ["PUBLIC"],
     deps = [
         ":util",
+        "//src/com/facebook/buck/core/build/execution/context/actionid:actionid",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/downwardapi/processexecutor/context:context",
         "//src/com/facebook/buck/event:interfaces",

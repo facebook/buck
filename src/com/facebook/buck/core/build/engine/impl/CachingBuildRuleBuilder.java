@@ -54,10 +54,12 @@ import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
 import com.facebook.buck.core.build.event.FinalizingBuildRuleEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -1333,13 +1335,14 @@ class CachingBuildRuleBuilder {
       ExecutionContext executionContext =
           this.executionContext.withProcessExecutor(contextualProcessExecutor);
 
+      BuildTarget buildTarget = rule.getBuildTarget();
       StepRunner.runStep(
           StepExecutionContext.from(
               executionContext,
               rule.getProjectFilesystem().getRootPath(),
-              rule.getFullyQualifiedName()),
+              ActionId.of(buildTarget)),
           step,
-          Optional.of(rule.getBuildTarget()));
+          Optional.of(buildTarget));
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {
@@ -1476,7 +1479,7 @@ class CachingBuildRuleBuilder {
           StepExecutionContext.from(
               executionContext.withProcessExecutor(contextualProcessExecutor),
               rule.getProjectFilesystem().getRootPath(),
-              rule.getFullyQualifiedName());
+              ActionId.of(rule.getBuildTarget()));
 
       if (stateHolderOptional.isPresent()) {
         @SuppressWarnings("unchecked")

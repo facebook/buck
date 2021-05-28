@@ -38,6 +38,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
@@ -304,7 +305,7 @@ public class InstallCommand extends BuildCommand {
                   DownwardApiProcessExecutor.FACTORY,
                   DefaultNamedPipeEventHandler.FACTORY,
                   buckEventBus.isolated(),
-                  "install-command:" + buildRule.getFullyQualifiedName(),
+                  ActionId.of("install-command:" + buildRule.getFullyQualifiedName()),
                   executionContext.getClock());
         }
 

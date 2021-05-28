@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.builders;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
@@ -366,7 +367,7 @@ public abstract class IsolatedBuildableBuilder {
       StepExecutionContext executionContext =
           executionContextBuilder
               .setRuleCellRoot(filesystem.getRootPath())
-              .setActionId(buildTarget.getFullyQualifiedName())
+              .setActionId(ActionId.of(buildTarget))
               .setWorkerToolPools(workerToolPoolsWrapper.get())
               .build();
       for (Step step :

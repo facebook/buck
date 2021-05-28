@@ -32,6 +32,7 @@ import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.Cells;
@@ -340,7 +341,8 @@ public class TestCommand extends BuildCommand {
               StepExecutionContext.from(
                   build.getExecutionContext(),
                   filesystem.getRootPath(),
-                  "test-running-" + buildContext.getEventBus().getBuildId().toString()),
+                  ActionId.of(
+                      "test-running-" + buildContext.getEventBus().getBuildId().toString())),
               getTestRunningOptions(params),
               testPool.getWeightedListeningExecutorService(),
               buildEngine,
@@ -405,7 +407,7 @@ public class TestCommand extends BuildCommand {
                           StepExecutionContext.from(
                               build.getExecutionContext(),
                               filesystem.getRootPath(),
-                              buildTarget.getFullyQualifiedName()),
+                              ActionId.of(buildTarget)),
                           options,
                           buildContext);
                     } finally {

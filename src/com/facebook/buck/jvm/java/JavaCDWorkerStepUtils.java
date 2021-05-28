@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
@@ -44,7 +45,7 @@ public class JavaCDWorkerStepUtils {
 
   /** Creates {@link StepExecutionResult} from received from javacd {@link ResultEvent} */
   public static StepExecutionResult createStepExecutionResult(
-      ImmutableList<String> executedCommand, ResultEvent resultEvent, String actionId) {
+      ImmutableList<String> executedCommand, ResultEvent resultEvent, ActionId actionId) {
     int exitCode = resultEvent.getExitCode();
     StepExecutionResult.Builder builder =
         StepExecutionResult.builder().setExitCode(exitCode).setExecutedCommand(executedCommand);
@@ -60,7 +61,7 @@ public class JavaCDWorkerStepUtils {
 
   /** Creates failed {@link StepExecutionResult} from the occurred {@link Exception} */
   public static StepExecutionResult createFailStepExecutionResult(
-      ImmutableList<String> executedCommand, String actionId, Exception e) {
+      ImmutableList<String> executedCommand, ActionId actionId, Exception e) {
     return StepExecutionResult.builder()
         .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
         .setExecutedCommand(executedCommand)

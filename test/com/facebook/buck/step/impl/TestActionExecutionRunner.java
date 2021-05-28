@@ -19,6 +19,7 @@ package com.facebook.buck.step.impl;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction;
@@ -109,7 +110,7 @@ public class TestActionExecutionRunner {
                 .setProcessExecutor(processExecutor)
                 .setProjectFilesystemFactory(projectFilesystemFactory)
                 .setRuleCellRoot(rootPath)
-                .setActionId(action.getBuildTarget().getFullyQualifiedName())
+                .setActionId(ActionId.of(action.getBuildTarget()))
                 .setClock(FakeClock.doNotCare())
                 .setWorkerToolPools(new ConcurrentHashMap<>())
                 .build());

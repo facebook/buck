@@ -29,6 +29,7 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downwardapi.processexecutor.BaseNamedPipeEventHandler;
@@ -109,7 +110,7 @@ public class JavaCDIntegrationTest {
   private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
       new TestWindowsHandleFactory();
 
-  private static final String TEST_ACTION_ID = "test_action_id";
+  private static final ActionId TEST_ACTION_ID = ActionId.of("test_action_id");
 
   private BuckEventBus eventBusForTests;
   private BuckEventBusForTests.CapturingEventListener eventBusListener;
@@ -252,7 +253,9 @@ public class JavaCDIntegrationTest {
       ResultEvent resultEvent =
           workerToolExecutor
               .executeCommand(
-                  "//my_test_action_id", buildJavaCommand, executionContext.getIsolatedEventBus())
+                  ActionId.of("//my_test_action_id"),
+                  buildJavaCommand,
+                  executionContext.getIsolatedEventBus())
               .get();
 
       assertThat(resultEvent.getActionId(), equalTo("//my_test_action_id"));
@@ -327,7 +330,9 @@ public class JavaCDIntegrationTest {
       ResultEvent resultEvent =
           workerToolExecutor
               .executeCommand(
-                  "//my_test_action_id", buildJavaCommand, executionContext.getIsolatedEventBus())
+                  ActionId.of("//my_test_action_id"),
+                  buildJavaCommand,
+                  executionContext.getIsolatedEventBus())
               .get();
 
       assertThat(resultEvent.getActionId(), equalTo("//my_test_action_id"));

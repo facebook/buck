@@ -17,6 +17,7 @@
 package com.facebook.buck.remoteexecution.event;
 
 import build.bazel.remote.execution.v2.ExecutedActionMetadata;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.AbstractBuckEvent;
@@ -81,7 +82,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     final Scope leftEventScope =
         PerfEvents.scope(
             eventBus.isolated(),
-            buildRule.getBuildTarget().getFullyQualifiedName(),
+            ActionId.of(buildRule.getBuildTarget()),
             state.toString().toLowerCase(),
             false,
             false);

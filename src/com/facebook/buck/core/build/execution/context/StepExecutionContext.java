@@ -17,6 +17,7 @@
 package com.facebook.buck.core.build.execution.context;
 
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
@@ -43,7 +44,7 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
    * {@code actionId}
    */
   public static StepExecutionContext from(
-      ExecutionContext executionContext, AbsPath ruleCellRoot, String actionId) {
+      ExecutionContext executionContext, AbsPath ruleCellRoot, ActionId actionId) {
     return StepExecutionContext.builder()
         .setConsole(executionContext.getConsole())
         .setBuckEventBus(executionContext.getBuckEventBus())

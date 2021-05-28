@@ -17,6 +17,7 @@
 package com.facebook.buck.external.main;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
@@ -66,7 +67,7 @@ public class ExternalActionsExecutableMain {
     // Note that creating if expected environment variables are not present, this will throw a
     // runtime exception
     ParsedEnvVars parsedEnvVars = ParsedEnvVars.parse(EnvVariablesProvider.getSystemEnv());
-    String actionId = parsedEnvVars.getActionId();
+    ActionId actionId = parsedEnvVars.getActionId();
     Console console = createConsole(parsedEnvVars);
     try (NamedPipeWriter namedPipe =
             NAMED_PIPE_FACTORY.connectAsWriter(parsedEnvVars.getEventPipe());
@@ -97,12 +98,12 @@ public class ExternalActionsExecutableMain {
   }
 
   private static void handleExceptionAndTerminate(
-      String actionId, Console console, Throwable throwable) {
+      ActionId actionId, Console console, Throwable throwable) {
     handleExceptionAndTerminate(actionId, console, ErrorLogger.getUserFriendlyMessage(throwable));
   }
 
   private static void handleExceptionAndTerminate(
-      String actionId, Console console, String errorMessage) {
+      ActionId actionId, Console console, String errorMessage) {
     // Remove an existing `ExternalLogHandler` handler that depend on the closed event pipe stream.
     Logger logger = Logger.get("");
     logger.cleanHandlers();
@@ -144,7 +145,7 @@ public class ExternalActionsExecutableMain {
     // no need to measure thread CPU time as this is an external process and we do not pass thread
     // time back to buck with Downward API
     Clock clock = new DefaultClock(false);
-    String actionId = parsedEnvVars.getActionId();
+    ActionId actionId = parsedEnvVars.getActionId();
     try (IsolatedEventBus eventBus =
             new DefaultIsolatedEventBus(
                 parsedEnvVars.getBuildUuid(), outputStream, clock, DOWNWARD_PROTOCOL, actionId);

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.downwardapi.processexecutor.handlers.impl;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
@@ -36,7 +37,7 @@ enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
     ImmutableMap<String, Object> attributes =
         ImmutableMap.<String, Object>builder().putAll(event.getDataMap()).build();
     int eventId = event.getEventId();
-    String actionId = Objects.requireNonNull(event.getActionId(), "action id has to be set");
+    ActionId actionId = ActionId.of(event.getActionId());
 
     SimplePerfEvent.Started started;
     switch (event.getStatus()) {

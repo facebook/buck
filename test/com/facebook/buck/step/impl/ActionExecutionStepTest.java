@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -217,7 +218,7 @@ public class ActionExecutionStepTest {
         .setProcessExecutor(new FakeProcessExecutor())
         .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
         .setRuleCellRoot(rootPath)
-        .setActionId("test_action_id")
+        .setActionId(ActionId.of("test_action_id"))
         .setClock(FakeClock.doNotCare())
         .setWorkerToolPools(new ConcurrentHashMap<>());
   }

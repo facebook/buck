@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -40,7 +41,7 @@ public interface NamedPipeEventHandler {
    * downward API execution would know about invoking thread id and would set it to every event that
    * has this action id.
    */
-  void registerActionId(String actionId);
+  void registerActionId(ActionId actionId);
 
   /** Signals that handler would work with the new thread. */
   void prepareForReuse();

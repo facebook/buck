@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.event.api.BuckTracingInterface;
@@ -30,12 +31,12 @@ public class BuckTracingEventBusBridge implements BuckTracingInterface {
   private static final Logger LOG = Logger.get(BuckTracingEventBusBridge.class);
 
   private final IsolatedEventBus eventBus;
-  private final String actionId;
+  private final ActionId actionId;
   private final String buildTargetName;
   private final Deque<CompilerPluginDurationEvent.Started> eventStack = new ArrayDeque<>();
 
   public BuckTracingEventBusBridge(
-      IsolatedEventBus eventBus, String actionId, String buildTargetName) {
+      IsolatedEventBus eventBus, ActionId actionId, String buildTargetName) {
     this.eventBus = eventBus;
     this.actionId = actionId;
     this.buildTargetName = buildTargetName;

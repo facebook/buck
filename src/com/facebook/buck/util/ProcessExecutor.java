@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.timing.Clock;
@@ -129,7 +130,7 @@ public interface ProcessExecutor {
       DownwardApiProcessExecutorFactory factory,
       NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
       IsolatedEventBus buckEventBus,
-      String actionId,
+      ActionId actionId,
       Clock clock);
 
   /**

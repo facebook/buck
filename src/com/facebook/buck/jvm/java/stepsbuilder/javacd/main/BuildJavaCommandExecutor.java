@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.event.IsolatedEventBus;
@@ -38,7 +39,7 @@ class BuildJavaCommandExecutor {
 
   static void executeBuildJavaCommand(
       ClassLoaderCache classLoaderCache,
-      String actionId,
+      ActionId actionId,
       BuildJavaCommand buildJavaCommand,
       OutputStream eventsOutputStream,
       DownwardProtocol downwardProtocol,

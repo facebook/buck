@@ -18,6 +18,7 @@ package com.facebook.buck.downwardapi.processexecutor;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.namedpipes.DownwardPOSIXNamedPipeFactory;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
@@ -72,7 +73,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
           NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
           ConsoleParams consoleParams,
           IsolatedEventBus buckEventBus,
-          String actionId,
+          ActionId actionId,
           Clock clock) ->
           new DownwardApiProcessExecutor(
               delegate,
@@ -101,7 +102,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
   private final String isAnsiTerminal;
   private final String verbosity;
-  private final String actionId;
+  private final ActionId actionId;
   private final IsolatedEventBus buckEventBus;
   private final NamedPipeFactory namedPipeFactory;
   private final Clock clock;
@@ -112,7 +113,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       ProcessExecutor delegate,
       ConsoleParams consoleParams,
       IsolatedEventBus buckEventBus,
-      String actionId,
+      ActionId actionId,
       NamedPipeFactory namedPipeFactory,
       Clock clock,
       NamedPipeEventHandlerFactory namedPipeEventHandlerFactory) {
@@ -181,7 +182,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     builder.put(DownwardApiConstants.ENV_VERBOSITY, verbosity);
     builder.put(DownwardApiConstants.ENV_ANSI_ENABLED, isAnsiTerminal);
     builder.put(DownwardApiConstants.ENV_BUILD_UUID, buckEventBus.getBuildId().toString());
-    builder.put(DownwardApiConstants.ENV_ACTION_ID, actionId);
+    builder.put(DownwardApiConstants.ENV_ACTION_ID, actionId.getValue());
     builder.put(DownwardApiConstants.ENV_EVENT_PIPE, namedPipeName);
     return builder.build();
   }
@@ -223,7 +224,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       DownwardApiProcessExecutorFactory factory,
       NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
       IsolatedEventBus buckEventBus,
-      String actionId,
+      ActionId actionId,
       Clock clock) {
     return this;
   }

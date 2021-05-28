@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
@@ -75,7 +76,8 @@ public class DefaultIsolatedEventBusTest {
       Instant.parse("2020-12-15T12:13:14.123456789Z").toEpochMilli();
   private static final int CLOCK_SHIFT_IN_SECONDS = 4242;
 
-  private static final String TEST_ACTION_ID = "test-action-id";
+  private static final ActionId TEST_ACTION_ID = ActionId.of("test-action-id");
+  private static final ActionId DEFAULT_ACTION_ID = ActionId.of("default-action-id");
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   @Rule public final ExpectedException exception = ExpectedException.none();
@@ -98,7 +100,7 @@ public class DefaultIsolatedEventBusTest {
             FakeClock.of(NOW_MILLIS + TimeUnit.SECONDS.toMillis(CLOCK_SHIFT_IN_SECONDS), 0),
             NOW_MILLIS,
             DownwardProtocolType.BINARY.getDownwardProtocol(),
-            "default-action-id");
+            DEFAULT_ACTION_ID);
   }
 
   @After
@@ -136,7 +138,7 @@ public class DefaultIsolatedEventBusTest {
             .setStepType("short_name")
             .setStepStatus(com.facebook.buck.downward.model.StepEvent.StepStatus.STARTED)
             .setDuration(Duration.newBuilder().setSeconds(secondsElapsedTillEventOccurred).build())
-            .setActionId(TEST_ACTION_ID)
+            .setActionId(TEST_ACTION_ID.getValue())
             .build();
 
     long threadId = Thread.currentThread().getId();
@@ -188,7 +190,7 @@ public class DefaultIsolatedEventBusTest {
             .setCategory("buck")
             .putData("my_path_key", Paths.get("my_path_value").toString())
             .setDuration(Duration.newBuilder().setSeconds(secondsElapsedTillEventOccurred).build())
-            .setActionId(TEST_ACTION_ID)
+            .setActionId(TEST_ACTION_ID.getValue())
             .build();
     ChromeTraceEvent expectedFinishEvent =
         ChromeTraceEvent.newBuilder()
@@ -197,7 +199,7 @@ public class DefaultIsolatedEventBusTest {
             .setTitle("my_event")
             .setCategory("buck")
             .setDuration(Duration.newBuilder().setSeconds(secondsElapsedTillEventOccurred).build())
-            .setActionId(TEST_ACTION_ID)
+            .setActionId(TEST_ACTION_ID.getValue())
             .build();
 
     EventType actualStartEventType = DOWNWARD_PROTOCOL.readEventType(inputStream);

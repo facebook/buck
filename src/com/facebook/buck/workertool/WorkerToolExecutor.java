@@ -16,6 +16,7 @@
 
 package com.facebook.buck.workertool;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.downward.model.PipelineFinishedEvent;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.event.IsolatedEventBus;
@@ -34,7 +35,7 @@ public interface WorkerToolExecutor extends WorkerProcess {
 
   /** Send an execution command to a worker tool instance and wait till the command executed. */
   SettableFuture<ResultEvent> executeCommand(
-      String actionId, AbstractMessage executeCommandMessage, IsolatedEventBus eventBus)
+      ActionId actionId, AbstractMessage executeCommandMessage, IsolatedEventBus eventBus)
       throws IOException, ExecutionException, InterruptedException;
 
   /**
@@ -42,7 +43,7 @@ public interface WorkerToolExecutor extends WorkerProcess {
    * result event's futures that represent the result.
    */
   ImmutableList<SettableFuture<ResultEvent>> executePipeliningCommand(
-      ImmutableList<String> actionIds,
+      ImmutableList<ActionId> actionIds,
       AbstractMessage executeCommandMessage,
       SettableFuture<PipelineFinishedEvent> pipelineFinished,
       IsolatedEventBus eventBus)
@@ -54,6 +55,6 @@ public interface WorkerToolExecutor extends WorkerProcess {
    * @param actionId - action id of the next pipelining command.
    */
   void startNextCommand(
-      AbstractMessage startNextPipeliningCommand, String actionId, IsolatedEventBus eventBus)
+      AbstractMessage startNextPipeliningCommand, ActionId actionId, IsolatedEventBus eventBus)
       throws IOException;
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
 import com.facebook.buck.core.build.buildable.context.NoOpBuildableContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -78,7 +79,7 @@ class PipeliningJavaCommandExecutor {
   private PipeliningJavaCommandExecutor() {}
 
   static void executePipeliningJavaCommand(
-      List<String> actionIds,
+      List<ActionId> actionIds,
       PipeliningCommand pipeliningCommand,
       OutputStream eventsOutputStream,
       DownwardProtocol downwardProtocol,
@@ -88,7 +89,7 @@ class PipeliningJavaCommandExecutor {
       Console console,
       Clock clock,
       ClassLoaderCache classLoaderCache,
-      Optional<SettableFuture<String>> startNextCommandOptional)
+      Optional<SettableFuture<ActionId>> startNextCommandOptional)
       throws IOException {
 
     BaseJavacToJarStepFactory javacToJarStepFactory =
@@ -101,7 +102,7 @@ class PipeliningJavaCommandExecutor {
       Optional<IsolatedExecutionContext> contextOptional = Optional.empty();
       boolean hasAbiCommand = pipeliningCommand.hasAbiCommand();
       boolean hasLibraryCommand = pipeliningCommand.hasLibraryCommand();
-      Iterator<String> actionIdIterator = actionIds.iterator();
+      Iterator<ActionId> actionIdIterator = actionIds.iterator();
 
       if (hasAbiCommand) {
         BasePipeliningCommand abiCommand = pipeliningCommand.getAbiCommand();
@@ -109,7 +110,7 @@ class PipeliningJavaCommandExecutor {
             getAbiSteps(abiCommand, javacToJarStepFactory, javacPipelineState, hasLibraryCommand);
         ImmutableList<IsolatedStep> abiSteps = abiStepsPair.getFirst();
         AbsPath ruleCellRoot = abiStepsPair.getSecond();
-        String abiActionId = actionIdIterator.next();
+        ActionId abiActionId = actionIdIterator.next();
 
         boolean closeExecutionContext = !hasLibraryCommand;
         contextOptional =
@@ -138,7 +139,7 @@ class PipeliningJavaCommandExecutor {
         AbsPath ruleCellRoot = libraryStepsPair.getSecond();
 
         Preconditions.checkState(actionIdIterator.hasNext());
-        String libraryActionId = actionIdIterator.next();
+        ActionId libraryActionId = actionIdIterator.next();
 
         if (contextOptional.isPresent()) {
           try (IsolatedExecutionContext isolatedExecutionContext = contextOptional.get()) {
@@ -180,13 +181,13 @@ class PipeliningJavaCommandExecutor {
   private static boolean waitForNextCommandSignal(
       OutputStream eventsOutputStream,
       DownwardProtocol downwardProtocol,
-      Optional<SettableFuture<String>> startNextCommandOptional,
-      String libraryActionId)
+      Optional<SettableFuture<ActionId>> startNextCommandOptional,
+      ActionId libraryActionId)
       throws IOException {
     Preconditions.checkState(
         startNextCommandOptional.isPresent(),
         "`startNextCommandOptional` has to be present if pipelining command contains more than one command.");
-    Future<String> waitForTheNextCommandFuture = startNextCommandOptional.get();
+    Future<ActionId> waitForTheNextCommandFuture = startNextCommandOptional.get();
 
     Optional<String> errorMessageOptional =
         waitForFuture(libraryActionId, waitForTheNextCommandFuture);
@@ -197,7 +198,7 @@ class PipeliningJavaCommandExecutor {
     String errorMessage = errorMessageOptional.get();
     ResultEvent resultEvent =
         ResultEvent.newBuilder()
-            .setActionId(libraryActionId)
+            .setActionId(libraryActionId.getValue())
             .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
             .setMessage(errorMessage)
             .build();
@@ -206,10 +207,10 @@ class PipeliningJavaCommandExecutor {
   }
 
   private static Optional<String> waitForFuture(
-      String libraryActionId, Future<String> waitForTheNextCommandFuture) {
+      ActionId libraryActionId, Future<ActionId> waitForTheNextCommandFuture) {
     String errorMessage = null;
     try {
-      String actionId = waitForTheNextCommandFuture.get();
+      ActionId actionId = waitForTheNextCommandFuture.get();
       if (!actionId.equals(libraryActionId)) {
         errorMessage =
             "Received action id: " + actionId + " not equals to excepted one: " + libraryActionId;

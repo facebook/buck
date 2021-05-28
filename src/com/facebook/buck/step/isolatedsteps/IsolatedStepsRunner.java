@@ -17,6 +17,7 @@
 package com.facebook.buck.step.isolatedsteps;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
@@ -87,7 +88,7 @@ public class IsolatedStepsRunner {
 
     StepEvent.Started started = StepEvent.started(step.getShortName(), stepDescription);
     IsolatedEventBus isolatedEventBus = context.getIsolatedEventBus();
-    String actionId = context.getActionId();
+    ActionId actionId = context.getActionId();
     isolatedEventBus.post(started, actionId);
     StepExecutionResult executionResult = StepExecutionResults.ERROR;
     try {

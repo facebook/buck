@@ -27,6 +27,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
@@ -80,7 +81,7 @@ public class IsolatedStepsRunnerTest {
   private static final Verbosity VERBOSITY_FOR_TEST = Verbosity.STANDARD_INFORMATION;
   private static final Ansi ANSI_FOR_TEST = new Ansi(true);
   private static final BuildId BUILD_UUID_FOR_TEST = new BuildId("my_build");
-  private static final String ACTION_ID = "my_action_id";
+  private static final ActionId ACTION_ID = ActionId.of("my_action_id");
   public static final DownwardProtocol DOWNWARD_PROTOCOL =
       DownwardProtocolType.BINARY.getDownwardProtocol();
 
@@ -315,7 +316,7 @@ public class IsolatedStepsRunnerTest {
             .setStepType(step.getShortName())
             .setStepStatus(stepStatus)
             .setDuration(Duration.newBuilder().setSeconds(CLOCK_SHIFT_IN_SECONDS).build())
-            .setActionId(ACTION_ID)
+            .setActionId(ACTION_ID.getValue())
             .build();
     EventTypeMessage.EventType actualEventType = protocol.readEventType(inputStream);
     StepEvent actualEvent = protocol.readEvent(inputStream, actualEventType);

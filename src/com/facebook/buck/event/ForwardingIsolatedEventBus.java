@@ -16,9 +16,11 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.model.BuildId;
 import java.io.IOException;
 import java.time.Instant;
+import javax.annotation.Nullable;
 
 /** An {@link IsolatedEventBus} that forwards events to a {@link BuckEventBus}. */
 public class ForwardingIsolatedEventBus implements IsolatedEventBus {
@@ -55,42 +57,43 @@ public class ForwardingIsolatedEventBus implements IsolatedEventBus {
   }
 
   @Override
-  public void post(StepEvent event, String actionId) {
+  public void post(StepEvent event, @Nullable ActionId actionId) {
     buckEventBus.post(event);
   }
 
   @Override
-  public void post(StepEvent event, String actionId, long threadId) {
+  public void post(StepEvent event, @Nullable ActionId actionId, long threadId) {
     buckEventBus.post(event, threadId);
   }
 
   @Override
-  public void post(StepEvent event, String actionId, Instant atTime, long threadId) {
+  public void post(StepEvent event, @Nullable ActionId actionId, Instant atTime, long threadId) {
     buckEventBus.post(event, atTime, threadId);
   }
 
   @Override
-  public void post(SimplePerfEvent event, String actionId) {
+  public void post(SimplePerfEvent event, @Nullable ActionId actionId) {
     buckEventBus.post(event);
   }
 
   @Override
-  public void post(SimplePerfEvent event, String actionId, Instant atTime) {
+  public void post(SimplePerfEvent event, @Nullable ActionId actionId, Instant atTime) {
     buckEventBus.post(event, atTime);
   }
 
   @Override
-  public void post(SimplePerfEvent event, String actionId, long threadId) {
+  public void post(SimplePerfEvent event, @Nullable ActionId actionId, long threadId) {
     buckEventBus.post(event, threadId);
   }
 
   @Override
-  public void post(SimplePerfEvent event, String actionId, Instant atTime, long threadId) {
+  public void post(
+      SimplePerfEvent event, @Nullable ActionId actionId, Instant atTime, long threadId) {
     buckEventBus.post(event, atTime, threadId);
   }
 
   @Override
-  public void postWithoutConfiguring(SimplePerfEvent event, String actionId) {
+  public void postWithoutConfiguring(SimplePerfEvent event, @Nullable ActionId actionId) {
     buckEventBus.postWithoutConfiguring(event);
   }
 

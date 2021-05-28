@@ -16,6 +16,7 @@
 
 package com.facebook.buck.downwardapi.processexecutor.context;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ExternalEvent;
@@ -37,10 +38,10 @@ public final class DownwardApiExecutionContext {
   private final IsolatedEventBus isolatedEventBus;
   private final Map<Integer, SimplePerfEvent.Started> chromeTraceStartedEvents = new HashMap<>();
   private final Map<Integer, StepEvent.Started> stepStartedEvents = new HashMap<>();
-  private final Map<String, Long> actionToThreadIdMap = new HashMap<>();
+  private final Map<ActionId, Long> actionToThreadIdMap = new HashMap<>();
 
   private DownwardApiExecutionContext(
-      Instant startExecutionInstant, IsolatedEventBus isolatedEventBus, String actionId) {
+      Instant startExecutionInstant, IsolatedEventBus isolatedEventBus, ActionId actionId) {
     this.startExecutionInstant = startExecutionInstant;
     this.isolatedEventBus = isolatedEventBus;
     registerActionId(actionId);
@@ -77,25 +78,25 @@ public final class DownwardApiExecutionContext {
     isolatedEventBus.post(event);
   }
 
-  public void postEvent(StepEvent event, String actionId) {
+  public void postEvent(StepEvent event, ActionId actionId) {
     isolatedEventBus.post(event, actionId, getThreadId(actionId));
   }
 
-  public void postEvent(StepEvent event, String actionId, Instant atTime) {
+  public void postEvent(StepEvent event, ActionId actionId, Instant atTime) {
     isolatedEventBus.post(event, actionId, atTime, getThreadId(actionId));
   }
 
   /** Posts events into buck event bus. */
-  public void postEvent(SimplePerfEvent event, String actionId) {
+  public void postEvent(SimplePerfEvent event, ActionId actionId) {
     isolatedEventBus.post(event, actionId, getThreadId(actionId));
   }
 
   /** Posts events into buck event bus that occurred at {@code atTime}. */
-  public void postEvent(SimplePerfEvent event, String actionId, Instant atTime) {
+  public void postEvent(SimplePerfEvent event, ActionId actionId, Instant atTime) {
     isolatedEventBus.post(event, actionId, atTime, getThreadId(actionId));
   }
 
-  private long getThreadId(String actionId) {
+  private long getThreadId(ActionId actionId) {
     Long threadId = actionToThreadIdMap.get(actionId);
     if (threadId == null) {
       LOG.warn("No thread id registered for action id: %s", actionId);
@@ -107,13 +108,13 @@ public final class DownwardApiExecutionContext {
 
   /** Creates {@link DownwardApiExecutionContext} */
   public static DownwardApiExecutionContext of(
-      IsolatedEventBus buckEventBus, Clock clock, String actionId) {
+      IsolatedEventBus buckEventBus, Clock clock, ActionId actionId) {
     return new DownwardApiExecutionContext(
         Instant.ofEpochMilli(clock.currentTimeMillis()), buckEventBus, actionId);
   }
 
   /** Register action id with this context. Stores mapping between action id and invoking thread. */
-  public void registerActionId(String actionId) {
+  public void registerActionId(ActionId actionId) {
     long threadId = Thread.currentThread().getId();
     Long previousThreadId = actionToThreadIdMap.put(actionId, threadId);
     if (previousThreadId != null && !previousThreadId.equals(threadId)) {

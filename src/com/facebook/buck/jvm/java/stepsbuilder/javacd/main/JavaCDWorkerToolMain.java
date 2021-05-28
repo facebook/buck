@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
@@ -58,6 +59,7 @@ import java.util.Optional;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /** JavaCD main class */
 public class JavaCDWorkerToolMain {
@@ -140,11 +142,15 @@ public class JavaCDWorkerToolMain {
     // no need to measure thread CPU time as this is an external process and we do not pass thread
     // time back to buck with Downward API
     Clock clock = new DefaultClock(false);
-    Map<String, SettableFuture<String>> startNextCommandMap = new HashMap<>();
+    Map<ActionId, SettableFuture<ActionId>> startNextCommandMap = new HashMap<>();
 
     try (IsolatedEventBus eventBus =
         new DefaultIsolatedEventBus(
-            buildUuid, eventsOutputStream, clock, DOWNWARD_PROTOCOL, "javacd_action_id")) {
+            buildUuid,
+            eventsOutputStream,
+            clock,
+            DOWNWARD_PROTOCOL,
+            ActionId.of("javacd_action_id"))) {
 
       try (NamedPipeReader commandsNamedPipe =
               NAMED_PIPE_FACTORY.connectAsReader(workerToolParsedEnvs.getCommandPipe());
@@ -159,7 +165,7 @@ public class JavaCDWorkerToolMain {
             case EXECUTE_COMMAND:
               ExecuteCommand executeCommand =
                   ExecuteCommand.parseDelimitedFrom(commandsInputStream);
-              String executeCommandActionId = executeCommand.getActionId();
+              ActionId executeCommandActionId = ActionId.of(executeCommand.getActionId());
               BuildJavaCommand buildJavaCommand =
                   BuildJavaCommand.parseDelimitedFrom(commandsInputStream);
               LOG.debug("Start executing command with action id: %s", executeCommandActionId);
@@ -192,21 +198,24 @@ public class JavaCDWorkerToolMain {
             case START_PIPELINE_COMMAND:
               StartPipelineCommand startPipelineCommand =
                   StartPipelineCommand.parseDelimitedFrom(commandsInputStream);
-              List<String> actionIds = startPipelineCommand.getActionIdList();
+              List<ActionId> actionIds =
+                  startPipelineCommand.getActionIdList().stream()
+                      .map(ActionId::of)
+                      .collect(Collectors.toList());
               PipeliningCommand pipeliningCommand =
                   PipeliningCommand.parseDelimitedFrom(commandsInputStream);
               LOG.debug("Start executing pipelining command with action ids: %s", actionIds);
 
-              Optional<SettableFuture<String>> startNextCommandOptional = Optional.empty();
+              Optional<SettableFuture<ActionId>> startNextCommandOptional = Optional.empty();
               if (actionIds.size() > 1) {
-                String libraryActionId = actionIds.get(1);
+                ActionId libraryActionId = actionIds.get(1);
                 checkState(!startNextCommandMap.containsKey(libraryActionId));
-                SettableFuture<String> startNextCommandFuture = SettableFuture.create();
+                SettableFuture<ActionId> startNextCommandFuture = SettableFuture.create();
                 startNextCommandMap.put(libraryActionId, startNextCommandFuture);
                 startNextCommandOptional = Optional.of(startNextCommandFuture);
               }
 
-              Optional<SettableFuture<String>> finalStartNextCommandOptional =
+              Optional<SettableFuture<ActionId>> finalStartNextCommandOptional =
                   startNextCommandOptional;
               THREAD_POOL.submit(
                   () -> {
@@ -235,12 +244,13 @@ public class JavaCDWorkerToolMain {
             case START_NEXT_PIPELINING_COMMAND:
               StartNextPipeliningCommand startNextPipeliningCommand =
                   StartNextPipeliningCommand.parseDelimitedFrom(commandsInputStream);
-              String startNextPipeliningCommandActionId = startNextPipeliningCommand.getActionId();
+              ActionId startNextPipeliningCommandActionId =
+                  ActionId.of(startNextPipeliningCommand.getActionId());
               LOG.debug(
                   "Received start next pipelining command with action id: %s",
                   startNextPipeliningCommandActionId);
 
-              SettableFuture<String> startNextCommand =
+              SettableFuture<ActionId> startNextCommand =
                   checkNotNull(startNextCommandMap.remove(startNextPipeliningCommandActionId));
               // signal to pipelining runner that it could continue with pipelining command
               // execution

@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.downwardapi.utils.DownwardApiConstants;
@@ -58,7 +59,7 @@ public class ParsedEnvVarsTest {
     ParsedEnvVars parsedEnvVars = ParsedEnvVars.parse(envs);
     assertThat(parsedEnvVars.getVerbosity(), equalTo(Verbosity.STANDARD_INFORMATION));
     assertTrue(parsedEnvVars.isAnsiTerminal());
-    assertThat(parsedEnvVars.getActionId(), equalTo("my_action"));
+    assertThat(parsedEnvVars.getActionId(), equalTo(ActionId.of("my_action")));
     assertThat(parsedEnvVars.getBuildUuid(), equalTo(new BuildId("my_build")));
     assertThat(parsedEnvVars.getEventPipe(), equalTo(Paths.get("my_pipe")));
     assertThat(

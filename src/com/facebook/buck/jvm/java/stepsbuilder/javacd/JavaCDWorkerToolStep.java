@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.event.IsolatedEventBus;
@@ -86,7 +87,7 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
       WorkerToolExecutor workerToolExecutor,
       ImmutableList<String> launchJavaCDCommand)
       throws IOException, InterruptedException {
-    String actionId = context.getActionId();
+    ActionId actionId = context.getActionId();
     IsolatedEventBus eventBus = context.getIsolatedEventBus();
     try {
       LOG.debug("Starting execution of java compilation command with action id: %s", actionId);

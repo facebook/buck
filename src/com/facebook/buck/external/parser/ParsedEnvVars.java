@@ -16,6 +16,7 @@
 
 package com.facebook.buck.external.parser;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -37,7 +38,7 @@ public abstract class ParsedEnvVars {
 
   public abstract BuildId getBuildUuid();
 
-  public abstract String getActionId();
+  public abstract ActionId getActionId();
 
   public abstract Path getEventPipe();
 
@@ -46,9 +47,9 @@ public abstract class ParsedEnvVars {
   public static ParsedEnvVars parse(ImmutableMap<String, String> envs) {
     return ImmutableParsedEnvVars.ofImpl(
         Verbosity.valueOf(checkNotNull(envs, DownwardApiConstants.ENV_VERBOSITY)),
-        Boolean.valueOf(checkNotNull(envs, DownwardApiConstants.ENV_ANSI_ENABLED)),
+        Boolean.parseBoolean(checkNotNull(envs, DownwardApiConstants.ENV_ANSI_ENABLED)),
         new BuildId(checkNotNull(envs, DownwardApiConstants.ENV_BUILD_UUID)),
-        checkNotNull(envs, DownwardApiConstants.ENV_ACTION_ID),
+        ActionId.of(checkNotNull(envs, DownwardApiConstants.ENV_ACTION_ID)),
         Paths.get(checkNotNull(envs, DownwardApiConstants.ENV_EVENT_PIPE)),
         AbsPath.get(checkNotNull(envs, ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT)));
   }

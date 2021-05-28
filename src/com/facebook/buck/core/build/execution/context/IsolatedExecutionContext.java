@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.build.execution.context;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
@@ -57,7 +58,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
       Platform platform,
       ProcessExecutor processExecutor,
       AbsPath ruleCellRoot,
-      String actionId,
+      ActionId actionId,
       Clock clock) {
     return ImmutableIsolatedExecutionContext.builder()
         .setIsolatedEventBus(eventBus)
@@ -79,7 +80,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
       Platform platform,
       ProcessExecutor processExecutor,
       AbsPath ruleCellRoot,
-      String actionId,
+      ActionId actionId,
       Clock clock) {
     return ImmutableIsolatedExecutionContext.builder()
         .setIsolatedEventBus(eventBus)
@@ -123,7 +124,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
    * Returns an id of executing action. Typically represents that fully qualified name of the build
    * target.
    */
-  public abstract String getActionId();
+  public abstract ActionId getActionId();
 
   /** Returns clock associated with the current invocation. */
   public abstract Clock getClock();

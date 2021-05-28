@@ -19,6 +19,7 @@ package com.facebook.buck.downwardapi.processexecutor.handlers.impl;
 import static com.facebook.buck.event.StepEvent.finished;
 import static com.facebook.buck.event.StepEvent.started;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.downward.model.StepEvent;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
@@ -34,7 +35,7 @@ enum StepEventHandler implements EventHandler<StepEvent> {
   public void handleEvent(DownwardApiExecutionContext context, StepEvent event) {
     Instant timestamp = EventHandlerUtils.getTimestamp(context, event.getDuration());
     int eventId = event.getEventId();
-    String actionId = Objects.requireNonNull(event.getActionId(), "action id has to be set");
+    ActionId actionId = ActionId.of(event.getActionId());
 
     switch (event.getStepStatus()) {
       case STARTED:

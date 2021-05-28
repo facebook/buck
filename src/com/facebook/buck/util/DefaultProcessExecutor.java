@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Predicates.not;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -106,7 +107,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       DownwardApiProcessExecutorFactory factory,
       NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
       IsolatedEventBus buckEventBus,
-      String actionId,
+      ActionId actionId,
       Clock clock) {
     return factory.create(
         this,

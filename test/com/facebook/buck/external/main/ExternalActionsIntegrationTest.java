@@ -26,6 +26,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandler;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
@@ -88,7 +89,7 @@ public class ExternalActionsIntegrationTest {
   private static final String EXTERNAL_ACTIONS_BINARY_TARGET =
       "//test/" + PACKAGE_NAME + ":" + TEST_BINARY_NAME;
 
-  private static final String TEST_ACTION_ID = "test_action_id";
+  private static final ActionId TEST_ACTION_ID = ActionId.of("test_action_id");
   private static final ConsoleParams CONSOLE_PARAMS =
       ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION);
 

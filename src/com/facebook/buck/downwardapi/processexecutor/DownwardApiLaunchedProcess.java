@@ -16,6 +16,7 @@
 
 package com.facebook.buck.downwardapi.processexecutor;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.util.DelegateLaunchedProcess;
@@ -92,7 +93,7 @@ public class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
    * downward API execution would know about invoking thread id and would set it to every event that
    * has this action id.
    */
-  public void registerActionId(String actionId) {
+  public void registerActionId(ActionId actionId) {
     namedPipeEventHandler.registerActionId(actionId);
   }
 

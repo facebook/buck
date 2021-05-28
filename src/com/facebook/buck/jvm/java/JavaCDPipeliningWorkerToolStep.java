@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.util.log.Logger;
@@ -88,7 +89,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
   private final PipeliningCommand.Builder builder = PipeliningCommand.newBuilder();
   private final List<AbstractMessage> commands = new ArrayList<>();
 
-  private ImmutableMap<String, SettableFuture<ResultEvent>> actionIdToResultEventMap =
+  private ImmutableMap<ActionId, SettableFuture<ResultEvent>> actionIdToResultEventMap =
       ImmutableMap.of();
   @Nullable private BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool;
   @Nullable private WorkerToolExecutor workerToolExecutor;
@@ -142,7 +143,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
   private StepExecutionResult execute(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
-    String actionId = context.getActionId();
+    ActionId actionId = context.getActionId();
     LOG.debug("Start execution for action id: %s", actionId);
     ImmutableList<String> launchJavaCDCommand =
         JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams);
@@ -205,17 +206,17 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     }
   }
 
-  private ImmutableMap<String, SettableFuture<ResultEvent>> startExecution(
+  private ImmutableMap<ActionId, SettableFuture<ResultEvent>> startExecution(
       IsolatedEventBus eventBus) throws IOException, ExecutionException, InterruptedException {
     Preconditions.checkNotNull(workerToolExecutor);
 
     Preconditions.checkArgument(
         !commands.isEmpty() && commands.size() <= 2, "Commands size must be equal only to 1 or 2");
 
-    ImmutableList<String> actionIds;
+    ImmutableList<ActionId> actionIds;
     PipeliningCommand pipeliningCommand;
 
-    ImmutableList.Builder<String> actionsIdsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<ActionId> actionsIdsBuilder = ImmutableList.builder();
 
     // the first command could be either source-abi or library one
     AbstractMessage command1 = commands.get(0);
@@ -251,7 +252,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     ImmutableList<SettableFuture<ResultEvent>> futures =
         workerToolExecutor.executePipeliningCommand(
             actionIds, pipeliningCommand, pipelineFinished, eventBus);
-    ImmutableMap.Builder<String, SettableFuture<ResultEvent>> mapBuilder =
+    ImmutableMap.Builder<ActionId, SettableFuture<ResultEvent>> mapBuilder =
         ImmutableMap.builderWithExpectedSize(actionIds.size());
     for (int i = 0; i < actionIds.size(); i++) {
       SettableFuture<ResultEvent> resultEventSettableFuture = futures.get(i);
@@ -272,18 +273,18 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     return mapBuilder.build();
   }
 
-  private String getActionId(BuildTargetValue buildTargetValue) {
-    return buildTargetValue.getFullyQualifiedName();
+  private ActionId getActionId(BuildTargetValue buildTargetValue) {
+    return ActionId.of(buildTargetValue.getFullyQualifiedName());
   }
 
-  private void startNextPipeliningCommand(String actionId, IsolatedEventBus eventBus)
+  private void startNextPipeliningCommand(ActionId actionId, IsolatedEventBus eventBus)
       throws IOException {
     Preconditions.checkNotNull(workerToolExecutor);
     LOG.debug(
         "Sending start execution next pipelining command (action id: %s) signal to worker tool.",
         actionId);
     StartNextPipeliningCommand startNextPipeliningCommand =
-        StartNextPipeliningCommand.newBuilder().setActionId(actionId).build();
+        StartNextPipeliningCommand.newBuilder().setActionId(actionId.getValue()).build();
     workerToolExecutor.startNextCommand(startNextPipeliningCommand, actionId, eventBus);
   }
 
@@ -320,7 +321,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
   }
 
   private void verifyAllActionsAreDone() {
-    for (Map.Entry<String, SettableFuture<ResultEvent>> executingAction :
+    for (Map.Entry<ActionId, SettableFuture<ResultEvent>> executingAction :
         actionIdToResultEventMap.entrySet()) {
       SettableFuture<ResultEvent> future = executingAction.getValue();
       if (!future.isDone()) {

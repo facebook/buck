@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -131,7 +132,7 @@ public class BuildableCommandExecutionStepTest {
                     Verbosity.STANDARD_INFORMATION, System.out, System.err, new Ansi(true))))
         .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
         .setRuleCellRoot(rootPath)
-        .setActionId("test_action_id")
+        .setActionId(ActionId.of("test_action_id"))
         .setClock(FakeClock.doNotCare())
         .setWorkerToolPools(new ConcurrentHashMap<>())
         .build();

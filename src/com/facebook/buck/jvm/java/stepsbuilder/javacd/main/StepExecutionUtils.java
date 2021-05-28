@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
@@ -57,7 +58,7 @@ class StepExecutionUtils {
       ProcessExecutor processExecutor,
       Console console,
       Clock clock,
-      String actionId,
+      ActionId actionId,
       AbsPath ruleCellRoot,
       ImmutableList<IsolatedStep> steps)
       throws IOException {
@@ -85,7 +86,7 @@ class StepExecutionUtils {
       ProcessExecutor processExecutor,
       Console console,
       Clock clock,
-      String actionId,
+      ActionId actionId,
       AbsPath ruleCellRoot,
       ImmutableList<IsolatedStep> steps,
       boolean closeExecutionContext)
@@ -121,7 +122,7 @@ class StepExecutionUtils {
       IsolatedExecutionContext executionContext,
       OutputStream eventsOutputStream,
       DownwardProtocol downwardProtocol,
-      String actionId,
+      ActionId actionId,
       ImmutableList<IsolatedStep> steps)
       throws IOException {
     StepExecutionResult stepExecutionResult =
@@ -131,10 +132,10 @@ class StepExecutionUtils {
   }
 
   private static ResultEvent getResultEvent(
-      String actionId, StepExecutionResult stepExecutionResult) {
+      ActionId actionId, StepExecutionResult stepExecutionResult) {
     int exitCode = stepExecutionResult.getExitCode();
     ResultEvent.Builder resultEventBuilder =
-        ResultEvent.newBuilder().setActionId(actionId).setExitCode(exitCode);
+        ResultEvent.newBuilder().setActionId(actionId.getValue()).setExitCode(exitCode);
     if (!stepExecutionResult.isSuccess()) {
       StringBuilder errorMessage = new StringBuilder();
       stepExecutionResult
@@ -170,11 +171,11 @@ class StepExecutionUtils {
   }
 
   static void writePipelineFinishedEvent(
-      DownwardProtocol downwardProtocol, OutputStream eventsOutputStream, String actionId)
+      DownwardProtocol downwardProtocol, OutputStream eventsOutputStream, ActionId actionId)
       throws IOException {
     writeEvent(
         EventType.PIPELINE_FINISHED_EVENT,
-        PipelineFinishedEvent.newBuilder().setActionId(actionId).build(),
+        PipelineFinishedEvent.newBuilder().setActionId(actionId.getValue()).build(),
         eventsOutputStream,
         downwardProtocol);
   }

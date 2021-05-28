@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /**
@@ -175,7 +177,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
    */
   public static Scope scopeWithActionId(
       IsolatedEventBus bus,
-      String actionId,
+      @Nullable ActionId actionId,
       PerfEventTitle perfEventTitle,
       ImmutableMap<String, Object> info) {
     StartedImpl started = new StartedImpl(perfEventTitle, info);
@@ -188,7 +190,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
    * PerfEventTitle, ImmutableMap)}.
    */
   public static Scope scope(IsolatedEventBus bus, PerfEventTitle perfEventTitle) {
-    return scopeWithActionId(bus, perfEventTitle.getValue(), perfEventTitle, ImmutableMap.of());
+    return scopeWithActionId(bus, null, perfEventTitle, ImmutableMap.of());
   }
 
   /**
@@ -197,8 +199,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
    */
   public static Scope scope(
       IsolatedEventBus bus, PerfEventTitle perfEventTitle, String k1, Object v1) {
-    return scopeWithActionId(
-        bus, perfEventTitle.getValue(), perfEventTitle, ImmutableMap.of(k1, v1));
+    return scopeWithActionId(bus, null, perfEventTitle, ImmutableMap.of(k1, v1));
   }
 
   /**
@@ -212,8 +213,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
       Object v1,
       String k2,
       Object v2) {
-    return scopeWithActionId(
-        bus, perfEventTitle.getValue(), perfEventTitle, ImmutableMap.of(k1, v1, k2, v2));
+    return scopeWithActionId(bus, null, perfEventTitle, ImmutableMap.of(k1, v1, k2, v2));
   }
 
   /**
@@ -222,7 +222,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
    */
   public static Scope scope(
       IsolatedEventBus bus, PerfEventTitle perfEventTitle, ImmutableMap<String, Object> info) {
-    return scopeWithActionId(bus, perfEventTitle.getValue(), perfEventTitle, info);
+    return scopeWithActionId(bus, null, perfEventTitle, info);
   }
 
   /**
@@ -232,8 +232,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
   public static Scope scope(Optional<IsolatedEventBus> bus, PerfEventTitle perfEventTitle) {
     return bus.map(
             IsolatedEventBus ->
-                scopeWithActionId(
-                    IsolatedEventBus, perfEventTitle.getValue(), perfEventTitle, ImmutableMap.of()))
+                scopeWithActionId(IsolatedEventBus, null, perfEventTitle, ImmutableMap.of()))
         .orElseGet(NoopScope::new);
   }
 
@@ -247,12 +246,11 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
    * PerfEventTitle, ImmutableMap)}.
    */
   public static Scope scope(IsolatedEventBus bus, String perfEventName) {
-    return scopeWithActionId(
-        bus, perfEventName, PerfEventTitle.of(perfEventName), ImmutableMap.of());
+    return scopeWithActionId(bus, null, PerfEventTitle.of(perfEventName), ImmutableMap.of());
   }
 
   public static Scope scopeWithActionId(
-      IsolatedEventBus bus, String actionId, String perfEventName) {
+      IsolatedEventBus bus, ActionId actionId, String perfEventName) {
     return scopeWithActionId(bus, actionId, PerfEventTitle.of(perfEventName), ImmutableMap.of());
   }
 
@@ -273,7 +271,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
    */
   public static Scope scopeIgnoringShortEvents(
       IsolatedEventBus bus,
-      String actionId,
+      @Nullable ActionId actionId,
       PerfEventTitle perfEventTitle,
       ImmutableMap<String, Object> info,
       Scope parentScope,
@@ -299,13 +297,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
       long minimumTime,
       TimeUnit timeUnit) {
     return scopeIgnoringShortEvents(
-        bus,
-        perfEventTitle.getValue(),
-        perfEventTitle,
-        ImmutableMap.of(),
-        parentScope,
-        minimumTime,
-        timeUnit);
+        bus, null, perfEventTitle, ImmutableMap.of(), parentScope, minimumTime, timeUnit);
   }
 
   /**
@@ -321,13 +313,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
       long minimumTime,
       TimeUnit timeUnit) {
     return scopeIgnoringShortEvents(
-        bus,
-        perfEventTitle.getValue(),
-        perfEventTitle,
-        ImmutableMap.of(k1, v1),
-        parentScope,
-        minimumTime,
-        timeUnit);
+        bus, null, perfEventTitle, ImmutableMap.of(k1, v1), parentScope, minimumTime, timeUnit);
   }
 
   /** Represents the scope within which a particular performance operation is taking place. */
@@ -462,12 +448,13 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
   private static class SimplePerfEventScope implements AutoCloseable, Scope {
 
     protected final IsolatedEventBus bus;
-    protected final String actionId;
+    protected final @Nullable ActionId actionId;
     protected final StartedImpl started;
     protected final ConcurrentMap<String, AtomicLong> finishedCounters;
     protected final ImmutableMap.Builder<String, Object> finishedInfoBuilder;
 
-    public SimplePerfEventScope(IsolatedEventBus bus, String actionId, StartedImpl started) {
+    public SimplePerfEventScope(
+        IsolatedEventBus bus, @Nullable ActionId actionId, StartedImpl started) {
       this.bus = bus;
       this.actionId = actionId;
       this.started = started;
@@ -524,7 +511,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent implements LeafE
 
     public MinimumTimePerfEventScope(
         IsolatedEventBus bus,
-        String actionId,
+        @Nullable ActionId actionId,
         StartedImpl started,
         Scope parentScope,
         long minimumDurationNanos) {

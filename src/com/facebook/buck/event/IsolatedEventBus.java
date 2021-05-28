@@ -16,9 +16,11 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.model.BuildId;
 import java.io.Closeable;
 import java.time.Instant;
+import javax.annotation.Nullable;
 
 /** Minimal event bus that does not know about core buck concepts. */
 public interface IsolatedEventBus extends Closeable {
@@ -39,36 +41,36 @@ public interface IsolatedEventBus extends Closeable {
   void post(ExternalEvent event, long threadId);
 
   /** Post a {@link StepEvent} to the this event bus. */
-  void post(StepEvent event, String actionId);
+  void post(StepEvent event, @Nullable ActionId actionId);
 
   /** Post a {@link StepEvent} that occurred in the given {@code threadId} to this event bus. */
-  void post(StepEvent event, String actionId, long threadId);
+  void post(StepEvent event, @Nullable ActionId actionId, long threadId);
 
   /**
    * Post a {@link StepEvent}t that occurred in the given {@code threadId} to this event bus using
    * the given {@code atTime} timestamp.
    */
-  void post(StepEvent event, String actionId, Instant atTime, long threadId);
+  void post(StepEvent event, @Nullable ActionId actionId, Instant atTime, long threadId);
 
   /** Post a {@link SimplePerfEvent} to the this event bus. */
-  void post(SimplePerfEvent event, String actionId);
+  void post(SimplePerfEvent event, @Nullable ActionId actionId);
 
   /** Post a {@link SimplePerfEvent} to this event bus using the given {@code atTime} timestamp. */
-  void post(SimplePerfEvent event, String actionId, Instant atTime);
+  void post(SimplePerfEvent event, @Nullable ActionId actionId, Instant atTime);
 
   /**
    * Post a {@link SimplePerfEvent} that occurred in the given {@code threadId} to this event bus.
    */
-  void post(SimplePerfEvent event, String actionId, long threadId);
+  void post(SimplePerfEvent event, @Nullable ActionId actionId, long threadId);
 
   /**
    * Post a {@link SimplePerfEvent}t that occurred in the given {@code threadId} to this event bus
    * using the given {@code atTime} timestamp.
    */
-  void post(SimplePerfEvent event, String actionId, Instant atTime, long threadId);
+  void post(SimplePerfEvent event, @Nullable ActionId actionId, Instant atTime, long threadId);
 
   /** Post an already configured {@link SimplePerfEvent} to this event bus. */
-  void postWithoutConfiguring(SimplePerfEvent event, String actionId);
+  void postWithoutConfiguring(SimplePerfEvent event, @Nullable ActionId actionId);
 
   /**
    * Timestamp the given {@link ConsoleEvent} that occurred in the current thread. A timestamped

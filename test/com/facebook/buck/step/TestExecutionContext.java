@@ -17,6 +17,7 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
@@ -55,7 +56,7 @@ public class TestExecutionContext {
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .setBuildCellRootPath(rootPath.getPath())
         .setRuleCellRoot(rootPath)
-        .setActionId("test_action_id")
+        .setActionId(ActionId.of("test_action_id"))
         .setClock(FakeClock.doNotCare())
         .setWorkerToolPools(new ConcurrentHashMap<>());
   }

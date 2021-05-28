@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EventTypeMessage.EventType;
@@ -102,11 +103,11 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   @BuckStyleValue
   abstract static class ExecutingAction {
 
-    abstract String getActionId();
+    abstract ActionId getActionId();
 
     abstract SettableFuture<ResultEvent> getResultEventFuture();
 
-    public static ExecutingAction of(String actionId) {
+    public static ExecutingAction of(ActionId actionId) {
       return ImmutableExecutingAction.ofImpl(actionId, SettableFuture.create());
     }
   }
@@ -215,7 +216,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
   @Override
   public SettableFuture<ResultEvent> executeCommand(
-      String actionId, AbstractMessage executeCommandMessage, IsolatedEventBus eventBus)
+      ActionId actionId, AbstractMessage executeCommandMessage, IsolatedEventBus eventBus)
       throws IOException, ExecutionException, InterruptedException {
     checkState(isAlive(), "Launched process is not alive");
     launchedProcess.registerActionId(actionId);
@@ -236,7 +237,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
       executeCommandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.EXECUTE_COMMAND);
-      executeCommand = ExecuteCommand.newBuilder().setActionId(actionId).build();
+      executeCommand = ExecuteCommand.newBuilder().setActionId(actionId.getValue()).build();
     }
 
     try (Scope ignored =
@@ -253,7 +254,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
   @Override
   public ImmutableList<SettableFuture<ResultEvent>> executePipeliningCommand(
-      ImmutableList<String> actionIds,
+      ImmutableList<ActionId> actionIds,
       AbstractMessage pipeliningCommand,
       SettableFuture<PipelineFinishedEvent> pipelineFinished,
       IsolatedEventBus eventBus)
@@ -261,7 +262,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     checkState(isAlive(), "Launched process is not alive");
     actionIds.forEach(launchedProcess::registerActionId);
 
-    String firstActionId = actionIds.iterator().next();
+    ActionId firstActionId = actionIds.iterator().next();
 
     CommandTypeMessage executeCommandTypeMessage;
     StartPipelineCommand startPipelineCommand;
@@ -276,9 +277,9 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
             ImmutableList.Builder<ExecutingAction> executingActionBuilder =
                 ImmutableList.builderWithExpectedSize(actionIds.size());
-            for (String actionId : actionIds) {
+            for (ActionId actionId : actionIds) {
               executingActionBuilder.add(ExecutingAction.of(actionId));
-              startPipeliningCommandBuilder.addActionId(actionId);
+              startPipeliningCommandBuilder.addActionId(actionId.getValue());
             }
             executingActions = executingActionBuilder.build();
             this.pipelineFinished = pipelineFinished;
@@ -307,7 +308,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
   @Override
   public void startNextCommand(
-      AbstractMessage startNextPipeliningCommand, String actionId, IsolatedEventBus eventBus)
+      AbstractMessage startNextPipeliningCommand, ActionId actionId, IsolatedEventBus eventBus)
       throws IOException {
     checkState(isAlive(), "Launched process is not alive");
 
@@ -397,9 +398,9 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
                           new IllegalStateException(
                               "The is no not completed executing action at the moment."));
 
-          String executingActionId = executingAction.getActionId();
+          ActionId executingActionId = executingAction.getActionId();
           checkState(
-              actionId.equals(executingActionId),
+              actionId.equals(executingActionId.getValue()),
               "Received action id %s is not equals to expected one %s. Currently executing actions: %s",
               actionId,
               executingActionId,
@@ -413,6 +414,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private String getExecutingActionIds() {
     return executingActions.stream()
         .map(ExecutingAction::getActionId)
+        .map(ActionId::getValue)
         .collect(Collectors.joining(", "));
   }
 

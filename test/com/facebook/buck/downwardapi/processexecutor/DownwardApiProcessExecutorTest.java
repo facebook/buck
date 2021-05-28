@@ -36,6 +36,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.ChromeTraceEvent.ChromeTraceEventStatus;
@@ -123,7 +124,7 @@ public class DownwardApiProcessExecutorTest {
   private static final ConsoleParams CONSOLE_PARAMS =
       ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION);
   private static final String TEST_COMMAND = "test_command";
-  private static final String TEST_ACTION_ID = "test_action_id";
+  private static final ActionId TEST_ACTION_ID = ActionId.of("test_action_id");
 
   private static WindowsHandleFactory initialWindowsHandleFactory;
   private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
@@ -613,7 +614,7 @@ public class DownwardApiProcessExecutorTest {
     envsBuilder.put("BUCK_VERBOSITY", CONSOLE_PARAMS.getVerbosity());
     envsBuilder.put("BUCK_ANSI_ENABLED", CONSOLE_PARAMS.isAnsiEscapeSequencesEnabled());
     envsBuilder.put("BUCK_BUILD_UUID", buckEventBus.getBuildId().toString());
-    envsBuilder.put("BUCK_ACTION_ID", TEST_ACTION_ID);
+    envsBuilder.put("BUCK_ACTION_ID", TEST_ACTION_ID.getValue());
     envsBuilder.put("BUCK_EVENT_PIPE", namedPipeName);
     ImmutableMap<String, String> envs = envsBuilder.build();
 
@@ -752,7 +753,7 @@ public class DownwardApiProcessExecutorTest {
             .setStepType("crazy_stuff")
             .setDescription(description)
             .setDuration(Duration.newBuilder().setSeconds(-durationSeconds).setNanos(-10).build())
-            .setActionId(TEST_ACTION_ID)
+            .setActionId(TEST_ACTION_ID.getValue())
             .build();
 
     return write(downwardProtocol, STEP_EVENT, stepEvent);
@@ -808,7 +809,7 @@ public class DownwardApiProcessExecutorTest {
             .setStatus(status)
             .setDuration(Duration.newBuilder().setSeconds(-durationInSeconds).setNanos(-10).build())
             .putAllData(attributes)
-            .setActionId(TEST_ACTION_ID)
+            .setActionId(TEST_ACTION_ID.getValue())
             .build();
 
     return write(downwardProtocol, CHROME_TRACE_EVENT, chromeTraceEvent);

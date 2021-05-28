@@ -16,10 +16,12 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.event.PerfEvents.AggregationSupportedEvent.Finished;
 import com.facebook.buck.event.PerfEvents.AggregationSupportedEvent.Started;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableMap;
+import javax.annotation.Nullable;
 
 /** Perf event utils */
 public class PerfEvents {
@@ -28,11 +30,11 @@ public class PerfEvents {
 
   /** Creates a simple scoped leaf event that will be logged to superconsole, chrome traces, etc. */
   public static Scope scope(BuckEventBus eventBus, String category) {
-    return scope(eventBus.isolated(), category, category, true, true);
+    return scope(eventBus.isolated(), null, category, true, true);
   }
 
   /** Creates a simple scoped leaf event that will be aggregated in scuba. */
-  public static Scope scope(IsolatedEventBus eventBus, String actionId, String category) {
+  public static Scope scope(IsolatedEventBus eventBus, ActionId actionId, String category) {
     return scope(eventBus, actionId, category, false, false);
   }
 
@@ -42,7 +44,7 @@ public class PerfEvents {
    */
   public static Scope scope(
       IsolatedEventBus eventBus,
-      String actionId,
+      @Nullable ActionId actionId,
       String category,
       boolean logToChromeTrace,
       boolean showOnSuperConsole) {

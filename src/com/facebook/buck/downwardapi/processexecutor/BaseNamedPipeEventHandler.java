@@ -18,6 +18,7 @@ package com.facebook.buck.downwardapi.processexecutor;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage.EventType;
@@ -101,7 +102,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   }
 
   @Override
-  public void registerActionId(String actionId) {
+  public void registerActionId(ActionId actionId) {
     context.registerActionId(actionId);
   }
 

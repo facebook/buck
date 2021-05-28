@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
@@ -105,7 +106,7 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
       DownwardApiProcessExecutorFactory factory,
       NamedPipeEventHandlerFactory namedPipeEventHandlerFactory,
       IsolatedEventBus buckEventBus,
-      String actionId,
+      ActionId actionId,
       Clock clock) {
     String ansiEnabled = context.get(ANSI_ESCAPE_SEQUENCES_ENABLED);
     Preconditions.checkNotNull(ansiEnabled, ANSI_ESCAPE_SEQUENCES_ENABLED + " key is not provided");

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandler;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
@@ -135,7 +136,7 @@ public class ProcessExecutorTest {
                 DownwardApiProcessExecutor.FACTORY,
                 DefaultNamedPipeEventHandler.FACTORY,
                 new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("fake")).isolated(),
-                "test_action_id",
+                ActionId.of("test_action_id"),
                 FakeClock.doNotCare());
 
     String cmd = Platform.detect() == Platform.WINDOWS ? "cmd /C echo Hello" : "echo Hello";
