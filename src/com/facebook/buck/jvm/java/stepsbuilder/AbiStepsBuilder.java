@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.javacd;
+package com.facebook.buck.jvm.java.stepsbuilder;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
-import com.facebook.buck.javacd.model.AbiJarCommand;
-import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
-import com.facebook.buck.javacd.model.BaseJarCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
@@ -31,30 +28,15 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JarParametersSerializer;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import javax.annotation.Nullable;
 
-/** Default implementation of {@link AbiJarStepsBuilder} */
-class JavaCDAbiJarStepsBuilder extends JavaCDStepsBuilderBase<AbiJarCommand>
-    implements AbiJarStepsBuilder {
+/** Builder that creates abi jar steps. */
+public interface AbiStepsBuilder extends JavaCompileStepsBuilder {
 
-  private final AbiJarCommand.Builder builder = AbiJarCommand.newBuilder();
-
-  JavaCDAbiJarStepsBuilder(
-      boolean hasAnnotationProcessing,
-      SpoolMode spoolMode,
-      boolean withDownwardApi,
-      JavaCDParams javaCDParams) {
-    super(hasAnnotationProcessing, spoolMode, withDownwardApi, Type.ABI_JAR, javaCDParams);
-  }
-
-  @Override
-  public void addBuildStepsForAbiJar(
+  void addBuildStepsForAbi(
       AbiGenerationMode abiCompatibilityMode,
       AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
@@ -75,45 +57,5 @@ class JavaCDAbiJarStepsBuilder extends JavaCDStepsBuilderBase<AbiJarCommand>
       @Nullable JarParameters libraryJarParameters,
       AbsPath buildCellRootPath,
       ResolvedJavac resolvedJavac,
-      CompileToJarStepFactory.ExtraParams extraParams) {
-
-    BaseJarCommand baseJarCommand =
-        buildBaseJarCommand(
-            abiCompatibilityMode,
-            abiGenerationMode,
-            isRequiredForSourceOnlyAbi,
-            trackClassUsage,
-            trackJavacPhaseEvents,
-            filesystemParams,
-            buildTargetValue,
-            compilerOutputPathsValue,
-            compileTimeClasspathPaths,
-            javaSrcs,
-            fullJarInfos,
-            abiJarInfos,
-            resourcesMap,
-            cellToPathMappings,
-            libraryJarParameters,
-            buildCellRootPath,
-            resolvedJavac,
-            extraParams);
-
-    builder.setBaseJarCommand(baseJarCommand);
-    if (abiJarParameters != null) {
-      builder.setAbiJarParameters(JarParametersSerializer.serialize(abiJarParameters));
-    }
-
-    recordArtifacts(
-        buildableContext,
-        compilerOutputPathsValue,
-        buildTargetValue,
-        javaSrcs,
-        trackClassUsage,
-        abiJarParameters);
-  }
-
-  @Override
-  protected AbiJarCommand buildCommand() {
-    return builder.build();
-  }
+      CompileToJarStepFactory.ExtraParams extraParams);
 }

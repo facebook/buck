@@ -47,7 +47,7 @@ import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateSourceAbi.SourceAbiBuildable;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
@@ -150,8 +150,8 @@ public class CalculateSourceAbi
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
       SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
-      AbiJarStepsBuilder stepsBuilder =
-          getJavaCompileStepsBuilderFactory(sourcePathResolver, filesystem).getAbiJarBuilder();
+      AbiStepsBuilder stepsBuilder =
+          getJavaCompileStepsBuilderFactory(sourcePathResolver, filesystem).getAbiBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
           filesystem,

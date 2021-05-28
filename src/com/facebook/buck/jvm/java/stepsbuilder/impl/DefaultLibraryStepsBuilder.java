@@ -22,33 +22,67 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.FilesystemParams;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
+import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
+import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
-/** Default implementation of {@link com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder} */
-class DefaultAbiJarCompileStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
-    extends DefaultJavaStepsBuilderBase<T> implements AbiJarStepsBuilder {
+/** Default implementation of {@link LibraryStepsBuilder} */
+class DefaultLibraryStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
+    extends DefaultJavaStepsBuilderBase<T> implements LibraryStepsBuilder {
 
-  DefaultAbiJarCompileStepsBuilder(CompileToJarStepFactory<T> configuredCompiler) {
+  DefaultLibraryStepsBuilder(CompileToJarStepFactory<T> configuredCompiler) {
     super(configuredCompiler);
   }
 
   @Override
-  public void addBuildStepsForAbiJar(
+  public void addUnusedDependencyStep(
+      UnusedDependenciesParams unusedDependenciesParams,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      String buildTargetFullyQualifiedName) {
+    String buildozerPath = unusedDependenciesParams.getBuildozerPath();
+    stepsBuilder.add(
+        UnusedDependenciesFinder.of(
+            buildTargetFullyQualifiedName,
+            unusedDependenciesParams.getDepsList(),
+            unusedDependenciesParams.getProvidedDepsList(),
+            unusedDependenciesParams.getExportedDepsList(),
+            unusedDependenciesParams.getUnusedDependenciesAction(),
+            buildozerPath.isEmpty() ? Optional.empty() : Optional.of(buildozerPath),
+            unusedDependenciesParams.getOnlyPrintCommands(),
+            cellToPathMappings,
+            unusedDependenciesParams.getDepFileList().stream()
+                .map(path -> RelPath.get(path.getPath()))
+                .collect(ImmutableList.toImmutableList()),
+            unusedDependenciesParams.getDoUltralightChecking()));
+  }
+
+  @Override
+  public void addMakeMissingOutputsStep(
+      RelPath rootOutput, RelPath pathToClassHashes, RelPath annotationsPath) {
+    stepsBuilder.add(new MakeMissingOutputsStep(rootOutput, pathToClassHashes, annotationsPath));
+  }
+
+  @Override
+  public void addBuildStepsForLibrary(
       AbiGenerationMode abiCompatibilityMode,
       AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
+      ImmutableList<String> postprocessClassesCommands,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       boolean withDownwardApi,
@@ -56,17 +90,19 @@ class DefaultAbiJarCompileStepsBuilder<T extends CompileToJarStepFactory.ExtraPa
       BuildableContext buildableContext,
       BuildTargetValue buildTargetValue,
       CompilerOutputPathsValue compilerOutputPathsValue,
+      RelPath pathToClassHashes,
       ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
       ImmutableSortedSet<RelPath> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
-      @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbsPath buildCellRootPath,
+      Optional<RelPath> pathToClasses,
       ResolvedJavac resolvedJavac,
       CompileToJarStepFactory.ExtraParams extraParams) {
+
     CompilerParameters compilerParameters =
         JavaLibraryRules.getCompilerParameters(
             compileTimeClasspathPaths,
@@ -87,8 +123,8 @@ class DefaultAbiJarCompileStepsBuilder<T extends CompileToJarStepFactory.ExtraPa
         buildTargetValue,
         compilerOutputPathsValue,
         compilerParameters,
-        ImmutableList.of(),
-        abiJarParameters,
+        postprocessClassesCommands,
+        null,
         libraryJarParameters,
         stepsBuilder,
         buildableContext,
@@ -98,5 +134,11 @@ class DefaultAbiJarCompileStepsBuilder<T extends CompileToJarStepFactory.ExtraPa
         buildCellRootPath,
         resolvedJavac,
         extraParamsType.cast(extraParams));
+
+    JavaLibraryRules.addAccumulateClassNamesStep(
+        FilesystemParamsUtils.getIgnoredPaths(filesystemParams),
+        stepsBuilder,
+        pathToClasses,
+        pathToClassHashes);
   }
 }

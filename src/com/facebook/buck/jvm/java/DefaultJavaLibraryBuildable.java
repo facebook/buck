@@ -49,8 +49,7 @@ import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependencie
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFactoryCreator;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsValueSerializer;
@@ -162,7 +161,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
     JavaCompileStepsBuilderFactory javaCompileStepsBuilderFactory =
         getJavaCompileStepsBuilderFactory(sourcePathResolver, filesystem);
-    LibraryJarStepsBuilder stepsBuilder = javaCompileStepsBuilderFactory.getLibraryJarBuilder();
+    LibraryStepsBuilder stepsBuilder = javaCompileStepsBuilderFactory.getLibraryBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
         buildContext,
@@ -382,7 +381,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       BuildContext buildContext,
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
-      LibraryStepsBuilderBase stepsBuilder) {
+      LibraryStepsBuilder stepsBuilder) {
 
     if (unusedDependenciesFinderFactory.isPresent()) {
       UnusedDependenciesFinderFactory factory = unusedDependenciesFinderFactory.get();
@@ -455,7 +454,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       UnusedDependenciesParams unusedDependenciesParams,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       String buildTargetFullyQualifiedName,
-      LibraryStepsBuilderBase stepsBuilder) {
+      LibraryStepsBuilder stepsBuilder) {
     stepsBuilder.addUnusedDependencyStep(
         unusedDependenciesParams, cellToPathMappings, buildTargetFullyQualifiedName);
   }

@@ -21,50 +21,43 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
+import com.facebook.buck.javacd.model.AbiJarCommand;
 import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.javacd.model.BaseJarCommand;
 import com.facebook.buck.javacd.model.FilesystemParams;
-import com.facebook.buck.javacd.model.LibraryJarBaseCommand;
-import com.facebook.buck.javacd.model.LibraryJarCommand;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
+import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JarParametersSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
-/** Default implementation of {@link LibraryJarStepsBuilder} */
-class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<LibraryJarCommand>
-    implements LibraryJarStepsBuilder {
+/** Default implementation of {@link AbiStepsBuilder} */
+class JavaCDAbiStepsBuilder extends JavaCDStepsBuilderBase<AbiJarCommand>
+    implements AbiStepsBuilder {
 
-  JavaCDLibraryJarStepsBuilder(
+  private final AbiJarCommand.Builder builder = AbiJarCommand.newBuilder();
+
+  JavaCDAbiStepsBuilder(
       boolean hasAnnotationProcessing,
       SpoolMode spoolMode,
       boolean withDownwardApi,
       JavaCDParams javaCDParams) {
-    super(
-        hasAnnotationProcessing,
-        spoolMode,
-        withDownwardApi,
-        Type.LIBRARY_JAR,
-        LibraryJarCommand.newBuilder(),
-        javaCDParams);
+    super(hasAnnotationProcessing, spoolMode, withDownwardApi, Type.ABI_JAR, javaCDParams);
   }
 
   @Override
-  public void addBuildStepsForLibraryJar(
+  public void addBuildStepsForAbi(
       AbiGenerationMode abiCompatibilityMode,
       AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
-      ImmutableList<String> postprocessClassesCommands,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       boolean withDownwardApi,
@@ -72,16 +65,15 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
       BuildableContext buildableContext,
       BuildTargetValue buildTargetValue,
       CompilerOutputPathsValue compilerOutputPathsValue,
-      RelPath pathToClassHashes,
       ImmutableSortedSet<RelPath> compileTimeClasspathPaths,
       ImmutableSortedSet<RelPath> javaSrcs,
       ImmutableList<BaseJavaAbiInfo> fullJarInfos,
       ImmutableList<BaseJavaAbiInfo> abiJarInfos,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       AbsPath buildCellRootPath,
-      Optional<RelPath> pathToClasses,
       ResolvedJavac resolvedJavac,
       CompileToJarStepFactory.ExtraParams extraParams) {
 
@@ -106,17 +98,10 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
             resolvedJavac,
             extraParams);
 
-    LibraryJarCommand.Builder libraryJarCommandBuilder = getLibraryJarCommandBuilder();
-    libraryJarCommandBuilder.setBaseJarCommand(baseJarCommand);
-    for (String postprocessClassesCommand : postprocessClassesCommands) {
-      libraryJarCommandBuilder.addPostprocessClassesCommands(postprocessClassesCommand);
+    builder.setBaseJarCommand(baseJarCommand);
+    if (abiJarParameters != null) {
+      builder.setAbiJarParameters(JarParametersSerializer.serialize(abiJarParameters));
     }
-
-    LibraryJarBaseCommand.Builder libraryJarBaseCommandBuilder =
-        libraryJarCommandBuilder.getLibraryJarBaseCommandBuilder();
-    pathToClasses
-        .map(RelPathSerializer::serialize)
-        .ifPresent(libraryJarBaseCommandBuilder::setPathToClasses);
 
     recordArtifacts(
         buildableContext,
@@ -124,11 +109,11 @@ class JavaCDLibraryJarStepsBuilder extends JavaCDLibraryCompileStepsBuilder<Libr
         buildTargetValue,
         javaSrcs,
         trackClassUsage,
-        libraryJarParameters);
+        abiJarParameters);
   }
 
   @Override
-  protected LibraryJarCommand buildCommand() {
-    return getLibraryJarCommandBuilder().build();
+  protected AbiJarCommand buildCommand() {
+    return builder.build();
   }
 }

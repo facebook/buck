@@ -51,9 +51,9 @@ import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JarParametersSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacOptionsSerializer;
@@ -382,7 +382,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ProjectFilesystem filesystem,
       RecordArtifactVerifier buildableContext,
       BuildTarget buildTarget,
-      AbiJarStepsBuilder stepsBuilder) {
+      AbiStepsBuilder stepsBuilder) {
     Preconditions.checkState(producesJar());
     Preconditions.checkArgument(
         buildTarget.equals(JavaAbis.getSourceAbiJar(libraryTarget))
@@ -425,7 +425,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver, rootPath);
     T extraParams = createExtraParams(context, rootPath);
 
-    stepsBuilder.addBuildStepsForAbiJar(
+    stepsBuilder.addBuildStepsForAbi(
         abiCompatibilityMode,
         abiGenerationMode,
         isRequiredForSourceOnlyAbi,
@@ -470,7 +470,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       RecordArtifactVerifier buildableContext,
       BuildTarget buildTarget,
       RelPath pathToClassHashes,
-      LibraryJarStepsBuilder stepsBuilder) {
+      LibraryStepsBuilder stepsBuilder) {
     Preconditions.checkArgument(buildTarget.equals(libraryTarget));
 
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
@@ -515,7 +515,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     Optional<RelPath> pathToClasses = getPathToClasses(context, buildTarget, buckPaths);
     T extraParams = createExtraParams(context, rootPath);
 
-    stepsBuilder.addBuildStepsForLibraryJar(
+    stepsBuilder.addBuildStepsForLibrary(
         abiCompatibilityMode,
         abiGenerationMode,
         isRequiredForSourceOnlyAbi,

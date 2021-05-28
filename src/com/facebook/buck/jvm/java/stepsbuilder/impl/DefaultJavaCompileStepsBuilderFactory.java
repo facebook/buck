@@ -17,10 +17,10 @@
 package com.facebook.buck.jvm.java.stepsbuilder.impl;
 
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
 
 /**
  * Factory that creates {@link JavaCompileStepsBuilder } builders instances that returns steps that
@@ -35,15 +35,15 @@ public class DefaultJavaCompileStepsBuilderFactory<T extends CompileToJarStepFac
     this.configuredCompiler = configuredCompiler;
   }
 
-  /** Creates an appropriate {@link LibraryJarStepsBuilder} instance */
+  /** Creates an appropriate {@link LibraryStepsBuilder} instance */
   @Override
-  public LibraryJarStepsBuilder getLibraryJarBuilder() {
-    return new DefaultLibraryJarStepsBuilder<>(configuredCompiler);
+  public LibraryStepsBuilder getLibraryBuilder() {
+    return new DefaultLibraryStepsBuilder<>(configuredCompiler);
   }
 
-  /** Creates an appropriate {@link AbiJarStepsBuilder} instance */
+  /** Creates an appropriate {@link AbiStepsBuilder} instance */
   @Override
-  public AbiJarStepsBuilder getAbiJarBuilder() {
-    return new DefaultAbiJarCompileStepsBuilder<>(configuredCompiler);
+  public AbiStepsBuilder getAbiBuilder() {
+    return new DefaultAbiStepsBuilder<>(configuredCompiler);
   }
 }

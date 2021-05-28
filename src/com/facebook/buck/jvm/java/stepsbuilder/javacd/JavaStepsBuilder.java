@@ -31,10 +31,9 @@ import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.JavaExtraParams;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilderBase;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.impl.DefaultJavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.AbsPathSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
@@ -84,7 +83,7 @@ public class JavaStepsBuilder {
     switch (commandCase) {
       case LIBRARYJARCOMMAND:
         LibraryJarCommand libraryJarCommand = buildJavaCommand.getLibraryJarCommand();
-        LibraryJarStepsBuilder libraryJarBuilder = factory.getLibraryJarBuilder();
+        LibraryStepsBuilder libraryJarBuilder = factory.getLibraryBuilder();
         ruleCellRoot =
             handleLibraryJarCommand(libraryJarBuilder, libraryJarCommand, withDownwardApi);
         javaCompileStepsBuilder = libraryJarBuilder;
@@ -92,7 +91,7 @@ public class JavaStepsBuilder {
 
       case ABIJARCOMMAND:
         AbiJarCommand abiJarCommand = buildJavaCommand.getAbiJarCommand();
-        AbiJarStepsBuilder abiJarBuilder = factory.getAbiJarBuilder();
+        AbiStepsBuilder abiJarBuilder = factory.getAbiBuilder();
         ruleCellRoot = handleAbiJarCommand(abiJarBuilder, abiJarCommand, withDownwardApi);
 
         javaCompileStepsBuilder = abiJarBuilder;
@@ -107,7 +106,7 @@ public class JavaStepsBuilder {
   }
 
   private AbsPath handleLibraryJarCommand(
-      LibraryJarStepsBuilder libraryJarBuilder,
+      LibraryStepsBuilder libraryJarBuilder,
       LibraryJarCommand libraryJarCommand,
       boolean withDownwardApi) {
     BaseJarCommand command = libraryJarCommand.getBaseJarCommand();
@@ -122,7 +121,7 @@ public class JavaStepsBuilder {
 
     FilesystemParams filesystemParams = command.getFilesystemParams();
 
-    libraryJarBuilder.addBuildStepsForLibraryJar(
+    libraryJarBuilder.addBuildStepsForLibrary(
         command.getAbiCompatibilityMode(),
         command.getAbiGenerationMode(),
         command.getIsRequiredForSourceOnlyAbi(),
@@ -163,12 +162,12 @@ public class JavaStepsBuilder {
   }
 
   private AbsPath handleAbiJarCommand(
-      AbiJarStepsBuilder abiJarBuilder, AbiJarCommand abiJarCommand, boolean withDownwardApi) {
+      AbiStepsBuilder abiJarBuilder, AbiJarCommand abiJarCommand, boolean withDownwardApi) {
     BaseJarCommand command = abiJarCommand.getBaseJarCommand();
 
     FilesystemParams filesystemParams = command.getFilesystemParams();
 
-    abiJarBuilder.addBuildStepsForAbiJar(
+    abiJarBuilder.addBuildStepsForAbi(
         command.getAbiCompatibilityMode(),
         command.getAbiGenerationMode(),
         command.getIsRequiredForSourceOnlyAbi(),
@@ -224,7 +223,7 @@ public class JavaStepsBuilder {
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       BuildTargetValue buildTargetValue,
       RelPath pathToClassHashes,
-      LibraryStepsBuilderBase javaCompileStepsBuilder) {
+      LibraryStepsBuilder javaCompileStepsBuilder) {
     LibraryJarBaseCommand libraryJarBaseCommand = command.getLibraryJarBaseCommand();
     if (libraryJarBaseCommand.hasUnusedDependenciesParams()) {
       UnusedDependenciesParams unusedDependenciesParams =

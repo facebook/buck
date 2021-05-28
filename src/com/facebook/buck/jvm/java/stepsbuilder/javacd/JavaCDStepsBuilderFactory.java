@@ -18,10 +18,10 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.AbiJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.LibraryJarStepsBuilder;
+import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 
 /**
@@ -42,17 +42,17 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
     this.javaCDParams = javaCDParams;
   }
 
-  /** Creates an appropriate {@link LibraryJarStepsBuilder} instance. */
+  /** Creates an appropriate {@link LibraryStepsBuilder} instance. */
   @Override
-  public LibraryJarStepsBuilder getLibraryJarBuilder() {
-    return new JavaCDLibraryJarStepsBuilder(
+  public LibraryStepsBuilder getLibraryBuilder() {
+    return new JavaCDLibraryStepsBuilder(
         hasAnnotationProcessing, spoolMode, withDownwardApi, javaCDParams);
   }
 
-  /** Creates an appropriate {@link AbiJarStepsBuilder} instance. */
+  /** Creates an appropriate {@link AbiStepsBuilder} instance. */
   @Override
-  public AbiJarStepsBuilder getAbiJarBuilder() {
-    return new JavaCDAbiJarStepsBuilder(
+  public AbiStepsBuilder getAbiBuilder() {
+    return new JavaCDAbiStepsBuilder(
         hasAnnotationProcessing, spoolMode, withDownwardApi, javaCDParams);
   }
 }

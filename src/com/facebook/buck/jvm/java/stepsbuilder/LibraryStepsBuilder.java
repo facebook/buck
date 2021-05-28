@@ -22,6 +22,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.FilesystemParams;
+import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
@@ -35,9 +36,17 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Builder that creates library jar steps. */
-public interface LibraryJarStepsBuilder extends LibraryStepsBuilderBase {
+public interface LibraryStepsBuilder extends JavaCompileStepsBuilder {
 
-  void addBuildStepsForLibraryJar(
+  void addUnusedDependencyStep(
+      UnusedDependenciesParams unusedDependenciesParams,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      String buildTargetFullyQualifiedName);
+
+  void addMakeMissingOutputsStep(
+      RelPath rootOutput, RelPath pathToClassHashes, RelPath annotationsPath);
+
+  void addBuildStepsForLibrary(
       AbiGenerationMode abiCompatibilityMode,
       AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
