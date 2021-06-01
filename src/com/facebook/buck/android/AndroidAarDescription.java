@@ -208,7 +208,7 @@ public class AndroidAarDescription
             manifest.getSourcePathToOutput(),
             /* hasWhitelistedStrings */ false,
             buildBuckConfig.areExternalActionsEnabled(),
-            javaBuckConfig.getBucksJavaOptions().getJavaRuntime());
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
     aarExtraDepsBuilder.add(graphBuilder.addToIndex(androidResource));
 
     ImmutableSortedSet.Builder<SourcePath> classpathToIncludeInAar =
@@ -249,7 +249,7 @@ public class AndroidAarDescription
                   .getDelegate()
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
-              javaBuckConfig.getBucksJavaOptions().getJavaRuntime(),
+              javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
               DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
       buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);

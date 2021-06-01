@@ -114,7 +114,7 @@ public class AndroidBuildConfigDescription
         graphBuilder,
         downwardApiConfig.isEnabledForAndroid(),
         javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
-        javaBuckConfig.getBucksJavaOptions().getJavaRuntime(),
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
         DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 

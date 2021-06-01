@@ -192,7 +192,7 @@ public class AndroidResourceDescription
         args.getHasWhitelistedStrings(),
         androidBuckConfig.isVerifyingXmlAttrsEnabled(),
         buildBuckConfig.areExternalActionsEnabled(),
-        javaBuckConfig.getBucksJavaOptions().getJavaRuntime());
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
   }
 
   private MappedSymlinkTree createSymlinkTree(

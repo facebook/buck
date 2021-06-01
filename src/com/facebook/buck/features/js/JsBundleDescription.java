@@ -336,7 +336,7 @@ public class JsBundleDescription
         null,
         false,
         buildBuckConfig.areExternalActionsEnabled(),
-        javaBuckConfig.getBucksJavaOptions().getJavaRuntime());
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
   }
 
   /**
@@ -347,7 +347,7 @@ public class JsBundleDescription
       SourcePathRuleFinder ruleFinder, Stream<JsLibrary> libraries) {
     return libraries
         .flatMap(lib -> lib.getJsFiles(ruleFinder))
-        .map(JsFile::getSourceBuildTarget)
+        .map(jsFile -> jsFile.getSourceBuildTarget())
         .filter(Objects::nonNull);
   }
 

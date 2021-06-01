@@ -465,7 +465,7 @@ public abstract class DefaultJavaLibraryRules {
             isDesugarRequired(),
             configuredCompilerFactory.shouldDesugarInterfaceMethods(),
             args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-            javaBuckConfig.getBucksJavaOptions().getJavaRuntime(),
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
             createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 
@@ -512,7 +512,7 @@ public abstract class DefaultJavaLibraryRules {
                 isDesugarRequired(),
                 configuredCompilerFactory.shouldDesugarInterfaceMethods(),
                 args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-                javaBuckConfig.getBucksJavaOptions().getJavaRuntime(),
+                javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
                 createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
 
     actionGraphBuilder.addToIndex(libraryRule);
@@ -566,7 +566,7 @@ public abstract class DefaultJavaLibraryRules {
             projectFilesystem,
             jarBuildStepsFactory,
             graphBuilder,
-            javaBuckConfig.getBucksJavaOptions().getJavaRuntime(),
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
             createJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
   }
 
@@ -591,7 +591,7 @@ public abstract class DefaultJavaLibraryRules {
             projectFilesystem,
             jarBuildStepsFactory,
             graphBuilder,
-            javaBuckConfig.getBucksJavaOptions().getJavaRuntime(),
+            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
             createJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
   }
 
@@ -715,7 +715,7 @@ public abstract class DefaultJavaLibraryRules {
         classpaths.getDependencyInfos(),
         getRequiredForSourceOnlyAbi(),
         getDownwardApiConfig().isEnabledForJava(),
-        javaBuckConfig.getBucksJavaOptions().getJavaRuntime(),
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
         createJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
   }
 
@@ -742,7 +742,7 @@ public abstract class DefaultJavaLibraryRules {
         getClasspaths().getDependencyInfosForSourceOnlyAbi(),
         getRequiredForSourceOnlyAbi(),
         getDownwardApiConfig().isEnabledForJava(),
-        javaBuckConfig.getBucksJavaOptions().getJavaRuntime(),
+        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
         createJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
   }
 

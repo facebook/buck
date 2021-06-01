@@ -35,7 +35,7 @@ public class AndroidManifestFactory {
 
   public AndroidManifestFactory(BuildBuckConfig buildBuckConfig, JavaBuckConfig javaBuckConfig) {
     this.shouldExecuteInSeparateProcess = buildBuckConfig.areExternalActionsEnabled();
-    this.javaRuntimeLauncher = javaBuckConfig.getBucksJavaOptions().getJavaRuntime();
+    this.javaRuntimeLauncher = javaBuckConfig.getDefaultJavaOptions().getJavaRuntime();
   }
 
   public AndroidManifest createBuildRule(
