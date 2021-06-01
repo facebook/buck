@@ -25,5 +25,8 @@ public class BuckStarlark {
 
   /** Starlark semantics used in Buck */
   public static final StarlarkSemantics BUCK_STARLARK_SEMANTICS =
-      StarlarkSemantics.builder().setBool(StarlarkSemantics.ALLOW_RECURSION, true).build();
+      StarlarkSemantics.builder()
+          .setBool(StarlarkSemantics.ALLOW_RECURSION, true)
+          .setBool(StarlarkSemantics.ALLOW_FLOATS, false)
+          .build();
 }
