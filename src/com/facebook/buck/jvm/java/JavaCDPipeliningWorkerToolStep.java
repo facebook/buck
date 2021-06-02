@@ -207,7 +207,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
   }
 
   private ImmutableMap<ActionId, SettableFuture<ResultEvent>> startExecution(
-      IsolatedEventBus eventBus) throws IOException, ExecutionException, InterruptedException {
+      IsolatedEventBus eventBus) throws IOException, ExecutionException {
     Preconditions.checkNotNull(workerToolExecutor);
 
     Preconditions.checkArgument(
