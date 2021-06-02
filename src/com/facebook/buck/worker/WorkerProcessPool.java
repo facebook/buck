@@ -57,7 +57,7 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
     this.poolHash = poolHash;
     for (int i = 0; i < maxWorkers; i++) {
       WorkerLifecycle<T> workerLifecycle =
-          new WorkerLifecycle<>(startWorkerProcess, availableWorkers::add);
+          new DefaultWorkerLifecycle<>(startWorkerProcess, availableWorkers::add);
       workerLifecycles[i] = workerLifecycle;
       availableWorkers.add(workerLifecycle);
     }
@@ -115,6 +115,15 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
     return poolHash;
   }
 
+  private interface WorkerLifecycle<T extends WorkerProcess>
+      extends Closeable, ThrowingSupplier<T, IOException> {
+
+    void makeAvailable();
+
+    @Override
+    void close();
+  }
+
   /**
    * Represents the lifecycle of one specific worker in a {@link WorkerProcessPool}.
    *
@@ -125,17 +134,17 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
    * pool with a consumer trying to acquire a worker in parallel.
    */
   @ThreadSafe
-  static class WorkerLifecycle<T extends WorkerProcess>
-      implements Closeable, ThrowingSupplier<T, IOException> {
+  private static class DefaultWorkerLifecycle<T extends WorkerProcess>
+      implements WorkerLifecycle<T> {
 
     private final ThrowingSupplier<T, IOException> startWorkerProcess;
-    private final Consumer<WorkerLifecycle<T>> onWorkerProcessReturn;
+    private final Consumer<DefaultWorkerLifecycle<T>> onWorkerProcessReturn;
     private boolean isClosed = false;
     @Nullable private T workerProcess;
 
-    WorkerLifecycle(
+    DefaultWorkerLifecycle(
         ThrowingSupplier<T, IOException> startWorkerProcess,
-        Consumer<WorkerLifecycle<T>> onWorkerProcessReturn) {
+        Consumer<DefaultWorkerLifecycle<T>> onWorkerProcessReturn) {
       this.startWorkerProcess = startWorkerProcess;
       this.onWorkerProcessReturn = onWorkerProcessReturn;
     }
@@ -167,6 +176,7 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
       }
     }
 
+    @Override
     public void makeAvailable() {
       onWorkerProcessReturn.accept(this);
     }
