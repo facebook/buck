@@ -25,8 +25,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
@@ -44,24 +42,32 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
 
+  private static final Logger LOG = Logger.get(WorkerProcessPool.class);
+
   private final int capacity;
   private final BlockingQueue<WorkerLifecycle<T>> availableWorkers;
   private final WorkerLifecycle<T>[] workerLifecycles;
   private final HashCode poolHash;
 
-  @SuppressWarnings("unchecked")
   public WorkerProcessPool(
       int maxWorkers, HashCode poolHash, ThrowingSupplier<T, IOException> startWorkerProcess) {
     this.capacity = maxWorkers;
     this.availableWorkers = new LinkedBlockingStack<>();
-    this.workerLifecycles =
-        (WorkerLifecycle<T>[]) Array.newInstance(WorkerLifecycle.class, maxWorkers);
+    this.workerLifecycles = getWorkerLifecyclesArray(WorkerLifecycle.class, capacity);
     this.poolHash = poolHash;
+    for (int i = 0; i < maxWorkers; i++) {
+      WorkerLifecycle<T> workerLifecycle =
+          new WorkerLifecycle<>(startWorkerProcess, availableWorkers::add);
+      workerLifecycles[i] = workerLifecycle;
+      availableWorkers.add(workerLifecycle);
+    }
+  }
 
-    Arrays.setAll(
-        workerLifecycles,
-        ignored -> new WorkerLifecycle<>(startWorkerProcess, availableWorkers::add));
-    Collections.addAll(availableWorkers, workerLifecycles);
+  @SuppressWarnings("unchecked")
+  private static <T extends WorkerProcess> WorkerLifecycle<T>[] getWorkerLifecyclesArray(
+      Class<?> componentType, int length) {
+    Object array = Array.newInstance(componentType, length);
+    return (WorkerLifecycle<T>[]) array;
   }
 
   /**
@@ -85,7 +91,7 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
 
     // remove all available workers
     int numAvailableWorkers = availableWorkers.drainTo(new ArrayList<>(capacity));
-    for (WorkerLifecycle<T> lifecycle : this.workerLifecycles) {
+    for (WorkerLifecycle<T> lifecycle : workerLifecycles) {
       try {
         lifecycle.close();
       } catch (Throwable t) {
@@ -122,8 +128,6 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
   static class WorkerLifecycle<T extends WorkerProcess>
       implements Closeable, ThrowingSupplier<T, IOException> {
 
-    private static final Logger LOG = Logger.get(WorkerLifecycle.class);
-
     private final ThrowingSupplier<T, IOException> startWorkerProcess;
     private final Consumer<WorkerLifecycle<T>> onWorkerProcessReturn;
     private boolean isClosed = false;
@@ -142,13 +146,7 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
       Preconditions.checkState(!isClosed, "Worker was already terminated");
       // If the worker is broken, destroy it
       if (workerProcess != null && !workerProcess.isAlive()) {
-        try {
-          workerProcess.close();
-        } catch (Exception ex) {
-          LOG.error(ex, "Failed to close dead worker process; ignoring.");
-        } finally {
-          workerProcess = null;
-        }
+        closeWorkerProcess();
       }
 
       // start a worker if necessary, this might throw IOException
@@ -157,6 +155,16 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
       }
 
       return workerProcess;
+    }
+
+    private void closeWorkerProcess() {
+      try {
+        workerProcess.close();
+      } catch (Exception ex) {
+        LOG.error(ex, "Failed to close dead worker process; ignoring.");
+      } finally {
+        workerProcess = null;
+      }
     }
 
     public void makeAvailable() {
