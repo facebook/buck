@@ -6,11 +6,11 @@
 	<dict>
 		<key>Resources/Info.plist</key>
 		<data>
-		K97SRfFUpY17JXX3ZDVESXtrvIU=
+		W2qFpEdxWRZrcdkil5YJVWUaksY=
 		</data>
 		<key>Resources/libShimulator.dylib</key>
 		<data>
-		hkjC+d4jeeHiMBUcA521ajRWxE4=
+		jh6g9UYVZVVK/JAPEE9RxCUJXeY=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -19,33 +19,19 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			YVxng4Rmhjf0nVB2DGV91iazODo=
+			yyB3dqxEk+ZlMQpHUntC8G/Wg60=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"615c678384668637f49d50760c657dd626b3383a"</string>
+			<string>cdhash H"cb207776ac4493e665310a47527b42f06fd683ad"</string>
 		</dict>
 		<key>Frameworks/XCTestBootstrap.framework</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			2f+91f+jIas2h1X8G0qqmzbGf1U=
+			hciK5FSksKOA39NTbQuJ+FyajNo=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"d9ffbdd5ffa321ab368755fc1b4aaa9b36c67f55"</string>
-		</dict>
-		<key>Headers/FBAccessibilityFetch.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			3OP0VAQ+xsVWQhLmcFV1embI6eCtaLlv9qgfMGLLoWI=
-			</data>
-		</dict>
-		<key>Headers/FBAgentLaunchConfiguration+Simulator.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			m7yAW/yZb5nGoCWdikTmFcD9/+rAtD0VIltLVVV8YmQ=
-			</data>
+			<string>cdhash H"85c88ae454a4b0a380dfd3536d0b89f85c9a8cda"</string>
 		</dict>
 		<key>Headers/FBAgentLaunchStrategy.h</key>
 		<dict>
@@ -59,20 +45,6 @@
 			<key>hash2</key>
 			<data>
 			W1q0AZP/pPCRwk5YMyjgcz8O09pAPix+Qoc7Q6yrfjg=
-			</data>
-		</dict>
-		<key>Headers/FBCompositeSimulatorEventSink.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			T4JN01W2s8iptNnqeyo1Zr/HzmZQxATdwos06p4AeHU=
-			</data>
-		</dict>
-		<key>Headers/FBContactsUpdateConfiguration.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			wB4qbX+2KfPayYLhEpCqAow5E976S3pgeDtYL1t6gvo=
 			</data>
 		</dict>
 		<key>Headers/FBCoreSimulatorNotifier.h</key>
@@ -93,63 +65,35 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			gajJsV+lxdAZ8lP48UheMFumljD++5BrgoGLf8MgKeY=
+			OmcWLB2dYZNoOS+LMST4rzShQs5FM/na2ZSooIoPkG4=
 			</data>
 		</dict>
 		<key>Headers/FBFramebuffer.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			JS2nTfu0EpkA4/Dicb95GaEYYq5bP8Fv3T/FyVrTv6c=
-			</data>
-		</dict>
-		<key>Headers/FBFramebufferConfiguration.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			CFnDNwPsIUqlKOwx2bB7qsVhptyueJUphOgGEgJJBrs=
-			</data>
-		</dict>
-		<key>Headers/FBMutableSimulatorEventSink.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			8bj20i5ggXhZ7OQk0BLZPu5d+EsMixpRfxayxfobRZE=
+			0el8w9lWT16Zy48WZgl38dkDS+5uXY65Al/VEf3VLgM=
 			</data>
 		</dict>
 		<key>Headers/FBProcessLaunchConfiguration+Simulator.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			3lGupOXQRxPhcNC72VqdJmwspnExJihqHdihrunXpVg=
-			</data>
-		</dict>
-		<key>Headers/FBServiceInfoConfiguration.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			I0qaMaMJviAg4huRXnzs1QQdZcwSfKxTHqIMgykPFe0=
-			</data>
-		</dict>
-		<key>Headers/FBShutdownConfiguration.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			S+OvI76OvVfzNVf75khVJhn7riK7/UYSb0XVlTWNPsI=
+			RIJa3u4bc9sygaybkBYv0aoOHaNnajxuVWAEvWVetmE=
 			</data>
 		</dict>
 		<key>Headers/FBSimulator+Private.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			ANhTxRCyGK6udxrpth02ZNnEcrlNNkksD7e/e7fjku4=
+			ZbPygpsyFr+jTzp0hs+QXuiCiyBTxPF3ytd14pSCUtg=
 			</data>
 		</dict>
 		<key>Headers/FBSimulator.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			9CkrCii1KyWnmZS1OyIw8TqRLeIl59iOKs+2/JNHPao=
+			AZv6upXGQueb1ZLTyBs7+1PYYnbHbbcG2258eeN6B8s=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorAccessibilityCommands.h</key>
@@ -170,35 +114,28 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			oYzKLyTYAxbzrWvp3L8P28z67NCnPDBCiT3Bgj5hcxM=
+			G/CadxupK2+MP2cR8HzdYrQCaGpy6JiC8edgFbtCq44=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorApplicationCommands.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			y1MMTbNicrVOPDceL0fiVwNTwMJ500JpEgzDdzSxzco=
+			kBvSS2t7d8osw/6OVlL7XGu1z3bRcTdMfaZ37HpWshE=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorApplicationOperation.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			jO6uasCJ3YDwR/9uGJMc4u2XEpUs2JISQuFbfey4Z58=
-			</data>
-		</dict>
-		<key>Headers/FBSimulatorBitmapStream.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			Rz3tpJy10CqMXuanvhPcmMonak02110PLtIZEe8Y9tM=
+			NE4y2cW4JR35ARmunKqO8+XDIh2BKcyGhXEsOP/DEBs=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorBootConfiguration.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			DZuiWYK0YYkeAJkH77rUi2EsWcQ2IMg4iDBvAgVOq6w=
+			O1BsHwlzBksAKgA+8Ok2A+H+OgZfB4ePuCzxNEOTpoo=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorBootStrategy.h</key>
@@ -212,14 +149,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Yw1JRBjgunA8d0aTEoBs3niPTWC55JDGxtzrRMqu8Qg=
-			</data>
-		</dict>
-		<key>Headers/FBSimulatorBridgeCommands.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			9owRrKkcpq5c4+3wUKlaCmFhdbrp6VI1yjtgUtmvgkk=
+			fMfG/qiuIVHgk3BgT0wttc/npidqkyHQaULhmsZCuNQ=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorConfiguration+CoreSimulator.h</key>
@@ -233,14 +163,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			trBA28fDvyKeUxwE+hmFyw9T+CzNrKpY2gh2iiqKEco=
+			z8ejhZC/NVawGIae0zKH0YjovWh0jjvzvcenL6H5jb0=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorConnection.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			6WghcVQMbz8F7U6zvZlxnnzv03nrjtoXiB662FDJMyk=
+			p3ZnPUQ+8Y4pY0oz0SN5d/1VVS6ilQrWyyi9Ouzu0rA=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorControl+PrincipalClass.h</key>
@@ -254,14 +184,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			143zbcgch7eCQrObBEr6kB3Rnpg031SzdBxH8/jirMs=
+			9O8ko+bKugfawAVbZ3cPxtREkB88Gp2ccUyltzyS6Nw=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorControlConfiguration.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			lKpliR6j6GcRuEhS8dr/yL/DsvmxUBYeDVeEmbSsdBY=
+			yqqJ4RvvXHthaGen+3sdiozfipHUdKXRyhvlvVqY7IE=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorControlFrameworkLoader.h</key>
@@ -271,32 +201,11 @@
 			KbZ8whlD4rnxT7ea03xDwqxSo0FosUK5+drzRpZfFes=
 			</data>
 		</dict>
-		<key>Headers/FBSimulatorDiagnostics.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			pjMffbL+/lXCpIROBaaycKF6CMPlMaP0ATfFMwpNxMM=
-			</data>
-		</dict>
-		<key>Headers/FBSimulatorEraseConfiguration.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			aQ5WGyJ9h7g/sVflcZAimT/JSQYzZLGH+wtudxnOHlI=
-			</data>
-		</dict>
 		<key>Headers/FBSimulatorError.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
 			Fmn8anGZ+u7w1STQBXv5Vn/M4neAB1jWfDwU7J3/BGE=
-			</data>
-		</dict>
-		<key>Headers/FBSimulatorEventSink.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			6vRUSQnkjwx3kqKbfV7q0Y4LbSdA3JxRLxMmRLp0Ew8=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorFileCommands.h</key>
@@ -310,28 +219,28 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			a3dPZD0NOvvFMx0LolKlItouqRWo9yE24zDMfeKlH+M=
+			le7g4Qib4g9/B1MwE1kr6yeD6SUoAjjuC7bTkroE6jo=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorHIDEvent.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			S+QR/Uf1UuwbIouiqm2YH20mMusfgoql250l6DyBzB0=
+			mx1GKiCA5Gwf9MpX08D8Vv5ZTVRPxQXYc77DggRZdco=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorImage.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			29zWQomOdQo/oLty/ONPPwede7Z6E/hhF8tjX0I+yCc=
+			kO6fe8CtH4QSlawpCPjlPvMbDSQzNxZ3dKrwyAggK4w=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorIndigoHID.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			R1UWDrJTZ+IpOMo/cxVc87b4PvS1SUtANebvy6qcX2g=
+			ndmt0Xd0bFEOG4X+4LeAXbgM8csEp25kEvGJ34B5So0=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorKeychainCommands.h</key>
@@ -352,14 +261,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			KeM/Mcy77PTlf/3j4XznNIi+9EeCN9p4uzvwAdioorA=
-			</data>
-		</dict>
-		<key>Headers/FBSimulatorLoggingEventSink.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			jBwu8YYgsS82GQGkEFbuWX7IAyJnrCO5AMZb62xfniY=
+			3d8CxNR1e970DIO9MHYAssjuBg1JwvHiaN+Rk0mXGHo=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorMediaCommands.h</key>
@@ -367,13 +269,6 @@
 			<key>hash2</key>
 			<data>
 			aUQRSMLdbqJy1+X8taH4wEGrh4JpP2rGCLilc44sMUI=
-			</data>
-		</dict>
-		<key>Headers/FBSimulatorMutableState.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			s0hVJ5srsy5A0c4B+kBkWqJ0XISZbx3usi+AGzXdkAo=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorPredicates.h</key>
@@ -415,14 +310,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			hFAOjCvHLOjgZmw4+WammJlnXRc5K0eYYL6mqEiwSzw=
+			hJEbcVyeSFyIY/RYqVw9Y46l1u+WUcrwf3DgfBf0KXM=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorSettingsCommands.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			58hEnuXbvau5tyl/LV6sIp6L/i9UuRS2hA1SaHjvZ1s=
+			s1Z3JwMARp6qPJGfme/kI4a9sa+LLJGypMal3aDx+NQ=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorShutdownStrategy.h</key>
@@ -446,25 +341,25 @@
 			1nd4lwH5QOK2cyL9wo9GiYxboiTL4+af008Ts8FY3+s=
 			</data>
 		</dict>
-		<key>Headers/FBSimulatorTestPreparationStrategy.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			HOtrogtRH+eGydXLD1Co8xDDdV/tU/5QtPwbwi52AEA=
-			</data>
-		</dict>
 		<key>Headers/FBSimulatorVideo.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			NEGyhJqBoCD4l2DBFE7tbnBcu7DqlzPsrozrNNjzd/U=
+			4NsuMoez58UXrGPNeBzegQM123lfX39H4dl0nAZGlwI=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorVideoRecordingCommands.h</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			Iyf3kDX93bh7N2sNoUn+vkDABexH+h0iJqmMr9lIJys=
+			K1SRZtcoYZOdDgJtxLcTX3ZTey2d75QBrmLL59tRAzk=
+			</data>
+		</dict>
+		<key>Headers/FBSimulatorVideoStream.h</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			RW/P10uR5GbFMJWlvna2qF3l+QDr39aMWyPwn+f1jvc=
 			</data>
 		</dict>
 		<key>Headers/FBSimulatorXCTestCommands.h</key>
@@ -492,7 +387,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			5IxQ5AzLU/DebPvTT6BPse/OjmIDm4vkkhkYf01Y7r0=
+			facDyUBE6wltzro+QfSM3tluJmyRBTG72dlFQRTlVqI=
 			</data>
 		</dict>
 		<key>Headers/FBVideoEncoderSimulatorKit.h</key>
@@ -513,14 +408,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			5zuz/9Oart4g0u7hVqwchMHvuQClYjwFRJni0Ne9p6g=
+			5Tz2KTjsQMCp3AYwqiDqm56ZowXamyDnlzBzWMF93No=
 			</data>
 		</dict>
 		<key>Resources/libShimulator.dylib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			VzRckOsVJbx3GyMFLdVN7NoPX6Fl3dbUl8Wi8HWpR0M=
+			gTjxNGdABqNT94O2PzVVOOq/IdjcUy3b4b0MA8fdkLk=
 			</data>
 		</dict>
 	</dict>

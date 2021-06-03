@@ -187,6 +187,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    * at compile time.
    */
   public boolean getAddXctestImportPaths() {
-    return delegate.getBooleanValue(SECTION_NAME, ADD_XCTEST_IMPORT_PATHS, false);
+    return delegate.getBooleanValue(SECTION_NAME, ADD_XCTEST_IMPORT_PATHS, true);
   }
 }

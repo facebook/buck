@@ -1,9 +1,0 @@
-apple_test(
-    name = "bar",
-    srcs = ["BarXCTest.m"],
-    frameworks = [
-        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
-        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
-    ],
-    info_plist = "Test.plist",
-)
