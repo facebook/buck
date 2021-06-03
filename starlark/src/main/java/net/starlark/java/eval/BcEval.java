@@ -103,7 +103,7 @@ class BcEval {
       return BcEvalDispatch.run(this);
     } catch (Throwable e) {
       try {
-        fr.setLocation(compiled.locationAt(currentIp));
+        fr.setErrorLocation(compiled.locationAt(currentIp));
       } catch (Throwable ignore) {
         // do not crash if we are already crashing
       }
@@ -641,17 +641,15 @@ class BcEval {
 
     if (star != null) {
       if (!(star instanceof Sequence)) {
-        throw new EvalException(
-            callSite.callLocs.starLocation(compiled.getFileLocations()),
-            "argument after * must be an iterable, not " + Starlark.type(star));
+        fr.setErrorLocation(callSite.callLocs.starLocation(compiled.getFileLocations()));
+        throw new EvalException("argument after * must be an iterable, not " + Starlark.type(star));
       }
     }
 
     if (starStar != null) {
       if (!(starStar instanceof Dict)) {
-        throw new EvalException(
-            callSite.callLocs.starStarLocation(compiled.getFileLocations()),
-            "argument after ** must be a dict, not " + Starlark.type(starStar));
+        fr.setErrorLocation(callSite.callLocs.starStarLocation(compiled.getFileLocations()));
+        throw new EvalException("argument after ** must be a dict, not " + Starlark.type(starStar));
       }
     }
 
@@ -712,13 +710,13 @@ class BcEval {
     Object starStar = getSlotOrNull(nextOperand());
 
     if (star != null && !(star instanceof Sequence<?>)) {
+      fr.setErrorLocation(locs.starLocation(compiled.getFileLocations()));
       throw new EvalException(
-          locs.starLocation(compiled.getFileLocations()),
           String.format("argument after * must be an iterable, not %s", Starlark.type(star)));
     }
     if (starStar != null && !(starStar instanceof Dict<?, ?>)) {
+      fr.setErrorLocation(locs.starStarLocation(compiled.getFileLocations()));
       throw new EvalException(
-          locs.starStarLocation(compiled.getFileLocations()),
           String.format("argument after ** must be a dict, not %s", Starlark.type(starStar)));
     }
 

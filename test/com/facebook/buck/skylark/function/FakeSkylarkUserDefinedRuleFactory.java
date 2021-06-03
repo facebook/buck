@@ -37,7 +37,6 @@ import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkCallable;
 import net.starlark.java.eval.StarlarkThread;
 import net.starlark.java.eval.Tuple;
-import net.starlark.java.syntax.Location;
 
 /** Simple container class to make constructing {@link SkylarkUserDefinedRule}s easier in tests */
 public class FakeSkylarkUserDefinedRuleFactory {
@@ -110,7 +109,6 @@ public class FakeSkylarkUserDefinedRuleFactory {
         };
     SkylarkUserDefinedRule ret =
         SkylarkUserDefinedRule.of(
-            Location.BUILTIN,
             implementation,
             IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,

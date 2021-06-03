@@ -75,7 +75,6 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
     }
 
     return SkylarkUserDefinedRule.of(
-        env.getCallerLocation(),
         implementation,
         test ? IMPLICIT_TEST_ATTRIBUTES : IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,

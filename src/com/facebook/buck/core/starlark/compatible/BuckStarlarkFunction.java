@@ -174,7 +174,7 @@ public abstract class BuckStarlarkFunction extends StarlarkCallable {
         throw (EvalException) e.getCause();
       } else if (e.getCause() != null) {
         Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
-        throw new EvalException(null, "method invocation failed: " + e, e.getCause());
+        throw new EvalException("method invocation failed: " + e, e.getCause());
       } else {
         // This is unlikely to happen
         throw new EvalException("method invocation failed: " + e, e);

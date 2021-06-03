@@ -146,7 +146,6 @@ public class SkylarkUserDefinedRuleTest {
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
-            location,
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
@@ -179,7 +178,6 @@ public class SkylarkUserDefinedRuleTest {
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
-            location,
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
@@ -216,7 +214,6 @@ public class SkylarkUserDefinedRuleTest {
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
-            location,
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
@@ -237,7 +234,6 @@ public class SkylarkUserDefinedRuleTest {
         "Implementation function 'a_func' must accept a single 'ctx' argument. Accepts 0 arguments");
 
     SkylarkUserDefinedRule.of(
-        location,
         SimpleFunction.of(0),
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
@@ -255,7 +251,6 @@ public class SkylarkUserDefinedRuleTest {
         "Implementation function 'a_func' must accept a single 'ctx' argument. Accepts 2 arguments");
 
     SkylarkUserDefinedRule.of(
-        location,
         SimpleFunction.of(2),
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
@@ -276,7 +271,6 @@ public class SkylarkUserDefinedRuleTest {
         "Provided attr 'name' shadows implicit attribute. Please remove it.");
 
     SkylarkUserDefinedRule.of(
-        location,
         SimpleFunction.of(1),
         TEST_IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
@@ -295,7 +289,6 @@ public class SkylarkUserDefinedRuleTest {
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
-            location,
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
@@ -343,7 +336,6 @@ public class SkylarkUserDefinedRuleTest {
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
-            location,
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
@@ -389,7 +381,6 @@ public class SkylarkUserDefinedRuleTest {
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
-            location,
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
@@ -431,7 +422,6 @@ public class SkylarkUserDefinedRuleTest {
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
-            location,
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
@@ -481,7 +471,6 @@ public class SkylarkUserDefinedRuleTest {
             StringAttribute.of("some string", "", false, ImmutableList.of()));
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
-            Location.BUILTIN,
             SimpleFunction.of(1),
             TEST_IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,

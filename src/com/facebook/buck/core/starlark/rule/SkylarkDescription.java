@@ -161,7 +161,6 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
     if (inferRunInfo) {
       if (suppliedRunInfo != null) {
         throw new EvalException(
-            implementation.getLocation(),
             String.format(
                 "Rule %s for %s specified `infer_run_info`, however a `RunInfo` object was "
                     + "explicitly returned. Either remove RunInfo from the returned values and "
@@ -171,7 +170,6 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
       }
       if (suppliedDefaultInfo.defaultOutputs().size() != 1) {
         throw new EvalException(
-            implementation.getLocation(),
             String.format(
                 "Rule %s for %s specified `infer_run_info`, but a RunInfo provider could not be "
                     + "inferred. This provider can only be inferred if the rule returns a single "
@@ -207,7 +205,6 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
       if (isTest) {
         if (suppliedRunInfo == null) {
           throw new EvalException(
-              implementation.getLocation(),
               String.format(
                   "Rule %s for %s was marked as a test rule, but did not return a RunInfo object. "
                       + "Either set `infer_run_info` to True to make Buck infer a RunInfo instance, "
@@ -217,7 +214,6 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
         infos.put(suppliedTestInfo);
       } else {
         throw new EvalException(
-            implementation.getLocation(),
             String.format(
                 "Rule %s for %s was not marked as a test rule, but returned a TestInfo provider. "
                     + "Please mark it as a test rule so that the rule() call, and the return value "
@@ -230,7 +226,6 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
       return infos.build(suppliedDefaultInfo);
     } catch (IllegalArgumentException e) {
       throw new EvalException(
-          implementation.getLocation(),
           duplicateProviderInfoErrorMessage(implResult, implementation.getName()));
     }
   }

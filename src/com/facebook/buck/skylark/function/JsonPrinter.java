@@ -68,7 +68,7 @@ class JsonPrinter {
       if (key != null) {
         errorMessage += " '" + key + "'";
       }
-      throw new EvalException(loc, errorMessage);
+      throw new EvalException(errorMessage);
     }
   }
 

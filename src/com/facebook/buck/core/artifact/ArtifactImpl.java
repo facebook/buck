@@ -229,7 +229,6 @@ class ArtifactImpl extends AbstractArtifact
   public SkylarkOutputArtifactApi asSkylarkOutputArtifact() throws EvalException {
     if (isBound()) {
       throw new EvalException(
-          location,
           String.format("%s is already bound. It cannot be used as an output artifact", this));
     }
     return ImmutableOutputArtifact.ofImpl(this);

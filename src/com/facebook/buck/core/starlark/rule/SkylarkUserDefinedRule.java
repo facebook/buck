@@ -53,7 +53,6 @@ import net.starlark.java.eval.StarlarkCallable;
 import net.starlark.java.eval.StarlarkFunction;
 import net.starlark.java.eval.StarlarkThread;
 import net.starlark.java.eval.Tuple;
-import net.starlark.java.syntax.Location;
 
 /**
  * The {@link StarlarkCallable} that is returned by `rule()`. Accepts user-specified parameters, and
@@ -70,7 +69,6 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
   @Nullable private String exportedName = null;
   @VisibleForTesting final FunctionSignature signature;
   private final Tuple defaultValues;
-  private final Location location;
   private final StarlarkCallable implementation;
   private final ImmutableMap<ParamName, Attribute<?>> attrs;
   private final Set<ParamName> hiddenImplicitAttributes;
@@ -81,7 +79,6 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
   private SkylarkUserDefinedRule(
       FunctionSignature signature,
       ImmutableList<Object> defaultValues,
-      Location location,
       StarlarkCallable implementation,
       ImmutableMap<ParamName, Attribute<?>> attrs,
       Set<ParamName> hiddenImplicitAttributes,
@@ -95,7 +92,6 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
      */
     this.signature = signature;
     this.defaultValues = Tuple.copyOf(defaultValues);
-    this.location = location;
     this.implementation = implementation;
     this.attrs = attrs;
     this.hiddenImplicitAttributes = hiddenImplicitAttributes;
@@ -202,7 +198,6 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
       arguments[numNamedParams] = varargs;
     } else if (numPositionalArgs > numPositionalParams) {
       throw new EvalException(
-          null,
           numPositionalParams > 0
               ? "too many (" + numPositionalArgs + ") positional arguments in call to " + func
               : func + " does not accept positional arguments, but got " + numPositionalArgs);
@@ -317,7 +312,6 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
 
   /** Create an instance of {@link SkylarkUserDefinedRule} */
   public static SkylarkUserDefinedRule of(
-      Location location,
       StarlarkCallable implementation,
       ImmutableMap<ParamName, Attribute<?>> implicitAttributes,
       Set<ParamName> hiddenImplicitAttributes,
@@ -326,17 +320,14 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
       boolean test)
       throws EvalException {
 
-    validateImplementation(location, implementation);
+    validateImplementation(implementation);
 
-    ImmutableMap<ParamName, Attribute<?>> validatedAttrs =
-        validateAttrs(location, implicitAttributes, attrs);
+    ImmutableMap<ParamName, Attribute<?>> validatedAttrs = validateAttrs(implicitAttributes, attrs);
 
-    Pair<FunctionSignature, ImmutableList<Object>> signature =
-        createSignature(validatedAttrs, location);
+    Pair<FunctionSignature, ImmutableList<Object>> signature = createSignature(validatedAttrs);
     return new SkylarkUserDefinedRule(
         signature.getFirst(),
         signature.getSecond(),
-        location,
         implementation,
         validatedAttrs,
         hiddenImplicitAttributes,
@@ -349,8 +340,7 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
     abstract FunctionSignature getSignature();
   }
 
-  private static void validateImplementation(Location location, StarlarkCallable implementation)
-      throws EvalException {
+  private static void validateImplementation(StarlarkCallable implementation) throws EvalException {
     int numArgs;
     if (implementation instanceof StarlarkFunction) {
       numArgs = ((StarlarkFunction) implementation).getParameterNames().size();
@@ -363,7 +353,6 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
     // Make sure we only take a single (ctx) argument
     if (numArgs != 1) {
       throw new EvalException(
-          location,
           String.format(
               "Implementation function '%s' must accept a single 'ctx' argument. Accepts %s arguments",
               implementation.getName(), numArgs));
@@ -371,19 +360,16 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
   }
 
   private static ImmutableMap<ParamName, Attribute<?>> validateAttrs(
-      Location location,
-      Map<ParamName, Attribute<?>> implicitAttributes,
-      Map<ParamName, AttributeHolder> attrs)
+      Map<ParamName, Attribute<?>> implicitAttributes, Map<ParamName, AttributeHolder> attrs)
       throws EvalException {
     /**
      * Make sure no one is trying to override built-in names. Ensuring that names are valid
      * identifiers happens when the {@link SkylarkUserDefinedRule} is created, in {@link
-     * #createSignature(ImmutableMap, Location)}
+     * #createSignature(ImmutableMap}
      */
     for (ParamName implicitAttribute : implicitAttributes.keySet()) {
       if (attrs.containsKey(implicitAttribute)) {
         throw new EvalException(
-            location,
             String.format(
                 "Provided attr '%s' shadows implicit attribute. Please remove it.",
                 implicitAttribute));
@@ -402,7 +388,7 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
   }
 
   private static Pair<FunctionSignature, ImmutableList<Object>> createSignature(
-      ImmutableMap<ParamName, Attribute<?>> parameters, Location location) throws EvalException {
+      ImmutableMap<ParamName, Attribute<?>> parameters) throws EvalException {
     /**
      * See {@link FunctionSignature} for details on how argument ordering works. We make all
      * arguments kwargs, so ignore the "positional" arguments
@@ -444,7 +430,7 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
               0, 0, mandatory, names.length - mandatory, false, false, ImmutableList.copyOf(names)),
           defaultValues.build());
     } catch (Exception e) {
-      throw new EvalException(location, "Could not create FunctionSignature", e);
+      throw new EvalException("Could not create FunctionSignature", e);
     }
   }
 
@@ -496,14 +482,12 @@ public class SkylarkUserDefinedRule extends StarlarkCallable implements Starlark
     Preconditions.checkState(!isExported);
     if (exportedName.endsWith(TEST_RULE_SUFFIX) && !shouldBeTestRule()) {
       throw new EvalException(
-          location,
           String.format(
               "Only rules with `test = True` may end with `%s`. Got %s",
               TEST_RULE_SUFFIX, exportedName));
     }
     if (!exportedName.endsWith(TEST_RULE_SUFFIX) && shouldBeTestRule()) {
       throw new EvalException(
-          location,
           String.format(
               "Rules with `test = True` must end with `%s`. Got %s",
               TEST_RULE_SUFFIX, exportedName));

@@ -27,7 +27,6 @@ import net.starlark.java.eval.Printer;
 import net.starlark.java.eval.Starlark;
 import net.starlark.java.eval.StarlarkValue;
 import net.starlark.java.eval.Structure;
-import net.starlark.java.syntax.Location;
 
 /**
  * Marks a Java object as accessible by Skylark as a struct-like object called {@link Structure}.
@@ -53,7 +52,7 @@ public abstract class BuckStarlarkStructObject extends Structure {
     try {
       @Nullable Method method = getMethods().get(name);
       if (method == null) {
-        throw new EvalException(Location.BUILTIN, getErrorMessageForUnknownField(name));
+        throw new EvalException(getErrorMessageForUnknownField(name));
       }
 
       // TODO: make mappings for skylark types here: e.g Optionals -> Starlark.NONE.
