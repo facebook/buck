@@ -19,6 +19,7 @@ package com.facebook.buck.swift.toolchain;
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -78,6 +79,12 @@ public interface SwiftPlatform {
 
   @Value.Default
   default ImmutableList<Path> getAdditionalSystemFrameworkSearchPaths() {
+    return ImmutableList.of();
+  }
+
+  /** @return A list of platform specific Swift flags. */
+  @Value.Default
+  default ImmutableList<Arg> getSwiftFlags() {
     return ImmutableList.of();
   }
 

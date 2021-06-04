@@ -330,7 +330,13 @@ public class SwiftLibraryDescription
           args.getSrcs(),
           args.getVersion(),
           getCompilerFlags(
-              swiftBuckConfig, cxxPlatform, buildTargetCopy, graphBuilder, cellRoots, args),
+              swiftPlatform.get(),
+              swiftBuckConfig,
+              cxxPlatform,
+              buildTargetCopy,
+              graphBuilder,
+              cellRoots,
+              args),
           args.getEnableObjcInterop(),
           args.getBridgingHeader(),
           preprocessor,
@@ -504,7 +510,14 @@ public class SwiftLibraryDescription
         BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s").getPath(),
         args.getSrcs(),
         args.getVersion(),
-        getCompilerFlags(swiftBuckConfig, cxxPlatform, buildTarget, graphBuilder, cellRoots, args),
+        getCompilerFlags(
+            swiftPlatform,
+            swiftBuckConfig,
+            cxxPlatform,
+            buildTarget,
+            graphBuilder,
+            cellRoots,
+            args),
         args.getEnableObjcInterop(),
         args.getBridgingHeader(),
         preprocessor,
@@ -531,6 +544,7 @@ public class SwiftLibraryDescription
   }
 
   private static ImmutableList<Arg> getCompilerFlags(
+      SwiftPlatform swiftPlatform,
       SwiftBuckConfig swiftBuckConfig,
       CxxPlatform cxxPlatform,
       BuildTarget buildTarget,
@@ -538,6 +552,7 @@ public class SwiftLibraryDescription
       CellPathResolver cellRoots,
       SwiftLibraryDescriptionArg args) {
     ImmutableList.Builder<Arg> builder = ImmutableList.builder();
+    builder.addAll(swiftPlatform.getSwiftFlags());
 
     for (String flag : swiftBuckConfig.getCompilerFlags().orElse(ImmutableList.of())) {
       builder.add(StringArg.of(flag));
@@ -587,7 +602,14 @@ public class SwiftLibraryDescription
         BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s").getPath(),
         args.getSrcs(),
         args.getVersion(),
-        getCompilerFlags(swiftBuckConfig, cxxPlatform, buildTarget, graphBuilder, cellRoots, args),
+        getCompilerFlags(
+            swiftPlatform,
+            swiftBuckConfig,
+            cxxPlatform,
+            buildTarget,
+            graphBuilder,
+            cellRoots,
+            args),
         args.getEnableObjcInterop(),
         args.getBridgingHeader(),
         preprocessor,

@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -34,6 +35,7 @@ import java.util.Optional;
 public class SwiftToolchainBuildRule extends NoopBuildRule {
 
   private final Tool swiftc;
+  private final ImmutableList<Arg> swiftFlags;
   private final Optional<Tool> swiftStdlibTool;
   private final ImmutableList<Path> runtimePathsForBundling;
   private final ImmutableList<Path> runtimePathsForLinking;
@@ -45,6 +47,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       Tool swiftc,
+      ImmutableList<Arg> swiftFlags,
       Optional<Tool> swiftStdlibTool,
       ImmutableList<Path> runtimePathsForBundling,
       ImmutableList<Path> runtimePathsForLinking,
@@ -53,6 +56,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
       boolean prefixSerializedDebugInfo) {
     super(buildTarget, projectFilesystem);
     this.swiftc = swiftc;
+    this.swiftFlags = swiftFlags;
     this.swiftStdlibTool = swiftStdlibTool;
     this.runtimePathsForBundling = runtimePathsForBundling;
     this.runtimePathsForLinking = runtimePathsForLinking;
@@ -65,6 +69,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   public SwiftPlatform getSwiftPlatform(AppleCompilerTargetTriple swiftTarget) {
     return SwiftPlatform.builder()
         .setSwiftc(swiftc)
+        .setSwiftFlags(swiftFlags)
         .setSwiftStdlibTool(swiftStdlibTool)
         .setSwiftTarget(swiftTarget)
         .setSwiftRuntimePathsForBundling(runtimePathsForBundling)

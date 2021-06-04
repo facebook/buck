@@ -55,6 +55,7 @@ public class SwiftToolchainDescription
     // The frontend flag is mandatory and has to come first. Keep that logic internal until we
     // migrate the SwiftCompile logic to use the driver.
     swiftcBuilder.addArg("-frontend");
+    Tool swiftc = swiftcBuilder.build();
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
@@ -72,11 +73,6 @@ public class SwiftToolchainDescription
             .map(macrosConverter::convert)
             .collect(ImmutableList.toImmutableList());
 
-    for (Arg arg : swiftFlags) {
-      swiftcBuilder.addArg(arg);
-    }
-    Tool swiftc = swiftcBuilder.build();
-
     Optional<Tool> swiftStdlibTool =
         args.getSwiftStdlibTool().map(path -> Tools.resolveTool(path, actionGraphBuilder));
     if (swiftStdlibTool.isPresent() && !args.getSwiftStdlibToolFlags().isEmpty()) {
@@ -89,6 +85,7 @@ public class SwiftToolchainDescription
         buildTarget,
         context.getProjectFilesystem(),
         swiftc,
+        swiftFlags,
         swiftStdlibTool,
         args.getRuntimePathsForBundling().stream()
             .map(Paths::get)
