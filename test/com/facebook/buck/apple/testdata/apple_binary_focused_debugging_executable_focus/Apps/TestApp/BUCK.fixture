@@ -1,6 +1,6 @@
 apple_binary(
     name = "TestApp",
-    srcs = ["main.c"],
+    srcs = ["main.c", "helper.c"],
     compiler_flags = ["-g"],
     focused_list_target = ":focused_targets",
     frameworks = [

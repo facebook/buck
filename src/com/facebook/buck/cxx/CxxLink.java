@@ -59,17 +59,18 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -397,8 +398,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       ImmutableSortedMap<Path, Path> cellRootMap = getCellRootMap(relativeCellRoots, filesystem);
       ImmutableList<FileScrubber> fileScrubbers;
       if (focusedTargetsPath.isPresent()) {
-        ImmutableMap<String, AbsPath> targetToOutputPathMap =
-            makeTargetToOutputPathMap(context.getSourcePathResolver(), args);
+        ImmutableMultimap<String, AbsPath> targetToOutputPathMap =
+            makeTargetToOutputPathsMap(context.getSourcePathResolver(), args);
 
         fileScrubbers =
             linker.getScrubbers(
@@ -467,12 +468,16 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     }
 
     /**
-     * Creates a map from build target strings to their output paths. This is used to acquire output
-     * paths for the focused debug targets. The output paths are used in file scrubbing.
+     * Creates a multimap from build target strings to their output paths. This is used to acquire
+     * output paths for the focused debug targets. The output paths are used in file scrubbing.
+     *
+     * <p>A multimap is used here because a target can create multiple outputs. For example: if a
+     * target `sample_target` has libA.c and libB.c, it'll have sample_target_path#libA.o and
+     * sample_target_path#libB.o under its output paths.
      */
-    private ImmutableMap<String, AbsPath> makeTargetToOutputPathMap(
+    private ImmutableMultimap<String, AbsPath> makeTargetToOutputPathsMap(
         SourcePathResolverAdapter sourcePathResolver, ImmutableList<Arg> linkerArgs) {
-      Map<String, AbsPath> targetToOutputPathMap = new HashMap<>();
+      Multimap<String, AbsPath> targetToOutputPathsMap = ArrayListMultimap.create();
 
       for (Arg arg : linkerArgs) {
         if (!(arg instanceof HasSourcePath)) {
@@ -488,10 +493,10 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         String targetString =
             buildTargetSourcePath.getTarget().getUnflavoredBuildTarget().toString();
 
-        targetToOutputPathMap.put(targetString, sourcePathResolver.getAbsolutePath(sourcePath));
+        targetToOutputPathsMap.put(targetString, sourcePathResolver.getAbsolutePath(sourcePath));
       }
 
-      return ImmutableMap.copyOf(targetToOutputPathMap);
+      return ImmutableMultimap.copyOf(targetToOutputPathsMap);
     }
   }
 

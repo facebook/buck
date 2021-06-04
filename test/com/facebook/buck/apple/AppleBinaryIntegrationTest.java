@@ -1049,7 +1049,10 @@ public class AppleBinaryIntegrationTest {
     // Check that binary has focused debug symbols
     String binaryDebugSymbolFiles =
         buildAndGetMacBinaryDebugSymbolFiles("//Apps/TestApp:TestApp", workspace);
-    assertThat(binaryDebugSymbolFiles, matchesRegex("(.*)buck-out/gen/(.*)/main.c.o(.*)"));
+    assertThat(
+        binaryDebugSymbolFiles,
+        matchesRegex(
+            "(.*)buck-out/gen/(.*)/helper.c.o(.*)[\\n\\r](.*)buck-out/gen/(.*)/main.c.o(.*)"));
 
     // Check that Dylib1 has no debug symbols
     String dylibDebugSymbolFiles =
@@ -1141,7 +1144,10 @@ public class AppleBinaryIntegrationTest {
     // Check that binary has focused debug symbols
     String binaryDebugSymbolFiles =
         buildAndGetMacBinaryDebugSymbolFiles("//Apps/TestApp:TestApp", workspace);
-    assertThat(binaryDebugSymbolFiles, matchesRegex("(.*)buck-out/gen/(.*)/main.c.o(.*)"));
+    assertThat(
+        binaryDebugSymbolFiles,
+        matchesRegex(
+            "(.*)buck-out/gen/(.*)/helper.c.o(.*)[\\n\\r](.*)buck-out/gen/(.*)/main.c.o(.*)"));
 
     // Check that Dylib1 has no debug symbols
     String dylibDebugSymbolFiles =

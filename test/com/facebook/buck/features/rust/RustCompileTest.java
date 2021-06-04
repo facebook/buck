@@ -40,6 +40,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -147,7 +148,7 @@ public class RustCompileTest {
       public ImmutableList<FileScrubber> getScrubbers(
           ImmutableMap<Path, Path> cellRootMap,
           Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths,
-          Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap,
+          Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap,
           Optional<AbsPath> focusedTargetsPath) {
         return null;
       }

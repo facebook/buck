@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +34,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -45,7 +47,7 @@ public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
   private final Optional<ImmutableMap<Path, Path>> cellRootMap;
   private final Optional<ImmutableSet<Path>> exemptPaths;
   private final Optional<AbsPath> exemptTargetsListPath;
-  private final Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap;
+  private final Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap;
 
   public OsoSymbolsContentsScrubber(ImmutableMap<Path, Path> cellRootMap) {
     this(Optional.of(cellRootMap), Optional.empty(), Optional.empty(), Optional.empty());
@@ -57,7 +59,7 @@ public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
 
   public OsoSymbolsContentsScrubber(
       Optional<AbsPath> focusedTargetsPath,
-      Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap) {
+      Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap) {
     this(Optional.empty(), Optional.empty(), focusedTargetsPath, targetToOutputPathMap);
   }
 
@@ -65,7 +67,7 @@ public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
       Optional<ImmutableMap<Path, Path>> cellRootMap,
       Optional<ImmutableSet<Path>> exemptPaths,
       Optional<AbsPath> exemptTargetsListPath,
-      Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap) {
+      Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap) {
     if (exemptTargetsListPath.isPresent()) {
       Preconditions.checkArgument(targetToOutputPathMap.isPresent());
     }
@@ -128,12 +130,13 @@ public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
               ObjectMappers.createParser(exemptTargetsListPath.get().getPath()),
               new TypeReference<List<String>>() {});
 
-      ImmutableMap<String, AbsPath> targetToOutputPath = targetToOutputPathMap.get();
+      ImmutableMultimap<String, AbsPath> targetToOutputPath = targetToOutputPathMap.get();
 
       Set<Path> exemptPathsFromTargets =
           exemptTargets.stream()
               .filter(targetToOutputPath::containsKey)
               .map(targetToOutputPath::get)
+              .flatMap(Collection::stream)
               .map(AbsPath::getPath)
               .collect(Collectors.toSet());
 

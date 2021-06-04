@@ -53,6 +53,7 @@ import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -100,7 +101,7 @@ public class DarwinLinker extends DelegatingTool
   public ImmutableList<FileScrubber> getScrubbers(
       ImmutableMap<Path, Path> cellRootMap,
       Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths,
-      Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap,
+      Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap,
       Optional<AbsPath> focusedTargetsPath) {
     if (shouldCreateHermeticLinkOutput) {
       if (focusedTargetsPath.isPresent()) {
@@ -131,7 +132,7 @@ public class DarwinLinker extends DelegatingTool
 
   private ImmutableList<FileScrubber> getFocusedDebugSymbolScrubbers(
       Optional<AbsPath> focusedTargetsPath,
-      Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap) {
+      Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap) {
     return ImmutableList.of(
         new OsoSymbolsContentsScrubber(focusedTargetsPath, targetToOutputPathMap));
   }
