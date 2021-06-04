@@ -28,6 +28,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
@@ -49,7 +50,12 @@ public class SwiftToolchainDescription
       SwiftToolchainDescriptionArg args) {
     Verify.verify(!buildTarget.isFlavored());
     ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
-    Tool swiftc = Tools.resolveTool(args.getSwiftc(), actionGraphBuilder);
+    CommandTool.Builder swiftcBuilder =
+        new CommandTool.Builder(Tools.resolveTool(args.getSwiftc(), actionGraphBuilder));
+    // The frontend flag is mandatory and has to come first. Keep that logic internal until we
+    // migrate the SwiftCompile logic to use the driver.
+    swiftcBuilder.addArg("-frontend");
+
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
             buildTarget,
@@ -58,11 +64,19 @@ public class SwiftToolchainDescription
             ImmutableList.of(LocationMacroExpander.INSTANCE),
             Optional.empty());
 
-    if (!args.getSwiftcFlags().isEmpty()) {
-      CommandTool.Builder swiftcBuilder = new CommandTool.Builder(swiftc);
-      args.getSwiftcFlags().forEach(a -> swiftcBuilder.addArg(macrosConverter.convert(a)));
-      swiftc = swiftcBuilder.build();
+    ImmutableList<Arg> swiftFlags =
+        args.getSwiftcFlags().stream()
+            // FIXME: Filter out any additional -frontend flags, this can be removed once the rules
+            // are updated.
+            .filter(f -> !f.matches("-frontend"))
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList());
+
+    for (Arg arg : swiftFlags) {
+      swiftcBuilder.addArg(arg);
     }
+    Tool swiftc = swiftcBuilder.build();
+
     Optional<Tool> swiftStdlibTool =
         args.getSwiftStdlibTool().map(path -> Tools.resolveTool(path, actionGraphBuilder));
     if (swiftStdlibTool.isPresent() && !args.getSwiftStdlibToolFlags().isEmpty()) {
