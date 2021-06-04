@@ -17,6 +17,7 @@
 package com.facebook.buck.event.isolated;
 
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
@@ -44,6 +45,7 @@ import java.io.OutputStream;
 import java.time.Instant;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Event bus that writes directly to its associated output stream. Only handles events associated
@@ -52,6 +54,9 @@ import java.util.concurrent.TimeUnit;
 public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   private static final Logger LOG = Logger.get(DefaultIsolatedEventBus.class);
+
+  private static final long WAIT_FOR_EVENTS_TIMEOUT = 1;
+  private static final TimeUnit WAIT_FOR_EVENTS_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
   private final BuildId buildId;
   private final OutputStream outputStream;
@@ -320,20 +325,36 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
 
   @Override
   public void waitTillAllEventsProcessed() {
-    int phase = phaser.getPhase();
-
     if (!measureWaitedTime) {
-      awaitTillProcessed(phase);
+      awaitTillProcessed();
     } else {
       long startTime = System.nanoTime();
-      awaitTillProcessed(phase);
+      awaitTillProcessed();
       long runTimeInMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
       LOG.info("Waited for " + runTimeInMillis + " ms");
     }
   }
 
-  private void awaitTillProcessed(int phase) {
-    phaser.awaitAdvance(phase);
+  private void awaitTillProcessed() {
+    if (phaser.getRegisteredParties() == 0) {
+      // no events to wait
+      return;
+    }
+
+    try {
+      int phase = phaser.getPhase();
+      phaser.awaitAdvanceInterruptibly(
+          phase, WAIT_FOR_EVENTS_TIMEOUT, WAIT_FOR_EVENTS_TIMEOUT_UNIT);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.warn(e, "Interrupted while waiting for events to process");
+    } catch (TimeoutException e) {
+      throw new HumanReadableException(
+          e,
+          String.format(
+              "Timeout while waiting for event bus events to process. %s ms elapsed!",
+              +WAIT_FOR_EVENTS_TIMEOUT_UNIT.toMillis(WAIT_FOR_EVENTS_TIMEOUT)));
+    }
   }
 
   @VisibleForTesting
