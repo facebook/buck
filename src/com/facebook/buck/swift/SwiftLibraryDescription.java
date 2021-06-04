@@ -75,6 +75,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
@@ -328,7 +329,8 @@ public class SwiftLibraryDescription
               .getPath(),
           args.getSrcs(),
           args.getVersion(),
-          getCompilerFlags(cxxPlatform, buildTargetCopy, graphBuilder, cellRoots, args),
+          getCompilerFlags(
+              swiftBuckConfig, cxxPlatform, buildTargetCopy, graphBuilder, cellRoots, args),
           args.getEnableObjcInterop(),
           args.getBridgingHeader(),
           preprocessor,
@@ -502,7 +504,7 @@ public class SwiftLibraryDescription
         BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s").getPath(),
         args.getSrcs(),
         args.getVersion(),
-        getCompilerFlags(cxxPlatform, buildTarget, graphBuilder, cellRoots, args),
+        getCompilerFlags(swiftBuckConfig, cxxPlatform, buildTarget, graphBuilder, cellRoots, args),
         args.getEnableObjcInterop(),
         args.getBridgingHeader(),
         preprocessor,
@@ -529,17 +531,28 @@ public class SwiftLibraryDescription
   }
 
   private static ImmutableList<Arg> getCompilerFlags(
+      SwiftBuckConfig swiftBuckConfig,
       CxxPlatform cxxPlatform,
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       SwiftLibraryDescriptionArg args) {
-    return RichStream.from(args.getCompilerFlags())
-        .map(
-            CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
-                    buildTarget, cellRoots, graphBuilder, cxxPlatform)
-                ::convert)
-        .toImmutableList();
+    ImmutableList.Builder<Arg> builder = ImmutableList.builder();
+
+    for (String flag : swiftBuckConfig.getCompilerFlags().orElse(ImmutableList.of())) {
+      builder.add(StringArg.of(flag));
+    }
+
+    if (!args.getCompilerFlags().isEmpty()) {
+      StringWithMacrosConverter converter =
+          CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+              buildTarget, cellRoots, graphBuilder, cxxPlatform);
+      for (StringWithMacros arg : args.getCompilerFlags()) {
+        builder.add(converter.convert(arg));
+      }
+    }
+
+    return builder.build();
   }
 
   public static SwiftCompile createSwiftCompileRule(
@@ -574,7 +587,7 @@ public class SwiftLibraryDescription
         BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s").getPath(),
         args.getSrcs(),
         args.getVersion(),
-        getCompilerFlags(cxxPlatform, buildTarget, graphBuilder, cellRoots, args),
+        getCompilerFlags(swiftBuckConfig, cxxPlatform, buildTarget, graphBuilder, cellRoots, args),
         args.getEnableObjcInterop(),
         args.getBridgingHeader(),
         preprocessor,

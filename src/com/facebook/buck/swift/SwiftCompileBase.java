@@ -233,11 +233,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.swiftTarget = swiftTarget;
     this.version = version;
-    this.compilerFlags =
-        new ImmutableList.Builder<Arg>()
-            .addAll(StringArg.from(swiftBuckConfig.getCompilerFlags().orElse(ImmutableSet.of())))
-            .addAll(compilerFlags)
-            .build();
+    this.compilerFlags = compilerFlags;
     this.enableObjcInterop = enableObjcInterop.orElse(true);
     this.bridgingHeader = bridgingHeader;
     this.cPreprocessor = preprocessor;
