@@ -54,7 +54,6 @@ import com.facebook.buck.javacd.model.OutputPathsValue;
 import com.facebook.buck.javacd.model.RelPath;
 import com.facebook.buck.javacd.model.ResolvedJavac;
 import com.facebook.buck.javacd.model.ResolvedJavacOptions;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDWorkerStepUtils;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -68,6 +67,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.WorkerToolLauncher;
@@ -617,7 +617,7 @@ public class JavaCDIntegrationTest {
 
   private ImmutableList<String> getLaunchJavaCDCommand() throws IOException {
     return ImmutableList.<String>builder()
-        .add(JavaBuckConfig.getJavaBinCommand())
+        .add(JavaRuntimeUtils.getBucksJavaBinCommand())
         .addAll(
             JavaCDWorkerStepUtils.getCommonJvmParams(
                 AbsPath.of(temporaryFolder.newFolder("log").getPath())))

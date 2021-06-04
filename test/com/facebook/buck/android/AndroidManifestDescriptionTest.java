@@ -34,7 +34,6 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import org.junit.Test;
@@ -66,9 +65,7 @@ public class AndroidManifestDescriptionTest {
     BuckConfig buckConfig = FakeBuckConfig.empty();
     BuildRule androidManifest =
         new AndroidManifestDescription(
-                new AndroidManifestFactory(
-                    buckConfig.getView(BuildBuckConfig.class),
-                    buckConfig.getView(JavaBuckConfig.class)))
+                new AndroidManifestFactory(buckConfig.getView(BuildBuckConfig.class)))
             .createBuildRule(
                 TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
                 buildTarget,

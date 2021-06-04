@@ -18,8 +18,8 @@ package com.facebook.buck.util.trace.uploader.launcher;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.google.common.base.Strings;
 import java.io.IOException;
@@ -50,7 +50,7 @@ public class UploaderLauncher {
 
     try {
       String[] args = {
-        JavaBuckConfig.getJavaBinCommand(),
+        JavaRuntimeUtils.getBucksJavaBinCommand(),
         "-cp",
         buckClasspath,
         "com.facebook.buck.util.trace.uploader.Main",

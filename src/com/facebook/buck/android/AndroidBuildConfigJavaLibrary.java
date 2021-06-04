@@ -21,7 +21,6 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
@@ -59,7 +58,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       JavacOptions javacOptions,
       AndroidBuildConfig androidBuildConfig,
       boolean withDownwardApi,
-      Tool javaRuntimeLauncher,
       BaseJavaCDParams javaCDParams) {
     super(
         buildTarget,
@@ -81,7 +79,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             ImmutableList.of(),
             false,
             withDownwardApi,
-            javaRuntimeLauncher,
             javaCDParams),
         ruleFinder,
         Optional.empty(),
@@ -101,7 +98,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
         false,
         false,
         false,
-        javaRuntimeLauncher,
         javaCDParams);
     this.androidBuildConfig = androidBuildConfig;
     Preconditions.checkState(getBuildDeps().contains(androidBuildConfig));

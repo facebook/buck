@@ -151,7 +151,7 @@ public class BuildRulePipelinesRunner<State extends RulePipelineState> {
       @SuppressWarnings("unchecked")
       Function<AbstractMessage, CompilationDaemonStep> compilationStepCreatorFunction =
           (Function<AbstractMessage, CompilationDaemonStep>)
-              pipelineStateFactory.getCompilationStepCreatorFunction(context, projectFilesystem);
+              pipelineStateFactory.getCompilationStepCreatorFunction(projectFilesystem);
       return StateHolder.fromCompilationStep(
           compilationStepCreatorFunction.apply(pipelineStateMessage));
     }

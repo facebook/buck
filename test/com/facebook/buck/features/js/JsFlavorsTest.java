@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -47,14 +46,12 @@ public class JsFlavorsTest {
     DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
     JsConfig jsConfig = JsConfig.of(buckConfig);
     BuildBuckConfig buildBuckConfig = BuildBuckConfig.of(buckConfig);
-    JavaBuckConfig javaBuckConfig = JavaBuckConfig.of(buckConfig);
     bundleDescription =
         new JsBundleDescription(
             new ToolchainProviderBuilder().build(),
             new AndroidBuckConfig(buckConfig, Platform.detect()),
             downwardApiConfig,
-            buildBuckConfig,
-            javaBuckConfig);
+            buildBuckConfig);
     libraryDescription = new JsLibraryDescription(downwardApiConfig, jsConfig);
   }
 

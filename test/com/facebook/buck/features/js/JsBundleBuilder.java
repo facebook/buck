@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.util.environment.Platform;
@@ -42,8 +41,7 @@ public class JsBundleBuilder
           new ToolchainProviderBuilder().build(),
           new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()),
           DownwardApiConfig.of(FakeBuckConfig.empty()),
-          BuildBuckConfig.of(FakeBuckConfig.empty()),
-          JavaBuckConfig.of(FakeBuckConfig.empty()));
+          BuildBuckConfig.of(FakeBuckConfig.empty()));
 
   JsBundleBuilder(
       BuildTarget target,

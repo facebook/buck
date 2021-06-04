@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
@@ -111,7 +110,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
       boolean neverMarkAsUnusedDependency,
-      Tool javaRuntimeLauncher,
       BaseJavaCDParams javaCDParams) {
     super(
         buildTarget,
@@ -135,7 +133,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         isDesugarEnabled,
         isInterfaceMethodsDesugarEnabled,
         neverMarkAsUnusedDependency,
-        javaRuntimeLauncher,
         javaCDParams);
     this.manifestFile = manifestFile;
     this.type = jvmLanguage.map(this::evalType).orElseGet(super::getType);
@@ -228,7 +225,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               isDesugarEnabled,
               isInterfaceMethodsDesugarEnabled,
               neverMarkAsUnusedDependency,
-              javaRuntimeLauncher,
               javaCDParams) ->
               new AndroidLibrary(
                   target,
@@ -254,7 +250,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                   isDesugarEnabled,
                   isInterfaceMethodsDesugarEnabled,
                   neverMarkAsUnusedDependency,
-                  javaRuntimeLauncher,
                   javaCDParams));
       delegateBuilder.setJavacOptions(libraryJavacOptions);
       delegateBuilder.setTests(args.getTests());

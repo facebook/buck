@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.externalactions.android.AndroidResourceExternalAction;
 import com.facebook.buck.externalactions.android.AndroidResourceExternalActionArgs;
 import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
@@ -113,8 +112,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
       Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
       boolean hasWhitelistedStrings,
       boolean isVerifyingXmlAttrsEnabled,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      boolean shouldExecuteInSeparateProcess) {
     super(
         buildTarget,
         projectFilesystem,
@@ -130,8 +128,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
             hasWhitelistedStrings,
             isVerifyingXmlAttrsEnabled,
             rDotJavaPackageArgument,
-            shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher));
+            shouldExecuteInSeparateProcess));
 
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
@@ -168,8 +165,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
       ImmutableSortedMap<Path, SourcePath> assetsSrcs,
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      boolean shouldExecuteInSeparateProcess) {
     this(
         buildTarget,
         projectFilesystem,
@@ -183,8 +179,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
         manifestFile,
         hasWhitelistedStrings,
         /* isVerifyingXmlAttrsEnabled */ false,
-        shouldExecuteInSeparateProcess,
-        javaRuntimeLauncher);
+        shouldExecuteInSeparateProcess);
   }
 
   public AndroidResource(
@@ -200,8 +195,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings,
       boolean isVerifyingXmlAttrsEnabled,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      boolean shouldExecuteInSeparateProcess) {
     this(
         buildTarget,
         projectFilesystem,
@@ -220,8 +214,7 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
                 .toImmutableSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
         isVerifyingXmlAttrsEnabled,
-        shouldExecuteInSeparateProcess,
-        javaRuntimeLauncher);
+        shouldExecuteInSeparateProcess);
   }
 
   @Override
@@ -283,9 +276,8 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
         boolean hasWhitelistedStrings,
         boolean isVerifyingXmlAttrsEnabled,
         @Nullable String rDotJavaPackageArgument,
-        boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
+        boolean shouldExecuteInSeparateProcess) {
+      super(shouldExecuteInSeparateProcess);
       this.res = res;
       this.resSrcs = resSrcs;
       this.assets = assets;

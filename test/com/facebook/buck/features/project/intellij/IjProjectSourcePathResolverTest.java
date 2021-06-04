@@ -61,7 +61,6 @@ import com.facebook.buck.jvm.java.JarGenruleDescription;
 import com.facebook.buck.jvm.java.JarGenruleDescriptionArg;
 import com.facebook.buck.jvm.java.JavaBinaryDescriptionArg;
 import com.facebook.buck.jvm.java.JavaBinaryRuleBuilder;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
@@ -292,9 +291,7 @@ public class IjProjectSourcePathResolverTest {
                 AndroidManifestDescription,
                 AndroidManifest>(
                 new AndroidManifestDescription(
-                    new AndroidManifestFactory(
-                        buckConfig.getView(BuildBuckConfig.class),
-                        buckConfig.getView(JavaBuckConfig.class))),
+                    new AndroidManifestFactory(buckConfig.getView(BuildBuckConfig.class))),
                 BuildTargetFactory.newInstance("//app:manifest")) {};
     builder
         .getArgForPopulating()

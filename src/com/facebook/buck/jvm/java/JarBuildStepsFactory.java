@@ -39,7 +39,6 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
@@ -119,8 +118,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
   @AddToRuleKey private final BaseJavaCDParams javaCDParams;
 
-  @AddToRuleKey private final Tool javaRuntimeLauncher;
-
   /** Creates {@link JarBuildStepsFactory} */
   public static <T extends CompileToJarStepFactory.ExtraParams> JarBuildStepsFactory<T> of(
       BuildTarget libraryTarget,
@@ -139,7 +136,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ImmutableList<JavaDependencyInfo> dependencyInfos,
       boolean isRequiredForSourceOnlyAbi,
       boolean withDownwardApi,
-      Tool javaRuntimeLauncher,
       BaseJavaCDParams javaCDParams) {
     return new JarBuildStepsFactory<>(
         libraryTarget,
@@ -158,7 +154,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         dependencyInfos,
         isRequiredForSourceOnlyAbi,
         withDownwardApi,
-        javaRuntimeLauncher,
         javaCDParams);
   }
 
@@ -277,7 +272,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ImmutableList<JavaDependencyInfo> dependencyInfos,
       boolean isRequiredForSourceOnlyAbi,
       boolean withDownwardApi,
-      Tool javaRuntimeLauncher,
       BaseJavaCDParams javaCDParams) {
     this.libraryTarget = libraryTarget;
     this.configuredCompiler = configuredCompiler;
@@ -296,7 +290,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     this.withDownwardApi = withDownwardApi;
     this.abiClasspath = this.dependencyInfos.getAbiClasspath();
     this.isRequiredForSourceOnlyAbi = isRequiredForSourceOnlyAbi;
-    this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.javaCDParams = javaCDParams;
   }
 
@@ -744,7 +737,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
   @Override
   public Function<PipelineState, CompilationDaemonStep> getCompilationStepCreatorFunction(
-      BuildContext context, ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem) {
     return (state) -> {
       BaseJavacToJarStepFactory configuredCompiler =
           (BaseJavacToJarStepFactory) getConfiguredCompiler();
@@ -753,14 +746,12 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
           hasAnnotationProcessing(),
           withDownwardApi,
           configuredCompiler.getSpoolMode(),
-          createJavaCDParams(context.getSourcePathResolver(), projectFilesystem));
+          createJavaCDParams(projectFilesystem));
     };
   }
 
-  private JavaCDParams createJavaCDParams(
-      SourcePathResolverAdapter sourcePathResolver, ProjectFilesystem filesystem) {
-    return JavaCDParams.of(
-        javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver), filesystem);
+  private JavaCDParams createJavaCDParams(ProjectFilesystem filesystem) {
+    return JavaCDParams.of(javaCDParams, filesystem);
   }
 
   boolean hasAnnotationProcessing() {

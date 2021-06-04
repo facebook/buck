@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.externalactions.android.AndroidManifestExternalAction;
 import com.facebook.buck.externalactions.android.AndroidManifestExternalActionArgs;
 import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
@@ -77,8 +76,7 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
       SourcePath skeletonFile,
       APKModule module,
       Collection<SourcePath> manifestFiles,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      boolean shouldExecuteInSeparateProcess) {
     super(
         buildTarget,
         projectFilesystem,
@@ -91,8 +89,7 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
                 String.format(
                     "AndroidManifest__%s__.xml", buildTarget.getShortNameAndFlavorPostfix())),
             new OutputPath("merge-report.txt"),
-            shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher));
+            shouldExecuteInSeparateProcess));
   }
 
   @Override
@@ -118,9 +115,8 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
         ImmutableSortedSet<SourcePath> manifestFiles,
         OutputPath outputPath,
         OutputPath mergeReportOutputPath,
-        boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
+        boolean shouldExecuteInSeparateProcess) {
+      super(shouldExecuteInSeparateProcess);
       this.skeletonFile = skeletonFile;
       this.manifestFiles = manifestFiles;
       this.moduleName = module.getName();

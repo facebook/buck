@@ -27,7 +27,6 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -39,7 +38,6 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.FakeClock;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.FileOutputStream;
@@ -80,7 +78,6 @@ public class BuildableCommandExecutionStepTest {
         new BuildableCommandExecutionStep(
             BuildableCommand.getDefaultInstance(),
             projectFilesystem,
-            ImmutableList.of(JavaBuckConfig.getJavaBinCommand()),
             FakeExternalActionsMain.class.getCanonicalName());
     StepExecutionResult result = testStep.execute(createExecutionContext(projectFilesystem));
     assertThat(result.getExitCode(), equalTo(0));

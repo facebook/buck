@@ -26,7 +26,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
@@ -67,7 +66,6 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       Optional<String> mavenCoords,
       boolean useSystemLibraryLoader,
       boolean withDownwardApi,
-      Tool javaRuntimeLauncher,
       BaseJavaCDParams javaCDParams) {
     super(
         androidLibraryBuildTarget,
@@ -89,7 +87,6 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             ImmutableList.of(),
             requiredForSourceAbi,
             withDownwardApi,
-            javaRuntimeLauncher,
             javaCDParams),
         ruleFinder,
         Optional.of(proguardConfig),
@@ -116,7 +113,6 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         false,
         false,
         false,
-        javaRuntimeLauncher,
         javaCDParams);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;

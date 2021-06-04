@@ -45,7 +45,6 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.step.isolatedsteps.android.MiniAapt;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
@@ -81,7 +80,6 @@ public class AndroidResourceDescription
   private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final BuildBuckConfig buildBuckConfig;
-  private final JavaBuckConfig javaBuckConfig;
 
   public static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR =
       InternalFlavor.of("resources-symlink-tree");
@@ -97,13 +95,11 @@ public class AndroidResourceDescription
       ToolchainProvider toolchainProvider,
       AndroidBuckConfig androidBuckConfig,
       DownwardApiConfig downwardApiConfig,
-      BuildBuckConfig buildBuckConfig,
-      JavaBuckConfig javaBuckConfig) {
+      BuildBuckConfig buildBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.androidBuckConfig = androidBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.buildBuckConfig = buildBuckConfig;
-    this.javaBuckConfig = javaBuckConfig;
   }
 
   @Override
@@ -191,8 +187,7 @@ public class AndroidResourceDescription
         args.getManifest().orElse(null),
         args.getHasWhitelistedStrings(),
         androidBuckConfig.isVerifyingXmlAttrsEnabled(),
-        buildBuckConfig.areExternalActionsEnabled(),
-        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
+        buildBuckConfig.areExternalActionsEnabled());
   }
 
   private MappedSymlinkTree createSymlinkTree(

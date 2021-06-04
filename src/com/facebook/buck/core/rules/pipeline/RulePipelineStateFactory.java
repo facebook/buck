@@ -43,5 +43,5 @@ public interface RulePipelineStateFactory<
    * a compilation daemon step.
    */
   Function<Message, CompilationDaemonStep> getCompilationStepCreatorFunction(
-      BuildContext context, ProjectFilesystem projectFilesystem);
+      ProjectFilesystem projectFilesystem);
 }

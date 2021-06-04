@@ -206,7 +206,7 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
 
           @Override
           public Function<AbstractMessage, CompilationDaemonStep> getCompilationStepCreatorFunction(
-              BuildContext context, ProjectFilesystem projectFilesystem) {
+              ProjectFilesystem projectFilesystem) {
             return message -> new FakeCompilationDaemonStep();
           }
         };

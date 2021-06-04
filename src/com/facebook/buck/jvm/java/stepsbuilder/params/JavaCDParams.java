@@ -33,8 +33,6 @@ public abstract class JavaCDParams {
     return getBaseJavaCDParams().hasJavaCDEnabled();
   }
 
-  public abstract ImmutableList<String> getJavaRuntimeLauncherCommand();
-
   @Value.Derived
   public ImmutableList<String> getStartCommandOptions() {
     return getBaseJavaCDParams().getStartCommandOptions();
@@ -54,10 +52,8 @@ public abstract class JavaCDParams {
 
   /** Creates {@link JavaCDParams} */
   public static JavaCDParams of(
-      BaseJavaCDParams baseJavaCDParams,
-      ImmutableList<String> javaRuntimeLauncherCommand,
-      ProjectFilesystem projectFilesystem) {
+      BaseJavaCDParams baseJavaCDParams, ProjectFilesystem projectFilesystem) {
     return ImmutableJavaCDParams.ofImpl(
-        baseJavaCDParams, javaRuntimeLauncherCommand, projectFilesystem.getBuckPaths().getLogDir());
+        baseJavaCDParams, projectFilesystem.getBuckPaths().getLogDir());
   }
 }

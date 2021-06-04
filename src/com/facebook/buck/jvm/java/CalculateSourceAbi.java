@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.BasePipeliningCommand;
@@ -90,18 +89,12 @@ public class CalculateSourceAbi
       ProjectFilesystem projectFilesystem,
       JarBuildStepsFactory<?> jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder,
-      Tool javaRuntimeLauncher,
       BaseJavaCDParams javaCDParams) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new SourceAbiBuildable(
-            buildTarget,
-            projectFilesystem,
-            jarBuildStepsFactory,
-            javaRuntimeLauncher,
-            javaCDParams));
+        new SourceAbiBuildable(buildTarget, projectFilesystem, jarBuildStepsFactory, javaCDParams));
     this.ruleFinder = ruleFinder;
     this.buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
     this.sourcePathToOutput =
@@ -125,18 +118,14 @@ public class CalculateSourceAbi
 
     @AddToRuleKey private final BaseJavaCDParams javaCDParams;
 
-    @AddToRuleKey private final Tool javaRuntimeLauncher;
-
     public SourceAbiBuildable(
         BuildTarget buildTarget,
         ProjectFilesystem filesystem,
         JarBuildStepsFactory<?> jarBuildStepsFactory,
-        Tool javaRuntimeLauncher,
         BaseJavaCDParams javaCDParams) {
       this.buildTarget = buildTarget;
       this.jarBuildStepsFactory = jarBuildStepsFactory;
       this.javaCDParams = javaCDParams;
-      this.javaRuntimeLauncher = javaRuntimeLauncher;
       CompilerOutputPaths outputPaths =
           CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
       this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
@@ -149,9 +138,7 @@ public class CalculateSourceAbi
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
-      AbiStepsBuilder stepsBuilder =
-          getJavaCompileStepsBuilderFactory(sourcePathResolver, filesystem).getAbiBuilder();
+      AbiStepsBuilder stepsBuilder = getJavaCompileStepsBuilderFactory(filesystem).getAbiBuilder();
       jarBuildStepsFactory.addBuildStepsForAbiJar(
           buildContext,
           filesystem,
@@ -259,16 +246,13 @@ public class CalculateSourceAbi
     }
 
     private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
-        SourcePathResolverAdapter sourcePathResolver, ProjectFilesystem filesystem) {
+        ProjectFilesystem filesystem) {
       return JavaCompileStepsBuilderFactoryCreator.createFactory(
-          jarBuildStepsFactory.getConfiguredCompiler(),
-          createJavaCDParams(sourcePathResolver, filesystem));
+          jarBuildStepsFactory.getConfiguredCompiler(), createJavaCDParams(filesystem));
     }
 
-    private JavaCDParams createJavaCDParams(
-        SourcePathResolverAdapter sourcePathResolver, ProjectFilesystem filesystem) {
-      return JavaCDParams.of(
-          javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver), filesystem);
+    private JavaCDParams createJavaCDParams(ProjectFilesystem filesystem) {
+      return JavaCDParams.of(javaCDParams, filesystem);
     }
 
     public boolean supportsCompilationDaemon() {

@@ -18,8 +18,6 @@ package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.external.model.ExternalAction;
 import com.facebook.buck.external.model.ParsedArgs;
 import com.facebook.buck.external.utils.BuildStepsRetriever;
@@ -37,12 +35,9 @@ import com.google.common.collect.ImmutableList;
 public abstract class BuildableWithExternalAction implements Buildable {
 
   @AddToRuleKey private final boolean shouldExecuteInSeparateProcess;
-  @AddToRuleKey private final Tool javaRuntimeLauncher;
 
-  public BuildableWithExternalAction(
-      boolean shouldExecuteInSeparateProcess, Tool javaRuntimeLauncher) {
+  public BuildableWithExternalAction(boolean shouldExecuteInSeparateProcess) {
     this.shouldExecuteInSeparateProcess = shouldExecuteInSeparateProcess;
-    this.javaRuntimeLauncher = javaRuntimeLauncher;
   }
 
   @Override
@@ -55,12 +50,9 @@ public abstract class BuildableWithExternalAction implements Buildable {
     BuildableCommand buildableCommand =
         getBuildableCommand(filesystem, outputPathResolver, buildContext);
     if (shouldExecuteInSeparateProcess) {
-      SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
       return ImmutableList.of(
           new BuildableCommandExecutionStep(
-              getBuildableCommand(filesystem, outputPathResolver, buildContext),
-              filesystem,
-              javaRuntimeLauncher.getCommandPrefix(sourcePathResolver)));
+              getBuildableCommand(filesystem, outputPathResolver, buildContext), filesystem));
     }
     String externalActionClassName = buildableCommand.getExternalActionClass();
     try {

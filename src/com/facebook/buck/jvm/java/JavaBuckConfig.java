@@ -30,24 +30,20 @@ import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.util.cmd.CmdWrapperForScriptWithSpaces;
-import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 
 /** A java-specific "view" of BuckConfig. */
@@ -57,45 +53,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
   public static final String PROPERTY_JAVACD_ENABLED = "javacd_enabled";
 
-  private static final String JAVA_HOME_SYSTEM_PROPERTY_NAME = "java.home";
-  private static final String DEFAULT_EXECUTABLE_NAME = "java";
-
-  private static final Supplier<String> JAVA_BIN_COMMAND =
-      Suppliers.memoize(
-          () -> {
-            // if `java.home` is set then use it
-            String javaHome = System.getProperty(JAVA_HOME_SYSTEM_PROPERTY_NAME);
-            if (javaHome != null) {
-              boolean isWindows = Platform.detect() == Platform.WINDOWS;
-              String binaryExtension = isWindows ? ".exe" : "";
-              Path javaBinPath =
-                  Paths.get(javaHome, "bin", DEFAULT_EXECUTABLE_NAME + binaryExtension);
-              if (Files.exists(javaBinPath)) {
-                boolean needToWrapWithCmdScript = isWindows && javaBinPath.toString().contains(" ");
-                if (!needToWrapWithCmdScript) {
-                  return javaBinPath.toString();
-                }
-
-                CmdWrapperForScriptWithSpaces cmdWrapperForScriptWithSpaces =
-                    new CmdWrapperForScriptWithSpaces(javaBinPath);
-                return cmdWrapperForScriptWithSpaces
-                    .getCmdPath()
-                    .map(Path::toString)
-                    .orElse(DEFAULT_EXECUTABLE_NAME);
-              }
-            }
-
-            return DEFAULT_EXECUTABLE_NAME;
-          });
-
-  public static final CommandTool DEFAULT_JAVA_TOOL =
-      new CommandTool.Builder().addArg(getJavaBinCommand()).build();
-
-  /** Returns a path for java binary */
-  @VisibleForTesting
-  public static String getJavaBinCommand() {
-    return JAVA_BIN_COMMAND.get();
-  }
+  private static final CommandTool DEFAULT_JAVA_TOOL =
+      new CommandTool.Builder().addArg(JavaRuntimeUtils.getBucksJavaBinCommand()).build();
 
   static final JavaOptions DEFAULT_JAVA_OPTIONS = JavaOptions.of(DEFAULT_JAVA_TOOL);
 

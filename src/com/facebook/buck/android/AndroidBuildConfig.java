@@ -22,7 +22,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.externalactions.android.AndroidBuildConfigExternalAction;
 import com.facebook.buck.externalactions.android.AndroidBuildConfigExternalActionArgs;
 import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
@@ -139,8 +138,7 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
       BuildConfigFields defaultValues,
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      boolean shouldExecuteInSeparateProcess) {
     super(
         buildTarget,
         projectFilesystem,
@@ -152,8 +150,7 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
             valuesFile,
             useConstantExpressions,
             new OutputPath("BuildConfig.java"),
-            shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher));
+            shouldExecuteInSeparateProcess));
   }
 
   @Override
@@ -194,9 +191,8 @@ public class AndroidBuildConfig extends ModernBuildRule<AndroidBuildConfig.Impl>
         Optional<SourcePath> valuesFile,
         boolean useConstantExpressions,
         OutputPath outputPath,
-        boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
+        boolean shouldExecuteInSeparateProcess) {
+      super(shouldExecuteInSeparateProcess);
       this.buildTarget = buildTarget;
       this.javaPackage = javaPackage;
       this.defaultValues = defaultValues;

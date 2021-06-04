@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -107,7 +108,7 @@ public class JavaBinaryTest {
         basePath + pathResolver.getCellUnsafeRelPath(javaBinary.getSourcePathToOutput());
 
     List<String> expectedCommand =
-        ImmutableList.of(JavaBuckConfig.getJavaBinCommand(), "-jar", expectedClasspath);
+        ImmutableList.of(JavaRuntimeUtils.getBucksJavaBinCommand(), "-jar", expectedClasspath);
     assertEquals(
         expectedCommand,
         javaBinary.getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(pathResolver));

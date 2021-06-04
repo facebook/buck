@@ -33,7 +33,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.FakeTool;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -121,8 +120,7 @@ public class AndroidResourceTest {
             /* assetsSrcs */ ImmutableSortedMap.of(),
             /* manifestFile */ null,
             /* hasWhitelistedStrings */ false,
-            /* areExternalActionsEnabled */ false,
-            new FakeTool());
+            /* areExternalActionsEnabled */ false);
     ruleFinder.addToIndex(androidResource);
     projectFilesystem.writeContentsToPath(
         "com.example.android" + System.lineSeparator(),
@@ -152,8 +150,7 @@ public class AndroidResourceTest {
             /* assetsSrcs */ ImmutableSortedMap.of(),
             /* manifestFile */ FakeSourcePath.of(projectFilesystem, "foo/AndroidManifest.xml"),
             /* hasWhitelistedStrings */ false,
-            /* areExternalActionsEnabled */ false,
-            new FakeTool());
+            /* areExternalActionsEnabled */ false);
     ruleFinder.addToIndex(androidResource);
     projectFilesystem.writeContentsToPath(
         "com.ex.pkg" + System.lineSeparator(),

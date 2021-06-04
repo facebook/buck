@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -107,7 +106,6 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final Optional<SourcePath> resourceStableIds;
   private final boolean withDownwardApi;
   private final boolean shouldExecuteInSeparateProcess;
-  private final Tool javaRuntimeLauncher;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
@@ -145,8 +143,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       ImmutableSet<String> extraFilteredResources,
       Optional<SourcePath> resourceStableIds,
       boolean withDownwardApi,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      boolean shouldExecuteInSeparateProcess) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
@@ -183,7 +180,6 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.resourceStableIds = resourceStableIds;
     this.withDownwardApi = withDownwardApi;
     this.shouldExecuteInSeparateProcess = shouldExecuteInSeparateProcess;
-    this.javaRuntimeLauncher = javaRuntimeLauncher;
   }
 
   @BuckStyleValueWithBuilder
@@ -284,8 +280,7 @@ class AndroidBinaryResourcesGraphEnhancer {
                 moduleManifestSkeleton.get(),
                 module,
                 packageableCollection.getAndroidManifestPieces().get(module),
-                shouldExecuteInSeparateProcess,
-                javaRuntimeLauncher);
+                shouldExecuteInSeparateProcess);
         graphBuilder.addToIndex(moduleManifestMergeRule);
         manifestPath = moduleManifestMergeRule.getSourcePathToOutput();
       }
@@ -453,8 +448,7 @@ class AndroidBinaryResourcesGraphEnhancer {
               aaptOutputInfo.getPrimaryResourcesApkPath(),
               aaptOutputInfo.getPathToRDotTxt(),
               withDownwardApi,
-              shouldExecuteInSeparateProcess,
-              javaRuntimeLauncher);
+              shouldExecuteInSeparateProcess);
       MergeThirdPartyJarResources mergeThirdPartyJarResource =
           createMergeThirdPartyJarResources(
               packageableCollection.getPathsToThirdPartyJars().values());
@@ -512,8 +506,7 @@ class AndroidBinaryResourcesGraphEnhancer {
               manifestSkeleton.get(),
               module,
               packageableCollection.getAndroidManifestPieces().values(),
-              shouldExecuteInSeparateProcess,
-              javaRuntimeLauncher);
+              shouldExecuteInSeparateProcess);
       graphBuilder.addToIndex(manifestMergeRule);
       realManifest = manifestMergeRule.getSourcePathToOutput();
     } else {
@@ -542,16 +535,14 @@ class AndroidBinaryResourcesGraphEnhancer {
         projectFilesystem,
         graphBuilder,
         pathsToThirdPartyJars,
-        shouldExecuteInSeparateProcess,
-        javaRuntimeLauncher);
+        shouldExecuteInSeparateProcess);
   }
 
   private SplitResources createSplitResourcesRule(
       SourcePath aaptOutputPath,
       SourcePath aaptRDotTxtPath,
       boolean withDownwardApi,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      boolean shouldExecuteInSeparateProcess) {
     BuildTarget target = buildTarget.withAppendedFlavors(SPLIT_RESOURCES_FLAVOR);
     return new SplitResources(
         target,
@@ -563,8 +554,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             .getZipalignToolProvider()
             .resolve(graphBuilder, target.getTargetConfiguration()),
         withDownwardApi,
-        shouldExecuteInSeparateProcess,
-        javaRuntimeLauncher);
+        shouldExecuteInSeparateProcess);
   }
 
   private Aapt2Link createAapt2Link(
@@ -760,8 +750,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             graphBuilder,
             baseApk,
             ImmutableSortedSet.copyOf(assetsDirectories),
-            shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher);
+            shouldExecuteInSeparateProcess);
     graphBuilder.addToIndex(mergeAssets);
     return mergeAssets;
   }

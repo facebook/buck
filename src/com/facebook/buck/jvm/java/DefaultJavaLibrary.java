@@ -38,7 +38,6 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.PipelineState;
@@ -183,7 +182,6 @@ public class DefaultJavaLibrary
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
       boolean neverMarkAsUnusedDependency,
-      Tool javaRuntimeLauncher,
       BaseJavaCDParams javaCDParams) {
     super(
         buildTarget,
@@ -196,7 +194,6 @@ public class DefaultJavaLibrary
             unusedDependenciesAction,
             unusedDependenciesFinderFactory,
             sourceAbi,
-            javaRuntimeLauncher,
             javaCDParams));
     this.ruleFinder = ruleFinder;
     this.sourcePathForOutputJar =

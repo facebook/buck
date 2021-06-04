@@ -40,7 +40,6 @@ import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
 import com.facebook.buck.external.parser.ExternalArgsParser;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.buildables.BuildableCommandExecutionStep;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
@@ -56,6 +55,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -354,7 +354,7 @@ public class ExternalActionsIntegrationTest {
 
   private ImmutableList<String> createCmd() {
     return ImmutableList.<String>builder()
-        .add(JavaBuckConfig.getJavaBinCommand())
+        .add(JavaRuntimeUtils.getBucksJavaBinCommand())
         .addAll(BuildableCommandExecutionStep.getCommonJvmParams())
         .add("-cp")
         .add(testBinary.toString())

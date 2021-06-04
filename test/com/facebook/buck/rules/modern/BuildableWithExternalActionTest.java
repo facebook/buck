@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.external.model.ExternalAction;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.FakeTool;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -98,7 +97,7 @@ public class BuildableWithExternalActionTest {
     private final String arg;
 
     private FakeBuildable(boolean shouldUseExternalActions, String arg) {
-      super(shouldUseExternalActions, new FakeTool());
+      super(shouldUseExternalActions);
       this.arg = arg;
     }
 

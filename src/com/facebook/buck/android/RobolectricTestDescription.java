@@ -277,8 +277,10 @@ public class RobolectricTestDescription
                 .map(HasAndroidResourceDeps::getAssets)
                 .filter(Objects::nonNull)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
-            javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
-            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
+            javaBuckConfig
+                .getDelegate()
+                .getView(BuildBuckConfig.class)
+                .areExternalActionsEnabled());
     graphBuilder.addToIndex(binaryResources);
 
     SourcePathResolverAdapter sourcePathResolver = graphBuilder.getSourcePathResolver();

@@ -809,7 +809,6 @@ public class AndroidApkGraphEnhancerTest {
             graphBuilder,
             false,
             false,
-            new FakeTool(),
             BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
@@ -955,8 +954,7 @@ public class AndroidApkGraphEnhancerTest {
                 ImmutableSortedMap.of(),
                 FakeSourcePath.of("manifest"),
                 false,
-                /* areExternalActionsEnabled */ false,
-                new FakeTool()));
+                /* areExternalActionsEnabled */ false));
 
     // set it up.
     BuildTarget target = BuildTargetFactory.newInstance("//:target");

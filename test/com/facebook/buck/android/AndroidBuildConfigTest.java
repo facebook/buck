@@ -31,7 +31,6 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.jvm.java.FakeTool;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -137,8 +136,7 @@ public class AndroidBuildConfigTest {
         /* values */ BuildConfigFields.of(),
         /* valuesFile */ Optional.empty(),
         /* useConstantExpressions */ false,
-        /* shouldExecuteInSeparateProcess */ false,
-        new FakeTool());
+        /* shouldExecuteInSeparateProcess */ false);
   }
 
   // TODO(nickpalmer): Add another unit test that passes in a non-trivial DependencyGraph and verify

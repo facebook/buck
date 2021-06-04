@@ -88,8 +88,7 @@ public class BuildRulePipelinesRunnerTest {
 
             @Override
             public Function<AbstractMessage, CompilationDaemonStep>
-                getCompilationStepCreatorFunction(
-                    BuildContext context, ProjectFilesystem projectFilesystem) {
+                getCompilationStepCreatorFunction(ProjectFilesystem projectFilesystem) {
               return message -> new FakeCompilationDaemonStep();
             }
           };

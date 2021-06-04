@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.externalactions.android.MergeJarResourcesExternalAction;
 import com.facebook.buck.externalactions.android.MergeJarResourcesExternalActionArgs;
 import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
@@ -46,8 +45,7 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       ImmutableCollection<SourcePath> pathsToThirdPartyJars,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      boolean shouldExecuteInSeparateProcess) {
     super(
         buildTarget,
         projectFilesystem,
@@ -55,8 +53,7 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
         new Impl(
             ImmutableSortedSet.copyOf(pathsToThirdPartyJars),
             new OutputPath("java.resources"),
-            shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher));
+            shouldExecuteInSeparateProcess));
   }
 
   @Override
@@ -74,9 +71,8 @@ public class MergeThirdPartyJarResources extends ModernBuildRule<MergeThirdParty
     public Impl(
         ImmutableSortedSet<SourcePath> pathsToThirdPartyJars,
         OutputPath mergedPath,
-        boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
+        boolean shouldExecuteInSeparateProcess) {
+      super(shouldExecuteInSeparateProcess);
       this.pathsToThirdPartyJars = pathsToThirdPartyJars;
       this.mergedPath = mergedPath;
     }

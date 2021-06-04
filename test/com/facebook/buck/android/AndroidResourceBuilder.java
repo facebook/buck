@@ -29,7 +29,6 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSortedMap;
@@ -53,8 +52,7 @@ public class AndroidResourceBuilder
         createToolchainProviderForAndroidResource(),
         new AndroidBuckConfig(buckConfig, Platform.detect()),
         DownwardApiConfig.of(buckConfig),
-        BuildBuckConfig.of(buckConfig),
-        JavaBuckConfig.of(buckConfig));
+        BuildBuckConfig.of(buckConfig));
   }
 
   private static ToolchainProvider createToolchainProviderForAndroidResource() {

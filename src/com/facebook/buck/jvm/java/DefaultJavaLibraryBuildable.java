@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.pipeline.StateHolder;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.BasePipeliningCommand;
@@ -98,8 +97,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   @AddToRuleKey private final BaseJavaCDParams javaCDParams;
 
-  @AddToRuleKey private final Tool javaRuntimeLauncher;
-
   DefaultJavaLibraryBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
@@ -107,7 +104,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
-      Tool javaRuntimeLauncher,
       BaseJavaCDParams javaCDParams) {
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
@@ -120,7 +116,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
                     new NonHashableSourcePathContainer(
                         Objects.requireNonNull(rule.getSourcePathToOutput())));
     this.javaCDParams = javaCDParams;
-    this.javaRuntimeLauncher = javaRuntimeLauncher;
 
     CompilerOutputPaths outputPaths =
         CompilerOutputPaths.of(buildTarget, filesystem.getBuckPaths());
@@ -158,9 +153,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
 
-    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
     JavaCompileStepsBuilderFactory javaCompileStepsBuilderFactory =
-        getJavaCompileStepsBuilderFactory(sourcePathResolver, filesystem);
+        getJavaCompileStepsBuilderFactory(filesystem);
     LibraryStepsBuilder stepsBuilder = javaCompileStepsBuilderFactory.getLibraryBuilder();
 
     jarBuildStepsFactory.addBuildStepsForLibraryJar(
@@ -178,10 +172,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   }
 
   private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(
-      SourcePathResolverAdapter sourcePathResolver, ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem) {
     return JavaCompileStepsBuilderFactoryCreator.createFactory(
-        jarBuildStepsFactory.getConfiguredCompiler(),
-        createJavaCDParams(sourcePathResolver, projectFilesystem));
+        jarBuildStepsFactory.getConfiguredCompiler(), createJavaCDParams(projectFilesystem));
   }
 
   @Override
@@ -371,10 +364,8 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return ImmutableList.copyOf(stepsBuilder.build()); // upcast to list of Steps
   }
 
-  private JavaCDParams createJavaCDParams(
-      SourcePathResolverAdapter sourcePathResolver, ProjectFilesystem filesystem) {
-    return JavaCDParams.of(
-        javaCDParams, javaRuntimeLauncher.getCommandPrefix(sourcePathResolver), filesystem);
+  private JavaCDParams createJavaCDParams(ProjectFilesystem filesystem) {
+    return JavaCDParams.of(javaCDParams, filesystem);
   }
 
   private void maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(

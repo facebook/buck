@@ -22,7 +22,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.externalactions.android.MergeAssetsExternalAction;
 import com.facebook.buck.externalactions.android.MergeAssetsExternalActionArgs;
 import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
@@ -54,13 +53,12 @@ public class MergeAssets extends ModernBuildRule<MergeAssets.Impl> {
       SourcePathRuleFinder ruleFinder,
       Optional<SourcePath> baseApk,
       ImmutableSortedSet<SourcePath> assetsDirectories,
-      boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher) {
+      boolean shouldExecuteInSeparateProcess) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new Impl(assetsDirectories, baseApk, shouldExecuteInSeparateProcess, javaRuntimeLauncher));
+        new Impl(assetsDirectories, baseApk, shouldExecuteInSeparateProcess));
   }
 
   @Override
@@ -84,9 +82,8 @@ public class MergeAssets extends ModernBuildRule<MergeAssets.Impl> {
     Impl(
         ImmutableSet<SourcePath> assetsDirectories,
         Optional<SourcePath> baseApk,
-        boolean shouldExecuteInSeparateProcess,
-        Tool javaRuntimeLauncher) {
-      super(shouldExecuteInSeparateProcess, javaRuntimeLauncher);
+        boolean shouldExecuteInSeparateProcess) {
+      super(shouldExecuteInSeparateProcess);
       this.assetsDirectories = assetsDirectories;
       this.baseApk = baseApk;
       this.outputPath = new OutputPath("merged.assets.ap_");

@@ -30,7 +30,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -114,7 +113,6 @@ public class AndroidBuildConfigDescription
         graphBuilder,
         downwardApiConfig.isEnabledForAndroid(),
         javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
-        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
         DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 
@@ -138,7 +136,6 @@ public class AndroidBuildConfigDescription
       ActionGraphBuilder graphBuilder,
       boolean withDownwardApi,
       boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher,
       BaseJavaCDParams javaCDParams) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
@@ -179,8 +176,7 @@ public class AndroidBuildConfigDescription
             values,
             valuesFile,
             useConstantExpressions,
-            shouldExecuteInSeparateProcess,
-            javaRuntimeLauncher);
+            shouldExecuteInSeparateProcess);
     graphBuilder.addToIndex(androidBuildConfig);
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
@@ -192,7 +188,6 @@ public class AndroidBuildConfigDescription
         javacOptions,
         androidBuildConfig,
         withDownwardApi,
-        javaRuntimeLauncher,
         javaCDParams);
   }
 

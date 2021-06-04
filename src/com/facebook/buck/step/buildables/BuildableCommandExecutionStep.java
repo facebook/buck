@@ -31,6 +31,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -57,33 +58,25 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
 
   private final BuildableCommand buildableCommand;
   private final ProjectFilesystem projectFilesystem;
-  private final ImmutableList<String> javaRuntimeLauncherCommand;
   private final String mainClass;
 
   /**
    * Used for testing only. Production code should use the constructor {@link
-   * #BuildableCommandExecutionStep(BuildableCommand, ProjectFilesystem, ImmutableList).
+   * #BuildableCommandExecutionStep(BuildableCommand, ProjectFilesystem, String).
    */
   @VisibleForTesting
   public BuildableCommandExecutionStep(
-      BuildableCommand buildableCommand,
-      ProjectFilesystem projectFilesystem,
-      ImmutableList<String> javaCommandPrefix,
-      String mainClass) {
+      BuildableCommand buildableCommand, ProjectFilesystem projectFilesystem, String mainClass) {
     this.buildableCommand = buildableCommand;
     this.projectFilesystem = projectFilesystem;
-    this.javaRuntimeLauncherCommand = javaCommandPrefix;
     this.mainClass = mainClass;
   }
 
   public BuildableCommandExecutionStep(
-      BuildableCommand buildableCommand,
-      ProjectFilesystem projectFilesystem,
-      ImmutableList<String> javaCommandPrefix) {
+      BuildableCommand buildableCommand, ProjectFilesystem projectFilesystem) {
     this(
         buildableCommand,
         projectFilesystem,
-        javaCommandPrefix,
         "com.facebook.buck.external.main.ExternalActionsExecutableMain");
   }
 
@@ -156,8 +149,8 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
             buildableCommandPath.toString());
 
     return ImmutableList.<String>builderWithExpectedSize(
-            javaRuntimeLauncherCommand.size() + commonJvmParams.size() + command.size())
-        .addAll(javaRuntimeLauncherCommand)
+            1 + commonJvmParams.size() + command.size())
+        .add(JavaRuntimeUtils.getBucksJavaBinCommand())
         .addAll(commonJvmParams)
         .addAll(command)
         .build();

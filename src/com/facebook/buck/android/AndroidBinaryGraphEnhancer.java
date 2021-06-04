@@ -39,7 +39,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
@@ -321,8 +320,7 @@ public class AndroidBinaryGraphEnhancer {
             extraFilteredResources,
             resourceStableIds,
             downwardApiConfig.isEnabledForAndroid(),
-            buildBuckConfig.areExternalActionsEnabled(),
-            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime());
+            buildBuckConfig.areExternalActionsEnabled());
     this.apkModuleGraph = apkModuleGraph;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
@@ -485,7 +483,6 @@ public class AndroidBinaryGraphEnhancer {
                   .getDelegate()
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
-              javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
               DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
@@ -740,7 +737,6 @@ public class AndroidBinaryGraphEnhancer {
       AndroidPackageableCollection packageableCollection,
       boolean withDownwardApi,
       boolean shouldExecuteInSeparateProcess,
-      Tool javaRuntimeLauncher,
       BaseJavaCDParams javaCDParams) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
@@ -785,7 +781,6 @@ public class AndroidBinaryGraphEnhancer {
               graphBuilder,
               withDownwardApi,
               shouldExecuteInSeparateProcess,
-              javaRuntimeLauncher,
               javaCDParams);
       graphBuilder.addToIndex(buildConfigJavaLibrary);
 

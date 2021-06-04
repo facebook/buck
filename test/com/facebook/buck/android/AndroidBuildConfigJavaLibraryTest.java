@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.FakeTool;
 import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -59,7 +58,6 @@ public class AndroidBuildConfigJavaLibraryTest {
             graphBuilder,
             false,
             false,
-            new FakeTool(),
             BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
@@ -93,7 +91,6 @@ public class AndroidBuildConfigJavaLibraryTest {
             graphBuilder,
             false,
             false,
-            new FakeTool(),
             BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());

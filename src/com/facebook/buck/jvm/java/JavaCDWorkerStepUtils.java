@@ -28,6 +28,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.WorkerToolLauncher;
@@ -77,7 +78,6 @@ public class JavaCDWorkerStepUtils {
   /** Returns the startup command for launching javacd process. */
   public static ImmutableList<String> getLaunchJavaCDCommand(
       JavaCDParams javaCDParams, AbsPath ruleCellRoot) {
-    ImmutableList<String> javaRuntimeLauncherCommand = javaCDParams.getJavaRuntimeLauncherCommand();
     ImmutableList<String> startCommandOptions = javaCDParams.getStartCommandOptions();
     ImmutableList<String> commonJvmParams =
         getCommonJvmParams(ruleCellRoot.resolve(javaCDParams.getLogDirectory()));
@@ -90,11 +90,8 @@ public class JavaCDWorkerStepUtils {
         ImmutableList.of("-cp", classpath, BuckClasspath.BOOTSTRAP_MAIN_CLASS, JAVACD_MAIN_CLASS);
 
     return ImmutableList.<String>builderWithExpectedSize(
-            javaRuntimeLauncherCommand.size()
-                + commonJvmParams.size()
-                + startCommandOptions.size()
-                + command.size())
-        .addAll(javaRuntimeLauncherCommand)
+            1 + commonJvmParams.size() + startCommandOptions.size() + command.size())
+        .add(JavaRuntimeUtils.getBucksJavaBinCommand())
         .addAll(commonJvmParams)
         .addAll(startCommandOptions)
         .addAll(command)

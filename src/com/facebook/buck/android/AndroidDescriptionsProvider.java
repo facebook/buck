@@ -69,8 +69,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new DefaultAndroidLibraryCompilerFactory(
             javaConfig, scalaConfig, kotlinBuckConfig, downwardApiConfig);
     AndroidInstallConfig androidInstallConfig = new AndroidInstallConfig(buckConfig);
-    AndroidManifestFactory androidManifestFactory =
-        new AndroidManifestFactory(buildBuckConfig, javaConfig);
+    AndroidManifestFactory androidManifestFactory = new AndroidManifestFactory(buildBuckConfig);
 
     return Arrays.asList(
         new AndroidAarDescription(
@@ -128,7 +127,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new AndroidPrebuiltAarDescription(
             toolchainProvider, androidBuckConfig, downwardApiConfig, javaConfig, javaCDBuckConfig),
         new AndroidResourceDescription(
-            toolchainProvider, androidBuckConfig, downwardApiConfig, buildBuckConfig, javaConfig),
+            toolchainProvider, androidBuckConfig, downwardApiConfig, buildBuckConfig),
         new RobolectricTestDescription(
             toolchainProvider,
             javaConfig,

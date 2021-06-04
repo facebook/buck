@@ -22,20 +22,16 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidManifestFactory {
 
   private final boolean shouldExecuteInSeparateProcess;
-  private final Tool javaRuntimeLauncher;
 
-  public AndroidManifestFactory(BuildBuckConfig buildBuckConfig, JavaBuckConfig javaBuckConfig) {
+  public AndroidManifestFactory(BuildBuckConfig buildBuckConfig) {
     this.shouldExecuteInSeparateProcess = buildBuckConfig.areExternalActionsEnabled();
-    this.javaRuntimeLauncher = javaBuckConfig.getDefaultJavaOptions().getJavaRuntime();
   }
 
   public AndroidManifest createBuildRule(
@@ -55,7 +51,6 @@ public class AndroidManifestFactory {
         skeleton,
         APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true),
         manifestFiles,
-        shouldExecuteInSeparateProcess,
-        javaRuntimeLauncher);
+        shouldExecuteInSeparateProcess);
   }
 }

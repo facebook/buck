@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -82,7 +81,6 @@ public abstract class DefaultJavaLibraryRules {
         boolean isDesugarEnabled,
         boolean isInterfaceMethodsDesugarEnabled,
         boolean neverMarkAsUnusedDependency,
-        Tool javaRuntimeLauncher,
         BaseJavaCDParams javaCDParams);
   }
 
@@ -465,7 +463,6 @@ public abstract class DefaultJavaLibraryRules {
             isDesugarRequired(),
             configuredCompilerFactory.shouldDesugarInterfaceMethods(),
             args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
             createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 
@@ -512,7 +509,6 @@ public abstract class DefaultJavaLibraryRules {
                 isDesugarRequired(),
                 configuredCompilerFactory.shouldDesugarInterfaceMethods(),
                 args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-                javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
                 createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
 
     actionGraphBuilder.addToIndex(libraryRule);
@@ -566,7 +562,6 @@ public abstract class DefaultJavaLibraryRules {
             projectFilesystem,
             jarBuildStepsFactory,
             graphBuilder,
-            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
             createJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
   }
 
@@ -591,7 +586,6 @@ public abstract class DefaultJavaLibraryRules {
             projectFilesystem,
             jarBuildStepsFactory,
             graphBuilder,
-            javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
             createJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
   }
 
@@ -715,7 +709,6 @@ public abstract class DefaultJavaLibraryRules {
         classpaths.getDependencyInfos(),
         getRequiredForSourceOnlyAbi(),
         getDownwardApiConfig().isEnabledForJava(),
-        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
         createJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
   }
 
@@ -742,7 +735,6 @@ public abstract class DefaultJavaLibraryRules {
         getClasspaths().getDependencyInfosForSourceOnlyAbi(),
         getRequiredForSourceOnlyAbi(),
         getDownwardApiConfig().isEnabledForJava(),
-        javaBuckConfig.getDefaultJavaOptions().getJavaRuntime(),
         createJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
   }
 

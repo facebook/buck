@@ -44,7 +44,6 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
@@ -111,8 +110,7 @@ public class AndroidResourceDescriptionTest {
             createToolchainProviderForAndroidResource(),
             new AndroidBuckConfig(buckConfig, Platform.detect()),
             DownwardApiConfig.of(buckConfig),
-            BuildBuckConfig.of(buckConfig),
-            JavaBuckConfig.of(buckConfig));
+            BuildBuckConfig.of(buckConfig));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot().toPath());
     Map<Path, SourcePath> inputs = description.collectInputFiles(filesystem, Paths.get("res"));
