@@ -407,6 +407,17 @@ public class AppleTestIntegrationTest {
     }
   }
 
+  @Test(timeout = 2 * 60 * 1_000)
+  public void testBuildingTestWithFocusedDebuggingEnabled() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_deps", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "focused_debugging_enabled", "true");
+
+    ProcessResult result = workspace.runBuckCommand("build", "//:foo");
+    result.assertSuccess();
+  }
+
   @Test
   public void testWithDepsCompileDeps() throws Exception {
     assumeTrue(

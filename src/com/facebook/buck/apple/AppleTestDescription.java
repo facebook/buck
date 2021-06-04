@@ -63,6 +63,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxFocusedDebugTargets;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -135,7 +136,11 @@ public class AppleTestDescription
           "Produces a directory containing the resource dependencies and an aggregated static library created from the dependencies of the target");
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
-      ImmutableSet.of(LIBRARY_FLAVOR, BUNDLE_FLAVOR, COMPILE_DEPS);
+      ImmutableSet.of(
+          LIBRARY_FLAVOR,
+          BUNDLE_FLAVOR,
+          COMPILE_DEPS,
+          CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS);
 
   /**
    * Auxiliary build modes which makes this description emit just the results of the underlying
@@ -205,6 +210,7 @@ public class AppleTestDescription
       return createCompileDepsRule(
           cxxPlatformsProvider, buildTarget, graphBuilder, context, params, args);
     }
+
     if (!appleConfig.shouldUseSwiftDelegate()) {
       Optional<BuildRule> buildRule =
           appleLibraryDescription.createSwiftBuildRule(
@@ -318,7 +324,13 @@ public class AppleTestDescription
             libraryTarget,
             RichStream.from(args.getTestHostApp()).toImmutableSortedSet(Ordering.natural()),
             appleCxxPlatform);
-    if (!createBundle || SwiftLibraryDescription.isSwiftTarget(libraryTarget)) {
+
+    boolean hasFocusedDebuggingFlavor =
+        buildTarget.getFlavors().contains(CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS);
+
+    if (!createBundle
+        || SwiftLibraryDescription.isSwiftTarget(libraryTarget)
+        || hasFocusedDebuggingFlavor) {
       return library;
     }
 
