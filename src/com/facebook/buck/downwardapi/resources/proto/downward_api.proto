@@ -129,5 +129,5 @@ message ResultEvent {
 
 // Event used to notify buck that pipelining task has been finished.
 message PipelineFinishedEvent {
-    string action_id = 1;
+    repeated string action_id = 1;
 }
