@@ -20,8 +20,10 @@ import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.downward.model.PipelineFinishedEvent;
 import com.facebook.buck.downward.model.ResultEvent;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.protobuf.AbstractMessage;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
@@ -30,9 +32,21 @@ import org.immutables.value.Value;
  * Holds execution request details. This represents a currently executing external worker tool
  * request of potentially many actions
  */
-abstract class ExecutionRequest {
+abstract class ExecutionRequest<T extends AbstractMessage> {
+
+  /** Execution request type */
+  enum Type {
+    SINGLE,
+    PIPELINING;
+  }
+
+  abstract Type getType();
 
   abstract ImmutableList<ExecutingAction> getExecutionActions();
+
+  abstract void setFinished(T event);
+
+  abstract void verifyExecuting();
 
   void verifyAllActionsAreDone() {
     for (ExecutingAction executingAction : getExecutionActions()) {
@@ -72,7 +86,7 @@ abstract class ExecutionRequest {
 
   /** Holds execution request details for a single command */
   @BuckStyleValue
-  abstract static class SingleExecutionRequest extends ExecutionRequest {
+  abstract static class SingleExecutionRequest extends ExecutionRequest<ResultEvent> {
 
     @Override
     @Value.Derived
@@ -82,6 +96,25 @@ abstract class ExecutionRequest {
 
     abstract ExecutingAction getExecutionAction();
 
+    @Override
+    void verifyExecuting() {
+      ExecutingAction executionAction = getExecutionAction();
+      Preconditions.checkState(
+          !executionAction.getResultEventFuture().isDone(),
+          String.format("Execution is finished : %s", getHumanReadableId()));
+    }
+
+    @Override
+    void setFinished(ResultEvent event) {
+      getExecutionAction().getResultEventFuture().set(event);
+    }
+
+    @Override
+    @Value.Derived
+    Type getType() {
+      return Type.SINGLE;
+    }
+
     public static SingleExecutionRequest of(ActionId actionId) {
       return ImmutableSingleExecutionRequest.ofImpl(ExecutingAction.of(actionId));
     }
@@ -89,12 +122,30 @@ abstract class ExecutionRequest {
 
   /** Holds execution request details for a pipelining command */
   @BuckStyleValue
-  abstract static class PipeliningExecutionRequest extends ExecutionRequest {
+  abstract static class PipeliningExecutionRequest extends ExecutionRequest<PipelineFinishedEvent> {
 
     abstract SettableFuture<PipelineFinishedEvent> getPipelineFinishedFuture();
 
     @Override
     abstract ImmutableList<ExecutingAction> getExecutionActions();
+
+    @Override
+    void verifyExecuting() {
+      Preconditions.checkState(
+          !getPipelineFinishedFuture().isDone(),
+          String.format("Pipeline is finished : %s", getHumanReadableId()));
+    }
+
+    @Override
+    void setFinished(PipelineFinishedEvent event) {
+      getPipelineFinishedFuture().set(event);
+    }
+
+    @Override
+    @Value.Derived
+    Type getType() {
+      return Type.PIPELINING;
+    }
 
     @Override
     void verifyAllActionsAreDone() {
