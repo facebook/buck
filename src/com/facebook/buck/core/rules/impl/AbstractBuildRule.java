@@ -130,14 +130,13 @@ public abstract class AbstractBuildRule implements BuildRule {
     return hashCode;
   }
 
-  private final int computeHashCode() {
+  private int computeHashCode() {
     return this.buildTarget.hashCode();
   }
 
   @Override
   public ImmutableSet<BuildTarget> getDependencies() {
-    return ImmutableSet.copyOf(
-        Collections2.transform(getBuildDeps(), rule -> rule.getBuildTarget()));
+    return ImmutableSet.copyOf(Collections2.transform(getBuildDeps(), BuildRule::getBuildTarget));
   }
 
   @Override

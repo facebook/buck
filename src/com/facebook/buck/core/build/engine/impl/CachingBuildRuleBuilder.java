@@ -850,7 +850,7 @@ class CachingBuildRuleBuilder {
                 right -> {
                   throw new RuntimeException(
                       "OUTPUT_SIZE should always be computed and present for rule "
-                          + rule.getFullyQualifiedName(),
+                          + rule.toStringWithConfiguration(),
                       right);
                 });
 
@@ -867,7 +867,7 @@ class CachingBuildRuleBuilder {
                     LOG.warn(
                         hashString.getRight(),
                         "OUTPUT_HASH is unexpectedly missing for %s",
-                        rule.getFullyQualifiedName());
+                        rule.toStringWithConfiguration());
                   }
                 });
 
@@ -1119,8 +1119,7 @@ class CachingBuildRuleBuilder {
           transformBuildResultIfNotPresent(
               buildResultFuture,
               () -> {
-                LOG.info(
-                    "Cannot populate cache for " + rule.getBuildTarget().getFullyQualifiedName());
+                LOG.info("Cannot populate cache for " + rule.toStringWithConfiguration());
                 return Optional.of(
                     canceled(
                         new HumanReadableException(
@@ -1518,14 +1517,14 @@ class CachingBuildRuleBuilder {
         }
 
         try (Scope ignored = buildRuleScope()) {
-          LOG.debug("Building locally: %s", rule);
+          LOG.debug("Building locally: %s", rule.toStringWithConfiguration());
           // Attempt to get an approximation of how long it takes to actually run the command.
           long start = System.nanoTime();
           executeCommands(ruleExecutionContext);
           long end = System.nanoTime();
           LOG.debug(
               "Build completed: %s %s (%dns)",
-              rule.getType(), rule.getFullyQualifiedName(), end - start);
+              rule.getType(), rule.toStringWithConfiguration(), end - start);
         }
 
         // Set the future outside of the scope, to match the behavior of other steps that use

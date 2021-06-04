@@ -47,6 +47,10 @@ public interface BuildRule
     return getBuildTarget().getFullyQualifiedName();
   }
 
+  default String toStringWithConfiguration() {
+    return getBuildTarget().toStringWithConfiguration();
+  }
+
   /**
    * @return the set of rules that must be built before this rule. Normally, this matches the value
    *     of the {@code deps} argument for this build rule in the build file in which it was defined.
