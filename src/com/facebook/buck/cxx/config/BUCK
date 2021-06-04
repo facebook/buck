@@ -7,6 +7,7 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/artifact_cache/config:config",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/linker/impl:impl",

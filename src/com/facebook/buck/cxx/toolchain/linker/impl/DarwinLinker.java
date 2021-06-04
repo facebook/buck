@@ -79,16 +79,19 @@ public class DarwinLinker extends DelegatingTool
           "We do want the get cache hits with normalised paths even when we would not build normalised paths locally.",
       serialization = DefaultFieldSerialization.class,
       inputs = DefaultFieldInputs.class)
-  private final boolean cacheLinks;
+  private final boolean shouldCreateHermeticLinkOutput;
 
   @AddToRuleKey private final boolean scrubConcurrently;
 
   @AddToRuleKey private final boolean usePathNormalizationArgs;
 
   public DarwinLinker(
-      Tool tool, boolean cacheLinks, boolean scrubConcurrently, boolean usePathNormalizationArgs) {
+      Tool tool,
+      boolean shouldCreateHermeticLinkOutput,
+      boolean scrubConcurrently,
+      boolean usePathNormalizationArgs) {
     super(tool);
-    this.cacheLinks = cacheLinks;
+    this.shouldCreateHermeticLinkOutput = shouldCreateHermeticLinkOutput;
     this.scrubConcurrently = scrubConcurrently;
     this.usePathNormalizationArgs = usePathNormalizationArgs;
   }
@@ -99,14 +102,11 @@ public class DarwinLinker extends DelegatingTool
       Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths,
       Optional<ImmutableMap<String, AbsPath>> targetToOutputPathMap,
       Optional<AbsPath> focusedTargetsPath) {
-    if (cacheLinks) {
+    if (shouldCreateHermeticLinkOutput) {
       if (focusedTargetsPath.isPresent()) {
-        // If we're caching link outputs and using focused debugging, scrub the debug symbols
-        // using focused debug targets.
-        // For builds that generate cached artifacts, we don't provide any focused targets and
-        // the link outputs will be stripped of all OSO paths. For local builds with focused
-        // targets, we don't upload to remote cache despite `cxx.cache_links=true`.
-        return getFocusedDebugSymbolScrubbers(focusedTargetsPath, targetToOutputPathMap);
+        // If we're caching link outputs and using focused debugging, strip the outputs' entire
+        // debug symbol tables to ensure they do not contain absolute paths.
+        return ImmutableList.of(new StripDebugSymbolTableScrubber());
       } else {
         // If we aren't using focused debugging, scrub all absolute OSO paths into relative paths.
         FileScrubber uuidScrubber = new LcUuidContentsScrubber(scrubConcurrently);
@@ -182,7 +182,7 @@ public class DarwinLinker extends DelegatingTool
 
   @Override
   public Iterable<Arg> pathNormalizationArgs(ImmutableMap<Path, Path> cellRootMap) {
-    if (cacheLinks && usePathNormalizationArgs) {
+    if (shouldCreateHermeticLinkOutput && usePathNormalizationArgs) {
       Optional<String> maybeOsoPrefix =
           OsoSymbolsContentsScrubber.computeOsoPrefixForCellRootMap(cellRootMap);
       return maybeOsoPrefix
@@ -199,7 +199,7 @@ public class DarwinLinker extends DelegatingTool
 
   @Override
   public Optional<String> pathNormalizationPrefix(ImmutableMap<Path, Path> cellRootMap) {
-    if (cacheLinks && usePathNormalizationArgs) {
+    if (shouldCreateHermeticLinkOutput && usePathNormalizationArgs) {
       return OsoSymbolsContentsScrubber.computeOsoPrefixForCellRootMap(cellRootMap);
     }
     return Optional.empty();

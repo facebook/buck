@@ -32,7 +32,7 @@ public class DefaultLinkerProvider implements LinkerProvider {
 
   private final Type type;
   private final ToolProvider toolProvider;
-  private final boolean cacheLinks;
+  private final boolean shouldCreateHermeticLinkOutput;
   private final boolean scrubConcurrently;
   private final boolean usePathNormalizationArgs;
 
@@ -53,26 +53,29 @@ public class DefaultLinkerProvider implements LinkerProvider {
                               build(
                                   type,
                                   tool,
-                                  cacheLinks,
+                                  shouldCreateHermeticLinkOutput,
                                   scrubConcurrently,
                                   usePathNormalizationArgs));
                     }
                   });
 
   public DefaultLinkerProvider(
-      Type type, ToolProvider toolProvider, boolean cacheLinks, boolean usePathNormalization) {
-    this(type, toolProvider, cacheLinks, false, usePathNormalization);
+      Type type,
+      ToolProvider toolProvider,
+      boolean shouldCreateHermeticLinkOutput,
+      boolean usePathNormalization) {
+    this(type, toolProvider, shouldCreateHermeticLinkOutput, false, usePathNormalization);
   }
 
   public DefaultLinkerProvider(
       Type type,
       ToolProvider toolProvider,
-      boolean cacheLinks,
+      boolean shouldCreateHermeticLinkOutput,
       boolean scrubConcurrently,
       boolean usePathNormalizationArgs) {
     this.type = type;
     this.toolProvider = toolProvider;
-    this.cacheLinks = cacheLinks;
+    this.shouldCreateHermeticLinkOutput = shouldCreateHermeticLinkOutput;
     this.scrubConcurrently = scrubConcurrently;
     this.usePathNormalizationArgs = usePathNormalizationArgs;
   }
@@ -80,12 +83,13 @@ public class DefaultLinkerProvider implements LinkerProvider {
   private static Linker build(
       Type type,
       Tool tool,
-      boolean cacheLinks,
+      boolean shouldCreateHermeticLinkOutput,
       boolean scrubConcurrently,
       boolean usePathNormalizationArgs) {
     switch (type) {
       case DARWIN:
-        return new DarwinLinker(tool, cacheLinks, scrubConcurrently, usePathNormalizationArgs);
+        return new DarwinLinker(
+            tool, shouldCreateHermeticLinkOutput, scrubConcurrently, usePathNormalizationArgs);
       case GNU:
         return new GnuLinker(tool);
       case WINDOWS:

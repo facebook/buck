@@ -71,9 +71,11 @@ public class CxxToolchainDescription
     implements DescriptionWithTargetGraph<CxxToolchainDescriptionArg> {
 
   private final DownwardApiConfig downwardApiConfig;
+  private final CxxBuckConfig cxxBuckConfig;
 
-  public CxxToolchainDescription(DownwardApiConfig downwardApiConfig) {
+  public CxxToolchainDescription(DownwardApiConfig downwardApiConfig, CxxBuckConfig cxxBuckConfig) {
     this.downwardApiConfig = downwardApiConfig;
+    this.cxxBuckConfig = cxxBuckConfig;
   }
 
   @Override
@@ -267,7 +269,7 @@ public class CxxToolchainDescription
         new DefaultLinkerProvider(
             linkerType,
             ToolProviders.getToolProvider(args.getLinker()),
-            args.getCacheLinks(),
+            args.getCacheLinks() && cxxBuckConfig.shouldUploadToCache(),
             scrubConcurrently,
             args.getLinkPathNormalizationArgsEnabled()));
 

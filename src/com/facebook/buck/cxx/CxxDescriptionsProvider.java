@@ -89,7 +89,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
             cliConfig,
             cxxBuckConfig,
             context.getSandboxExecutionStrategy()),
-        new CxxToolchainDescription(downwardApiConfig),
+        new CxxToolchainDescription(downwardApiConfig, cxxBuckConfig),
         new CxxTestDescription(
             toolchainProvider, cxxBuckConfig, downwardApiConfig, cxxBinaryMetadataFactory),
         new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig),

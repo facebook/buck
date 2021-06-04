@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.config;
 
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -428,7 +429,7 @@ public class CxxBuckConfig {
         new DefaultLinkerProvider(
             type.orElse(defaultType),
             toolProvider.get(),
-            shouldCacheLinks(),
+            shouldCacheLinks() && shouldUploadToCache(),
             getLinkPathNormalizationArgsEnabled()));
   }
 
@@ -514,6 +515,14 @@ public class CxxBuckConfig {
 
   public boolean shouldCacheLinks() {
     return delegate.getBooleanValue(cxxSection, CACHE_LINKS, true);
+  }
+
+  /** Checks the caching config to determine whether we can upload to remote cache. */
+  public boolean shouldUploadToCache() {
+    String cacheMode =
+        delegate.getValue("cache", "http_mode").orElse(CacheReadMode.READWRITE.name());
+    cacheMode = cacheMode.toUpperCase();
+    return cacheMode.equals(CacheReadMode.READWRITE.name());
   }
 
   public boolean getLinkerMapEnabled() {

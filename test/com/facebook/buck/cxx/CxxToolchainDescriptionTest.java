@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_CONFIG;
 import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static org.junit.Assert.assertEquals;
 
@@ -57,7 +58,7 @@ public class CxxToolchainDescriptionTest {
           CxxToolchainBuildRule> {
 
     protected CxxPlatformNodeBuilder(BuildTarget target) {
-      super(new CxxToolchainDescription(DEFAULT_DOWNWARD_API_CONFIG), target);
+      super(new CxxToolchainDescription(DEFAULT_DOWNWARD_API_CONFIG, DEFAULT_CONFIG), target);
     }
   }
 
