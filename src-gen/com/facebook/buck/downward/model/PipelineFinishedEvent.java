@@ -22,7 +22,7 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private PipelineFinishedEvent() {
-    actionId_ = "";
+    actionId_ = com.google.protobuf.LazyStringArrayList.EMPTY;
   }
 
   @java.lang.Override
@@ -51,8 +51,11 @@ private static final long serialVersionUID = 0L;
             break;
           case 10: {
             java.lang.String s = input.readStringRequireUtf8();
-
-            actionId_ = s;
+            if (!((mutable_bitField0_ & 0x00000001) != 0)) {
+              actionId_ = new com.google.protobuf.LazyStringArrayList();
+              mutable_bitField0_ |= 0x00000001;
+            }
+            actionId_.add(s);
             break;
           }
           default: {
@@ -70,6 +73,9 @@ private static final long serialVersionUID = 0L;
       throw new com.google.protobuf.InvalidProtocolBufferException(
           e).setUnfinishedMessage(this);
     } finally {
+      if (((mutable_bitField0_ & 0x00000001) != 0)) {
+        actionId_ = actionId_.getUnmodifiableView();
+      }
       this.unknownFields = unknownFields.build();
       makeExtensionsImmutable();
     }
@@ -88,37 +94,32 @@ private static final long serialVersionUID = 0L;
   }
 
   public static final int ACTION_ID_FIELD_NUMBER = 1;
-  private volatile java.lang.Object actionId_;
+  private com.google.protobuf.LazyStringList actionId_;
   /**
-   * <code>string action_id = 1;</code>
+   * <code>repeated string action_id = 1;</code>
    */
-  public java.lang.String getActionId() {
-    java.lang.Object ref = actionId_;
-    if (ref instanceof java.lang.String) {
-      return (java.lang.String) ref;
-    } else {
-      com.google.protobuf.ByteString bs = 
-          (com.google.protobuf.ByteString) ref;
-      java.lang.String s = bs.toStringUtf8();
-      actionId_ = s;
-      return s;
-    }
+  public com.google.protobuf.ProtocolStringList
+      getActionIdList() {
+    return actionId_;
   }
   /**
-   * <code>string action_id = 1;</code>
+   * <code>repeated string action_id = 1;</code>
+   */
+  public int getActionIdCount() {
+    return actionId_.size();
+  }
+  /**
+   * <code>repeated string action_id = 1;</code>
+   */
+  public java.lang.String getActionId(int index) {
+    return actionId_.get(index);
+  }
+  /**
+   * <code>repeated string action_id = 1;</code>
    */
   public com.google.protobuf.ByteString
-      getActionIdBytes() {
-    java.lang.Object ref = actionId_;
-    if (ref instanceof java.lang.String) {
-      com.google.protobuf.ByteString b = 
-          com.google.protobuf.ByteString.copyFromUtf8(
-              (java.lang.String) ref);
-      actionId_ = b;
-      return b;
-    } else {
-      return (com.google.protobuf.ByteString) ref;
-    }
+      getActionIdBytes(int index) {
+    return actionId_.getByteString(index);
   }
 
   private byte memoizedIsInitialized = -1;
@@ -135,8 +136,8 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (!getActionIdBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, actionId_);
+    for (int i = 0; i < actionId_.size(); i++) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 1, actionId_.getRaw(i));
     }
     unknownFields.writeTo(output);
   }
@@ -147,8 +148,13 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (!getActionIdBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, actionId_);
+    {
+      int dataSize = 0;
+      for (int i = 0; i < actionId_.size(); i++) {
+        dataSize += computeStringSizeNoTag(actionId_.getRaw(i));
+      }
+      size += dataSize;
+      size += 1 * getActionIdList().size();
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -165,8 +171,8 @@ private static final long serialVersionUID = 0L;
     }
     com.facebook.buck.downward.model.PipelineFinishedEvent other = (com.facebook.buck.downward.model.PipelineFinishedEvent) obj;
 
-    if (!getActionId()
-        .equals(other.getActionId())) return false;
+    if (!getActionIdList()
+        .equals(other.getActionIdList())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -178,8 +184,10 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + ACTION_ID_FIELD_NUMBER;
-    hash = (53 * hash) + getActionId().hashCode();
+    if (getActionIdCount() > 0) {
+      hash = (37 * hash) + ACTION_ID_FIELD_NUMBER;
+      hash = (53 * hash) + getActionIdList().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -317,8 +325,8 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      actionId_ = "";
-
+      actionId_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00000001);
       return this;
     }
 
@@ -345,6 +353,11 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.facebook.buck.downward.model.PipelineFinishedEvent buildPartial() {
       com.facebook.buck.downward.model.PipelineFinishedEvent result = new com.facebook.buck.downward.model.PipelineFinishedEvent(this);
+      int from_bitField0_ = bitField0_;
+      if (((bitField0_ & 0x00000001) != 0)) {
+        actionId_ = actionId_.getUnmodifiableView();
+        bitField0_ = (bitField0_ & ~0x00000001);
+      }
       result.actionId_ = actionId_;
       onBuilt();
       return result;
@@ -394,8 +407,14 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(com.facebook.buck.downward.model.PipelineFinishedEvent other) {
       if (other == com.facebook.buck.downward.model.PipelineFinishedEvent.getDefaultInstance()) return this;
-      if (!other.getActionId().isEmpty()) {
-        actionId_ = other.actionId_;
+      if (!other.actionId_.isEmpty()) {
+        if (actionId_.isEmpty()) {
+          actionId_ = other.actionId_;
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          ensureActionIdIsMutable();
+          actionId_.addAll(other.actionId_);
+        }
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -426,72 +445,98 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
+    private int bitField0_;
 
-    private java.lang.Object actionId_ = "";
-    /**
-     * <code>string action_id = 1;</code>
-     */
-    public java.lang.String getActionId() {
-      java.lang.Object ref = actionId_;
-      if (!(ref instanceof java.lang.String)) {
-        com.google.protobuf.ByteString bs =
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        actionId_ = s;
-        return s;
-      } else {
-        return (java.lang.String) ref;
-      }
+    private com.google.protobuf.LazyStringList actionId_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+    private void ensureActionIdIsMutable() {
+      if (!((bitField0_ & 0x00000001) != 0)) {
+        actionId_ = new com.google.protobuf.LazyStringArrayList(actionId_);
+        bitField0_ |= 0x00000001;
+       }
     }
     /**
-     * <code>string action_id = 1;</code>
+     * <code>repeated string action_id = 1;</code>
+     */
+    public com.google.protobuf.ProtocolStringList
+        getActionIdList() {
+      return actionId_.getUnmodifiableView();
+    }
+    /**
+     * <code>repeated string action_id = 1;</code>
+     */
+    public int getActionIdCount() {
+      return actionId_.size();
+    }
+    /**
+     * <code>repeated string action_id = 1;</code>
+     */
+    public java.lang.String getActionId(int index) {
+      return actionId_.get(index);
+    }
+    /**
+     * <code>repeated string action_id = 1;</code>
      */
     public com.google.protobuf.ByteString
-        getActionIdBytes() {
-      java.lang.Object ref = actionId_;
-      if (ref instanceof String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        actionId_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
+        getActionIdBytes(int index) {
+      return actionId_.getByteString(index);
     }
     /**
-     * <code>string action_id = 1;</code>
+     * <code>repeated string action_id = 1;</code>
      */
     public Builder setActionId(
+        int index, java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureActionIdIsMutable();
+      actionId_.set(index, value);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string action_id = 1;</code>
+     */
+    public Builder addActionId(
         java.lang.String value) {
       if (value == null) {
     throw new NullPointerException();
   }
-  
-      actionId_ = value;
+  ensureActionIdIsMutable();
+      actionId_.add(value);
       onChanged();
       return this;
     }
     /**
-     * <code>string action_id = 1;</code>
+     * <code>repeated string action_id = 1;</code>
+     */
+    public Builder addAllActionId(
+        java.lang.Iterable<java.lang.String> values) {
+      ensureActionIdIsMutable();
+      com.google.protobuf.AbstractMessageLite.Builder.addAll(
+          values, actionId_);
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>repeated string action_id = 1;</code>
      */
     public Builder clearActionId() {
-      
-      actionId_ = getDefaultInstance().getActionId();
+      actionId_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      bitField0_ = (bitField0_ & ~0x00000001);
       onChanged();
       return this;
     }
     /**
-     * <code>string action_id = 1;</code>
+     * <code>repeated string action_id = 1;</code>
      */
-    public Builder setActionIdBytes(
+    public Builder addActionIdBytes(
         com.google.protobuf.ByteString value) {
       if (value == null) {
     throw new NullPointerException();
   }
   checkByteStringIsUtf8(value);
-      
-      actionId_ = value;
+      ensureActionIdIsMutable();
+      actionId_.add(value);
       onChanged();
       return this;
     }

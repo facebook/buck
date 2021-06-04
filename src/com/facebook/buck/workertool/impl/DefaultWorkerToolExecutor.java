@@ -58,7 +58,6 @@ import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -185,15 +184,18 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     }
 
     private void processPipelineFinishedEvent(PipelineFinishedEvent pipelineFinishedEvent) {
-      String actionId =
-          Objects.requireNonNull(pipelineFinishedEvent.getActionId(), "action id has to be set");
+      ImmutableList<ActionId> actionIds =
+          pipelineFinishedEvent.getActionIdList().stream()
+              .map(ActionId::of)
+              .collect(ImmutableList.toImmutableList());
+      ActionId firstActionId = actionIds.iterator().next();
       @SuppressWarnings("unchecked")
       ExecutionRequest<PipelineFinishedEvent> executionRequest =
-          (ExecutionRequest<PipelineFinishedEvent>) executionRequests.get(ActionId.of(actionId));
+          (ExecutionRequest<PipelineFinishedEvent>) executionRequests.get(firstActionId);
 
       LOG.debug(
           "Received pipeline finished event with action id: %s. Actions: %s, worker id: %s",
-          actionId, executionRequest.getHumanReadableId(), workerId);
+          actionIds, executionRequest.getHumanReadableId(), workerId);
 
       // signal to Step that pipeline is finished
       executionRequest.setFinished(pipelineFinishedEvent);

@@ -115,7 +115,7 @@ public final class DownwardAPIProto {
       "ntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030\002 \001(\t:\0028\001\"D\n\013" +
       "ResultEvent\022\021\n\taction_id\030\001 \001(\t\022\021\n\texit_c" +
       "ode\030\002 \001(\005\022\017\n\007message\030\003 \001(\t\"*\n\025PipelineFi" +
-      "nishedEvent\022\021\n\taction_id\030\001 \001(\t*W\n\010LogLev" +
+      "nishedEvent\022\021\n\taction_id\030\001 \003(\t*W\n\010LogLev" +
       "el\022\013\n\007UNKNOWN\020\000\022\t\n\005FATAL\020\001\022\t\n\005ERROR\020\002\022\010\n" +
       "\004WARN\020\003\022\010\n\004INFO\020\004\022\t\n\005DEBUG\020\005\022\t\n\005TRACE\020\006B" +
       "6\n com.facebook.buck.downward.modelB\020Dow" +

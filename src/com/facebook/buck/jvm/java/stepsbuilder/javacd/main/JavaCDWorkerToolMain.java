@@ -49,17 +49,16 @@ import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
 import com.facebook.buck.workertool.model.StartPipelineCommand;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /** JavaCD main class */
 public class JavaCDWorkerToolMain {
@@ -198,10 +197,10 @@ public class JavaCDWorkerToolMain {
             case START_PIPELINE_COMMAND:
               StartPipelineCommand startPipelineCommand =
                   StartPipelineCommand.parseDelimitedFrom(commandsInputStream);
-              List<ActionId> actionIds =
+              ImmutableList<ActionId> actionIds =
                   startPipelineCommand.getActionIdList().stream()
                       .map(ActionId::of)
-                      .collect(Collectors.toList());
+                      .collect(ImmutableList.toImmutableList());
               PipeliningCommand pipeliningCommand =
                   PipeliningCommand.parseDelimitedFrom(commandsInputStream);
               LOG.debug("Start executing pipelining command with action ids: %s", actionIds);

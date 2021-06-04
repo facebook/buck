@@ -10,12 +10,21 @@ public interface PipelineFinishedEventOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>string action_id = 1;</code>
+   * <code>repeated string action_id = 1;</code>
    */
-  java.lang.String getActionId();
+  java.util.List<java.lang.String>
+      getActionIdList();
   /**
-   * <code>string action_id = 1;</code>
+   * <code>repeated string action_id = 1;</code>
+   */
+  int getActionIdCount();
+  /**
+   * <code>repeated string action_id = 1;</code>
+   */
+  java.lang.String getActionId(int index);
+  /**
+   * <code>repeated string action_id = 1;</code>
    */
   com.google.protobuf.ByteString
-      getActionIdBytes();
+      getActionIdBytes(int index);
 }

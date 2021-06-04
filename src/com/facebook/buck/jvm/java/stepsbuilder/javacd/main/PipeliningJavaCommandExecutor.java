@@ -63,12 +63,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -79,7 +77,7 @@ class PipeliningJavaCommandExecutor {
   private PipeliningJavaCommandExecutor() {}
 
   static void executePipeliningJavaCommand(
-      List<ActionId> actionIds,
+      ImmutableList<ActionId> actionIds,
       PipeliningCommand pipeliningCommand,
       OutputStream eventsOutputStream,
       DownwardProtocol downwardProtocol,
@@ -174,8 +172,7 @@ class PipeliningJavaCommandExecutor {
         }
       }
     }
-    StepExecutionUtils.writePipelineFinishedEvent(
-        downwardProtocol, eventsOutputStream, Iterators.getLast(actionIds.iterator()));
+    StepExecutionUtils.writePipelineFinishedEvent(downwardProtocol, eventsOutputStream, actionIds);
   }
 
   private static boolean waitForNextCommandSignal(

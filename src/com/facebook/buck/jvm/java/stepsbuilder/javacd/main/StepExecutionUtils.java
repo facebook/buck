@@ -171,11 +171,17 @@ class StepExecutionUtils {
   }
 
   static void writePipelineFinishedEvent(
-      DownwardProtocol downwardProtocol, OutputStream eventsOutputStream, ActionId actionId)
+      DownwardProtocol downwardProtocol,
+      OutputStream eventsOutputStream,
+      ImmutableList<ActionId> actionIds)
       throws IOException {
+    PipelineFinishedEvent.Builder pipelineFinishedEventBuilder = PipelineFinishedEvent.newBuilder();
+    for (ActionId actionId : actionIds) {
+      pipelineFinishedEventBuilder.addActionId(actionId.getValue());
+    }
     writeEvent(
         EventType.PIPELINE_FINISHED_EVENT,
-        PipelineFinishedEvent.newBuilder().setActionId(actionId.getValue()).build(),
+        pipelineFinishedEventBuilder.build(),
         eventsOutputStream,
         downwardProtocol);
   }
