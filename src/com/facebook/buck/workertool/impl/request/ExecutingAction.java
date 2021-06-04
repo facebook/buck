@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.workertool.impl;
+package com.facebook.buck.workertool.impl.request;
 
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -26,11 +26,11 @@ import com.google.common.util.concurrent.SettableFuture;
  * external worker tool request. {@link ExecutionRequest}
  */
 @BuckStyleValue
-abstract class ExecutingAction {
+public abstract class ExecutingAction {
 
-  abstract ActionId getActionId();
+  public abstract ActionId getActionId();
 
-  abstract SettableFuture<ResultEvent> getResultEventFuture();
+  public abstract SettableFuture<ResultEvent> getResultEventFuture();
 
   public static ExecutingAction of(ActionId actionId) {
     return ImmutableExecutingAction.ofImpl(actionId, SettableFuture.create());

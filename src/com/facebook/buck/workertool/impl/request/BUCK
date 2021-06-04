@@ -1,0 +1,14 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "request",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src-gen:downward-model",
+        "//src-gen:worker-tool-model",
+        "//src/com/facebook/buck/core/build/execution/context/actionid:actionid",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

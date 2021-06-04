@@ -16,10 +16,8 @@
 
 package com.facebook.buck.workertool.impl;
 
-import static com.facebook.buck.workertool.impl.ExecutionRequest.PipeliningExecutionRequest;
-import static com.facebook.buck.workertool.impl.ExecutionRequest.pipeliningExecution;
-import static com.facebook.buck.workertool.impl.ExecutionRequest.singleExecution;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.facebook.buck.workertool.impl.request.ExecutionRequest.pipeliningExecution;
+import static com.facebook.buck.workertool.impl.request.ExecutionRequest.singleExecution;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
@@ -42,6 +40,10 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.workertool.WorkerToolExecutor;
+import com.facebook.buck.workertool.impl.request.ExecutingAction;
+import com.facebook.buck.workertool.impl.request.ExecutionRequest;
+import com.facebook.buck.workertool.impl.request.ExecutionRequest.PipeliningExecutionRequest;
+import com.facebook.buck.workertool.impl.request.ExecutionRequest.SingleExecutionRequest;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
@@ -52,7 +54,6 @@ import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
@@ -176,13 +177,6 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
       }
     }
 
-    private void processResultEvent(ResultEvent resultEvent) {
-      LOG.debug(
-          "Received result event for action id: %s, worker id: %s",
-          resultEvent.getActionId(), workerId);
-      receiveResultEvent(resultEvent);
-    }
-
     private void processPipelineFinishedEvent(PipelineFinishedEvent pipelineFinishedEvent) {
       ImmutableList<ActionId> actionIds =
           pipelineFinishedEvent.getActionIdList().stream()
@@ -192,12 +186,10 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
       @SuppressWarnings("unchecked")
       ExecutionRequest<PipelineFinishedEvent> executionRequest =
           (ExecutionRequest<PipelineFinishedEvent>) executionRequests.get(firstActionId);
-
       LOG.debug(
-          "Received pipeline finished event with action id: %s. Actions: %s, worker id: %s",
-          actionIds, executionRequest.getHumanReadableId(), workerId);
+          "Received pipeline finished event with action id: %s. Worker id: %s",
+          actionIds, workerId);
 
-      // signal to Step that pipeline is finished
       executionRequest.setFinished(pipelineFinishedEvent);
     }
   }
@@ -211,14 +203,12 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
     CommandTypeMessage executeCommandTypeMessage;
     ExecuteCommand executeCommand;
+    SingleExecutionRequest singleExecutionRequest;
 
     try (Scope ignored =
         PerfEvents.scope(eventBus, actionId, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
-
-      checkThatNoActionsAreExecuting(actionId);
-      ExecutionRequest<?> previousValue =
-          executionRequests.put(actionId, singleExecution(actionId));
-      checkState(previousValue == null);
+      checkState(!executionRequests.containsKey(actionId));
+      singleExecutionRequest = singleExecution(actionId, executionRequests);
 
       executeCommandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.EXECUTE_COMMAND);
@@ -232,15 +222,14 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
     LOG.debug(
         "Started execution of worker tool for for actionId: %s, worker id: %s", actionId, workerId);
-    return Iterables.getOnlyElement(executionRequests.get(actionId).getExecutionActions())
-        .getResultEventFuture();
+    return singleExecutionRequest.getExecutionAction().getResultEventFuture();
   }
 
   @Override
   public ImmutableList<SettableFuture<ResultEvent>> executePipeliningCommand(
       ImmutableList<ActionId> actionIds,
       AbstractMessage pipeliningCommand,
-      SettableFuture<PipelineFinishedEvent> pipelineFinished,
+      SettableFuture<PipelineFinishedEvent> pipelineFinishedFuture,
       IsolatedEventBus eventBus)
       throws IOException {
     checkState(isAlive(), "Launched process is not alive");
@@ -250,6 +239,8 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
     CommandTypeMessage executeCommandTypeMessage;
     StartPipelineCommand startPipelineCommand;
+    PipeliningExecutionRequest pipeliningExecutionRequest;
+
     try (Scope ignored =
         PerfEvents.scope(
             eventBus, firstActionId, EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX + "_preparing")) {
@@ -259,20 +250,14 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
       ImmutableList.Builder<ExecutingAction> executingActionBuilder =
           ImmutableList.builderWithExpectedSize(actionIds.size());
       for (ActionId actionId : actionIds) {
-        checkThatNoActionsAreExecuting(actionId);
+        checkState(!executionRequests.containsKey(actionId));
         executingActionBuilder.add(ExecutingAction.of(actionId));
         startPipeliningCommandBuilder.addActionId(actionId.getValue());
       }
       // create pipelining execution request
-      PipeliningExecutionRequest pipeliningExecutionRequest =
-          pipeliningExecution(executingActionBuilder.build(), pipelineFinished);
-
-      // add pipelining execution request into requests map
-      for (ActionId actionId : actionIds) {
-        ExecutionRequest<?> previousValue =
-            executionRequests.put(actionId, pipeliningExecutionRequest);
-        checkState(previousValue == null);
-      }
+      pipeliningExecutionRequest =
+          pipeliningExecution(
+              executingActionBuilder.build(), pipelineFinishedFuture, executionRequests);
 
       executeCommandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.START_PIPELINE_COMMAND);
@@ -288,7 +273,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     LOG.debug(
         "Started execution of worker tool for for pipelining actionIds: %s, worker id: %s",
         actionIds, workerId);
-    return executionRequests.get(firstActionId).getExecutionActions().stream()
+    return pipeliningExecutionRequest.getExecutionActions().stream()
         .map(ExecutingAction::getResultEventFuture)
         .collect(ImmutableList.toImmutableList());
   }
@@ -306,13 +291,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
       ExecutionRequest<?> executionRequest = executionRequests.get(actionId);
       executionRequest.verifyExecuting();
-      checkState(
-          executionRequest.getExecutionActions().stream()
-              .map(ExecutingAction::getActionId)
-              .anyMatch(actionId::equals),
-          "Action id: %s is not found among currently execution actions: %s",
-          actionId,
-          executionRequest.getHumanReadableId());
+      executionRequest.verifyContainsAction(actionId);
 
       commandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.START_NEXT_PIPELINING_COMMAND);
@@ -329,49 +308,16 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
         actionId, workerId);
   }
 
-  private void checkThatNoActionsAreExecuting(ActionId actionId) {
-    // `executionRequest` has to be null when a request to execute a new command arrived.
-    ExecutionRequest<?> executionRequest = executionRequests.get(actionId);
-    lazyCheckState(
-        executionRequest == null,
-        () -> String.format("Actions %s are executing...", executionRequest.getHumanReadableId()));
-  }
-
-  private void lazyCheckState(boolean state, Supplier<String> errorMessageSupplier) {
-    if (!state) {
-      throw new IllegalStateException(errorMessageSupplier.get());
-    }
-  }
-
   /**
    * Entry point to {@link WorkerToolExecutorNamedPipeEventHandler} to signal that {@link
    * ResultEvent} is received.
    */
-  private void receiveResultEvent(ResultEvent resultEvent) {
+  private void processResultEvent(ResultEvent resultEvent) {
     ActionId actionId = ActionId.of(resultEvent.getActionId());
+    LOG.debug("Received result event for action id: %s, worker id: %s", actionId, workerId);
+
     ExecutionRequest<?> executionRequest = executionRequests.get(actionId);
-    // `executionRequest` has to be present
-    checkNotNull(executionRequest, "The is no action executing at the moment.");
-
-    ExecutingAction executingAction =
-        executionRequest.getExecutionActions().stream()
-            .filter(action -> !action.getResultEventFuture().isDone())
-            .findFirst()
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "The is no not completed executing action at the moment."));
-
-    ActionId executingActionId = executingAction.getActionId();
-    checkState(
-        actionId.equals(executingActionId),
-        "Received action id %s is not equals to expected one %s. Currently executing actions: %s",
-        actionId,
-        executingActionId,
-        executionRequest.getHumanReadableId());
-
-    SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
-    resultEventFuture.set(resultEvent);
+    executionRequest.processResultEvent(resultEvent);
   }
 
   @Override
@@ -425,12 +371,9 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private void shutdownResultEventFuturesIfNotDone(String errorMessage) {
     Supplier<Exception> exceptionSupplier =
         Suppliers.memoize(() -> new IllegalStateException(errorMessage));
-
-    executionRequests
-        .values()
-        .forEach(
-            executionRequest ->
-                executionRequest.terminateWithExceptionIfNotDone(exceptionSupplier));
+    for (ExecutionRequest<?> executionRequest : executionRequests.values()) {
+      executionRequest.terminateWithExceptionIfNotDone(exceptionSupplier);
+    }
   }
 
   private void shutdownWaitForLaunchedProcessFuture() {
