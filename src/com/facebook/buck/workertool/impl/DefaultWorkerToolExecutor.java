@@ -225,9 +225,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
     try (Scope ignored =
         PerfEvents.scope(eventBus, actionId, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_write")) {
-      executeCommandTypeMessage.writeDelimitedTo(outputStream);
-      executeCommand.writeDelimitedTo(outputStream);
-      executeCommandMessage.writeDelimitedTo(outputStream);
+      writeCommands(executeCommandTypeMessage, executeCommand, executeCommandMessage);
     }
 
     LOG.debug(
@@ -282,9 +280,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     try (Scope ignored =
         PerfEvents.scope(
             eventBus, firstActionId, EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX + "_write")) {
-      executeCommandTypeMessage.writeDelimitedTo(outputStream);
-      startPipelineCommand.writeDelimitedTo(outputStream);
-      pipeliningCommand.writeDelimitedTo(outputStream);
+      writeCommands(executeCommandTypeMessage, startPipelineCommand, pipeliningCommand);
     }
 
     LOG.debug(
@@ -323,8 +319,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     try (Scope ignored =
         PerfEvents.scope(
             eventBus, actionId, START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX + "_write")) {
-      commandTypeMessage.writeDelimitedTo(outputStream);
-      startNextPipeliningCommand.writeDelimitedTo(outputStream);
+      writeCommands(commandTypeMessage, startNextPipeliningCommand);
     }
 
     LOG.debug(
@@ -407,12 +402,11 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   @VisibleForTesting
   public void sendShutdownCommand() {
     LOG.debug("Sending shutdown command to worker tool: %s", workerId);
+    CommandTypeMessage shutdownCommandTypeMessage =
+        getCommandTypeMessage(CommandTypeMessage.CommandType.SHUTDOWN_COMMAND);
+    ShutdownCommand shutdownCommand = ShutdownCommand.getDefaultInstance();
     try {
-      CommandTypeMessage shutdownCommandTypeMessage =
-          getCommandTypeMessage(CommandTypeMessage.CommandType.SHUTDOWN_COMMAND);
-      shutdownCommandTypeMessage.writeDelimitedTo(outputStream);
-      ShutdownCommand shutdownCommand = ShutdownCommand.getDefaultInstance();
-      shutdownCommand.writeDelimitedTo(outputStream);
+      writeCommands(shutdownCommandTypeMessage, shutdownCommand);
     } catch (IOException e) {
       LOG.error(
           e,
@@ -559,5 +553,13 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   @Override
   public boolean isAlive() {
     return launchedProcess != null && launchedProcess.isAlive();
+  }
+
+  private void writeCommands(AbstractMessage... commands) throws IOException {
+    synchronized (this) {
+      for (AbstractMessage c : commands) {
+        c.writeDelimitedTo(outputStream);
+      }
+    }
   }
 }
