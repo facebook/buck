@@ -213,27 +213,28 @@ public class AuditActionGraphCommand extends AbstractCommand {
         json.writeObjectFieldStart("outputPaths");
         SourcePathResolverAdapter resolver = actionGraphBuilder.getSourcePathResolver();
         for (OutputLabel outputLabel : outputLabels) {
-          Optional<SourcePath> sourcePath =
-              getSourcePathForNamedOutput((HasMultipleOutputs) node, outputLabel);
-          if (sourcePath.isPresent()) {
+          ImmutableSet<SourcePath> sourcePaths =
+              getSourcePathsForNamedOutput((HasMultipleOutputs) node, outputLabel);
+          if (!sourcePaths.isEmpty()) {
             json.writeObjectField(
                 outputLabel.toString(),
-                LEFT_BRACKET
-                    + resolver.getAbsolutePath(sourcePath.get()).toString()
-                    + RIGHT_BRACKET);
+                sourcePaths.stream()
+                    .map(sourcePath -> resolver.getAbsolutePath(sourcePath))
+                    .collect(ImmutableSet.toImmutableSet())
+                    .toString());
           }
         }
         json.writeEndObject();
-        // For backwards compatibility for existing scripts in the repo, write the default output to
-        // outputPath
-        Optional<SourcePath> sourcePath =
-            getSourcePathForNamedOutput((HasMultipleOutputs) node, OutputLabel.defaultLabel());
-        if (sourcePath.isPresent()) {
+        // For backwards compatibility for existing scripts in the repo, write the first default
+        // output to outputPath
+        ImmutableSet<SourcePath> sourcePaths =
+            getSourcePathsForNamedOutput((HasMultipleOutputs) node, OutputLabel.defaultLabel());
+        if (!sourcePaths.isEmpty()) {
           json.writeStringField(
               "outputPath",
               actionGraphBuilder
                   .getSourcePathResolver()
-                  .getAbsolutePath(sourcePath.get())
+                  .getAbsolutePath(Iterables.get(sourcePaths, 0))
                   .toString());
         }
       } else {
@@ -334,5 +335,11 @@ public class AuditActionGraphCommand extends AbstractCommand {
       return Optional.empty();
     }
     return Optional.of(Iterables.getOnlyElement(sourcePaths));
+  }
+
+  private static ImmutableSet<SourcePath> getSourcePathsForNamedOutput(
+      HasMultipleOutputs node, OutputLabel outputLabel) {
+    ImmutableSet<SourcePath> sourcePaths = node.getSourcePathToOutput(outputLabel);
+    return sourcePaths;
   }
 }
