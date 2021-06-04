@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
+import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements HasClasspathEntries {
@@ -60,6 +62,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final SourcePath assembledAssetsDirectory;
   private final Optional<SourcePath> assembledNativeLibs;
   private final Optional<SourcePath> assembledNativeLibsAssets;
+  private final ImmutableSet<Pattern> classesToRemove;
 
   private final ImmutableSortedSet<SourcePath> classpathsToIncludeInJar;
 
@@ -73,6 +76,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePath assembledAssetsDirectory,
       Optional<SourcePath> assembledNativeLibs,
       Optional<SourcePath> assembledNativeLibsAssets,
+      ImmutableSet<Pattern> classesToRemove,
       ImmutableSortedSet<SourcePath> classpathsToIncludeInJar) {
     super(buildTarget, projectFilesystem, params);
     this.pathToOutputFile =
@@ -85,6 +89,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.assembledNativeLibs = assembledNativeLibs;
     this.assembledNativeLibsAssets = assembledNativeLibsAssets;
     this.classpathsToIncludeInJar = classpathsToIncludeInJar;
+    this.classesToRemove = classesToRemove;
   }
 
   @Override
@@ -140,6 +145,7 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .setJarPath(temp.resolveRel("classes.jar"))
                 .setEntriesToJar(
                     sourcePathResolver.getAllRelativePaths(filesystem, classpathsToIncludeInJar))
+                .setRemoveEntryPredicate(new RemoveClassesPatternsMatcher(classesToRemove))
                 .setMergeManifests(true)
                 .build()));
 

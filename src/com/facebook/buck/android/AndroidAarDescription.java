@@ -308,6 +308,7 @@ public class AndroidAarDescription
         assembleAssetsDirectories.getSourcePathToOutput(),
         assembledNativeLibsDir,
         assembledNativeLibsAssetsDir,
+        args.getRemoveClasses(),
         classpathToIncludeInAar.build());
   }
 
@@ -322,6 +323,7 @@ public class AndroidAarDescription
         targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
   }
 
+  // TODO: Don't inherit from AndroidLibraryDescription if most args are ignored
   @RuleArg
   interface AbstractAndroidAarDescriptionArg extends AndroidLibraryDescription.CoreArg {
 
