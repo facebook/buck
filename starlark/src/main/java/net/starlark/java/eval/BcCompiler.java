@@ -92,6 +92,8 @@ class BcCompiler {
       return new BcWriter.LocOffset(((DotExpression) node).getDotOffset());
     } else if (node instanceof AssignmentStatement) {
       return new BcWriter.LocOffset(((AssignmentStatement) node).getOpOffset());
+    } else if (node instanceof CallExpression) {
+      return new BcWriter.LocOffset(((CallExpression) node).getLparenOffset());
     } else {
       return new BcWriter.LocOffset(node.getStartOffset());
     }

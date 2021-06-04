@@ -167,41 +167,19 @@ public final class StarlarkThread {
 
     // Current PC location. Initially fn.getLocation(); for Starlark functions,
     // it is updated at key points when it may be observed: calls, breakpoints, errors.
-    @Nullable private Location loc;
-
-    // Indicates that setErrorLocation has been called already and the error
-    // location (loc) should not be overrwritten.
-    private boolean errorLocationSet;
+    @Nullable BcEval bcEval;
 
     private Frame(StarlarkCallable fn) {
       this.fn = fn;
-    }
-
-    // Updates the PC location in this frame.
-    void setLocation(Location loc) {
-      this.loc = loc;
-    }
-
-    // Sets location only the first time it is called,
-    // to ensure that the location of the innermost expression
-    // is used for errors.
-    // (Once we switch to a bytecode interpreter, we can afford
-    // to update fr.pc before each fallible operation, but until then
-    // we must materialize Locations only after the fact of failure.)
-    // Sets errorLocationSet.
-    void setErrorLocation(Location loc) {
-      if (!errorLocationSet) {
-        errorLocationSet = true;
-        setLocation(loc);
-      }
     }
 
     public StarlarkCallable getFunction() {
       return fn;
     }
 
+    @Nullable
     public Location getLocation() {
-      return loc != null ? loc : fn.getLocation();
+      return bcEval != null ? bcEval.location() : null;
     }
 
     @Override
@@ -403,7 +381,9 @@ public final class StarlarkThread {
   public ImmutableList<CallStackEntry> getCallStack() {
     ImmutableList.Builder<CallStackEntry> stack = ImmutableList.builder();
     for (Frame fr : callstack) {
-      stack.add(new CallStackEntry(fr.fn.getName(), fr.getLocation()));
+      Location location = fr.getLocation();
+      stack.add(
+          new CallStackEntry(fr.fn.getName(), location != null ? location : Location.BUILTIN));
     }
     return stack.build();
   }

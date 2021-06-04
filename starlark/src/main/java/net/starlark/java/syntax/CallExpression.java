@@ -38,7 +38,7 @@ import javax.annotation.Nullable;
 public final class CallExpression extends Expression {
 
   private final Expression function;
-  private final Location lparenLocation;
+  private final int lparenOffset;
   private final ImmutableList<Argument> arguments;
   private final int rparenOffset;
 
@@ -47,12 +47,12 @@ public final class CallExpression extends Expression {
   CallExpression(
       FileLocations locs,
       Expression function,
-      Location lparenLocation,
+      int lparenOffset,
       ImmutableList<Argument> arguments,
       int rparenOffset) {
     super(locs, Kind.CALL);
     this.function = Preconditions.checkNotNull(function);
-    this.lparenLocation = lparenLocation;
+    this.lparenOffset = lparenOffset;
     this.arguments = arguments;
     this.rparenOffset = rparenOffset;
 
@@ -117,13 +117,12 @@ public final class CallExpression extends Expression {
     return rparenOffset + 1;
   }
 
+  public int getLparenOffset() {
+    return lparenOffset;
+  }
+
   public Location getLparenLocation() {
-    // Unlike all other getXXXLocation methods, this one returns a reference to
-    // a previously materialized Location. getLparenLocation is unique among
-    // locations because the tree-walking evaluator needs it frequently even
-    // in the absence of errors. When we switch to a compiled representation
-    // we can dispense with this optimization.
-    return lparenLocation;
+    return locs.getLocation(lparenOffset);
   }
 
   @Override

@@ -503,7 +503,7 @@ final class Parser {
       args = parseArguments(); // (includes optional trailing comma)
     }
     int rparenOffset = expect(TokenKind.RPAREN);
-    return new CallExpression(locs, fn, locs.getLocation(lparenOffset), args, rparenOffset);
+    return new CallExpression(locs, fn, lparenOffset, args, rparenOffset);
   }
 
   // Parse a list of call arguments.

@@ -236,7 +236,7 @@ public class BcCallCachedTest {
     } catch (EvalException e) {
       assertEquals(
           "Traceback (most recent call last):\n"
-              + "\tFile \"f.star\", line 1, column 20, in <toplevel>\n"
+              + "\tFile \"f.star\", line 1, column 3, in <toplevel>\n"
               + "\tFile \"f.star\", line 1, column 13, in f\n"
               + "Error in t: test",
           e.getMessageWithStack());

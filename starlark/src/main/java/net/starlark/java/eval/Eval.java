@@ -84,7 +84,6 @@ final class Eval {
     // Has the application defined a behavior for load statements in this thread?
     StarlarkThread.Loader loader = thread.getLoader();
     if (loader == null) {
-      fr.setErrorLocation(node.getStartLocation());
       throw Starlark.errorf("load statements may not be executed in this thread");
     }
 
@@ -92,7 +91,6 @@ final class Eval {
     String moduleName = node.getImport().getValue();
     LoadedModule module = loader.load(moduleName);
     if (module == null) {
-      fr.setErrorLocation(node.getStartLocation());
       throw Starlark.errorf("module '%s' not found", moduleName);
     }
 
@@ -101,7 +99,6 @@ final class Eval {
       Identifier orig = binding.getOriginalName();
       Object value = module.getGlobal(orig.getName());
       if (value == null) {
-        fr.setErrorLocation(orig.getStartLocation());
         throw Starlark.errorf(
             "file '%s' does not contain symbol '%s'%s",
             moduleName,

@@ -79,6 +79,8 @@ class BcEval {
     this.loops = ArraysForStarlark.newObjectArray(fn.compiled.loopDepth * 2);
     this.loopInts = ArraysForStarlark.newIntArray(fn.compiled.loopDepth * 2);
     this.text = fn.compiled.text;
+
+    fr.bcEval = this;
   }
 
   /** Public API. */
@@ -101,18 +103,17 @@ class BcEval {
   private Object eval() throws EvalException, InterruptedException {
     try {
       return BcEvalDispatch.run(this);
-    } catch (Throwable e) {
-      try {
-        fr.setErrorLocation(compiled.locationAt(currentIp));
-      } catch (Throwable ignore) {
-        // do not crash if we are already crashing
-      }
-      throw e;
     } finally {
       while (loopDepth != 0) {
         popFor();
       }
     }
+  }
+
+  @Nullable private Location errorLocation;
+
+  Location location() {
+    return errorLocation != null ? errorLocation : compiled.locationAt(currentIp);
   }
 
   /** Pop one for statement. */
@@ -169,7 +170,6 @@ class BcEval {
   private void throwLocalNotFound(int index) throws EvalException {
     if (index < fn.compiled.getLocals().size()) {
       Resolver.Binding binding = fn.compiled.getLocals().get(index);
-      fr.setErrorLocation(fr.getLocation());
       throw referencedBeforeAssignment(binding.getScope(), binding.getName());
     } else {
       // Now this is always IllegalStateException,
@@ -624,7 +624,6 @@ class BcEval {
 
   private BcDynCallSite nextDynCallSite() {
     BcDynCallSite callSite = (BcDynCallSite) compiled.objects[nextOperand()];
-    fr.setLocation(callSite.lparenLocation);
     return callSite;
   }
 
@@ -641,14 +640,14 @@ class BcEval {
 
     if (star != null) {
       if (!(star instanceof Sequence)) {
-        fr.setErrorLocation(callSite.callLocs.starLocation(compiled.getFileLocations()));
+        errorLocation = callSite.callLocs.starLocation(compiled.getFileLocations());
         throw new EvalException("argument after * must be an iterable, not " + Starlark.type(star));
       }
     }
 
     if (starStar != null) {
       if (!(starStar instanceof Dict)) {
-        fr.setErrorLocation(callSite.callLocs.starStarLocation(compiled.getFileLocations()));
+        errorLocation = callSite.callLocs.starStarLocation(compiled.getFileLocations());
         throw new EvalException("argument after ** must be a dict, not " + Starlark.type(starStar));
       }
     }
@@ -687,9 +686,7 @@ class BcEval {
   }
 
   private BcCallLocs nextCallLocs() {
-    BcCallLocs locs = (BcCallLocs) compiled.objects[nextOperand()];
-    fr.setLocation(locs.getLparentLocation());
-    return locs;
+    return (BcCallLocs) compiled.objects[nextOperand()];
   }
 
   private StarlarkCallableLinked nextCallableLinked() {
@@ -710,12 +707,12 @@ class BcEval {
     Object starStar = getSlotOrNull(nextOperand());
 
     if (star != null && !(star instanceof Sequence<?>)) {
-      fr.setErrorLocation(locs.starLocation(compiled.getFileLocations()));
+      errorLocation = locs.starLocation(compiled.getFileLocations());
       throw new EvalException(
           String.format("argument after * must be an iterable, not %s", Starlark.type(star)));
     }
     if (starStar != null && !(starStar instanceof Dict<?, ?>)) {
-      fr.setErrorLocation(locs.starStarLocation(compiled.getFileLocations()));
+      errorLocation = locs.starStarLocation(compiled.getFileLocations());
       throw new EvalException(
           String.format("argument after ** must be a dict, not %s", Starlark.type(starStar)));
     }
