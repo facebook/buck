@@ -139,5 +139,14 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
     ImmutableSortedSet<SourcePath> getResources();
 
     ImmutableMap<String, StringWithMacros> getEnv();
+
+    /** The following are used for future test specs and ignored for now */
+    Optional<ImmutableMap<String, String>> getRunEnv();
+
+    Optional<ImmutableList<String>> getRunCmd();
+
+    Optional<ImmutableMap<String, String>> getListEnv();
+
+    Optional<ImmutableList<String>> getListCmd();
   }
 }
