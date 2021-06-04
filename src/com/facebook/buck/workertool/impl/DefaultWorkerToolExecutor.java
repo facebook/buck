@@ -185,23 +185,18 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     }
 
     private void processPipelineFinishedEvent(PipelineFinishedEvent pipelineFinishedEvent) {
-      runUnderLock(
-          () -> {
-            String actionId =
-                Objects.requireNonNull(
-                    pipelineFinishedEvent.getActionId(), "action id has to be set");
-            @SuppressWarnings("unchecked")
-            ExecutionRequest<PipelineFinishedEvent> executionRequest =
-                (ExecutionRequest<PipelineFinishedEvent>)
-                    executionRequests.get(ActionId.of(actionId));
+      String actionId =
+          Objects.requireNonNull(pipelineFinishedEvent.getActionId(), "action id has to be set");
+      @SuppressWarnings("unchecked")
+      ExecutionRequest<PipelineFinishedEvent> executionRequest =
+          (ExecutionRequest<PipelineFinishedEvent>) executionRequests.get(ActionId.of(actionId));
 
-            LOG.debug(
-                "Received pipeline finished event with action id: %s. Actions: %s, worker id: %s",
-                actionId, executionRequest.getHumanReadableId(), workerId);
+      LOG.debug(
+          "Received pipeline finished event with action id: %s. Actions: %s, worker id: %s",
+          actionId, executionRequest.getHumanReadableId(), workerId);
 
-            // signal to Step that pipeline is finished
-            executionRequest.setFinished(pipelineFinishedEvent);
-          });
+      // signal to Step that pipeline is finished
+      executionRequest.setFinished(pipelineFinishedEvent);
     }
   }
 
@@ -217,13 +212,11 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
     try (Scope ignored =
         PerfEvents.scope(eventBus, actionId, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
-      runUnderLock(
-          () -> {
-            checkThatNoActionsAreExecuting(actionId);
-            ExecutionRequest<?> previousValue =
-                executionRequests.put(actionId, singleExecution(actionId));
-            checkState(previousValue == null);
-          });
+
+      checkThatNoActionsAreExecuting(actionId);
+      ExecutionRequest<?> previousValue =
+          executionRequests.put(actionId, singleExecution(actionId));
+      checkState(previousValue == null);
 
       executeCommandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.EXECUTE_COMMAND);
@@ -262,26 +255,24 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
             eventBus, firstActionId, EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX + "_preparing")) {
       StartPipelineCommand.Builder startPipeliningCommandBuilder =
           StartPipelineCommand.newBuilder();
-      runUnderLock(
-          () -> {
-            ImmutableList.Builder<ExecutingAction> executingActionBuilder =
-                ImmutableList.builderWithExpectedSize(actionIds.size());
-            for (ActionId actionId : actionIds) {
-              checkThatNoActionsAreExecuting(actionId);
-              executingActionBuilder.add(ExecutingAction.of(actionId));
-              startPipeliningCommandBuilder.addActionId(actionId.getValue());
-            }
-            // create pipelining execution request
-            PipeliningExecutionRequest pipeliningExecutionRequest =
-                pipeliningExecution(executingActionBuilder.build(), pipelineFinished);
 
-            // add pipelining execution request into requests map
-            for (ActionId actionId : actionIds) {
-              ExecutionRequest<?> previousValue =
-                  executionRequests.put(actionId, pipeliningExecutionRequest);
-              checkState(previousValue == null);
-            }
-          });
+      ImmutableList.Builder<ExecutingAction> executingActionBuilder =
+          ImmutableList.builderWithExpectedSize(actionIds.size());
+      for (ActionId actionId : actionIds) {
+        checkThatNoActionsAreExecuting(actionId);
+        executingActionBuilder.add(ExecutingAction.of(actionId));
+        startPipeliningCommandBuilder.addActionId(actionId.getValue());
+      }
+      // create pipelining execution request
+      PipeliningExecutionRequest pipeliningExecutionRequest =
+          pipeliningExecution(executingActionBuilder.build(), pipelineFinished);
+
+      // add pipelining execution request into requests map
+      for (ActionId actionId : actionIds) {
+        ExecutionRequest<?> previousValue =
+            executionRequests.put(actionId, pipeliningExecutionRequest);
+        checkState(previousValue == null);
+      }
 
       executeCommandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.START_PIPELINE_COMMAND);
@@ -314,18 +305,16 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     try (Scope ignored =
         PerfEvents.scope(
             eventBus, actionId, START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
-      runUnderLock(
-          () -> {
-            ExecutionRequest<?> executionRequest = executionRequests.get(actionId);
-            executionRequest.verifyExecuting();
-            checkState(
-                executionRequest.getExecutionActions().stream()
-                    .map(ExecutingAction::getActionId)
-                    .anyMatch(actionId::equals),
-                "Action id: %s is not found among currently execution actions: %s",
-                actionId,
-                executionRequest.getHumanReadableId());
-          });
+
+      ExecutionRequest<?> executionRequest = executionRequests.get(actionId);
+      executionRequest.verifyExecuting();
+      checkState(
+          executionRequest.getExecutionActions().stream()
+              .map(ExecutingAction::getActionId)
+              .anyMatch(actionId::equals),
+          "Action id: %s is not found among currently execution actions: %s",
+          actionId,
+          executionRequest.getHumanReadableId());
 
       commandTypeMessage =
           getCommandTypeMessage(CommandTypeMessage.CommandType.START_NEXT_PIPELINING_COMMAND);
@@ -362,33 +351,30 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
    * ResultEvent} is received.
    */
   private void receiveResultEvent(ResultEvent resultEvent) {
-    runUnderLock(
-        () -> {
-          ActionId actionId = ActionId.of(resultEvent.getActionId());
-          ExecutionRequest<?> executionRequest = executionRequests.get(actionId);
-          // `executionRequest` has to be present
-          checkNotNull(executionRequest, "The is no action executing at the moment.");
+    ActionId actionId = ActionId.of(resultEvent.getActionId());
+    ExecutionRequest<?> executionRequest = executionRequests.get(actionId);
+    // `executionRequest` has to be present
+    checkNotNull(executionRequest, "The is no action executing at the moment.");
 
-          ExecutingAction executingAction =
-              executionRequest.getExecutionActions().stream()
-                  .filter(action -> !action.getResultEventFuture().isDone())
-                  .findFirst()
-                  .orElseThrow(
-                      () ->
-                          new IllegalStateException(
-                              "The is no not completed executing action at the moment."));
+    ExecutingAction executingAction =
+        executionRequest.getExecutionActions().stream()
+            .filter(action -> !action.getResultEventFuture().isDone())
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "The is no not completed executing action at the moment."));
 
-          ActionId executingActionId = executingAction.getActionId();
-          checkState(
-              actionId.equals(executingActionId),
-              "Received action id %s is not equals to expected one %s. Currently executing actions: %s",
-              actionId,
-              executingActionId,
-              executionRequest.getHumanReadableId());
+    ActionId executingActionId = executingAction.getActionId();
+    checkState(
+        actionId.equals(executingActionId),
+        "Received action id %s is not equals to expected one %s. Currently executing actions: %s",
+        actionId,
+        executingActionId,
+        executionRequest.getHumanReadableId());
 
-          SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
-          resultEventFuture.set(resultEvent);
-        });
+    SettableFuture<ResultEvent> resultEventFuture = executingAction.getResultEventFuture();
+    resultEventFuture.set(resultEvent);
   }
 
   @Override
@@ -444,13 +430,11 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     Supplier<Exception> exceptionSupplier =
         Suppliers.memoize(() -> new IllegalStateException(errorMessage));
 
-    runUnderLock(
-        () ->
-            executionRequests
-                .values()
-                .forEach(
-                    executionRequest ->
-                        executionRequest.terminateWithExceptionIfNotDone(exceptionSupplier)));
+    executionRequests
+        .values()
+        .forEach(
+            executionRequest ->
+                executionRequest.terminateWithExceptionIfNotDone(exceptionSupplier));
   }
 
   private void shutdownWaitForLaunchedProcessFuture() {
@@ -565,12 +549,6 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     builder.putAll(envs);
     builder.put(WorkerToolConstants.ENV_COMMAND_PIPE, namedPipeName);
     return builder.build();
-  }
-
-  private void runUnderLock(Runnable runnable) {
-    synchronized (this) {
-      runnable.run();
-    }
   }
 
   @Override
