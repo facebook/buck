@@ -28,7 +28,7 @@ public abstract class ActionId {
   public abstract String getValue();
 
   public static ActionId of(BuildTarget buildTarget) {
-    return of(buildTarget.getFullyQualifiedName());
+    return of(buildTarget.toStringWithConfiguration());
   }
 
   public static ActionId of(String value) {

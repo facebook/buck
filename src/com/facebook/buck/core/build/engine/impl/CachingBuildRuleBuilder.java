@@ -1494,7 +1494,8 @@ class CachingBuildRuleBuilder {
       StateHolder<State> stateHolder = getInitializedStateHolder();
       CompilationDaemonStep compilationDaemonStep = stateHolder.getCompilationDaemonStep();
       AbstractMessage pipelinedCommand = getPipelinedCommand(pipelinedRule);
-      compilationDaemonStep.appendStepWithCommand(pipelinedCommand);
+      ActionId actionId = ActionId.of(pipelinedRule.getBuildTarget());
+      compilationDaemonStep.appendStepWithCommand(actionId, pipelinedCommand);
     }
 
     private AbstractMessage getPipelinedCommand(SupportsPipelining<State> pipelinedRule) {

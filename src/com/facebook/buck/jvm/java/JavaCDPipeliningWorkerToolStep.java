@@ -29,7 +29,6 @@ import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.javacd.model.BaseCommandParams;
 import com.facebook.buck.javacd.model.BasePipeliningCommand;
-import com.facebook.buck.javacd.model.BuildTargetValue;
 import com.facebook.buck.javacd.model.LibraryPipeliningCommand;
 import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.javacd.model.PipeliningCommand;
@@ -51,8 +50,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -87,7 +86,8 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
   private final JavaCDParams javaCDParams;
   private final PipeliningCommand.Builder builder = PipeliningCommand.newBuilder();
-  private final List<AbstractMessage> commands = new ArrayList<>();
+  // using LinkedHashMap implementation to support an order of commands.
+  private final Map<ActionId, AbstractMessage> commands = new LinkedHashMap<>();
 
   private ImmutableMap<ActionId, SettableFuture<ResultEvent>> actionIdToResultEventMap =
       ImmutableMap.of();
@@ -129,8 +129,8 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
   }
 
   @Override
-  public void appendStepWithCommand(AbstractMessage command) {
-    commands.add(command);
+  public void appendStepWithCommand(ActionId actionId, AbstractMessage command) {
+    commands.put(actionId, command);
   }
 
   @Override
@@ -219,30 +219,34 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     ImmutableList.Builder<ActionId> actionsIdsBuilder = ImmutableList.builder();
 
     // the first command could be either source-abi or library one
-    AbstractMessage command1 = commands.get(0);
+    Iterator<Map.Entry<ActionId, AbstractMessage>> commandsIterator =
+        commands.entrySet().iterator();
+    Map.Entry<ActionId, AbstractMessage> command1Entry = commandsIterator.next();
+    AbstractMessage command1 = command1Entry.getValue();
+    ActionId commands1ActionId = command1Entry.getKey();
     if (command1 instanceof BasePipeliningCommand) {
       BasePipeliningCommand abiCommand = (BasePipeliningCommand) command1;
       builder.setAbiCommand(abiCommand);
-      actionsIdsBuilder.add(getActionId(abiCommand.getBuildTargetValue()));
+      actionsIdsBuilder.add(commands1ActionId);
     } else {
       Preconditions.checkState(
           command1 instanceof LibraryPipeliningCommand, "The first command must be a library one");
       LibraryPipeliningCommand libraryCommand = (LibraryPipeliningCommand) command1;
       builder.clearAbiCommand();
       builder.setLibraryCommand(libraryCommand);
-      actionsIdsBuilder.add(
-          getActionId(libraryCommand.getBasePipeliningCommand().getBuildTargetValue()));
+      actionsIdsBuilder.add(commands1ActionId);
     }
 
     // the second command could be only library one
-    if (commands.size() > 1) {
-      AbstractMessage command2 = commands.get(1);
+    if (commandsIterator.hasNext()) {
+      Map.Entry<ActionId, AbstractMessage> command2Entry = commandsIterator.next();
+      AbstractMessage command2 = command2Entry.getValue();
+      ActionId command2ActionId = command2Entry.getKey();
       Preconditions.checkState(
           command2 instanceof LibraryPipeliningCommand, "The second command must be a library one");
       LibraryPipeliningCommand libraryCommand = (LibraryPipeliningCommand) command2;
       builder.setLibraryCommand(libraryCommand);
-      actionsIdsBuilder.add(
-          getActionId(libraryCommand.getBasePipeliningCommand().getBuildTargetValue()));
+      actionsIdsBuilder.add(command2ActionId);
     }
 
     actionIds = actionsIdsBuilder.build();
@@ -271,10 +275,6 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       mapBuilder.put(actionIds.get(i), resultEventSettableFuture);
     }
     return mapBuilder.build();
-  }
-
-  private ActionId getActionId(BuildTargetValue buildTargetValue) {
-    return ActionId.of(buildTargetValue.getFullyQualifiedName());
   }
 
   private void startNextPipeliningCommand(ActionId actionId, IsolatedEventBus eventBus)

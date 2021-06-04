@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.rules.pipeline;
 
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.step.Step;
 import com.google.protobuf.AbstractMessage;
 
@@ -26,7 +27,7 @@ import com.google.protobuf.AbstractMessage;
 public interface CompilationDaemonStep extends Step {
 
   /** Appends existing compilation step with a new protobuf command. */
-  void appendStepWithCommand(AbstractMessage command);
+  void appendStepWithCommand(ActionId actionId, AbstractMessage command);
 
   /**
    * Closes compilation step after it has been executed.

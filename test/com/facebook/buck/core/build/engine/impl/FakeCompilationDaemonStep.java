@@ -17,6 +17,7 @@
 package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -36,7 +37,7 @@ class FakeCompilationDaemonStep extends AbstractIsolatedExecutionStep
   }
 
   @Override
-  public void appendStepWithCommand(AbstractMessage command) {}
+  public void appendStepWithCommand(ActionId actionId, AbstractMessage command) {}
 
   @Override
   public void close(boolean force) {}
