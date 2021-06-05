@@ -51,5 +51,10 @@ message StartPipelineCommand {
     repeated string action_id = 1;
 }
 
+// Represents a signal that the next command in pipelining command could be started
+message StartNextPipeliningCommand{
+    string actionId = 1;
+}
+
 message ShutdownCommand {
 }

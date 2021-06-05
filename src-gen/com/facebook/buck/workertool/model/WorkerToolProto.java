@@ -32,6 +32,11 @@ public final class WorkerToolProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_workertool_api_v1_StartPipelineCommand_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_workertool_api_v1_StartNextPipeliningCommand_descriptor;
+  static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_workertool_api_v1_StartNextPipeliningCommand_fieldAccessorTable;
+  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_workertool_api_v1_ShutdownCommand_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -54,10 +59,11 @@ public final class WorkerToolProto {
       "RT_PIPELINE_COMMAND\020\002\022!\n\035START_NEXT_PIPE" +
       "LINING_COMMAND\020\003\022\024\n\020SHUTDOWN_COMMAND\020\004\"#" +
       "\n\016ExecuteCommand\022\021\n\taction_id\030\001 \001(\t\")\n\024S" +
-      "tartPipelineCommand\022\021\n\taction_id\030\001 \003(\t\"\021" +
-      "\n\017ShutdownCommandB7\n\"com.facebook.buck.w" +
-      "orkertool.modelB\017WorkerToolProtoP\001b\006prot" +
-      "o3"
+      "tartPipelineCommand\022\021\n\taction_id\030\001 \003(\t\"." +
+      "\n\032StartNextPipeliningCommand\022\020\n\010actionId" +
+      "\030\001 \001(\t\"\021\n\017ShutdownCommandB7\n\"com.faceboo" +
+      "k.buck.workertool.modelB\017WorkerToolProto" +
+      "P\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -89,8 +95,14 @@ public final class WorkerToolProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_workertool_api_v1_StartPipelineCommand_descriptor,
         new java.lang.String[] { "ActionId", });
-    internal_static_workertool_api_v1_ShutdownCommand_descriptor =
+    internal_static_workertool_api_v1_StartNextPipeliningCommand_descriptor =
       getDescriptor().getMessageTypes().get(3);
+    internal_static_workertool_api_v1_StartNextPipeliningCommand_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_workertool_api_v1_StartNextPipeliningCommand_descriptor,
+        new java.lang.String[] { "ActionId", });
+    internal_static_workertool_api_v1_ShutdownCommand_descriptor =
+      getDescriptor().getMessageTypes().get(4);
     internal_static_workertool_api_v1_ShutdownCommand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_workertool_api_v1_ShutdownCommand_descriptor,

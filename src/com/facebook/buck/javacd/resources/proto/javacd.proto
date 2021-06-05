@@ -133,7 +133,14 @@ message AbiJarCommand {
     JarParameters abiJarParameters = 2;
 }
 
-// Represents pipelining command (consist from base parameters, pipelining state, abi command and maybe library command)
+// Represents pipelining command
+// Consist from
+// 1. Base parameters,
+// 2. Pipelining state
+// 3. One of these :
+//      * abi command
+//      * library command
+//      * or both abi and library commands
 message PipeliningCommand {
     BaseCommandParams baseCommandParams = 1;
     PipelineState pipeliningState = 2;
@@ -174,11 +181,6 @@ message PipelineState {
     bool withDownwardApi = 14;
     ResolvedJavac resolvedJavac = 15;
     ResolvedJavacOptions resolvedJavacOptions = 16;
-}
-
-// Represents a signal that the next command in pipelining command could be started
-message StartNextPipeliningCommand{
-    string actionId = 1;
 }
 
 message FilesystemParams {

@@ -6,7 +6,14 @@ package com.facebook.buck.javacd.model;
 
 /**
  * <pre>
- * Represents pipelining command (consist from base parameters, pipelining state, abi command and maybe library command)
+ * Represents pipelining command
+ * Consist from
+ * 1. Base parameters,
+ * 2. Pipelining state
+ * 3. One of these :
+ *      * abi command
+ *      * library command
+ *      * or both abi and library commands
  * </pre>
  *
  * Protobuf type {@code javacd.api.v1.PipeliningCommand}
@@ -426,7 +433,14 @@ private static final long serialVersionUID = 0L;
   }
   /**
    * <pre>
-   * Represents pipelining command (consist from base parameters, pipelining state, abi command and maybe library command)
+   * Represents pipelining command
+   * Consist from
+   * 1. Base parameters,
+   * 2. Pipelining state
+   * 3. One of these :
+   *      * abi command
+   *      * library command
+   *      * or both abi and library commands
    * </pre>
    *
    * Protobuf type {@code javacd.api.v1.PipeliningCommand}
