@@ -24,9 +24,6 @@ public interface WorkerProcess extends Closeable {
   /** Returns if process is still alive. */
   boolean isAlive();
 
-  /** Prepares worker process for reuse of the new thread. */
-  default void prepareForReuse() {}
-
   @Override
   void close();
 }

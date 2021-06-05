@@ -41,7 +41,9 @@ import java.io.InputStream;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 
@@ -90,8 +92,12 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
 
   @VisibleForTesting static final Logger LOGGER = Logger.get(BaseNamedPipeEventHandler.class);
 
+  private static final long WAIT_FOR_EVENTS_TIMEOUT = 100;
+  private static final TimeUnit WAIT_FOR_EVENTS_TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
+
   private final NamedPipeReader namedPipe;
   private final DownwardApiExecutionContext context;
+  private final Phaser eventProcessingPhaser = new Phaser();
   private final SettableFuture<Void> done = SettableFuture.create();
 
   @Nullable private volatile DownwardProtocol downwardProtocol = null;
@@ -104,11 +110,6 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   @Override
   public void registerActionId(ActionId actionId) {
     context.registerActionId(actionId);
-  }
-
-  @Override
-  public synchronized void prepareForReuse() {
-    context.prepareForReuse();
   }
 
   @Override
@@ -159,6 +160,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
           break;
         }
 
+        eventProcessingPhaser.register();
         DownwardApiProcessExecutor.HANDLER_THREAD_POOL.execute(
             () -> {
               LOGGER.verbose(
@@ -168,6 +170,8 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
                 processEvent(eventType, event);
               } catch (Exception e) {
                 LOGGER.error(e, "Cannot process event: %s", event);
+              } finally {
+                eventProcessingPhaser.arriveAndDeregister();
               }
             });
 
@@ -200,6 +204,14 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   @Override
   public void terminateAndWait()
       throws CancellationException, InterruptedException, ExecutionException, TimeoutException {
+    try {
+      closeNamedPipe();
+    } finally {
+      closeContext();
+    }
+  }
+
+  private void closeNamedPipe() throws ExecutionException, TimeoutException, InterruptedException {
     if (namedPipe.isClosed()) {
       LOGGER.info("Named pipe %s is already closed.", namedPipe.getName());
       return;
@@ -225,6 +237,31 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
         supportsDownwardProtocol.setProtocol(downwardProtocol);
       }
     }
+  }
+
+  private void closeContext() {
+    try {
+      awaitTillEventsProcessed();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOGGER.warn(e, "Interrupted while waiting for events to process");
+    } catch (TimeoutException e) {
+      LOGGER.warn(
+          "Timeout while waiting for event handler to process events from named pipe: %s. %s ms elapsed!",
+          namedPipe.getName(), WAIT_FOR_EVENTS_TIMEOUT_UNIT.toMillis(WAIT_FOR_EVENTS_TIMEOUT));
+    } finally {
+      context.close();
+    }
+  }
+
+  private void awaitTillEventsProcessed() throws InterruptedException, TimeoutException {
+    if (eventProcessingPhaser.getRegisteredParties() == 0) {
+      // no events to wait
+      return;
+    }
+    int phase = eventProcessingPhaser.getPhase();
+    eventProcessingPhaser.awaitAdvanceInterruptibly(
+        phase, WAIT_FOR_EVENTS_TIMEOUT, WAIT_FOR_EVENTS_TIMEOUT_UNIT);
   }
 
   protected DownwardApiExecutionContext getContext() {

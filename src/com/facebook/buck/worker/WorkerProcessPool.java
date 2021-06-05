@@ -224,7 +224,6 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
       }
 
       inUseCount++;
-      workerProcess.prepareForReuse();
       return workerProcess;
     }
 
@@ -277,9 +276,7 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
     /** Returns an instance of {@link WorkerProcess} wrapped by this object. */
     public T get() throws IOException {
       Preconditions.checkState(lifecycle != null, "BorrowedWorker has already been closed.");
-      T workerProcess = lifecycle.get();
-      workerProcess.prepareForReuse();
-      return workerProcess;
+      return lifecycle.get();
     }
   }
 }

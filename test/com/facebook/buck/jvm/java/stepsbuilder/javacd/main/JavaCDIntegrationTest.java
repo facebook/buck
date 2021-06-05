@@ -222,7 +222,6 @@ public class JavaCDIntegrationTest {
     WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(executionContext);
     try (WorkerToolExecutor workerToolExecutor =
         workerToolLauncher.launchWorker(getLaunchJavaCDCommand(), getEnvs())) {
-      workerToolExecutor.prepareForReuse();
 
       AbsPath workingDir = temporaryFolder.newFolder("working_dir");
       String src1 = "src/com/facebook/buck/core/path/TestForwardRelativePath.java";
@@ -318,7 +317,6 @@ public class JavaCDIntegrationTest {
     WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(executionContext);
     try (WorkerToolExecutor workerToolExecutor =
         workerToolLauncher.launchWorker(getLaunchJavaCDCommand(), getEnvs())) {
-      workerToolExecutor.prepareForReuse();
 
       AbsPath workingDir = temporaryFolder.newFolder("working_dir");
       String src1 = "src/com/facebook/buck/core/path/TestForwardRelativePath.java";
@@ -384,7 +382,6 @@ public class JavaCDIntegrationTest {
     WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(executionContext);
     try (WorkerToolExecutor workerToolExecutor =
         workerToolLauncher.launchWorker(getLaunchJavaCDCommand(), getEnvs())) {
-      workerToolExecutor.prepareForReuse();
 
       // stop the process
       workerToolExecutor.close();

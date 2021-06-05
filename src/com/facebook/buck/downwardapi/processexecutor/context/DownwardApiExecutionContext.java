@@ -30,7 +30,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /** Downward API execution context. */
-public final class DownwardApiExecutionContext {
+public final class DownwardApiExecutionContext implements AutoCloseable {
 
   private static final Logger LOG = Logger.get(DownwardApiExecutionContext.class);
 
@@ -78,17 +78,8 @@ public final class DownwardApiExecutionContext {
     isolatedEventBus.post(event);
   }
 
-  public void postEvent(StepEvent event, ActionId actionId) {
-    isolatedEventBus.post(event, actionId, getThreadId(actionId));
-  }
-
   public void postEvent(StepEvent event, ActionId actionId, Instant atTime) {
     isolatedEventBus.post(event, actionId, atTime, getThreadId(actionId));
-  }
-
-  /** Posts events into buck event bus. */
-  public void postEvent(SimplePerfEvent event, ActionId actionId) {
-    isolatedEventBus.post(event, actionId, getThreadId(actionId));
   }
 
   /** Posts events into buck event bus that occurred at {@code atTime}. */
@@ -124,28 +115,23 @@ public final class DownwardApiExecutionContext {
     }
   }
 
-  /** Preparation before switching to another thread. */
-  public void prepareForReuse() {
-    // verify that all events processed.
-    boolean hasUnprocessed = verifyAllEventsProcessed();
-
-    if (hasUnprocessed) {
-      // clean maps with unprocessed events
-      stepStartedEvents.clear();
-      chromeTraceStartedEvents.clear();
-    }
+  @Override
+  public void close() {
+    verifyAllEventsProcessed();
+    chromeTraceStartedEvents.clear();
+    stepStartedEvents.clear();
+    actionToThreadIdMap.clear();
   }
 
-  private boolean verifyAllEventsProcessed() {
+  private void verifyAllEventsProcessed() {
     int eventsSize = chromeTraceStartedEvents.size() + stepStartedEvents.size();
     boolean hasUnprocessed = eventsSize > 0;
     if (hasUnprocessed) {
-      // TODO: msemko : remove this when the issue with switchover would be fixed
+      // TODO: msemko : remove this when the issue with unprocessed events would be fixed
       LOG.error("There are " + eventsSize + " unprocessed events.");
       LOG.info(
           "Unprocessed events: stepStarted: %s, chromeTraceStarted: %s",
           stepStartedEvents.values(), chromeTraceStartedEvents.values());
     }
-    return hasUnprocessed;
   }
 }

@@ -96,9 +96,4 @@ public class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
   public void registerActionId(ActionId actionId) {
     namedPipeEventHandler.registerActionId(actionId);
   }
-
-  /** Signal to Named pipe event handler that process would be used by new thread. */
-  public void prepareForReuse() {
-    namedPipeEventHandler.prepareForReuse();
-  }
 }

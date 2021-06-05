@@ -491,11 +491,6 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   }
 
   @Override
-  public void prepareForReuse() {
-    launchedProcess.prepareForReuse();
-  }
-
-  @Override
   public boolean isAlive() {
     return launchedProcess != null && launchedProcess.isAlive();
   }

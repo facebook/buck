@@ -97,11 +97,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import org.junit.After;
@@ -230,7 +234,7 @@ public class DownwardApiProcessExecutorTest {
   }
 
   @Test
-  public void downwardApi() throws IOException, InterruptedException {
+  public void downwardApi() throws Exception {
     TestListener listener = new TestListener();
     long epochMilli = clock.currentTimeMillis();
     buckEventBus.register(listener);
@@ -253,9 +257,28 @@ public class DownwardApiProcessExecutorTest {
     DownwardApiProcessExecutor processExecutor =
         getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
 
-    DownwardApiExecutionResult result = launchAndExecute(processExecutor);
-    assertEquals("Process should exit with EXIT_SUCCESS", 0, result.getExitCode());
-    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
+    AtomicReference<DownwardApiExecutionResult> resultReference = new AtomicReference<>();
+    AtomicLong threadIdReference = new AtomicLong();
+
+    // Run in thread that is different from main thread's. Would create a mapping between thread
+    // id and action id.
+    ExecutorService executorService = Executors.newSingleThreadExecutor();
+    try {
+      Future<Void> f =
+          executorService.submit(
+              () -> {
+                threadIdReference.set(Thread.currentThread().getId());
+                resultReference.set(launchAndExecute(processExecutor));
+                return null;
+              });
+      f.get(1, TimeUnit.SECONDS);
+    } finally {
+      executorService.shutdownNow();
+    }
+
+    DownwardApiExecutionResult executionResult = resultReference.get();
+    assertEquals("Process should exit with EXIT_SUCCESS", 0, executionResult.getExitCode());
+    assertTrue("Reader thread is not terminated!", executionResult.isReaderThreadTerminated());
     assertFalse(
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
     assertNotNull("Named pipe has not been created!", namedPipeReader);
@@ -265,7 +288,6 @@ public class DownwardApiProcessExecutorTest {
     Map<Integer, BuckEvent> events = listener.events;
     assertEquals(6, events.size());
 
-    long currentThreadId = Thread.currentThread().getId();
     for (BuckEvent buckEvent : events.values()) {
       if (!(buckEvent instanceof com.facebook.buck.event.StepEvent
           || buckEvent instanceof SimplePerfEvent)) {
@@ -275,7 +297,7 @@ public class DownwardApiProcessExecutorTest {
       assertEquals(
           "Thread id for events has to be equals to thread id of the invoking thread. Failed event: "
               + buckEvent,
-          currentThreadId,
+          threadIdReference.get(),
           buckEvent.getThreadId());
     }
 

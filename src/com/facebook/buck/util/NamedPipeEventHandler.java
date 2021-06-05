@@ -42,7 +42,4 @@ public interface NamedPipeEventHandler {
    * has this action id.
    */
   void registerActionId(ActionId actionId);
-
-  /** Signals that handler would work with the new thread. */
-  void prepareForReuse();
 }
