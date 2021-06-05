@@ -17,17 +17,16 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.config.ConfigDifference;
-import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.util.config.Configs;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -41,7 +40,8 @@ class UIMessagesFormatter {
       "Using additional configuration options from ";
 
   /** Formats comparison of {@link BuckConfig}s into UI message */
-  static Optional<String> reusedConfigWarning(Map<String, ConfigChange> diff) {
+  static Optional<String> reusedConfigWarning(
+      ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange> diff) {
     if (diff.isEmpty()) {
       return Optional.empty();
     }

@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.command.config.ConfigDifference;
 import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
@@ -32,7 +33,6 @@ import com.facebook.buck.util.config.Configs;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -87,10 +87,16 @@ public class UIMessagesFormatterTest {
   }
 
   /** Generates set of changes that look like: diff{i}: before{i} -> after{i} for i = 1 to n */
-  private static Map<String, ConfigChange> generateConfigChange(int n) {
-    ImmutableMap.Builder<String, ConfigChange> builder = ImmutableMap.builder();
+  private static ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange>
+      generateConfigChange(int n) {
+    ImmutableMap.Builder<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange> builder =
+        ImmutableMap.builder();
     IntStream.range(0, n)
-        .forEach((i) -> builder.put("diff" + i, ConfigChange.of("before" + i, "after" + i)));
+        .forEach(
+            i ->
+                builder.put(
+                    ConfigDifference.ConfigKey.of("p", "diff" + i),
+                    ConfigChange.of("before" + i, "after" + i)));
     return builder.build();
   }
 
@@ -101,12 +107,14 @@ public class UIMessagesFormatterTest {
     assertEquals(message.get(), formatExpectedComparisonMessage(generateConfigChange(3)));
   }
 
-  private String formatExpectedComparisonMessage(Map<String, ConfigChange> diffs) {
+  private String formatExpectedComparisonMessage(
+      ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange> diffs) {
     return formatExpectedComparisonMessage(Optional.empty(), diffs);
   }
 
   private String formatExpectedComparisonMessage(
-      Optional<String> suffix, Map<String, ConfigChange> diffs) {
+      Optional<String> suffix,
+      ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange> diffs) {
     StringBuilder sb = new StringBuilder(COMPARISON_MESSAGE_PREFIX);
     sb.append(System.lineSeparator()).append("  ");
     sb.append(

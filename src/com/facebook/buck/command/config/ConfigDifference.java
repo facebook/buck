@@ -39,7 +39,7 @@ import org.immutables.value.Value;
  */
 public class ConfigDifference {
   /** Compares all values in two sets of configs */
-  public static Map<String, ConfigChange> compare(Config config1, Config config2) {
+  public static ImmutableMap<ConfigKey, ConfigChange> compare(Config config1, Config config2) {
     return compare(config1.getRawConfig().getValues(), config2.getRawConfig().getValues());
   }
 
@@ -48,7 +48,7 @@ public class ConfigDifference {
    *
    * @return The difference as a map of 'section.key' strings to changed values
    */
-  public static Map<String, ConfigChange> compareForCaching(
+  public static ImmutableMap<ConfigKey, ConfigChange> compareForCaching(
       BuckConfig buckConfig1, BuckConfig buckConfig2) {
     // This is a hack. A cleaner approach would be to expose a narrow view of the config to any
     // code that affects the state cached.
@@ -65,33 +65,35 @@ public class ConfigDifference {
    * to pairs containing the different values.
    */
   @VisibleForTesting
-  public static Map<String, ConfigChange> compare(
+  public static ImmutableMap<ConfigKey, ConfigChange> compare(
       ImmutableMap<String, ImmutableMap<String, String>> rawConfig1,
       ImmutableMap<String, ImmutableMap<String, String>> rawConfig2) {
     MapDifference<String, ImmutableMap<String, String>> diffSections =
         Maps.difference(rawConfig1, rawConfig2);
     if (!diffSections.areEqual()) {
-      ImmutableMap.Builder<String, ConfigChange> result = ImmutableMap.builder();
+      ImmutableMap.Builder<ConfigKey, ConfigChange> result = ImmutableMap.builder();
 
       BiConsumer<String, Map<String, ValueDifference<String>>> appendChange =
           (section, diff) ->
               diff.forEach(
                   (option, value) ->
                       result.put(
-                          section + "." + option,
+                          ImmutableConfigKey.ofImpl(section, option),
                           ImmutableConfigChange.ofImpl(value.leftValue(), value.rightValue())));
       BiConsumer<String, Map<String, String>> appendLeft =
           (section, diff) ->
               diff.forEach(
                   (option, value) ->
                       result.put(
-                          section + "." + option, ImmutableConfigChange.ofImpl(value, null)));
+                          ImmutableConfigKey.ofImpl(section, option),
+                          ImmutableConfigChange.ofImpl(value, null)));
       BiConsumer<String, Map<String, String>> appendRight =
           (section, diff) ->
               diff.forEach(
                   (option, value) ->
                       result.put(
-                          section + "." + option, ImmutableConfigChange.ofImpl(null, value)));
+                          ImmutableConfigKey.ofImpl(section, option),
+                          ImmutableConfigChange.ofImpl(null, value)));
 
       diffSections
           .entriesDiffering()
@@ -109,6 +111,23 @@ public class ConfigDifference {
       return result.build();
     }
     return ImmutableMap.of();
+  }
+
+  /** Section-dot-property. */
+  @BuckStyleValue
+  public abstract static class ConfigKey {
+    public abstract String getSection();
+
+    public abstract String getProperty();
+
+    @Override
+    public final String toString() {
+      return getSection() + "." + getProperty();
+    }
+
+    public static ConfigKey of(String section, String property) {
+      return ImmutableConfigKey.ofImpl(section, property);
+    }
   }
 
   /** A single changed config value */
@@ -132,7 +151,8 @@ public class ConfigDifference {
   }
 
   /** Format a set of changes between configs for the console */
-  public static String formatConfigDiffShort(Map<String, ConfigChange> diff, int maxLines) {
+  public static String formatConfigDiffShort(
+      ImmutableMap<ConfigKey, ConfigChange> diff, int maxLines) {
     StringBuilder builder = new StringBuilder();
     int linesToPrint = diff.size() <= maxLines ? maxLines : maxLines - 1;
     builder
@@ -140,7 +160,7 @@ public class ConfigDifference {
         .append(
             diff.entrySet().stream()
                 .limit(linesToPrint)
-                .map((change) -> formatConfigChange(change, true))
+                .map(change -> formatConfigChange(change, true))
                 .collect(Collectors.joining(System.lineSeparator() + "  ")));
     if (linesToPrint < diff.size()) {
       builder
@@ -153,14 +173,14 @@ public class ConfigDifference {
   }
 
   /** Format the full set of changes between configs to be logged */
-  public static String formatConfigDiff(Map<String, ConfigChange> diff) {
+  public static String formatConfigDiff(Map<ConfigKey, ConfigChange> diff) {
     return diff.entrySet().stream()
-        .map((change) -> formatConfigChange(change, false))
+        .map(change -> formatConfigChange(change, false))
         .collect(Collectors.joining(", "));
   }
 
   /** Format a single config change */
-  public static String formatConfigChange(Entry<String, ConfigChange> change, boolean truncate) {
+  public static String formatConfigChange(Entry<ConfigKey, ConfigChange> change, boolean truncate) {
     String prevVal = change.getValue().getPrevValue();
     String newVal = change.getValue().getNewValue();
     BiFunction<String, Integer, String> abbrev =

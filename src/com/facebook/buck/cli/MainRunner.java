@@ -25,7 +25,6 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig.Executor;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.command.config.ConfigDifference;
-import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
@@ -721,7 +720,8 @@ public final class MainRunner {
         buckConfigProjectFilesystem = null;
         cellPathResolver = DefaultCellPathResolver.create(canonicalRootPath, config);
 
-        Map<String, ConfigChange> configDiff = ConfigDifference.compare(config, currentConfig);
+        ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange> configDiff =
+            ConfigDifference.compare(config, currentConfig);
         UIMessagesFormatter.reusedConfigWarning(configDiff).ifPresent(this::printWarnMessage);
       } else {
         config = currentConfig;

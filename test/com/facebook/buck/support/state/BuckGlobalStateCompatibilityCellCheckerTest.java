@@ -54,7 +54,7 @@ public class BuckGlobalStateCompatibilityCellCheckerTest {
 
     assertEquals(
         ImmutableMap.of(
-            "cxx.cc",
+            ConfigDifference.ConfigKey.of("cxx", "cc"),
             ConfigDifference.ConfigChange.of("/some_location/gcc", "/some_location/clang")),
         ConfigDifference.compareForCaching(buckConfig, buckConfigDifferentCompiler));
 
@@ -124,10 +124,14 @@ public class BuckGlobalStateCompatibilityCellCheckerTest {
             .build();
 
     assertEquals(
-        ImmutableMap.of("cxx.new", ConfigDifference.ConfigChange.of(null, "value")),
+        ImmutableMap.of(
+            ConfigDifference.ConfigKey.of("cxx", "new"),
+            ConfigDifference.ConfigChange.of(null, "value")),
         ConfigDifference.compareForCaching(buckConfigWithoutValue, buckConfigWithValue));
     assertEquals(
-        ImmutableMap.of("cxx.new", ConfigDifference.ConfigChange.of("value", null)),
+        ImmutableMap.of(
+            ConfigDifference.ConfigKey.of("cxx", "new"),
+            ConfigDifference.ConfigChange.of("value", null)),
         ConfigDifference.compareForCaching(buckConfigWithValue, buckConfigWithoutValue));
   }
 
@@ -141,10 +145,14 @@ public class BuckGlobalStateCompatibilityCellCheckerTest {
             .build();
 
     assertEquals(
-        ImmutableMap.of("cxx.new", ConfigDifference.ConfigChange.of(null, "value")),
+        ImmutableMap.of(
+            ConfigDifference.ConfigKey.of("cxx", "new"),
+            ConfigDifference.ConfigChange.of(null, "value")),
         ConfigDifference.compareForCaching(buckConfigWithoutValue, buckConfigWithValue));
     assertEquals(
-        ImmutableMap.of("cxx.new", ConfigDifference.ConfigChange.of("value", null)),
+        ImmutableMap.of(
+            ConfigDifference.ConfigKey.of("cxx", "new"),
+            ConfigDifference.ConfigChange.of("value", null)),
         ConfigDifference.compareForCaching(buckConfigWithValue, buckConfigWithoutValue));
   }
 }

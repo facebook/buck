@@ -61,9 +61,13 @@ public class ConfigDifferenceTest {
     assertEquals(
         ConfigDifference.compare(rawConfig1.getValues(), rawConfig2.getValues()),
         ImmutableMap.of(
-            "section1.field1", ImmutableConfigChange.ofImpl("diffValue1", "diffValue2"),
-            "section3.onlyOnLeft", ImmutableConfigChange.ofImpl("someValue", null),
-            "section4.onlyOnLeft", ImmutableConfigChange.ofImpl("someValue", null),
-            "section5.onlyOnRight", ImmutableConfigChange.ofImpl(null, "someValue")));
+            ConfigDifference.ConfigKey.of("section1", "field1"),
+                ImmutableConfigChange.ofImpl("diffValue1", "diffValue2"),
+            ConfigDifference.ConfigKey.of("section3", "onlyOnLeft"),
+                ImmutableConfigChange.ofImpl("someValue", null),
+            ConfigDifference.ConfigKey.of("section4", "onlyOnLeft"),
+                ImmutableConfigChange.ofImpl("someValue", null),
+            ConfigDifference.ConfigKey.of("section5", "onlyOnRight"),
+                ImmutableConfigChange.ofImpl(null, "someValue")));
   }
 }

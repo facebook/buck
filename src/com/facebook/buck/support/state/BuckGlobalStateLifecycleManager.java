@@ -17,7 +17,6 @@
 package com.facebook.buck.support.state;
 
 import com.facebook.buck.command.config.ConfigDifference;
-import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
@@ -153,7 +152,8 @@ public class BuckGlobalStateLifecycleManager {
       buckGlobalState = null;
     }
 
-    Map<String, ConfigChange> configDifference = ImmutableMap.of();
+    ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange> configDifference =
+        ImmutableMap.of();
     // If Buck config has changed or SDKs have changed, drop all caches
     if (buckGlobalState != null) {
       // Check if current cell and cell for cached state are similar enough to re-use global state.
@@ -232,7 +232,8 @@ public class BuckGlobalStateLifecycleManager {
 
     public abstract LifecycleStatus getLifecycleStatus();
 
-    public abstract Map<String, ConfigChange> getConfigDifference();
+    public abstract ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange>
+        getConfigDifference();
 
     @Value.Check
     protected void check() {
@@ -291,7 +292,7 @@ public class BuckGlobalStateLifecycleManager {
       return CellCompareResult.of(LifecycleStatus.INVALIDATED_FILESYSTEM_CHANGED);
     }
 
-    Map<String, ConfigChange> configDifference =
+    ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange> configDifference =
         ConfigDifference.compareForCaching(stateCell.getBuckConfig(), newCell.getBuckConfig());
     if (!configDifference.isEmpty()) {
       return ImmutableCellCompareResult.ofImpl(
