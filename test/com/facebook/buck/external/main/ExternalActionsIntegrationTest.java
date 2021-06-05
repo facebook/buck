@@ -359,7 +359,7 @@ public class ExternalActionsIntegrationTest {
         .add("-cp")
         .add(testBinary.toString())
         .add(BuckClasspath.BOOTSTRAP_MAIN_CLASS)
-        .add("com.facebook.buck.external.main.ExternalActionsExecutableMain")
+        .add(BuildableCommandExecutionStep.EXTERNAL_ACTIONS_MAIN_CLASS)
         .add(buildableCommandFile.getAbsolutePath())
         .build();
   }

@@ -54,6 +54,9 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
 
   private static final Logger LOG = Logger.get(BuildableCommandExecutionStep.class);
 
+  public static final String EXTERNAL_ACTIONS_MAIN_CLASS =
+      "com.facebook.buck.external.main.ExternalActionsExecutableMain";
+
   private static final String TEMP_FILE_NAME_PREFIX = "buildable_command_";
 
   private final BuildableCommand buildableCommand;
@@ -61,8 +64,7 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   private final String mainClass;
 
   /**
-   * Used for testing only. Production code should use the constructor {@link
-   * #BuildableCommandExecutionStep(BuildableCommand, ProjectFilesystem, String).
+   * Used for testing only. Production code should use the constructor {@link #BuildableCommandExecutionStep(BuildableCommand, ProjectFilesystem).
    */
   @VisibleForTesting
   public BuildableCommandExecutionStep(
@@ -74,10 +76,7 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
 
   public BuildableCommandExecutionStep(
       BuildableCommand buildableCommand, ProjectFilesystem projectFilesystem) {
-    this(
-        buildableCommand,
-        projectFilesystem,
-        "com.facebook.buck.external.main.ExternalActionsExecutableMain");
+    this(buildableCommand, projectFilesystem, EXTERNAL_ACTIONS_MAIN_CLASS);
   }
 
   @Override
