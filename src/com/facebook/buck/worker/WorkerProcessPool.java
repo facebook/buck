@@ -50,17 +50,29 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
   private final HashCode poolHash;
 
   public WorkerProcessPool(
-      int maxWorkers, HashCode poolHash, ThrowingSupplier<T, IOException> startWorkerProcess) {
-    this.capacity = maxWorkers;
+      int maxWorkers,
+      int maxInstancesPerWorker,
+      HashCode poolHash,
+      ThrowingSupplier<T, IOException> startWorkerProcess) {
+    this.capacity = maxWorkers * maxInstancesPerWorker;
     this.availableWorkers = new LinkedBlockingStack<>();
-    this.workerLifecycles = getWorkerLifecyclesArray(WorkerLifecycle.class, capacity);
+    this.workerLifecycles = getWorkerLifecyclesArray(ReusableWorkerLifecycle.class, capacity);
     this.poolHash = poolHash;
     for (int i = 0; i < maxWorkers; i++) {
       WorkerLifecycle<T> workerLifecycle =
-          new DefaultWorkerLifecycle<>(startWorkerProcess, availableWorkers::add);
-      workerLifecycles[i] = workerLifecycle;
-      availableWorkers.add(workerLifecycle);
+          new ReusableWorkerLifecycle<>(
+              new DefaultWorkerLifecycle<>(startWorkerProcess, availableWorkers::add),
+              maxInstancesPerWorker);
+      for (int j = 0; j < maxInstancesPerWorker; j++) {
+        workerLifecycles[i * maxInstancesPerWorker + j] = workerLifecycle;
+        availableWorkers.add(workerLifecycle);
+      }
     }
+  }
+
+  public WorkerProcessPool(
+      int maxWorkers, HashCode poolHash, ThrowingSupplier<T, IOException> startWorkerProcess) {
+    this(maxWorkers, 1, poolHash, startWorkerProcess);
   }
 
   @SuppressWarnings("unchecked")
@@ -188,6 +200,46 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
         workerProcess.close();
         workerProcess = null;
       }
+    }
+  }
+
+  private static class ReusableWorkerLifecycle<T extends WorkerProcess>
+      implements WorkerLifecycle<T> {
+
+    private final WorkerLifecycle<T> delegate;
+    private final int maxInstances;
+    private int inUseCount = 0;
+    @Nullable private T workerProcess;
+
+    ReusableWorkerLifecycle(WorkerLifecycle<T> lifecycle, int maxInstances) {
+      this.delegate = lifecycle;
+      this.maxInstances = maxInstances;
+    }
+
+    @Override
+    public synchronized T get() throws IOException {
+      Preconditions.checkState(inUseCount < maxInstances);
+      if (workerProcess == null) {
+        workerProcess = delegate.get();
+      }
+
+      inUseCount++;
+      workerProcess.prepareForReuse();
+      return workerProcess;
+    }
+
+    @Override
+    public void makeAvailable() {
+      if (inUseCount > 0) {
+        inUseCount--;
+      }
+      delegate.makeAvailable();
+    }
+
+    @Override
+    public synchronized void close() {
+      delegate.close();
+      workerProcess = null;
     }
   }
 

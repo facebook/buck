@@ -48,12 +48,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 public class WorkerProcessPoolTest {
 
-  private static final int WAIT_FOR_TEST_THREADS_TIMEOUT = 1_000;
   private TestThreads testThreads;
+
+  private static final int WAIT_FOR_TEST_THREADS_TIMEOUT = 1_000;
+
+  @Rule public Timeout globalTestTimeout = Timeout.millis(WAIT_FOR_TEST_THREADS_TIMEOUT);
 
   @Before
   public void setUp() {
@@ -65,7 +70,7 @@ public class WorkerProcessPoolTest {
     testThreads.close();
   }
 
-  @Test(timeout = WAIT_FOR_TEST_THREADS_TIMEOUT)
+  @Test
   public void testProvidesWorkersAccordingToCapacityThenBlocks() throws Exception {
     int maxWorkers = 3;
     Set<WorkerProcess> createdWorkers = new HashSet<>();
@@ -84,7 +89,7 @@ public class WorkerProcessPoolTest {
     assertThat(extraWorkerProcess.get(), is(nullValue()));
   }
 
-  @Test(timeout = WAIT_FOR_TEST_THREADS_TIMEOUT)
+  @Test
   public void testReusesWorkerProcesses() throws Exception {
     int maxWorkers = 3;
     int firstBatch = 2;
@@ -127,7 +132,7 @@ public class WorkerProcessPoolTest {
     assertThat(createdWorkers.size(), equalTo(numConcurrentConsumers));
   }
 
-  @Test(timeout = WAIT_FOR_TEST_THREADS_TIMEOUT)
+  @Test
   public void destroysProcessOnFailure() throws Exception {
     Set<WorkerProcess> createdWorkers = new HashSet<>();
     WorkerProcessPool<DefaultWorkerProcess> pool = createPool(1, createdWorkers::add);
@@ -150,7 +155,7 @@ public class WorkerProcessPoolTest {
     assertThat(createdWorkers.size(), is(2));
   }
 
-  @Test(timeout = WAIT_FOR_TEST_THREADS_TIMEOUT)
+  @Test
   public void returnAndDestroyDoNotInterrupt() throws InterruptedException, IOException {
     WorkerProcessPool<DefaultWorkerProcess> pool = createPool(1);
 
@@ -196,7 +201,7 @@ public class WorkerProcessPoolTest {
     assertThat(process2, is(not(process)));
   }
 
-  @Test(timeout = WAIT_FOR_TEST_THREADS_TIMEOUT)
+  @Test
   public void notifiesWaitingThreadsWhenCleaningDeadProcesses() throws Exception {
     int maxWorkers = 2;
     Set<WorkerProcess> createdProcesses = concurrentSet();
@@ -214,7 +219,7 @@ public class WorkerProcessPoolTest {
     testThreads.join();
   }
 
-  @Test(timeout = WAIT_FOR_TEST_THREADS_TIMEOUT)
+  @Test
   public void canStartupMultipleWorkersInParallel() throws InterruptedException, IOException {
     ArrayBlockingQueue<Future<WorkerProcess>> workers = new ArrayBlockingQueue<>(1);
     WorkerProcessPool<DefaultWorkerProcess> pool = createPool(2, workers);
@@ -290,7 +295,7 @@ public class WorkerProcessPoolTest {
     assertThat(secondBorrowedWorker.get(), is(firstBorrowedWorker.get()));
   }
 
-  @Test(timeout = WAIT_FOR_TEST_THREADS_TIMEOUT)
+  @Test
   public void testEmptyPoolDoesNotBlockForever() throws InterruptedException {
     int CAPACITY = 3;
     int NUM_CONSUMERS = 6;
