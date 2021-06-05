@@ -28,9 +28,8 @@ public abstract class JavaCDBuckConfig implements ConfigView<BuckConfig> {
 
   private static final String SECTION = "javacd";
 
-  private static final int DEFAULT_WORKER_TOOL_POOL_SIZE =
-      Math.max((int) Math.ceil(Runtime.getRuntime().availableProcessors() * 0.75), 1);
-  private static final int DEFAULT_MAX_INSTANCES_PER_WORKER_VALUE = 1;
+  private static final int DEFAULT_WORKER_TOOL_POOL_SIZE = 1;
+  private static final int DEFAULT_MAX_INSTANCES_PER_WORKER_VALUE = 64;
 
   private static final int DEFAULT_BORROW_FROM_THE_POOL_TIMEOUT_IN_SECONDS = 30 * 60;
 

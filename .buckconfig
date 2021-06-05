@@ -21,7 +21,7 @@
     compile_against_abis = True
     javacd_enabled = True
 [javacd]
-  jvm_args = -Xms128m
+  jvm_args = -Xms1g
 
 [kotlin]
   # TODO: Put this in a shared location so Kotlin code under src/
