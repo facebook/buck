@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.config.ConfigDifference;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
@@ -41,6 +42,7 @@ class UIMessagesFormatter {
 
   /** Formats comparison of {@link BuckConfig}s into UI message */
   static Optional<String> reusedConfigWarning(
+      CanonicalCellName cellName,
       ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange> diff) {
     if (diff.isEmpty()) {
       return Optional.empty();
@@ -48,7 +50,7 @@ class UIMessagesFormatter {
     StringBuilder diffBuilder = new StringBuilder(COMPARISON_MESSAGE_PREFIX);
     diffBuilder
         .append(System.lineSeparator())
-        .append(ConfigDifference.formatConfigDiffShort(diff, 4));
+        .append(ConfigDifference.formatConfigDiffShort(cellName, diff, 4));
     return Optional.of(diffBuilder.toString());
   }
 

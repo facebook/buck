@@ -19,8 +19,10 @@ package com.facebook.buck.command.config;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.util.config.RawConfig;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 import org.junit.Test;
 
 public class ConfigDifferenceTest {
@@ -69,5 +71,20 @@ public class ConfigDifferenceTest {
                 ImmutableConfigChange.ofImpl("someValue", null),
             ConfigDifference.ConfigKey.of("section5", "onlyOnRight"),
                 ImmutableConfigChange.ofImpl(null, "someValue")));
+  }
+
+  @Test
+  public void compareNotEqualWithCellName() {
+    assertEquals(
+        "Changed value thecell//aa.bb='dd' (was 'cc'), Removed value thecell//ee.ff='gg', New value thecell//hh.ii='jj'",
+        ConfigDifference.formatConfigDiff(
+            CanonicalCellName.unsafeOf(Optional.of("thecell")),
+            ImmutableMap.of(
+                ConfigDifference.ConfigKey.of("aa", "bb"),
+                ConfigDifference.ConfigChange.of("cc", "dd"),
+                ConfigDifference.ConfigKey.of("ee", "ff"),
+                ConfigDifference.ConfigChange.of("gg", null),
+                ConfigDifference.ConfigKey.of("hh", "ii"),
+                ConfigDifference.ConfigChange.of(null, "jj"))));
   }
 }

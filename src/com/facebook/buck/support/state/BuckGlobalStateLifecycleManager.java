@@ -154,6 +154,7 @@ public class BuckGlobalStateLifecycleManager {
 
     ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange> configDifference =
         ImmutableMap.of();
+    CanonicalCellName configDifferenceCell = CanonicalCellName.rootCell();
     // If Buck config has changed or SDKs have changed, drop all caches
     if (buckGlobalState != null) {
       // Check if current cell and cell for cached state are similar enough to re-use global state.
@@ -165,6 +166,7 @@ public class BuckGlobalStateLifecycleManager {
       if (compareCells.getLifecycleStatus() != LifecycleStatus.REUSED) {
         lifecycleStatus = compareCells.getLifecycleStatus();
         configDifference = compareCells.getConfigDifference();
+        configDifferenceCell = compareCells.getCellName();
 
         LOG.info(
             "Shutting down and restarting daemon state on config or directory graphBuilder change (%s != %s)",
@@ -186,8 +188,11 @@ public class BuckGlobalStateLifecycleManager {
       if (!configDifference.isEmpty()) {
         warning
             .append(System.lineSeparator())
-            .append(ConfigDifference.formatConfigDiffShort(configDifference, 2));
-        LOG.info("Config changes: %s", ConfigDifference.formatConfigDiff(configDifference));
+            .append(
+                ConfigDifference.formatConfigDiffShort(configDifferenceCell, configDifference, 2));
+        LOG.info(
+            "Config changes: %s",
+            ConfigDifference.formatConfigDiff(configDifferenceCell, configDifference));
       }
       // Use the raw stream because otherwise this will stop superconsole from ever printing again
       console
@@ -230,6 +235,9 @@ public class BuckGlobalStateLifecycleManager {
   @BuckStyleValue
   abstract static class CellCompareResult {
 
+    /** Which cell produced the result. Ignore when there's no change. */
+    public abstract CanonicalCellName getCellName();
+
     public abstract LifecycleStatus getLifecycleStatus();
 
     public abstract ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange>
@@ -242,8 +250,9 @@ public class BuckGlobalStateLifecycleManager {
               == !getConfigDifference().isEmpty());
     }
 
-    public static CellCompareResult of(LifecycleStatus lifecycleStatus) {
-      return ImmutableCellCompareResult.ofImpl(lifecycleStatus, ImmutableMap.of());
+    public static CellCompareResult of(
+        CanonicalCellName cellName, LifecycleStatus lifecycleStatus) {
+      return ImmutableCellCompareResult.ofImpl(cellName, lifecycleStatus, ImmutableMap.of());
     }
   }
 
@@ -284,27 +293,35 @@ public class BuckGlobalStateLifecycleManager {
       }
     }
 
-    return CellCompareResult.of(LifecycleStatus.REUSED);
+    return CellCompareResult.of(CanonicalCellName.rootCell(), LifecycleStatus.REUSED);
   }
 
   private CellCompareResult compareCell(Cell stateCell, Cell newCell) {
+    Preconditions.checkArgument(
+        stateCell.getCanonicalName().equals(newCell.getCanonicalName()),
+        "comparing different cells: '%s' and '%s'",
+        stateCell.getCanonicalName(),
+        newCell.getCanonicalName());
+
+    CanonicalCellName cellName = stateCell.getCanonicalName();
+
     if (!stateCell.getFilesystem().equals(newCell.getFilesystem())) {
-      return CellCompareResult.of(LifecycleStatus.INVALIDATED_FILESYSTEM_CHANGED);
+      return CellCompareResult.of(cellName, LifecycleStatus.INVALIDATED_FILESYSTEM_CHANGED);
     }
 
     ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange> configDifference =
         ConfigDifference.compareForCaching(stateCell.getBuckConfig(), newCell.getBuckConfig());
     if (!configDifference.isEmpty()) {
       return ImmutableCellCompareResult.ofImpl(
-          LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED, configDifference);
+          cellName, LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED, configDifference);
     }
 
     if (!BuckGlobalStateCompatibilityCellChecker.areToolchainsCompatibleForCaching(
         stateCell, newCell)) {
-      return CellCompareResult.of(LifecycleStatus.INVALIDATED_TOOLCHAINS_INCOMPATIBLE);
+      return CellCompareResult.of(cellName, LifecycleStatus.INVALIDATED_TOOLCHAINS_INCOMPATIBLE);
     }
 
-    return CellCompareResult.of(LifecycleStatus.REUSED);
+    return CellCompareResult.of(cellName, LifecycleStatus.REUSED);
   }
 
   /** Manually reset the {@link BuckGlobalState}, used for testing. */

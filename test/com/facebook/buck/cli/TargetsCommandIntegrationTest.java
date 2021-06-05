@@ -1756,15 +1756,15 @@ public class TargetsCommandIntegrationTest {
     assertThat(
         "show config key in the diff",
         stderr,
-        containsString("  Removed value ui.json_attribute_format='snake_case'"));
+        containsString("  Removed value //ui.json_attribute_format='snake_case'"));
     assertThat(
         "show whitelisted config settings in the diff",
         stderr,
-        containsString("  Removed value ui.warn_on_config_file_overrides='true'"));
+        containsString("  Removed value //ui.warn_on_config_file_overrides='true'"));
     assertThat(
         "show whitelisted config settings in the diff",
         stderr,
-        containsString("  Removed value client.id='123'"));
+        containsString("  Removed value //client.id='123'"));
     assertThat(stderr, containsString("  ... and 2 more. See logs for all changes"));
 
     // the third execution without specific configuration params for ui.json_attribute_format and

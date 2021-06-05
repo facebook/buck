@@ -720,9 +720,11 @@ public final class MainRunner {
         buckConfigProjectFilesystem = null;
         cellPathResolver = DefaultCellPathResolver.create(canonicalRootPath, config);
 
+        // TODO(nga): print a warning about other cells
         ImmutableMap<ConfigDifference.ConfigKey, ConfigDifference.ConfigChange> configDiff =
             ConfigDifference.compare(config, currentConfig);
-        UIMessagesFormatter.reusedConfigWarning(configDiff).ifPresent(this::printWarnMessage);
+        UIMessagesFormatter.reusedConfigWarning(CanonicalCellName.rootCell(), configDiff)
+            .ifPresent(this::printWarnMessage);
       } else {
         config = currentConfig;
         cellPathResolver = DefaultCellPathResolver.create(canonicalRootPath, config);

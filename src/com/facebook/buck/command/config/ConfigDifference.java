@@ -16,6 +16,7 @@
 
 package com.facebook.buck.command.config;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.config.Config;
@@ -152,7 +153,7 @@ public class ConfigDifference {
 
   /** Format a set of changes between configs for the console */
   public static String formatConfigDiffShort(
-      ImmutableMap<ConfigKey, ConfigChange> diff, int maxLines) {
+      CanonicalCellName cellName, ImmutableMap<ConfigKey, ConfigChange> diff, int maxLines) {
     StringBuilder builder = new StringBuilder();
     int linesToPrint = diff.size() <= maxLines ? maxLines : maxLines - 1;
     builder
@@ -160,7 +161,7 @@ public class ConfigDifference {
         .append(
             diff.entrySet().stream()
                 .limit(linesToPrint)
-                .map(change -> formatConfigChange(change, true))
+                .map(change -> formatConfigChange(cellName, change, true))
                 .collect(Collectors.joining(System.lineSeparator() + "  ")));
     if (linesToPrint < diff.size()) {
       builder
@@ -173,27 +174,31 @@ public class ConfigDifference {
   }
 
   /** Format the full set of changes between configs to be logged */
-  public static String formatConfigDiff(Map<ConfigKey, ConfigChange> diff) {
+  public static String formatConfigDiff(
+      CanonicalCellName cellName, Map<ConfigKey, ConfigChange> diff) {
     return diff.entrySet().stream()
-        .map(change -> formatConfigChange(change, false))
+        .map(change -> formatConfigChange(cellName, change, false))
         .collect(Collectors.joining(", "));
   }
 
   /** Format a single config change */
-  public static String formatConfigChange(Entry<ConfigKey, ConfigChange> change, boolean truncate) {
+  public static String formatConfigChange(
+      CanonicalCellName cellName, Entry<ConfigKey, ConfigChange> change, boolean truncate) {
     String prevVal = change.getValue().getPrevValue();
     String newVal = change.getValue().getNewValue();
     BiFunction<String, Integer, String> abbrev =
         (value, width) -> truncate ? MoreStrings.abbreviate(value, width) : value;
     if (prevVal == null) {
-      return String.format("New value %s='%s'", change.getKey(), abbrev.apply(newVal, 80));
+      return String.format(
+          "New value %s//%s='%s'", cellName, change.getKey(), abbrev.apply(newVal, 80));
     }
     if (newVal == null) {
-      return String.format("Removed value %s='%s'", change.getKey(), abbrev.apply(prevVal, 80));
+      return String.format(
+          "Removed value %s//%s='%s'", cellName, change.getKey(), abbrev.apply(prevVal, 80));
     }
 
     return String.format(
-        "Changed value %s='%s' (was '%s')",
-        change.getKey(), abbrev.apply(newVal, 40), abbrev.apply(prevVal, 40));
+        "Changed value %s//%s='%s' (was '%s')",
+        cellName, change.getKey(), abbrev.apply(newVal, 40), abbrev.apply(prevVal, 40));
   }
 }

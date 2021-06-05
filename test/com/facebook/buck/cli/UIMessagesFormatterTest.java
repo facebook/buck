@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.command.config.ConfigDifference;
 import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.util.config.Configs;
@@ -65,20 +66,25 @@ public class UIMessagesFormatterTest {
 
   @Test
   public void configComparisonMessageWithEmptyNumberOfDiffs() {
-    Optional<String> message = UIMessagesFormatter.reusedConfigWarning(ImmutableMap.of());
+    Optional<String> message =
+        UIMessagesFormatter.reusedConfigWarning(CanonicalCellName.rootCell(), ImmutableMap.of());
     assertFalse(message.isPresent());
   }
 
   @Test
   public void configComparisonMessageWithNumberOfDiffsUnderDisplayLimit() {
-    Optional<String> message = UIMessagesFormatter.reusedConfigWarning(generateConfigChange(2));
+    Optional<String> message =
+        UIMessagesFormatter.reusedConfigWarning(
+            CanonicalCellName.rootCell(), generateConfigChange(2));
     assertTrue(message.isPresent());
     assertEquals(message.get(), formatExpectedComparisonMessage(generateConfigChange(2)));
   }
 
   @Test
   public void configComparisonMessageWithNumberOfDiffsAboveDisplayLimit() {
-    Optional<String> message = UIMessagesFormatter.reusedConfigWarning(generateConfigChange(5));
+    Optional<String> message =
+        UIMessagesFormatter.reusedConfigWarning(
+            CanonicalCellName.rootCell(), generateConfigChange(5));
     assertTrue(message.isPresent());
     assertEquals(
         message.get(),
@@ -102,7 +108,9 @@ public class UIMessagesFormatterTest {
 
   @Test
   public void configComparisonMessageWithNumberOfDiffsEqualsToDisplayLimit() {
-    Optional<String> message = UIMessagesFormatter.reusedConfigWarning(generateConfigChange(3));
+    Optional<String> message =
+        UIMessagesFormatter.reusedConfigWarning(
+            CanonicalCellName.rootCell(), generateConfigChange(3));
     assertTrue(message.isPresent());
     assertEquals(message.get(), formatExpectedComparisonMessage(generateConfigChange(3)));
   }
@@ -122,7 +130,7 @@ public class UIMessagesFormatterTest {
             .map(
                 (entry) ->
                     String.format(
-                        "Changed value %s='%s' (was '%s')",
+                        "Changed value //%s='%s' (was '%s')",
                         entry.getKey(),
                         entry.getValue().getNewValue(),
                         entry.getValue().getPrevValue()))
