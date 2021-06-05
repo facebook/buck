@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertThrows;
 
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.function.ThrowingSupplier;
@@ -30,8 +31,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -73,14 +76,16 @@ public class WorkerProcessPoolTest {
   @Test
   public void testProvidesWorkersAccordingToCapacityThenBlocks() throws Exception {
     int maxWorkers = 3;
+    int maxInstances = 2;
     Set<WorkerProcess> createdWorkers = new HashSet<>();
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(maxWorkers, createdWorkers::add);
+    WorkerProcessPool<DefaultWorkerProcess> pool =
+        createPool(maxWorkers, maxInstances, createdWorkers::add);
 
     AtomicReference<BorrowedWorkerProcess<?>> extraWorkerProcess = new AtomicReference<>();
     // acquire enough workers to exhaust the pool
     acquireWorkersThenRunActionThenRelease(
         pool,
-        maxWorkers,
+        maxWorkers * maxInstances,
         () ->
             pool.borrowWorkerProcess(1, TimeUnit.MILLISECONDS).ifPresent(extraWorkerProcess::set));
 
@@ -96,7 +101,7 @@ public class WorkerProcessPoolTest {
     int secondBatch = 3;
 
     Set<WorkerProcess> usedWorkers = new HashSet<>();
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(maxWorkers, usedWorkers::add);
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(maxWorkers, 1, usedWorkers::add);
 
     // create two worker processes, and release them.
     acquireWorkersThenRelease(pool, firstBatch);
@@ -110,11 +115,12 @@ public class WorkerProcessPoolTest {
   @Test
   public void testLargePool() throws Exception {
     int numConcurrentConsumers = 128;
+    int maxInstances = 10;
     Set<WorkerProcess> createdWorkers = new HashSet<>();
     WorkerProcessPool<DefaultWorkerProcess> pool =
-        createPool(numConcurrentConsumers * 2, createdWorkers::add);
+        createPool(numConcurrentConsumers * 2, maxInstances, createdWorkers::add);
 
-    acquireWorkersThenRelease(pool, numConcurrentConsumers);
+    acquireWorkersThenRelease(pool, numConcurrentConsumers * maxInstances);
 
     assertThat(createdWorkers.size(), is(numConcurrentConsumers));
   }
@@ -122,20 +128,23 @@ public class WorkerProcessPoolTest {
   @Test
   public void testReusesWorkerProcessesInLargePools() throws Exception {
     int numConcurrentConsumers = 128;
+    int maxInstances = 5;
     Set<WorkerProcess> createdWorkers = new HashSet<>();
     WorkerProcessPool<DefaultWorkerProcess> pool =
-        createPool(numConcurrentConsumers * 2, createdWorkers::add);
+        createPool(numConcurrentConsumers * 2, maxInstances, createdWorkers::add);
 
     acquireWorkersThenRelease(pool, numConcurrentConsumers / 2);
     acquireWorkersThenRelease(pool, numConcurrentConsumers);
 
-    assertThat(createdWorkers.size(), equalTo(numConcurrentConsumers));
+    assertThat(
+        createdWorkers.size(),
+        equalTo((int) Math.ceil(numConcurrentConsumers * 1. / maxInstances)));
   }
 
   @Test
   public void destroysProcessOnFailure() throws Exception {
     Set<WorkerProcess> createdWorkers = new HashSet<>();
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(1, createdWorkers::add);
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(1, 2, createdWorkers::add);
 
     acquireWorkersThenRelease(pool, 1);
     assertThat(createdWorkers.size(), is(1));
@@ -157,7 +166,7 @@ public class WorkerProcessPoolTest {
 
   @Test
   public void returnAndDestroyDoNotInterrupt() throws InterruptedException, IOException {
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(1);
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(1, 2);
 
     DefaultWorkerProcess process;
     try (BorrowedWorkerProcess<DefaultWorkerProcess> worker = pool.borrowWorkerProcess()) {
@@ -180,7 +189,7 @@ public class WorkerProcessPoolTest {
 
   @Test
   public void cleansUpDeadProcesses() throws InterruptedException, IOException {
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(1);
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(1, 2);
 
     DefaultWorkerProcess process;
     try (BorrowedWorkerProcess<DefaultWorkerProcess> worker = pool.borrowWorkerProcess()) {
@@ -205,7 +214,7 @@ public class WorkerProcessPoolTest {
   public void notifiesWaitingThreadsWhenCleaningDeadProcesses() throws Exception {
     int maxWorkers = 2;
     Set<WorkerProcess> createdProcesses = concurrentSet();
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(maxWorkers, createdProcesses::add);
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(maxWorkers, 2, createdProcesses::add);
 
     acquireWorkersThenRunActionThenRelease(
         pool,
@@ -222,7 +231,7 @@ public class WorkerProcessPoolTest {
   @Test
   public void canStartupMultipleWorkersInParallel() throws InterruptedException, IOException {
     ArrayBlockingQueue<Future<WorkerProcess>> workers = new ArrayBlockingQueue<>(1);
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(2, workers);
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(2, 1, workers);
 
     // thread 1, attempting to borrow a worker
     testThreads.startThread(borrowWorkerProcessWithoutReturning(pool, concurrentSet()));
@@ -252,7 +261,7 @@ public class WorkerProcessPoolTest {
   @Test
   public void canReturnAndBorrowWorkersWhileStartingUpOtherWorkers() throws Exception {
     SynchronousQueue<Future<WorkerProcess>> workers = new SynchronousQueue<>();
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(2, workers);
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(2, 1, workers);
     CountDownLatch firstThreadWaitingToBorrowProcess = new CountDownLatch(1);
     CountDownLatch secondThreadWaitingForWorker = new CountDownLatch(1);
 
@@ -307,6 +316,7 @@ public class WorkerProcessPoolTest {
     WorkerProcessPool<DefaultWorkerProcess> pool =
         createPool(
             CAPACITY,
+            1,
             () -> {
               phaser.awaitAdvance(phaser.arriveAndDeregister());
               numStartedWorkers.incrementAndGet();
@@ -327,60 +337,94 @@ public class WorkerProcessPoolTest {
   @Test
   public void testPoolClosesCleanyIfNoWorkersUsed() {
     int arbitraryNumber = 16;
-    createPool(arbitraryNumber).close();
+    int maxInstances = 2;
+    createPool(arbitraryNumber, maxInstances).close();
   }
 
   @Test
   public void testPoolClosesCleanlyAfterSomeWorkersWereUsedAndReturned() throws Exception {
     int maxWorkers = 6;
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(maxWorkers);
-    acquireWorkersThenRelease(pool, maxWorkers / 2);
+    int maxInstances = 2;
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(maxWorkers, maxInstances);
+    acquireWorkersThenRelease(pool, maxWorkers * maxInstances - 1);
     pool.close();
   }
 
   @Test
   public void testPoolClosesCleanlyAfterAllWorkersWereUsedAndReturned() throws Exception {
     int maxWorkers = 6;
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(maxWorkers);
-    acquireWorkersThenRelease(pool, maxWorkers);
+    int maxInstances = 2;
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(maxWorkers, maxInstances);
+    acquireWorkersThenRelease(pool, maxWorkers * maxInstances);
     pool.close();
   }
 
   @Test
   public void testPoolClosesCleanlyAfterSomeWorkersWereReused() throws Exception {
     int maxWorkers = 6;
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(maxWorkers);
+    int maxInstances = 2;
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(maxWorkers, maxInstances);
     for (int i = 0; i < 2; ++i) {
       // first iteration starts up workers, second iteration reuses
-      acquireWorkersThenRelease(pool, 2);
+      acquireWorkersThenRelease(pool, 5);
     }
     pool.close();
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testThrowsWhenClosingWithoutAllWorkersReturned()
       throws InterruptedException, IOException {
     int arbitraryNumber = 3;
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(arbitraryNumber);
-    BorrowedWorkerProcess<DefaultWorkerProcess> worker = pool.borrowWorkerProcess();
-    worker.get(); // use worker
-    pool.close();
-    worker.close();
+    int maxInstances = 2;
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(arbitraryNumber, maxInstances);
+
+    List<BorrowedWorkerProcess<DefaultWorkerProcess>> workers = new ArrayList<>();
+    for (int i = 0; i < 3; i++) {
+      BorrowedWorkerProcess<DefaultWorkerProcess> workerProcess = pool.borrowWorkerProcess();
+      workers.add(workerProcess);
+      workerProcess.get(); // use worker
+    }
+
+    IllegalStateException illegalStateException =
+        assertThrows(IllegalStateException.class, () -> pool.close());
+    assertThat(
+        illegalStateException.getMessage(),
+        equalTo(
+            "WorkerProcessPool was still running when shutdown was called. Running workers: "
+                + workers.size()));
+
+    workers.forEach(BorrowedWorkerProcess::close);
   }
 
-  @Test(expected = IllegalStateException.class)
+  @Test
   public void testThrowsWhenClosingWithoutAllUnusedWorkersReturned() throws InterruptedException {
     int arbitraryNumber = 5;
-    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(arbitraryNumber);
-    BorrowedWorkerProcess<DefaultWorkerProcess> worker = pool.borrowWorkerProcess();
-    pool.close();
-    worker.close();
+    int maxInstances = 2;
+    WorkerProcessPool<DefaultWorkerProcess> pool = createPool(arbitraryNumber, maxInstances);
+
+    List<BorrowedWorkerProcess<DefaultWorkerProcess>> workers = new ArrayList<>();
+    for (int i = 0; i < 3; i++) {
+      workers.add(pool.borrowWorkerProcess());
+    }
+
+    IllegalStateException illegalStateException =
+        assertThrows(IllegalStateException.class, () -> pool.close());
+    assertThat(
+        illegalStateException.getMessage(),
+        equalTo(
+            "WorkerProcessPool was still running when shutdown was called. Running workers: "
+                + workers.size()));
+
+    workers.forEach(BorrowedWorkerProcess::close);
   }
 
   private static WorkerProcessPool<DefaultWorkerProcess> createPool(
-      int maxWorkers, ThrowingSupplier<WorkerProcess, IOException> startWorkerProcess) {
+      int maxWorkers,
+      int maxInstances,
+      ThrowingSupplier<WorkerProcess, IOException> startWorkerProcess) {
     return new WorkerProcessPool<>(
         maxWorkers,
+        maxInstances,
         Hashing.sha1().hashLong(0),
         () -> {
           DefaultWorkerProcess workerProcess = (DefaultWorkerProcess) startWorkerProcess.get();
@@ -389,14 +433,16 @@ public class WorkerProcessPoolTest {
         });
   }
 
-  private static WorkerProcessPool<DefaultWorkerProcess> createPool(int maxWorkers) {
-    return createPool(maxWorkers, x -> {});
+  private static WorkerProcessPool<DefaultWorkerProcess> createPool(
+      int maxWorkers, int maxInstances) {
+    return createPool(maxWorkers, maxInstances, x -> {});
   }
 
   private static WorkerProcessPool<DefaultWorkerProcess> createPool(
-      int maxWorkers, Consumer<WorkerProcess> onWorkerCreated) {
+      int maxWorkers, int maxInstances, Consumer<WorkerProcess> onWorkerCreated) {
     return createPool(
         maxWorkers,
+        maxInstances,
         () -> {
           FakeWorkerProcess worker = new FakeWorkerProcess(ImmutableMap.of());
           onWorkerCreated.accept(worker);
@@ -405,9 +451,10 @@ public class WorkerProcessPoolTest {
   }
 
   private static WorkerProcessPool<DefaultWorkerProcess> createPool(
-      int maxWorkers, BlockingQueue<Future<WorkerProcess>> workers) {
+      int maxWorkers, int maxInstances, BlockingQueue<Future<WorkerProcess>> workers) {
     return createPool(
         maxWorkers,
+        maxInstances,
         () -> {
           try {
             return workers.take().get();

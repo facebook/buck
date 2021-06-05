@@ -20,10 +20,10 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.concurrent.LinkedBlockingStack;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,8 +45,8 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
   private static final Logger LOG = Logger.get(WorkerProcessPool.class);
 
   private final int capacity;
+  private final ImmutableList<DefaultWorkerLifecycle<T>> workerLifecycles;
   private final BlockingQueue<WorkerLifecycle<T>> availableWorkers;
-  private final WorkerLifecycle<T>[] workerLifecycles;
   private final HashCode poolHash;
 
   public WorkerProcessPool(
@@ -56,30 +56,28 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
       ThrowingSupplier<T, IOException> startWorkerProcess) {
     this.capacity = maxWorkers * maxInstancesPerWorker;
     this.availableWorkers = new LinkedBlockingStack<>();
-    this.workerLifecycles = getWorkerLifecyclesArray(ReusableWorkerLifecycle.class, capacity);
     this.poolHash = poolHash;
+
+    ImmutableList.Builder<DefaultWorkerLifecycle<T>> workerLifecycleBuilder =
+        ImmutableList.builderWithExpectedSize(maxWorkers);
     for (int i = 0; i < maxWorkers; i++) {
+      DefaultWorkerLifecycle<T> defaultWorkerLifecycle =
+          new DefaultWorkerLifecycle<>(startWorkerProcess, availableWorkers::add);
+      workerLifecycleBuilder.add(defaultWorkerLifecycle);
+
       WorkerLifecycle<T> workerLifecycle =
-          new ReusableWorkerLifecycle<>(
-              new DefaultWorkerLifecycle<>(startWorkerProcess, availableWorkers::add),
-              maxInstancesPerWorker);
+          new ReusableWorkerLifecycle<>(defaultWorkerLifecycle, maxInstancesPerWorker);
       for (int j = 0; j < maxInstancesPerWorker; j++) {
-        workerLifecycles[i * maxInstancesPerWorker + j] = workerLifecycle;
         availableWorkers.add(workerLifecycle);
       }
     }
+    this.workerLifecycles = workerLifecycleBuilder.build();
+    Preconditions.checkState(workerLifecycles.size() == maxWorkers);
   }
 
   public WorkerProcessPool(
       int maxWorkers, HashCode poolHash, ThrowingSupplier<T, IOException> startWorkerProcess) {
     this(maxWorkers, 1, poolHash, startWorkerProcess);
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <T extends WorkerProcess> WorkerLifecycle<T>[] getWorkerLifecyclesArray(
-      Class<?> componentType, int length) {
-    Object array = Array.newInstance(componentType, length);
-    return (WorkerLifecycle<T>[]) array;
   }
 
   /**
@@ -103,7 +101,7 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
 
     // remove all available workers
     int numAvailableWorkers = availableWorkers.drainTo(new ArrayList<>(capacity));
-    for (WorkerLifecycle<T> lifecycle : workerLifecycles) {
+    for (DefaultWorkerLifecycle<T> lifecycle : workerLifecycles) {
       try {
         lifecycle.close();
       } catch (Throwable t) {
@@ -111,9 +109,11 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
       }
     }
 
+    int running = capacity - numAvailableWorkers;
     Preconditions.checkState(
-        numAvailableWorkers == capacity,
-        "WorkerProcessPool was still running when shutdown was called.");
+        running == 0,
+        "WorkerProcessPool was still running when shutdown was called. Running workers: %s",
+        running);
     if (caughtWhileClosing != null) {
       throw new RuntimeException(caughtWhileClosing);
     }
@@ -128,12 +128,9 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
   }
 
   private interface WorkerLifecycle<T extends WorkerProcess>
-      extends Closeable, ThrowingSupplier<T, IOException> {
+      extends ThrowingSupplier<T, IOException> {
 
     void makeAvailable();
-
-    @Override
-    void close();
   }
 
   /**
@@ -147,7 +144,7 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
    */
   @ThreadSafe
   private static class DefaultWorkerLifecycle<T extends WorkerProcess>
-      implements WorkerLifecycle<T> {
+      implements WorkerLifecycle<T>, Closeable {
 
     private final ThrowingSupplier<T, IOException> startWorkerProcess;
     private final Consumer<DefaultWorkerLifecycle<T>> onWorkerProcessReturn;
@@ -167,7 +164,8 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
       Preconditions.checkState(!isClosed, "Worker was already terminated");
       // If the worker is broken, destroy it
       if (workerProcess != null && !workerProcess.isAlive()) {
-        closeWorkerProcess();
+        closeWorkerProcess(workerProcess);
+        workerProcess = null;
       }
 
       // start a worker if necessary, this might throw IOException
@@ -178,13 +176,11 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
       return workerProcess;
     }
 
-    private void closeWorkerProcess() {
+    private void closeWorkerProcess(T workerProcess) {
       try {
         workerProcess.close();
       } catch (Exception ex) {
         LOG.error(ex, "Failed to close dead worker process; ignoring.");
-      } finally {
-        workerProcess = null;
       }
     }
 
@@ -195,6 +191,7 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
 
     @Override
     public synchronized void close() {
+      Preconditions.checkState(!isClosed, "Worker was already terminated");
       isClosed = true;
       if (workerProcess != null) {
         workerProcess.close();
@@ -233,12 +230,6 @@ public class WorkerProcessPool<T extends WorkerProcess> implements Closeable {
         inUseCount--;
       }
       delegate.makeAvailable();
-    }
-
-    @Override
-    public synchronized void close() {
-      delegate.close();
-      workerProcess = null;
     }
   }
 
