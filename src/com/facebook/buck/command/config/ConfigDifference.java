@@ -21,6 +21,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.MapDifference.ValueDifference;
@@ -31,6 +32,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 /**
  * Helper methods for calculating and logging the config differences that cause state invalidation
@@ -111,14 +113,20 @@ public class ConfigDifference {
 
   /** A single changed config value */
   @BuckStyleValue
-  public interface ConfigChange {
+  public abstract static class ConfigChange {
     @Nullable
-    String getPrevValue();
+    public abstract String getPrevValue();
 
     @Nullable
-    String getNewValue();
+    public abstract String getNewValue();
 
-    static ConfigChange of(@Nullable String prevValue, @Nullable String newValue) {
+    @Value.Check
+    protected void check() {
+      Preconditions.checkArgument(
+          getPrevValue() != null || getNewValue() != null, "prevValue or newValue must be defined");
+    }
+
+    public static ConfigChange of(@Nullable String prevValue, @Nullable String newValue) {
       return ImmutableConfigChange.ofImpl(prevValue, newValue);
     }
   }
