@@ -44,6 +44,12 @@ public abstract class BaseJavaCDParams implements AddsToRuleKey {
   public abstract int getWorkerToolPoolSize();
 
   @ExcludeFromRuleKey(
+      reason = "javacd worker tool max instances size is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  public abstract int getWorkerToolMaxInstancesSize();
+
+  @ExcludeFromRuleKey(
       reason = "javacd borrow from the pool is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
@@ -54,8 +60,13 @@ public abstract class BaseJavaCDParams implements AddsToRuleKey {
       boolean hasJavaCDEnabled,
       Iterable<String> startCommandOptions,
       int workerToolPoolSize,
+      int workerToolMaxInstancesSize,
       int borrowFromPoolTimeoutInSeconds) {
     return ImmutableBaseJavaCDParams.ofImpl(
-        hasJavaCDEnabled, startCommandOptions, workerToolPoolSize, borrowFromPoolTimeoutInSeconds);
+        hasJavaCDEnabled,
+        startCommandOptions,
+        workerToolPoolSize,
+        workerToolMaxInstancesSize,
+        borrowFromPoolTimeoutInSeconds);
   }
 }

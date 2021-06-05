@@ -44,6 +44,11 @@ public abstract class JavaCDParams {
   }
 
   @Value.Derived
+  public int getWorkerToolMaxInstancesSize() {
+    return getBaseJavaCDParams().getWorkerToolMaxInstancesSize();
+  }
+
+  @Value.Derived
   public int getBorrowFromPoolTimeoutInSeconds() {
     return getBaseJavaCDParams().getBorrowFromPoolTimeoutInSeconds();
   }

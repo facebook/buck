@@ -809,7 +809,7 @@ public class AndroidApkGraphEnhancerTest {
             graphBuilder,
             false,
             false,
-            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1));
+            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1, 1));
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams =

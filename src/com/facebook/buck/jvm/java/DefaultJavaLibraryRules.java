@@ -784,6 +784,7 @@ public abstract class DefaultJavaLibraryRules {
         javaBuckConfig.isJavaCDEnabled(),
         javaCDBuckConfig.getJvmFlags(),
         javaCDBuckConfig.getWorkerToolSize(),
+        javaCDBuckConfig.getWorkerToolMaxInstancesSize(),
         javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
   }
 

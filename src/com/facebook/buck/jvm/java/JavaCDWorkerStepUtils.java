@@ -147,6 +147,7 @@ public class JavaCDWorkerStepUtils {
                         BuckClasspath.ENV_VAR_NAME + " env variable is not set")));
           }
         },
-        javaCDParams.getWorkerToolPoolSize());
+        javaCDParams.getWorkerToolPoolSize(),
+        javaCDParams.getWorkerToolMaxInstancesSize());
   }
 }

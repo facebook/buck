@@ -29,7 +29,8 @@ public abstract class JavaCDBuckConfig implements ConfigView<BuckConfig> {
   private static final String SECTION = "javacd";
 
   private static final int DEFAULT_WORKER_TOOL_POOL_SIZE =
-      (int) Math.ceil(Runtime.getRuntime().availableProcessors() * 0.75);
+      Math.max((int) Math.ceil(Runtime.getRuntime().availableProcessors() * 0.75), 1);
+  private static final int DEFAULT_MAX_INSTANCES_PER_WORKER_VALUE = 1;
 
   private static final int DEFAULT_BORROW_FROM_THE_POOL_TIMEOUT_IN_SECONDS = 30 * 60;
 
@@ -52,6 +53,14 @@ public abstract class JavaCDBuckConfig implements ConfigView<BuckConfig> {
     return getDelegate()
         .getInteger(SECTION, "worker_pool_size")
         .orElse(DEFAULT_WORKER_TOOL_POOL_SIZE);
+  }
+
+  /** Returns worker tool max instances size. */
+  @Value.Lazy
+  public int getWorkerToolMaxInstancesSize() {
+    return getDelegate()
+        .getInteger(SECTION, "worker_max_instances")
+        .orElse(DEFAULT_MAX_INSTANCES_PER_WORKER_VALUE);
   }
 
   /**

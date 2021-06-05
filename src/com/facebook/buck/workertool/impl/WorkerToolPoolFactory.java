@@ -43,7 +43,8 @@ public class WorkerToolPoolFactory {
       IsolatedExecutionContext context,
       ImmutableList<String> startupCommand,
       ThrowingSupplier<WorkerToolExecutor, IOException> startWorkerProcess,
-      int capacity) {
+      int capacity,
+      int maxInstancesPerWorker) {
 
     String key = String.join(" ", startupCommand);
     HashCode workerHash = Hashing.sha1().hashString(key, StandardCharsets.UTF_8);
@@ -61,7 +62,8 @@ public class WorkerToolPoolFactory {
     }
 
     if (pool == null) {
-      pool = createPool(poolMap, capacity, key, workerHash, startWorkerProcess);
+      pool =
+          createPool(poolMap, capacity, maxInstancesPerWorker, key, workerHash, startWorkerProcess);
     }
     return pool;
   }
@@ -69,12 +71,13 @@ public class WorkerToolPoolFactory {
   private static WorkerProcessPool<WorkerToolExecutor> createPool(
       ConcurrentMap<String, WorkerProcessPool<WorkerToolExecutor>> poolMap,
       int capacity,
+      int maxInstancesPerWorker,
       String key,
       HashCode workerHash,
       ThrowingSupplier<WorkerToolExecutor, IOException> startWorkerProcess) {
 
     WorkerProcessPool<WorkerToolExecutor> newPool =
-        new WorkerProcessPool<>(capacity, workerHash, startWorkerProcess);
+        new WorkerProcessPool<>(capacity, maxInstancesPerWorker, workerHash, startWorkerProcess);
     WorkerProcessPool<WorkerToolExecutor> previousPool = poolMap.putIfAbsent(key, newPool);
     // If putIfAbsent does not return null, then that means another thread beat this thread
     // into putting an WorkerProcessPool in the map for this key. If that's the case, then we
