@@ -17,6 +17,7 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 
@@ -67,5 +68,21 @@ public abstract class WatchmanWatcherOneBigEvent {
       overflows.addAll(event.getOverflowEvents());
     }
     return ImmutableWatchmanWatcherOneBigEvent.ofImpl(pathEvents.build(), overflows.build());
+  }
+
+  @Override
+  public abstract String toString();
+
+  /** Short description of events. */
+  public String summaryForLogging() {
+    // Reasonable amount to be able to debug, but keep logs small
+    if (getOverflowEvents().size() + getPathEvents().size() <= 5) {
+      return toString();
+    } else {
+      return MoreObjects.toStringHelper(WatchmanWatcherOneBigEvent.class)
+          .add("pathEvents", getPathEvents().size())
+          .add("overflowEvents", getOverflowEvents().size())
+          .toString();
+    }
   }
 }

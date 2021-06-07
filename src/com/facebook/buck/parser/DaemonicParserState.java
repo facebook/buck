@@ -398,6 +398,8 @@ public class DaemonicParserState {
 
   @Subscribe
   public void invalidateBasedOn(WatchmanWatcherOneBigEvent event) {
+    LOG.debug("Invalidating based on watchman event: " + event.summaryForLogging());
+
     try (AutoCloseableWriteLocked locked = locks.cachesLock.lockWrite()) {
       if (!event.getOverflowEvents().isEmpty()) {
         locks.markInvalidated(locked);
