@@ -143,10 +143,10 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
     /** The following are used for future test specs and ignored for now */
     Optional<ImmutableMap<String, String>> getRunEnv();
 
-    Optional<ImmutableList<String>> getRunCmd();
+    Optional<ImmutableList<String>> getRunArgs();
 
     Optional<ImmutableMap<String, String>> getListEnv();
 
-    Optional<ImmutableList<String>> getListCmd();
+    Optional<ImmutableList<String>> getListArgs();
   }
 }
