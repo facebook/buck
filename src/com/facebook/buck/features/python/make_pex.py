@@ -110,6 +110,7 @@ def main():
     parser.add_option("--python", default="")
     parser.add_option("--python-version", default="")
     parser.add_option("--python-shebang", default=None)
+    parser.add_option("--absolute-shebang", action="store_true", default=False)
     parser.add_option("--preload", action="append", default=[])
     options, args = parser.parse_args()
     if len(args) == 1:
@@ -140,13 +141,15 @@ def main():
         identity = PythonIdentity.from_id_string(" ".join(python_version))
 
     interpreter = PythonInterpreter(options.python, identity, extras={})
-
     pex_builder = PEXBuilder(
         path=output if options.directory else None, interpreter=interpreter
     )
 
     if options.python_shebang is not None:
         pex_builder.set_shebang(options.python_shebang)
+
+    elif options.absolute_shebang:
+        pex_builder.set_shebang(options.python)
 
     # Set whether this PEX as zip-safe, meaning everything will stayed zipped up
     # and we'll rely on python's zip-import mechanism to load modules from

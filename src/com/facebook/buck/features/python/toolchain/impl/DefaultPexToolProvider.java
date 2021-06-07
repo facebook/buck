@@ -69,6 +69,10 @@ public class DefaultPexToolProvider implements PexToolProvider {
       builder.addArg(flag);
     }
 
+    if (pythonBuckConfig.useAbsoluteShebang()) {
+      builder.addArg("--absolute-shebang");
+    }
+
     return builder.build();
   }
 

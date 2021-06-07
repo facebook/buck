@@ -92,6 +92,10 @@ public class PythonBuckConfig {
     return delegate.getValue(SECTION, "pex_extension").orElse(".pex");
   }
 
+  public boolean useAbsoluteShebang() {
+    return delegate.getBooleanValue(SECTION, "pex_use_absolute_shebang", false);
+  }
+
   public Optional<String> getConfiguredVersion(String section) {
     return delegate.getValue(section, "version");
   }
