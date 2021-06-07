@@ -55,18 +55,26 @@ public abstract class BaseJavaCDParams implements AddsToRuleKey {
       inputs = IgnoredFieldInputs.class)
   public abstract int getBorrowFromPoolTimeoutInSeconds();
 
+  @ExcludeFromRuleKey(
+      reason = "javacd max wait for the result is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  public abstract int getMaxWaitForResultTimeoutInSeconds();
+
   /** Creates {@link BaseJavaCDParams} */
   public static BaseJavaCDParams of(
       boolean hasJavaCDEnabled,
       Iterable<String> startCommandOptions,
       int workerToolPoolSize,
       int workerToolMaxInstancesSize,
-      int borrowFromPoolTimeoutInSeconds) {
+      int borrowFromPoolTimeoutInSeconds,
+      int maxWaitForResultTimeoutInSeconds) {
     return ImmutableBaseJavaCDParams.ofImpl(
         hasJavaCDEnabled,
         startCommandOptions,
         workerToolPoolSize,
         workerToolMaxInstancesSize,
-        borrowFromPoolTimeoutInSeconds);
+        borrowFromPoolTimeoutInSeconds,
+        maxWaitForResultTimeoutInSeconds);
   }
 }

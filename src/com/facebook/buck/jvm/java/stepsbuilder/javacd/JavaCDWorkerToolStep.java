@@ -35,6 +35,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /** JavaCD worker tool isolated step. */
 public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
@@ -99,12 +101,14 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
       ResultEvent resultEvent;
       try (Scope ignored =
           PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_waiting_for_result")) {
-        resultEvent = resultEventFuture.get();
+        resultEvent =
+            resultEventFuture.get(
+                javaCDParams.getMaxWaitForResultTimeoutInSeconds(), TimeUnit.SECONDS);
       }
 
       return JavaCDWorkerStepUtils.createStepExecutionResult(
           launchJavaCDCommand, resultEvent, actionId);
-    } catch (ExecutionException e) {
+    } catch (ExecutionException | TimeoutException e) {
       return JavaCDWorkerStepUtils.createFailStepExecutionResult(launchJavaCDCommand, actionId, e);
     }
   }

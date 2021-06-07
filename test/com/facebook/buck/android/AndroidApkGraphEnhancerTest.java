@@ -22,6 +22,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_EXTERN
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA8_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVACD_CONFIG;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVACD_PARAMS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -75,7 +76,6 @@ import com.facebook.buck.jvm.java.FakeTool;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavacFactoryHelper;
-import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -809,7 +809,7 @@ public class AndroidApkGraphEnhancerTest {
             graphBuilder,
             false,
             false,
-            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1, 1));
+            DEFAULT_JAVACD_PARAMS);
 
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
     BuildRuleParams originalParams =

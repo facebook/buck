@@ -31,7 +31,8 @@ public abstract class JavaCDBuckConfig implements ConfigView<BuckConfig> {
   private static final int DEFAULT_WORKER_TOOL_POOL_SIZE = 1;
   private static final int DEFAULT_MAX_INSTANCES_PER_WORKER_VALUE = 64;
 
-  private static final int DEFAULT_BORROW_FROM_THE_POOL_TIMEOUT_IN_SECONDS = 30 * 60;
+  private static final int DEFAULT_BORROW_FROM_THE_POOL_TIMEOUT_IN_SECONDS = 10 * 60;
+  private static final int DEFAULT_MAX_WAIT_FOR_RESULT_TIMEOUT_IN_SECONDS = 10 * 60;
 
   @Override
   public abstract BuckConfig getDelegate();
@@ -71,5 +72,13 @@ public abstract class JavaCDBuckConfig implements ConfigView<BuckConfig> {
     return getDelegate()
         .getInteger(SECTION, "borrow_from_the_pool_timeout_sec")
         .orElse(DEFAULT_BORROW_FROM_THE_POOL_TIMEOUT_IN_SECONDS);
+  }
+
+  /** Returns the maximum number of seconds for waiting for a result from the worker tool. */
+  @Value.Lazy
+  public int getMaxWaitForResultTimeoutInSeconds() {
+    return getDelegate()
+        .getInteger(SECTION, "max_wait_for_result_timeout_sec")
+        .orElse(DEFAULT_MAX_WAIT_FOR_RESULT_TIMEOUT_IN_SECONDS);
   }
 }

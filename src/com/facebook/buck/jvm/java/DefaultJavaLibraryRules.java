@@ -785,7 +785,8 @@ public abstract class DefaultJavaLibraryRules {
         javaCDBuckConfig.getJvmFlags(),
         javaCDBuckConfig.getWorkerToolSize(),
         javaCDBuckConfig.getWorkerToolMaxInstancesSize(),
-        javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds());
+        javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds(),
+        javaCDBuckConfig.getMaxWaitForResultTimeoutInSeconds());
   }
 
   @org.immutables.builder.Builder.AccessibleFields

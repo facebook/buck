@@ -215,6 +215,7 @@ java_library(
         "//src/com/facebook/buck/jvm/java:packagefinder",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/params:params",
         "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/rules/args:args",

@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVACD_PARAMS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
@@ -28,7 +29,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
@@ -58,7 +58,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             graphBuilder,
             false,
             false,
-            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1, 1));
+            DEFAULT_JAVACD_PARAMS);
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
     buildConfigJavaLibrary.addToCollector(graphBuilder, collector);
@@ -91,7 +91,7 @@ public class AndroidBuildConfigJavaLibraryTest {
             graphBuilder,
             false,
             false,
-            BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1, 1));
+            DEFAULT_JAVACD_PARAMS);
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
     assertEquals(fields, buildConfig.getBuildConfigFields());

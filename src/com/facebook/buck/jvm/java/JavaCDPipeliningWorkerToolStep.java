@@ -193,13 +193,15 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
         PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_waiting_for_result")) {
       try {
         LOG.debug("Waiting for the result event associated with action id: %s", actionId);
-        ResultEvent resultEvent = resultEventFuture.get();
+        ResultEvent resultEvent =
+            resultEventFuture.get(
+                javaCDParams.getMaxWaitForResultTimeoutInSeconds(), TimeUnit.SECONDS);
         LOG.debug(
             "Result event (exit code = %s) for action id: %s has been received",
             resultEvent.getExitCode(), actionId);
         return JavaCDWorkerStepUtils.createStepExecutionResult(
             launchJavaCDCommand, resultEvent, actionId);
-      } catch (ExecutionException e) {
+      } catch (ExecutionException | TimeoutException e) {
         return JavaCDWorkerStepUtils.createFailStepExecutionResult(
             launchJavaCDCommand, actionId, e);
       }

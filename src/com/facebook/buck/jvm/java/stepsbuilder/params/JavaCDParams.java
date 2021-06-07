@@ -53,6 +53,11 @@ public abstract class JavaCDParams {
     return getBaseJavaCDParams().getBorrowFromPoolTimeoutInSeconds();
   }
 
+  @Value.Derived
+  public int getMaxWaitForResultTimeoutInSeconds() {
+    return getBaseJavaCDParams().getMaxWaitForResultTimeoutInSeconds();
+  }
+
   public abstract RelPath getLogDirectory();
 
   /** Creates {@link JavaCDParams} */

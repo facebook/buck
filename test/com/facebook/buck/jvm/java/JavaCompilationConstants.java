@@ -20,6 +20,7 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.google.common.collect.ImmutableList;
 
@@ -65,6 +66,9 @@ public class JavaCompilationConstants {
           DEFAULT_JAVA_CONFIG
               .getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE)
               .getJavacProvider());
+
+  public static final BaseJavaCDParams DEFAULT_JAVACD_PARAMS =
+      BaseJavaCDParams.of(false, ImmutableList.of(), 1, 1, 1, 1);
 
   private JavaCompilationConstants() {
     // Thou shalt not instantiate utility classes.
