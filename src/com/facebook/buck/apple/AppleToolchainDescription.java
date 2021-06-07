@@ -44,7 +44,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
-import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
@@ -60,12 +59,6 @@ import java.util.Optional;
 /** Defines an apple_toolchain rule which provides {@link AppleCxxPlatform}. */
 public class AppleToolchainDescription
     implements DescriptionWithTargetGraph<AppleToolchainDescriptionArg> {
-
-  private final AppleConfig appleConfig;
-
-  public AppleToolchainDescription(AppleConfig appleConfig) {
-    this.appleConfig = appleConfig;
-  }
 
   @Override
   public BuildRule createBuildRule(
@@ -226,14 +219,6 @@ public class AppleToolchainDescription
     // Expand macros in cxx platform flags.
     CxxFlags.translateCxxPlatformFlags(
         cxxPlatformBuilder, currentCxxPlatform, macrosArgsBuilder.build());
-
-    boolean stripSwift = appleConfig.getStripSwiftSymbolsEnabled();
-    cxxPlatformBuilder.setStripDebugFlags(
-        AppleStripFlags.getStripArgs(StripStyle.DEBUGGING_SYMBOLS, stripSwift));
-    cxxPlatformBuilder.setStripNonGlobalFlags(
-        AppleStripFlags.getStripArgs(StripStyle.NON_GLOBAL_SYMBOLS, stripSwift));
-    cxxPlatformBuilder.setStripAllFlags(
-        AppleStripFlags.getStripArgs(StripStyle.ALL_SYMBOLS, stripSwift));
 
     return cxxPlatformBuilder.build();
   }

@@ -188,5 +188,7 @@ cxx_toolchain(
     objcopy_for_shared_library_interface = "//tools:unimplemented",
     ranlib = "//tools:ranlib",
     strip = "//apple_toolchain/tools:strip",
+    strip_non_global_flags = ["-x", "-T"],
+    strip_all_flags = ["-r", "-u", "-T"],
     visibility = ["PUBLIC"],
 )

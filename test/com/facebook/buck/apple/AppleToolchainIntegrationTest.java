@@ -60,7 +60,7 @@ public class AppleToolchainIntegrationTest {
             "%s");
     assertEquals(
         String.format(
-            "strip x:%n"
+            "strip Tx:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
                     workspace.getProjectFileSystem().getBuckPaths(),
@@ -98,7 +98,7 @@ public class AppleToolchainIntegrationTest {
     assertEquals(
         String.format(
             "universal file:%n"
-                + "strip x:%n"
+                + "strip Tx:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
                     workspace.getProjectFileSystem().getBuckPaths(),
@@ -114,7 +114,7 @@ public class AppleToolchainIntegrationTest {
                 + "linker: lpath: %s/sdk/lib%n"
                 + "linker: libs: objc%n"
                 + "universal file:%n"
-                + "strip x:%n"
+                + "strip Tx:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
                     workspace.getProjectFileSystem().getBuckPaths(),
@@ -146,7 +146,7 @@ public class AppleToolchainIntegrationTest {
     assertEquals("signed by codesign\n", workspace.getFileContents(output.resolve("app_signed")));
     assertEquals(
         String.format(
-            "strip x:%n"
+            "strip Tx:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
                     workspace.getProjectFileSystem().getBuckPaths(),
@@ -252,7 +252,7 @@ public class AppleToolchainIntegrationTest {
             "%s");
     assertEquals(
         String.format(
-            "strip x:%n"
+            "strip Tx:%n"
                 + "linker: input:%n"
                 + BuildTargetPaths.getGenPath(
                     workspace.getProjectFileSystem().getBuckPaths(),
@@ -280,12 +280,6 @@ public class AppleToolchainIntegrationTest {
     workspace.addBuckConfigLocalOption(
         "apple", "toolchain_set_target", "//apple_toolchain:toolchain");
     workspace.setUp();
-
-    verifyStripArgs(workspace, "strip-debug", "S");
-    verifyStripArgs(workspace, "strip-non-global", "x");
-    verifyStripArgs(workspace, "strip-all", "");
-
-    workspace.addBuckConfigLocalOption("apple", "strip_swift_symbols", "true");
 
     verifyStripArgs(workspace, "strip-debug", "S");
     verifyStripArgs(workspace, "strip-non-global", "Tx");
