@@ -92,7 +92,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
 
   @VisibleForTesting static final Logger LOGGER = Logger.get(BaseNamedPipeEventHandler.class);
 
-  private static final long WAIT_FOR_EVENTS_TIMEOUT = 100;
+  private static final long WAIT_FOR_EVENTS_TIMEOUT = 500;
   private static final TimeUnit WAIT_FOR_EVENTS_TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
 
   private final NamedPipeReader namedPipe;
