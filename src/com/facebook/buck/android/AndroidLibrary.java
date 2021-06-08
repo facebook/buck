@@ -42,7 +42,7 @@ import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.UnusedDependenciesFinderFactory;
-import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -110,7 +110,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
       boolean neverMarkAsUnusedDependency,
-      BaseJavaCDParams javaCDParams) {
+      RulesJavaCDParams javaCDParams) {
     super(
         buildTarget,
         projectFilesystem,

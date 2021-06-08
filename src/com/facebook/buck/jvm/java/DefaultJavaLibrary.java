@@ -48,7 +48,7 @@ import com.facebook.buck.jvm.core.JavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
-import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.rules.modern.PipelinedModernBuildRule;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
@@ -182,7 +182,7 @@ public class DefaultJavaLibrary
       boolean isDesugarEnabled,
       boolean isInterfaceMethodsDesugarEnabled,
       boolean neverMarkAsUnusedDependency,
-      BaseJavaCDParams javaCDParams) {
+      RulesJavaCDParams javaCDParams) {
     super(
         buildTarget,
         projectFilesystem,

@@ -34,7 +34,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ResourcesParameters;
-import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -58,7 +58,7 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       JavacOptions javacOptions,
       AndroidBuildConfig androidBuildConfig,
       boolean withDownwardApi,
-      BaseJavaCDParams javaCDParams) {
+      RulesJavaCDParams javaCDParams) {
     super(
         buildTarget,
         projectFilesystem,

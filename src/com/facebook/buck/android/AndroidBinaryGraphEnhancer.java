@@ -57,7 +57,7 @@ import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
-import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -737,7 +737,7 @@ public class AndroidBinaryGraphEnhancer {
       AndroidPackageableCollection packageableCollection,
       boolean withDownwardApi,
       boolean shouldExecuteInSeparateProcess,
-      BaseJavaCDParams javaCDParams) {
+      RulesJavaCDParams javaCDParams) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
         BuildConfigFields.fromFields(

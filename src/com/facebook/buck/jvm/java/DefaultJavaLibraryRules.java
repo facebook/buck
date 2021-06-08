@@ -40,7 +40,8 @@ import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
-import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.DefaultRulesJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -81,7 +82,7 @@ public abstract class DefaultJavaLibraryRules {
         boolean isDesugarEnabled,
         boolean isInterfaceMethodsDesugarEnabled,
         boolean neverMarkAsUnusedDependency,
-        BaseJavaCDParams javaCDParams);
+        RulesJavaCDParams javaCDParams);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -777,10 +778,10 @@ public abstract class DefaultJavaLibraryRules {
     }
   }
 
-  /** Returns a new {@link BaseJavaCDParams} built from configuration values */
-  public static BaseJavaCDParams createJavaCDParams(
+  /** Returns a new {@link RulesJavaCDParams} built from configuration values */
+  public static RulesJavaCDParams createJavaCDParams(
       JavaBuckConfig javaBuckConfig, JavaCDBuckConfig javaCDBuckConfig) {
-    return BaseJavaCDParams.of(
+    return DefaultRulesJavaCDParams.of(
         javaBuckConfig.isJavaCDEnabled(),
         javaCDBuckConfig.getJvmFlags(),
         javaCDBuckConfig.getWorkerToolSize(),

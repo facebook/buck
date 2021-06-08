@@ -17,53 +17,57 @@
 package com.facebook.buck.jvm.java.stepsbuilder.params;
 
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
-/** Params related to javacd. Used to pass into javacd worker tool step. */
+/**
+ * Params related to javacd. Used to pass into javacd worker tool step. Doesn't implement {@link
+ * AddsToRuleKey} interface.
+ */
 @BuckStyleValue
 public abstract class JavaCDParams {
 
-  abstract BaseJavaCDParams getBaseJavaCDParams();
+  abstract RulesJavaCDParams getRulesJavaCDParams();
 
   @Value.Derived
   public boolean hasJavaCDEnabled() {
-    return getBaseJavaCDParams().hasJavaCDEnabled();
+    return getRulesJavaCDParams().hasJavaCDEnabled();
   }
 
   @Value.Derived
   public ImmutableList<String> getStartCommandOptions() {
-    return getBaseJavaCDParams().getStartCommandOptions();
+    return getRulesJavaCDParams().getStartCommandOptions();
   }
 
   @Value.Derived
   public int getWorkerToolPoolSize() {
-    return getBaseJavaCDParams().getWorkerToolPoolSize();
+    return getRulesJavaCDParams().getWorkerToolPoolSize();
   }
 
   @Value.Derived
   public int getWorkerToolMaxInstancesSize() {
-    return getBaseJavaCDParams().getWorkerToolMaxInstancesSize();
+    return getRulesJavaCDParams().getWorkerToolMaxInstancesSize();
   }
 
   @Value.Derived
   public int getBorrowFromPoolTimeoutInSeconds() {
-    return getBaseJavaCDParams().getBorrowFromPoolTimeoutInSeconds();
+    return getRulesJavaCDParams().getBorrowFromPoolTimeoutInSeconds();
   }
 
   @Value.Derived
   public int getMaxWaitForResultTimeoutInSeconds() {
-    return getBaseJavaCDParams().getMaxWaitForResultTimeoutInSeconds();
+    return getRulesJavaCDParams().getMaxWaitForResultTimeoutInSeconds();
   }
 
   public abstract RelPath getLogDirectory();
 
   /** Creates {@link JavaCDParams} */
   public static JavaCDParams of(
-      BaseJavaCDParams baseJavaCDParams, ProjectFilesystem projectFilesystem) {
+      RulesJavaCDParams rulesJavaCDParams, ProjectFilesystem projectFilesystem) {
     return ImmutableJavaCDParams.ofImpl(
-        baseJavaCDParams, projectFilesystem.getBuckPaths().getLogDir());
+        rulesJavaCDParams, projectFilesystem.getBuckPaths().getLogDir());
   }
 }

@@ -52,8 +52,8 @@ import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFa
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsValueSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
-import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PipelinedBuildable;
@@ -89,7 +89,7 @@ public class CalculateSourceAbi
       ProjectFilesystem projectFilesystem,
       JarBuildStepsFactory<?> jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder,
-      BaseJavaCDParams javaCDParams) {
+      RulesJavaCDParams javaCDParams) {
     super(
         buildTarget,
         projectFilesystem,
@@ -116,13 +116,13 @@ public class CalculateSourceAbi
     @AddToRuleKey private final PublicOutputPath rootOutputPath;
     @AddToRuleKey private final PublicOutputPath annotationsOutputPath;
 
-    @AddToRuleKey private final BaseJavaCDParams javaCDParams;
+    @AddToRuleKey private final RulesJavaCDParams javaCDParams;
 
     public SourceAbiBuildable(
         BuildTarget buildTarget,
         ProjectFilesystem filesystem,
         JarBuildStepsFactory<?> jarBuildStepsFactory,
-        BaseJavaCDParams javaCDParams) {
+        RulesJavaCDParams javaCDParams) {
       this.buildTarget = buildTarget;
       this.jarBuildStepsFactory = jarBuildStepsFactory;
       this.javaCDParams = javaCDParams;

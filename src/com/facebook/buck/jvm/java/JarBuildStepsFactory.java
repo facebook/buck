@@ -57,8 +57,8 @@ import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetV
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.JarParametersSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacOptionsSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacSerializer;
-import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.rules.modern.CustomFieldInputs;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
@@ -94,6 +94,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   @AddToRuleKey private final Javac javac;
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
+
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
 
   @AddToRuleKey private final ResourcesParameters resourcesParameters;
@@ -116,7 +117,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   @AddToRuleKey private final AbiGenerationMode abiCompatibilityMode;
   @AddToRuleKey private final boolean withDownwardApi;
 
-  @AddToRuleKey private final BaseJavaCDParams javaCDParams;
+  @AddToRuleKey private final RulesJavaCDParams javaCDParams;
 
   /** Creates {@link JarBuildStepsFactory} */
   public static <T extends CompileToJarStepFactory.ExtraParams> JarBuildStepsFactory<T> of(
@@ -136,7 +137,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ImmutableList<JavaDependencyInfo> dependencyInfos,
       boolean isRequiredForSourceOnlyAbi,
       boolean withDownwardApi,
-      BaseJavaCDParams javaCDParams) {
+      RulesJavaCDParams javaCDParams) {
     return new JarBuildStepsFactory<>(
         libraryTarget,
         configuredCompiler,
@@ -272,7 +273,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ImmutableList<JavaDependencyInfo> dependencyInfos,
       boolean isRequiredForSourceOnlyAbi,
       boolean withDownwardApi,
-      BaseJavaCDParams javaCDParams) {
+      RulesJavaCDParams javaCDParams) {
     this.libraryTarget = libraryTarget;
     this.configuredCompiler = configuredCompiler;
     this.javac = javac;

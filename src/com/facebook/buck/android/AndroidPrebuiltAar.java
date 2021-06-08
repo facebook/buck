@@ -35,7 +35,7 @@ import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ResourcesParameters;
-import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -66,7 +66,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       Optional<String> mavenCoords,
       boolean useSystemLibraryLoader,
       boolean withDownwardApi,
-      BaseJavaCDParams javaCDParams) {
+      RulesJavaCDParams javaCDParams) {
     super(
         androidLibraryBuildTarget,
         projectFilesystem,

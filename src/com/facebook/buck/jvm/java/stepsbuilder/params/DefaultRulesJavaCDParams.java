@@ -17,59 +17,64 @@
 package com.facebook.buck.jvm.java.stepsbuilder.params;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 
-/** Base params related to javacd. */
+/** Default implementation of {@link RulesJavaCDParams} interface. */
 @BuckStyleValue
-public abstract class BaseJavaCDParams implements AddsToRuleKey {
+public abstract class DefaultRulesJavaCDParams implements RulesJavaCDParams {
 
+  @Override
   @AddToRuleKey
   public abstract boolean hasJavaCDEnabled();
 
+  @Override
   @ExcludeFromRuleKey(
       reason = "start javacd jvm options is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract ImmutableList<String> getStartCommandOptions();
 
+  @Override
   @ExcludeFromRuleKey(
       reason = "javacd worker tool pool size is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract int getWorkerToolPoolSize();
 
+  @Override
   @ExcludeFromRuleKey(
       reason = "javacd worker tool max instances size is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract int getWorkerToolMaxInstancesSize();
 
+  @Override
   @ExcludeFromRuleKey(
       reason = "javacd borrow from the pool is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract int getBorrowFromPoolTimeoutInSeconds();
 
+  @Override
   @ExcludeFromRuleKey(
       reason = "javacd max wait for the result is not a part of a rule key",
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract int getMaxWaitForResultTimeoutInSeconds();
 
-  /** Creates {@link BaseJavaCDParams} */
-  public static BaseJavaCDParams of(
+  /** Creates {@link DefaultRulesJavaCDParams} */
+  public static DefaultRulesJavaCDParams of(
       boolean hasJavaCDEnabled,
       Iterable<String> startCommandOptions,
       int workerToolPoolSize,
       int workerToolMaxInstancesSize,
       int borrowFromPoolTimeoutInSeconds,
       int maxWaitForResultTimeoutInSeconds) {
-    return ImmutableBaseJavaCDParams.ofImpl(
+    return ImmutableDefaultRulesJavaCDParams.ofImpl(
         hasJavaCDEnabled,
         startCommandOptions,
         workerToolPoolSize,

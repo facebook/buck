@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder.isActionableUnusedDependenciesAction;
+import static java.util.Objects.requireNonNull;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
@@ -53,8 +54,8 @@ import com.facebook.buck.jvm.java.stepsbuilder.creator.JavaCompileStepsBuilderFa
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.BuildTargetValueSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutputPathsValueSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
-import com.facebook.buck.jvm.java.stepsbuilder.params.BaseJavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPath;
@@ -71,7 +72,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.protobuf.AbstractMessage;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
@@ -95,7 +95,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   @AddToRuleKey
   private final Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory;
 
-  @AddToRuleKey private final BaseJavaCDParams javaCDParams;
+  @AddToRuleKey private final RulesJavaCDParams javaCDParams;
 
   DefaultJavaLibraryBuildable(
       BuildTarget buildTarget,
@@ -104,7 +104,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       UnusedDependenciesAction unusedDependenciesAction,
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
-      BaseJavaCDParams javaCDParams) {
+      RulesJavaCDParams javaCDParams) {
     this.jarBuildStepsFactory = jarBuildStepsFactory;
     this.unusedDependenciesAction = unusedDependenciesAction;
     this.buildTarget = buildTarget;
@@ -114,7 +114,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
             .map(
                 rule ->
                     new NonHashableSourcePathContainer(
-                        Objects.requireNonNull(rule.getSourcePathToOutput())));
+                        requireNonNull(rule.getSourcePathToOutput())));
     this.javaCDParams = javaCDParams;
 
     CompilerOutputPaths outputPaths =
