@@ -18,11 +18,13 @@ package com.facebook.buck.swift.toolchain.impl;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.collect.ImmutableList;
@@ -62,6 +64,13 @@ public class SwiftPlatformFactory {
                     sdkPaths.getSdkPath(),
                     sdkPaths.getPlatformPath(),
                     sdkPaths.getDeveloperPath()));
+
+    if (sdk.getApplePlatform() == ApplePlatform.WATCHOS) {
+      // Watch binaries need to embed bitcode to pass app store submission. It is sufficient to
+      // only compile as bitcode, the linker will generate the object code from the bitcode as well
+      // as embedding the bitcode in the linked binary.
+      builder.setSwiftFlags(ImmutableList.of(StringArg.of("-emit-bc")));
+    }
 
     for (String systemFrameworkPath : sdk.getAdditionalSystemFrameworkSearchPaths()) {
       builder.addAdditionalSystemFrameworkSearchPaths(Paths.get(systemFrameworkPath));
