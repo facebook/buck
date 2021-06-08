@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.immutables.value.Value;
 
@@ -50,17 +51,23 @@ public abstract class JavaCDBuckConfig implements ConfigView<BuckConfig> {
   /** Returns worker tool pool size. */
   @Value.Lazy
   public int getWorkerToolSize() {
-    return getDelegate()
-        .getInteger(SECTION, "worker_pool_size")
-        .orElse(DEFAULT_WORKER_TOOL_POOL_SIZE);
+    String propertyName = "worker_pool_size";
+    int workerPoolSize =
+        getDelegate().getInteger(SECTION, propertyName).orElse(DEFAULT_WORKER_TOOL_POOL_SIZE);
+    verifyNonNegative(workerPoolSize, propertyName);
+    return workerPoolSize;
   }
 
   /** Returns worker tool max instances size. */
   @Value.Lazy
   public int getWorkerToolMaxInstancesSize() {
-    return getDelegate()
-        .getInteger(SECTION, "worker_max_instances")
-        .orElse(DEFAULT_MAX_INSTANCES_PER_WORKER_VALUE);
+    String propertyName = "worker_max_instances";
+    int workerMaxInstances =
+        getDelegate()
+            .getInteger(SECTION, propertyName)
+            .orElse(DEFAULT_MAX_INSTANCES_PER_WORKER_VALUE);
+    verifyPositive(workerMaxInstances, propertyName);
+    return workerMaxInstances;
   }
 
   /**
@@ -69,16 +76,32 @@ public abstract class JavaCDBuckConfig implements ConfigView<BuckConfig> {
    */
   @Value.Lazy
   public int getBorrowFromPoolTimeoutInSeconds() {
-    return getDelegate()
-        .getInteger(SECTION, "borrow_from_the_pool_timeout_sec")
-        .orElse(DEFAULT_BORROW_FROM_THE_POOL_TIMEOUT_IN_SECONDS);
+    String propertyName = "borrow_from_the_pool_timeout_sec";
+    int borrowFromThePoolTimeoutSec =
+        getDelegate()
+            .getInteger(SECTION, propertyName)
+            .orElse(DEFAULT_BORROW_FROM_THE_POOL_TIMEOUT_IN_SECONDS);
+    verifyPositive(borrowFromThePoolTimeoutSec, propertyName);
+    return borrowFromThePoolTimeoutSec;
   }
 
   /** Returns the maximum number of seconds for waiting for a result from the worker tool. */
   @Value.Lazy
   public int getMaxWaitForResultTimeoutInSeconds() {
-    return getDelegate()
-        .getInteger(SECTION, "max_wait_for_result_timeout_sec")
-        .orElse(DEFAULT_MAX_WAIT_FOR_RESULT_TIMEOUT_IN_SECONDS);
+    String propertyName = "max_wait_for_result_timeout_sec";
+    int maxWaitForResultTimeoutSec =
+        getDelegate()
+            .getInteger(SECTION, propertyName)
+            .orElse(DEFAULT_MAX_WAIT_FOR_RESULT_TIMEOUT_IN_SECONDS);
+    verifyPositive(maxWaitForResultTimeoutSec, propertyName);
+    return maxWaitForResultTimeoutSec;
+  }
+
+  private void verifyNonNegative(int value, String propertyName) {
+    Preconditions.checkState(value >= 0, propertyName + " has to be non negative");
+  }
+
+  private void verifyPositive(int value, String propertyName) {
+    Preconditions.checkState(value > 0, propertyName + " has to be positive");
   }
 }
