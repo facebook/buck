@@ -229,15 +229,14 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     if (command1 instanceof BasePipeliningCommand) {
       BasePipeliningCommand abiCommand = (BasePipeliningCommand) command1;
       builder.setAbiCommand(abiCommand);
-      actionsIdsBuilder.add(commands1ActionId);
     } else {
       Preconditions.checkState(
           command1 instanceof LibraryPipeliningCommand, "The first command must be a library one");
       LibraryPipeliningCommand libraryCommand = (LibraryPipeliningCommand) command1;
       builder.clearAbiCommand();
       builder.setLibraryCommand(libraryCommand);
-      actionsIdsBuilder.add(commands1ActionId);
     }
+    actionsIdsBuilder.add(commands1ActionId);
 
     // the second command could be only library one
     if (commandsIterator.hasNext()) {
@@ -247,6 +246,9 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       Preconditions.checkState(
           command2 instanceof LibraryPipeliningCommand, "The second command must be a library one");
       LibraryPipeliningCommand libraryCommand = (LibraryPipeliningCommand) command2;
+      Preconditions.checkState(
+          !builder.hasLibraryCommand(),
+          "The first command is set to library one. Could not override it with the second library command.");
       builder.setLibraryCommand(libraryCommand);
       actionsIdsBuilder.add(command2ActionId);
     }
