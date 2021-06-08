@@ -18,37 +18,46 @@ package com.facebook.buck.android;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.regex.Pattern;
 
 /**
  * Filter for internal class names.
  *
  * <p>We use this to determine if a class must be placed in our primary dex. It supports prefix,
- * suffix, substring, and exact matches.
+ * suffix, substring, regular expression and exact matches.
  */
 public class ClassNameFilter {
+  private static final Character PREFIX_MARKER = '^';
+  private static final Character SUFFIX_MARKER = '^';
+  private static final String REGEX_MARKER = "^-";
+
   // We use naive algorithms for prefix, suffix, and substring, but these could easily be
   // optimzied using RE2 or some other more specialized search algorithms.
   private final ImmutableList<String> prefixes;
   private final ImmutableList<String> suffixes;
   private final ImmutableList<String> substrings;
   private final ImmutableSet<String> exactMatches;
+  private final ImmutableSet<Pattern> regularExpressions;
 
   private ClassNameFilter(
       Iterable<String> prefixes,
       Iterable<String> suffixes,
       Iterable<String> substrings,
-      Iterable<String> exactMatches) {
+      Iterable<String> exactMatches,
+      Iterable<Pattern> regularExpressions) {
     this.prefixes = ImmutableList.copyOf(prefixes);
     this.suffixes = ImmutableList.copyOf(suffixes);
     this.substrings = ImmutableList.copyOf(substrings);
     this.exactMatches = ImmutableSet.copyOf(exactMatches);
+    this.regularExpressions = ImmutableSet.copyOf(regularExpressions);
   }
 
   /**
    * Convenience factory to produce a filter from a very simple pattern language.
    *
    * <p>patterns are substrings by default, but {@code ^} at the start or end of a pattern anchors
-   * it to the start or end of the class name.
+   * it to the start or end of the class name. {@code ^-} at the start of a pattern specifies that
+   * pattern is a regular expression.
    *
    * @param patterns Patterns to include in the filter.
    * @return A new filter.
@@ -58,11 +67,15 @@ public class ClassNameFilter {
     ImmutableList.Builder<String> suffixes = ImmutableList.builder();
     ImmutableList.Builder<String> substrings = ImmutableList.builder();
     ImmutableSet.Builder<String> exactMatches = ImmutableSet.builder();
+    ImmutableSet.Builder<Pattern> regexes = ImmutableSet.builder();
 
     for (String pattern : patterns) {
-      boolean isPrefix = pattern.charAt(0) == '^';
-      boolean isSuffix = pattern.charAt(pattern.length() - 1) == '^';
-      if (isPrefix && isSuffix) {
+      boolean isRegex = pattern.startsWith(REGEX_MARKER);
+      boolean isPrefix = !isRegex && pattern.charAt(0) == PREFIX_MARKER;
+      boolean isSuffix = !isRegex && pattern.charAt(pattern.length() - 1) == SUFFIX_MARKER;
+      if (isRegex) {
+        regexes.add(Pattern.compile(pattern.substring(2)));
+      } else if (isPrefix && isSuffix) {
         exactMatches.add(pattern.substring(1, pattern.length() - 1));
       } else if (isPrefix) {
         prefixes.add(pattern.substring(1));
@@ -74,12 +87,22 @@ public class ClassNameFilter {
     }
 
     return new ClassNameFilter(
-        prefixes.build(), suffixes.build(), substrings.build(), exactMatches.build());
+        prefixes.build(),
+        suffixes.build(),
+        substrings.build(),
+        exactMatches.build(),
+        regexes.build());
   }
 
   public boolean matches(String internalClassName) {
     if (exactMatches.contains(internalClassName)) {
       return true;
+    }
+
+    for (Pattern pattern : regularExpressions) {
+      if (pattern.matcher(internalClassName).find()) {
+        return true;
+      }
     }
 
     for (String prefix : prefixes) {

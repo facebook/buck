@@ -32,7 +32,10 @@ public class ClassNameFilterTest {
                 "^org/tukaani/",
                 "/FbInjector^",
                 "^com/facebook/build/Config^",
-                "/nodex/"));
+                "/nodex/",
+                // regex patterns
+                "^-com\\/facebook\\/intent\\$(FbrpcIntent|ChooserActivityIntent)$",
+                "^-^com\\/facebook\\/.*\\/util"));
 
     assertTrue(filter.matches("org/acra/Reporter"));
     assertTrue(filter.matches("org/tukaani/Decoder$State"));
@@ -47,5 +50,13 @@ public class ClassNameFilterTest {
     assertFalse(filter.matches("dcom/facebook/build/Config"));
     assertFalse(filter.matches("com/facebook/fake/build/Config"));
     assertFalse(filter.matches("com/facebook/modex/Splash"));
+    // Test cases for regex match
+    assertTrue(filter.matches("com/facebook/intent$FbrpcIntent"));
+    assertFalse(filter.matches("com/facebook/intent$FbrpcIntent/Config"));
+    assertTrue(filter.matches("com/facebook/intent$ChooserActivityIntent"));
+    assertTrue(filter.matches("/com/facebook/intent$ChooserActivityIntent"));
+    assertTrue(filter.matches("com/facebook/intent/local/utility/store"));
+    assertFalse(filter.matches("com/facebook/intent/local/store"));
+    assertFalse(filter.matches("/com/facebook/whatever/util/whatever"));
   }
 }
