@@ -50,7 +50,6 @@ public class PythonEnvironmentTest {
     PythonEnvironment reconstructed =
         SerializationTestHelper.serializeAndDeserialize(
             environment,
-            PythonEnvironment.class,
             ruleFinder,
             cellResolver,
             ruleFinder.getSourcePathResolver(),

@@ -17,11 +17,14 @@
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -29,6 +32,7 @@ import com.facebook.buck.rules.modern.SerializationTestHelper;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Test;
@@ -50,7 +54,6 @@ public class CxxSymlinkTreeHeadersTest {
     CxxSymlinkTreeHeaders reconstructed =
         SerializationTestHelper.serializeAndDeserialize(
             cxxSymlinkTreeHeaders,
-            CxxSymlinkTreeHeaders.class,
             ruleFinder,
             TestCellPathResolver.create(fakeFilesystem.getRootPath()),
             ruleFinder.getSourcePathResolver(),
@@ -58,5 +61,59 @@ public class CxxSymlinkTreeHeadersTest {
             cellPath -> fakeFilesystem);
 
     assertEquals(cxxSymlinkTreeHeaders, reconstructed);
+  }
+
+  @Test
+  public void testSerializationAnonymousClass() {
+
+    CxxSymlinkTreeHeaders cxxSymlinkTreeHeaders =
+        new CxxSymlinkTreeHeaders() {
+
+          @Override
+          public CxxPreprocessables.IncludeType getIncludeType() {
+            return CxxPreprocessables.IncludeType.SYSTEM;
+          }
+
+          @Override
+          public SourcePath getRoot() {
+            return FakeSourcePath.of("root");
+          }
+
+          @Override
+          public Either<PathSourcePath, SourcePath> getIncludeRoot() {
+            return Either.ofRight(FakeSourcePath.of("includeRoot"));
+          }
+
+          @Override
+          public Optional<SourcePath> getHeaderMap() {
+            return Optional.of(FakeSourcePath.of("headerMap"));
+          }
+
+          @Override
+          public ImmutableSortedMap<Path, SourcePath> getNameToPathMap() {
+            return ImmutableSortedMap.of(Paths.get("a/b"), FakeSourcePath.of("path"));
+          }
+
+          @Override
+          public String getSymlinkTreeClass() {
+            return "treeClass";
+          }
+        };
+
+    ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                SerializationTestHelper.serializeAndDeserialize(
+                    cxxSymlinkTreeHeaders,
+                    ruleFinder,
+                    TestCellPathResolver.create(fakeFilesystem.getRootPath()),
+                    ruleFinder.getSourcePathResolver(),
+                    new ToolchainProviderBuilder().build(),
+                    cellPath -> fakeFilesystem));
+
+    assertEquals(exception.getMessage(), "Cannot be or reference anonymous classes.");
   }
 }

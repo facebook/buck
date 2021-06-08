@@ -830,7 +830,6 @@ public class CxxPreprocessAndCompileTest {
     CxxPreprocessAndCompile.Impl reconstructed =
         SerializationTestHelper.serializeAndDeserialize(
             cxxPreprocessAndCompile,
-            CxxPreprocessAndCompile.Impl.class,
             ruleFinder,
             TestCellPathResolver.get(projectFilesystem),
             ruleFinder.getSourcePathResolver(),

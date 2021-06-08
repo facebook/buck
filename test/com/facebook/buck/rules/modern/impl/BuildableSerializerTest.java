@@ -175,7 +175,6 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     AddsToRuleKey reconstructed =
         SerializationTestHelper.serializeAndDeserialize(
             instance,
-            AddsToRuleKey.class,
             ruleFinder,
             cellResolver,
             resolver,

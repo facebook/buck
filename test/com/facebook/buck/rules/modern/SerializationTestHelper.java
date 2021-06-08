@@ -31,8 +31,8 @@ import com.google.common.hash.HashCode;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -46,22 +46,21 @@ public class SerializationTestHelper {
    */
   public static <T extends AddsToRuleKey> T serializeAndDeserialize(
       T instance,
-      Class<T> tClass,
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       SourcePathResolverAdapter resolver,
       ToolchainProvider toolchainProvider,
       Function<Optional<String>, ProjectFilesystem> filesystemFunction)
       throws IOException {
-    Map<HashCode, byte[]> dataMap = new HashMap<>();
-    Map<HashCode, List<HashCode>> childMap = new HashMap<>();
+    Class<T> tClass = (Class<T>) instance.getClass();
+    verifyClass(tClass);
 
+    Map<HashCode, byte[]> dataMap = new HashMap<>();
     Delegate serializerDelegate =
         (value, data, children) -> {
           int id = dataMap.size();
           HashCode hash = HashCode.fromInt(id);
           dataMap.put(hash, data);
-          childMap.put(hash, children);
           return hash;
         };
 
@@ -79,14 +78,25 @@ public class SerializationTestHelper {
 
               @Override
               public DataProvider getChild(HashCode hash) {
-                return getDataProvider(dataMap, childMap, hash);
+                return getDataProvider(dataMap, hash);
               }
             },
             tClass);
   }
 
-  private static DataProvider getDataProvider(
-      Map<HashCode, byte[]> dataMap, Map<HashCode, List<HashCode>> childMap, HashCode hash) {
+  private static <T extends AddsToRuleKey> void verifyClass(Class<T> tClass) {
+    Preconditions.checkArgument(
+        !tClass.isAnonymousClass(), "Cannot be or reference anonymous classes.");
+    Preconditions.checkArgument(!tClass.isLocalClass(), "Cannot be or reference local classes.");
+    Preconditions.checkArgument(!tClass.isSynthetic(), "Cannot be or reference synthetic classes.");
+    // We don't want to have to deal with inner non-static classes (and verifying usage of state
+    // from the outer class).
+    Preconditions.checkArgument(
+        !tClass.isMemberClass() || Modifier.isStatic(tClass.getModifiers()),
+        "Cannot be or reference inner non-static classes.");
+  }
+
+  private static DataProvider getDataProvider(Map<HashCode, byte[]> dataMap, HashCode hash) {
     return new DataProvider() {
       @Override
       public InputStream getData() {
@@ -95,7 +105,7 @@ public class SerializationTestHelper {
 
       @Override
       public DataProvider getChild(HashCode hash) {
-        return getDataProvider(dataMap, childMap, hash);
+        return getDataProvider(dataMap, hash);
       }
     };
   }
