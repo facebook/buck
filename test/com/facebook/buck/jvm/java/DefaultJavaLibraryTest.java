@@ -22,10 +22,14 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -37,6 +41,7 @@ import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -73,6 +78,7 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
+import com.facebook.buck.rules.modern.SerializationTestHelper;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
@@ -91,6 +97,7 @@ import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
+import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -109,7 +116,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1002,8 +1008,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
-    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JavacStep.class)));
-    assertThat(steps, Matchers.not(Matchers.hasItem(Matchers.instanceOf(JarDirectoryStep.class))));
+    assertThat(steps, hasItem(instanceOf(JavacStep.class)));
+    assertThat(steps, not(hasItem(instanceOf(JarDirectoryStep.class))));
   }
 
   @Test
@@ -1025,8 +1031,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
-    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JavacStep.class)));
-    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JarDirectoryStep.class)));
+    assertThat(steps, hasItem(instanceOf(JavacStep.class)));
+    assertThat(steps, hasItem(instanceOf(JarDirectoryStep.class)));
   }
 
   @Test
@@ -1048,8 +1054,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ImmutableList<Step> steps =
         javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
 
-    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JavacStep.class)));
-    assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JarDirectoryStep.class)));
+    assertThat(steps, hasItem(instanceOf(JavacStep.class)));
+    assertThat(steps, hasItem(instanceOf(JarDirectoryStep.class)));
   }
 
   /** Tests that input-based rule keys work properly with generated sources. */
@@ -1113,7 +1119,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(affectedHashCache, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
+    assertThat(originalRuleKey, not(equalTo(affectedRuleKey)));
   }
 
   /** Tests that input-based rule keys work properly with simple Java library deps. */
@@ -1196,7 +1202,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(affectedHashCache, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
+    assertThat(originalRuleKey, not(equalTo(affectedRuleKey)));
   }
 
   /**
@@ -1292,7 +1298,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(affectedHashCache, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
+    assertThat(originalRuleKey, not(equalTo(affectedRuleKey)));
   }
 
   /**
@@ -1393,7 +1399,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT, false);
     factory = new TestInputBasedRuleKeyFactory(affectedHashCache, ruleFinder);
     RuleKey affectedRuleKey = factory.build(library);
-    assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
+    assertThat(originalRuleKey, not(equalTo(affectedRuleKey)));
   }
 
   private DefaultJavaLibrary createDefaultJavaLibraryRuleWithAbiKey(
@@ -1824,5 +1830,73 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   private static ImmutableSet<AbsPath> resolve(
       ImmutableSet<SourcePath> paths, SourcePathResolverAdapter resolver) {
     return paths.stream().map(resolver::getAbsolutePath).collect(ImmutableSet.toImmutableSet());
+  }
+
+  @Test
+  public void testSerialization() throws IOException {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+    DefaultJavaLibrary javaLibrary = scenario.createJavaLibraryRule(projectFilesystem);
+    DefaultJavaLibraryBuildable javaLibraryBuildable = javaLibrary.getBuildable();
+
+    ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    DefaultJavaLibraryBuildable reconstructed =
+        SerializationTestHelper.serializeAndDeserialize(
+            javaLibraryBuildable,
+            ruleFinder,
+            TestCellPathResolver.create(fakeFilesystem.getRootPath()),
+            ruleFinder.getSourcePathResolver(),
+            new ToolchainProviderBuilder().build(),
+            cellPath -> fakeFilesystem);
+
+    assertThat(javaLibraryBuildable, equalTo(reconstructed));
+  }
+
+  @Test
+  public void testSerializationFailure() throws IOException {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
+    TestJavaPluginScenario scenario = new TestJavaPluginScenario();
+    DefaultJavaLibrary javaLibrary = scenario.createJavaLibraryRule(projectFilesystem);
+    DefaultJavaLibraryBuildable javaLibraryBuildable =
+        new DefaultJavaLibraryBuildable(
+            javaLibrary.getBuildable(), projectFilesystem, BrokenJavaCDParams.of());
+
+    ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+
+    BuckUncheckedExecutionException exception =
+        assertThrows(
+            BuckUncheckedExecutionException.class,
+            () -> {
+              SerializationTestHelper.serializeAndDeserialize(
+                  javaLibraryBuildable,
+                  ruleFinder,
+                  TestCellPathResolver.create(fakeFilesystem.getRootPath()),
+                  ruleFinder.getSourcePathResolver(),
+                  new ToolchainProviderBuilder().build(),
+                  cellPath -> fakeFilesystem);
+            });
+
+    assertThat(
+        exception.getMessage(),
+        containsString(
+            "When visiting "
+                + DefaultJavaLibraryBuildable.class.getCanonicalName()
+                + ".javaCDParams"));
+    assertThat(exception.getCause(), instanceOf(BuckUncheckedExecutionException.class));
+    BuckUncheckedExecutionException cause = (BuckUncheckedExecutionException) exception.getCause();
+    assertThat(
+        cause.getMessage(),
+        containsString(
+            "When visiting com.facebook.buck.jvm.java.ImmutableBrokenJavaCDParams.paramWithNoAnnotation"));
+    assertThat(cause.getCause(), instanceOf(VerifyException.class));
+    VerifyException verifyException = (VerifyException) cause.getCause();
+    assertThat(
+        verifyException.getMessage(),
+        equalTo(
+            "Cannot serialize excluded fields. Either add @AddToRuleKey or specify custom field/class serialization."));
   }
 }

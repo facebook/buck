@@ -31,6 +31,7 @@ public interface ExtraClasspathProvider extends AddsToRuleKey {
   ExtraClasspathProvider EMPTY = new EmptyExtraClasspathProvider();
 
   class EmptyExtraClasspathProvider implements ExtraClasspathProvider {
+
     @AddToRuleKey private final String classpath = "default";
 
     private EmptyExtraClasspathProvider() {}

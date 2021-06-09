@@ -1,11 +1,13 @@
 load(
     "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
     "java_test",
 )
 
-java_library(
+java_immutables_library(
     name = "testutil",
     srcs = [
+        "BrokenJavaCDParams.java",
         "FakeJavaClassHashesProvider.java",
         "FakeJavaLibrary.java",
         "FakeJavac.java",
@@ -64,6 +66,7 @@ java_library(
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/jvm/java/javax:javax",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/params:params",
         "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",
@@ -446,6 +449,7 @@ java_test(
         "//src/com/facebook/buck/jvm/java/javax:javax",
         "//src/com/facebook/buck/jvm/java/nullsafe:config",
         "//src/com/facebook/buck/jvm/java/runner:runner",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/params:params",
         "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
         "//src/com/facebook/buck/jvm/java/version:version",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
@@ -528,6 +532,7 @@ java_test(
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/jvm/java/testutil:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
+        "//test/com/facebook/buck/rules/modern:testutil",
         "//test/com/facebook/buck/shell:testutil",
         "//test/com/facebook/buck/step:testutil",
         "//test/com/facebook/buck/testutil:testutil",

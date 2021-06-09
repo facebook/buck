@@ -67,6 +67,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -126,6 +127,21 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     this.pathToClassHashesOutputPath = new PublicOutputPath(pathToClassHashes);
     this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
     this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
+  }
+
+  @VisibleForTesting
+  DefaultJavaLibraryBuildable(
+      DefaultJavaLibraryBuildable libraryBuildable,
+      ProjectFilesystem filesystem,
+      RulesJavaCDParams javaCDParams) {
+    this(
+        libraryBuildable.buildTarget,
+        filesystem,
+        libraryBuildable.jarBuildStepsFactory,
+        libraryBuildable.unusedDependenciesAction,
+        libraryBuildable.unusedDependenciesFinderFactory,
+        null,
+        javaCDParams);
   }
 
   RelPath getPathToClassHashes(ProjectFilesystem filesystem) {
