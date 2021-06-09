@@ -83,6 +83,7 @@ public class CalculateSourceAbi
   private final SourcePathRuleFinder ruleFinder;
   private final JavaAbiInfo javaAbiInfo;
   private final SourcePath sourcePathToOutput;
+  private final boolean usePipelining;
 
   public CalculateSourceAbi(
       BuildTarget buildTarget,
@@ -102,6 +103,7 @@ public class CalculateSourceAbi
             jarBuildStepsFactory.getSourcePathToOutput(
                 getBuildTarget(), getProjectFilesystem().getBuckPaths()));
     this.javaAbiInfo = DefaultJavaAbiInfo.of(getSourcePathToOutput());
+    this.usePipelining = !javaCDParams.pipeliningDisabled();
   }
 
   /** Buildable implementation. */
@@ -296,7 +298,7 @@ public class CalculateSourceAbi
 
   @Override
   public boolean useRulePipelining() {
-    return !JavaAbis.isSourceOnlyAbiTarget(getBuildTarget());
+    return usePipelining && !JavaAbis.isSourceOnlyAbiTarget(getBuildTarget());
   }
 
   @Nullable

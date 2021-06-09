@@ -69,7 +69,7 @@ public class JavaCompilationConstants {
               .getJavacProvider());
 
   public static final RulesJavaCDParams DEFAULT_JAVACD_PARAMS =
-      DefaultRulesJavaCDParams.of(false, ImmutableList.of(), 1, 1, 1, 1);
+      DefaultRulesJavaCDParams.of(false, ImmutableList.of(), 1, 1, 1, 1, false);
 
   private JavaCompilationConstants() {
     // Thou shalt not instantiate utility classes.

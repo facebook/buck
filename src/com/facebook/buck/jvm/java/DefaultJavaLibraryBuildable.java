@@ -495,7 +495,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
   }
 
   public boolean useRulePipelining() {
-    return jarBuildStepsFactory.useRulePipelining();
+    return !javaCDParams.pipeliningDisabled() && jarBuildStepsFactory.useRulePipelining();
   }
 
   public RulePipelineStateFactory<JavacPipelineState, PipelineState> getPipelineStateFactory() {

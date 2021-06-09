@@ -61,9 +61,15 @@ public abstract class BrokenJavaCDParams implements RulesJavaCDParams {
       inputs = IgnoredFieldInputs.class)
   public abstract int getMaxWaitForResultTimeoutInSeconds();
 
+  @Override
+  @ExcludeFromRuleKey(
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  public abstract boolean pipeliningDisabled();
+
   public abstract boolean getParamWithNoAnnotation();
 
   public static BrokenJavaCDParams of() {
-    return ImmutableBrokenJavaCDParams.ofImpl(false, ImmutableList.of(), 1, 1, 1, 1, false);
+    return ImmutableBrokenJavaCDParams.ofImpl(false, ImmutableList.of(), 1, 1, 1, 1, false, false);
   }
 }

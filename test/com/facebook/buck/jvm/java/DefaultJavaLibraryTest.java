@@ -1870,15 +1870,14 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     BuckUncheckedExecutionException exception =
         assertThrows(
             BuckUncheckedExecutionException.class,
-            () -> {
-              SerializationTestHelper.serializeAndDeserialize(
-                  javaLibraryBuildable,
-                  ruleFinder,
-                  TestCellPathResolver.create(fakeFilesystem.getRootPath()),
-                  ruleFinder.getSourcePathResolver(),
-                  new ToolchainProviderBuilder().build(),
-                  cellPath -> fakeFilesystem);
-            });
+            () ->
+                SerializationTestHelper.serializeAndDeserialize(
+                    javaLibraryBuildable,
+                    ruleFinder,
+                    TestCellPathResolver.create(fakeFilesystem.getRootPath()),
+                    ruleFinder.getSourcePathResolver(),
+                    new ToolchainProviderBuilder().build(),
+                    cellPath -> fakeFilesystem));
 
     assertThat(
         exception.getMessage(),

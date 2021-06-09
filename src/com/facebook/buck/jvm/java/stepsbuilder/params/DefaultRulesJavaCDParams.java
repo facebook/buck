@@ -66,6 +66,13 @@ public abstract class DefaultRulesJavaCDParams implements RulesJavaCDParams {
       inputs = IgnoredFieldInputs.class)
   public abstract int getMaxWaitForResultTimeoutInSeconds();
 
+  @Override
+  @ExcludeFromRuleKey(
+      reason = "pipelining disabled option is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  public abstract boolean pipeliningDisabled();
+
   /** Creates {@link DefaultRulesJavaCDParams} */
   public static DefaultRulesJavaCDParams of(
       boolean hasJavaCDEnabled,
@@ -73,13 +80,15 @@ public abstract class DefaultRulesJavaCDParams implements RulesJavaCDParams {
       int workerToolPoolSize,
       int workerToolMaxInstancesSize,
       int borrowFromPoolTimeoutInSeconds,
-      int maxWaitForResultTimeoutInSeconds) {
+      int maxWaitForResultTimeoutInSeconds,
+      boolean pipeliningDisabled) {
     return ImmutableDefaultRulesJavaCDParams.ofImpl(
         hasJavaCDEnabled,
         startCommandOptions,
         workerToolPoolSize,
         workerToolMaxInstancesSize,
         borrowFromPoolTimeoutInSeconds,
-        maxWaitForResultTimeoutInSeconds);
+        maxWaitForResultTimeoutInSeconds,
+        pipeliningDisabled);
   }
 }

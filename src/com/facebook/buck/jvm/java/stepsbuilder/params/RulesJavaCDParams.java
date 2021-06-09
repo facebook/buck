@@ -36,4 +36,6 @@ public interface RulesJavaCDParams extends AddsToRuleKey {
   int getBorrowFromPoolTimeoutInSeconds();
 
   int getMaxWaitForResultTimeoutInSeconds();
+
+  boolean pipeliningDisabled();
 }

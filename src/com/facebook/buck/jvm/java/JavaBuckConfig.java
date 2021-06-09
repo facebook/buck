@@ -302,6 +302,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return getDelegate().getBooleanValue(SECTION, PROPERTY_JAVACD_ENABLED, false);
   }
 
+  public boolean isPipeliningDisabled() {
+    return getDelegate().getBooleanValue(SECTION, "pipelining_disabled", false);
+  }
+
   public boolean isPreDexPerClassPrimaryDexMatching() {
     return delegate.getBooleanValue(SECTION, "is_pre_dex_per_class_primary_dex_matching", false);
   }
