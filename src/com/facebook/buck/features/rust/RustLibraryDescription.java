@@ -182,6 +182,7 @@ public class RustLibraryDescription
     if (type.isPresent()) {
       // Uncommon case - someone explicitly invoked buck to build a specific flavor as the
       // direct target.
+      CrateType requestedType = type.get().getValue().getCrateType();
       CrateType crateType;
 
       Linker.LinkableDepType depType;
@@ -193,7 +194,7 @@ public class RustLibraryDescription
         // XXX Do we care about overriding platform with proc-macro one?
         crateType = CrateType.PROC_MACRO;
       } else {
-        crateType = type.get().getValue().getCrateType();
+        crateType = requestedType;
       }
 
       if (crateType.isDynamic()) {
@@ -204,6 +205,10 @@ public class RustLibraryDescription
         } else {
           depType = Linker.LinkableDepType.STATIC;
         }
+      }
+
+      if (requestedType.isDoc()) {
+        crateType = requestedType;
       }
 
       Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
