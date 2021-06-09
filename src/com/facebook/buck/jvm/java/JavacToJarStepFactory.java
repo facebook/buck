@@ -24,6 +24,8 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
@@ -73,5 +75,31 @@ public class JavacToJarStepFactory extends BaseJavacToJarStepFactory {
     ResolvedJavacOptions resolvedJavacOptions =
         ResolvedJavacOptions.of(buildTimeOptions, resolver, rootPath);
     return JavaExtraParams.of(resolvedJavacOptions);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    JavacToJarStepFactory that = (JavacToJarStepFactory) o;
+    return Objects.equal(javacOptions, that.javacOptions)
+        && Objects.equal(extraClasspathProvider, that.extraClasspathProvider);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(javacOptions, extraClasspathProvider);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("javacOptions", javacOptions)
+        .add("extraClasspathProvider", extraClasspathProvider)
+        .toString();
   }
 }

@@ -20,9 +20,14 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
+import com.google.common.base.MoreObjects;
 import javax.tools.JavaCompiler;
 
 public class JdkProvidedInMemoryJavac extends Jsr199Javac {
+
+  public static JdkProvidedInMemoryJavac INSTANCE = new JdkProvidedInMemoryJavac();
+
+  private JdkProvidedInMemoryJavac() {}
 
   @Override
   protected ResolvedJsr199Javac create(SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
@@ -43,5 +48,23 @@ public class JdkProvidedInMemoryJavac extends Jsr199Javac {
         return compiler;
       }
     };
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    return o != null && getClass() == o.getClass();
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).toString();
   }
 }

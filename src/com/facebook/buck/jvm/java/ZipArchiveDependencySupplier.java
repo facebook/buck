@@ -25,6 +25,8 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.rules.keys.ArchiveDependencySupplier;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.stream.Stream;
@@ -48,5 +50,27 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
               Preconditions.checkState(ruleOutput.equals(zipSourcePath));
               return hasJavaAbi.getAbiInfo().getJarContents().stream();
             });
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ZipArchiveDependencySupplier that = (ZipArchiveDependencySupplier) o;
+    return Objects.equal(zipFiles, that.zipFiles);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(zipFiles);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("zipFiles", zipFiles).toString();
   }
 }

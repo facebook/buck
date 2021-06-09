@@ -77,7 +77,7 @@ public class ExternalJavacProvider implements JavacProvider {
         Preconditions.checkState(spec.getJavacJarPath().isPresent());
         return new JarBackedJavacProvider(spec.getJavacJarPath().get(), compilerClassName);
       case JDK:
-        return new ConstantJavacProvider(new JdkProvidedInMemoryJavac());
+        return new ConstantJavacProvider(JdkProvidedInMemoryJavac.INSTANCE);
     }
     throw new AssertionError("Unknown javac source: " + javacSource);
   }

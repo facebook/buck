@@ -20,6 +20,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -56,6 +57,23 @@ public class OutputPath implements AddsToRuleKey {
 
   public static Internals internals() {
     return Internals.INSTANCE;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    OutputPath that = (OutputPath) o;
+    return Objects.equal(path, that.path);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(path);
   }
 
   @Override

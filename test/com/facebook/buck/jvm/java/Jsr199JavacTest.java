@@ -62,10 +62,9 @@ public class Jsr199JavacTest extends EasyMockSupport {
   }
 
   private Jsr199Javac.ResolvedJsr199Javac createTestStep() {
-    return new JdkProvidedInMemoryJavac()
-        .resolve(
-            new TestActionGraphBuilder().getSourcePathResolver(),
-            AbsPath.of(Paths.get(".").toAbsolutePath()));
+    return JdkProvidedInMemoryJavac.INSTANCE.resolve(
+        new TestActionGraphBuilder().getSourcePathResolver(),
+        AbsPath.of(Paths.get(".").toAbsolutePath()));
   }
 
   private ImmutableList.Builder<String> getArgs() {

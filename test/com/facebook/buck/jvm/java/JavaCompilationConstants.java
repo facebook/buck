@@ -61,7 +61,7 @@ public class JavaCompilationConstants {
               JavacLanguageLevelOptions.builder().setSourceLevel("7").setTargetLevel("6").build())
           .build();
 
-  public static final Javac DEFAULT_JAVAC = new JdkProvidedInMemoryJavac();
+  public static final Javac DEFAULT_JAVAC = JdkProvidedInMemoryJavac.INSTANCE;
   public static final JavaToolchain DEFAULT_JAVA_TOOLCHAIN =
       JavaToolchain.of(
           DEFAULT_JAVA_CONFIG

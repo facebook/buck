@@ -67,6 +67,8 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -490,5 +492,57 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   public boolean supportsCompilationDaemon() {
     return javaCDParams.hasJavaCDEnabled();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    DefaultJavaLibraryBuildable that = (DefaultJavaLibraryBuildable) o;
+    return buckJavaVersion == that.buckJavaVersion
+        && unusedDependenciesAction == that.unusedDependenciesAction
+        && Objects.equal(buildTarget, that.buildTarget)
+        && Objects.equal(jarBuildStepsFactory, that.jarBuildStepsFactory)
+        && Objects.equal(sourceAbiOutput, that.sourceAbiOutput)
+        && Objects.equal(rootOutputPath, that.rootOutputPath)
+        && Objects.equal(pathToClassHashesOutputPath, that.pathToClassHashesOutputPath)
+        && Objects.equal(annotationsOutputPath, that.annotationsOutputPath)
+        && Objects.equal(unusedDependenciesFinderFactory, that.unusedDependenciesFinderFactory)
+        && Objects.equal(javaCDParams, that.javaCDParams);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(
+        buckJavaVersion,
+        jarBuildStepsFactory,
+        unusedDependenciesAction,
+        sourceAbiOutput,
+        rootOutputPath,
+        pathToClassHashesOutputPath,
+        annotationsOutputPath,
+        buildTarget,
+        unusedDependenciesFinderFactory,
+        javaCDParams);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("buckJavaVersion", buckJavaVersion)
+        .add("jarBuildStepsFactory", jarBuildStepsFactory)
+        .add("unusedDependenciesAction", unusedDependenciesAction)
+        .add("sourceAbiOutput", sourceAbiOutput)
+        .add("rootOutputPath", rootOutputPath)
+        .add("pathToClassHashesOutputPath", pathToClassHashesOutputPath)
+        .add("annotationsOutputPath", annotationsOutputPath)
+        .add("buildTarget", buildTarget)
+        .add("unusedDependenciesFinderFactory", unusedDependenciesFinderFactory)
+        .add("javaCDParams", javaCDParams)
+        .toString();
   }
 }

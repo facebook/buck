@@ -22,6 +22,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.util.ClassLoaderCache;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
@@ -96,5 +97,23 @@ public class JarBackedJavac extends Jsr199Javac {
         throw new RuntimeException(e);
       }
     }
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    JarBackedJavac that = (JarBackedJavac) o;
+    return Objects.equal(compilerClassName, that.compilerClassName)
+        && Objects.equal(classpath, that.classpath);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(compilerClassName, classpath);
   }
 }

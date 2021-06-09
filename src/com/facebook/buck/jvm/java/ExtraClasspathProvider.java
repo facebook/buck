@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 
 /** Used to provide extra classpath entries to a compiler. */
@@ -37,6 +38,19 @@ public interface ExtraClasspathProvider extends AddsToRuleKey {
     @Override
     public Iterable<AbsPath> getExtraClasspath() {
       return ImmutableList.of();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      return o != null && getClass() == o.getClass();
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(classpath);
     }
   }
 }

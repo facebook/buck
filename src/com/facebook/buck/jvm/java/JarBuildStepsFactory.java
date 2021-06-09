@@ -64,6 +64,8 @@ import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -213,6 +215,28 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       return infos.stream()
           .map(info -> info.compileTimeJar)
           .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      DependencyInfoHolder that = (DependencyInfoHolder) o;
+      return Objects.equal(infos, that.infos);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(infos);
+    }
+
+    @Override
+    public String toString() {
+      return MoreObjects.toStringHelper(this).add("infos", infos).toString();
     }
 
     private static class InfosBehavior
@@ -765,5 +789,81 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
   public ResourcesParameters getResourcesParameters() {
     return resourcesParameters;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    JarBuildStepsFactory<?> that = (JarBuildStepsFactory<?>) o;
+    return trackClassUsage == that.trackClassUsage
+        && trackJavacPhaseEvents == that.trackJavacPhaseEvents
+        && isRequiredForSourceOnlyAbi == that.isRequiredForSourceOnlyAbi
+        && withDownwardApi == that.withDownwardApi
+        && abiGenerationMode == that.abiGenerationMode
+        && abiCompatibilityMode == that.abiCompatibilityMode
+        && Objects.equal(libraryTarget, that.libraryTarget)
+        && Objects.equal(configuredCompiler, that.configuredCompiler)
+        && Objects.equal(javac, that.javac)
+        && Objects.equal(srcs, that.srcs)
+        && Objects.equal(resources, that.resources)
+        && Objects.equal(resourcesParameters, that.resourcesParameters)
+        && Objects.equal(manifestFile, that.manifestFile)
+        && Objects.equal(postprocessClassesCommands, that.postprocessClassesCommands)
+        && Objects.equal(dependencyInfos, that.dependencyInfos)
+        && Objects.equal(abiClasspath, that.abiClasspath)
+        && Objects.equal(classesToRemoveFromJar, that.classesToRemoveFromJar)
+        && Objects.equal(javaCDParams, that.javaCDParams);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(
+        libraryTarget,
+        configuredCompiler,
+        javac,
+        srcs,
+        resources,
+        resourcesParameters,
+        manifestFile,
+        postprocessClassesCommands,
+        dependencyInfos,
+        abiClasspath,
+        trackClassUsage,
+        trackJavacPhaseEvents,
+        isRequiredForSourceOnlyAbi,
+        classesToRemoveFromJar,
+        abiGenerationMode,
+        abiCompatibilityMode,
+        withDownwardApi,
+        javaCDParams);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("libraryTarget", libraryTarget)
+        .add("configuredCompiler", configuredCompiler)
+        .add("javac", javac)
+        .add("srcs", srcs)
+        .add("resources", resources)
+        .add("resourcesParameters", resourcesParameters)
+        .add("manifestFile", manifestFile)
+        .add("postprocessClassesCommands", postprocessClassesCommands)
+        .add("dependencyInfos", dependencyInfos)
+        .add("abiClasspath", abiClasspath)
+        .add("trackClassUsage", trackClassUsage)
+        .add("trackJavacPhaseEvents", trackJavacPhaseEvents)
+        .add("isRequiredForSourceOnlyAbi", isRequiredForSourceOnlyAbi)
+        .add("classesToRemoveFromJar", classesToRemoveFromJar)
+        .add("abiGenerationMode", abiGenerationMode)
+        .add("abiCompatibilityMode", abiCompatibilityMode)
+        .add("withDownwardApi", withDownwardApi)
+        .add("javaCDParams", javaCDParams)
+        .toString();
   }
 }

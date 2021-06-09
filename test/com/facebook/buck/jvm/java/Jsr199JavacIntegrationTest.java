@@ -367,8 +367,8 @@ public class Jsr199JavacIntegrationTest {
           .resolve(sourcePathResolver, projectFilesystem.getRootPath());
     }
 
-    return new JdkProvidedInMemoryJavac()
-        .resolve(sourcePathResolver, projectFilesystem.getRootPath());
+    return JdkProvidedInMemoryJavac.INSTANCE.resolve(
+        sourcePathResolver, projectFilesystem.getRootPath());
   }
 
   private Jsr199Javac.ResolvedJsr199Javac createJavac(boolean withSyntaxError) throws IOException {

@@ -18,6 +18,8 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.function.Predicate;
@@ -71,5 +73,27 @@ public class RemoveClassesPatternsMatcher implements AddsToRuleKey, Predicate<Ob
 
   public ImmutableList<Pattern> getPatterns() {
     return patterns;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    RemoveClassesPatternsMatcher that = (RemoveClassesPatternsMatcher) o;
+    return Objects.equal(patterns, that.patterns);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(patterns);
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("patterns", patterns).toString();
   }
 }
