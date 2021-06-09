@@ -192,7 +192,7 @@ public class RustLibraryDescription
 
       if (args.getProcMacro()) {
         // XXX Do we care about overriding platform with proc-macro one?
-        crateType = CrateType.PROC_MACRO;
+        crateType = requestedType.isDoc() ? CrateType.DOC_MACRO : CrateType.PROC_MACRO;
       } else {
         crateType = requestedType;
       }
@@ -205,10 +205,6 @@ public class RustLibraryDescription
         } else {
           depType = Linker.LinkableDepType.STATIC;
         }
-      }
-
-      if (requestedType.isDoc()) {
-        crateType = requestedType;
       }
 
       Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =

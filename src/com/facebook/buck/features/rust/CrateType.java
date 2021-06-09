@@ -44,6 +44,11 @@ public enum CrateType {
       "bin",
       RustDescriptionEnhancer.RFDOC,
       (target, crate, plat) -> ""), // #doc builds emit a tree of files.
+  /**
+   * Crate type during #doc build of a proc-macro crate. Behaves like DOC, but makes libproc_macro
+   * available in the extern prelude.
+   */
+  DOC_MACRO("proc-macro", RustDescriptionEnhancer.RFDOC, (target, crate, plat) -> ""),
   SAVEANALYSIS(
       "lib",
       RustDescriptionEnhancer.RFSAVEANALYSIS,
@@ -161,7 +166,8 @@ public enum CrateType {
         || this == RLIB_PIC
         || this == STATIC_PIC
         || this == BIN
-        || this == PROC_MACRO;
+        || this == PROC_MACRO
+        || this == DOC_MACRO;
   }
 
   /** Create generates an executable */
@@ -181,7 +187,7 @@ public enum CrateType {
 
   /** Preliminary boolean method for #doc flavor. */
   public boolean isDoc() {
-    return this == DOC || this == DOCBIN;
+    return this == DOC || this == DOCBIN || this == DOC_MACRO;
   }
 
   /**
