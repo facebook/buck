@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.params;
 
-import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
@@ -28,7 +27,10 @@ import com.google.common.collect.ImmutableList;
 public abstract class DefaultRulesJavaCDParams implements RulesJavaCDParams {
 
   @Override
-  @AddToRuleKey
+  @ExcludeFromRuleKey(
+      reason = "running with or without javacd should not be a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
   public abstract boolean hasJavaCDEnabled();
 
   @Override
