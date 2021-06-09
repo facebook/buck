@@ -78,18 +78,18 @@ public class DefaultJarContentHasherTest {
 
     // Use JarBuilder with toTest -- we cache the open file to make sure it stays mmapped
     //noinspection unused
-    JarFile cache = new JarFile(toTest);
-    assertThat(
-        new DefaultJarContentHasher(filesystem, relativeToTestPath).getContentHashes().keySet(),
-        Matchers.contains("Before"));
+    try (JarFile cache = new JarFile(toTest)) {
+      assertThat(
+          new DefaultJarContentHasher(filesystem, relativeToTestPath).getContentHashes().keySet(),
+          Matchers.contains("Before"));
 
-    // Now modify toTest make sure we don't get a cached result when we open it for a second time
-    Files.move(modification.toPath(), toTest.toPath(), StandardCopyOption.REPLACE_EXISTING);
-    Files.setLastModifiedTime(toTest.toPath(), hardcodedTime);
-    assertThat(
-        new DefaultJarContentHasher(filesystem, relativeToTestPath).getContentHashes().keySet(),
-        Matchers.contains("After"));
-    cache.close();
+      // Now modify toTest make sure we don't get a cached result when we open it for a second time
+      Files.move(modification.toPath(), toTest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+      Files.setLastModifiedTime(toTest.toPath(), hardcodedTime);
+      assertThat(
+          new DefaultJarContentHasher(filesystem, relativeToTestPath).getContentHashes().keySet(),
+          Matchers.contains("After"));
+    }
   }
 
   @Test

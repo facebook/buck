@@ -188,7 +188,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void whenJarMemberWithHashInManifestIsQueriedThenCacheCorrectlyObtainsIt()
       throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = createTempProjectFilesystem();
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
 
@@ -214,7 +214,7 @@ public class DefaultFileHashCacheTest {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.PARALLEL_COMPARISON);
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = createTempProjectFilesystem();
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
 
@@ -236,49 +236,61 @@ public class DefaultFileHashCacheTest {
     cache.getForArchiveMember(abiJarPath, memberPath);
   }
 
-  @Test(expected = UnsupportedOperationException.class)
+  @Test
   public void whenJarMemberWithoutManifestIsQueriedThenThrow() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = createTempProjectFilesystem();
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
 
     Path abiJarPath = Paths.get("no-manifest.jar");
     Path memberPath = Paths.get("Empty.class");
+    String memberContents = "Some contents";
 
     try (JarOutputStream jar = new JarOutputStream(filesystem.newFileOutputStream(abiJarPath))) {
       jar.putNextEntry(new JarEntry(memberPath.toString()));
-      jar.write("Contents".getBytes(StandardCharsets.UTF_8));
+      jar.write(memberContents.getBytes(StandardCharsets.UTF_8));
       jar.closeEntry();
     }
 
     cache.getForArchiveMember(abiJarPath, memberPath);
+
+    HashCode actual = cache.getForArchiveMember(abiJarPath, memberPath);
+    HashCode expected = Hashing.murmur3_128().hashString(memberContents, StandardCharsets.UTF_8);
+
+    assertEquals(expected, actual);
   }
 
-  @Test(expected = UnsupportedOperationException.class)
-  public void whenJarMemberWithEmptyManifestIsQueriedThenThrow() throws IOException {
+  @Test
+  public void whenJarMemberWithEmptyManifestIsQueriedThenManifestIsGenerated() throws IOException {
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.PARALLEL_COMPARISON);
     Assume.assumeFalse(fileHashCacheMode == FileHashCacheMode.LIMITED_PREFIX_TREE_PARALLEL);
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = createTempProjectFilesystem();
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
 
     Path abiJarPath = Paths.get("empty-manifest.jar");
     Path memberPath = Paths.get("Empty.class");
+    String memberContents = "Some contents";
 
     try (CustomZipOutputStream jar =
         ZipOutputStreams.newOutputStream(filesystem.newFileOutputStream(abiJarPath))) {
       jar.writeEntry(JarFile.MANIFEST_NAME, new ByteArrayInputStream(new byte[0]));
       jar.writeEntry(
           memberPath.toString(),
-          new ByteArrayInputStream("Contents".getBytes(StandardCharsets.UTF_8)));
+          new ByteArrayInputStream(memberContents.getBytes(StandardCharsets.UTF_8)));
     }
 
     cache.getForArchiveMember(abiJarPath, memberPath);
+
+    HashCode actual = cache.getForArchiveMember(abiJarPath, memberPath);
+    HashCode expected = Hashing.murmur3_128().hashString(memberContents, StandardCharsets.UTF_8);
+
+    assertEquals(expected, actual);
   }
 
   @Test
   public void getSizeOfMissingPathThrows() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = createTempProjectFilesystem();
     Path input = filesystem.getPath("input");
     DefaultFileHashCache cache =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode, false);
@@ -370,5 +382,10 @@ public class DefaultFileHashCacheTest {
     assertTrue(
         buckOutCacheClassDelegate.get(buckOutCache.getFilesystem())
             instanceof DefaultProjectFilesystemDelegate);
+  }
+
+  private static ProjectFilesystem createTempProjectFilesystem() throws IOException {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
+    return TestProjectFilesystems.createProjectFilesystem(filesystem.getRootPath().toRealPath());
   }
 }

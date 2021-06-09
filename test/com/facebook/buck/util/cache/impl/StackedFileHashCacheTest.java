@@ -101,7 +101,7 @@ public class StackedFileHashCacheTest {
 
   @Test
   public void usesFirstCacheForArchivePathAbsolutePath() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = createTempProjectFilesystem();
 
     Path path = filesystem.getPath("world.jar");
     writeJarWithHashes(filesystem, path);
@@ -121,7 +121,7 @@ public class StackedFileHashCacheTest {
 
   @Test
   public void usesFirstCacheForArchivePath() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = createTempProjectFilesystem();
 
     Path path = filesystem.getPath("world.jar");
     writeJarWithHashes(filesystem, path);
@@ -385,5 +385,10 @@ public class StackedFileHashCacheTest {
           SOME_FILE_INSIDE_JAR,
           new ByteArrayInputStream("fake contents".getBytes(StandardCharsets.UTF_8)));
     }
+  }
+
+  private static ProjectFilesystem createTempProjectFilesystem() throws IOException {
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
+    return TestProjectFilesystems.createProjectFilesystem(filesystem.getRootPath().toRealPath());
   }
 }
