@@ -85,6 +85,8 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
   private static final int MAX_WAIT_TIME_FOR_PIPELINE_FINISH_EVENT_SECONDS = 1;
 
   private final JavaCDParams javaCDParams;
+  private final boolean runWithoutPool;
+
   private final PipeliningCommand.Builder builder = PipeliningCommand.newBuilder();
   // using LinkedHashMap implementation to support an order of commands.
   private final Map<ActionId, AbstractMessage> commands = new LinkedHashMap<>();
@@ -105,6 +107,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       JavaCDParams javaCDParams) {
     super(STEP_NAME);
     this.javaCDParams = javaCDParams;
+    this.runWithoutPool = javaCDParams.getWorkerToolPoolSize() == 0;
 
     builder
         .getBaseCommandParamsBuilder()
@@ -149,7 +152,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
         JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams, context.getRuleCellRoot());
 
     IsolatedEventBus eventBus = context.getIsolatedEventBus();
-    if (borrowedWorkerTool == null) {
+    if (workerToolExecutor == null) {
       // the first execution
       Preconditions.checkState(
           actionIdToResultEventMap.isEmpty(),
@@ -158,18 +161,23 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
       LOG.debug(
           "The first step execution. Obtaining worker tool from the pool. Action id: %s", actionId);
-      try (Scope ignored = PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_get_wt")) {
-        WorkerProcessPool<WorkerToolExecutor> workerToolPool =
-            JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
-        borrowedWorkerTool =
-            JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
-                workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
+
+      if (runWithoutPool) {
+        workerToolExecutor = JavaCDWorkerStepUtils.getLaunchedWorker(context, launchJavaCDCommand);
+      } else {
+        try (Scope ignored = PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_get_wt")) {
+          WorkerProcessPool<WorkerToolExecutor> workerToolPool =
+              JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
+          borrowedWorkerTool =
+              JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
+                  workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
+          workerToolExecutor = borrowedWorkerTool.get();
+        }
       }
 
       try (Scope ignored = PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_execution")) {
         try {
-          workerToolExecutor = Objects.requireNonNull(borrowedWorkerTool).get();
-          actionIdToResultEventMap = startExecution(eventBus);
+          actionIdToResultEventMap = startExecution(eventBus, workerToolExecutor);
         } catch (ExecutionException e) {
           return JavaCDWorkerStepUtils.createFailStepExecutionResult(
               launchJavaCDCommand, actionId, e);
@@ -178,7 +186,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     } else {
       try (Scope ignored =
           PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_start_next_command")) {
-        startNextPipeliningCommand(actionId, eventBus);
+        startNextPipeliningCommand(actionId, eventBus, workerToolExecutor);
       }
     }
 
@@ -209,7 +217,8 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
   }
 
   private ImmutableMap<ActionId, SettableFuture<ResultEvent>> startExecution(
-      IsolatedEventBus eventBus) throws IOException, ExecutionException {
+      IsolatedEventBus eventBus, WorkerToolExecutor workerToolExecutor)
+      throws IOException, ExecutionException {
     Preconditions.checkNotNull(workerToolExecutor);
 
     Preconditions.checkArgument(
@@ -281,7 +290,8 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     return mapBuilder.build();
   }
 
-  private void startNextPipeliningCommand(ActionId actionId, IsolatedEventBus eventBus)
+  private void startNextPipeliningCommand(
+      ActionId actionId, IsolatedEventBus eventBus, WorkerToolExecutor workerToolExecutor)
       throws IOException {
     Preconditions.checkNotNull(workerToolExecutor);
     LOG.debug(
@@ -400,6 +410,21 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
   }
 
   private void closeWorkerTool() {
+    if (runWithoutPool) {
+      reallyCloseWorkerTool();
+    } else {
+      returnWorkerToolBackToPool();
+    }
+  }
+
+  private void reallyCloseWorkerTool() {
+    if (workerToolExecutor != null) {
+      workerToolExecutor.close();
+      workerToolExecutor = null;
+    }
+  }
+
+  private void returnWorkerToolBackToPool() {
     if (borrowedWorkerTool != null) {
       borrowedWorkerTool.close();
       borrowedWorkerTool = null;

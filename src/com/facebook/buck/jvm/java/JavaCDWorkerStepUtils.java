@@ -28,6 +28,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.workertool.WorkerToolExecutor;
@@ -37,6 +38,7 @@ import com.facebook.buck.workertool.impl.WorkerToolPoolFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -133,21 +135,31 @@ public class JavaCDWorkerStepUtils {
     return WorkerToolPoolFactory.getPool(
         context,
         startupCommand,
-        () -> {
-          WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
-          try (Scope ignored =
-              PerfEvents.scope(
-                  context.getIsolatedEventBus(), context.getActionId(), "launch_worker")) {
-            return workerToolLauncher.launchWorker(
-                startupCommand,
-                ImmutableMap.of(
-                    BuckClasspath.ENV_VAR_NAME,
-                    Objects.requireNonNull(
-                        BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
-                        BuckClasspath.ENV_VAR_NAME + " env variable is not set")));
-          }
-        },
+        getLaunchWorkerSupplier(context, startupCommand),
         javaCDParams.getWorkerToolPoolSize(),
         javaCDParams.getWorkerToolMaxInstancesSize());
+  }
+
+  /** Returns {@link WorkerToolExecutor} created for the passed {@code command} */
+  public static WorkerToolExecutor getLaunchedWorker(
+      IsolatedExecutionContext context, ImmutableList<String> startupCommand) throws IOException {
+    return getLaunchWorkerSupplier(context, startupCommand).get();
+  }
+
+  private static ThrowingSupplier<WorkerToolExecutor, IOException> getLaunchWorkerSupplier(
+      IsolatedExecutionContext context, ImmutableList<String> startupCommand) {
+    return () -> {
+      WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
+      try (Scope ignored =
+          PerfEvents.scope(context.getIsolatedEventBus(), context.getActionId(), "launch_worker")) {
+        return workerToolLauncher.launchWorker(
+            startupCommand,
+            ImmutableMap.of(
+                BuckClasspath.ENV_VAR_NAME,
+                Objects.requireNonNull(
+                    BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
+                    BuckClasspath.ENV_VAR_NAME + " env variable is not set")));
+      }
+    };
   }
 }

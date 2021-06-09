@@ -48,11 +48,13 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
   private final BuildJavaCommand buildJavaCommand;
   private final JavaCDParams javaCDParams;
+  private final boolean runWithoutPool;
 
   public JavaCDWorkerToolStep(BuildJavaCommand buildJavaCommand, JavaCDParams javaCDParams) {
     super(STEP_NAME);
     this.buildJavaCommand = buildJavaCommand;
     this.javaCDParams = javaCDParams;
+    this.runWithoutPool = javaCDParams.getWorkerToolPoolSize() == 0;
   }
 
   @Override
@@ -63,8 +65,24 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
     ImmutableList<String> launchJavaCDCommand =
         JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams, context.getRuleCellRoot());
 
+    if (runWithoutPool) {
+      try (WorkerToolExecutor workerToolExecutor =
+          JavaCDWorkerStepUtils.getLaunchedWorker(context, launchJavaCDCommand)) {
+        return executeBuildJavaCommand(context, workerToolExecutor, launchJavaCDCommand);
+      }
+    }
+
     WorkerProcessPool<WorkerToolExecutor> workerToolPool =
         JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
+    return executeOnWorkerToolPool(context, eventBus, launchJavaCDCommand, workerToolPool);
+  }
+
+  private StepExecutionResult executeOnWorkerToolPool(
+      IsolatedExecutionContext context,
+      IsolatedEventBus eventBus,
+      ImmutableList<String> launchJavaCDCommand,
+      WorkerProcessPool<WorkerToolExecutor> workerToolPool)
+      throws InterruptedException, IOException {
 
     BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool = null;
     try {
