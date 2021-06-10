@@ -232,7 +232,7 @@ public class CxxRawHeadersIntegrationTest {
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        containsString("Cannot use `headers` and `raw_headers` in the same rule"));
+        containsString("Cannot use `headers` and `raw_headers` in the same rule: lib5"));
   }
 
   @Test

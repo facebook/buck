@@ -399,12 +399,13 @@ public class CxxLibraryDescription
 
       if (!getExportedHeaders().isEmpty()) {
         throw new HumanReadableException(
-            "Cannot use `exported_headers` and `raw_headers` in the same rule.");
+            "Cannot use `exported_headers` and `raw_headers` in the same rule: %s", this.getName());
       }
 
       if (!getExportedPlatformHeaders().getPatternsAndValues().isEmpty()) {
         throw new HumanReadableException(
-            "Cannot use `exported_platform_headers` and `raw_headers` in the same rule.");
+            "Cannot use `exported_platform_headers` and `raw_headers` in the same rule: %s",
+            this.getName());
       }
     }
 

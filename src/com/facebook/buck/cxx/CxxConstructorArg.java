@@ -130,12 +130,13 @@ public interface CxxConstructorArg
     }
 
     if (!getHeaders().isEmpty()) {
-      throw new HumanReadableException("Cannot use `headers` and `raw_headers` in the same rule.");
+      throw new HumanReadableException(
+          "Cannot use `headers` and `raw_headers` in the same rule: %s", this.getName());
     }
 
     if (!getPlatformHeaders().getPatternsAndValues().isEmpty()) {
       throw new HumanReadableException(
-          "Cannot use `platform_headers` and `raw_headers` in the same rule.");
+          "Cannot use `platform_headers` and `raw_headers` in the same rule: %s", this.getName());
     }
   }
 
