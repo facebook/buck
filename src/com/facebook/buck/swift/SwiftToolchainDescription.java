@@ -67,9 +67,6 @@ public class SwiftToolchainDescription
 
     ImmutableList<Arg> swiftFlags =
         args.getSwiftcFlags().stream()
-            // FIXME: Filter out any additional -frontend flags, this can be removed once the rules
-            // are updated.
-            .filter(f -> !f.matches("-frontend"))
             .map(macrosConverter::convert)
             .collect(ImmutableList.toImmutableList());
 
