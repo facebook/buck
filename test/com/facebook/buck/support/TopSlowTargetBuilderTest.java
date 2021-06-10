@@ -35,7 +35,7 @@ public class TopSlowTargetBuilderTest {
   public void testOneRule() {
     TopSlowTargetsBuilder builder = new TopSlowTargetsBuilder();
     BuildTarget a = BuildTargetFactory.newInstance("//foo/bar:baz");
-    builder.onTargetCompleted(a, 42);
+    builder.onTargetCompleted(a, 42, 5);
     ImmutableList<SlowTarget> slowTargets = builder.getSlowRules();
     assertEquals(1, slowTargets.size());
     assertEquals(a, slowTargets.get(0).getTarget());
@@ -48,9 +48,9 @@ public class TopSlowTargetBuilderTest {
     BuildTarget a = BuildTargetFactory.newInstance("//foo/bar:a");
     BuildTarget b = BuildTargetFactory.newInstance("//foo/bar:b");
     BuildTarget c = BuildTargetFactory.newInstance("//foo/bar:c");
-    builder.onTargetCompleted(a, 40);
-    builder.onTargetCompleted(b, 30);
-    builder.onTargetCompleted(c, 50);
+    builder.onTargetCompleted(a, 40, 5);
+    builder.onTargetCompleted(b, 30, 45);
+    builder.onTargetCompleted(c, 50, 55);
 
     ImmutableList<SlowTarget> slowTargets = builder.getSlowRules();
     assertEquals(2, slowTargets.size());
@@ -66,9 +66,9 @@ public class TopSlowTargetBuilderTest {
     BuildTarget a = BuildTargetFactory.newInstance("//foo/bar:a");
     BuildTarget b = BuildTargetFactory.newInstance("//foo/bar:b");
     BuildTarget c = BuildTargetFactory.newInstance("//foo/bar:c");
-    builder.onTargetCompleted(a, 40);
-    builder.onTargetCompleted(b, 30);
-    builder.onTargetCompleted(c, 35);
+    builder.onTargetCompleted(a, 40, 65);
+    builder.onTargetCompleted(b, 30, 1);
+    builder.onTargetCompleted(c, 35, 30);
 
     ImmutableList<SlowTarget> slowTargets = builder.getSlowRules();
     assertEquals(2, slowTargets.size());
@@ -85,10 +85,10 @@ public class TopSlowTargetBuilderTest {
     BuildTarget b = BuildTargetFactory.newInstance("//foo/bar:b");
     BuildTarget c = BuildTargetFactory.newInstance("//foo/bar:c");
     BuildTarget d = BuildTargetFactory.newInstance("//foo/bar:d");
-    builder.onTargetCompleted(a, 40);
-    builder.onTargetCompleted(b, 30);
-    builder.onTargetCompleted(c, 35);
-    builder.onTargetCompleted(d, 35);
+    builder.onTargetCompleted(a, 40, 10);
+    builder.onTargetCompleted(b, 30, 15);
+    builder.onTargetCompleted(c, 35, 30);
+    builder.onTargetCompleted(d, 35, 20);
 
     ImmutableList<SlowTarget> slowTargets = builder.getSlowRules();
     assertEquals(3, slowTargets.size());

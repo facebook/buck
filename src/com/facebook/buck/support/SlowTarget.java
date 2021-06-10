@@ -28,4 +28,6 @@ public interface SlowTarget {
   BuildTarget getTarget();
 
   long getDurationMilliseconds();
+
+  long getStartTimeMilliseconds();
 }

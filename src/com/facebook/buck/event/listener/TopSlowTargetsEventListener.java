@@ -37,14 +37,17 @@ public class TopSlowTargetsEventListener implements BuckEventListener {
   @Subscribe
   public void subscribe(BuildRuleExecutionEvent.Finished event) {
     long elapsedTimeMillis = TimeUnit.NANOSECONDS.toMillis(event.getElapsedTimeNano());
-    slowTargetsBuilder.onTargetCompleted(event.getTarget(), elapsedTimeMillis);
+    long startTimeMillis = event.getTimestampMillis() - elapsedTimeMillis;
+    slowTargetsBuilder.onTargetCompleted(event.getTarget(), elapsedTimeMillis, startTimeMillis);
   }
 
   /** Subscribes to {@link RemoteBuildRuleExecutionEvent} events */
   @Subscribe
   public void subscribe(RemoteBuildRuleExecutionEvent event) {
+    long executionDurationMs = event.getExecutionDurationMs();
+    long startTimeMs = event.getTimestampMillis() - executionDurationMs;
     slowTargetsBuilder.onTargetCompleted(
-        event.getBuildRule().getBuildTarget(), event.getExecutionDurationMs());
+        event.getBuildRule().getBuildTarget(), executionDurationMs, startTimeMs);
   }
 
   public ImmutableList<SlowTarget> getTopSlowTargets() {

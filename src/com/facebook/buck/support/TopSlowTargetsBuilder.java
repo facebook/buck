@@ -73,8 +73,11 @@ public final class TopSlowTargetsBuilder {
    * @param durationMilliseconds The execution duration of the given target
    */
   public synchronized void onTargetCompleted(
-      final BuildTarget target, final long durationMilliseconds) {
-    slowTargets.add(ImmutableSlowTarget.ofImpl(target, durationMilliseconds));
+      final BuildTarget target,
+      final long durationMilliseconds,
+      final long targetStartTimeMilliseconds) {
+    slowTargets.add(
+        ImmutableSlowTarget.ofImpl(target, durationMilliseconds, targetStartTimeMilliseconds));
     trimToRequestedLength();
   }
 
