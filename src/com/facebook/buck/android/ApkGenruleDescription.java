@@ -16,12 +16,14 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
@@ -70,15 +72,68 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
 
-    BuildRule apk = graphBuilder.getRule(args.getApk());
-    if (!(apk instanceof HasInstallableApk)) {
-      throw new HumanReadableException(
-          "The 'apk' argument of %s, %s, must correspond to an "
-              + "installable rule, such as android_binary() or apk_genrule().",
-          buildTarget, args.getApk().getFullyQualifiedName());
+    Optional<BuildTarget> apk = args.getApk();
+    Optional<BuildTarget> aab = args.getAab();
+
+    if (!apk.isPresent() && !aab.isPresent()) {
+      throw new HumanReadableException("You must specify either apk or aab.");
     }
 
-    HasInstallableApk installableApk = (HasInstallableApk) apk;
+    if (apk.isPresent() && aab.isPresent()) {
+      throw new HumanReadableException("You cannot specify both apk and aab.");
+    }
+
+    HasInstallableApk installableApk = null;
+    if (apk.isPresent()) {
+      BuildRule apk_rule = graphBuilder.getRule(apk.get());
+      if (!(apk_rule instanceof HasInstallableApk)) {
+        throw new HumanReadableException(
+            "The 'apk' argument of %s, %s, must correspond to an "
+                + "installable rule, such as android_binary() or apk_genrule().",
+            buildTarget, apk.get().getFullyQualifiedName());
+      }
+
+      installableApk = (HasInstallableApk) apk_rule;
+    } else {
+      BuildRule aab_rule = graphBuilder.getRule(aab.get());
+      if (!(aab_rule instanceof AndroidBundle)) {
+        throw new HumanReadableException(
+            "The 'aab' argument of %s, %s, must correspond to an android_bundle",
+            buildTarget, aab.get().getFullyQualifiedName());
+      }
+      installableApk =
+          new HasInstallableApk() {
+            @Override
+            public ApkInfo getApkInfo() {
+              return new ApkInfo() {
+                @Override
+                public SourcePath getManifestPath() {
+                  return ((AndroidBundle) aab_rule).getManifestSourcePath();
+                }
+
+                @Override
+                public SourcePath getApkPath() {
+                  return aab_rule.getSourcePathToOutput();
+                }
+
+                @Override
+                public Optional<ExopackageInfo> getExopackageInfo() {
+                  return Optional.empty();
+                }
+              };
+            }
+
+            @Override
+            public BuildTarget getBuildTarget() {
+              return aab_rule.getBuildTarget();
+            }
+
+            @Override
+            public ProjectFilesystem getProjectFilesystem() {
+              return projectFilesystem;
+            }
+          };
+    }
     return new ApkGenrule(
         buildTarget,
         projectFilesystem,
@@ -104,7 +159,9 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
   interface AbstractApkGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
     Optional<String> getOut();
 
-    BuildTarget getApk();
+    Optional<BuildTarget> getAab();
+
+    Optional<BuildTarget> getApk();
 
     @Override
     default Optional<String> getType() {

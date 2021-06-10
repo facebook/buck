@@ -336,4 +336,8 @@ public class AndroidBundle extends AbstractBuildRule
   public ImmutableSet<SourcePath> getCompileTimeClasspathSourcePaths() {
     return enhancementResult.getClasspathEntriesToDex();
   }
+
+  public SourcePath getManifestSourcePath() {
+    return enhancementResult.getAndroidManifestPath();
+  }
 }
