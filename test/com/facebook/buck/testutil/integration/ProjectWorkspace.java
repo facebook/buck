@@ -29,6 +29,7 @@ import com.dd.plist.NSObject;
 import com.facebook.buck.cli.DaemonMode;
 import com.facebook.buck.cli.MainForTests;
 import com.facebook.buck.cli.MainRunner;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellProvider;
@@ -648,11 +649,13 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public void enableOutOfProcessExecution() throws IOException {
-    addBuckConfigLocalOption("build", "are_external_actions_enabled", true);
+    addBuckConfigLocalOption(
+        BuildBuckConfig.BUILD_SECTION, BuildBuckConfig.EXTERNAL_ACTIONS_FLAG_PROPERTY_NAME, true);
   }
 
-  public void disableThreadLimitOverride() throws IOException {
-    removeBuckConfigLocalOption("build", "threads");
+  public void disableOutOfProcessExecution() throws IOException {
+    addBuckConfigLocalOption(
+        BuildBuckConfig.BUILD_SECTION, BuildBuckConfig.EXTERNAL_ACTIONS_FLAG_PROPERTY_NAME, false);
   }
 
   public void setKnownRuleTypesFactoryFactory(

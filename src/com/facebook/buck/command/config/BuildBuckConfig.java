@@ -38,10 +38,15 @@ public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
 
   private static final Float DEFAULT_THREAD_CORE_RATIO = 1.0F;
 
-  private static final String BUILD_SECTION = "build";
+  @VisibleForTesting public static final String BUILD_SECTION = "build";
   private static final String PROJECT_SECTION = "project";
   private static final String TARGETS_SECTION = "targets";
   private static final String CACHE_SECTION = "cache";
+
+  private static final boolean ARE_EXTERNAL_ACTIONS_ENABLED_BY_DEFAULT = true;
+
+  @VisibleForTesting
+  public static final String EXTERNAL_ACTIONS_FLAG_PROPERTY_NAME = "are_external_actions_enabled";
 
   @Override
   public abstract BuckConfig getDelegate();
@@ -264,15 +269,21 @@ public abstract class BuildBuckConfig implements ConfigView<BuckConfig> {
     if (IS_WINDOWS) {
       return areExternalActionsEnabledForWindows();
     }
-    return getDelegate().getBooleanValue(BUILD_SECTION, "are_external_actions_enabled", false);
+    return getDelegate()
+        .getBooleanValue(
+            BUILD_SECTION,
+            EXTERNAL_ACTIONS_FLAG_PROPERTY_NAME,
+            ARE_EXTERNAL_ACTIONS_ENABLED_BY_DEFAULT);
   }
 
   @Value.Lazy
   @VisibleForTesting
   boolean areExternalActionsEnabledForWindows() {
-    // TODO: msemko: fix windows issues
     return getDelegate()
-        .getBooleanValue(BUILD_SECTION, "are_external_actions_enabled_for_windows", false);
+        .getBooleanValue(
+            BUILD_SECTION,
+            EXTERNAL_ACTIONS_FLAG_PROPERTY_NAME + "_for_windows",
+            ARE_EXTERNAL_ACTIONS_ENABLED_BY_DEFAULT);
   }
 
   /** @return whether to enable filesystem map logging for hashes. */

@@ -83,6 +83,8 @@ public class AndroidExopackageApkIntegrationTest {
     workspace.setUp();
     if (shouldExecuteInSeparateProcess) {
       workspace.enableOutOfProcessExecution();
+    } else {
+      workspace.disableOutOfProcessExecution();
     }
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();

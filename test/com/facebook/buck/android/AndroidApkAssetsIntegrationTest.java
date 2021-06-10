@@ -81,7 +81,8 @@ public class AndroidApkAssetsIntegrationTest extends AbiCompilationModeTest {
   public void testAppAssetsAreCompressed() throws IOException {
     // Small files don't get compressed. Make something a bit bigger.
     String largeContents =
-        Joiner.on("\n").join(Collections.nCopies(100, "A boring line of content."));
+        Joiner.on(System.lineSeparator())
+            .join(Collections.nCopies(100, "A boring line of content."));
     workspace.writeContentsToPath(largeContents, "res/com/sample/base/buck-assets/hilarity.txt");
 
     Path apkPath = workspace.buildAndReturnOutput(SIMPLE_TARGET);
@@ -98,7 +99,8 @@ public class AndroidApkAssetsIntegrationTest extends AbiCompilationModeTest {
   public void testAppUncompressableAssetsAreNotCompressed() throws IOException {
     // Small files don't get compressed. Make something a bit bigger.
     String largeContents =
-        Joiner.on("\n").join(Collections.nCopies(100, "A boring line of content."));
+        Joiner.on(System.lineSeparator())
+            .join(Collections.nCopies(100, "A boring line of content."));
     workspace.writeContentsToPath(largeContents, "res/com/sample/base/buck-assets/movie.mp4");
 
     Path apkPath = workspace.buildAndReturnOutput(SIMPLE_TARGET);
@@ -112,13 +114,15 @@ public class AndroidApkAssetsIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testGzAssetsAreRejected() throws IOException {
+    workspace.disableOutOfProcessExecution();
     workspace.writeContentsToPath("some contents", "res/com/sample/base/buck-assets/zipped.gz");
 
     ProcessResult result = workspace.runBuckBuild(SIMPLE_TARGET);
     // This is IllegalStateException so exit code 10; it should probably be some another exception
     // type
     result.assertExitCode(null, ExitCode.FATAL_GENERIC);
-    assertTrue(result.getStderr().contains("zipped.gz"));
+    String stderr = result.getStderr();
+    assertTrue(stderr.contains("zipped.gz"));
   }
 
   @Test

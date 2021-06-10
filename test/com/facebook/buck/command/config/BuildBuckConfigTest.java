@@ -33,7 +33,8 @@ public class BuildBuckConfigTest {
   public void testShouldSetNumberOfThreadsFromBuckConfig() {
     BuildBuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of("build", ImmutableMap.of("threads", "3")))
+            .setSections(
+                ImmutableMap.of(BuildBuckConfig.BUILD_SECTION, ImmutableMap.of("threads", "3")))
             .build()
             .getView(BuildBuckConfig.class);
     assertThat(buckConfig.getNumThreads(), equalTo(3));
@@ -55,7 +56,9 @@ public class BuildBuckConfigTest {
   public void testBuildThreadsRatioSanityCheck() {
     BuildBuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "1")))
+            .setSections(
+                ImmutableMap.of(
+                    BuildBuckConfig.BUILD_SECTION, ImmutableMap.of("thread_core_ratio", "1")))
             .build()
             .getView(BuildBuckConfig.class);
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), equalTo(10));
@@ -65,7 +68,9 @@ public class BuildBuckConfigTest {
   public void testKeepGoingEnabledTrueCheck() {
     BuildBuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of("build", ImmutableMap.of("keep_going", "true")))
+            .setSections(
+                ImmutableMap.of(
+                    BuildBuckConfig.BUILD_SECTION, ImmutableMap.of("keep_going", "true")))
             .build()
             .getView(BuildBuckConfig.class);
     assertThat(buckConfig.getBuildKeepGoingEnabled(), equalTo(true));
@@ -81,7 +86,9 @@ public class BuildBuckConfigTest {
   public void testBuildThreadsRatioGreaterThanZero() {
     BuildBuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "0.00001")))
+            .setSections(
+                ImmutableMap.of(
+                    BuildBuckConfig.BUILD_SECTION, ImmutableMap.of("thread_core_ratio", "0.00001")))
             .build()
             .getView(BuildBuckConfig.class);
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(1), equalTo(1));
@@ -91,7 +98,9 @@ public class BuildBuckConfigTest {
   public void testBuildThreadsRatioRoundsUp() {
     BuildBuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "0.3")))
+            .setSections(
+                ImmutableMap.of(
+                    BuildBuckConfig.BUILD_SECTION, ImmutableMap.of("thread_core_ratio", "0.3")))
             .build()
             .getView(BuildBuckConfig.class);
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(4), equalTo(2));
@@ -101,7 +110,9 @@ public class BuildBuckConfigTest {
   public void testNonZeroBuildThreadsRatio() {
     BuildBuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "0.1")))
+            .setSections(
+                ImmutableMap.of(
+                    BuildBuckConfig.BUILD_SECTION, ImmutableMap.of("thread_core_ratio", "0.1")))
             .build()
             .getView(BuildBuckConfig.class);
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(1), equalTo(1));
@@ -112,7 +123,9 @@ public class BuildBuckConfigTest {
     try {
       BuildBuckConfig buckConfig =
           FakeBuckConfig.builder()
-              .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "0")))
+              .setSections(
+                  ImmutableMap.of(
+                      BuildBuckConfig.BUILD_SECTION, ImmutableMap.of("thread_core_ratio", "0")))
               .build()
               .getView(BuildBuckConfig.class);
       buckConfig.getDefaultMaximumNumberOfThreads(1);
@@ -128,7 +141,9 @@ public class BuildBuckConfigTest {
     try {
       BuildBuckConfig buckConfig =
           FakeBuckConfig.builder()
-              .setSections(ImmutableMap.of("build", ImmutableMap.of("thread_core_ratio", "-0.1")))
+              .setSections(
+                  ImmutableMap.of(
+                      BuildBuckConfig.BUILD_SECTION, ImmutableMap.of("thread_core_ratio", "-0.1")))
               .build()
               .getView(BuildBuckConfig.class);
       buckConfig.getDefaultMaximumNumberOfThreads(1);
@@ -145,7 +160,7 @@ public class BuildBuckConfigTest {
         FakeBuckConfig.builder()
             .setSections(
                 ImmutableMap.of(
-                    "build",
+                    BuildBuckConfig.BUILD_SECTION,
                     ImmutableMap.of(
                         "thread_core_ratio", "1",
                         "thread_core_ratio_reserved_cores", "2")))
@@ -160,7 +175,7 @@ public class BuildBuckConfigTest {
         FakeBuckConfig.builder()
             .setSections(
                 ImmutableMap.of(
-                    "build",
+                    BuildBuckConfig.BUILD_SECTION,
                     ImmutableMap.of(
                         "thread_core_ratio", "0.5",
                         "thread_core_ratio_max_threads", "4")))
@@ -175,7 +190,7 @@ public class BuildBuckConfigTest {
         FakeBuckConfig.builder()
             .setSections(
                 ImmutableMap.of(
-                    "build",
+                    BuildBuckConfig.BUILD_SECTION,
                     ImmutableMap.of(
                         "thread_core_ratio", "0.25",
                         "thread_core_ratio_min_threads", "6")))
@@ -185,27 +200,31 @@ public class BuildBuckConfigTest {
   }
 
   @Test
-  public void externalActionsDisabledByDefault() {
+  public void externalActionsEnabledByDefault() {
     BuildBuckConfig buckConfig = FakeBuckConfig.builder().build().getView(BuildBuckConfig.class);
-    assertThat(buckConfig.areExternalActionsEnabled(), is(false));
+    assertThat(buckConfig.areExternalActionsEnabled(), is(true));
   }
 
   @Test
-  public void externalActionsDisabledByDefaultForWindows() {
+  public void externalActionsEnabledByDefaultForWindows() {
     BuildBuckConfig buckConfig = FakeBuckConfig.builder().build().getView(BuildBuckConfig.class);
-    assertThat(buckConfig.areExternalActionsEnabledForWindows(), is(false));
+    assertThat(buckConfig.areExternalActionsEnabledForWindows(), is(true));
   }
 
   @Test
-  public void externalActionsDisabledForWindowsEvenIfEnabledForOtherPlatform() {
+  public void externalActionsConfiguredForWindows() {
     BuildBuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(
-                ImmutableMap.of("build", ImmutableMap.of("are_external_actions_enabled", "true")))
+                ImmutableMap.of(
+                    BuildBuckConfig.BUILD_SECTION,
+                    ImmutableMap.of(
+                        BuildBuckConfig.EXTERNAL_ACTIONS_FLAG_PROPERTY_NAME + "_for_windows",
+                        "false")))
             .build()
             .getView(BuildBuckConfig.class);
     assertThat(buckConfig.areExternalActionsEnabledForWindows(), is(false));
-    // still disabled for windows
+    // enabled for everything except windows
     boolean enabled = Platform.detect() != Platform.WINDOWS;
     assertThat(buckConfig.areExternalActionsEnabled(), is(enabled));
   }

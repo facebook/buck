@@ -66,6 +66,8 @@ public class AndroidFullExopackageApkIntegrationTest {
 
     if (shouldExecuteInSeparateProcess) {
       workspace.enableOutOfProcessExecution();
+    } else {
+      workspace.disableOutOfProcessExecution();
     }
 
     outputPath = workspace.buildAndReturnOutput(RESOURCES_EXOPACKAGE_TARGET);
