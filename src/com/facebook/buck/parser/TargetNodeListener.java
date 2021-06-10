@@ -16,10 +16,10 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import java.io.IOException;
-import java.nio.file.Path;
 
 /** Callback which is called when target node is created */
 public interface TargetNodeListener<T> {
-  void onCreate(Path buildFile, T node) throws IOException;
+  void onCreate(AbsPath buildFile, T node) throws IOException;
 }

@@ -23,7 +23,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.util.types.Unit;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.concurrent.ConcurrentHashMap;
 
 class CellManager {
@@ -51,9 +50,9 @@ class CellManager {
     return cell;
   }
 
-  void registerInputsUnderSymlinks(Path buildFile, TargetNode<?> node) throws IOException {
+  void registerInputsUnderSymlinks(AbsPath buildFile, TargetNode<?> node) throws IOException {
     Cell currentCell = getCell(node.getBuildTarget().getCell());
-    symlinkCache.registerInputsUnderSymlinks(currentCell, AbsPath.of(buildFile), node);
+    symlinkCache.registerInputsUnderSymlinks(currentCell, buildFile, node);
   }
 
   void close() {

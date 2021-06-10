@@ -199,7 +199,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     cellBoundaryChecker.enforceCellBoundary(target);
 
     try {
-      nodeListener.onCreate(buildFile.getPath(), targetNode);
+      nodeListener.onCreate(buildFile, targetNode);
     } catch (IOException e) {
       throw new HumanReadableException(e.getMessage(), e);
     }
