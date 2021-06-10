@@ -28,6 +28,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.config.ParserConfig;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -69,6 +70,12 @@ class SymlinkCache {
 
   public void registerInputsUnderSymlinks(Cell targetCell, AbsPath buildFile, TargetNode<?> node)
       throws IOException {
+    Preconditions.checkArgument(
+        targetCell.getCanonicalName() == node.getBuildTarget().getCell(),
+        "target %s cell does not match cell argument '%s'",
+        node.getBuildTarget(),
+        targetCell.getCanonicalName());
+
     Map<Path, Path> newSymlinksEncountered =
         inputFilesUnderSymlink(node.getInputs(), node.getFilesystem());
     Optional<ImmutableList<Path>> readOnlyPaths =
