@@ -127,11 +127,9 @@ public final class DownwardApiExecutionContext implements AutoCloseable {
     int eventsSize = chromeTraceStartedEvents.size() + stepStartedEvents.size();
     boolean hasUnprocessed = eventsSize > 0;
     if (hasUnprocessed) {
-      // TODO: msemko : remove this when the issue with unprocessed events would be fixed
-      LOG.error("There are " + eventsSize + " unprocessed events.");
-      LOG.info(
-          "Unprocessed events: stepStarted: %s, chromeTraceStarted: %s",
-          stepStartedEvents.values(), chromeTraceStartedEvents.values());
+      LOG.warn(
+          "There are %s unprocessed events%n. Unprocessed events: stepStarted: %s, chromeTraceStarted: %s",
+          eventsSize, stepStartedEvents.values(), chromeTraceStartedEvents.values());
     }
   }
 }
