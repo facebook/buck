@@ -782,6 +782,7 @@ public class GenruleBuildable implements Buildable {
         "GEN_DIR", filesystem.resolve(filesystem.getBuckPaths().getGenDir()).toString());
     environmentVariablesBuilder.put("SRCDIR", filesystem.resolve(srcPath).toString());
     environmentVariablesBuilder.put("TMP", filesystem.resolve(tmpPath).toString());
+    environmentVariablesBuilder.put("BUCK_BUILD_TARGET", buildTarget.getFullyQualifiedName());
 
     // TODO(mbolin): This entire hack needs to be removed. The [tools] section of .buckconfig
     // should be generalized to specify local paths to tools that can be used in genrules.
