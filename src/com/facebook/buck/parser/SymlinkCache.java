@@ -67,14 +67,14 @@ class SymlinkCache {
     this.daemonicParserState = daemonicParserState;
   }
 
-  public void registerInputsUnderSymlinks(
-      Cell currentCell, Cell targetCell, AbsPath buildFile, TargetNode<?> node) throws IOException {
+  public void registerInputsUnderSymlinks(Cell targetCell, AbsPath buildFile, TargetNode<?> node)
+      throws IOException {
     Map<Path, Path> newSymlinksEncountered =
         inputFilesUnderSymlink(node.getInputs(), node.getFilesystem());
     Optional<ImmutableList<Path>> readOnlyPaths =
         targetCell.getBuckConfig().getView(ParserConfig.class).getReadOnlyPaths();
 
-    if (readOnlyPaths.isPresent() && currentCell != null) {
+    if (readOnlyPaths.isPresent()) {
       newSymlinksEncountered =
           Maps.filterEntries(
               newSymlinksEncountered,

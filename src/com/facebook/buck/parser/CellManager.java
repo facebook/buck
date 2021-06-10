@@ -53,8 +53,7 @@ class CellManager {
 
   void registerInputsUnderSymlinks(Path buildFile, TargetNode<?> node) throws IOException {
     Cell currentCell = getCell(node.getBuildTarget().getCell());
-    symlinkCache.registerInputsUnderSymlinks(
-        currentCell, getCell(node.getBuildTarget().getCell()), AbsPath.of(buildFile), node);
+    symlinkCache.registerInputsUnderSymlinks(currentCell, AbsPath.of(buildFile), node);
   }
 
   void close() {
