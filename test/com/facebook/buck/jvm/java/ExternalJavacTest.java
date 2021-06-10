@@ -90,18 +90,18 @@ public class ExternalJavacTest extends EasyMockSupport {
 
     assertEquals(
         filesystem.resolve("fakeJavac")
-            + " -source 6 -target 6 -g -d . -classpath foo.jar @"
+            + " -encoding utf-8 -source 6 -target 6 -g -d . -classpath foo.jar @"
             + PATH_TO_SRCS_LIST,
         firstOrder.getDescription(
             getArgs().add("foo.jar").build(), SOURCE_PATHS, PATH_TO_SRCS_LIST));
     assertEquals(
         filesystem.resolve("fakeJavac")
-            + " -source 6 -target 6 -g -d . -classpath foo.jar @"
+            + " -encoding utf-8 -source 6 -target 6 -g -d . -classpath foo.jar @"
             + PATH_TO_SRCS_LIST,
         warn.getDescription(getArgs().add("foo.jar").build(), SOURCE_PATHS, PATH_TO_SRCS_LIST));
     assertEquals(
         filesystem.resolve("fakeJavac")
-            + " -source 6 -target 6 -g -d . -classpath bar.jar"
+            + " -encoding utf-8 -source 6 -target 6 -g -d . -classpath bar.jar"
             + File.pathSeparator
             + "foo.jar @"
             + PATH_TO_SRCS_LIST,
