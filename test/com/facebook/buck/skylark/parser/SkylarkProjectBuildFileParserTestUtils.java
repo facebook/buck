@@ -31,6 +31,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.function.SkylarkBuildModule;
+import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -96,6 +97,16 @@ public class SkylarkProjectBuildFileParserTestUtils {
       ProjectBuildFileParserOptions options,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Cell cell) {
+    return createParserWithOptions(
+        eventHandler, options, knownRuleTypesProvider, cell, NativeGlobber.Factory.INSTANCE);
+  }
+
+  static SkylarkProjectBuildFileParser createParserWithOptions(
+      EventHandler eventHandler,
+      ProjectBuildFileParserOptions options,
+      KnownRuleTypesProvider knownRuleTypesProvider,
+      Cell cell,
+      GlobberFactory globberFactory) {
     return SkylarkProjectBuildFileParser.using(
         options,
         BuckEventBusForTests.newInstance(),
@@ -108,7 +119,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
             knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
             options.getPerFeatureProviders()),
         eventHandler,
-        NativeGlobber.Factory.INSTANCE);
+        globberFactory);
   }
 
   static RawTargetNode getSingleRule(SkylarkProjectBuildFileParser parser, AbsPath buildFile)

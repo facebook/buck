@@ -23,19 +23,14 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
-import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.timing.FakeClock;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,16 +49,8 @@ public class WatchmanGlobPathsCheckerTest {
   @Before
   public void setUp() throws Exception {
     projectFilesystem = new FakeProjectFilesystem(tmp.getRoot());
-    WatchmanFactory watchmanFactory = new WatchmanFactory();
     root = tmp.getRoot();
-    watchman =
-        watchmanFactory.build(
-            ImmutableSet.of(tmp.getRoot()),
-            ImmutableMap.of(),
-            new TestEventConsole(),
-            FakeClock.doNotCare(),
-            Optional.empty(),
-            Optional.empty());
+    watchman = WatchmanTestUtils.buildWatchman(tmp.getRoot());
     assumeTrue(watchman.getTransportPath().isPresent());
   }
 

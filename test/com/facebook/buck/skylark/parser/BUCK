@@ -38,6 +38,7 @@ standard_java_test(
         "//test/com/facebook/buck/core/rules/knowntypes:testutil",
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/event:testutil",
+        "//test/com/facebook/buck/io/watchman:testutil",
         "//test/com/facebook/buck/sandbox:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/guava:guava",

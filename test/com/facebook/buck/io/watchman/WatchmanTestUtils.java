@@ -20,11 +20,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.event.console.TestEventConsole;
+import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.AssumptionViolatedException;
 
 public class WatchmanTestUtils {
   /** Sync all watchman roots. */
@@ -42,5 +48,32 @@ public class WatchmanTestUtils {
         assertTrue(clockResult.isLeft());
       }
     }
+  }
+
+  public static void setupWatchman(AbsPath root) throws IOException {
+    Files.write(
+        root.resolve(".watchmanconfig").getPath(),
+        "{\"ignore_dirs\":[\"buck-out\",\".buckd\"]}".getBytes(StandardCharsets.UTF_8));
+  }
+
+  public static Watchman buildWatchman(AbsPath root) throws InterruptedException {
+    WatchmanFactory watchmanFactory = new WatchmanFactory();
+    return watchmanFactory.build(
+        ImmutableSet.of(root),
+        ImmutableMap.of(),
+        new TestEventConsole(),
+        FakeClock.doNotCare(),
+        Optional.empty(),
+        Optional.empty());
+  }
+
+  public static Watchman buildWatchmanAssumeNotNull(AbsPath root) throws InterruptedException {
+    Watchman watchman = buildWatchman(root);
+    if (watchman instanceof WatchmanFactory.NullWatchman) {
+      // TODO(nga): why there's no watchman on CI? This should be AssertionError
+      throw new AssumptionViolatedException(
+          "failed to create watchman: " + ((WatchmanFactory.NullWatchman) watchman).reason);
+    }
+    return watchman;
   }
 }

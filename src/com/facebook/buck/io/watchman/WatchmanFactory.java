@@ -57,7 +57,7 @@ public class WatchmanFactory {
    * <p>Used when watchman cannot be initialized, and in tests.
    */
   public static class NullWatchman extends Watchman {
-    private final String reason;
+    public final String reason;
 
     public NullWatchman(String reason) {
       super(

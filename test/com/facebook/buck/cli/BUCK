@@ -144,6 +144,7 @@ java_library(
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/event/console:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/io/watchman:testutil",
         "//test/com/facebook/buck/jvm/java:fakepackagefinder",
         "//test/com/facebook/buck/parser:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
