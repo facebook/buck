@@ -34,6 +34,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
@@ -149,7 +150,6 @@ import java.util.SortedMap;
 import java.util.concurrent.Executors;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -1915,11 +1915,20 @@ public class ParserWithConfigurableAttributesTest {
         equalTo(targetNode.getBuildTarget().getShortName()));
   }
 
+  private void assumePythonDslBecauseOfSymlinks() {
+    // Glob in Starlark does not follow symlinks (with either native or watchman).
+    // I guess Python glob with watchman does not follow symlinks too,
+    // but checking this is not trivial, and not important at the moment.
+    assumeTrue(syntax == Syntax.PYTHON_DSL);
+  }
+
   @Test
   public void whenBuildFileContainsSourcesUnderSymLinkNewSourcesNotAddedUntilCacheCleaned()
       throws Exception {
     // This test depends on creating symbolic links which we cannot do on Windows.
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
+
+    assumePythonDslBecauseOfSymlinks();
 
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
@@ -1971,7 +1980,9 @@ public class ParserWithConfigurableAttributesTest {
   public void whenBuildFileContainsSourcesUnderSymLinkDeletedSourcesNotRemovedUntilCacheCleaned()
       throws Exception {
     // This test depends on creating symbolic links which we cannot do on Windows.
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
+
+    assumePythonDslBecauseOfSymlinks();
 
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
@@ -2024,7 +2035,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void whenSymlinksForbiddenThenParseFailsOnSymlinkInSources() throws Exception {
     // This test depends on creating symbolic links which we cannot do on Windows.
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
@@ -2048,7 +2059,7 @@ public class ParserWithConfigurableAttributesTest {
     AbsPath testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(
         testBuckFile.getPath(),
-        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
+        "java_library(name = 'lib', srcs=['bar/Bar.java'])\n".getBytes(UTF_8));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
@@ -2059,7 +2070,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void whenSymlinksAreInReadOnlyPathsCachingIsNotDisabled() throws Exception {
     // This test depends on creating symbolic links which we cannot do on Windows.
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
     AbsPath rootPath = tempDir.getRoot().toRealPath();
     BuckConfig config =
@@ -2078,7 +2089,7 @@ public class ParserWithConfigurableAttributesTest {
     AbsPath testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(
         testBuckFile.getPath(),
-        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
+        "java_library(name = 'lib', srcs=['bar/Bar.java'])\n".getBytes(UTF_8));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
@@ -2178,7 +2189,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void defaultFlavorsInRuleArgsAppliedToTarget() throws Exception {
     // We depend on Xcode platforms for this test.
-    Assume.assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     AbsPath buckFile = cellRoot.resolve("lib/BUCK");
@@ -2217,7 +2228,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void defaultFlavorsInConfigAppliedToTarget() throws Exception {
     // We depend on Xcode platforms for this test.
-    Assume.assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     AbsPath buckFile = cellRoot.resolve("lib/BUCK");
@@ -2259,7 +2270,7 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void defaultFlavorsInArgsOverrideDefaultsFromConfig() throws Exception {
     // We depend on Xcode platforms for this test.
-    Assume.assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeThat(Platform.detect(), is(Platform.MACOS));
 
     AbsPath buckFile = cellRoot.resolve("lib/BUCK");
     Files.createDirectories(buckFile.getParent().getPath());

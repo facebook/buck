@@ -88,57 +88,6 @@ public class WatchmanGlobberTest {
   }
 
   @Test
-  public void testMatchingSymbolicLinkIsReturnedWhenSymlinksAreNotExcluded() throws Exception {
-    Files.createSymbolicLink(root.resolve("broken-symlink").getPath(), Paths.get("does-not-exist"));
-    tmp.newFolder("directory");
-    Files.createSymbolicLink(
-        root.resolve("symlink-to-directory").getPath(), Paths.get("directory"));
-    tmp.newFile("regular-file");
-    Files.createSymbolicLink(
-        root.resolve("symlink-to-regular-file").getPath(), Paths.get("regular-file"));
-
-    sync();
-
-    assertThat(
-        globber.run(
-            Collections.singleton("symlink-to-regular-file"), Collections.emptySet(), false),
-        equalTo(Optional.of(ImmutableSet.of("symlink-to-regular-file"))));
-    assertThat(
-        globber.run(Collections.singleton("symlink-to-directory"), Collections.emptySet(), false),
-        equalTo(Optional.of(ImmutableSet.of("symlink-to-directory"))));
-    assertThat(
-        globber.run(Collections.singleton("broken-symlink"), Collections.emptySet(), false),
-        equalTo(Optional.of(ImmutableSet.of("broken-symlink"))));
-    assertThat(
-        globber.run(Collections.singleton("*"), Collections.emptySet(), false),
-        equalTo(
-            Optional.of(
-                ImmutableSet.of(
-                    "broken-symlink",
-                    "directory",
-                    "regular-file",
-                    "symlink-to-directory",
-                    "symlink-to-regular-file"))));
-  }
-
-  @Test
-  public void testMatchingSymbolicLinkToDirectoryIsReturnedWhenDirectoriesAreExcluded()
-      throws Exception {
-    tmp.newFolder("directory");
-    Files.createSymbolicLink(
-        root.resolve("symlink-to-directory").getPath(), Paths.get("directory"));
-
-    sync();
-
-    assertThat(
-        globber.run(Collections.singleton("symlink-to-directory"), Collections.emptySet(), true),
-        equalTo(Optional.of(ImmutableSet.of("symlink-to-directory"))));
-    assertThat(
-        globber.run(Collections.singleton("*"), Collections.emptySet(), true),
-        equalTo(Optional.of(ImmutableSet.of("symlink-to-directory"))));
-  }
-
-  @Test
   public void testMatchingIsCaseSensitiveIfForced() throws Exception {
     AssumePath.assumeNamesAreCaseInsensitive(tmp.getRoot());
 

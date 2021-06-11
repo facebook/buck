@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import javax.annotation.Nullable;
@@ -278,5 +279,69 @@ public class GlobberTest {
     assertThat(
         globber.run(Collections.singleton("**/DIRECTORY/FILE"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("directory/file")));
+  }
+
+  @Test
+  public void testMatchingSymbolicLinkIsReturnedWhenSymlinksAreNotExcluded() throws Exception {
+    Files.createSymbolicLink(root.resolve("broken-symlink").getPath(), Paths.get("does-not-exist"));
+    tmp.newFolder("directory");
+    Files.createSymbolicLink(
+        root.resolve("symlink-to-directory").getPath(), Paths.get("directory"));
+    tmp.newFile("regular-file");
+    Files.createSymbolicLink(
+        root.resolve("symlink-to-regular-file").getPath(), Paths.get("regular-file"));
+
+    sync();
+
+    assertThat(
+        globber.run(
+            Collections.singleton("symlink-to-regular-file"), Collections.emptySet(), false),
+        equalTo(ImmutableSet.of("symlink-to-regular-file")));
+    assertThat(
+        globber.run(Collections.singleton("symlink-to-directory"), Collections.emptySet(), false),
+        equalTo(ImmutableSet.of("symlink-to-directory")));
+    assertThat(
+        globber.run(Collections.singleton("broken-symlink"), Collections.emptySet(), false),
+        equalTo(ImmutableSet.of("broken-symlink")));
+    assertThat(
+        globber.run(Collections.singleton("*"), Collections.emptySet(), false),
+        equalTo(
+            ImmutableSet.of(
+                "broken-symlink",
+                "directory",
+                "regular-file",
+                "symlink-to-directory",
+                "symlink-to-regular-file")));
+  }
+
+  @Test
+  public void testMatchingSymbolicLinkToDirectoryIsReturnedWhenDirectoriesAreExcluded()
+      throws Exception {
+    tmp.newFolder("directory");
+    Files.createSymbolicLink(
+        root.resolve("symlink-to-directory").getPath(), Paths.get("directory"));
+
+    sync();
+
+    assertThat(
+        globber.run(Collections.singleton("symlink-to-directory"), Collections.emptySet(), true),
+        equalTo(ImmutableSet.of("symlink-to-directory")));
+    assertThat(
+        globber.run(Collections.singleton("*"), Collections.emptySet(), true),
+        equalTo(ImmutableSet.of("symlink-to-directory")));
+  }
+
+  @Test
+  public void whenDirectoryIsSymlink() throws Exception {
+    tmp.newFolder("foo");
+    tmp.newFile("foo/a.txt");
+    Files.createSymbolicLink(tmp.getRoot().resolve("bar").getPath(), Paths.get("foo"));
+    assertThat(
+        globber.run(ImmutableList.of("foo/*.txt"), ImmutableList.of(), false),
+        equalTo(ImmutableSet.of("foo/a.txt")));
+    assumeTrue(Files.exists(tmp.getRoot().resolve("bar/a.txt").getPath()));
+    assertThat(
+        globber.run(ImmutableList.of("bar/*.txt"), ImmutableList.of(), false),
+        equalTo(ImmutableSet.of()));
   }
 }

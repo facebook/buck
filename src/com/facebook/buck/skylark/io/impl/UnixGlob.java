@@ -45,6 +45,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
@@ -77,7 +78,8 @@ final class UnixGlob {
   @Nullable
   private static BasicFileAttributes statIfFound(AbsPath path) throws IOException {
     try {
-      return Files.readAttributes(path.getPath(), BasicFileAttributes.class);
+      return Files.readAttributes(
+          path.getPath(), BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
     } catch (FileNotFoundException | FileSystemException e) {
       // Catch these two exception because that's what Bazel VFS did before we forked it.
       return null;
@@ -301,11 +303,6 @@ final class UnixGlob {
           });
     }
 
-    /** Should only be called by link {@GlobTaskContext}. */
-    private void queueTask(Runnable runnable) {
-      enqueue(runnable);
-    }
-
     protected void enqueue(final Runnable r) {
       totalOps.incrementAndGet();
       pendingOps.incrementAndGet();
@@ -361,10 +358,6 @@ final class UnixGlob {
 
       protected void queueGlob(AbsPath base, boolean baseIsDir, int patternIdx) {
         GlobVisitor.this.queueGlob(base, baseIsDir, patternIdx, this);
-      }
-
-      protected void queueTask(Runnable runnable) {
-        GlobVisitor.this.queueTask(runnable);
       }
     }
 
@@ -457,9 +450,8 @@ final class UnixGlob {
         // We do not need to do a readdir in this case, just a stat.
         AbsPath child = base.resolve(pattern);
         BasicFileAttributes status = statIfFound(child);
-        if (status == null
-            || (!status.isDirectory() && !(status.isRegularFile() || status.isOther()))) {
-          // The file is a dangling symlink, fifo, does not exist, etc.
+        if (status == null) {
+          // The file does not exist
           return;
         }
 
@@ -475,38 +467,15 @@ final class UnixGlob {
         if (!UnixGlobPattern.segmentMatches(pattern, child.getFileName().toString(), cache)) {
           continue;
         }
-        BasicFileAttributes attributes = Files.readAttributes(child, BasicFileAttributes.class);
+        BasicFileAttributes attributes =
+            Files.readAttributes(child, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
         if (attributes.isOther()) {
           // The file is a special file (fifo, etc.). No need to even match against the pattern.
           continue;
         }
-        if (attributes.isSymbolicLink()) {
-          processSymlink(AbsPath.of(child), idx, context);
-        } else {
-          processFileOrDirectory(AbsPath.of(child), Files.isDirectory(child), idx, context);
-        }
+        processFileOrDirectory(
+            AbsPath.of(child), Files.isDirectory(child, LinkOption.NOFOLLOW_LINKS), idx, context);
       }
-    }
-
-    /**
-     * Process symlinks asynchronously. If we should used readdir(..., Symlinks.FOLLOW), that would
-     * result in a sequential symlink resolution with many file system implementations. If the
-     * underlying file system is networked and a single directory contains many symlinks, that can
-     * lead to substantial slowness.
-     */
-    private void processSymlink(AbsPath path, int idx, GlobTaskContext context) {
-      context.queueTask(
-          () -> {
-            try {
-              BasicFileAttributes status = statIfFound(path);
-              if (status != null) {
-                processFileOrDirectory(path, status.isDirectory(), idx, context);
-              }
-            } catch (IOException e) {
-              // Intentionally empty. Just ignore symlinks that cannot be stat'ed to leave
-              // historical behavior of readdir(..., Symlinks.FOLLOW).
-            }
-          });
     }
 
     private void processFileOrDirectory(

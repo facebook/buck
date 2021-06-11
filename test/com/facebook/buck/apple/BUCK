@@ -153,7 +153,10 @@ java_test(
     labels = [
         "glacial",
     ],
-    resources = glob(["testdata/**"]),
+    resources = glob(
+        ["testdata/**"],
+        exclude = ["**/symlink*"],
+    ),
     run_test_separately = True,
     deps = [
         "//src/com/facebook/buck/apple/toolchain:toolchain",
@@ -193,7 +196,10 @@ java_test(
     labels = [
         "long_running",
     ],
-    resources = glob(["testdata/**"]),
+    resources = glob(
+        ["testdata/**"],
+        exclude = ["**/symlink*"],
+    ),
     deps = [
         "//src/com/facebook/buck/apple/platform_type:type",
         "//src/com/facebook/buck/apple/toolchain:toolchain",
