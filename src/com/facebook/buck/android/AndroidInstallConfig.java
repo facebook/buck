@@ -57,8 +57,7 @@ public class AndroidInstallConfig {
             .orElse(CONCURRENT_INSTALL_DEFAULT);
     if (state == ConcurrentInstall.EXPERIMENT) {
       state = RandomizedTrial.getGroupStable("concurrent_install", ConcurrentInstall.class);
-      ExperimentEvent event =
-          new ExperimentEvent("concurrent_install", state.toString(), "", null, null);
+      ExperimentEvent event = new ExperimentEvent("concurrent_install", state.toString());
       eventBus.ifPresent((bus) -> bus.post(event));
     }
     return state.equals(ConcurrentInstall.ENABLED);

@@ -20,6 +20,7 @@ import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.jvm.java.JavaCDRolloutMode;
 import com.google.common.collect.ImmutableList;
 
 /** Default implementation of {@link RulesJavaCDParams} interface. */
@@ -32,6 +33,13 @@ public abstract class DefaultRulesJavaCDParams implements RulesJavaCDParams {
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   public abstract boolean hasJavaCDEnabled();
+
+  @Override
+  @ExcludeFromRuleKey(
+      reason = "running with or without javacd should not be a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  public abstract JavaCDRolloutModeValue getJavaCDRolloutModeValue();
 
   @Override
   @ExcludeFromRuleKey(
@@ -76,8 +84,9 @@ public abstract class DefaultRulesJavaCDParams implements RulesJavaCDParams {
   public abstract boolean pipeliningDisabled();
 
   /** Creates {@link DefaultRulesJavaCDParams} */
-  public static DefaultRulesJavaCDParams of(
+  static DefaultRulesJavaCDParams of(
       boolean hasJavaCDEnabled,
+      JavaCDRolloutMode javacdMode,
       Iterable<String> startCommandOptions,
       int workerToolPoolSize,
       int workerToolMaxInstancesSize,
@@ -86,6 +95,7 @@ public abstract class DefaultRulesJavaCDParams implements RulesJavaCDParams {
       boolean pipeliningDisabled) {
     return ImmutableDefaultRulesJavaCDParams.ofImpl(
         hasJavaCDEnabled,
+        JavaCDRolloutModeValue.of(javacdMode),
         startCommandOptions,
         workerToolPoolSize,
         workerToolMaxInstancesSize,

@@ -186,7 +186,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     maybeAddUnusedDependencyStepAndAddMakeMissingOutputStep(
         buildContext, filesystem, outputPathResolver, stepsBuilder);
 
-    return stepsBuilder.build();
+    return stepsBuilder.build(buildContext.getEventBus());
   }
 
   private JavaCompileStepsBuilderFactory getJavaCompileStepsBuilderFactory(

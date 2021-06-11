@@ -16,10 +16,12 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.impl;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
 /** Creates a list of {@link IsolatedStep} that is ready for in process execute. */
 abstract class DefaultJavaStepsBuilderBase<T extends CompileToJarStepFactory.ExtraParams>
@@ -33,7 +35,8 @@ abstract class DefaultJavaStepsBuilderBase<T extends CompileToJarStepFactory.Ext
   }
 
   @Override
-  public final ImmutableList<IsolatedStep> buildIsolatedSteps() {
+  public final ImmutableList<IsolatedStep> buildIsolatedSteps(
+      Optional<BuckEventBus> buckEventBusOptional) {
     return stepsBuilder.build();
   }
 }

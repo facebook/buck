@@ -16,16 +16,22 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
 /** Builder for java compilation steps. */
 public interface JavaCompileStepsBuilder {
 
-  ImmutableList<IsolatedStep> buildIsolatedSteps();
+  ImmutableList<IsolatedStep> buildIsolatedSteps(Optional<BuckEventBus> buckEventBusOptional);
 
-  default ImmutableList<Step> build() {
-    return ImmutableList.copyOf(buildIsolatedSteps()); // upcast to Steps
+  default ImmutableList<IsolatedStep> buildIsolatedSteps() {
+    return buildIsolatedSteps(Optional.empty());
+  }
+
+  default ImmutableList<Step> build(BuckEventBus buckEventBus) {
+    return ImmutableList.copyOf(buildIsolatedSteps(Optional.of(buckEventBus))); // upcast to Steps
   }
 }

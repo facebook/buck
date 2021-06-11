@@ -35,12 +35,12 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
-import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParamsUtils;
 import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
@@ -113,7 +113,7 @@ public class AndroidBuildConfigDescription
         graphBuilder,
         downwardApiConfig.isEnabledForAndroid(),
         javaBuckConfig.getDelegate().getView(BuildBuckConfig.class).areExternalActionsEnabled(),
-        DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
+        JavaCDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 
   /**

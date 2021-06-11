@@ -147,7 +147,7 @@ public class CalculateSourceAbi
           ModernBuildableSupport.getDerivedArtifactVerifier(buildTarget, filesystem, this),
           buildTarget,
           stepsBuilder);
-      return stepsBuilder.build();
+      return stepsBuilder.build(buildContext.getEventBus());
     }
 
     @Override

@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
@@ -31,8 +32,10 @@ import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
+import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,14 +47,18 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 
 /** A java-specific "view" of BuckConfig. */
 public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
+  private static final Logger LOGGER = Logger.get(JavaBuckConfig.class);
+
   public static final String SECTION = "java";
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
   public static final String PROPERTY_JAVACD_ENABLED = "javacd_enabled";
+  private static final String PROPERTY_JAVACD_ROLLOUT_PERCENTAGE = "javacd_rollout_percentage";
 
   private static final CommandTool DEFAULT_JAVA_TOOL =
       new CommandTool.Builder().addArg(JavaRuntimeUtils.getBucksJavaBinCommand()).build();
@@ -60,6 +67,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   private final BuckConfig delegate;
   private final Function<TargetConfiguration, JavacSpec> javacSpecSupplier;
+  private final Supplier<JavaCDRolloutMode> javacdMode;
 
   // Interface for reflection-based ConfigView to instantiate this class.
   public static JavaBuckConfig of(BuckConfig delegate) {
@@ -75,6 +83,38 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
                 .setJavacJarPath(getJavacJarPath(targetConfiguration))
                 .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
                 .build();
+    this.javacdMode =
+        Suppliers.memoize(
+            () -> {
+              OptionalInt javacdRolloutPercentage =
+                  delegate.getInteger(SECTION, PROPERTY_JAVACD_ROLLOUT_PERCENTAGE);
+              if (javacdRolloutPercentage.isPresent()) {
+                LOGGER.info("%s is present. Experiment is on.", PROPERTY_JAVACD_ROLLOUT_PERCENTAGE);
+
+                int rolloutPercentage = javacdRolloutPercentage.getAsInt();
+
+                Preconditions.checkArgument(
+                    rolloutPercentage >= 0 && rolloutPercentage <= 100,
+                    "%s has to be between 0 and 100",
+                    PROPERTY_JAVACD_ROLLOUT_PERCENTAGE);
+                double enabledPercentage = rolloutPercentage / 100.;
+                double disabledPercentage = 1. - enabledPercentage;
+                Map<JavaCDRolloutMode, Double> experimentValues =
+                    ImmutableMap.of(
+                        JavaCDRolloutMode.ENABLED,
+                        enabledPercentage,
+                        JavaCDRolloutMode.DISABLED,
+                        disabledPercentage);
+                LOGGER.info("JavacdMode experimentValues set to %s", experimentValues);
+
+                JavaCDRolloutMode state =
+                    RandomizedTrial.getGroupStable(
+                        PROPERTY_JAVACD_ROLLOUT_PERCENTAGE, experimentValues);
+                LOGGER.info("JavacdMode is set to %s", state);
+                return state;
+              }
+              return JavaCDRolloutMode.UNKNOWN;
+            });
   }
 
   @Override
@@ -300,6 +340,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public boolean isJavaCDEnabled() {
     return getDelegate().getBooleanValue(SECTION, PROPERTY_JAVACD_ENABLED, false);
+  }
+
+  public JavaCDRolloutMode getJavacdMode() {
+    return javacdMode.get();
   }
 
   public boolean isPipeliningDisabled() {

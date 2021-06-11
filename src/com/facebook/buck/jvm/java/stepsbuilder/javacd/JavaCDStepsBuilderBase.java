@@ -21,6 +21,9 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rules.common.RecordArtifactVerifier;
+import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.ExperimentEvent;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.AbiJarCommand;
 import com.facebook.buck.javacd.model.BaseCommandParams;
@@ -37,6 +40,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.JarParameters;
+import com.facebook.buck.jvm.java.JavaCDRolloutMode;
 import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
@@ -49,16 +53,21 @@ import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSeria
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacOptionsSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.ResolvedJavacSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDRolloutModeValue;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.protobuf.Message;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 /** Creates a worker tool step that would communicate with JavaCD process. */
 abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileStepsBuilder {
+
+  private static final Logger LOG = Logger.get(JavaCDStepsBuilderBase.class);
 
   /** Type of the command that javacd should execute. */
   protected enum Type {
@@ -86,7 +95,8 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
   }
 
   @Override
-  public ImmutableList<IsolatedStep> buildIsolatedSteps() {
+  public ImmutableList<IsolatedStep> buildIsolatedSteps(
+      Optional<BuckEventBus> buckEventBusOptional) {
     switch (type) {
       case LIBRARY_JAR:
         commandBuilder.setLibraryJarCommand((LibraryJarCommand) buildCommand());
@@ -101,10 +111,36 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
     }
 
     BuildJavaCommand buildJavaCommand = commandBuilder.build();
-    if (javaCDParams.hasJavaCDEnabled()) {
+    if (hasJavaCDEnabled(getEventBus(buckEventBusOptional))) {
       return ImmutableList.of(new JavaCDWorkerToolStep(buildJavaCommand, javaCDParams));
     }
     return new JavaStepsBuilder(buildJavaCommand).getSteps();
+  }
+
+  private BuckEventBus getEventBus(Optional<BuckEventBus> buckEventBusOptional) {
+    return buckEventBusOptional.orElseThrow(
+        () ->
+            new IllegalStateException(
+                "buck event bus has to be passed if steps are creating in the buck process"));
+  }
+
+  private boolean hasJavaCDEnabled(BuckEventBus eventBus) {
+    JavaCDRolloutModeValue javaCDRolloutModeValue = javaCDParams.getJavaCDRolloutModeValue();
+
+    JavaCDRolloutMode javaCDRolloutMode = javaCDRolloutModeValue.getJavacdMode();
+    if (javaCDRolloutMode == JavaCDRolloutMode.UNKNOWN) {
+      LOG.info("JavaCD mode is not set. Using javacd_enabled property");
+      return javaCDParams.hasJavaCDEnabled();
+    }
+
+    AtomicBoolean needToEmitExperimentEvent = javaCDRolloutModeValue.needToEmitExperimentEvent();
+    // emit ExperimentEvent only for the very first invocation
+    if (needToEmitExperimentEvent.compareAndSet(true, false)) {
+      LOG.info("Experiment event: %s", javaCDRolloutMode);
+      eventBus.post(new ExperimentEvent("javacd_mode", javaCDRolloutMode.toString()));
+    }
+
+    return javaCDRolloutMode == JavaCDRolloutMode.ENABLED;
   }
 
   protected abstract T buildCommand();

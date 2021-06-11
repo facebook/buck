@@ -43,10 +43,10 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParamsUtils;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.query.Query;
@@ -248,7 +248,7 @@ public class AndroidAarDescription
                   .getDelegate()
                   .getView(BuildBuckConfig.class)
                   .areExternalActionsEnabled(),
-              DefaultJavaLibraryRules.createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
+              JavaCDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig));
       buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(

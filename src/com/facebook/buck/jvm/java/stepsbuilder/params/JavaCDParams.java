@@ -38,6 +38,11 @@ public abstract class JavaCDParams {
   }
 
   @Value.Derived
+  public JavaCDRolloutModeValue getJavaCDRolloutModeValue() {
+    return getRulesJavaCDParams().getJavaCDRolloutModeValue();
+  }
+
+  @Value.Derived
   public ImmutableList<String> getStartCommandOptions() {
     return getRulesJavaCDParams().getStartCommandOptions();
   }

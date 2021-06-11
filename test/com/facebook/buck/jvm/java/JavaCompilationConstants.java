@@ -20,7 +20,7 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
-import com.facebook.buck.jvm.java.stepsbuilder.params.DefaultRulesJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParamsUtils;
 import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.google.common.collect.ImmutableList;
@@ -69,7 +69,7 @@ public class JavaCompilationConstants {
               .getJavacProvider());
 
   public static final RulesJavaCDParams DEFAULT_JAVACD_PARAMS =
-      DefaultRulesJavaCDParams.of(false, ImmutableList.of(), 1, 1, 1, 1, false);
+      JavaCDParamsUtils.getJavaCDParams(DEFAULT_JAVA_CONFIG, DEFAULT_JAVACD_CONFIG);
 
   private JavaCompilationConstants() {
     // Thou shalt not instantiate utility classes.

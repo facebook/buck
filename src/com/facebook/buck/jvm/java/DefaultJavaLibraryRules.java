@@ -40,7 +40,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesConfig;
 import com.facebook.buck.jvm.java.JavaLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
-import com.facebook.buck.jvm.java.stepsbuilder.params.DefaultRulesJavaCDParams;
+import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParamsUtils;
 import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -464,7 +464,7 @@ public abstract class DefaultJavaLibraryRules {
             isDesugarRequired(),
             configuredCompilerFactory.shouldDesugarInterfaceMethods(),
             args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-            createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
+            JavaCDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig));
   }
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
@@ -510,7 +510,7 @@ public abstract class DefaultJavaLibraryRules {
                 isDesugarRequired(),
                 configuredCompilerFactory.shouldDesugarInterfaceMethods(),
                 args != null && args.getNeverMarkAsUnusedDependency().orElse(false),
-                createJavaCDParams(javaBuckConfig, javaCDBuckConfig));
+                JavaCDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig));
 
     actionGraphBuilder.addToIndex(libraryRule);
     return libraryRule;
@@ -563,7 +563,7 @@ public abstract class DefaultJavaLibraryRules {
             projectFilesystem,
             jarBuildStepsFactory,
             graphBuilder,
-            createJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
+            JavaCDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
   }
 
   @Nullable
@@ -587,7 +587,7 @@ public abstract class DefaultJavaLibraryRules {
             projectFilesystem,
             jarBuildStepsFactory,
             graphBuilder,
-            createJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
+            JavaCDParamsUtils.getJavaCDParams(javaBuckConfig, javaCDBuckConfig)));
   }
 
   @Nullable
@@ -710,7 +710,7 @@ public abstract class DefaultJavaLibraryRules {
         classpaths.getDependencyInfos(),
         getRequiredForSourceOnlyAbi(),
         getDownwardApiConfig().isEnabledForJava(),
-        createJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
+        JavaCDParamsUtils.getJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
   }
 
   @Value.Lazy
@@ -736,7 +736,7 @@ public abstract class DefaultJavaLibraryRules {
         getClasspaths().getDependencyInfosForSourceOnlyAbi(),
         getRequiredForSourceOnlyAbi(),
         getDownwardApiConfig().isEnabledForJava(),
-        createJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
+        JavaCDParamsUtils.getJavaCDParams(javaBuckConfig, getJavaCDBuckConfig()));
   }
 
   private ResourcesParameters getResourcesParameters() {
@@ -776,19 +776,6 @@ public abstract class DefaultJavaLibraryRules {
     } else {
       return UnusedDependenciesAction.IGNORE;
     }
-  }
-
-  /** Returns a new {@link RulesJavaCDParams} built from configuration values */
-  public static RulesJavaCDParams createJavaCDParams(
-      JavaBuckConfig javaBuckConfig, JavaCDBuckConfig javaCDBuckConfig) {
-    return DefaultRulesJavaCDParams.of(
-        javaBuckConfig.isJavaCDEnabled(),
-        javaCDBuckConfig.getJvmFlags(),
-        javaCDBuckConfig.getWorkerToolSize(),
-        javaCDBuckConfig.getWorkerToolMaxInstancesSize(),
-        javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds(),
-        javaCDBuckConfig.getMaxWaitForResultTimeoutInSeconds(),
-        javaBuckConfig.isPipeliningDisabled());
   }
 
   @org.immutables.builder.Builder.AccessibleFields

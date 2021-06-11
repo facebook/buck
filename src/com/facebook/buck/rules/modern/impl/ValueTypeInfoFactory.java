@@ -50,6 +50,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -162,6 +163,8 @@ public class ValueTypeInfoFactory {
         return OutputLabelValueTypeInfo.INSTANCE;
       } else if (RelPath.class.isAssignableFrom(rawClass)) {
         return RelPathValueTypeInfo.INSTANCE;
+      } else if (AtomicBoolean.class.isAssignableFrom(rawClass)) {
+        return AtomicBooleanValueTypeInfo.INSTANCE;
       }
     } else if (type instanceof ParameterizedType) {
       // This is a parameterized type where one of the parameters requires special handling (i.e.
