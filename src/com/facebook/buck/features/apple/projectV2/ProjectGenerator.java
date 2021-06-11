@@ -260,6 +260,7 @@ public class ProjectGenerator {
 
       FlagParser flagParser =
           new FlagParser(
+              projectFilesystem,
               cells,
               projectCell,
               appleConfig,

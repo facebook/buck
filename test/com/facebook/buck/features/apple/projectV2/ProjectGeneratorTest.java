@@ -151,6 +151,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
@@ -709,16 +710,22 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
     assertFalse(settings.containsKey("HEADER_SEARCH_PATHS"));
     assertFalse(settings.containsKey("SWIFT_INDEX_PATHS"));
-    assertThat(settings.get("OTHER_SWIFT_FLAGS"), containsString("-import-underlying-module"));
-    assertThat(
-        settings.get("OTHER_SWIFT_FLAGS"),
-        containsString(" -Xcc -ivfsoverlay" + projectFilesystem.resolve(vfsOverlayPath)));
-    assertThat(
-        settings.get("OTHER_SWIFT_FLAGS"),
-        containsString(" -Xcc -I" + projectFilesystem.resolve(exportedHeadersPath)));
-    assertThat(
-        settings.get("OTHER_CFLAGS"),
-        containsString("-I" + projectFilesystem.resolve(swiftHeaderMapPath)));
+
+    // we need to read the flags from the response files
+    Pattern responseFileRegex = Pattern.compile("@(.+\\.argfile)");
+    Matcher m = responseFileRegex.matcher(settings.get("OTHER_SWIFT_FLAGS"));
+    assertTrue(m.find());
+    RelPath swiftResponseFilePath = projectFilesystem.relativize(Paths.get(m.group(1)));
+    List<String> swiftArgs = projectFilesystem.readLines(swiftResponseFilePath.getPath());
+    assertThat(swiftArgs, hasItem("-import-underlying-module"));
+    assertThat(swiftArgs, hasItem("-ivfsoverlay" + projectFilesystem.resolve(vfsOverlayPath)));
+    assertThat(swiftArgs, hasItem("-I" + projectFilesystem.resolve(exportedHeadersPath)));
+
+    m = responseFileRegex.matcher(settings.get("OTHER_CFLAGS"));
+    assertTrue(m.find());
+    RelPath clangResponseFilePath = projectFilesystem.relativize(Paths.get(m.group(1)));
+    List<String> clangArgs = projectFilesystem.readLines(clangResponseFilePath.getPath());
+    assertThat(clangArgs, hasItem("-I" + projectFilesystem.resolve(swiftHeaderMapPath)));
 
     BuildTarget privateHeadersTarget =
         libTarget.withAppendedFlavors(

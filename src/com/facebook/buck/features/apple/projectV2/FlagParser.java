@@ -24,9 +24,12 @@ import com.facebook.buck.apple.PrebuiltAppleFrameworkDescription;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -38,12 +41,14 @@ import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRul
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescription;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.features.apple.common.Utils;
 import com.facebook.buck.features.halide.HalideLibraryDescription;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -64,6 +69,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -73,6 +79,7 @@ import java.util.stream.StreamSupport;
 /** Helper class to parse flags for targets to apply for compilation and linking. */
 class FlagParser {
 
+  private static final Logger LOG = Logger.get(FlagParser.class);
   private static final ImmutableList<String> DEFAULT_CFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CXXFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CPPFLAGS = ImmutableList.of();
@@ -80,6 +87,7 @@ class FlagParser {
   private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_SWIFTFLAGS = ImmutableList.of();
 
+  private final ProjectFilesystem projectFilesystem;
   private final Cells cells;
   private final Cell projectCell;
   private final AppleConfig appleConfig;
@@ -96,6 +104,7 @@ class FlagParser {
   private final ImmutableMap<Flavor, CxxBuckConfig> platformCxxBuckConfigs;
 
   FlagParser(
+      ProjectFilesystem projectFilesystem,
       Cells cells,
       Cell projectCell,
       AppleConfig appleConfig,
@@ -108,6 +117,7 @@ class FlagParser {
       AppleDependenciesCache dependenciesCache,
       SourcePathResolverAdapter defaultPathResolver,
       HeaderSearchPaths headerSearchPaths) {
+    this.projectFilesystem = projectFilesystem;
     this.cells = cells;
     this.projectCell = projectCell;
     this.appleConfig = appleConfig;
@@ -171,8 +181,23 @@ class FlagParser {
 
     ImmutableList.Builder<String> cFlagsBuilder = ImmutableList.builder();
     if (indexViaBuildFlags) {
-      cFlagsBuilder.addAll(searchPathAttributes.includeFlags());
-      targetSpecificSwiftFlags.addAll(searchPathAttributes.swiftIncludeFlags());
+      // We use argfiles to prevent increasing the already large xcconfig files in size
+      try {
+        cFlagsBuilder.add(
+            "@"
+                + createArgFile(
+                    targetNode.getBuildTarget(),
+                    "header_search_paths",
+                    searchPathAttributes.includeFlags()));
+        targetSpecificSwiftFlags.add(
+            "@"
+                + createArgFile(
+                    targetNode.getBuildTarget(),
+                    "swift_include_paths",
+                    searchPathAttributes.swiftIncludeFlags()));
+      } catch (IOException ex) {
+        LOG.error(ex);
+      }
     } else {
       // Explicitly add system include directories to compile flags to mute warnings,
       // XCode seems to not support system include directories directly.
@@ -368,6 +393,15 @@ class FlagParser {
                       Escaper.BASH_ESCAPER::apply))
               .collect(Collectors.joining(" ")));
     }
+  }
+
+  private AbsPath createArgFile(BuildTarget buildTarget, String name, ImmutableList<String> args)
+      throws IOException {
+    RelPath argfilePath =
+        BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "%s-" + name + ".argfile");
+    projectFilesystem.createParentDirs(argfilePath);
+    projectFilesystem.writeLinesToPath(args, argfilePath);
+    return projectFilesystem.resolve(argfilePath);
   }
 
   /** Convert a list of {@link StringWithMacros} to a list of flags for the {@code node}. */
