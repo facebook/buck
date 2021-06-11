@@ -187,7 +187,7 @@ class ComboFileHashCache implements FileHashCacheEngine {
     if (sha1Mismatches > 0) {
       events.add(
           new ExperimentEvent(
-              "file_hash_cache_invalidation", "sha1", "mismatches", sha1Mismatches, null));
+              "file_hash_cache_invalidation", "sha1", "mismatches", sha1Mismatches));
     }
     sha1Mismatches = 0;
     return events;

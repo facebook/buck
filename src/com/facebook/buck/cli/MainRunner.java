@@ -2545,8 +2545,7 @@ public final class MainRunner {
           RandomizedTrial.getGroup(
               "depsaware_executor", eventBus.getBuildId().toString(), executorType);
     }
-    eventBus.post(
-        new ExperimentEvent("depsaware_executor", resolvedExecutorType.toString(), "", null, null));
+    eventBus.post(new ExperimentEvent("depsaware_executor", resolvedExecutorType.toString()));
     return getDepsAwareExecutorSupplier(
         resolvedExecutorType,
         config.getView(ResourcesConfig.class).getMaximumResourceAmounts().getCpu());

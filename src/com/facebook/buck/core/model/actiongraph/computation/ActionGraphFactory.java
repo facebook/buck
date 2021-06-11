@@ -103,8 +103,7 @@ public class ActionGraphFactory {
               "incremental_action_graph", incrementalActionGraphExperimentGroups);
       Preconditions.checkState(incrementalActionGraphMode != IncrementalActionGraphMode.EXPERIMENT);
       eventBus.post(
-          new ExperimentEvent(
-              "incremental_action_graph", incrementalActionGraphMode.toString(), "", null, null));
+          new ExperimentEvent("incremental_action_graph", incrementalActionGraphMode.toString()));
     }
 
     ActionGraphCreationLifecycleListener listener;
@@ -117,9 +116,7 @@ public class ActionGraphFactory {
     boolean withDownwardApi = downwardApiConfig.isEnabledForRuleAnalysis();
 
     ActionGraphBuilderDecorator graphBuilderDecorator;
-    eventBus.post(
-        new ExperimentEvent(
-            "rule_analysis", ruleAnalysisComputationMode.toString(), "", null, null));
+    eventBus.post(new ExperimentEvent("rule_analysis", ruleAnalysisComputationMode.toString()));
     if (ruleAnalysisComputationMode == RuleAnalysisComputationMode.COMPATIBLE) {
       graphBuilderDecorator =
           builderConstructor -> {

@@ -20,11 +20,20 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class ExperimentEvent extends AbstractBuckEvent {
+
   private final String tag;
   private final String variant;
   private final String propertyName;
   private final Optional<Long> value;
   private final Optional<String> content;
+
+  public ExperimentEvent(String tag, String variant) {
+    this(tag, variant, "", null);
+  }
+
+  public ExperimentEvent(String tag, String variant, String propertyName, @Nullable Long value) {
+    this(tag, variant, propertyName, value, null);
+  }
 
   public ExperimentEvent(
       String tag,

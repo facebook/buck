@@ -497,9 +497,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
               "engine_dep_resolving",
               buildContext.getBuildId().toString(),
               EngineDepsResolvingMode.class);
-      buildContext
-          .getEventBus()
-          .post(new ExperimentEvent("engine_dep_resolving", mode.toString(), "", null, null));
+      buildContext.getEventBus().post(new ExperimentEvent("engine_dep_resolving", mode.toString()));
       if (mode == EngineDepsResolvingMode.PARALLEL) {
         Collection<BuildRule> allRules = resolver.getBuildRules();
         pending.ensureCapacity(allRules.size());
