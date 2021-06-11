@@ -195,14 +195,15 @@ public class WatchmanFactory {
       Clock clock,
       long timeoutMillis)
       throws IOException, InterruptedException {
+    String watchmanSockFromEnv = env.get("WATCHMAN_SOCK");
+    if (watchmanSockFromEnv != null) {
+      LOG.info("WATCHMAN_SOCK set in env, using %s", watchmanSockFromEnv);
+      return Optional.of(Paths.get(watchmanSockFromEnv));
+    }
+
     Optional<Path> watchmanPathOpt = exeFinder.getOptionalExecutable(WATCHMAN, env);
     if (!watchmanPathOpt.isPresent()) {
       return Optional.empty();
-    }
-
-    if (env.containsKey("WATCHMAN_SOCK")) {
-      LOG.info("WATCHMAN_SOCK set in env, using %s", env.get("WATCHMAN_SOCK"));
-      return Optional.of(Paths.get(env.get("WATCHMAN_SOCK")));
     }
 
     Path watchmanPath = watchmanPathOpt.get().toAbsolutePath();
