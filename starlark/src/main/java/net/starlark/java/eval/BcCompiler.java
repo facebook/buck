@@ -732,6 +732,10 @@ class BcCompiler {
     return new CompileExpressionResult(resultLocal);
   }
 
+  private enum NoAttr {
+    INSTANCE
+  }
+
   private CompileExpressionResult compileDot(
       BcIr ir, DotExpression dotExpression, BcIrLocalOrAny result) {
     CompileExpressionResult object = compileExpression(ir, dotExpression.getObject());
@@ -743,8 +747,9 @@ class BcCompiler {
         // When it is no longer the case, we can add something like
         // `ImmutableStructure` interface.
         Object attrValue =
-            Starlark.getattr(thread, object.value(), dotExpression.getField().getName(), null);
-        if (attrValue != null) {
+            Starlark.getattr(
+                thread, object.value(), dotExpression.getField().getName(), NoAttr.INSTANCE);
+        if (attrValue != NoAttr.INSTANCE) {
           return compileConstantTo(ir, dotExpression, attrValue, result);
         }
       } catch (EvalException | InterruptedException e) {
