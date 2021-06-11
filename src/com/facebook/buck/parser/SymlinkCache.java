@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -58,7 +59,8 @@ class SymlinkCache {
    * Cache of (symlink path: symlink target) pairs used to avoid repeatedly checking for the
    * existence of symlinks in the source tree.
    */
-  private final Map<Path, Optional<Path>> symlinkExistenceCache = new ConcurrentHashMap<>();
+  private final Map<CellRelativePath, Optional<Path>> symlinkExistenceCache =
+      new ConcurrentHashMap<>();
 
   private final Map<CanonicalCellName, ParserConfig.AllowSymlinks> cellSymlinkAllowability =
       new ConcurrentHashMap<>();
@@ -77,7 +79,8 @@ class SymlinkCache {
         targetCell.getCanonicalName());
 
     Map<Path, Path> newSymlinksEncountered =
-        inputFilesUnderSymlink(node.getInputs(), node.getFilesystem());
+        inputFilesUnderSymlink(
+            node.getBuildTarget().getCell(), node.getInputs(), node.getFilesystem());
     Optional<ImmutableList<Path>> readOnlyPaths =
         targetCell.getBuckConfig().getView(ParserConfig.class).getReadOnlyPaths();
 
@@ -138,15 +141,18 @@ class SymlinkCache {
   }
 
   private Map<Path, Path> inputFilesUnderSymlink(
-      // We use Collection<Path> instead of Iterable<Path> to prevent
-      // accidentally passing in Path, since Path itself is Iterable<Path>.
-      Collection<ForwardRelPath> inputs, ProjectFilesystem projectFilesystem) throws IOException {
+      CanonicalCellName cellName,
+      Collection<ForwardRelPath> inputs,
+      ProjectFilesystem projectFilesystem)
+      throws IOException {
     Map<Path, Path> newSymlinksEncountered = new HashMap<>();
     for (ForwardRelPath input : inputs) {
       Path inputPath = input.toPath(projectFilesystem.getFileSystem());
       for (int i = 1; i < inputPath.getNameCount(); i++) {
         Path subpath = inputPath.subpath(0, i);
-        Optional<Path> resolvedSymlink = symlinkExistenceCache.get(subpath);
+        CellRelativePath cellRelativeSubpath =
+            CellRelativePath.of(cellName, ForwardRelPath.ofPath(subpath));
+        Optional<Path> resolvedSymlink = symlinkExistenceCache.get(cellRelativeSubpath);
         if (resolvedSymlink != null) {
           if (resolvedSymlink.isPresent()) {
             LOG.verbose("Detected cached symlink %s -> %s", subpath, resolvedSymlink.get());
@@ -161,9 +167,9 @@ class SymlinkCache {
                 projectFilesystem.getPathRelativeToProjectRoot(symlinkTarget).orElse(symlinkTarget);
             LOG.verbose("Detected symbolic link %s -> %s", subpath, relativeSymlinkTarget);
             newSymlinksEncountered.put(subpath, relativeSymlinkTarget);
-            symlinkExistenceCache.put(subpath, Optional.of(relativeSymlinkTarget));
+            symlinkExistenceCache.put(cellRelativeSubpath, Optional.of(relativeSymlinkTarget));
           } else {
-            symlinkExistenceCache.put(subpath, Optional.empty());
+            symlinkExistenceCache.put(cellRelativeSubpath, Optional.empty());
           }
         }
       }
