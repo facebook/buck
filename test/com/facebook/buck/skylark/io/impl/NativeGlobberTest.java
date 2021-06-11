@@ -16,24 +16,19 @@
 
 package com.facebook.buck.skylark.io.impl;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsEqual.equalTo;
-
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.skylark.io.Globber;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.util.Collections;
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+/** @see GlobberTest which runs the same tests for native and watchman globbers. */
 public class NativeGlobberTest {
   private AbsPath root;
   private Globber globber;
@@ -45,146 +40,6 @@ public class NativeGlobberTest {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     root = projectFilesystem.getRootPath();
     globber = NativeGlobber.create(root);
-  }
-
-  @Test
-  public void testGlobFindsRecursiveIncludes() throws Exception {
-    AbsPath child = root.resolve("child");
-    Files.createDirectory(child.getPath());
-    Files.write(child.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.jpg").getPath(), new byte[0]);
-    assertThat(
-        globber.run(Collections.singleton("**/*.txt"), Collections.emptySet(), false),
-        equalTo(ImmutableSet.of("child/bar.txt", "child/foo.txt")));
-  }
-
-  @Test
-  public void testGlobFindsShallowRecursiveIncludes() throws Exception {
-    AbsPath child = root.resolve("child");
-    Files.createDirectory(child.getPath());
-    Files.write(child.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.jpg").getPath(), new byte[0]);
-    assertThat(
-        globber.run(Collections.singleton("child/**/*.txt"), Collections.emptySet(), false),
-        equalTo(ImmutableSet.of("child/bar.txt", "child/foo.txt")));
-  }
-
-  @Test
-  public void testGlobFindsDeepRecursiveIncludes() throws Exception {
-    AbsPath child = root.resolve("dir").resolve("child");
-    Files.createDirectories(child.getPath());
-    Files.write(child.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(child.resolve("bar.jpg").getPath(), new byte[0]);
-    assertThat(
-        globber.run(Collections.singleton("dir/**/child/*.txt"), Collections.emptySet(), false),
-        equalTo(ImmutableSet.of("dir/child/bar.txt", "dir/child/foo.txt")));
-  }
-
-  @Test
-  public void starPatternDoesNotIncludeDot() throws Exception {
-    Files.write(root.resolve("a.txt").getPath(), new byte[0]);
-    Files.write(root.resolve(".a.txt").getPath(), new byte[0]);
-    assertThat(
-        globber.run(Collections.singleton("*.txt"), Collections.emptySet(), false),
-        equalTo(ImmutableSet.of("a.txt")));
-    assertThat(
-        globber.run(Collections.singleton("*"), Collections.emptySet(), false),
-        equalTo(ImmutableSet.of("a.txt")));
-  }
-
-  @Test
-  public void starStarDoesNotIncludeDotDirectories() throws Exception {
-    Files.createDirectory(root.resolve("dir").getPath());
-    Files.write(root.resolve("dir").resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("dir").resolve("bar.job").getPath(), new byte[0]);
-    Files.createDirectory(root.resolve(".xx").getPath());
-    Files.write(root.resolve(".xx").resolve("baz.txt").getPath(), new byte[0]);
-    Files.write(root.resolve(".xx").resolve("qux.job").getPath(), new byte[0]);
-    assertThat(
-        globber.run(Collections.singleton("**/*.txt"), Collections.emptySet(), false),
-        equalTo(ImmutableSet.of("dir/foo.txt")));
-  }
-
-  @Test
-  public void starDoesNotCrashOnNonMachingBrokenDotLinks() throws Exception {
-    Files.createDirectory(root.resolve("dir").getPath());
-    Files.write(root.resolve("dir").resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("dir").resolve("bar.job").getPath(), new byte[0]);
-    Files.createSymbolicLink(
-        root.resolve(".xx").getPath(), root.resolve("non-existent-target").getPath());
-    assertThat(
-        globber.run(Collections.singleton("**/*.txt"), Collections.emptySet(), false),
-        // .xx is broken, but it ** does not match it.
-        equalTo(ImmutableSet.of("dir/foo.txt")));
-  }
-
-  @Test
-  public void testGlobFindsIncludes() throws Exception {
-    Files.write(root.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.jpg").getPath(), new byte[0]);
-    assertThat(
-        globber.run(Collections.singleton("*.txt"), Collections.emptySet(), false),
-        equalTo(ImmutableSet.of("bar.txt", "foo.txt")));
-  }
-
-  @Test
-  public void testGlobExcludedElementsAreNotReturned() throws Exception {
-    Files.write(root.resolve("foo.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.txt").getPath(), new byte[0]);
-    Files.write(root.resolve("bar.jpg").getPath(), new byte[0]);
-    assertThat(
-        globber.run(Collections.singleton("*.txt"), Collections.singleton("bar.txt"), false),
-        equalTo(ImmutableSet.of("foo.txt")));
-  }
-
-  @Test
-  public void testMatchingDirectoryIsReturnedWhenDirsAreNotExcluded() throws Exception {
-    Files.createDirectories(root.resolve("some_dir").getPath());
-    assertThat(
-        globber.run(Collections.singleton("some_dir"), Collections.emptySet(), false),
-        equalTo(ImmutableSet.of("some_dir")));
-  }
-
-  @Test
-  public void testMatchingDirectoryIsNotReturnedWhenDirsAreExcluded() throws Exception {
-    Files.createDirectories(root.resolve("some_dir").getPath());
-    AbsPath buildFile = root.resolve("BUCK");
-    Files.write(
-        buildFile.getPath(),
-        ImmutableList.of("txts = glob(['some_dir'], exclude_directories=True)"));
-    assertThat(
-        globber.run(Collections.singleton("some_dir"), Collections.emptySet(), true),
-        equalTo(ImmutableSet.of()));
-  }
-
-  @Test
-  public void doesNotReturnNonexistentDirectory() throws Exception {
-    assertThat(
-        globber.run(Collections.singleton("does/not/exist.txt"), Collections.emptySet(), false),
-        Matchers.empty());
-  }
-
-  @Test
-  public void doesNotReturnNonexistentFile() throws Exception {
-    assertThat(
-        globber.run(Collections.singleton("does_not_exist.txt"), Collections.emptySet(), false),
-        Matchers.empty());
-  }
-
-  @Test
-  public void doesNotCrashIfEncountersNonMatchingBrokenSymlink() throws Exception {
-    Files.createDirectories(root.resolve("foo").getPath());
-    Files.write(root.resolve("foo/bar.h").getPath(), new byte[0]);
-    Files.createSymbolicLink(
-        root.resolve("foo/non-existent.cpp").getPath(),
-        root.resolve("foo/non-existent-target.cpp").getPath());
-    assertThat(
-        globber.run(ImmutableList.of("foo/*.h"), ImmutableList.of(), false),
-        equalTo(ImmutableSet.of("foo/bar.h")));
   }
 
   @Test

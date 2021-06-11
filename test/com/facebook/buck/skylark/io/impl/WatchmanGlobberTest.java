@@ -26,7 +26,6 @@ import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.console.TestEventConsole;
-import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.watchman.StubWatchmanClient;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
@@ -55,6 +54,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+/** @see GlobberTest for the test common to native and watchman globber */
 public class WatchmanGlobberTest {
   private static final Logger LOG = Logger.get(WatchmanGlobberTest.class);
 
@@ -83,54 +83,8 @@ public class WatchmanGlobberTest {
     globber = WatchmanGlobber.create(watchmanClient, "", root.toString());
   }
 
-  @Test
-  public void testGlobFindsIncludes() throws Exception {
-    tmp.newFile("foo.txt");
-    tmp.newFile("bar.txt");
-    tmp.newFile("bar.jpg");
-
+  private void sync() throws Exception {
     WatchmanTestUtils.sync(watchman);
-
-    assertThat(
-        globber.run(Collections.singleton("*.txt"), Collections.emptySet(), false),
-        equalTo(Optional.of(ImmutableSet.of("bar.txt", "foo.txt"))));
-  }
-
-  @Test
-  public void testGlobExcludedElementsAreNotReturned() throws Exception {
-    tmp.newFile("foo.txt");
-    tmp.newFile("bar.txt");
-    tmp.newFile("bar.jpg");
-
-    WatchmanTestUtils.sync(watchman);
-
-    assertThat(
-        globber.run(Collections.singleton("*.txt"), Collections.singleton("bar.txt"), false),
-        equalTo(Optional.of(ImmutableSet.of("foo.txt"))));
-  }
-
-  @Test
-  public void testMatchingDirectoryIsReturnedWhenDirsAreNotExcluded() throws Exception {
-    tmp.newFolder("some_dir");
-
-    WatchmanTestUtils.sync(watchman);
-
-    assertThat(
-        globber.run(Collections.singleton("some_dir"), Collections.emptySet(), false),
-        equalTo(Optional.of(ImmutableSet.of("some_dir"))));
-  }
-
-  @Test
-  public void testMatchingDirectoryIsNotReturnedWhenDirsAreExcluded() throws Exception {
-    tmp.newFolder("some_dir");
-    AbsPath buildFile = root.resolve("BUCK");
-    MostFiles.write(buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
-
-    WatchmanTestUtils.sync(watchman);
-
-    assertThat(
-        globber.run(Collections.singleton("some_dir"), Collections.emptySet(), true),
-        equalTo(Optional.of(ImmutableSet.of())));
   }
 
   @Test
@@ -143,7 +97,7 @@ public class WatchmanGlobberTest {
     Files.createSymbolicLink(
         root.resolve("symlink-to-regular-file").getPath(), Paths.get("regular-file"));
 
-    WatchmanTestUtils.sync(watchman);
+    sync();
 
     assertThat(
         globber.run(
@@ -174,7 +128,7 @@ public class WatchmanGlobberTest {
     Files.createSymbolicLink(
         root.resolve("symlink-to-directory").getPath(), Paths.get("directory"));
 
-    WatchmanTestUtils.sync(watchman);
+    sync();
 
     assertThat(
         globber.run(Collections.singleton("symlink-to-directory"), Collections.emptySet(), true),
@@ -185,31 +139,13 @@ public class WatchmanGlobberTest {
   }
 
   @Test
-  public void testMatchingIsCaseInsensitiveByDefault() throws Exception {
-    AssumePath.assumeNamesAreCaseInsensitive(tmp.getRoot());
-
-    tmp.newFolder("directory");
-    tmp.newFile("directory/file");
-
-    WatchmanTestUtils.sync(watchman);
-
-    // HACK: Watchman's case sensitivity rules are strange without **/.
-    assertThat(
-        globber.run(Collections.singleton("**/DIRECTORY"), Collections.emptySet(), false),
-        equalTo(Optional.of(ImmutableSet.of("directory"))));
-    assertThat(
-        globber.run(Collections.singleton("**/DIRECTORY/FILE"), Collections.emptySet(), false),
-        equalTo(Optional.of(ImmutableSet.of("directory/file"))));
-  }
-
-  @Test
   public void testMatchingIsCaseSensitiveIfForced() throws Exception {
     AssumePath.assumeNamesAreCaseInsensitive(tmp.getRoot());
 
     tmp.newFolder("directory");
     tmp.newFile("directory/file");
 
-    WatchmanTestUtils.sync(watchman);
+    sync();
 
     // HACK: Watchman's case sensitivity rules are strange without **/.
     assertThat(
@@ -250,7 +186,7 @@ public class WatchmanGlobberTest {
 
     tmp.newFile("file");
 
-    WatchmanTestUtils.sync(watchman);
+    sync();
 
     assertThat(
         globber.run(Collections.singleton("file"), Collections.singleton("FILE"), false),
@@ -261,7 +197,7 @@ public class WatchmanGlobberTest {
   public void testExcludingIsCaseSensitiveIfForced() throws Exception {
     tmp.newFile("file");
 
-    WatchmanTestUtils.sync(watchman);
+    sync();
 
     assertThat(
         globber.run(
@@ -281,7 +217,7 @@ public class WatchmanGlobberTest {
     Files.createSymbolicLink(
         root.resolve("symlink-to-regular-file").getPath(), Paths.get("regular-file"));
 
-    WatchmanTestUtils.sync(watchman);
+    sync();
 
     assertThat(
         globber.run(
@@ -372,7 +308,7 @@ public class WatchmanGlobberTest {
   public void testGlobberRunWithExtraFields() throws Exception {
     tmp.newFile("foo.txt");
 
-    WatchmanTestUtils.sync(watchman);
+    sync();
 
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
         globber.runWithExtraFields(
@@ -397,7 +333,7 @@ public class WatchmanGlobberTest {
     tmp.newFile("foo.txt");
     tmp.newFile("bar.txt");
 
-    WatchmanTestUtils.sync(watchman);
+    sync();
 
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
         globber.runWithExtraFields(
@@ -423,7 +359,7 @@ public class WatchmanGlobberTest {
   public void testGlobberRunWithExtraFieldsNoMatch() throws Exception {
     tmp.newFile("foo.txt");
 
-    WatchmanTestUtils.sync(watchman);
+    sync();
 
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> globberMap =
         globber.runWithExtraFields(
@@ -441,7 +377,7 @@ public class WatchmanGlobberTest {
   public void testGlobberRunWithExtraFieldsButStillNameOnly() throws Exception {
     tmp.newFile("foo.txt");
 
-    WatchmanTestUtils.sync(watchman);
+    sync();
 
     assertThat(
         globber.run(Collections.singleton("foo.txt"), Collections.emptySet(), false),

@@ -6,6 +6,7 @@ standard_java_test(
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/watchman:watchman",
+        "//src/com/facebook/buck/parser/config:config",
         "//src/com/facebook/buck/skylark/function:function",
         "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/skylark/io/impl:impl",
