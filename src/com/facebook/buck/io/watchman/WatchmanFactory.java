@@ -152,17 +152,15 @@ public class WatchmanFactory {
     long timeoutMillis = commandTimeoutMillis.orElse(DEFAULT_COMMAND_TIMEOUT_MILLIS);
     long endTimeNanos = clock.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
     try {
-      Optional<Path> pathToTransportOpt =
+      Either<Path, NullWatchman> pathToTransportOpt =
           determineWatchmanTransportPath(executor, env, exeFinder, console, clock, timeoutMillis);
-      if (pathToTransportOpt.isPresent()) {
-        pathToTransport = pathToTransportOpt.get();
+      if (pathToTransportOpt.isLeft()) {
+        pathToTransport = pathToTransportOpt.getLeft();
       } else {
-        return returnNullWatchman(
-            console, "Could not determine the socket to talk to Watchman, disabling.", null);
+        return returnNullWatchman(console, pathToTransportOpt.getRight().reason, null);
       }
     } catch (IOException e) {
-      return returnNullWatchman(
-          console, "Unable to determine the version of watchman. Going without.", e);
+      return returnNullWatchman(console, "Unable to determine the version of watchman", e);
     }
 
     try (WatchmanClient client =
@@ -182,12 +180,11 @@ public class WatchmanFactory {
       LOG.debug("Connected to Watchman");
       return watchman;
     } catch (ClassCastException | IOException e) {
-      return returnNullWatchman(
-          console, "Unable to determine the version of watchman. Going without.", e);
+      return returnNullWatchman(console, "Unable to determine the version of watchman", e);
     }
   }
 
-  private static Optional<Path> determineWatchmanTransportPath(
+  private static Either<Path, NullWatchman> determineWatchmanTransportPath(
       ListeningProcessExecutor executor,
       ImmutableMap<String, String> env,
       ExecutableFinder exeFinder,
@@ -198,16 +195,16 @@ public class WatchmanFactory {
     String watchmanSockFromEnv = env.get("WATCHMAN_SOCK");
     if (watchmanSockFromEnv != null) {
       LOG.info("WATCHMAN_SOCK set in env, using %s", watchmanSockFromEnv);
-      return Optional.of(Paths.get(watchmanSockFromEnv));
+      return Either.ofLeft(Paths.get(watchmanSockFromEnv));
     }
 
     Optional<Path> watchmanPathOpt = exeFinder.getOptionalExecutable(WATCHMAN, env);
     if (!watchmanPathOpt.isPresent()) {
-      return Optional.empty();
+      return Either.ofRight(new NullWatchman(String.format("%s executable not found", WATCHMAN)));
     }
 
     Path watchmanPath = watchmanPathOpt.get().toAbsolutePath();
-    Optional<? extends Map<String, ?>> result =
+    Either<Map<String, Object>, NullWatchman> result =
         execute(
             executor,
             console,
@@ -217,19 +214,20 @@ public class WatchmanFactory {
             watchmanPath,
             "get-sockname");
 
-    if (!result.isPresent()) {
-      return Optional.empty();
+    if (!result.isLeft()) {
+      return Either.ofRight(result.getRight());
     }
 
-    String rawSockname = (String) result.get().get("sockname");
+    String rawSockname = (String) result.getLeft().get("sockname");
     if (rawSockname == null) {
-      return Optional.empty();
+      return Either.ofRight(new NullWatchman("watchman get-sockname response has no sockname"));
     }
 
     Path transportPath = Paths.get(rawSockname);
 
-    LOG.info("Connecting to Watchman version %s at %s", result.get().get("version"), transportPath);
-    return Optional.of(transportPath);
+    LOG.info(
+        "Connecting to Watchman version %s at %s", result.getLeft().get("version"), transportPath);
+    return Either.ofLeft(transportPath);
   }
 
   /** Query Watchman's capabilities and watch the given directories. */
@@ -256,8 +254,7 @@ public class WatchmanFactory {
               WatchmanQuery.version(
                   REQUIRED_CAPABILITIES.asList(), ALL_CAPABILITIES.keySet().asList()));
     } catch (WatchmanQueryFailedException e) {
-      return returnNullWatchman(
-          console, "Could not get version from watchman, disabling watchman", e);
+      return returnNullWatchman(console, "Could not get version from watchman", e);
     }
 
     LOG.info(
@@ -266,18 +263,16 @@ public class WatchmanFactory {
         ALL_CAPABILITIES);
 
     if (!result.isLeft()) {
-      return returnNullWatchman(
-          console, "Could not get version response from Watchman, disabling Watchman", null);
+      return returnNullWatchman(console, "Could not get version response from Watchman", null);
     }
     Object versionRaw = result.getLeft().get("version");
     if (!(versionRaw instanceof String)) {
-      return returnNullWatchman(console, "Unexpected version format, disabling Watchman", null);
+      return returnNullWatchman(console, "Unexpected version format", null);
     }
     String version = (String) versionRaw;
     ImmutableSet.Builder<Capability> capabilitiesBuilder = ImmutableSet.builder();
     if (!extractCapabilities(result.getLeft(), capabilitiesBuilder)) {
-      return returnNullWatchman(
-          console, "Could not extract capabilities, disabling Watchman", null);
+      return returnNullWatchman(console, "Could not extract capabilities", null);
     }
     ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
     LOG.debug("Got Watchman capabilities: %s", capabilities);
@@ -287,7 +282,7 @@ public class WatchmanFactory {
       Optional<ProjectWatch> projectWatch =
           queryWatchProject(client, projectRoot, clock, endTimeNanos - clock.nanoTime());
       if (!projectWatch.isPresent()) {
-        return returnNullWatchman(console, "watch-project failed, disabling Watchman", null);
+        return returnNullWatchman(console, "watch-project failed", null);
       }
       projectWatchesBuilder.put(projectRoot, projectWatch.get());
     }
@@ -311,12 +306,12 @@ public class WatchmanFactory {
                 endTimeNanos - clock.nanoTime(),
                 clockSyncTimeoutMillis);
       } catch (WatchmanQueryFailedException e) {
-        return returnNullWatchman(console, "clock query failed, disabling Watchman", e);
+        return returnNullWatchman(console, "watchman clock query failed", e);
       }
       if (clockId.isPresent()) {
         clockIdsBuilder.put(watchRoot, clockId.get());
       } else {
-        return returnNullWatchman(console, "clock query timed out, disabling Watchman", null);
+        return returnNullWatchman(console, "watchman clock query timed out", null);
       }
     }
 
@@ -336,13 +331,13 @@ public class WatchmanFactory {
   private static Watchman returnNullWatchman(
       EventConsole console, String reason, @Nullable Throwable e) {
     if (e != null) {
-      LOG.warn(e, reason);
+      LOG.warn(e, "%s, disabling watchman.", reason);
     } else {
-      LOG.warn(reason);
+      LOG.warn("%s, disabling watchman", reason);
     }
     // Unavailable watchman is an important event,
     // so print that to the console, not just log it.
-    console.err(reason);
+    console.err(String.format("%s, disabling watchman", reason));
     return new NullWatchman(reason);
   }
 
@@ -492,7 +487,7 @@ public class WatchmanFactory {
   }
 
   @SuppressWarnings("unchecked")
-  private static Optional<Map<String, Object>> execute(
+  private static Either<Map<String, Object>, NullWatchman> execute(
       ListeningProcessExecutor executor,
       EventConsole console,
       Clock clock,
@@ -531,17 +526,20 @@ public class WatchmanFactory {
         Joiner.on(" ").join(args),
         exitCode);
     if (exitCode == Integer.MIN_VALUE) {
-      LOG.warn("Watchman did not respond within %d ms, disabling.", commandTimeoutMillis);
+      String message =
+          String.format("Watchman did not respond within %d ms, disabling.", commandTimeoutMillis);
+      LOG.warn(message);
       console.warn(
           String.format(
               "Timed out after %d ms waiting for Watchman command [%s]. Disabling Watchman.",
               commandTimeoutMillis, Joiner.on(" ").join(args)));
-      return Optional.empty();
+      return Either.ofRight(new NullWatchman(message));
     }
     if (exitCode != 0) {
       LOG.error("Watchman's stderr: %s", new String(stderr.toByteArray(), StandardCharsets.UTF_8));
       LOG.error("Error %d executing %s", exitCode, Joiner.on(" ").join(args));
-      return Optional.empty();
+      return Either.ofRight(
+          new NullWatchman(String.format("watchman get-sockname exited with code %s", exitCode)));
     }
 
     Object response =
@@ -550,8 +548,8 @@ public class WatchmanFactory {
     LOG.debug("stdout of command: " + response);
     if (!(response instanceof Map<?, ?>)) {
       LOG.error("Unexpected response from Watchman: %s", response);
-      return Optional.empty();
+      return Either.ofRight(new NullWatchman("Unexpected response from watchman"));
     }
-    return Optional.of((Map<String, Object>) response);
+    return Either.ofLeft((Map<String, Object>) response);
   }
 }
