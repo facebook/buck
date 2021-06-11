@@ -1,4 +1,4 @@
-load("root//:defs.bzl", "from_root")
+load("@root//:defs.bzl", "from_root")
 
 genrule(
     name = "rule",

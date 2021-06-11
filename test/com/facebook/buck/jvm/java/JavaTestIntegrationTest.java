@@ -41,6 +41,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
@@ -319,8 +320,14 @@ public class JavaTestIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "test_with_jni", temp);
     workspace.setUp();
+    String javaHome = EnvVariablesProvider.getSystemEnv().get("JAVA_HOME");
     ProcessResult result1 =
-        workspace.runBuckCommand("test", "//:jtest-pernicious", "//:jtest-symlink");
+        workspace.runBuckCommand(
+            "test",
+            "//:jtest-pernicious",
+            "//:jtest-symlink",
+            "-c",
+            "java_test_integration_test.java_home=" + (javaHome != null ? javaHome : ""));
     result1.assertSuccess();
 
     workspace.replaceFileContents("BUCK", "\"//:jlib-native\",  #delete-1", "");
@@ -562,7 +569,6 @@ public class JavaTestIntegrationTest {
     assertTrue(other.has(0));
     assertEquals("stuff", other.get(0).get("complicated").textValue());
     assertEquals(1, other.get(0).get("integer").intValue());
-    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
     assertTrue(other.get(0).get("boolean").booleanValue());
 
     String cmd = spec.get("cmd").textValue();
@@ -597,7 +603,6 @@ public class JavaTestIntegrationTest {
     assertTrue(other.has(0));
     assertEquals("stuff", other.get(0).get("complicated").textValue());
     assertEquals(1, other.get(0).get("integer").intValue());
-    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
     assertFalse(other.get(0).get("boolean").booleanValue());
 
     String cmd = spec.get("cmd").textValue();

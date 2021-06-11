@@ -9,16 +9,15 @@ java_test(
     srcs = ["SomeTest.java"],
     runner = ":runner",
     specs = {
+        "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
         "my": "spec",
         "other": [
             {
+                "boolean": True,
                 "complicated": "stuff",
                 "integer": 1,
-                "double": 1.2,
-                "boolean": True,
             },
         ],
-        "cmd": "java -jar $(abs_output testbin) $(abs_output classnames)",
     },
     deps = [
         "buck//third-party/java/junit:junit",
@@ -30,16 +29,15 @@ java_test(
     srcs = ["SomeTest.java"],
     runner = ":runner",
     specs = {
+        "cmd": "cat $(abs_output jvm-args)",
         "my": "spec",
         "other": [
             {
+                "boolean": False,
                 "complicated": "stuff",
                 "integer": 1,
-                "double": 1.2,
-                "boolean": False,
             },
         ],
-        "cmd": "cat $(abs_output jvm-args)",
     },
     vm_args = ["-DHasVMArgs"],
     deps = [

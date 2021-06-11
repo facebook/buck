@@ -15,7 +15,7 @@ cxx_library(
     ],
     exported_headers = glob(
         ["*.h"],
-        excludes = ["*_private.h"],
+        exclude = ["*_private.h"],
     ),
     headers = glob(["*.h"]),
 )

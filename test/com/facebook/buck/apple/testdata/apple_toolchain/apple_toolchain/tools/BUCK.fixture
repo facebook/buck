@@ -1,13 +1,4 @@
-def define_impl(name):
-    python_binary(
-        name = name,
-        main = name + ".py",
-        deps = [
-            "//tools:impl",
-            ":gen-sdk",
-        ],
-        visibility = ["PUBLIC"],
-    )
+load(":defs.bzl", "define_impl")
 
 define_impl("apple_compiler")
 

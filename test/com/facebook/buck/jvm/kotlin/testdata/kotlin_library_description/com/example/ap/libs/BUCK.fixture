@@ -1,17 +1,26 @@
-import re
-
-file_name_regex = re.compile(
-    "^.*/([^/]+)\.(jar|aar)$",
-    re.IGNORECASE,
+prebuilt_jar(
+    name = "auto-common.jar",
+    binary_jar = "auto-common.jar",
+    visibility = ["PUBLIC"],
 )
 
-for jar in glob(['*.jar']):
-  name = file_name_regex.sub(r'\1', jar)
-  prebuilt_jar(
-    name = jar,
-    binary_jar = jar,
-    visibility = ['PUBLIC'],
-  )
+prebuilt_jar(
+    name = "auto-service.jar",
+    binary_jar = "auto-service.jar",
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_jar(
+    name = "javapoet.jar",
+    binary_jar = "javapoet.jar",
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_jar(
+    name = "kotlinpoet.jar",
+    binary_jar = "kotlinpoet.jar",
+    visibility = ["PUBLIC"],
+)
 
 java_annotation_processor(
     name = "google_auto_service",

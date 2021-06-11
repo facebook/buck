@@ -76,6 +76,7 @@ public class AndroidApkInstallIntegrationTest {
   private static final Path INSTALL_ROOT =
       ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT.resolve(FAKE_PACKAGE_NAME);
   private static final Path CONFIG_PATH = Paths.get("state.config");
+  private static final Path CONFIG_BZL_PATH = Paths.get("state.config.bzl");
   private static final String BINARY_TARGET = "//:binary";
   private RelPath apkPath;
 
@@ -645,6 +646,14 @@ public class AndroidApkInstallIntegrationTest {
     config.put("module_deps", moduleDeps);
     filesystem.writeContentsToPath(
         mapper.writerWithDefaultPrettyPrinter().writeValueAsString(config), CONFIG_PATH);
+    filesystem.writeContentsToPath(
+        "CONFIG = "
+            + mapper
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(config)
+                .replaceAll("\\btrue\\b", "True")
+                .replaceAll("\\bfalse\\b", "False"),
+        CONFIG_BZL_PATH);
 
     ProcessExecutor.Result result =
         executionContext

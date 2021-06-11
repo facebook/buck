@@ -1,6 +1,4 @@
-kwargs = {}
-if read_config("testcase", "set_targetspecific_env", False):
-	kwargs['env'] = {"FOO": "bar"}
+env = {"FOO": "bar"} if read_config("testcase", "set_targetspecific_env", None) else {}
 
 apple_test(
     name = "foo",
@@ -10,5 +8,5 @@ apple_test(
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
     info_plist = "Test.plist",
-    **kwargs
+    env = env,
 )

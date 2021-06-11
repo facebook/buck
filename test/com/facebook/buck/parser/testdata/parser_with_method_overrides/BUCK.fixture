@@ -10,5 +10,4 @@ echo_genrule(
 # If subsequent build files are parsed but aren't sandboxed, this will raise
 # an exception.  This tests that build files are in fact properly sandboxed
 # from each other.
-def genrule():
-  raise "I POLLUTED THE SCOPE!!!"
+genrule = "I POLLUTED THE SCOPE!!!"

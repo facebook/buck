@@ -1,3 +1,5 @@
+load(":defs.bzl", "gen_src")
+
 android_binary(
     name = "app",
     keystore = "//keystores:debug",
@@ -68,8 +70,6 @@ android_binary(
         "//native/cxx:bar",
     ],
 )
-
-
 
 android_bundle(
     name = "app_modular_debug_multiple_native",
@@ -851,21 +851,6 @@ android_binary(
     ],
 )
 
-def gen_src(count):
-    for i in range(1, count):
-        data = "".join(["%d" % x for x in range(1,10000)]),
-        genrule(
-            name = "generated_class_%d" % i,
-            out = "Class%d.java" % i,
-            bash = "echo -e 'package gen;\npublic class Class%d { static String data = \"%s\"; }' > $OUT" % (i, data)
-        )
-        android_library(
-            name = "generated_lib_%d" % i,
-            srcs = [":generated_class_%d" % i]
-        )
-
-    return [":generated_lib_%d" % x for x in range(1, count)]
-
 android_library(
     name = "many_libs",
     deps = gen_src(120),
@@ -883,8 +868,8 @@ android_bundle(
     use_split_dex = True,
     primary_dex_patterns = [],
     application_module_configs = {
-        "native1": ["//native/cxx:foo1"],
         "many_libs": [":many_libs"],
+        "native1": ["//native/cxx:foo1"],
     },
     deps = [
         "//java/com/sample/lib:lib",

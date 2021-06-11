@@ -1,4 +1,4 @@
-load("secondary//:included_by_primary.bzl", "flavor")
+load("@secondary//:included_by_primary.bzl", "flavor")
 
 genrule(
     name = "rule",

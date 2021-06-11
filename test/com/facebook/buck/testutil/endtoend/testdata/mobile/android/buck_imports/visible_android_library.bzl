@@ -9,4 +9,4 @@
 def visible_android_library(**kwargs):
     """android_library that is by default public"""
     kwargs["visibility"] = ["PUBLIC"]
-    android_library(**kwargs)
+    native.android_library(**kwargs)

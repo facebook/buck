@@ -41,7 +41,7 @@ def menu(name, foods = []):
         outputs[food] = [file_name]
         bash.append("echo \'{} \' > $OUT/{}".format(food, file_name))
         cmd_exe.append("(echo {} )> $OUT\\{}".format(food, file_name))
-    genrule(
+    native.genrule(
         name = name,
         outs = outputs,
         default_outs = [],
@@ -65,7 +65,7 @@ def eat(name, srcs, out):
     for src in srcs:
         bash.append("cat $(location {})>>$OUT/{}".format(src, out))
         cmd_exe.append("type $(location {})>>$OUT\\{}".format(src, out))
-    genrule(
+    native.genrule(
         name = name,
         outs = {
             out: [out],

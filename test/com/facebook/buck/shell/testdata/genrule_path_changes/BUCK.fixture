@@ -1,14 +1,14 @@
 genrule(
     name = "hello",
     out = "hello.txt",
-    bash = "mkdir -p \$(dirname ${OUT}) && touch ${OUT}",
+    bash = "mkdir -p \\$(dirname ${OUT}) && touch ${OUT}",
     cmd_exe = "powershell -Command mkdir (Split-Path -Parent ${OUT}) ; New-Item -Type file ${OUT}",
 )
 
 genrule(
     name = "hello_break",
     out = "hello.txt/hello.txt",
-    bash = "mkdir -p \$(dirname ${OUT}) && touch ${OUT}",
+    bash = "mkdir -p \\$(dirname ${OUT}) && touch ${OUT}",
     cmd_exe = "powershell -Command mkdir (Split-Path -Parent ${OUT}) ; New-Item -Type file ${OUT}",
 )
 
@@ -20,8 +20,8 @@ genrule(
         ],
     },
     default_outs = ["hello.txt"],
-    bash = "mkdir -p \$(dirname ${OUT}/hello.txt) && touch ${OUT}/hello.txt",
-    cmd_exe = "powershell -Command mkdir (Split-Path -Parent ${OUT}\hello.txt) ; New-Item -Type file ${OUT}\hello.txt",
+    bash = "mkdir -p \\$(dirname ${OUT}/hello.txt) && touch ${OUT}/hello.txt",
+    cmd_exe = "powershell -Command mkdir (Split-Path -Parent ${OUT}\\hello.txt) ; New-Item -Type file ${OUT}\\hello.txt",
 )
 
 genrule(
@@ -32,6 +32,6 @@ genrule(
         ],
     },
     default_outs = ["hello.txt/hello.txt"],
-    bash = "mkdir -p \$(dirname ${OUT}/hello.txt/hello.txt) && touch ${OUT}/hello.txt/hello.txt",
-    cmd_exe = "powershell -Command mkdir (Split-Path -Parent ${OUT}\hello.txt\hello.txt) ; New-Item -Type file ${OUT}\hello.txt\hello.txt",
+    bash = "mkdir -p \\$(dirname ${OUT}/hello.txt/hello.txt) && touch ${OUT}/hello.txt/hello.txt",
+    cmd_exe = "powershell -Command mkdir (Split-Path -Parent ${OUT}\\hello.txt\\hello.txt) ; New-Item -Type file ${OUT}\\hello.txt\\hello.txt",
 )

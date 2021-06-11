@@ -1,121 +1,116 @@
-import json
-import os
+load("state.config.bzl", "CONFIG")
 
-add_build_file_dep('//state.config')
-add_build_file_dep('//config.processed')
-config_str = open(os.path.join(os.path.dirname(__file__), 'state.config')).read()
-config_verify = open(os.path.join(os.path.dirname(__file__), 'config.processed')).read()
-
-if config_str != config_verify:
-    print >>sys.stderr, 'Oh no! directory state out of sync with config. Please run generate.py'
-
-config = json.loads(config_str)
+config = CONFIG
 
 android_library(
-  name = 'mainjava',
-  srcs = ['MainJava.java'],
+    name = "mainjava",
+    srcs = ["MainJava.java"],
 )
 
 android_library(
-  name = 'java1',
-  srcs = ['Java1.java'],
+    name = "java1",
+    srcs = ["Java1.java"],
 )
 
 android_library(
-  name = 'java2',
-  srcs = ['Java2.java'],
+    name = "java2",
+    srcs = ["Java2.java"],
 )
 
 android_library(
-  name = 'java3',
-  srcs = ['Java3.java'],
+    name = "java3",
+    srcs = ["Java3.java"],
 )
 
 # Modular Deps
 android_library(
-  name = 'java_module1',
-  srcs = ['JavaModule1.java'],
+    name = "java_module1",
+    srcs = ["JavaModule1.java"],
 )
 
 android_library(
-  name = 'java_module2',
-  srcs = ['JavaModule2.java'],
+    name = "java_module2",
+    srcs = ["JavaModule2.java"],
 )
 
 android_library(
-  name = 'java_module3',
-  srcs = ['JavaModule3.java'],
+    name = "java_module3",
+    srcs = ["JavaModule3.java"],
 )
 
 cxx_library(
-  name = 'cxx1',
-  soname = 'libcxx1.so',
-  srcs = glob(['cxx1.c']),
+    name = "cxx1",
+    srcs = ["cxx1.c"],
+    soname = "libcxx1.so",
 )
 
 cxx_library(
-  name = 'cxx2',
-  soname = 'libcxx2.so',
-  srcs = glob(['cxx2.c']),
+    name = "cxx2",
+    srcs = ["cxx2.c"],
+    soname = "libcxx2.so",
 )
 
 cxx_library(
-  name = 'cxx3',
-  soname = 'libcxx3.so',
-  srcs = glob(['cxx3.c']),
+    name = "cxx3",
+    srcs = ["cxx3.c"],
+    soname = "libcxx3.so",
 )
 
 android_resource(
-  name = 'resources',
-  res = 'res',
-  package = 'exo',
+    name = "resources",
+    package = "exo",
+    res = "res",
 )
 
 android_resource(
-  name = 'mainresources',
-  res = 'main_res',
-  package = 'exo',
+    name = "mainresources",
+    package = "exo",
+    res = "main_res",
 )
 
 android_resource(
-  name = 'assets',
-  assets = 'assets',
-  package = 'exo',
+    name = "assets",
+    assets = "assets",
+    package = "exo",
 )
 
 prebuilt_jar(
-  name = 'java_resources',
-  binary_jar = 'java_resources.jar'
+    name = "java_resources",
+    binary_jar = "java_resources.jar",
 )
 
 android_binary(
-  name = 'binary',
-  manifest = 'AndroidManifest.xml',
-  keystore = ':debug_keystore',
-  # This limit is carefully selected to ensure that BUCK doesn't complain about
-  # the main apk dex weight and that only a single JavaX.java file ends up in
-  # each secondary dex. This number and the length of the long generated string
-  # in generate.py can be tweaked to get the right behavior.
-  secondary_dex_weight_limit = 2000,
-  use_split_dex = True,
-  application_module_configs = {
-    dep[1:]: [ dep ] for dep in config['module_deps']
-  },
-  exopackage_modes = [
-    'native_library',
-    'secondary_dex',
-    'resources',
-    'modules',
-  ] if config['exopackage'] else [],
-  primary_dex_patterns = [
-    '^mainapk/',
-  ],
-  deps = [ ':mainjava', ':mainresources'] + config['resources_deps'] + config['java_deps'] + config['cxx_deps'] + config['module_deps'],
+    name = "binary",
+    application_module_configs = {
+        dep[1:]: [dep]
+        for dep in config["module_deps"]
+    },
+    exopackage_modes = [
+        "native_library",
+        "secondary_dex",
+        "resources",
+        "modules",
+    ] if config["exopackage"] else [],
+    keystore = ":debug_keystore",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "^mainapk/",
+    ],
+    # This limit is carefully selected to ensure that BUCK doesn't complain about
+    # the main apk dex weight and that only a single JavaX.java file ends up in
+    # each secondary dex. This number and the length of the long generated string
+    # in generate.py can be tweaked to get the right behavior.
+    secondary_dex_weight_limit = 2000,
+    use_split_dex = True,
+    deps = [
+        ":mainjava",
+        ":mainresources",
+    ] + config["resources_deps"] + config["java_deps"] + config["cxx_deps"] + config["module_deps"],
 )
 
 keystore(
-  name = 'debug_keystore',
-  store = 'debug.keystore',
-  properties = 'debug.keystore.properties',
-  visibility = [ 'PUBLIC' ],
+    name = "debug_keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+    visibility = ["PUBLIC"],
 )

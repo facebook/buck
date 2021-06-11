@@ -6,10 +6,7 @@ apple_library(
 
 apple_library(
     name = "PathsLibrary",
-    exported_headers = subdir_glob(
-        [("PathsLibrary", "**/*.h")],
-        prefix = "PathsLibrary",
-    ),
+    exported_headers = {x: x for x in glob(["PathsLibrary/**/*.h"])},
     modular = True,
 )
 

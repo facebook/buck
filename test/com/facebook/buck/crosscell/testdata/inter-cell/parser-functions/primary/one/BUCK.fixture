@@ -1,8 +1,8 @@
 # Convoluted BUCK file that changes output depending on the cell
 
-base_path = get_base_path()
+base_path = package_name()
 
-cell_name = get_cell_name()
+cell_name = repository_name()[1:]
 
 export_file(
     name = "two",

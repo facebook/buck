@@ -286,7 +286,7 @@ public class DaemonIntegrationTest {
     assertThat(
         "Failure should be due to syntax error.",
         result.getStderr(),
-        containsString("Syntax error"));
+        containsString("Cannot parse"));
     result.assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 

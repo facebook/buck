@@ -65,6 +65,7 @@ import java.util.List;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.hamcrest.Matchers;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -801,6 +802,7 @@ public class QueryCommandIntegrationTest {
     }
   }
 
+  @Ignore // No parser profile in Starlark
   @Test
   public void testQueryProfileParser() throws IOException {
     ProjectWorkspace workspace =

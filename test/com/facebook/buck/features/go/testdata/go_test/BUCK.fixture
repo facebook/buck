@@ -33,16 +33,15 @@ go_test(
     resources = ["testdata/input"],
     runner = ":runner",
     specs = {
+        "cmd": "out=\"$(abs_output testbin)\" && cd \\$(dirname $out) && $out",
         "my": "spec",
         "other": [
             {
+                "boolean": True,
                 "complicated": "stuff",
                 "integer": 1,
-                "double": 1.2,
-                "boolean": True,
             },
         ],
-        "cmd": "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && $out",
     },
     deps = [":base"],
 )

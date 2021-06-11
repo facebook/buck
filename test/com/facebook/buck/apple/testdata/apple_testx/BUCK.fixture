@@ -8,16 +8,15 @@ apple_test(
     info_plist = "Test.plist",
     runner = ":runner",
     specs = {
+        "cmd": "$(abs_output testbin) $(abs_output apple_configs) $(abs_output test_bundle)",
         "my": "spec",
         "other": [
             {
+                "boolean": True,
                 "complicated": "stuff",
                 "integer": 1,
-                "double": 1.2,
-                "boolean": True,
             },
         ],
-        "cmd": "$(abs_output testbin) $(abs_output apple_configs) $(abs_output test_bundle)",
     },
 )
 

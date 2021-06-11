@@ -2304,13 +2304,20 @@ public class ParserWithConfigurableAttributesTest {
 
   @Test
   public void countsParsedBytes() throws Exception {
+    // Byte counter is not implemented for Starlark
+    assumeTrue(syntax == Syntax.PYTHON_DSL);
+
     AbsPath buckFile = cellRoot.resolve("lib/BUCK");
     Files.createDirectories(buckFile.getParent().getPath());
     byte[] bytes =
         ("genrule(" + "name='gen'," + "out='generated', " + "cmd='touch ${OUT}')").getBytes(UTF_8);
     Files.write(buckFile.getPath(), bytes);
 
-    cells = new TestCellBuilder().setFilesystem(filesystem).build();
+    cells =
+        new TestCellBuilder()
+            .setFilesystem(filesystem)
+            .setBuckConfig(cells.getBuckConfig())
+            .build();
 
     List<ParseEvent.Finished> events = new ArrayList<>();
     class EventListener {

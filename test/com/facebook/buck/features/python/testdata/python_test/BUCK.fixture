@@ -1,4 +1,4 @@
-CMD_UNIX = "out=\"$(abs_output testbin)\" && cd \$(dirname $out) && python $out"
+CMD_UNIX = "out=\"$(abs_output testbin)\" && cd \\$(dirname $out) && python $out"
 
 CMD_WIN = "\r\n".join([
     "set out=\"$(abs_output testbin)\"",
@@ -111,17 +111,16 @@ python_test(
     ],
     runner = ":runner",
     specs = {
+        "cmd": CMD_UNIX,
+        "cmd_win": CMD_WIN,
         "my": "spec",
         "other": [
             {
+                "boolean": True,
                 "complicated": "stuff",
                 "integer": 1,
-                "double": 1.2,
-                "boolean": True,
             },
         ],
-        "cmd": CMD_UNIX,
-        "cmd_win": CMD_WIN,
     },
 )
 
@@ -132,17 +131,16 @@ python_test(
     ],
     runner = ":runner",
     specs = {
+        "cmd": CMD_UNIX,
+        "cmd_win": CMD_WIN,
         "my": "spec",
         "other": [
             {
+                "boolean": True,
                 "complicated": "stuff",
                 "integer": 1,
-                "double": 1.2,
-                "boolean": True,
             },
         ],
-        "cmd": CMD_UNIX,
-        "cmd_win": CMD_WIN,
     },
 )
 
@@ -159,16 +157,15 @@ python_test(
     ],
     runner = ":runner_with_bad_test_main_module",
     specs = {
+        "cmd": CMD_UNIX,
+        "cmd_win": CMD_WIN,
         "my": "spec",
         "other": [
             {
+                "boolean": True,
                 "complicated": "stuff",
                 "integer": 1,
-                "double": 1.2,
-                "boolean": True,
             },
         ],
-        "cmd": CMD_UNIX,
-        "cmd_win": CMD_WIN,
     },
 )

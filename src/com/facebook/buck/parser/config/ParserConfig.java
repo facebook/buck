@@ -301,7 +301,7 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
     Syntax defaultValue =
         getDelegate()
             .getEnum("parser", "default_build_file_syntax", Syntax.class)
-            .orElse(Syntax.PYTHON_DSL);
+            .orElse(Syntax.SKYLARK);
     Optional<String> byPath =
         getDelegate().getValue("parser", "default_build_file_syntax_by_prefix");
     return DefaultBuildFileSyntaxMapping.parse(byPath.orElse(""), defaultValue);

@@ -19,7 +19,6 @@ package com.facebook.buck.parser;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -182,8 +181,7 @@ public class ParsePipelineTest {
     try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
       Cell cell = fixture.getCells();
       expectedException.expect(BuildFileParseException.class);
-      expectedException.expectMessage(
-          stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
+      expectedException.expectMessage("BUCK cannot be loaded because it does not exist");
       fixture
           .getTargetNodeParsePipeline()
           .getAllRequestedTargetNodes(
@@ -196,8 +194,7 @@ public class ParsePipelineTest {
     try (Fixture fixture = createMultiThreadedFixture("parse_rule_with_bad_dependency")) {
       Cell cell = fixture.getCells();
       expectedException.expect(BuildFileParseException.class);
-      expectedException.expectMessage(
-          stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
+      expectedException.expectMessage("BUCK cannot be loaded because it does not exist");
       fixture
           .getBuildFileRawNodeParsePipeline()
           .getFile(cell, ForwardRelPath.of("no/such/file/BUCK"));
@@ -225,7 +222,7 @@ public class ParsePipelineTest {
             .getNode(cell, BuildTargetFactory.newInstance("//error:error"), DependencyStack.root());
         Assert.fail("Expected BuildFileParseException");
       } catch (BuildFileParseException e) {
-        assertThat(e.getMessage(), containsString("crash!"));
+        assertThat(e.getMessage(), containsString("Cannot parse"));
       }
 
       fixture

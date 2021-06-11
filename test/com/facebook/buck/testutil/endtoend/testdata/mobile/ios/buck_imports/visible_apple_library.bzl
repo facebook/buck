@@ -9,4 +9,4 @@
 def visible_apple_library(**kwargs):
     """apple_library that is by default public"""
     kwargs["visibility"] = ["PUBLIC"]
-    apple_library(**kwargs)
+    native.apple_library(**kwargs)

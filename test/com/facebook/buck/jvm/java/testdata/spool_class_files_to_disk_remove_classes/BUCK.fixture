@@ -7,7 +7,7 @@ java_library(
     ],
     remove_classes = [
         "test.pkg.RemovableC",
-        "test.pkg.B\$MemberD",
+        "test.pkg.B\\$MemberD",
         "^*Deletable*",
     ],
     resources = ["test/pkg/RemovableC.txt"],

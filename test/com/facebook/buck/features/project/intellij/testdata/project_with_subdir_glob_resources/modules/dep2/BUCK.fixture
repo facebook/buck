@@ -1,8 +1,8 @@
 android_resource(
     name = "dep2",
-    assets = subdir_glob([("assets", "**")]),
+    assets = {x[len("assets/"):]: x for x in glob(["assets/**"])},
     package = "com.test",
-    res = subdir_glob([("res", "**")]),
+    res = {x[4:]: x for x in glob(["res/**"])},
     visibility = [
         "PUBLIC",
     ],

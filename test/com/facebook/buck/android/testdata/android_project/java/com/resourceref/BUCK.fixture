@@ -9,20 +9,23 @@ android_library(
     ],
 )
 
-for pkg in ["primary", "secondary1", "secondary2"]:
-    android_resource(
-        name = "resources_" + pkg,
-        package = "com." + pkg,
-        res = {
-            "values/all.xml": ":generate_" + pkg,
-        },
+[
+    (
+        android_resource(
+            name = "resources_" + pkg,
+            package = "com." + pkg,
+            res = {
+                "values/all.xml": ":generate_" + pkg,
+            },
+        ),
+        genrule(
+            name = "generate_" + pkg,
+            out = "res_%s.xml" % pkg,
+            bash = "$(exe :generator) res > $OUT",
+        ),
     )
-
-    genrule(
-        name = "generate_" + pkg,
-        out = "res_%s.xml" % pkg,
-        bash = "$(exe :generator) res > $OUT",
-    )
+    for pkg in ["primary", "secondary1", "secondary2"]
+]
 
 genrule(
     name = "java_src",

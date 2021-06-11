@@ -90,6 +90,7 @@ public class AndroidExopackageApkIntegrationTest {
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode();
 
+    // TODO(nga): system properties should not be modified within a test
     Properties properties = System.getProperties();
     properties.setProperty(
         "buck.native_exopackage_fake_path",

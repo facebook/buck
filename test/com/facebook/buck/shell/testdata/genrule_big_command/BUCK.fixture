@@ -30,9 +30,9 @@ CMD_COMMAND_FOR_OUTS = joinlines(
     [NOOP_CMD_COMMAND] * REPETITIONS + [FINAL_COMMAND_FOR_OUTS],
 )
 
-assert len(BASH_COMMAND) >= STRING_SIZE * REPETITIONS
+_assert1 = fail() if not len(BASH_COMMAND) >= STRING_SIZE * REPETITIONS else None
 
-assert len(CMD_COMMAND) >= STRING_SIZE * REPETITIONS
+_assert2 = fail() if not len(CMD_COMMAND) >= STRING_SIZE * REPETITIONS else None
 
 genrule(
     name = "big",
@@ -48,7 +48,7 @@ genrule(
             "file",
         ],
     },
-    default_outs = [ "file", ],
+    default_outs = ["file"],
     bash = BASH_COMMAND_FOR_OUTS,
     cmd_exe = CMD_COMMAND_FOR_OUTS,
 )

@@ -1,3 +1,5 @@
+load(":defs.bzl", "gen_overflow_lib", "gen_primary_dex_overflow", "gen_secondary_dex_overflow", "gen_src")
+
 android_binary(
     name = "java-only",
     dex_compression = "jar",
@@ -41,21 +43,6 @@ android_binary(
     ],
 )
 
-def gen_src(count):
-    for i in range(1, count):
-        data = "".join(["%d" % x for x in range(1,10000)]),
-        genrule(
-            name = "generated_class_%d" % i,
-            out = "Class%d.java" % i,
-            bash = "echo -e 'package gen;\npublic class Class%d { static String data = \"%s\"; }' > $OUT" % (i, data)
-        )
-        android_library(
-            name = "generated_lib_%d" % i,
-            srcs = [":generated_class_%d" % i]
-        )
-
-    return [":generated_lib_%d" % x for x in range(1, count)]
-
 android_library(
     name = "many_libs",
     deps = gen_src(120),
@@ -88,66 +75,12 @@ android_binary(
     ],
 )
 
-def gen_src_with_refs(index, ref_count, type):
-    if type == "method":
-        refs = " ".join(["void fun%d() {};\n" % i for i in range(1, ref_count + 1)])
-    elif type == "field":
-        refs = " ".join(["int field%d = 1;\n" % i for i in range(1, ref_count + 1)])
-
-    name = "generated_class_%d_%d_%s_refs" % (index, ref_count, type)
-    native.genrule(
-        name = name,
-        out = "Class%d.java" % index,
-        bash = "echo -e 'package gen;\npublic class Class%d {\n%s}' > $OUT" % (index, refs)
-    )
-    return ":%s" % name
-
-def gen_overflow_lib(type):
-    for i in range(1, 15):
-        native.android_library(
-            name = "generated_lib_%s_overflow_%d" % (type, i),
-            srcs = [gen_src_with_refs(i, 5000, type)],
-            visibility = ["PUBLIC"],
-        )
-    return [":" + "generated_lib_%s_overflow_%d" % (type, i) for i in range(1, 15)]
-
-def gen_primary_dex_overflow(type, gen_deps):
-    android_binary(
-        name = "primary_dex_%s_overflow" % type,
-        dex_group_lib_limit = 1,
-        keystore = "//keystores:debug",
-        manifest = "SimpleManifest.xml",
-        primary_dex_patterns = [
-            "^gen/Class"
-        ],
-        use_split_dex = True,
-        deps = [
-            "//java/com/sample/app:app",
-            "//java/com/sample/lib:lib",
-        ] + gen_deps,
-    )
-
-def gen_secondary_dex_overflow(type, gen_deps):
-    android_binary(
-        name = "secondary_dex_%s_overflow" % type,
-        dex_group_lib_limit = 1,
-        secondary_dex_weight_limit = 1024 * 1024 * 64,
-        keystore = "//keystores:debug",
-        manifest = "SimpleManifest.xml",
-        primary_dex_patterns = [
-            "/MyApplication^",
-        ],
-        use_split_dex = True,
-        deps = [
-            "//java/com/sample/app:app",
-            "//java/com/sample/lib:lib",
-        ] + gen_deps,
-    )
-
-for type in ["method", "field"]:
-    deps = gen_overflow_lib(type=type)
-    gen_primary_dex_overflow(type=type, gen_deps=deps)
-    gen_secondary_dex_overflow(type=type, gen_deps=deps)
+deps = gen_overflow_lib(type = "method")
+gen_primary_dex_overflow(type = "method", gen_deps = deps)
+gen_secondary_dex_overflow(type = "method", gen_deps = deps)
+deps_2 = gen_overflow_lib(type = "field")
+gen_primary_dex_overflow(type = "field", gen_deps = deps_2)
+gen_secondary_dex_overflow(type = "field", gen_deps = deps_2)
 
 genrule(
     name = "disassemble_app_with_d8_for_canary",
@@ -166,8 +99,8 @@ genrule(
         "mkdir $TMP/dexes",
         "mkdir $TMP/smali",
         "unzip -j $(location :app_with_d8) *.dex -d $TMP/dexes",
-        "find $TMP/dexes/ -name *.dex -exec $(exe //third-party/smali:baksmali) d -o $TMP/smali {} \;",
-        "find $TMP/smali/ -name *.smali -exec cat {} \; > $OUT",
+        "find $TMP/dexes/ -name *.dex -exec $(exe //third-party/smali:baksmali) d -o $TMP/smali {} \\;",
+        "find $TMP/smali/ -name *.smali -exec cat {} \\; > $OUT",
     ]),
 )
 
@@ -282,8 +215,8 @@ android_binary(
         "//java/com/sample/shared:shared_with_no_resource_deps",
     ],
     application_module_configs = {
-        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
         "small_with_shared2_with_no_resource_deps": ["//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps"],
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
     },
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
@@ -308,8 +241,8 @@ android_binary(
         "filter(shared_with_no_resource_deps, deps($declared_deps))",
     ],
     application_module_configs = {
-        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
         "small_with_shared2_with_no_resource_deps": ["//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps"],
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
     },
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
@@ -331,8 +264,8 @@ android_binary(
 android_binary(
     name = "app_modular_manifest_debug_shared_multiple",
     application_module_configs = {
-        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
         "small_with_shared2_with_no_resource_deps": ["//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps"],
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
     },
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
@@ -847,8 +780,8 @@ android_app_modularity(
 android_app_modularity(
     name = "modularity-metadata-shared-module",
     application_module_configs = {
-        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
         "small_with_shared2_with_no_resource_deps": ["//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps"],
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
     },
     deps = [
         "//java/com/sample/app:app",
@@ -862,8 +795,8 @@ android_app_modularity(
 android_app_modularity(
     name = "modularity-metadata-declared-dep-with-shared-target",
     application_module_configs = {
-        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
         "small_with_shared2_with_no_resource_deps": ["//java/com/sample/small_with_shared2:small_with_shared2_with_no_resource_deps"],
+        "small_with_shared_with_no_resource_deps": ["//java/com/sample/small_with_shared:small_with_shared_with_no_resource_deps"],
     },
     application_module_dependencies = {
         "small_with_shared_with_no_resource_deps": ["small_with_shared2_with_no_resource_deps"],
@@ -957,10 +890,15 @@ genrule(
            "$(location :app_with_big_r_dot_java)/classes.dex > $OUT",
 )
 
-for i in (2,3):
-    genrule(
-        name = "disassemble_big_r_dot_java_classes%d" % i,
-        out = "big_r_dot_java_secondary.txt",
-        bash = "$(exe //third-party/smali:baksmali) list classes " +
-               "$(location :app_with_big_r_dot_java)/classes%d.dex > $OUT" % i,
-    )
+genrule(
+    name = "disassemble_big_r_dot_java_classes2",
+    out = "big_r_dot_java_secondary.txt",
+    bash = "$(exe //third-party/smali:baksmali) list classes " +
+           "$(location :app_with_big_r_dot_java)/classes2.dex > $OUT",
+)
+genrule(
+    name = "disassemble_big_r_dot_java_classes3",
+    out = "big_r_dot_java_secondary.txt",
+    bash = "$(exe //third-party/smali:baksmali) list classes " +
+           "$(location :app_with_big_r_dot_java)/classes3.dex > $OUT",
+)

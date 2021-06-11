@@ -1,16 +1,10 @@
+load(":defs.bzl", "define_impl")
+
 python_library(
     name = "impl",
     srcs = ["impl.py"],
     visibility = ["PUBLIC"],
 )
-
-def define_impl(name):
-    python_binary(
-        name = name,
-        main = name + ".py",
-        deps = [":impl"],
-        visibility = ["PUBLIC"],
-    )
 
 define_impl("unimplemented")
 

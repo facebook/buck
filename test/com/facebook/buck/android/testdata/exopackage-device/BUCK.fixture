@@ -1,3 +1,5 @@
+load(":defs.bzl", "subdir_glob")
+
 android_build_config(
     name = "build_config",
     package = "exotest",

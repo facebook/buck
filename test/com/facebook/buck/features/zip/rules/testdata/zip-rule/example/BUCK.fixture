@@ -2,7 +2,7 @@ zip_file(
     name = "ziptastic",
     srcs = glob(
         ["**/*"],
-        excludes = ["BUCK"],
+        exclude = ["BUCK"],
     ),
 )
 

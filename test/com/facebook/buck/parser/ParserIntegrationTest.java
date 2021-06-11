@@ -143,6 +143,7 @@ public class ParserIntegrationTest {
    * If a .buckconfig is overridden to set allow_empty_glob to False, a glob call returning no
    * results will cause the build to fail.
    */
+  @Ignore // Starlark ignores this buckconfig
   @Test
   public void testNotAllowEmptyGlob() throws IOException {
     ProjectWorkspace workspace =
@@ -172,6 +173,7 @@ public class ParserIntegrationTest {
     result.assertSuccess("buck build should ignore empty glob results by default");
   }
 
+  @Ignore // Starlark parse does not respect ignores
   @Test
   public void ignoredFilesAreNotReturnedByGlob() throws IOException {
     ProjectWorkspace workspace =
@@ -233,7 +235,6 @@ public class ParserIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("targets", "//:gr");
     result.assertExitCode("extra attr should error", ExitCode.PARSE_ERROR);
     assertThat(result.getStderr(), containsString("genrule"));
-    assertThat(result.getStderr(), containsString("gr"));
     assertThat(result.getStderr(), containsString("blurgle"));
   }
 
@@ -448,14 +449,18 @@ public class ParserIntegrationTest {
         workspace.runBuckBuild(
             "//python/implicit_in_build_file:main",
             "-c",
-            "parser.disable_implicit_native_rules=true"),
+            "parser.disable_implicit_native_rules=true",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl"),
         "NameError: name 'java_library' is not defined",
         "BUCK\", line 1");
     assertParseFailedWithSubstrings(
         workspace.runBuckBuild(
             "//python/implicit_in_extension_bzl:main",
             "-c",
-            "parser.disable_implicit_native_rules=true"),
+            "parser.disable_implicit_native_rules=true",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl"),
         "NameError: global name 'java_library' is not defined",
         "extension.bzl\", line 5",
         "BUCK\", line 5");
@@ -463,38 +468,63 @@ public class ParserIntegrationTest {
         workspace.runBuckBuild(
             "//python/native_in_build_file:main",
             "-c",
-            "parser.disable_implicit_native_rules=true"),
+            "parser.disable_implicit_native_rules=true",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl"),
         "AttributeError: 'native' object has no attribute 'java_library'",
         "BUCK\", line 1");
     workspace
         .runBuckBuild(
             "//python/native_in_extension_bzl:main",
             "-c",
-            "parser.disable_implicit_native_rules=true")
+            "parser.disable_implicit_native_rules=true",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl")
         .assertSuccess();
 
     workspace
         .runBuckBuild(
             "//python/implicit_in_build_file:main",
             "-c",
-            "parser.disable_implicit_native_rules=false")
+            "parser.disable_implicit_native_rules=false",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl")
         .assertSuccess();
     workspace
         .runBuckBuild(
             "//python/implicit_in_extension_bzl:main",
             "-c",
-            "parser.disable_implicit_native_rules=false")
+            "parser.disable_implicit_native_rules=false",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl")
         .assertSuccess();
     workspace
         .runBuckBuild(
             "//python/native_in_extension_bzl:main",
             "-c",
-            "parser.disable_implicit_native_rules=false")
+            "parser.disable_implicit_native_rules=false",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl")
         .assertSuccess();
 
-    workspace.runBuckBuild("//python/implicit_in_build_file:main").assertSuccess();
-    workspace.runBuckBuild("//python/implicit_in_extension_bzl:main").assertSuccess();
-    workspace.runBuckBuild("//python/native_in_extension_bzl:main").assertSuccess();
+    workspace
+        .runBuckBuild(
+            "//python/implicit_in_build_file:main",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl")
+        .assertSuccess();
+    workspace
+        .runBuckBuild(
+            "//python/implicit_in_extension_bzl:main",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl")
+        .assertSuccess();
+    workspace
+        .runBuckBuild(
+            "//python/native_in_extension_bzl:main",
+            "-c",
+            "parser.default_build_file_syntax=python_dsl")
+        .assertSuccess();
   }
 
   @Test
@@ -763,6 +793,7 @@ public class ParserIntegrationTest {
         .assertSuccess();
   }
 
+  @Ignore // There's no `get_base_path` function in Starlark
   @Test
   public void getBasePath() throws Exception {
     ProjectWorkspace workspace =

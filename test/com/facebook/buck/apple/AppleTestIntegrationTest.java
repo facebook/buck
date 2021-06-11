@@ -110,7 +110,6 @@ public class AppleTestIntegrationTest {
     assertTrue(other.has(0));
     assertEquals("stuff", other.get(0).get("complicated").textValue());
     assertEquals(1, other.get(0).get("integer").intValue());
-    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
     assertTrue(other.get(0).get("boolean").booleanValue());
 
     String cmd = spec.get("cmd").textValue();

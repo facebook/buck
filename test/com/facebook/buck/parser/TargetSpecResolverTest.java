@@ -167,7 +167,7 @@ public class TargetSpecResolverTest {
     Files.write(buckFile, "I do not parse as python".getBytes(UTF_8));
 
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Buck wasn't able to parse");
+    thrown.expectMessage("Cannot parse");
     thrown.expectMessage(Paths.get("bar/BUCK").toString());
 
     resolve(

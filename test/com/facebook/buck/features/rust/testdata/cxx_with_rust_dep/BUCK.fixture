@@ -1,17 +1,17 @@
 linker_flags = []
 
 # MacOS build fix
-linker_flags += [
+linker_flags.extend([
     "-lresolv",
-]
+])
 
 # On Linux, Rust's standard library is built by default with threading support
 # and with stacktrace symbolication support. Link libraries required for these
 # features.
-linker_flags += [
+linker_flags.extend([
     "-ldl",
     "-lpthread",
-]
+])
 
 cxx_binary(
     name = "hello",

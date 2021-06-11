@@ -32,7 +32,7 @@ genrule(
     out = "smali-files.txt",
     bash = " && ".join([
         "$(exe //third-party/smali:baksmali) d -o $TMP $(location :app)",
-        "find $TMP -name \*.smali > $OUT",
+        "find $TMP -name \\*.smali > $OUT",
     ]),
     cmd = " && ".join([
         "$(exe //third-party/smali:baksmali) d -o %TMP% $(location :app)",
