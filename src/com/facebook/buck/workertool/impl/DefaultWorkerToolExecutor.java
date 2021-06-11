@@ -30,14 +30,11 @@ import com.facebook.buck.downwardapi.processexecutor.DefaultNamedPipeEventHandle
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiLaunchedProcess;
 import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
-import com.facebook.buck.event.IsolatedEventBus;
-import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.impl.request.ExecutingAction;
@@ -72,12 +69,6 @@ import java.util.function.Supplier;
 public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
   private static final Logger LOG = Logger.get(DefaultWorkerToolExecutor.class);
-
-  private static final String EXECUTE_WT_COMMAND_SCOPE_PREFIX = "execute_wt_command";
-  private static final String EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX =
-      "execute_pipelining_wt_command";
-  private static final String START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX =
-      "start_next_pipelining_wt_command";
 
   private static final AtomicInteger COUNTER = new AtomicInteger();
 
@@ -196,29 +187,19 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
   @Override
   public SettableFuture<ResultEvent> executeCommand(
-      ActionId actionId, AbstractMessage executeCommandMessage, IsolatedEventBus eventBus)
-      throws IOException {
+      ActionId actionId, AbstractMessage executeCommandMessage) throws IOException {
     checkState(isAlive(), "Launched process is not alive");
     launchedProcess.registerActionId(actionId);
 
-    CommandTypeMessage executeCommandTypeMessage;
-    ExecuteCommand executeCommand;
-    SingleExecutionRequest singleExecutionRequest;
+    checkState(!executionRequests.containsKey(actionId));
+    SingleExecutionRequest singleExecutionRequest = singleExecution(actionId, executionRequests);
 
-    try (Scope ignored =
-        PerfEvents.scope(eventBus, actionId, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
-      checkState(!executionRequests.containsKey(actionId));
-      singleExecutionRequest = singleExecution(actionId, executionRequests);
+    CommandTypeMessage executeCommandTypeMessage =
+        getCommandTypeMessage(CommandTypeMessage.CommandType.EXECUTE_COMMAND);
+    ExecuteCommand executeCommand =
+        ExecuteCommand.newBuilder().setActionId(actionId.getValue()).build();
 
-      executeCommandTypeMessage =
-          getCommandTypeMessage(CommandTypeMessage.CommandType.EXECUTE_COMMAND);
-      executeCommand = ExecuteCommand.newBuilder().setActionId(actionId.getValue()).build();
-    }
-
-    try (Scope ignored =
-        PerfEvents.scope(eventBus, actionId, EXECUTE_WT_COMMAND_SCOPE_PREFIX + "_write")) {
-      writeCommands(executeCommandTypeMessage, executeCommand, executeCommandMessage);
-    }
+    writeCommands(executeCommandTypeMessage, executeCommand, executeCommandMessage);
 
     LOG.debug(
         "Started execution of worker tool for for actionId: %s, worker id: %s", actionId, workerId);
@@ -229,46 +210,29 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   public ImmutableList<SettableFuture<ResultEvent>> executePipeliningCommand(
       ImmutableList<ActionId> actionIds,
       AbstractMessage pipeliningCommand,
-      SettableFuture<PipelineFinishedEvent> pipelineFinishedFuture,
-      IsolatedEventBus eventBus)
+      SettableFuture<PipelineFinishedEvent> pipelineFinishedFuture)
       throws IOException {
     checkState(isAlive(), "Launched process is not alive");
     actionIds.forEach(launchedProcess::registerActionId);
 
-    ActionId firstActionId = actionIds.iterator().next();
+    StartPipelineCommand.Builder startPipeliningCommandBuilder = StartPipelineCommand.newBuilder();
 
-    CommandTypeMessage executeCommandTypeMessage;
-    StartPipelineCommand startPipelineCommand;
-    PipeliningExecutionRequest pipeliningExecutionRequest;
-
-    try (Scope ignored =
-        PerfEvents.scope(
-            eventBus, firstActionId, EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX + "_preparing")) {
-      StartPipelineCommand.Builder startPipeliningCommandBuilder =
-          StartPipelineCommand.newBuilder();
-
-      ImmutableList.Builder<ExecutingAction> executingActionBuilder =
-          ImmutableList.builderWithExpectedSize(actionIds.size());
-      for (ActionId actionId : actionIds) {
-        checkState(!executionRequests.containsKey(actionId));
-        executingActionBuilder.add(ExecutingAction.of(actionId));
-        startPipeliningCommandBuilder.addActionId(actionId.getValue());
-      }
-      // create pipelining execution request
-      pipeliningExecutionRequest =
-          pipeliningExecution(
-              executingActionBuilder.build(), pipelineFinishedFuture, executionRequests);
-
-      executeCommandTypeMessage =
-          getCommandTypeMessage(CommandTypeMessage.CommandType.START_PIPELINE_COMMAND);
-      startPipelineCommand = startPipeliningCommandBuilder.build();
+    ImmutableList.Builder<ExecutingAction> executingActionBuilder =
+        ImmutableList.builderWithExpectedSize(actionIds.size());
+    for (ActionId actionId : actionIds) {
+      checkState(!executionRequests.containsKey(actionId));
+      executingActionBuilder.add(ExecutingAction.of(actionId));
+      startPipeliningCommandBuilder.addActionId(actionId.getValue());
     }
+    // create pipelining execution request
+    PipeliningExecutionRequest pipeliningExecutionRequest =
+        pipeliningExecution(
+            executingActionBuilder.build(), pipelineFinishedFuture, executionRequests);
 
-    try (Scope ignored =
-        PerfEvents.scope(
-            eventBus, firstActionId, EXECUTE_WT_PIPELINING_COMMAND_SCOPE_PREFIX + "_write")) {
-      writeCommands(executeCommandTypeMessage, startPipelineCommand, pipeliningCommand);
-    }
+    CommandTypeMessage executeCommandTypeMessage =
+        getCommandTypeMessage(CommandTypeMessage.CommandType.START_PIPELINE_COMMAND);
+    StartPipelineCommand startPipelineCommand = startPipeliningCommandBuilder.build();
+    writeCommands(executeCommandTypeMessage, startPipelineCommand, pipeliningCommand);
 
     LOG.debug(
         "Started execution of worker tool for for pipelining actionIds: %s, worker id: %s",
@@ -279,29 +243,17 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   }
 
   @Override
-  public void startNextCommand(
-      AbstractMessage startNextPipeliningCommand, ActionId actionId, IsolatedEventBus eventBus)
+  public void startNextCommand(AbstractMessage startNextPipeliningCommand, ActionId actionId)
       throws IOException {
     checkState(isAlive(), "Launched process is not alive");
 
-    CommandTypeMessage commandTypeMessage;
-    try (Scope ignored =
-        PerfEvents.scope(
-            eventBus, actionId, START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX + "_preparing")) {
+    ExecutionRequest<?> executionRequest = executionRequests.get(actionId);
+    executionRequest.verifyExecuting();
+    executionRequest.verifyContainsAction(actionId);
 
-      ExecutionRequest<?> executionRequest = executionRequests.get(actionId);
-      executionRequest.verifyExecuting();
-      executionRequest.verifyContainsAction(actionId);
-
-      commandTypeMessage =
-          getCommandTypeMessage(CommandTypeMessage.CommandType.START_NEXT_PIPELINING_COMMAND);
-    }
-
-    try (Scope ignored =
-        PerfEvents.scope(
-            eventBus, actionId, START_NEXT_PIPELINING_WT_COMMAND_SCOPE_PREFIX + "_write")) {
-      writeCommands(commandTypeMessage, startNextPipeliningCommand);
-    }
+    CommandTypeMessage commandTypeMessage =
+        getCommandTypeMessage(CommandTypeMessage.CommandType.START_NEXT_PIPELINING_COMMAND);
+    writeCommands(commandTypeMessage, startNextPipeliningCommand);
 
     LOG.debug(
         "Started next pipelining command with action id: %s has been send to worker id: %s",

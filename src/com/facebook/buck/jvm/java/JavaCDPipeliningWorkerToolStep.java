@@ -25,8 +25,6 @@ import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.PipelineFinishedEvent;
 import com.facebook.buck.downward.model.ResultEvent;
-import com.facebook.buck.event.IsolatedEventBus;
-import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.javacd.model.BaseCommandParams;
 import com.facebook.buck.javacd.model.BasePipeliningCommand;
 import com.facebook.buck.javacd.model.LibraryPipeliningCommand;
@@ -35,7 +33,6 @@ import com.facebook.buck.javacd.model.PipeliningCommand;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
-import com.facebook.buck.util.Scope;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.workertool.WorkerToolExecutor;
@@ -79,9 +76,6 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
   private static final Logger LOG = Logger.get(JavaCDPipeliningWorkerToolStep.class);
 
-  private static final String STEP_NAME = "javacd_pipelining";
-  private static final String SCOPE_PREFIX = STEP_NAME + "_command";
-
   private static final int MAX_WAIT_TIME_FOR_PIPELINE_FINISH_EVENT_SECONDS = 1;
 
   private final JavaCDParams javaCDParams;
@@ -105,7 +99,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       boolean withDownwardApi,
       BaseCommandParams.SpoolMode spoolMode,
       JavaCDParams javaCDParams) {
-    super(STEP_NAME);
+    super("javacd_pipelining");
     this.javaCDParams = javaCDParams;
     this.runWithoutPool = javaCDParams.getWorkerToolPoolSize() == 0;
 
@@ -151,7 +145,6 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     ImmutableList<String> launchJavaCDCommand =
         JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams, context.getRuleCellRoot());
 
-    IsolatedEventBus eventBus = context.getIsolatedEventBus();
     if (workerToolExecutor == null) {
       // the first execution
       Preconditions.checkState(
@@ -159,35 +152,27 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
           "Some actions are executing at the moment: %s",
           actionIdToResultEventMap.keySet());
 
-      LOG.debug(
-          "The first step execution. Obtaining worker tool from the pool. Action id: %s", actionId);
+      LOG.debug("The first step execution. Obtaining worker tool. Action id: %s", actionId);
 
       if (runWithoutPool) {
         workerToolExecutor = JavaCDWorkerStepUtils.getLaunchedWorker(context, launchJavaCDCommand);
       } else {
-        try (Scope ignored = PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_get_wt")) {
-          WorkerProcessPool<WorkerToolExecutor> workerToolPool =
-              JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
-          borrowedWorkerTool =
-              JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
-                  workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
-          workerToolExecutor = borrowedWorkerTool.get();
-        }
+        WorkerProcessPool<WorkerToolExecutor> workerToolPool =
+            JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
+        borrowedWorkerTool =
+            JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
+                workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
+        workerToolExecutor = borrowedWorkerTool.get();
       }
 
-      try (Scope ignored = PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_execution")) {
-        try {
-          actionIdToResultEventMap = startExecution(eventBus, workerToolExecutor);
-        } catch (ExecutionException e) {
-          return JavaCDWorkerStepUtils.createFailStepExecutionResult(
-              launchJavaCDCommand, actionId, e);
-        }
+      try {
+        actionIdToResultEventMap = startExecution(workerToolExecutor);
+      } catch (ExecutionException e) {
+        return JavaCDWorkerStepUtils.createFailStepExecutionResult(
+            launchJavaCDCommand, actionId, e);
       }
     } else {
-      try (Scope ignored =
-          PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_start_next_command")) {
-        startNextPipeliningCommand(actionId, eventBus, workerToolExecutor);
-      }
+      startNextPipeliningCommand(actionId, workerToolExecutor);
     }
 
     Future<ResultEvent> resultEventFuture =
@@ -197,28 +182,23 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
                 "Cannot find a future for actionId: %s among executing: %s",
                 actionId, actionIdToResultEventMap.keySet()));
 
-    try (Scope ignored =
-        PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_waiting_for_result")) {
-      try {
-        LOG.debug("Waiting for the result event associated with action id: %s", actionId);
-        ResultEvent resultEvent =
-            resultEventFuture.get(
-                javaCDParams.getMaxWaitForResultTimeoutInSeconds(), TimeUnit.SECONDS);
-        LOG.debug(
-            "Result event (exit code = %s) for action id: %s has been received",
-            resultEvent.getExitCode(), actionId);
-        return JavaCDWorkerStepUtils.createStepExecutionResult(
-            launchJavaCDCommand, resultEvent, actionId);
-      } catch (ExecutionException | TimeoutException e) {
-        return JavaCDWorkerStepUtils.createFailStepExecutionResult(
-            launchJavaCDCommand, actionId, e);
-      }
+    try {
+      LOG.debug("Waiting for the result event associated with action id: %s", actionId);
+      ResultEvent resultEvent =
+          resultEventFuture.get(
+              javaCDParams.getMaxWaitForResultTimeoutInSeconds(), TimeUnit.SECONDS);
+      LOG.debug(
+          "Result event (exit code = %s) for action id: %s has been received",
+          resultEvent.getExitCode(), actionId);
+      return JavaCDWorkerStepUtils.createStepExecutionResult(
+          launchJavaCDCommand, resultEvent, actionId);
+    } catch (ExecutionException | TimeoutException e) {
+      return JavaCDWorkerStepUtils.createFailStepExecutionResult(launchJavaCDCommand, actionId, e);
     }
   }
 
   private ImmutableMap<ActionId, SettableFuture<ResultEvent>> startExecution(
-      IsolatedEventBus eventBus, WorkerToolExecutor workerToolExecutor)
-      throws IOException, ExecutionException {
+      WorkerToolExecutor workerToolExecutor) throws IOException, ExecutionException {
     Preconditions.checkNotNull(workerToolExecutor);
 
     Preconditions.checkArgument(
@@ -267,8 +247,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
 
     LOG.debug("Starting execution for action ids: %s", actionIds);
     ImmutableList<SettableFuture<ResultEvent>> futures =
-        workerToolExecutor.executePipeliningCommand(
-            actionIds, pipeliningCommand, pipelineFinished, eventBus);
+        workerToolExecutor.executePipeliningCommand(actionIds, pipeliningCommand, pipelineFinished);
     ImmutableMap.Builder<ActionId, SettableFuture<ResultEvent>> mapBuilder =
         ImmutableMap.builderWithExpectedSize(actionIds.size());
     for (int i = 0; i < actionIds.size(); i++) {
@@ -290,8 +269,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     return mapBuilder.build();
   }
 
-  private void startNextPipeliningCommand(
-      ActionId actionId, IsolatedEventBus eventBus, WorkerToolExecutor workerToolExecutor)
+  private void startNextPipeliningCommand(ActionId actionId, WorkerToolExecutor workerToolExecutor)
       throws IOException {
     Preconditions.checkNotNull(workerToolExecutor);
     LOG.debug(
@@ -299,7 +277,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
         actionId);
     StartNextPipeliningCommand startNextPipeliningCommand =
         StartNextPipeliningCommand.newBuilder().setActionId(actionId.getValue()).build();
-    workerToolExecutor.startNextCommand(startNextPipeliningCommand, actionId, eventBus);
+    workerToolExecutor.startNextCommand(startNextPipeliningCommand, actionId);
   }
 
   @Override

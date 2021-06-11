@@ -20,14 +20,11 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ResultEvent;
-import com.facebook.buck.event.IsolatedEventBus;
-import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.jvm.java.JavaCDWorkerStepUtils;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;
-import com.facebook.buck.util.Scope;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPool.BorrowedWorkerProcess;
 import com.facebook.buck.workertool.WorkerToolExecutor;
@@ -43,15 +40,12 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
   private static final Logger LOG = Logger.get(JavaCDWorkerToolStep.class);
 
-  private static final String STEP_NAME = "javacd";
-  private static final String SCOPE_PREFIX = STEP_NAME + "_command";
-
   private final BuildJavaCommand buildJavaCommand;
   private final JavaCDParams javaCDParams;
   private final boolean runWithoutPool;
 
   public JavaCDWorkerToolStep(BuildJavaCommand buildJavaCommand, JavaCDParams javaCDParams) {
-    super(STEP_NAME);
+    super("javacd");
     this.buildJavaCommand = buildJavaCommand;
     this.javaCDParams = javaCDParams;
     this.runWithoutPool = javaCDParams.getWorkerToolPoolSize() == 0;
@@ -60,8 +54,6 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
-    IsolatedEventBus eventBus = context.getIsolatedEventBus();
-
     ImmutableList<String> launchJavaCDCommand =
         JavaCDWorkerStepUtils.getLaunchJavaCDCommand(javaCDParams, context.getRuleCellRoot());
 
@@ -74,31 +66,19 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
     WorkerProcessPool<WorkerToolExecutor> workerToolPool =
         JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);
-    return executeOnWorkerToolPool(context, eventBus, launchJavaCDCommand, workerToolPool);
+    return executeOnWorkerToolPool(context, launchJavaCDCommand, workerToolPool);
   }
 
   private StepExecutionResult executeOnWorkerToolPool(
       IsolatedExecutionContext context,
-      IsolatedEventBus eventBus,
       ImmutableList<String> launchJavaCDCommand,
       WorkerProcessPool<WorkerToolExecutor> workerToolPool)
       throws InterruptedException, IOException {
 
-    BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool = null;
-    try {
-      try (Scope ignored =
-          PerfEvents.scope(eventBus, context.getActionId(), SCOPE_PREFIX + "_get_wt")) {
-        borrowedWorkerTool =
-            JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
-                workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds());
-      }
-
+    try (BorrowedWorkerProcess<WorkerToolExecutor> borrowedWorkerTool =
+        JavaCDWorkerStepUtils.borrowWorkerToolWithTimeout(
+            workerToolPool, javaCDParams.getBorrowFromPoolTimeoutInSeconds())) {
       return executeBuildJavaCommand(context, borrowedWorkerTool.get(), launchJavaCDCommand);
-
-    } finally {
-      if (borrowedWorkerTool != null) {
-        borrowedWorkerTool.close();
-      }
     }
   }
 
@@ -108,22 +88,13 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
       ImmutableList<String> launchJavaCDCommand)
       throws IOException, InterruptedException {
     ActionId actionId = context.getActionId();
-    IsolatedEventBus eventBus = context.getIsolatedEventBus();
     try {
       LOG.debug("Starting execution of java compilation command with action id: %s", actionId);
-      SettableFuture<ResultEvent> resultEventFuture;
-      try (Scope ignored = PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_execution")) {
-        resultEventFuture = workerToolExecutor.executeCommand(actionId, buildJavaCommand, eventBus);
-      }
-
-      ResultEvent resultEvent;
-      try (Scope ignored =
-          PerfEvents.scope(eventBus, actionId, SCOPE_PREFIX + "_waiting_for_result")) {
-        resultEvent =
-            resultEventFuture.get(
-                javaCDParams.getMaxWaitForResultTimeoutInSeconds(), TimeUnit.SECONDS);
-      }
-
+      SettableFuture<ResultEvent> resultEventFuture =
+          workerToolExecutor.executeCommand(actionId, buildJavaCommand);
+      ResultEvent resultEvent =
+          resultEventFuture.get(
+              javaCDParams.getMaxWaitForResultTimeoutInSeconds(), TimeUnit.SECONDS);
       return JavaCDWorkerStepUtils.createStepExecutionResult(
           launchJavaCDCommand, resultEvent, actionId);
     } catch (ExecutionException | TimeoutException e) {

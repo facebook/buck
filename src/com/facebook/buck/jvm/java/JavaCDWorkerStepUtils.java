@@ -22,11 +22,9 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downward.model.ResultEvent;
-import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
@@ -150,16 +148,13 @@ public class JavaCDWorkerStepUtils {
       IsolatedExecutionContext context, ImmutableList<String> startupCommand) {
     return () -> {
       WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
-      try (Scope ignored =
-          PerfEvents.scope(context.getIsolatedEventBus(), context.getActionId(), "launch_worker")) {
-        return workerToolLauncher.launchWorker(
-            startupCommand,
-            ImmutableMap.of(
-                BuckClasspath.ENV_VAR_NAME,
-                Objects.requireNonNull(
-                    BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
-                    BuckClasspath.ENV_VAR_NAME + " env variable is not set")));
-      }
+      return workerToolLauncher.launchWorker(
+          startupCommand,
+          ImmutableMap.of(
+              BuckClasspath.ENV_VAR_NAME,
+              Objects.requireNonNull(
+                  BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
+                  BuckClasspath.ENV_VAR_NAME + " env variable is not set")));
     };
   }
 }

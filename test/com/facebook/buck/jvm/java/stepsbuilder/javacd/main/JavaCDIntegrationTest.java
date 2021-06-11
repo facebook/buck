@@ -269,9 +269,7 @@ public class JavaCDIntegrationTest {
 
                   resultEventFutureReference.set(
                       workerToolExecutor.executeCommand(
-                          ActionId.of("//my_test_action_id"),
-                          buildJavaCommand,
-                          executionContext.getIsolatedEventBus()));
+                          ActionId.of("//my_test_action_id"), buildJavaCommand));
 
                   return null;
                 });
@@ -292,7 +290,7 @@ public class JavaCDIntegrationTest {
     assertThat(actualStepEvents, hasSize(28));
 
     List<String> simplePerfEvents = eventBusListener.getSimplePerfEvents();
-    assertThat(simplePerfEvents, hasSize(8));
+    assertThat(simplePerfEvents, hasSize(4));
 
     SimplePerfEvent.Started buildTargetStartedEvent =
         SimplePerfEvent.started(SimplePerfEvent.PerfEventTitle.of(target));
@@ -358,10 +356,7 @@ public class JavaCDIntegrationTest {
 
       ResultEvent resultEvent =
           workerToolExecutor
-              .executeCommand(
-                  ActionId.of("//my_test_action_id"),
-                  buildJavaCommand,
-                  executionContext.getIsolatedEventBus())
+              .executeCommand(ActionId.of("//my_test_action_id"), buildJavaCommand)
               .get();
 
       assertThat(resultEvent.getActionId(), equalTo("//my_test_action_id"));
