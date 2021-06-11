@@ -838,11 +838,13 @@ public class ProjectFilesystemUtils {
    *   <li>The walk is in a deterministic order.
    * </ol>
    *
-   * <p>And it has two minor differences.
+   * <p>And it has three minor differences.
    *
    * <ol>
    *   <li>It doesn't accept a depth limit.
    *   <li>It doesn't handle the presence of a security manager the same way.
+   *   <li>It skips symlinks which create cycles instead of calling visitFileFailed method with the
+   *       FileSystemLoopException.
    * </ol>
    */
   private static class FileTreeWalker {
@@ -923,6 +925,9 @@ public class ProjectFilesystemUtils {
       try {
         attrs = getAttributes(p);
         ensureNoLoops(p, attrs);
+      } catch (FileSystemLoopException ex) {
+        // Skip loop if found
+        return FileVisitResult.CONTINUE;
       } catch (IOException ioe) {
         return visitor.visitFileFailed(p, ioe);
       }
