@@ -26,7 +26,6 @@ import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -57,8 +56,6 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.function.SkylarkBuildModule;
-import com.facebook.buck.skylark.io.GlobSpec;
-import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParserTestUtils.RecordingParser;
 import com.google.common.collect.ImmutableList;
@@ -202,139 +199,6 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
-  public void globResultsMatchCurrentStateIfStateIsUnchanged() throws Exception {
-    AbsPath directory = projectFilesystem.resolve("src").resolve("test");
-    AbsPath buildFile = directory.resolve("BUCK");
-    Files.createDirectories(directory.getPath());
-    Files.write(
-        buildFile.getPath(),
-        Collections.singletonList(
-            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
-    Files.createFile(directory.resolve("file1").getPath());
-    Files.createFile(directory.resolve("file2").getPath());
-    Files.createFile(directory.resolve("bad_file").getPath());
-
-    boolean result =
-        parser.globResultsMatchCurrentState(
-            buildFile,
-            ImmutableList.of(
-                GlobSpecWithResult.of(
-                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
-                    ImmutableSet.of("file2", "file1"))));
-
-    assertTrue(result);
-  }
-
-  @Test
-  public void globResultsDontMatchCurrentStateIfStateIsChanged() throws Exception {
-    AbsPath directory = projectFilesystem.resolve("src").resolve("test");
-    AbsPath buildFile = directory.resolve("BUCK");
-    Files.createDirectories(directory.getPath());
-    Files.write(
-        buildFile.getPath(),
-        Collections.singletonList(
-            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
-    Files.createFile(directory.resolve("file1").getPath());
-    Files.createFile(directory.resolve("file2").getPath());
-    Files.createFile(directory.resolve("bad_file").getPath());
-
-    boolean result =
-        parser.globResultsMatchCurrentState(
-            buildFile,
-            ImmutableList.of(
-                GlobSpecWithResult.of(
-                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
-                    ImmutableSet.of("file3", "file1"))));
-
-    assertFalse(result);
-  }
-
-  @Test
-  public void globResultsDontMatchCurrentStateIfCurrentStateHasMoreEntries() throws Exception {
-    AbsPath directory = projectFilesystem.resolve("src").resolve("test");
-    AbsPath buildFile = directory.resolve("BUCK");
-    Files.createDirectories(directory.getPath());
-    Files.write(
-        buildFile.getPath(),
-        Collections.singletonList(
-            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
-    Files.createFile(directory.resolve("file1").getPath());
-    Files.createFile(directory.resolve("file2").getPath());
-    Files.createFile(directory.resolve("bad_file").getPath());
-
-    boolean result =
-        parser.globResultsMatchCurrentState(
-            buildFile,
-            ImmutableList.of(
-                GlobSpecWithResult.of(
-                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
-                    ImmutableSet.of("file1"))));
-
-    assertFalse(result);
-  }
-
-  @Test
-  public void globResultsDontMatchCurrentStateIfCurrentStateHasLessEntries() throws Exception {
-    AbsPath directory = projectFilesystem.resolve("src").resolve("test");
-    AbsPath buildFile = directory.resolve("BUCK");
-    Files.createDirectories(directory.getPath());
-    Files.write(
-        buildFile.getPath(),
-        Collections.singletonList(
-            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
-    Files.createFile(directory.resolve("file1").getPath());
-    Files.createFile(directory.resolve("bad_file").getPath());
-
-    boolean result =
-        parser.globResultsMatchCurrentState(
-            buildFile,
-            ImmutableList.of(
-                GlobSpecWithResult.of(
-                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
-                    ImmutableSet.of("file1", "file2"))));
-
-    assertFalse(result);
-  }
-
-  @Test
-  public void globResultsMatchCurrentStateIfCurrentStateAndResultsAreEmpty() throws Exception {
-    AbsPath directory = projectFilesystem.resolve("src").resolve("test");
-    AbsPath buildFile = directory.resolve("BUCK");
-    Files.createDirectories(directory.getPath());
-    Files.write(
-        buildFile.getPath(),
-        Collections.singletonList(
-            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
-    Files.createFile(directory.resolve("bad_file").getPath());
-
-    boolean result =
-        parser.globResultsMatchCurrentState(
-            buildFile,
-            ImmutableList.of(
-                GlobSpecWithResult.of(
-                    GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
-                    ImmutableSet.of())));
-
-    assertTrue(result);
-  }
-
-  @Test
-  public void globFunction() throws Exception {
-    AbsPath directory = projectFilesystem.resolve("src").resolve("test");
-    AbsPath buildFile = directory.resolve("BUCK");
-    Files.createDirectories(directory.getPath());
-    Files.write(
-        buildFile.getPath(),
-        Collections.singletonList(
-            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
-    Files.createFile(directory.resolve("file1").getPath());
-    Files.createFile(directory.resolve("file2").getPath());
-    Files.createFile(directory.resolve("bad_file").getPath());
-    RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.getBySnakeCase("licenses"), equalTo(ImmutableList.of("file1", "file2")));
-  }
-
-  @Test
   public void lazyRangeIsUsedFunction() throws Exception {
     AbsPath directory = projectFilesystem.resolve("src").resolve("test");
     AbsPath buildFile = directory.resolve("BUCK");
@@ -344,29 +208,6 @@ public class SkylarkProjectBuildFileParserTest {
         Collections.singletonList("prebuilt_jar(name=type(range(5)), binary_jar='foo.jar')"));
     RawTargetNode rule = getSingleRule(buildFile);
     assertThat(rule.getBySnakeCase("name"), equalTo("range"));
-  }
-
-  @Test
-  public void globManifestIsCapturedFunction() throws Exception {
-    AbsPath directory = projectFilesystem.resolve("src").resolve("test");
-    AbsPath buildFile = directory.resolve("BUCK");
-    Files.createDirectories(directory.getPath());
-    Files.write(
-        buildFile.getPath(),
-        Collections.singletonList(
-            "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
-    Files.createFile(directory.resolve("file1").getPath());
-    Files.createFile(directory.resolve("file2").getPath());
-    Files.createFile(directory.resolve("bad_file").getPath());
-    BuildFileManifest buildFileManifest = parser.getManifest(buildFile);
-    assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
-    assertThat(
-        buildFileManifest.getGlobManifest(),
-        equalTo(
-            ImmutableList.of(
-                GlobSpecWithResult.of(
-                    GlobSpec.of(ImmutableList.of("f*"), ImmutableList.of(), true),
-                    ImmutableSet.of("file1", "file2")))));
   }
 
   @Test
@@ -755,43 +596,6 @@ public class SkylarkProjectBuildFileParserTest {
     RawTargetNode rule = getSingleRule(buildFile);
     assertThat(rule.getBySnakeCase("name"), equalTo("foo"));
     assertThat(rule.getBySnakeCase("binary_jar"), equalTo("foo.jar"));
-  }
-
-  @Test
-  public void canUseGlobalGlobFunctionInsideOfExtension() throws Exception {
-    AbsPath directory = projectFilesystem.resolve("src").resolve("test");
-    Files.createDirectories(directory.getPath());
-    AbsPath buildFile = directory.resolve("BUCK");
-    AbsPath extensionFile = directory.resolve("build_rules.bzl");
-    Files.write(
-        buildFile.getPath(),
-        Arrays.asList("load('//src/test:build_rules.bzl', 'guava_jar')", "guava_jar(name='foo')"));
-    Files.write(
-        extensionFile.getPath(),
-        Arrays.asList(
-            "def guava_jar(name):",
-            "  native.prebuilt_jar(name=name, binary_jar='foo.jar', licenses=glob(['*.txt']))"));
-    getSingleRule(buildFile);
-  }
-
-  @Test
-  public void canUseNativeGlobFunctionInsideOfExtension() throws Exception {
-    AbsPath directory = projectFilesystem.resolve("src").resolve("test");
-    Files.createDirectories(directory.getPath());
-    AbsPath buildFile = directory.resolve("BUCK");
-    AbsPath extensionFile = directory.resolve("build_rules.bzl");
-    Files.write(
-        buildFile.getPath(),
-        Arrays.asList("load('//src/test:build_rules.bzl', 'guava_jar')", "guava_jar(name='foo')"));
-    Files.write(
-        extensionFile.getPath(),
-        Arrays.asList(
-            "def guava_jar(name):",
-            "  native.prebuilt_jar(name=name, binary_jar='foo.jar', licenses=native.glob(['*.txt']))"));
-    RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.getBySnakeCase("name"), equalTo("foo"));
-    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("foo.jar"));
-    assertThat(rule.getBySnakeCase("licenses"), equalTo(ImmutableList.of()));
   }
 
   @Test
