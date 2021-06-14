@@ -318,13 +318,6 @@ public class WatchmanWatcher {
           cursor.set(newCursor);
         }
 
-        String warning = (String) response.getResp().get("warning");
-        if (warning != null) {
-          buckEventBus.post(
-              new WatchmanDiagnosticEvent(
-                  WatchmanDiagnostic.of(WatchmanDiagnostic.Level.WARNING, warning)));
-        }
-
         Boolean isFreshInstance = (Boolean) response.getResp().get("is_fresh_instance");
         if (isFreshInstance != null && isFreshInstance) {
           LOG.debug(

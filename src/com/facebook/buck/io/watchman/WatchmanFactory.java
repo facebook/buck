@@ -359,11 +359,6 @@ public class WatchmanFactory {
   @SuppressWarnings("unchecked")
   private static boolean extractCapabilities(
       Map<String, ?> versionResponse, ImmutableSet.Builder<Capability> capabilitiesBuilder) {
-    if (versionResponse.containsKey("warning")) {
-      LOG.warn("Warning in watchman output: %s", versionResponse.get("warning"));
-      // Warnings are not fatal. Don't panic.
-    }
-
     Object capabilitiesResponse = versionResponse.get("capabilities");
     if (!(capabilitiesResponse instanceof Map<?, ?>)) {
       LOG.warn("capabilities response is not map, got %s", capabilitiesResponse);
@@ -422,11 +417,6 @@ public class WatchmanFactory {
     }
 
     Map<String, ?> map = result.getLeft().getResp();
-
-    if (map.containsKey("warning")) {
-      LOG.warn("Warning in watchman output: %s", map.get("warning"));
-      // Warnings are not fatal. Don't panic.
-    }
 
     if (!map.containsKey("watch")) {
       return Optional.empty();

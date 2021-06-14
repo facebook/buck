@@ -17,8 +17,6 @@
 package com.facebook.buck.io.watchman;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -30,13 +28,11 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.RecursiveFileMatcher;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
-import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -500,40 +496,6 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.FreshInstanceAction.NONE);
     assertTrue(eventBuffer.events.isEmpty());
     assertTrue(eventBuffer.bigEvents.isEmpty());
-  }
-
-  @Test
-  public void whenWatchmanProducesAWarningThenDiagnosticEventGenerated()
-      throws IOException, InterruptedException {
-    String message = "Find me!";
-    ImmutableMap<String, Object> watchmanOutput =
-        ImmutableMap.of("files", ImmutableList.of(), "warning", message);
-    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
-    FakeBuckEventListener listener = new FakeBuckEventListener();
-    buckEventBus.register(listener);
-    WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
-    watcher.postEvents(buckEventBus, WatchmanWatcher.FreshInstanceAction.NONE);
-    ImmutableList<WatchmanDiagnosticEvent> diagnostics =
-        RichStream.from(listener.getEvents())
-            .filter(WatchmanDiagnosticEvent.class)
-            .toImmutableList();
-    assertThat(diagnostics, hasSize(1));
-    assertThat(diagnostics.get(0).getDiagnostic().getMessage(), Matchers.containsString(message));
-  }
-
-  @Test
-  public void whenWatchmanProducesAWarningThenWarningAddedToCache()
-      throws IOException, InterruptedException {
-    String message = "I'm a warning!";
-    ImmutableMap<String, Object> watchmanOutput =
-        ImmutableMap.of("files", ImmutableList.of(), "warning", message);
-    WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
-    Set<WatchmanDiagnostic> diagnostics = new HashSet<>();
-    BuckEventBus buckEventBus = BuckEventBusForTests.newInstance(FakeClock.doNotCare());
-    buckEventBus.register(new WatchmanDiagnosticEventListener(buckEventBus, diagnostics));
-    watcher.postEvents(buckEventBus, WatchmanWatcher.FreshInstanceAction.NONE);
-    assertThat(
-        diagnostics, hasItem(WatchmanDiagnostic.of(WatchmanDiagnostic.Level.WARNING, message)));
   }
 
   @Test

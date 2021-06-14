@@ -102,6 +102,18 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
           throw new WatchmanQueryFailedException(
               String.format("watchman query %s failed: %s", query.queryDesc(), error));
         }
+
+        Object warning = result.getLeft().get("warning");
+        if (warning != null) {
+          // We do a lot of queries, if watchman decides to produce warnings for each of them
+          // we should not overflow wherever important warnings are written.
+          if (query instanceof WatchmanQuery.Query) {
+            LOG.debug("Warning in watchman output of query %s: %s", query.queryDesc(), warning);
+          } else {
+            LOG.warn("Warning in watchman output of query %s: %s", query.queryDesc(), warning);
+          }
+          // Warnings are not fatal. Don't panic.
+        }
       }
 
       long elapsedNanos = clock.nanoTime() - startTimeNanos;
