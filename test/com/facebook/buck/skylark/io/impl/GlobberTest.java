@@ -336,6 +336,9 @@ public class GlobberTest {
     tmp.newFolder("foo");
     tmp.newFile("foo/a.txt");
     Files.createSymbolicLink(tmp.getRoot().resolve("bar").getPath(), Paths.get("foo"));
+
+    sync();
+
     assertThat(
         globber.run(ImmutableList.of("foo/*.txt"), ImmutableList.of(), false),
         equalTo(ImmutableSet.of("foo/a.txt")));
