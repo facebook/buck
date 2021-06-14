@@ -51,9 +51,8 @@ public class HybridGlobberFactory implements GlobberFactory {
   @Override
   public Globber create(ForwardRelPath basePathRel) {
     final AbsPath basePath = projectRoot.resolve(basePathRel);
-    final AbsPath cellPath = projectRoot;
-    String watchRoot = cellPath.toString();
-    @Nullable ProjectWatch projectWatch = projectWatches.get(cellPath);
+    String watchRoot = projectRoot.toString();
+    @Nullable ProjectWatch projectWatch = projectWatches.get(projectRoot);
     if (projectWatch != null) {
       watchRoot = projectWatch.getWatchRoot();
     }
