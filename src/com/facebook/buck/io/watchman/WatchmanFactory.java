@@ -543,8 +543,7 @@ public class WatchmanFactory {
     }
 
     Object response =
-        new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED)
-            .deserializeBserValue(new ByteArrayInputStream(stdout.toByteArray()));
+        new BserDeserializer().deserializeBserValue(new ByteArrayInputStream(stdout.toByteArray()));
     LOG.debug("stdout of command: " + response);
     if (!(response instanceof Map<?, ?>)) {
       LOG.error("Unexpected response from Watchman: %s", response);

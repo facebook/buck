@@ -53,7 +53,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     this.clock = clock;
     this.transport = transport;
     this.bserSerializer = new BserSerializer();
-    this.bserDeserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    this.bserDeserializer = new BserDeserializer();
   }
 
   private final AtomicBoolean running = new AtomicBoolean();

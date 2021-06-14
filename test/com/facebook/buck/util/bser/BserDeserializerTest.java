@@ -78,7 +78,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeEmptyArray() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     List<Object> deserialized =
         (List<Object>) deserializer.deserializeBserValue(getByteStream("00010303000300"));
     List<Object> expected = ImmutableList.of();
@@ -87,7 +87,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeEmptyArrayTwiceReturnsSameArray() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     List<Object> deserialized =
         (List<Object>) deserializer.deserializeBserValue(getByteStream("00010303000300"));
     List<Object> deserialized2 =
@@ -97,7 +97,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeArrayOfInt8() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     List<Object> deserialized =
         (List<Object>)
             deserializer.deserializeBserValue(getByteStream("000103090003030323034203F0"));
@@ -107,7 +107,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeString() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     String deserialized =
         (String)
             deserializer.deserializeBserValue(
@@ -118,7 +118,7 @@ public class BserDeserializerTest {
 
   @Test
   public void sameStringDeserializedTwiceReturnsSameInstance() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     String deserialized =
         (String)
             deserializer.deserializeBserValue(
@@ -132,7 +132,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeEmptyMap() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Map<String, Object> deserialized =
         (Map<String, Object>) deserializer.deserializeBserValue(getByteStream("00010303010300"));
     Map<String, Object> expected = ImmutableMap.of();
@@ -141,7 +141,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeEmptyMapTwiceReturnsSameMap() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Map<String, Object> deserialized =
         (Map<String, Object>) deserializer.deserializeBserValue(getByteStream("00010303010300"));
     Map<String, Object> deserialized2 =
@@ -151,7 +151,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeUnsortedMapOfStringToInt8() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Map<String, Object> deserialized =
         (Map<String, Object>)
             deserializer.deserializeBserValue(
@@ -161,19 +161,8 @@ public class BserDeserializerTest {
   }
 
   @Test
-  public void deserializeSortedMapOfStringToInt8() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.SORTED);
-    Map<String, Object> deserialized =
-        (Map<String, Object>)
-            deserializer.deserializeBserValue(
-                getByteStream("0001031B010303020303666F6F0323020303626172034202030362617A03F0"));
-    // Make sure the result contains these entries in sorted order.
-    assertThat(deserialized.entrySet(), contains(BAR_MAP_ENTRY, BAZ_MAP_ENTRY, FOO_MAP_ENTRY));
-  }
-
-  @Test
   public void deserializeTemplate() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     List<Map<String, Object>> deserialized =
         (List<Map<String, Object>>)
             deserializer.deserializeBserValue(
@@ -198,7 +187,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeInt8() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Byte deserialized = (Byte) deserializer.deserializeBserValue(getByteStream("000103020342"));
     assertThat(deserialized, equalTo((byte) 0x42));
   }
@@ -206,7 +195,7 @@ public class BserDeserializerTest {
   @Test
   public void sameInt8DeserializedTwiceReturnsSameInstance() throws IOException {
     // Java actually interns small integer values for us. How nice!
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Byte deserialized = (Byte) deserializer.deserializeBserValue(getByteStream("000103020342"));
     Byte deserialized2 = (Byte) deserializer.deserializeBserValue(getByteStream("000103020342"));
     assertThat(deserialized, is(sameInstance(deserialized2)));
@@ -214,7 +203,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeInt16() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Short deserialized =
         (Short) deserializer.deserializeBserValue(getByteStream("0001030304" + SHORT_11FF));
     assertThat(deserialized, equalTo((short) 0x11FF));
@@ -222,7 +211,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeInt32() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Integer deserialized =
         (Integer) deserializer.deserializeBserValue(getByteStream("0001030505" + INT_1122EEFF));
     assertThat(deserialized, equalTo(0x1122EEFF));
@@ -230,7 +219,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeInt64() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Long deserialized =
         (Long)
             deserializer.deserializeBserValue(getByteStream("0001030906" + LONG_11223344CCDDEEFF));
@@ -239,7 +228,7 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeReal() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Double deserialized =
         (Double)
             deserializer.deserializeBserValue(getByteStream("0001030907" + REAL_0DOT123456789));
@@ -248,21 +237,21 @@ public class BserDeserializerTest {
 
   @Test
   public void deserializeTrue() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Boolean deserialized = (Boolean) deserializer.deserializeBserValue(getByteStream("0001030108"));
     assertThat(deserialized, is(true));
   }
 
   @Test
   public void deserializeFalse() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Boolean deserialized = (Boolean) deserializer.deserializeBserValue(getByteStream("0001030109"));
     assertThat(deserialized, is(false));
   }
 
   @Test
   public void deserializeNull() throws IOException {
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     Object deserialized = deserializer.deserializeBserValue(getByteStream("000103010A"));
     assertThat(deserialized, is(nullValue()));
   }
@@ -271,7 +260,7 @@ public class BserDeserializerTest {
   public void throwIfSniffLengthTooShort() throws IOException {
     thrown.expect(IOException.class);
     thrown.expectMessage("Invalid BSER header (expected 3 bytes, got 0 bytes)");
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     deserializer.deserializeBserValue(getByteStream(""));
   }
 
@@ -279,7 +268,7 @@ public class BserDeserializerTest {
   public void throwIfInvalidHeader() throws IOException {
     thrown.expect(IOException.class);
     thrown.expectMessage("Invalid BSER header");
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     deserializer.deserializeBserValue(getByteStream("000F03"));
   }
 
@@ -287,7 +276,7 @@ public class BserDeserializerTest {
   public void throwIfInvalidHeaderLengthType() throws IOException {
     thrown.expect(IOException.class);
     thrown.expectMessage("Unrecognized BSER header length type 7");
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     deserializer.deserializeBserValue(getByteStream("000107" + REAL_0DOT123456789));
   }
 
@@ -295,7 +284,7 @@ public class BserDeserializerTest {
   public void throwIfHeaderLengthIsNegative() throws IOException {
     thrown.expect(IOException.class);
     thrown.expectMessage("BSER length out of range (-128 < 0)");
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     deserializer.deserializeBserValue(getByteStream("00010380"));
   }
 
@@ -303,7 +292,7 @@ public class BserDeserializerTest {
   public void throwIfBodyLengthIsOverMaxInt() throws IOException {
     thrown.expect(IOException.class);
     thrown.expectMessage("BSER length out of range (2147483648 > 2147483647)");
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     deserializer.deserializeBserValue(getByteStream("000106" + LONG_0000000080000000));
   }
 
@@ -311,7 +300,7 @@ public class BserDeserializerTest {
   public void throwIfHeaderLengthTooShort() throws IOException {
     thrown.expect(IOException.class);
     thrown.expectMessage("Invalid BSER header length (expected 1 bytes, got 0 bytes)");
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     deserializer.deserializeBserValue(getByteStream("000103"));
   }
 
@@ -319,14 +308,14 @@ public class BserDeserializerTest {
   public void throwIfRemainingLengthTooShort() throws IOException {
     thrown.expect(IOException.class);
     thrown.expectMessage("Invalid BSER header (expected 1 bytes, got 0 bytes)");
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     deserializer.deserializeBserValue(getByteStream("00010301"));
   }
 
   @Test
   public void throwIfStringNotUTF8() throws IOException {
     thrown.expect(CharacterCodingException.class);
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     deserializer.deserializeBserValue(getByteStream("00010306020303ABCDEF"));
   }
 
@@ -334,7 +323,7 @@ public class BserDeserializerTest {
   public void throwIfArrayLengthTooShort() throws IOException {
     thrown.expect(BserDeserializer.BserEofException.class);
     thrown.expectMessage("Prematurely reached end of BSER buffer");
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     deserializer.deserializeBserValue(getByteStream("000103050003020323"));
   }
 
@@ -342,7 +331,7 @@ public class BserDeserializerTest {
   public void throwIfMapLengthTooShort() throws IOException {
     thrown.expect(BserDeserializer.BserEofException.class);
     thrown.expectMessage("Prematurely reached end of BSER buffer");
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     deserializer.deserializeBserValue(getByteStream("0001030B010303020303666F6F0323"));
   }
 
@@ -350,7 +339,7 @@ public class BserDeserializerTest {
   public void throwIfMapKeyNotString() throws IOException {
     thrown.expect(IOException.class);
     thrown.expectMessage("Unrecognized BSER object key type 3, expected string");
-    BserDeserializer deserializer = new BserDeserializer(BserDeserializer.KeyOrdering.UNSORTED);
+    BserDeserializer deserializer = new BserDeserializer();
     deserializer.deserializeBserValue(getByteStream("0001030701030103030323"));
   }
 }

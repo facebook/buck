@@ -46,7 +46,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import javax.annotation.Nullable;
 
 /**
@@ -55,11 +54,6 @@ import javax.annotation.Nullable;
  * <p>https://facebook.github.io/watchman/docs/bser.html
  */
 public class BserDeserializer {
-
-  public enum KeyOrdering {
-    UNSORTED,
-    SORTED
-  }
 
   /** Exception thrown when BSER parser unexpectedly reaches the end of the input stream. */
   public static class BserEofException extends IOException {
@@ -72,7 +66,6 @@ public class BserDeserializer {
     }
   }
 
-  private final KeyOrdering keyOrdering;
   private final CharsetDecoder utf8Decoder;
 
   /**
@@ -80,8 +73,7 @@ public class BserDeserializer {
    * have their keys sorted in natural order. Otherwise, any {@code Map}s will have their keys in
    * the same order with which they were encoded.
    */
-  public BserDeserializer(KeyOrdering keyOrdering) {
-    this.keyOrdering = keyOrdering;
+  public BserDeserializer() {
     this.utf8Decoder =
         StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT);
   }
@@ -232,12 +224,8 @@ public class BserDeserializer {
     if (numItems == 0) {
       return Collections.emptyMap();
     }
-    ImmutableMapWithNullValues.Builder<String, Object> builder;
-    if (keyOrdering == KeyOrdering.UNSORTED) {
-      builder = ImmutableMapWithNullValues.Builder.insertionOrder();
-    } else {
-      builder = ImmutableMapWithNullValues.Builder.sorted();
-    }
+    ImmutableMapWithNullValues.Builder<String, Object> builder =
+        ImmutableMapWithNullValues.Builder.insertionOrder();
     for (int i = 0; i < numItems; i++) {
       byte stringType = buffer.get();
       if (stringType != BSER_STRING) {
@@ -261,16 +249,11 @@ public class BserDeserializer {
     int numItems = deserializeIntLen(buffer, numItemsType);
     ArrayList<Map<String, Object>> result = new ArrayList<>();
     for (int itemIdx = 0; itemIdx < numItems; itemIdx++) {
-      Map<String, Object> obj;
-      if (keyOrdering == KeyOrdering.UNSORTED) {
-        obj = new LinkedHashMap<>();
-      } else {
-        obj = new TreeMap<>();
-      }
-      for (int keyIdx = 0; keyIdx < keys.size(); keyIdx++) {
+      Map<String, Object> obj = new LinkedHashMap<>();
+      for (Object o : keys) {
         byte keyValueType = buffer.get();
         if (keyValueType != BSER_SKIP) {
-          String key = (String) keys.get(keyIdx);
+          String key = (String) o;
           obj.put(key, deserializeRecursiveWithType(buffer, keyValueType));
         }
       }
