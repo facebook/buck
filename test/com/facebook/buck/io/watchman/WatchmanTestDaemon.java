@@ -37,7 +37,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -146,7 +145,7 @@ public class WatchmanTestDaemon implements Closeable {
       try (WatchmanClient client =
           WatchmanFactory.createWatchmanClient(
               watchmanSockFile, new TestEventConsole(), new DefaultClock())) {
-        Either<Map<String, Object>, WatchmanClient.Timeout> response =
+        Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> response =
             client.queryWithTimeout(timeoutNanos, warnTimeoutNanos, WatchmanQuery.getPid());
         return response.isLeft();
       }

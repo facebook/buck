@@ -17,8 +17,8 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.util.Map;
 
 /**
  * Watchman interface.
@@ -31,8 +31,12 @@ public interface WatchmanClient extends AutoCloseable {
     INSTANCE,
   }
 
-  /** Perform the query. */
-  Either<Map<String, Object>, Timeout> queryWithTimeout(
+  /**
+   * Perform the query.
+   *
+   * @return
+   */
+  Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
       long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
       throws IOException, InterruptedException, WatchmanQueryFailedException;
 

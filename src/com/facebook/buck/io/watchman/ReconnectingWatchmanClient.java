@@ -18,8 +18,8 @@ package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
@@ -42,7 +42,7 @@ class ReconnectingWatchmanClient implements WatchmanClient {
   private final AtomicBoolean running = new AtomicBoolean();
 
   @Override
-  public Either<Map<String, Object>, Timeout> queryWithTimeout(
+  public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
       long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     if (!running.compareAndSet(false, true)) {
@@ -55,7 +55,7 @@ class ReconnectingWatchmanClient implements WatchmanClient {
     }
   }
 
-  private Either<Map<String, Object>, Timeout> queryWithTimeoutInner(
+  private Either<ImmutableMap<String, Object>, Timeout> queryWithTimeoutInner(
       long timeoutNanos, long pollingTimeNanos, WatchmanQuery query)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     if (underlying == null) {
@@ -66,7 +66,7 @@ class ReconnectingWatchmanClient implements WatchmanClient {
 
     boolean finishedSuccessfully = false;
     try {
-      Either<Map<String, Object>, Timeout> result =
+      Either<ImmutableMap<String, Object>, Timeout> result =
           underlying.queryWithTimeout(timeoutNanos, pollingTimeNanos, query);
       finishedSuccessfully = result.isLeft();
       return result;

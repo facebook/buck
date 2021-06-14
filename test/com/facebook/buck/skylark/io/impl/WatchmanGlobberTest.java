@@ -45,7 +45,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matchers;
@@ -220,7 +219,7 @@ public class WatchmanGlobberTest {
     WatchmanClient client =
         new WatchmanClient() {
           @Override
-          public Either<Map<String, Object>, Timeout> queryWithTimeout(
+          public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
               long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
               throws WatchmanQueryFailedException {
             LOG.info("Processing query: %s", query);
@@ -353,7 +352,7 @@ public class WatchmanGlobberTest {
     private WatchmanQuery query;
 
     @Override
-    public Either<Map<String, Object>, Timeout> queryWithTimeout(
+    public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
         long timeoutNanos, long warnTimeNanos, WatchmanQuery query) {
       this.query = query;
       return Either.ofLeft(ImmutableMap.of("files", ImmutableList.of()));

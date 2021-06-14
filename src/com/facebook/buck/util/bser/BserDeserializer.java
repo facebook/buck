@@ -30,8 +30,9 @@ import static com.facebook.buck.util.bser.BserConstants.BSER_STRING;
 import static com.facebook.buck.util.bser.BserConstants.BSER_TEMPLATE;
 import static com.facebook.buck.util.bser.BserConstants.BSER_TRUE;
 
-import com.facebook.buck.util.ImmutableMapWithNullValues;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,9 +42,6 @@ import java.nio.ByteOrder;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -205,27 +203,26 @@ public class BserDeserializer {
     }
   }
 
-  private List<Object> deserializeArray(ByteBuffer buffer) throws IOException {
+  private ImmutableList<Object> deserializeArray(ByteBuffer buffer) throws IOException {
     byte intType = buffer.get();
     int numItems = deserializeIntLen(buffer, intType);
     if (numItems == 0) {
-      return Collections.emptyList();
+      return ImmutableList.of();
     }
-    ArrayList<Object> list = new ArrayList<>(numItems);
+    ImmutableList.Builder<Object> list = ImmutableList.builderWithExpectedSize(numItems);
     for (int i = 0; i < numItems; i++) {
       list.add(deserializeRecursive(buffer));
     }
-    return list;
+    return list.build();
   }
 
-  private Map<String, Object> deserializeObject(ByteBuffer buffer) throws IOException {
+  private ImmutableMap<String, Object> deserializeObject(ByteBuffer buffer) throws IOException {
     byte intType = buffer.get();
     int numItems = deserializeIntLen(buffer, intType);
     if (numItems == 0) {
-      return Collections.emptyMap();
+      return ImmutableMap.of();
     }
-    ImmutableMapWithNullValues.Builder<String, Object> builder =
-        ImmutableMapWithNullValues.Builder.insertionOrder();
+    ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     for (int i = 0; i < numItems; i++) {
       byte stringType = buffer.get();
       if (stringType != BSER_STRING) {
@@ -239,17 +236,18 @@ public class BserDeserializer {
     return builder.build();
   }
 
-  private List<Map<String, Object>> deserializeTemplate(ByteBuffer buffer) throws IOException {
+  private ImmutableList<ImmutableMap<String, Object>> deserializeTemplate(ByteBuffer buffer)
+      throws IOException {
     byte arrayType = buffer.get();
     if (arrayType != BSER_ARRAY) {
       throw new IOException(String.format("Expected ARRAY to follow TEMPLATE, got %d", arrayType));
     }
-    List<Object> keys = deserializeArray(buffer);
+    ImmutableList<Object> keys = deserializeArray(buffer);
     byte numItemsType = buffer.get();
     int numItems = deserializeIntLen(buffer, numItemsType);
-    ArrayList<Map<String, Object>> result = new ArrayList<>();
+    ImmutableList.Builder<ImmutableMap<String, Object>> result = ImmutableList.builder();
     for (int itemIdx = 0; itemIdx < numItems; itemIdx++) {
-      Map<String, Object> obj = new LinkedHashMap<>();
+      ImmutableMap.Builder<String, Object> obj = ImmutableMap.builder();
       for (Object o : keys) {
         byte keyValueType = buffer.get();
         if (keyValueType != BSER_SKIP) {
@@ -257,18 +255,16 @@ public class BserDeserializer {
           obj.put(key, deserializeRecursiveWithType(buffer, keyValueType));
         }
       }
-      result.add(obj);
+      result.add(obj.build());
     }
-    return result;
+    return result.build();
   }
 
-  @Nullable
   private Object deserializeRecursive(ByteBuffer buffer) throws IOException {
     byte type = buffer.get();
     return deserializeRecursiveWithType(buffer, type);
   }
 
-  @Nullable
   private Object deserializeRecursiveWithType(ByteBuffer buffer, byte type) throws IOException {
     switch (type) {
       case BSER_INT8:
@@ -283,7 +279,7 @@ public class BserDeserializer {
       case BSER_FALSE:
         return false;
       case BSER_NULL:
-        return null;
+        return BserNull.NULL;
       case BSER_STRING:
         return deserializeString(buffer);
       case BSER_ARRAY:

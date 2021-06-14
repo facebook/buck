@@ -47,7 +47,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -239,7 +238,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
           public void close() {}
 
           @Override
-          public Either<Map<String, Object>, Timeout> queryWithTimeout(
+          public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
               long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
               throws WatchmanQueryFailedException {
             return mockQueryWithTimeout.apply(timeoutNanos, warnTimeNanos, query);
@@ -263,7 +262,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
   @FunctionalInterface
   interface QueryWithTimeoutFunction {
-    Either<Map<String, Object>, WatchmanClient.Timeout> apply(
+    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> apply(
         long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query)
         throws WatchmanQueryFailedException;
   }

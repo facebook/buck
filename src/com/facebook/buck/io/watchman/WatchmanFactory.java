@@ -245,7 +245,7 @@ public class WatchmanFactory {
     Preconditions.checkArgument(clockSyncTimeoutMillis > 0, "Clock sync timeout must be positive");
 
     long versionQueryStartTimeNanos = clock.nanoTime();
-    Either<Map<String, Object>, WatchmanClient.Timeout> result;
+    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result;
     try {
       result =
           client.queryWithTimeout(
@@ -402,7 +402,7 @@ public class WatchmanFactory {
     LOG.info("Adding watchman root: %s", rootPath);
 
     long projectWatchTimeNanos = clock.nanoTime();
-    Either<Map<String, Object>, WatchmanClient.Timeout> result;
+    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result;
     try {
       result =
           watchmanClient.queryWithTimeout(
@@ -462,7 +462,7 @@ public class WatchmanFactory {
     Optional<String> clockId = Optional.empty();
     long clockStartTimeNanos = clock.nanoTime();
 
-    Either<Map<String, Object>, WatchmanClient.Timeout> result =
+    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(
             timeoutNanos,
             WARN_TIMEOUT_NANOS,

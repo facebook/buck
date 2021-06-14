@@ -26,11 +26,11 @@ import com.facebook.buck.util.bser.BserSerializer;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -59,7 +59,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   private final AtomicBoolean running = new AtomicBoolean();
 
   @Override
-  public Either<Map<String, Object>, Timeout> queryWithTimeout(
+  public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
       long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     if (!running.compareAndSet(false, true)) {
@@ -72,14 +72,14 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     }
   }
 
-  private Either<Map<String, Object>, Timeout> queryListWithTimeoutAndWarning(
+  private Either<ImmutableMap<String, Object>, Timeout> queryListWithTimeoutAndWarning(
       long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query)
       throws IOException, WatchmanQueryFailedException, InterruptedException {
-    ListenableFuture<Map<String, Object>> future =
+    ListenableFuture<ImmutableMap<String, Object>> future =
         listeningExecutorService.submit(() -> sendWatchmanQuery(query.toProtocolArgs()));
     try {
       long startTimeNanos = clock.nanoTime();
-      Either<Map<String, Object>, Timeout> result =
+      Either<ImmutableMap<String, Object>, Timeout> result =
           waitForQueryNotifyingUserIfSlow(future, timeoutNanos, warnTimeoutNanos, query);
 
       if (result.isLeft()) {
@@ -137,8 +137,8 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
             TimeUnit.NANOSECONDS.toSeconds(timeoutNanos), whichQuery));
   }
 
-  private Either<Map<String, Object>, Timeout> waitForQueryNotifyingUserIfSlow(
-      ListenableFuture<Map<String, Object>> future,
+  private Either<ImmutableMap<String, Object>, Timeout> waitForQueryNotifyingUserIfSlow(
+      ListenableFuture<ImmutableMap<String, Object>> future,
       long timeoutNanos,
       long warnTimeNanos,
       WatchmanQuery query)
@@ -155,7 +155,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
                 "Waiting for watchman query '%s' for %ds...",
                 query.queryDesc(), TimeUnit.NANOSECONDS.toSeconds(timeoutNanos)));
         try {
-          Map<String, Object> result = future.get(remainingNanos, TimeUnit.NANOSECONDS);
+          ImmutableMap<String, Object> result = future.get(remainingNanos, TimeUnit.NANOSECONDS);
           long queryDurationNanos = clock.nanoTime() - queryStartNanos;
           LOG.debug(
               "Watchman query [%s] finished in %dms",
@@ -175,12 +175,12 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   }
 
   @SuppressWarnings("unchecked")
-  private Map<String, Object> sendWatchmanQuery(List<Object> query) throws IOException {
+  private ImmutableMap<String, Object> sendWatchmanQuery(List<Object> query) throws IOException {
     LOG.verbose("Sending query: %s", query);
     bserSerializer.serializeToStream(query, transport.getOutputStream());
     Object response = bserDeserializer.deserializeBserValue(transport.getInputStream());
     LOG.verbose("Got response: %s", response);
-    Map<String, Object> responseMap = (Map<String, Object>) response;
+    ImmutableMap<String, Object> responseMap = (ImmutableMap<String, Object>) response;
     Preconditions.checkNotNull(responseMap, "response must not be null");
     return responseMap;
   }

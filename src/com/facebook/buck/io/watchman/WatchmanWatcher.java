@@ -269,7 +269,7 @@ public class WatchmanWatcher {
       ConcurrentLinkedQueue<WatchmanWatcherOneBigEvent> bigEvents)
       throws IOException, InterruptedException {
     try {
-      Either<Map<String, Object>, WatchmanClient.Timeout> queryResponse;
+      Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> queryResponse;
       try (SimplePerfEvent.Scope ignored =
           SimplePerfEvent.scope(buckEventBus.isolated(), "query")) {
         queryResponse =

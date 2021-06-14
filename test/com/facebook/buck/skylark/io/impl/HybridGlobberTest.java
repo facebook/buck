@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -79,7 +78,8 @@ public class HybridGlobberTest {
         equalTo(ImmutableSet.of("bar.txt", "foo.txt")));
   }
 
-  private WatchmanGlobber newGlobber(Either<Map<String, Object>, WatchmanClient.Timeout> result) {
+  private WatchmanGlobber newGlobber(
+      Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result) {
     return WatchmanGlobber.create(new StubWatchmanClient(result), "", root.toString());
   }
 

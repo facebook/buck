@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -75,7 +74,7 @@ public class PooledWatchmanClientTest {
       private final AtomicBoolean closed = new AtomicBoolean();
 
       @Override
-      public Either<Map<String, Object>, Timeout> queryWithTimeout(
+      public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
           long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
           throws IOException, InterruptedException {
         assertFalse(closed.get());
@@ -97,7 +96,7 @@ public class PooledWatchmanClientTest {
       private final AtomicBoolean closed = new AtomicBoolean();
 
       @Override
-      public Either<Map<String, Object>, Timeout> queryWithTimeout(
+      public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
           long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
           throws IOException, InterruptedException {
         assertFalse(closed.get());
@@ -125,9 +124,9 @@ public class PooledWatchmanClientTest {
     PooledWatchmanClient pool = new PooledWatchmanClient(opener);
 
     ExecutorService executor = Executors.newFixedThreadPool(10);
-    Future<Either<Map<String, Object>, WatchmanClient.Timeout>> f1 =
+    Future<Either<ImmutableMap<String, Object>, WatchmanClient.Timeout>> f1 =
         executor.submit(() -> pool.queryWithTimeout(10, 20, WatchmanQuery.getPid()));
-    Future<Either<Map<String, Object>, WatchmanClient.Timeout>> f2 =
+    Future<Either<ImmutableMap<String, Object>, WatchmanClient.Timeout>> f2 =
         executor.submit(() -> pool.queryWithTimeout(30, 40, WatchmanQuery.watch("/")));
 
     assertEquals(Either.ofLeft(ImmutableMap.of()), f1.get());

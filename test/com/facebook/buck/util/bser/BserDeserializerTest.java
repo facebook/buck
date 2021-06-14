@@ -21,7 +21,6 @@ import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 
 import com.google.common.collect.ImmutableList;
@@ -253,7 +252,7 @@ public class BserDeserializerTest {
   public void deserializeNull() throws IOException {
     BserDeserializer deserializer = new BserDeserializer();
     Object deserialized = deserializer.deserializeBserValue(getByteStream("000103010A"));
-    assertThat(deserialized, is(nullValue()));
+    assertThat(deserialized, is(BserNull.NULL));
   }
 
   @Test

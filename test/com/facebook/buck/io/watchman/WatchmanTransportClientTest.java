@@ -25,8 +25,8 @@ import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.After;
 import org.junit.Assert;
@@ -83,7 +83,7 @@ public class WatchmanTransportClientTest {
 
   @Test
   public void syncTimeout() throws Exception {
-    Either<Map<String, Object>, WatchmanClient.Timeout> result =
+    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result =
         watchmanTransportClient.queryWithTimeout(
             60_000_000_000L,
             60_000_000_000L,

@@ -27,6 +27,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -86,7 +87,7 @@ public class WatchmanClientIntegrationTest {
         WatchmanFactory.createWatchmanClient(
             watchmanDaemon.getTransportPath(), new TestEventConsole(), new DefaultClock());
 
-    Either<Map<String, Object>, WatchmanClient.Timeout> versionResponse =
+    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> versionResponse =
         client.queryWithTimeout(
             timeoutNanos,
             pollingTimeNanos,
@@ -97,7 +98,7 @@ public class WatchmanClientIntegrationTest {
 
     Path rootPath = workspace.getDestPath();
 
-    Either<Map<String, Object>, WatchmanClient.Timeout> watch =
+    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> watch =
         client.queryWithTimeout(
             timeoutNanos, pollingTimeNanos, WatchmanQuery.watchProject(rootPath.toString()));
 
@@ -106,7 +107,7 @@ public class WatchmanClientIntegrationTest {
     Map<String, ?> map = watch.getLeft();
     String watchRoot = (String) map.get("watch");
 
-    Either<Map<String, Object>, WatchmanClient.Timeout> queryResponse =
+    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> queryResponse =
         client.queryWithTimeout(
             timeoutNanos,
             pollingTimeNanos,

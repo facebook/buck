@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.io.impl;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
+import com.facebook.buck.util.bser.BserNull;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -194,7 +195,7 @@ public class WatchmanGlobber {
       long timeoutNanos,
       long warnTimeNanos)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
-    Either<Map<String, Object>, WatchmanClient.Timeout> result =
+    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result =
         performWatchmanQuery(
             timeoutNanos, warnTimeNanos, include, exclude, options, NAME_ONLY_FIELD);
     if (!result.isLeft()) {
@@ -206,7 +207,7 @@ public class WatchmanGlobber {
     return Optional.of(ImmutableSet.copyOf(files));
   }
 
-  private Either<Map<String, Object>, WatchmanClient.Timeout> performWatchmanQuery(
+  private Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> performWatchmanQuery(
       long timeoutNanos,
       long pollingTimeNanos,
       Collection<String> include,
@@ -283,7 +284,7 @@ public class WatchmanGlobber {
       }
     }
 
-    Either<Map<String, Object>, WatchmanClient.Timeout> result =
+    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result =
         performWatchmanQuery(
             timeoutNanos, warnTimeNanos, includePatterns, excludePatterns, options, fields);
     if (!result.isLeft()) {
@@ -296,7 +297,8 @@ public class WatchmanGlobber {
         resultEntries.stream()
             .filter(
                 entry ->
-                    entry.containsKey("name") && entry.values().stream().allMatch(v -> v != null))
+                    entry.containsKey("name")
+                        && entry.values().stream().allMatch(v -> v != BserNull.NULL))
             .collect(
                 ImmutableMap.toImmutableMap(
                     entry -> (String) entry.get("name"), WatchmanFileAttributes::new));

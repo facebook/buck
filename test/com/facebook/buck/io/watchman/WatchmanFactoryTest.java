@@ -37,7 +37,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
@@ -63,7 +62,7 @@ public class WatchmanFactoryTest {
   private static WatchmanFactory createFakeWatchmanFactory(
       Path socketName,
       long queryElapsedTimeNanos,
-      Map<WatchmanQuery, Map<String, Object>> queryResults) {
+      ImmutableMap<WatchmanQuery, ImmutableMap<String, Object>> queryResults) {
     InitialWatchmanClientFactory factory =
         (path, console, clock) -> {
           if (path.equals(socketName)) {
