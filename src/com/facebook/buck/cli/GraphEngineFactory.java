@@ -131,10 +131,7 @@ public class GraphEngineFactory {
 
     BuildPackagePathToBuildFileManifestComputation packagePathToManifestComputation =
         BuildPackagePathToBuildFileManifestComputation.of(
-            buildFileParser,
-            cell.getFilesystem().getPath(parserConfig.getBuildFileName()),
-            cell.getRoot().getPath(),
-            false);
+            buildFileParser, parserConfig.getBuildFileName(), cell.getRoot().getPath(), false);
 
     // COMPOSITION: build target pattern to build file manifest
     ComposedComputation<BuildTargetPatternToBuildPackagePathKey, BuildPackagePaths>
