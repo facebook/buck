@@ -112,8 +112,8 @@ public class NativeGlobber implements Globber {
     }
 
     @Override
-    public Globber create(AbsPath basePath) {
-      return new NativeGlobber(basePath);
+    public Globber create(ForwardRelPath basePath) {
+      return new NativeGlobber(root.resolve(basePath));
     }
 
     @Override

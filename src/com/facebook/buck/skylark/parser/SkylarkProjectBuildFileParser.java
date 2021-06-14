@@ -182,8 +182,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
 
   /** Creates a globber for the package defined by the provided build file path. */
   private CachingGlobber newGlobber(ForwardRelPath buildFile) {
-    AbsPath buildFileAbs = options.getProjectRoot().resolve(buildFile);
-    return CachingGlobber.of(globberFactory.create(buildFileAbs.getParent()));
+    return CachingGlobber.of(globberFactory.create(buildFile.getParentButEmptyForSingleSegment()));
   }
 
   @Override

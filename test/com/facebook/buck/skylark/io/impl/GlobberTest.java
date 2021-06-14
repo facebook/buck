@@ -21,6 +21,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
@@ -81,7 +82,7 @@ public class GlobberTest {
     }
 
     root = tmp.getRoot();
-    globber = globberFactory.create(tmp.getRoot());
+    globber = globberFactory.create(ForwardRelPath.EMPTY);
   }
 
   @After

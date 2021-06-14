@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
@@ -90,7 +91,8 @@ public class HybridGlobberFactory implements GlobberFactory {
   }
 
   @Override
-  public Globber create(AbsPath basePath) {
+  public Globber create(ForwardRelPath basePathRel) {
+    AbsPath basePath = projectRoot.resolve(basePathRel);
     AbsPath cellPath = projectRoot;
     String watchRoot = cellPath.toString();
     @Nullable ProjectWatch projectWatch = projectWatches.get(cellPath);

@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.io;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import java.io.Closeable;
 import java.io.IOException;
 
@@ -30,7 +31,7 @@ public interface GlobberFactory extends Closeable {
    * Create a globber which performs a glob against given base path. This operation is pure and
    * cheap.
    */
-  Globber create(AbsPath basePath);
+  Globber create(ForwardRelPath basePath);
 
   /** Close the globber. */
   @Override
