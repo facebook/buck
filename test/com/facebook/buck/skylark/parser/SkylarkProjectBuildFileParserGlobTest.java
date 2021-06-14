@@ -37,7 +37,6 @@ import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.config.ParserConfig;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -46,7 +45,6 @@ import com.facebook.buck.skylark.io.impl.HybridGlobberFactory;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
@@ -126,6 +124,12 @@ public class SkylarkProjectBuildFileParserGlobTest {
     }
   }
 
+  private void sync() throws Exception {
+    if (watchman != null) {
+      WatchmanTestUtils.sync(watchman);
+    }
+  }
+
   private ProjectBuildFileParserOptions.Builder getDefaultParserOptions() {
     return SkylarkProjectBuildFileParserTestUtils.getDefaultParserOptions(
         cell.getRootCell(), knownRuleTypesProvider);
@@ -144,8 +148,8 @@ public class SkylarkProjectBuildFileParserGlobTest {
     return createParserWithOptions(eventHandler, getDefaultParserOptions().build(), globberFactory);
   }
 
-  private RawTargetNode getSingleRule(AbsPath buildFile)
-      throws BuildFileParseException, InterruptedException, IOException {
+  private RawTargetNode getSingleRule(AbsPath buildFile) throws Exception {
+    sync();
     return SkylarkProjectBuildFileParserTestUtils.getSingleRule(parser, buildFile);
   }
 
@@ -178,6 +182,8 @@ public class SkylarkProjectBuildFileParserGlobTest {
     Files.createFile(directory.resolve("file2").getPath());
     Files.createFile(directory.resolve("bad_file").getPath());
 
+    sync();
+
     boolean result =
         parser.globResultsMatchCurrentState(
             buildFile,
@@ -201,6 +207,8 @@ public class SkylarkProjectBuildFileParserGlobTest {
     Files.createFile(directory.resolve("file1").getPath());
     Files.createFile(directory.resolve("file2").getPath());
     Files.createFile(directory.resolve("bad_file").getPath());
+
+    sync();
 
     boolean result =
         parser.globResultsMatchCurrentState(
@@ -226,6 +234,8 @@ public class SkylarkProjectBuildFileParserGlobTest {
     Files.createFile(directory.resolve("file2").getPath());
     Files.createFile(directory.resolve("bad_file").getPath());
 
+    sync();
+
     boolean result =
         parser.globResultsMatchCurrentState(
             buildFile,
@@ -249,6 +259,8 @@ public class SkylarkProjectBuildFileParserGlobTest {
     Files.createFile(directory.resolve("file1").getPath());
     Files.createFile(directory.resolve("bad_file").getPath());
 
+    sync();
+
     boolean result =
         parser.globResultsMatchCurrentState(
             buildFile,
@@ -270,6 +282,8 @@ public class SkylarkProjectBuildFileParserGlobTest {
         Collections.singletonList(
             "prebuilt_jar(name='guava', binary_jar='foo.jar', licenses=glob(['f*']))"));
     Files.createFile(directory.resolve("bad_file").getPath());
+
+    sync();
 
     boolean result =
         parser.globResultsMatchCurrentState(
@@ -331,6 +345,9 @@ public class SkylarkProjectBuildFileParserGlobTest {
     Files.createFile(directory.resolve("file1").getPath());
     Files.createFile(directory.resolve("file2").getPath());
     Files.createFile(directory.resolve("bad_file").getPath());
+
+    sync();
+
     BuildFileManifest buildFileManifest = parser.getManifest(buildFile);
     assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
     assertThat(

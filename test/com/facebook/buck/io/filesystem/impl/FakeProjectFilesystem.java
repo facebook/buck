@@ -218,7 +218,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
   public static ProjectFilesystem createRealTempFilesystem() {
     AbsPath tempDir;
     try {
-      tempDir = AbsPath.of(Files.createTempDirectory("pfs"));
+      tempDir = AbsPath.of(Files.createTempDirectory("pfs")).toRealPath();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
