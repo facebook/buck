@@ -407,7 +407,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             || buildFileParserOptions.getWatchman() instanceof WatchmanFactory.NullWatchman
         ? NativeGlobber.Factory.INSTANCE
         : HybridGlobberFactory.using(
-            buildFileParserOptions.getWatchman(),
-            buildFileParserOptions.getProjectRoot().getPath());
+            buildFileParserOptions.getWatchman(), buildFileParserOptions.getProjectRoot());
   }
 }

@@ -74,7 +74,7 @@ public class GlobberTest {
       case WATCHMAN:
         WatchmanTestUtils.setupWatchman(tmp.getRoot());
         watchman = WatchmanTestUtils.buildWatchmanAssumeNotNull(tmp.getRoot());
-        globberFactory = HybridGlobberFactory.using(watchman, tmp.getRoot().getPath());
+        globberFactory = HybridGlobberFactory.using(watchman, tmp.getRoot());
         break;
       default:
         throw new AssertionError("unreachable");

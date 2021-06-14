@@ -38,12 +38,12 @@ public class HybridGlobberFactory implements GlobberFactory {
   private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
 
   private final WatchmanClient watchmanClient;
-  private final java.nio.file.Path projectRoot;
+  private final AbsPath projectRoot;
   private final ImmutableMap<AbsPath, ProjectWatch> projectWatches;
 
   private HybridGlobberFactory(
       WatchmanClient watchmanClient,
-      java.nio.file.Path projectRoot,
+      AbsPath projectRoot,
       ImmutableMap<AbsPath, ProjectWatch> projectWatches) {
     this.watchmanClient = watchmanClient;
     this.projectRoot = projectRoot;
@@ -86,7 +86,7 @@ public class HybridGlobberFactory implements GlobberFactory {
 
   @Override
   public Globber create(AbsPath basePath) {
-    AbsPath cellPath = AbsPath.of(projectRoot.toAbsolutePath());
+    AbsPath cellPath = projectRoot;
     String watchRoot = cellPath.toString();
     @Nullable ProjectWatch projectWatch = projectWatches.get(cellPath);
     if (projectWatch != null) {
@@ -125,7 +125,7 @@ public class HybridGlobberFactory implements GlobberFactory {
   @Override
   public void close() throws IOException {}
 
-  public static HybridGlobberFactory using(Watchman watchman, java.nio.file.Path projectRoot) {
+  public static HybridGlobberFactory using(Watchman watchman, AbsPath projectRoot) {
     return new HybridGlobberFactory(
         watchman.getPooledClient(), projectRoot, watchman.getProjectWatches());
   }

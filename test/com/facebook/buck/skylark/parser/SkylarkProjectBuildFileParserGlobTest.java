@@ -96,8 +96,7 @@ public class SkylarkProjectBuildFileParserGlobTest {
       case WATCHMAN:
         WatchmanTestUtils.setupWatchman(projectFilesystem.getRootPath());
         watchman = WatchmanTestUtils.buildWatchmanAssumeNotNull(projectFilesystem.getRootPath());
-        globberFactory =
-            HybridGlobberFactory.using(watchman, projectFilesystem.getRootPath().getPath());
+        globberFactory = HybridGlobberFactory.using(watchman, projectFilesystem.getRootPath());
         break;
       default:
         throw new AssertionError("unreachable");
