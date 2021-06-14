@@ -33,6 +33,7 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanNotFoundException;
 import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
+import com.facebook.buck.io.watchman.WatchmanQueryResp;
 import com.facebook.buck.io.watchman.WatchmanQueryTimedOutException;
 import com.facebook.buck.io.watchman.WatchmanTestDaemon;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -149,7 +150,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
   public void throwsIfWatchmanTimesOut() throws ExecutionException, InterruptedException {
     Watchman stubWatchmanFactory =
         createMockWatchmanFactory(
-            (long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query) ->
+            (long timeoutNanos, long warnTimeoutNanos, WatchmanQuery<?> query) ->
                 Either.ofRight(WatchmanClient.Timeout.INSTANCE));
 
     thrown.expect(ExecutionException.class);
@@ -163,7 +164,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
   public void throwsIfWatchmanQueryFails() throws ExecutionException, InterruptedException {
     Watchman stubWatchmanFactory =
         createMockWatchmanFactory(
-            (long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query) -> {
+            (long timeoutNanos, long warnTimeoutNanos, WatchmanQuery<?> query) -> {
               LOG.info("Processing query: %s", query);
               if (query instanceof WatchmanQuery.Query) {
                 throw new WatchmanQueryFailedException(
@@ -237,11 +238,13 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
           @Override
           public void close() {}
 
+          @SuppressWarnings("unchecked")
           @Override
-          public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
-              long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
+          public <R extends WatchmanQueryResp> Either<R, Timeout> queryWithTimeout(
+              long timeoutNanos, long warnTimeNanos, WatchmanQuery<R> query)
               throws WatchmanQueryFailedException {
-            return mockQueryWithTimeout.apply(timeoutNanos, warnTimeNanos, query);
+            return (Either<R, Timeout>)
+                mockQueryWithTimeout.apply(timeoutNanos, warnTimeNanos, query);
           }
         };
       }
@@ -262,8 +265,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
   @FunctionalInterface
   interface QueryWithTimeoutFunction {
-    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> apply(
-        long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query)
+    Either<WatchmanQueryResp, WatchmanClient.Timeout> apply(
+        long timeoutNanos, long warnTimeoutNanos, WatchmanQuery<?> query)
         throws WatchmanQueryFailedException;
   }
 }

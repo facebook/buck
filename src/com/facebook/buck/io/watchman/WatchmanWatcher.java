@@ -269,7 +269,7 @@ public class WatchmanWatcher {
       ConcurrentLinkedQueue<WatchmanWatcherOneBigEvent> bigEvents)
       throws IOException, InterruptedException {
     try {
-      Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> queryResponse;
+      Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> queryResponse;
       try (SimplePerfEvent.Scope ignored =
           SimplePerfEvent.scope(buckEventBus.isolated(), "query")) {
         queryResponse =
@@ -307,25 +307,25 @@ public class WatchmanWatcher {
           return;
         }
 
-        Map<String, ? extends Object> response = queryResponse.getLeft();
+        WatchmanQueryResp.Generic response = queryResponse.getLeft();
 
         if (cursor.get().startsWith("c:")) {
           // Update the clockId
           String newCursor =
-              Optional.ofNullable((String) response.get("clock"))
+              Optional.ofNullable((String) response.getResp().get("clock"))
                   .orElse(WatchmanFactory.NULL_CLOCK);
           LOG.debug("Updating Watchman Cursor from %s to %s", cursor.get(), newCursor);
           cursor.set(newCursor);
         }
 
-        String warning = (String) response.get("warning");
+        String warning = (String) response.getResp().get("warning");
         if (warning != null) {
           buckEventBus.post(
               new WatchmanDiagnosticEvent(
                   WatchmanDiagnostic.of(WatchmanDiagnostic.Level.WARNING, warning)));
         }
 
-        Boolean isFreshInstance = (Boolean) response.get("is_fresh_instance");
+        Boolean isFreshInstance = (Boolean) response.getResp().get("is_fresh_instance");
         if (isFreshInstance != null && isFreshInstance) {
           LOG.debug(
               "Watchman indicated a fresh instance (fresh instance action %s)",
@@ -345,7 +345,8 @@ public class WatchmanWatcher {
           return;
         }
 
-        List<Map<String, Object>> files = (List<Map<String, Object>>) response.get("files");
+        List<Map<String, Object>> files =
+            (List<Map<String, Object>>) response.getResp().get("files");
         if (files == null) {
           if (freshInstanceAction == FreshInstanceAction.NONE) {
             filesHaveChanged.set(true);

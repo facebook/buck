@@ -27,12 +27,10 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -87,7 +85,7 @@ public class WatchmanClientIntegrationTest {
         WatchmanFactory.createWatchmanClient(
             watchmanDaemon.getTransportPath(), new TestEventConsole(), new DefaultClock());
 
-    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> versionResponse =
+    Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> versionResponse =
         client.queryWithTimeout(
             timeoutNanos,
             pollingTimeNanos,
@@ -98,16 +96,16 @@ public class WatchmanClientIntegrationTest {
 
     Path rootPath = workspace.getDestPath();
 
-    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> watch =
+    Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> watch =
         client.queryWithTimeout(
             timeoutNanos, pollingTimeNanos, WatchmanQuery.watchProject(rootPath.toString()));
 
     assertTrue(watch.isLeft());
 
-    Map<String, ?> map = watch.getLeft();
-    String watchRoot = (String) map.get("watch");
+    WatchmanQueryResp.Generic map = watch.getLeft();
+    String watchRoot = (String) map.getResp().get("watch");
 
-    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> queryResponse =
+    Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> queryResponse =
         client.queryWithTimeout(
             timeoutNanos,
             pollingTimeNanos,
@@ -120,7 +118,8 @@ public class WatchmanClientIntegrationTest {
 
     assertTrue(queryResponse.isLeft());
 
-    Set<?> actualFileSet = ImmutableSet.copyOf((List<?>) queryResponse.getLeft().get("files"));
+    Set<?> actualFileSet =
+        ImmutableSet.copyOf((List<?>) queryResponse.getLeft().getResp().get("files"));
     Set<?> expectedFileSet = ImmutableSet.of("X", "f1/X", "f2/X");
 
     Assert.assertEquals(expectedFileSet, actualFileSet);

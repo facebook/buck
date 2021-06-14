@@ -245,7 +245,7 @@ public class WatchmanFactory {
     Preconditions.checkArgument(clockSyncTimeoutMillis > 0, "Clock sync timeout must be positive");
 
     long versionQueryStartTimeNanos = clock.nanoTime();
-    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result;
+    Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> result;
     try {
       result =
           client.queryWithTimeout(
@@ -265,13 +265,14 @@ public class WatchmanFactory {
     if (!result.isLeft()) {
       return returnNullWatchman(console, "Could not get version response from Watchman", null);
     }
-    Object versionRaw = result.getLeft().get("version");
+    WatchmanQueryResp.Generic generic = result.getLeft();
+    Object versionRaw = generic.getResp().get("version");
     if (!(versionRaw instanceof String)) {
       return returnNullWatchman(console, "Unexpected version format", null);
     }
     String version = (String) versionRaw;
     ImmutableSet.Builder<Capability> capabilitiesBuilder = ImmutableSet.builder();
-    if (!extractCapabilities(result.getLeft(), capabilitiesBuilder)) {
+    if (!extractCapabilities(generic.getResp(), capabilitiesBuilder)) {
       return returnNullWatchman(console, "Could not extract capabilities", null);
     }
     ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
@@ -402,7 +403,7 @@ public class WatchmanFactory {
     LOG.info("Adding watchman root: %s", rootPath);
 
     long projectWatchTimeNanos = clock.nanoTime();
-    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result;
+    Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> result;
     try {
       result =
           watchmanClient.queryWithTimeout(
@@ -420,7 +421,7 @@ public class WatchmanFactory {
       return Optional.empty();
     }
 
-    Map<String, ?> map = result.getLeft();
+    Map<String, ?> map = result.getLeft().getResp();
 
     if (map.containsKey("warning")) {
       LOG.warn("Warning in watchman output: %s", map.get("warning"));
@@ -462,17 +463,17 @@ public class WatchmanFactory {
     Optional<String> clockId = Optional.empty();
     long clockStartTimeNanos = clock.nanoTime();
 
-    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result =
+    Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(
             timeoutNanos,
             WARN_TIMEOUT_NANOS,
             WatchmanQuery.clock(watchRoot, Optional.of(syncTimeoutMilis)));
     if (result.isLeft()) {
-      Map<String, ?> clockResult = result.getLeft();
+      Map<String, ?> clockResult = result.getLeft().getResp();
       clockId = Optional.ofNullable((String) clockResult.get("clock"));
     }
     if (clockId.isPresent()) {
-      Map<String, ?> map = result.getLeft();
+      Map<String, ?> map = result.getLeft().getResp();
       clockId = Optional.ofNullable((String) map.get("clock"));
       LOG.info(
           "Took %d ms to query for initial clock id %s",

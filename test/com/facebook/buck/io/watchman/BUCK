@@ -18,9 +18,6 @@ java_library(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io/watchman:capability",
-        "//src/com/facebook/buck/io/watchman:transport",
-        "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/test/result/type:type",
         "//src/com/facebook/buck/util:io",
@@ -45,6 +42,9 @@ java_library(
     ],
     exported_deps = [
         "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/io/watchman:capability",
+        "//src/com/facebook/buck/io/watchman:transport",
+        "//src/com/facebook/buck/io/watchman:watchman",
         "//test/com/facebook/buck/event/console:testutil",
     ],
 )

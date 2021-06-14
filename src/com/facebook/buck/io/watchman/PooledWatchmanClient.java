@@ -18,7 +18,6 @@ package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -42,8 +41,8 @@ class PooledWatchmanClient implements WatchmanClient {
   }
 
   @Override
-  public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
-      long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
+  public <R extends WatchmanQueryResp> Either<R, Timeout> queryWithTimeout(
+      long timeoutNanos, long warnTimeNanos, WatchmanQuery<R> query)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     Preconditions.checkState(!closed, "closed");
     WatchmanClient client = pool.poll();

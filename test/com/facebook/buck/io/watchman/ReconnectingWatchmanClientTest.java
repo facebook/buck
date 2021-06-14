@@ -38,9 +38,9 @@ public class ReconnectingWatchmanClientTest {
   public void worksFineWhenNoErrors() throws Exception {
     WatchmanClient mock = EasyMock.createStrictMock(WatchmanClient.class);
     EasyMock.expect(mock.queryWithTimeout(17, 19, WatchmanQuery.getPid()))
-        .andReturn(Either.ofLeft(ImmutableMap.of("a", "b")));
+        .andReturn(Either.ofLeft(WatchmanQueryResp.generic(ImmutableMap.of("a", "b"))));
     EasyMock.expect(mock.queryWithTimeout(23, 29, WatchmanQuery.watchProject("/x")))
-        .andReturn(Either.ofLeft(ImmutableMap.of("c", "d")));
+        .andReturn(Either.ofLeft(WatchmanQueryResp.generic(ImmutableMap.of("c", "d"))));
     mock.close();
 
     EasyMock.expect(underlyingWatchmanOpenerMock.open()).andReturn(mock);
@@ -49,11 +49,11 @@ public class ReconnectingWatchmanClientTest {
     EasyMock.replay(underlyingWatchmanOpenerMock);
 
     assertEquals(
-        Either.ofLeft(ImmutableMap.of("a", "b")),
+        Either.ofLeft(WatchmanQueryResp.generic(ImmutableMap.of("a", "b"))),
         reconnectingWatchmanClient.queryWithTimeout(17, 19, WatchmanQuery.getPid()));
     assertNotNull(reconnectingWatchmanClient.getUnderlying());
     assertEquals(
-        Either.ofLeft(ImmutableMap.of("c", "d")),
+        Either.ofLeft(WatchmanQueryResp.generic(ImmutableMap.of("c", "d"))),
         reconnectingWatchmanClient.queryWithTimeout(23, 29, WatchmanQuery.watchProject("/x")));
     assertNotNull(reconnectingWatchmanClient.getUnderlying());
     reconnectingWatchmanClient.close();

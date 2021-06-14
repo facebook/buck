@@ -18,7 +18,6 @@ package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.util.types.Either;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
@@ -42,8 +41,8 @@ class ReconnectingWatchmanClient implements WatchmanClient {
   private final AtomicBoolean running = new AtomicBoolean();
 
   @Override
-  public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
-      long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
+  public <R extends WatchmanQueryResp> Either<R, Timeout> queryWithTimeout(
+      long timeoutNanos, long warnTimeNanos, WatchmanQuery<R> query)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     if (!running.compareAndSet(false, true)) {
       throw new IllegalStateException("ReconnectingWatchmanClient is single-threaded");
@@ -55,8 +54,8 @@ class ReconnectingWatchmanClient implements WatchmanClient {
     }
   }
 
-  private Either<ImmutableMap<String, Object>, Timeout> queryWithTimeoutInner(
-      long timeoutNanos, long pollingTimeNanos, WatchmanQuery query)
+  private <R extends WatchmanQueryResp> Either<R, Timeout> queryWithTimeoutInner(
+      long timeoutNanos, long pollingTimeNanos, WatchmanQuery<R> query)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     if (underlying == null) {
       // TODO(nga): issue debug-status query on reconnect
@@ -66,7 +65,7 @@ class ReconnectingWatchmanClient implements WatchmanClient {
 
     boolean finishedSuccessfully = false;
     try {
-      Either<ImmutableMap<String, Object>, Timeout> result =
+      Either<R, Timeout> result =
           underlying.queryWithTimeout(timeoutNanos, pollingTimeNanos, query);
       finishedSuccessfully = result.isLeft();
       return result;

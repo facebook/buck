@@ -42,9 +42,9 @@ public class PooledWatchmanClientTest {
     EasyMock.expect(opener.open()).andReturn(client1);
 
     EasyMock.expect(client1.queryWithTimeout(10, 20, WatchmanQuery.getPid()))
-        .andReturn(Either.ofLeft(ImmutableMap.of()));
+        .andReturn(Either.ofLeft(WatchmanQueryResp.generic(ImmutableMap.of())));
     EasyMock.expect(client1.queryWithTimeout(30, 40, WatchmanQuery.watch("/")))
-        .andReturn(Either.ofLeft(ImmutableMap.of()));
+        .andReturn(Either.ofLeft(WatchmanQueryResp.generic(ImmutableMap.of())));
     client1.close();
 
     EasyMock.replay(opener, client1);
@@ -52,9 +52,11 @@ public class PooledWatchmanClientTest {
     PooledWatchmanClient pool = new PooledWatchmanClient(opener);
 
     assertEquals(
-        Either.ofLeft(ImmutableMap.of()), pool.queryWithTimeout(10, 20, WatchmanQuery.getPid()));
+        Either.ofLeft(WatchmanQueryResp.generic(ImmutableMap.of())),
+        pool.queryWithTimeout(10, 20, WatchmanQuery.getPid()));
     assertEquals(
-        Either.ofLeft(ImmutableMap.of()), pool.queryWithTimeout(30, 40, WatchmanQuery.watch("/")));
+        Either.ofLeft(WatchmanQueryResp.generic(ImmutableMap.of())),
+        pool.queryWithTimeout(30, 40, WatchmanQuery.watch("/")));
     pool.closePool();
 
     EasyMock.verify(opener, client1);
@@ -73,9 +75,10 @@ public class PooledWatchmanClientTest {
     class Client1 implements WatchmanClient {
       private final AtomicBoolean closed = new AtomicBoolean();
 
+      @SuppressWarnings("unchecked")
       @Override
-      public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
-          long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
+      public <R extends WatchmanQueryResp> Either<R, Timeout> queryWithTimeout(
+          long timeoutNanos, long warnTimeNanos, WatchmanQuery<R> query)
           throws IOException, InterruptedException {
         assertFalse(closed.get());
 
@@ -83,7 +86,7 @@ public class PooledWatchmanClientTest {
 
         bothRequestsExecute.countDown();
         bothRequestsExecute.await();
-        return Either.ofLeft(ImmutableMap.of());
+        return Either.ofLeft((R) WatchmanQueryResp.generic(ImmutableMap.of()));
       }
 
       @Override
@@ -95,16 +98,17 @@ public class PooledWatchmanClientTest {
     class Client2 implements WatchmanClient {
       private final AtomicBoolean closed = new AtomicBoolean();
 
+      @SuppressWarnings("unchecked")
       @Override
-      public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
-          long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
+      public <R extends WatchmanQueryResp> Either<R, Timeout> queryWithTimeout(
+          long timeoutNanos, long warnTimeNanos, WatchmanQuery<R> query)
           throws IOException, InterruptedException {
         assertFalse(closed.get());
 
         bothRequestsExecute.countDown();
         bothRequestsExecute.await();
 
-        return Either.ofLeft(ImmutableMap.of());
+        return Either.ofLeft((R) WatchmanQueryResp.generic(ImmutableMap.of()));
       }
 
       @Override
@@ -124,14 +128,14 @@ public class PooledWatchmanClientTest {
     PooledWatchmanClient pool = new PooledWatchmanClient(opener);
 
     ExecutorService executor = Executors.newFixedThreadPool(10);
-    Future<Either<ImmutableMap<String, Object>, WatchmanClient.Timeout>> f1 =
+    Future<Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout>> f1 =
         executor.submit(() -> pool.queryWithTimeout(10, 20, WatchmanQuery.getPid()));
-    Future<Either<ImmutableMap<String, Object>, WatchmanClient.Timeout>> f2 =
+    Future<Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout>> f2 =
         executor.submit(() -> pool.queryWithTimeout(30, 40, WatchmanQuery.watch("/")));
 
-    assertEquals(Either.ofLeft(ImmutableMap.of()), f1.get());
+    assertEquals(Either.ofLeft(WatchmanQueryResp.generic(ImmutableMap.of())), f1.get());
     firstRequestStarted.await();
-    assertEquals(Either.ofLeft(ImmutableMap.of()), f2.get());
+    assertEquals(Either.ofLeft(WatchmanQueryResp.generic(ImmutableMap.of())), f2.get());
 
     pool.closePool();
 

@@ -24,17 +24,18 @@ import java.util.Map;
 /** Fake implementation of {@link com.facebook.buck.io.watchman.WatchmanClient} for tests. */
 public class FakeWatchmanClient implements WatchmanClient {
   private final long queryElapsedTimeNanos;
-  private final Map<WatchmanQuery, ImmutableMap<String, Object>> queryResults;
+  private final Map<WatchmanQuery<?>, ImmutableMap<String, Object>> queryResults;
   private final Exception exceptionToThrow;
 
   public FakeWatchmanClient(
-      long queryElapsedTimeNanos, Map<WatchmanQuery, ImmutableMap<String, Object>> queryResults) {
+      long queryElapsedTimeNanos,
+      Map<WatchmanQuery<?>, ImmutableMap<String, Object>> queryResults) {
     this(queryElapsedTimeNanos, queryResults, null);
   }
 
   public FakeWatchmanClient(
       long queryElapsedTimeNanos,
-      Map<WatchmanQuery, ImmutableMap<String, Object>> queryResults,
+      Map<WatchmanQuery<?>, ImmutableMap<String, Object>> queryResults,
       Exception exceptionToThrow) {
     this.queryElapsedTimeNanos = queryElapsedTimeNanos;
     this.queryResults = queryResults;
@@ -42,8 +43,8 @@ public class FakeWatchmanClient implements WatchmanClient {
   }
 
   @Override
-  public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
-      long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
+  public <R extends WatchmanQueryResp> Either<R, Timeout> queryWithTimeout(
+      long timeoutNanos, long warnTimeNanos, WatchmanQuery<R> query)
       throws InterruptedException, IOException, WatchmanQueryFailedException {
     ImmutableMap<String, Object> result = queryResults.get(query);
     if (result == null) {
@@ -66,7 +67,7 @@ public class FakeWatchmanClient implements WatchmanClient {
     if (error != null) {
       throw new WatchmanQueryFailedException(error.toString());
     }
-    return Either.ofLeft(result);
+    return Either.ofLeft(query.decodeResponse(result));
   }
 
   @Override

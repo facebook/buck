@@ -29,6 +29,7 @@ import com.facebook.buck.io.watchman.StubWatchmanClient;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.io.watchman.WatchmanQueryResp;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.util.types.Either;
@@ -71,15 +72,17 @@ public class HybridGlobberTest {
   @Test
   public void watchmanResultsAreReturnedIfTheyExist() throws Exception {
     WatchmanGlobber watchmanGlobber =
-        newGlobber(Either.ofLeft(ImmutableMap.of("files", ImmutableList.of("bar.txt", "foo.txt"))));
+        newGlobber(
+            Either.ofLeft(
+                WatchmanQueryResp.generic(
+                    ImmutableMap.of("files", ImmutableList.of("bar.txt", "foo.txt")))));
     globber = new HybridGlobber(nativeGlobber, watchmanGlobber);
     assertThat(
         globber.run(Collections.singleton("*.txt"), Collections.emptySet(), false),
         equalTo(ImmutableSet.of("bar.txt", "foo.txt")));
   }
 
-  private WatchmanGlobber newGlobber(
-      Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result) {
+  private WatchmanGlobber newGlobber(Either<WatchmanQueryResp, WatchmanClient.Timeout> result) {
     return WatchmanGlobber.create(new StubWatchmanClient(result), "", root.toString());
   }
 

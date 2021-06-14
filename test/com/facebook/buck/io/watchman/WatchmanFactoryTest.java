@@ -62,7 +62,7 @@ public class WatchmanFactoryTest {
   private static WatchmanFactory createFakeWatchmanFactory(
       Path socketName,
       long queryElapsedTimeNanos,
-      ImmutableMap<WatchmanQuery, ImmutableMap<String, Object>> queryResults) {
+      ImmutableMap<WatchmanQuery<?>, ImmutableMap<String, Object>> queryResults) {
     InitialWatchmanClientFactory factory =
         (path, console, clock) -> {
           if (path.equals(socketName)) {

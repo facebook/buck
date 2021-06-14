@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.io.impl;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
+import com.facebook.buck.io.watchman.WatchmanQueryResp;
 import com.facebook.buck.util.bser.BserNull;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
@@ -195,19 +196,20 @@ public class WatchmanGlobber {
       long timeoutNanos,
       long warnTimeNanos)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
-    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result =
+    Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> result =
         performWatchmanQuery(
             timeoutNanos, warnTimeNanos, include, exclude, options, NAME_ONLY_FIELD);
     if (!result.isLeft()) {
       return Optional.empty();
     }
 
+    WatchmanQueryResp.Generic generic = result.getLeft();
     @SuppressWarnings("unchecked")
-    List<String> files = (List<String>) result.getLeft().get("files");
+    List<String> files = (List<String>) generic.getResp().get("files");
     return Optional.of(ImmutableSet.copyOf(files));
   }
 
-  private Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> performWatchmanQuery(
+  private Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> performWatchmanQuery(
       long timeoutNanos,
       long pollingTimeNanos,
       Collection<String> include,
@@ -255,8 +257,6 @@ public class WatchmanGlobber {
    * @param warnTimeNanos time to polling results if query is slow
    * @param fields Fields to query
    * @return a optional map of matching file names to their file properties.
-   * @throws IOException
-   * @throws InterruptedException
    */
   public Optional<ImmutableMap<String, WatchmanFileAttributes>> runWithExtraFields(
       Collection<String> includePatterns,
@@ -284,15 +284,16 @@ public class WatchmanGlobber {
       }
     }
 
-    Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> result =
+    Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> result =
         performWatchmanQuery(
             timeoutNanos, warnTimeNanos, includePatterns, excludePatterns, options, fields);
     if (!result.isLeft()) {
       return Optional.empty();
     }
 
+    WatchmanQueryResp.Generic generic = result.getLeft();
     @SuppressWarnings("unchecked")
-    List<Map<String, ?>> resultEntries = (List<Map<String, ?>>) result.getLeft().get("files");
+    List<Map<String, ?>> resultEntries = (List<Map<String, ?>>) generic.getResp().get("files");
     ImmutableMap<String, WatchmanFileAttributes> resultMap =
         resultEntries.stream()
             .filter(

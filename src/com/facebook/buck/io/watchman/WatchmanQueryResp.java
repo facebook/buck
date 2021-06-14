@@ -16,26 +16,20 @@
 
 package com.facebook.buck.io.watchman;
 
-import com.facebook.buck.util.types.Either;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableMap;
 
-/**
- * A {@link com.facebook.buck.io.watchman.WatchmanClient} that simply returns a value passed in a
- * constructor.
- */
-public class StubWatchmanClient implements WatchmanClient {
+/** Responses for {@link WatchmanQuery}. */
+public abstract class WatchmanQueryResp {
 
-  private final Either<WatchmanQueryResp, WatchmanClient.Timeout> result;
-
-  public StubWatchmanClient(Either<WatchmanQueryResp, WatchmanClient.Timeout> result) {
-    this.result = result;
+  /** Generic response. */
+  // TODO: replace with specific types
+  @BuckStyleValue
+  public abstract static class Generic extends WatchmanQueryResp {
+    public abstract ImmutableMap<String, Object> getResp();
   }
 
-  @Override
-  public Either<WatchmanQueryResp, WatchmanClient.Timeout> queryWithTimeout(
-      long timeoutNanos, long warnTimeNanos, WatchmanQuery query) {
-    return result;
+  public static Generic generic(ImmutableMap<String, Object> resp) {
+    return ImmutableGeneric.ofImpl(resp);
   }
-
-  @Override
-  public void close() {}
 }

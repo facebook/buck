@@ -59,8 +59,8 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   private final AtomicBoolean running = new AtomicBoolean();
 
   @Override
-  public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
-      long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
+  public <R extends WatchmanQueryResp> Either<R, Timeout> queryWithTimeout(
+      long timeoutNanos, long warnTimeNanos, WatchmanQuery<R> query)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     if (!running.compareAndSet(false, true)) {
       throw new IllegalStateException("WatchmanTransportClient is single-threaded");
@@ -72,8 +72,8 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
     }
   }
 
-  private Either<ImmutableMap<String, Object>, Timeout> queryListWithTimeoutAndWarning(
-      long timeoutNanos, long warnTimeoutNanos, WatchmanQuery query)
+  private <R extends WatchmanQueryResp> Either<R, Timeout> queryListWithTimeoutAndWarning(
+      long timeoutNanos, long warnTimeoutNanos, WatchmanQuery<R> query)
       throws IOException, WatchmanQueryFailedException, InterruptedException {
     ListenableFuture<ImmutableMap<String, Object>> future =
         listeningExecutorService.submit(() -> sendWatchmanQuery(query.toProtocolArgs()));
@@ -106,7 +106,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
 
       long elapsedNanos = clock.nanoTime() - startTimeNanos;
       LOG.debug("Query %s returned in %d ms", query, TimeUnit.NANOSECONDS.toMillis(elapsedNanos));
-      return result;
+      return result.mapLeft(resp -> query.decodeResponse(resp));
     } catch (ExecutionException e) {
       if (e.getCause() instanceof IOException) {
         throw (IOException) e.getCause();
@@ -141,7 +141,7 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       ListenableFuture<ImmutableMap<String, Object>> future,
       long timeoutNanos,
       long warnTimeNanos,
-      WatchmanQuery query)
+      WatchmanQuery<?> query)
       throws InterruptedException, ExecutionException {
     long queryStartNanos = clock.nanoTime();
     try {

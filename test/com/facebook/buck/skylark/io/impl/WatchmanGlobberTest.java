@@ -32,6 +32,7 @@ import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
+import com.facebook.buck.io.watchman.WatchmanQueryResp;
 import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.testutil.AssumePath;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -219,7 +220,7 @@ public class WatchmanGlobberTest {
     WatchmanClient client =
         new WatchmanClient() {
           @Override
-          public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
+          public Either<WatchmanQueryResp, Timeout> queryWithTimeout(
               long timeoutNanos, long warnTimeNanos, WatchmanQuery query)
               throws WatchmanQueryFailedException {
             LOG.info("Processing query: %s", query);
@@ -352,10 +353,10 @@ public class WatchmanGlobberTest {
     private WatchmanQuery query;
 
     @Override
-    public Either<ImmutableMap<String, Object>, Timeout> queryWithTimeout(
+    public Either<WatchmanQueryResp, Timeout> queryWithTimeout(
         long timeoutNanos, long warnTimeNanos, WatchmanQuery query) {
       this.query = query;
-      return Either.ofLeft(ImmutableMap.of("files", ImmutableList.of()));
+      return Either.ofLeft(WatchmanQueryResp.generic(ImmutableMap.of("files", ImmutableList.of())));
     }
 
     @Override

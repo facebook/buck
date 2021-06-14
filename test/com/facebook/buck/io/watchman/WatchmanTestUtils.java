@@ -39,7 +39,7 @@ public class WatchmanTestUtils {
       for (AbsPath root : watchman.getProjectWatches().keySet()) {
         assertEquals(ImmutableSet.of(root), watchman.getProjectWatches().keySet());
         // synchronize using clock request
-        Either<ImmutableMap<String, Object>, WatchmanClient.Timeout> clockResult =
+        Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> clockResult =
             client.queryWithTimeout(
                 Long.MAX_VALUE,
                 Long.MAX_VALUE,

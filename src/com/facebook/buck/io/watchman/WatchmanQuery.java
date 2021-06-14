@@ -22,12 +22,21 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-/** Enumerate all watchman queries. */
-public abstract class WatchmanQuery {
+/**
+ * Enumerate all watchman queries.
+ *
+ * <p>Responses are {@link WatchmanQueryResp}.
+ */
+public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
 
   private WatchmanQuery() {}
 
   public abstract ImmutableList<Object> toProtocolArgs();
+
+  @SuppressWarnings("unchecked")
+  public R decodeResponse(ImmutableMap<String, Object> resp) {
+    return (R) WatchmanQueryResp.generic(resp);
+  }
 
   /** Short query description to be used in logs. */
   public String queryDesc() {
@@ -51,7 +60,8 @@ public abstract class WatchmanQuery {
   @BuckStyleValue
   @Value.Immutable(copy = true, builder = false, prehash = false, intern = false)
   @SuppressWarnings("immutables:untype")
-  public abstract static class Query extends WatchmanQuery implements QueryWithSync {
+  public abstract static class Query extends WatchmanQuery<WatchmanQueryResp.Generic>
+      implements QueryWithSync {
     public abstract String getPath();
 
     public abstract Optional<String> getRelativeRoot();
@@ -126,7 +136,7 @@ public abstract class WatchmanQuery {
 
   /** {@code version} query. */
   @BuckStyleValue
-  public abstract static class Version extends WatchmanQuery {
+  public abstract static class Version extends WatchmanQuery<WatchmanQueryResp.Generic> {
     public abstract ImmutableList<String> getRequired();
 
     public abstract ImmutableList<String> getOptional();
@@ -140,7 +150,7 @@ public abstract class WatchmanQuery {
 
   /** {@code watch-project} query. */
   @BuckStyleValue
-  public abstract static class WatchProject extends WatchmanQuery {
+  public abstract static class WatchProject extends WatchmanQuery<WatchmanQueryResp.Generic> {
     public abstract String getPath();
 
     @Override
@@ -151,7 +161,7 @@ public abstract class WatchmanQuery {
 
   /** {@code watch} query. */
   @BuckStyleValue
-  public abstract static class Watch extends WatchmanQuery {
+  public abstract static class Watch extends WatchmanQuery<WatchmanQueryResp.Generic> {
     public abstract String getPath();
 
     @Override
@@ -162,7 +172,8 @@ public abstract class WatchmanQuery {
 
   /** {@code clock} query. */
   @BuckStyleValue
-  public abstract static class Clock extends WatchmanQuery implements QueryWithSync {
+  public abstract static class Clock extends WatchmanQuery<WatchmanQueryResp.Generic>
+      implements QueryWithSync {
     public abstract String getPath();
 
     /** Milliseconds. */
@@ -184,7 +195,7 @@ public abstract class WatchmanQuery {
 
   /** {@code get-pid} query. */
   @BuckStyleValue
-  public abstract static class GetPid extends WatchmanQuery {
+  public abstract static class GetPid extends WatchmanQuery<WatchmanQueryResp.Generic> {
     @Override
     public ImmutableList<Object> toProtocolArgs() {
       return ImmutableList.of("get-pid");
