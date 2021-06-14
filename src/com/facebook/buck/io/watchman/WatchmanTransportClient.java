@@ -118,7 +118,11 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
 
       long elapsedNanos = clock.nanoTime() - startTimeNanos;
       LOG.debug("Query %s returned in %d ms", query, TimeUnit.NANOSECONDS.toMillis(elapsedNanos));
-      return result.mapLeft(resp -> query.decodeResponse(resp));
+      if (result.isLeft()) {
+        return Either.ofLeft(query.decodeResponse(result.getLeft()));
+      } else {
+        return Either.ofRight(result.getRight());
+      }
     } catch (ExecutionException e) {
       if (e.getCause() instanceof IOException) {
         throw (IOException) e.getCause();

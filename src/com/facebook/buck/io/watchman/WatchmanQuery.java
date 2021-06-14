@@ -34,7 +34,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
   public abstract ImmutableList<Object> toProtocolArgs();
 
   @SuppressWarnings("unchecked")
-  public R decodeResponse(ImmutableMap<String, Object> resp) {
+  public R decodeResponse(ImmutableMap<String, Object> resp) throws WatchmanQueryFailedException {
     return (R) WatchmanQueryResp.generic(resp);
   }
 
@@ -150,12 +150,25 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
 
   /** {@code watch-project} query. */
   @BuckStyleValue
-  public abstract static class WatchProject extends WatchmanQuery<WatchmanQueryResp.Generic> {
+  public abstract static class WatchProject
+      extends WatchmanQuery<WatchmanQueryResp.WatchProjectResp> {
     public abstract String getPath();
 
     @Override
     public ImmutableList<Object> toProtocolArgs() {
       return ImmutableList.of("watch-project", getPath());
+    }
+
+    @Override
+    public WatchmanQueryResp.WatchProjectResp decodeResponse(ImmutableMap<String, Object> resp)
+        throws WatchmanQueryFailedException {
+      String watch = (String) resp.get("watch");
+      if (watch == null) {
+        throw new WatchmanQueryFailedException(
+            "watch-project response has no `watch` field: " + resp);
+      }
+      String relativePath = (String) resp.getOrDefault("relative_path", "");
+      return WatchmanQueryResp.watchProject(watch, relativePath);
     }
   }
 

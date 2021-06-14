@@ -29,7 +29,19 @@ public abstract class WatchmanQueryResp {
     public abstract ImmutableMap<String, Object> getResp();
   }
 
+  /** Response to {@code watch-project} command. */
+  @BuckStyleValue
+  public abstract static class WatchProjectResp extends WatchmanQueryResp {
+    public abstract String getWatch();
+
+    public abstract String getRelativePath();
+  }
+
   public static Generic generic(ImmutableMap<String, Object> resp) {
     return ImmutableGeneric.ofImpl(resp);
+  }
+
+  public static WatchProjectResp watchProject(String watch, String relativePath) {
+    return ImmutableWatchProjectResp.ofImpl(watch, relativePath);
   }
 }

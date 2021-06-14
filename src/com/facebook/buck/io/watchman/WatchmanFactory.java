@@ -398,7 +398,7 @@ public class WatchmanFactory {
     LOG.info("Adding watchman root: %s", rootPath);
 
     long projectWatchTimeNanos = clock.nanoTime();
-    Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> result;
+    Either<WatchmanQueryResp.WatchProjectResp, WatchmanClient.Timeout> result;
     try {
       result =
           watchmanClient.queryWithTimeout(
@@ -416,14 +416,10 @@ public class WatchmanFactory {
       return Optional.empty();
     }
 
-    Map<String, ?> map = result.getLeft().getResp();
+    WatchmanQueryResp.WatchProjectResp map = result.getLeft();
 
-    if (!map.containsKey("watch")) {
-      return Optional.empty();
-    }
-
-    String watchRoot = (String) map.get("watch");
-    Optional<String> watchPrefix = Optional.ofNullable((String) map.get("relative_path"));
+    String watchRoot = map.getWatch();
+    Optional<String> watchPrefix = Optional.of(map.getRelativePath()).filter(s -> !s.isEmpty());
     return Optional.of(ProjectWatch.of(watchRoot, watchPrefix));
   }
 

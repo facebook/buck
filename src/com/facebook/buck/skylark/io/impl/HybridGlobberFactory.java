@@ -77,8 +77,8 @@ public class HybridGlobberFactory implements GlobberFactory {
             TIMEOUT_NANOS, WARN_TIMEOUT_NANOS, WatchmanQuery.watchProject(filePath.toString()))
         .mapLeft(
             result -> {
-              String watchRoot = (String) result.getResp().get("watch");
-              String relativePath = (String) result.getResp().get("relative_path");
+              String watchRoot = result.getWatch();
+              String relativePath = result.getRelativePath();
               return new WatchProjectResult(
                   Objects.requireNonNull(watchRoot), Objects.requireNonNull(relativePath));
             });

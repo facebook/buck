@@ -96,14 +96,14 @@ public class WatchmanClientIntegrationTest {
 
     Path rootPath = workspace.getDestPath();
 
-    Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> watch =
+    Either<WatchmanQueryResp.WatchProjectResp, WatchmanClient.Timeout> watch =
         client.queryWithTimeout(
             timeoutNanos, pollingTimeNanos, WatchmanQuery.watchProject(rootPath.toString()));
 
     assertTrue(watch.isLeft());
 
-    WatchmanQueryResp.Generic map = watch.getLeft();
-    String watchRoot = (String) map.getResp().get("watch");
+    WatchmanQueryResp.WatchProjectResp map = watch.getLeft();
+    String watchRoot = map.getWatch();
 
     Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> queryResponse =
         client.queryWithTimeout(
