@@ -186,6 +186,13 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       ParserConfig parserConfig,
       ProjectBuildFileParserOptions buildFileParserOptions,
       boolean threadSafe) {
+    Preconditions.checkArgument(
+        cell.getRoot().equals(buildFileParserOptions.getProjectRoot()),
+        "cell '%s' root %s should be equal to parser options root %s",
+        cell.getCanonicalName(),
+        cell.getRoot(),
+        buildFileParserOptions.getProjectRoot());
+
     ProjectBuildFileParser parser;
     DefaultBuildFileSyntaxMapping defaultBuildFileSyntax = parserConfig.getDefaultBuildFileSyntax();
 
