@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -41,7 +42,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -356,7 +356,7 @@ public class ProjectBuildFileParserPoolTest {
               BuckEventBusForTests.newInstance(),
               cell,
               new WatchmanFactory.NullWatchman("test"),
-              AbsPath.of(Paths.get("BUCK").toAbsolutePath()),
+              ForwardRelPath.of("BUCK"),
               executorService));
     }
     return futures.build();

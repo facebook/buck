@@ -77,7 +77,7 @@ public abstract class GenericFileParsePipeline<T extends FileManifest>
           }
 
           return fileParserPool.getManifest(
-              eventBus, cell, watchman, absManifestPath, executorService);
+              eventBus, cell, watchman, manifestFile, executorService);
         });
   }
 
