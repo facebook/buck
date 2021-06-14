@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.label.Label;
 import com.facebook.buck.core.starlark.eventhandler.EventHandler;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
@@ -102,7 +103,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   }
 
   @Override
-  CachingGlobber getGlobber(AbsPath parseFile) {
+  CachingGlobber getGlobber(ForwardRelPath parseFile) {
     return newGlobber(parseFile);
   }
 
@@ -129,12 +130,15 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
 
   @Override
   @SuppressWarnings("unchecked")
-  public BuildFileManifest getManifest(AbsPath buildFile)
+  public BuildFileManifest getManifest(ForwardRelPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
+
+    AbsPath buildFileAbs = options.getProjectRoot().resolve(buildFile);
+
     LOG.verbose("Started parsing build file %s", buildFile);
     ParseBuckFileEvent.Started startEvent =
         ParseBuckFileEvent.started(
-            buildFile.getPath(), ParseBuckFileEvent.ParserKind.SKYLARK, this.getClass());
+            buildFileAbs.getPath(), ParseBuckFileEvent.ParserKind.SKYLARK, this.getClass());
     buckEventBus.post(startEvent);
     int rulesParsed = 0;
     try {
@@ -171,8 +175,9 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   }
 
   /** Creates a globber for the package defined by the provided build file path. */
-  private CachingGlobber newGlobber(AbsPath buildFile) {
-    return CachingGlobber.of(globberFactory.create(buildFile.getParent()));
+  private CachingGlobber newGlobber(ForwardRelPath buildFile) {
+    AbsPath buildFileAbs = options.getProjectRoot().resolve(buildFile);
+    return CachingGlobber.of(globberFactory.create(buildFileAbs.getParent()));
   }
 
   @Override
@@ -183,7 +188,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
 
   @Override
   public boolean globResultsMatchCurrentState(
-      AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      ForwardRelPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
       throws IOException, InterruptedException {
     CachingGlobber globber = newGlobber(buildFile);
     for (GlobSpecWithResult globSpecWithResult : existingGlobsWithResults) {

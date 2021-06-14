@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -195,8 +196,11 @@ public class ResolverIntegrationTest {
     HashCode seen = MorePaths.asByteSource(jarFile.getPath()).hash(Hashing.sha1());
     assertEquals(expected, seen);
 
+    AbsPath buildFileAbs = groupDir.resolve("BUCK");
+    ForwardRelPath buildFile =
+        ForwardRelPath.ofRelPath(MorePaths.relativize(buckRepoRoot, buildFileAbs));
     TwoArraysImmutableHashMap<String, RawTargetNode> rules =
-        buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
+        buildFileParser.getManifest(buildFile).getTargets();
 
     assertEquals(1, rules.size());
     RawTargetNode rule = Iterables.getOnlyElement(rules.values());
@@ -221,8 +225,11 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:with-sources:jar:1.0");
 
     AbsPath groupDir = thirdParty.resolve("example");
+    AbsPath buildFileAbs = groupDir.resolve("BUCK");
+    ForwardRelPath buildFile =
+        ForwardRelPath.ofRelPath(MorePaths.relativize(buckRepoRoot, buildFileAbs));
     TwoArraysImmutableHashMap<String, RawTargetNode> rules =
-        buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
+        buildFileParser.getManifest(buildFile).getTargets();
 
     RawTargetNode rule = Iterables.getOnlyElement(rules.values());
     assertEquals("with-sources-1.0-sources.jar", rule.getBySnakeCase("source_jar"));
@@ -233,19 +240,18 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:with-deps:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
+    AbsPath exampleBuildFileAbs = buckRepoRoot.resolve(exampleDir).resolve("BUCK");
+    ForwardRelPath exampleBuildFile =
+        ForwardRelPath.ofRelPath(MorePaths.relativize(buckRepoRoot, exampleBuildFileAbs));
     RawTargetNode withDeps =
         Iterables.getOnlyElement(
-            buildFileParser
-                .getManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
-                .getTargets()
-                .values());
+            buildFileParser.getManifest(exampleBuildFile).getTargets().values());
     Path otherDir = thirdPartyRelative.resolve("othercorp");
+    AbsPath otherBuildFileAbs = buckRepoRoot.resolve(otherDir).resolve("BUCK");
+    ForwardRelPath otherBuildFile =
+        ForwardRelPath.ofRelPath(MorePaths.relativize(buckRepoRoot, otherBuildFileAbs));
     RawTargetNode noDeps =
-        Iterables.getOnlyElement(
-            buildFileParser
-                .getManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
-                .getTargets()
-                .values());
+        Iterables.getOnlyElement(buildFileParser.getManifest(otherBuildFile).getTargets().values());
 
     List<String> visibility = noDeps.getVisibility();
     assertEquals(1, visibility.size());
@@ -271,7 +277,7 @@ public class ResolverIntegrationTest {
 
     Path exampleDir = thirdPartyRelative.resolve("example");
     TwoArraysImmutableHashMap<String, RawTargetNode> allTargets =
-        buildFileParser.getManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK")).getTargets();
+        buildFileParser.getManifest(ForwardRelPath.ofPath(exampleDir).resolve("BUCK")).getTargets();
 
     assertEquals(2, allTargets.size());
 

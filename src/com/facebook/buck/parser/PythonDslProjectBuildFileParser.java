@@ -388,17 +388,19 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   @Override
-  public BuildFileManifest getManifest(AbsPath buildFile)
+  public BuildFileManifest getManifest(ForwardRelPath buildFile)
       throws BuildFileParseException, InterruptedException {
+    AbsPath buildFileAbs = options.getProjectRoot().resolve(buildFile);
+
     LOG.verbose("Started parsing build file %s", buildFile);
     try {
-      BuildFileManifest manifest = getAllRulesInternal(buildFile);
+      BuildFileManifest manifest = getAllRulesInternal(buildFileAbs);
       userDefinedRulesParser.ifPresent(
           parser -> parser.loadExtensionsForUserDefinedRules(currentBuildFile.get(), manifest));
       return manifest;
     } catch (IOException e) {
       MoreThrowables.propagateIfInterrupt(e);
-      throw BuildFileParseException.createForBuildFileParseError(buildFile.getPath(), e);
+      throw BuildFileParseException.createForBuildFileParseError(buildFileAbs.getPath(), e);
     } catch (BuildFileParseException ex) {
 
       // When buck.py encounters parsing error, it writes diagnostics and then crashes the process
@@ -879,14 +881,14 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
+  public ImmutableSortedSet<String> getIncludedFiles(ForwardRelPath buildFile)
       throws BuildFileParseException, InterruptedException {
     return ImmutableSortedSet.copyOf(getManifest(buildFile).getIncludes());
   }
 
   @Override
   public boolean globResultsMatchCurrentState(
-      AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
+      ForwardRelPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
     throw new UnsupportedOperationException("Not yet implemented!");
   }
 

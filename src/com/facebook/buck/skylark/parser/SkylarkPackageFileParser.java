@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.starlark.eventhandler.EventHandler;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -73,7 +74,7 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
   }
 
   @Override
-  Globber getGlobber(AbsPath parseFile) {
+  Globber getGlobber(ForwardRelPath parseFile) {
     return new UnsupportedGlobber();
   }
 
@@ -98,12 +99,14 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
 
   @Override
   @SuppressWarnings("unchecked")
-  public PackageFileManifest getManifest(AbsPath packageFile)
+  public PackageFileManifest getManifest(ForwardRelPath packageFile)
       throws BuildFileParseException, InterruptedException, IOException {
+    AbsPath packageFileAbs = options.getProjectRoot().resolve(packageFile);
+
     LOG.verbose("Started parsing package file file %s", packageFile);
     ParseBuckFileEvent.Started startEvent =
         ParseBuckFileEvent.started(
-            packageFile.getPath(), ParseBuckFileEvent.ParserKind.SKYLARK, this.getClass());
+            packageFileAbs.getPath(), ParseBuckFileEvent.ParserKind.SKYLARK, this.getClass());
     buckEventBus.post(startEvent);
     try {
       ParseResult parseResult = parse(packageFile);

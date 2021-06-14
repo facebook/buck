@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.api;
 
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
@@ -39,7 +39,7 @@ public abstract class ForwardingProjectBuildFileParserDecorator implements Proje
   }
 
   @Override
-  public BuildFileManifest getManifest(AbsPath buildFile)
+  public BuildFileManifest getManifest(ForwardRelPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return delegate.getManifest(buildFile);
   }
@@ -50,14 +50,14 @@ public abstract class ForwardingProjectBuildFileParserDecorator implements Proje
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
+  public ImmutableSortedSet<String> getIncludedFiles(ForwardRelPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return delegate.getIncludedFiles(buildFile);
   }
 
   @Override
   public boolean globResultsMatchCurrentState(
-      AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      ForwardRelPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
       throws IOException, InterruptedException {
     return delegate.globResultsMatchCurrentState(buildFile, existingGlobsWithResults);
   }

@@ -21,13 +21,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.FileName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.starlark.eventhandler.EventHandler;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.config.ParserConfig;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.skylark.function.SkylarkBuildModule;
@@ -122,16 +122,10 @@ public class SkylarkProjectBuildFileParserTestUtils {
         globberFactory);
   }
 
-  static RawTargetNode getSingleRule(SkylarkProjectBuildFileParser parser, AbsPath buildFile)
+  static RawTargetNode getSingleRule(SkylarkProjectBuildFileParser parser, ForwardRelPath buildFile)
       throws IOException, InterruptedException {
     BuildFileManifest buildFileManifest = parser.getManifest(buildFile);
     assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
     return Iterables.getOnlyElement(buildFileManifest.getTargets().values());
-  }
-
-  static RawTargetNode getSingleRule(
-      SkylarkProjectBuildFileParser parser, java.nio.file.Path buildFile)
-      throws BuildFileParseException, InterruptedException, IOException {
-    return getSingleRule(parser, AbsPath.of(buildFile));
   }
 }

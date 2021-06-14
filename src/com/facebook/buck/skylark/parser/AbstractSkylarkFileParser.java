@@ -121,7 +121,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       Globber globber,
       ImmutableList<String> loadedPaths);
 
-  abstract Globber getGlobber(AbsPath parseFile);
+  abstract Globber getGlobber(ForwardRelPath parseFile);
 
   private ImplicitlyLoadedExtension loadImplicitInclude(ImplicitIncludePath path)
       throws IOException, InterruptedException {
@@ -212,17 +212,19 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   /** @return The parsed result defined in {@code parseFile}. */
-  protected ParseResult parse(AbsPath parseFile)
+  protected ParseResult parse(ForwardRelPath parseFile)
       throws IOException, BuildFileParseException, InterruptedException {
 
-    ForwardRelPath basePath = getBasePath(parseFile);
+    AbsPath parseFileAbs = options.getProjectRoot().resolve(parseFile);
+
+    ForwardRelPath basePath = parseFile.getParentButEmptyForSingleSegment();
     Label containingLabel = createContainingLabel(basePath);
     LoadStack loadStack = LoadStack.top(Location.fromFile(parseFile.toString()));
     ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, loadStack);
 
     Program buildFileAst =
         parseSkylarkFile(
-            parseFile, loadStack, getBuckOrPackage().fileKind, implicitLoad.getLoadedSymbols());
+            parseFileAbs, loadStack, getBuckOrPackage().fileKind, implicitLoad.getLoadedSymbols());
     Globber globber = getGlobber(parseFile);
     PackageContext packageContext =
         createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
@@ -231,7 +233,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     try (Mutability mutability = Mutability.create("parsing " + parseFile)) {
       EnvironmentData envData =
           createBuildFileEvaluationEnvironment(
-              parseFile,
+              parseFileAbs,
               containingLabel,
               buildFileAst,
               mutability,
@@ -244,11 +246,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
       ImmutableList.Builder<String> loadedPaths =
           ImmutableList.builderWithExpectedSize(envData.getLoadedPaths().size() + 1);
-      loadedPaths.add(parseFile.toString());
+      loadedPaths.add(parseFileAbs.toString());
       loadedPaths.addAll(envData.getLoadedPaths());
 
       return getParseResult(
-          parseFile, parseContext, readConfigContext, globber, loadedPaths.build());
+          parseFileAbs, parseContext, readConfigContext, globber, loadedPaths.build());
     }
   }
 
@@ -458,9 +460,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         loadIncludes(label, getImports(fileAst, label), loadStack);
 
     return ImmutableIncludesData.ofImpl(
-        filePath,
-        dependencies,
-        toIncludedPaths(filePath.toString(), dependencies, ImmutableSet.of()));
+        filePath, dependencies, toIncludedPaths(filePath, dependencies, ImmutableSet.of()));
   }
 
   /**
@@ -505,11 +505,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   private ImmutableSet<String> toIncludedPaths(
-      String containingPath,
+      AbsPath containingPath,
       ImmutableList<IncludesData> dependencies,
       ImmutableSet<String> implicitLoadExtensionTransitiveClosure) {
     ImmutableSet.Builder<String> includedPathsBuilder = ImmutableSet.builder();
-    includedPathsBuilder.add(containingPath);
+    includedPathsBuilder.add(containingPath.toString());
     // for loop is used instead of foreach to avoid iterator overhead, since it's a hot spot
     for (int i = 0; i < dependencies.size(); ++i) {
       includedPathsBuilder.addAll(dependencies.get(i).getLoadTransitiveClosure());
@@ -940,15 +940,17 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(AbsPath parseFile)
+  public ImmutableSortedSet<String> getIncludedFiles(ForwardRelPath parseFile)
       throws BuildFileParseException, InterruptedException, IOException {
 
-    ForwardRelPath basePath = getBasePath(parseFile);
+    AbsPath parseFileAbs = options.getProjectRoot().resolve(parseFile);
+
+    ForwardRelPath basePath = parseFile.getParentButEmptyForSingleSegment();
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, LoadStack.EMPTY);
     Program buildFileAst =
         parseSkylarkFile(
-            parseFile,
+            parseFileAbs,
             LoadStack.EMPTY,
             getBuckOrPackage().fileKind,
             implicitLoad.getLoadedSymbols());
@@ -959,8 +961,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     // merge sorted lists as we aggregate transitive close up
     // But Guava does not seem to have a built-in way of merging sorted lists/sets
     return ImmutableSortedSet.copyOf(
-        toIncludedPaths(
-            parseFile.toString(), dependencies, implicitLoad.getLoadTransitiveClosure()));
+        toIncludedPaths(parseFileAbs, dependencies, implicitLoad.getLoadTransitiveClosure()));
   }
 
   @Override

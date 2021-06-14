@@ -25,7 +25,6 @@ import com.facebook.buck.parser.config.DefaultBuildFileSyntaxMapping;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -64,7 +63,7 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public BuildFileManifest getManifest(AbsPath buildFile)
+  public BuildFileManifest getManifest(ForwardRelPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return getParserForBuildFile(buildFile).getManifest(buildFile);
   }
@@ -77,14 +76,14 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
+  public ImmutableSortedSet<String> getIncludedFiles(ForwardRelPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return getParserForBuildFile(buildFile).getIncludedFiles(buildFile);
   }
 
   @Override
   public boolean globResultsMatchCurrentState(
-      AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      ForwardRelPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
       throws IOException, InterruptedException {
     return getParserForBuildFile(buildFile)
         .globResultsMatchCurrentState(buildFile, existingGlobsWithResults);
@@ -104,19 +103,13 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
    *     <p>Passing an unknown syntax causes {@link BuildFileParseException}, since new versions of
    *     Buck might support new syntax, that does not have to be Python DSL compatible.
    */
-  private ProjectBuildFileParser getParserForBuildFile(AbsPath buildFile)
+  private ProjectBuildFileParser getParserForBuildFile(ForwardRelPath buildFile)
       throws IOException, BuildFileParseException {
-    Preconditions.checkArgument(
-        buildFile.startsWith(cellRoot),
-        "build file %s must be a descendant of cell root %s",
-        buildFile,
-        cellRoot);
-
-    ForwardRelPath buildFileRel = ForwardRelPath.ofRelPath(cellRoot.relativize(buildFile));
+    AbsPath buildFileAbs = cellRoot.resolve(buildFile);
 
     @Nullable
     String firstLine =
-        Files.asCharSource(buildFile.toFile(), StandardCharsets.UTF_8).readFirstLine();
+        Files.asCharSource(buildFileAbs.toFile(), StandardCharsets.UTF_8).readFirstLine();
 
     Syntax syntax;
     if (firstLine != null && firstLine.startsWith(SYNTAX_MARKER_START)) {
@@ -128,14 +121,14 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
                       BuildFileParseException.createForUnknownParseError(
                           String.format(
                               "Unrecognized syntax [%s] requested for build file [%s]",
-                              syntaxName, buildFile)));
+                              syntaxName, buildFileAbs)));
     } else {
-      syntax = defaultSyntax.syntaxForPath(buildFileRel);
+      syntax = defaultSyntax.syntaxForPath(buildFile);
     }
     @Nullable ProjectBuildFileParser parser = parsers.get(syntax);
     if (parser == null) {
       throw BuildFileParseException.createForUnknownParseError(
-          String.format("Syntax [%s] is not supported for build file [%s]", syntax, buildFile));
+          String.format("Syntax [%s] is not supported for build file [%s]", syntax, buildFileAbs));
     }
     return parser;
   }

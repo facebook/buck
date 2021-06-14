@@ -22,8 +22,8 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.FileName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
@@ -38,14 +38,13 @@ public class BuildPackagePathToBuildFileManifestComputationTest {
 
     ProjectBuildFileParser parser = createMock(ProjectBuildFileParser.class);
 
-    AbsPath root = AbsPath.of(Paths.get("/root/package/BUCK").toAbsolutePath());
+    ForwardRelPath root = ForwardRelPath.of("package/BUCK");
 
     expect(parser.getManifest(eq(root))).andReturn(createMock(BuildFileManifest.class)).once();
     replay(parser);
 
     BuildPackagePathToBuildFileManifestComputation computation =
-        BuildPackagePathToBuildFileManifestComputation.of(
-            parser, FileName.of("BUCK"), Paths.get("/root").toAbsolutePath(), true);
+        BuildPackagePathToBuildFileManifestComputation.of(parser, FileName.of("BUCK"), true);
     FakeComputationEnvironment env = new FakeComputationEnvironment(ImmutableMap.of());
 
     computation.transform(

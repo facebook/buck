@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
@@ -34,14 +34,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.eventbus.Subscribe;
-import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
 public class EventReportingProjectBuildFileParserTest {
 
-  private final AbsPath somePath = AbsPath.of(Paths.get("some_path").toAbsolutePath());
+  private final ForwardRelPath somePath = ForwardRelPath.of("some_path");
   private TestProjectBuildFileParser delegate;
 
   private EventReportingProjectBuildFileParser parser;
@@ -83,7 +82,7 @@ public class EventReportingProjectBuildFileParserTest {
     private boolean isClosed;
 
     @Override
-    public BuildFileManifest getManifest(AbsPath buildFile) {
+    public BuildFileManifest getManifest(ForwardRelPath buildFile) {
       return allRulesAndMetadata;
     }
 
@@ -93,14 +92,14 @@ public class EventReportingProjectBuildFileParserTest {
     }
 
     @Override
-    public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
+    public ImmutableSortedSet<String> getIncludedFiles(ForwardRelPath buildFile)
         throws BuildFileParseException {
       return ImmutableSortedSet.of();
     }
 
     @Override
     public boolean globResultsMatchCurrentState(
-        AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
+        ForwardRelPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
       return false;
     }
 

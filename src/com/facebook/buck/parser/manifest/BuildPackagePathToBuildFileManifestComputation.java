@@ -16,8 +16,8 @@
 
 package com.facebook.buck.parser.manifest;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.FileName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -37,16 +37,14 @@ import java.nio.file.Path;
 public class BuildPackagePathToBuildFileManifestComputation
     implements GraphComputation<BuildPackagePathToBuildFileManifestKey, BuildFileManifest> {
 
-  private final AbsPath root;
   private final ProjectBuildFileParser parser;
   private final FileName buildFileName;
   private final boolean throwOnParseError;
 
   private BuildPackagePathToBuildFileManifestComputation(
-      ProjectBuildFileParser parser, FileName buildFileName, Path root, boolean throwOnParseError) {
+      ProjectBuildFileParser parser, FileName buildFileName, boolean throwOnParseError) {
     this.parser = parser;
     this.buildFileName = buildFileName;
-    this.root = AbsPath.of(root);
     this.throwOnParseError = throwOnParseError;
   }
 
@@ -55,14 +53,13 @@ public class BuildPackagePathToBuildFileManifestComputation
    *
    * @param parser Parser used to parse build file. This parser should be thread-safe.
    * @param buildFileName File name of the build file (like BUCK) expressed as a {@link Path}
-   * @param root Absolute {@link Path} to the build root, usually cell root
    * @param throwOnParseError If true, error in parsing of a build file results in exception thrown.
    *     Otherwise an empty {@link BuildFileManifest} is created and filled with error information.
    */
   public static BuildPackagePathToBuildFileManifestComputation of(
-      ProjectBuildFileParser parser, FileName buildFileName, Path root, boolean throwOnParseError) {
+      ProjectBuildFileParser parser, FileName buildFileName, boolean throwOnParseError) {
     return new BuildPackagePathToBuildFileManifestComputation(
-        parser, buildFileName, root, throwOnParseError);
+        parser, buildFileName, throwOnParseError);
   }
 
   @Override
@@ -74,7 +71,7 @@ public class BuildPackagePathToBuildFileManifestComputation
   public BuildFileManifest transform(
       BuildPackagePathToBuildFileManifestKey key, ComputationEnvironment env) throws Exception {
     try {
-      return parser.getManifest(root.resolve(key.getPath()).resolve(buildFileName));
+      return parser.getManifest(ForwardRelPath.ofPath(key.getPath()).resolve(buildFileName));
     } catch (BuildFileParseException ex) {
       if (throwOnParseError) {
         throw ex;

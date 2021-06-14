@@ -17,6 +17,7 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -35,6 +36,7 @@ public class TargetCountVerificationParserDecorator
     extends ForwardingProjectBuildFileParserDecorator {
   private final int targetWarnCount;
   private final BuckEventBus buckEventBus;
+  private final AbsPath cellRoot;
 
   /**
    * @param delegate the aggregated parser.
@@ -42,11 +44,15 @@ public class TargetCountVerificationParserDecorator
    * @param eventBus The event buss where to post warning events for handling.
    */
   public TargetCountVerificationParserDecorator(
-      ProjectBuildFileParser delegate, int targetWarnCount, BuckEventBus eventBus) {
+      ProjectBuildFileParser delegate,
+      int targetWarnCount,
+      BuckEventBus eventBus,
+      AbsPath cellRoot) {
     super(delegate);
     Objects.requireNonNull(eventBus, "Must have a valid eventBus set.");
+    this.cellRoot = cellRoot;
     this.targetWarnCount = targetWarnCount;
-    buckEventBus = eventBus;
+    this.buckEventBus = eventBus;
   }
 
   /**
@@ -65,14 +71,16 @@ public class TargetCountVerificationParserDecorator
         ConsoleEvent.warning(
             String.format(
                 "Number of expanded targets - %1$d - in file %2$s exceeds the threshold of %3$d. This could result in really slow builds.",
-                targetCount, buildFile.toString(), targetWarnCount)));
+                targetCount, cellRoot.resolve(buildFile), targetWarnCount)));
   }
 
   @Override
-  public BuildFileManifest getManifest(AbsPath buildFile)
+  public BuildFileManifest getManifest(ForwardRelPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
+    AbsPath buildFileAbs = cellRoot.resolve(buildFile);
+
     BuildFileManifest targetManifest = delegate.getManifest(buildFile);
-    maybePostWarningAboutTooManyTargets(buildFile.getPath(), targetManifest.getTargets().size());
+    maybePostWarningAboutTooManyTargets(buildFileAbs.getPath(), targetManifest.getTargets().size());
     return targetManifest;
   }
 }

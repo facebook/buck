@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.facebook.buck.core.starlark.eventhandler.EventKind;
@@ -173,8 +174,12 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
 
   /** Creates a delegate wrapper that counts the number of targets declared in a parsed file */
   private static ProjectBuildFileParser createTargetCountingWrapper(
-      ProjectBuildFileParser aggregate, int targetCountThreshold, BuckEventBus eventBus) {
-    return new TargetCountVerificationParserDecorator(aggregate, targetCountThreshold, eventBus);
+      ProjectBuildFileParser aggregate,
+      int targetCountThreshold,
+      BuckEventBus eventBus,
+      AbsPath cellRoot) {
+    return new TargetCountVerificationParserDecorator(
+        aggregate, targetCountThreshold, eventBus, cellRoot);
   }
 
   /** Creates a project build file parser based on Buck configuration settings. */
@@ -265,7 +270,12 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       }
     }
 
-    parser = createTargetCountingWrapper(parser, parserConfig.getParserTargetThreshold(), eventBus);
+    parser =
+        createTargetCountingWrapper(
+            parser,
+            parserConfig.getParserTargetThreshold(),
+            eventBus,
+            buildFileParserOptions.getProjectRoot());
 
     return parser;
   }

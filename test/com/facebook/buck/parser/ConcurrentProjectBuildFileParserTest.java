@@ -20,8 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -35,7 +34,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -75,7 +73,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public BuildFileManifest getManifest(AbsPath buildFile) {
+    public BuildFileManifest getManifest(ForwardRelPath buildFile) {
       processCall("getManifest");
       return null;
     }
@@ -87,7 +85,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile) {
+    public ImmutableSortedSet<String> getIncludedFiles(ForwardRelPath buildFile) {
       processCall("getIncludedFiles");
       return null;
     }
@@ -95,7 +93,7 @@ public class ConcurrentProjectBuildFileParserTest {
     @Override
     @SuppressWarnings("unused")
     public boolean globResultsMatchCurrentState(
-        AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
+        ForwardRelPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
       processCall("globResultsMatchCurrentState");
       return false;
     }
@@ -132,7 +130,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public BuildFileManifest getManifest(AbsPath buildFile) {
+    public BuildFileManifest getManifest(ForwardRelPath buildFile) {
       waitLatch();
       return null;
     }
@@ -142,7 +140,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile) {
+    public ImmutableSortedSet<String> getIncludedFiles(ForwardRelPath buildFile) {
       waitLatch();
       return null;
     }
@@ -150,7 +148,7 @@ public class ConcurrentProjectBuildFileParserTest {
     @Override
     @SuppressWarnings("unused")
     public boolean globResultsMatchCurrentState(
-        AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
+        ForwardRelPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults) {
       waitLatch();
       return false;
     }
@@ -178,17 +176,15 @@ public class ConcurrentProjectBuildFileParserTest {
 
       for (int i = 0; i < ITERATIONS; i++) {
         futures.add(
-            executorService.submit(
-                () -> buildFileParser.getManifest(AbsPath.of(Paths.get("").toAbsolutePath()))));
+            executorService.submit(() -> buildFileParser.getManifest(ForwardRelPath.of("BUCK"))));
         futures.add(
             executorService.submit(
-                () ->
-                    buildFileParser.getIncludedFiles(AbsPath.of(Paths.get("").toAbsolutePath()))));
+                () -> buildFileParser.getIncludedFiles(ForwardRelPath.of("BUCK"))));
         futures.add(
             executorService.submit(
                 () ->
                     buildFileParser.globResultsMatchCurrentState(
-                        RelPath.get(".").toAbsolutePath(), ImmutableList.of())));
+                        ForwardRelPath.of("BUCK"), ImmutableList.of())));
       }
 
       Futures.allAsList(futures).get();
@@ -263,8 +259,7 @@ public class ConcurrentProjectBuildFileParserTest {
             MoreExecutors.listeningDecorator(fixedThreadExecutor);
         for (int i = 0; i < threads; i++) {
           futures.add(
-              executorService.submit(
-                  () -> buildFileParser.getManifest(AbsPath.of(Paths.get("").toAbsolutePath()))));
+              executorService.submit(() -> buildFileParser.getManifest(ForwardRelPath.of("BUCK"))));
         }
         Futures.allAsList(futures).get();
       }

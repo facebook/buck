@@ -17,12 +17,16 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.FlushConsoleEvent;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.RawTargetNode;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -131,9 +135,16 @@ public class AuditRulesCommand extends AbstractCommand {
 
           AbsPath absPath = projectFilesystem.getRootPath().resolve(path);
 
+          RelPath relPath = MorePaths.relativize(projectFilesystem.getRootPath(), absPath);
+          if (relPath.startsWith("..")) {
+            throw BuildFileParseException.createForUnknownParseError(
+                "Path %s is not under cell root %s", path, projectFilesystem.getRootPath());
+          }
+          ForwardRelPath forwardRelPath = ForwardRelPath.ofRelPath(relPath);
+
           // Parse the rules from the build file.
           TwoArraysImmutableHashMap<String, RawTargetNode> rawRules =
-              parser.getManifest(absPath).getTargets();
+              parser.getManifest(forwardRelPath).getTargets();
 
           // Format and print the rules from the raw data, filtered by type.
           ImmutableSet<String> types = getTypes();

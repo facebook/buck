@@ -22,7 +22,6 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.watchman.WatchmanFactory;
@@ -146,7 +145,7 @@ public class ProjectBuildFileParserPoolTest {
 
               ProjectBuildFileParser parser = EasyMock.createMock(ProjectBuildFileParser.class);
               try {
-                EasyMock.expect(parser.getManifest(EasyMock.anyObject(AbsPath.class)))
+                EasyMock.expect(parser.getManifest(EasyMock.anyObject(ForwardRelPath.class)))
                     .andAnswer(
                         () -> {
                           createParserLatch.countDown();
@@ -365,7 +364,7 @@ public class ProjectBuildFileParserPoolTest {
   private ProjectBuildFileParser createMockParser(IAnswer<BuildFileManifest> parseFn) {
     ProjectBuildFileParser mock = EasyMock.createMock(ProjectBuildFileParser.class);
     try {
-      EasyMock.expect(mock.getManifest(EasyMock.anyObject(AbsPath.class)))
+      EasyMock.expect(mock.getManifest(EasyMock.anyObject(ForwardRelPath.class)))
           .andAnswer(parseFn)
           .anyTimes();
       mock.close();

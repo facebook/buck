@@ -17,10 +17,14 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -82,7 +86,14 @@ public class AuditIncludesCommand extends AbstractCommand {
 
         AbsPath absPath = projectFilesystem.getRootPath().resolve(path);
 
-        Iterable<String> includes = parser.getIncludedFiles(absPath);
+        RelPath relPath = MorePaths.relativize(projectFilesystem.getRootPath(), absPath);
+        if (relPath.startsWith("..")) {
+          throw BuildFileParseException.createForUnknownParseError(
+              "Path %s is not under cell root %s", path, projectFilesystem.getRootPath());
+        }
+        ForwardRelPath forwardRelPath = ForwardRelPath.ofRelPath(relPath);
+
+        Iterable<String> includes = parser.getIncludedFiles(forwardRelPath);
         printIncludesToStdout(
             params, Objects.requireNonNull(includes, "__includes metadata entry is missing"));
       }

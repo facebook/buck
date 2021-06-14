@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.api;
 
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -38,6 +38,6 @@ public interface ProjectBuildFileParser extends FileParser<BuildFileManifest> {
    *     {@code false} otherwise.
    */
   boolean globResultsMatchCurrentState(
-      AbsPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
+      ForwardRelPath buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
       throws IOException, InterruptedException;
 }

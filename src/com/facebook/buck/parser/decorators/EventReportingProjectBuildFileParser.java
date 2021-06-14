@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.decorators;
 
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -63,7 +63,7 @@ public class EventReportingProjectBuildFileParser
   }
 
   @Override
-  public BuildFileManifest getManifest(AbsPath buildFile)
+  public BuildFileManifest getManifest(ForwardRelPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     maybePostStartEvent();
     return delegate.getManifest(buildFile);

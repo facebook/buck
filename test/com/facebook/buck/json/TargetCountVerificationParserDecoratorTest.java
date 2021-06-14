@@ -22,6 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingEventListener;
@@ -32,8 +33,6 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import org.easymock.EasyMock;
@@ -43,7 +42,9 @@ import org.junit.Test;
 public class TargetCountVerificationParserDecoratorTest {
 
   private CapturingEventListener capturingEventListener;
-  private Path path;
+  private AbsPath root;
+  private ForwardRelPath path;
+  private AbsPath pathAbs;
   private ProjectBuildFileParser parserMock;
   private ImmutableMap<String, RawTargetNode> rawTargets;
   private BuckEventBus eventBus;
@@ -53,7 +54,9 @@ public class TargetCountVerificationParserDecoratorTest {
     eventBus = BuckEventBusForTests.newInstance();
     capturingEventListener = new CapturingEventListener();
     eventBus.register(capturingEventListener);
-    path = Paths.get("/foo/bar").toAbsolutePath();
+    root = RelPath.get(".").toAbsolutePath().normalize();
+    path = ForwardRelPath.of("bar");
+    pathAbs = root.resolve(path);
     parserMock = EasyMock.createMock(ProjectBuildFileParser.class);
 
     Map<String, Object> retMap1 = new HashMap<>();
@@ -86,7 +89,7 @@ public class TargetCountVerificationParserDecoratorTest {
     String expectedWarning =
         String.format(
             "Number of expanded targets - %1$d - in file %2$s exceeds the threshold of %3$d. This could result in really slow builds.",
-            5, path.toString(), 3);
+            5, pathAbs.toString(), 3);
 
     assertThat(
         capturingEventListener.getConsoleEventLogMessages(),
@@ -100,18 +103,17 @@ public class TargetCountVerificationParserDecoratorTest {
   }
 
   private TargetCountVerificationParserDecorator newParserDelegate(int threshold) {
-    return new TargetCountVerificationParserDecorator(parserMock, threshold, eventBus);
+    return new TargetCountVerificationParserDecorator(parserMock, threshold, eventBus, root);
   }
 
   @Test
   public void givenTargetCountExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsEmitted()
       throws Exception {
-    EasyMock.expect(parserMock.getManifest(AbsPath.of(path)))
-        .andReturn(toBuildFileManifest(this.rawTargets));
+    EasyMock.expect(parserMock.getManifest(path)).andReturn(toBuildFileManifest(this.rawTargets));
 
     TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(3);
     EasyMock.replay(parserMock);
-    parserDelegate.getManifest(AbsPath.of(path));
+    parserDelegate.getManifest(path);
 
     assertWarningIsEmitted();
   }
@@ -129,12 +131,11 @@ public class TargetCountVerificationParserDecoratorTest {
   public void
       givenTargetCountNotExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsNotEmitted()
           throws Exception {
-    EasyMock.expect(parserMock.getManifest(AbsPath.of(path)))
-        .andReturn(toBuildFileManifest(rawTargets));
+    EasyMock.expect(parserMock.getManifest(path)).andReturn(toBuildFileManifest(rawTargets));
 
     TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(6);
     EasyMock.replay(parserMock);
-    parserDelegate.getManifest(AbsPath.of(path));
+    parserDelegate.getManifest(path);
 
     assertWarningIsNotEmitted();
   }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.api;
 
-import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -30,7 +30,7 @@ public interface FileParser<T extends FileManifest> extends AutoCloseable {
    *
    * @param parseFile should be an absolute path to a file. Must have rootPath as its prefix.
    */
-  T getManifest(AbsPath parseFile)
+  T getManifest(ForwardRelPath parseFile)
       throws BuildFileParseException, InterruptedException, IOException;
 
   /**
@@ -38,7 +38,7 @@ public interface FileParser<T extends FileManifest> extends AutoCloseable {
    *
    * @param parseFile should be an absolute path to a file. Must have rootPath as its prefix.
    */
-  ImmutableSortedSet<String> getIncludedFiles(AbsPath parseFile)
+  ImmutableSortedSet<String> getIncludedFiles(ForwardRelPath parseFile)
       throws BuildFileParseException, InterruptedException, IOException;
 
   @Override

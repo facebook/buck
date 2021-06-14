@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.FileName;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -104,33 +105,36 @@ public class SkylarkPackageFileParserTest {
 
   @Test
   public void canParsePackage() throws Exception {
-    AbsPath packageFile = projectFilesystem.resolve("src").resolve("PACKAGE");
+    ForwardRelPath packageFileRel = ForwardRelPath.of("src/PACKAGE");
+    AbsPath packageFile = projectFilesystem.resolve(packageFileRel);
     Files.createDirectories(packageFile.getParent().getPath());
     Files.write(packageFile.getPath(), Collections.singletonList("package(visibility=['//:foo'])"));
 
-    PackageFileManifest packageFileManifest = parser.getManifest(packageFile);
+    PackageFileManifest packageFileManifest = parser.getManifest(packageFileRel);
     PackageMetadata pkg = packageFileManifest.getPackage();
     Assert.assertEquals("//:foo", pkg.getVisibility().get(0));
   }
 
   @Test
   public void missingPackageCreatesDefault() throws Exception {
-    AbsPath packageFile = projectFilesystem.resolve("src").resolve("PACKAGE");
+    ForwardRelPath packageFileRel = ForwardRelPath.of("src/PACKAGE");
+    AbsPath packageFile = projectFilesystem.resolve(packageFileRel);
     Files.createDirectories(packageFile.getParent().getPath());
     Files.write(packageFile.getPath(), Collections.emptyList());
 
-    PackageFileManifest packageFileManifest = parser.getManifest(packageFile);
+    PackageFileManifest packageFileManifest = parser.getManifest(packageFileRel);
     assertNotNull(packageFileManifest.getPackage());
   }
 
   @Test
   public void onlyOnePackageAllowed() throws Exception {
-    AbsPath packageFile = projectFilesystem.resolve("src").resolve("PACKAGE");
+    ForwardRelPath packageFileRel = ForwardRelPath.of("src/PACKAGE");
+    AbsPath packageFile = projectFilesystem.resolve(packageFileRel);
     Files.createDirectories(packageFile.getParent().getPath());
     Files.write(packageFile.getPath(), Arrays.asList("package()", "package()"));
 
     thrown.expectMessage("Cannot evaluate file");
-    parser.getManifest(packageFile);
+    parser.getManifest(packageFileRel);
 
     Event event = Iterables.getOnlyElement(eventCollector);
     assertThat(event.getKind(), is(EventKind.ERROR));
@@ -149,7 +153,13 @@ public class SkylarkPackageFileParserTest {
     Files.write(
         extensionFile.getPath(),
         Arrays.asList("def custom_package():", "  native.package(visibility=['PUBLIC'])"));
-    parser.getManifest(packageFile).getPackage().getVisibility().iterator().next().equals("PUBLIC");
+    parser
+        .getManifest(ForwardRelPath.of("src/test/PACKAGE"))
+        .getPackage()
+        .getVisibility()
+        .iterator()
+        .next()
+        .equals("PUBLIC");
   }
 
   @Test
@@ -163,7 +173,8 @@ public class SkylarkPackageFileParserTest {
         Arrays.asList("load('//src/test:helper_rules.bzl', 'custom_package')", "custom_package()"));
     Files.write(
         extensionFile.getPath(), Arrays.asList("def custom_package():", "  native.package()"));
-    ImmutableSortedSet<String> includes = parser.getIncludedFiles(packageFile);
+    ImmutableSortedSet<String> includes =
+        parser.getIncludedFiles(ForwardRelPath.of("src/test/PACKAGE"));
     assertThat(includes, Matchers.hasSize(2));
     assertThat(
         includes.stream()
@@ -185,7 +196,7 @@ public class SkylarkPackageFileParserTest {
         buildFile.getPath(), Collections.singletonList("prebuilt_jar(" + "name='guava'," + ")"));
 
     thrown.expectMessage("Cannot parse");
-    parser.getManifest(buildFile);
+    parser.getManifest(ForwardRelPath.of("src/test/BUCK"));
 
     Event event = Iterables.getOnlyElement(eventCollector);
     assertThat(event.getKind(), is(EventKind.ERROR));

@@ -24,12 +24,14 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.starlark.eventhandler.EventHandler;
 import com.facebook.buck.core.starlark.eventhandler.EventKind;
 import com.facebook.buck.core.starlark.eventhandler.PrintingEventHandler;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
@@ -149,7 +151,9 @@ public class SkylarkProjectBuildFileParserGlobTest {
 
   private RawTargetNode getSingleRule(AbsPath buildFile) throws Exception {
     sync();
-    return SkylarkProjectBuildFileParserTestUtils.getSingleRule(parser, buildFile);
+    ForwardRelPath buildFileRel =
+        ForwardRelPath.ofRelPath(MorePaths.relativize(projectFilesystem.getRootPath(), buildFile));
+    return SkylarkProjectBuildFileParserTestUtils.getSingleRule(parser, buildFileRel);
   }
 
   @Test
@@ -185,7 +189,7 @@ public class SkylarkProjectBuildFileParserGlobTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile,
+            ForwardRelPath.of("src/test/BUCK"),
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -211,7 +215,7 @@ public class SkylarkProjectBuildFileParserGlobTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile,
+            ForwardRelPath.of("src/test/BUCK"),
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -237,7 +241,7 @@ public class SkylarkProjectBuildFileParserGlobTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile,
+            ForwardRelPath.of("src/test/BUCK"),
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -262,7 +266,7 @@ public class SkylarkProjectBuildFileParserGlobTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile,
+            ForwardRelPath.of("src/test/BUCK"),
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -286,7 +290,7 @@ public class SkylarkProjectBuildFileParserGlobTest {
 
     boolean result =
         parser.globResultsMatchCurrentState(
-            buildFile,
+            ForwardRelPath.of("src/test/BUCK"),
             ImmutableList.of(
                 GlobSpecWithResult.of(
                     GlobSpec.of(Collections.singletonList("f*"), Collections.EMPTY_LIST, false),
@@ -347,7 +351,8 @@ public class SkylarkProjectBuildFileParserGlobTest {
 
     sync();
 
-    BuildFileManifest buildFileManifest = parser.getManifest(buildFile);
+    BuildFileManifest buildFileManifest = parser.getManifest(ForwardRelPath.of("src/test/BUCK"));
+
     assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
     assertThat(
         buildFileManifest.getGlobManifest(),
