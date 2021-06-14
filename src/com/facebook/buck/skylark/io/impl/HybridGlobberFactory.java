@@ -32,7 +32,7 @@ public class HybridGlobberFactory implements GlobberFactory {
 
   private final WatchmanClient watchmanClient;
   private final AbsPath projectRoot;
-  private final ImmutableMap<AbsPath, ProjectWatch> projectWatches;
+  private final @Nullable ProjectWatch projectWatch;
 
   private HybridGlobberFactory(
       WatchmanClient watchmanClient,
@@ -40,7 +40,7 @@ public class HybridGlobberFactory implements GlobberFactory {
       ImmutableMap<AbsPath, ProjectWatch> projectWatches) {
     this.watchmanClient = watchmanClient;
     this.projectRoot = projectRoot;
-    this.projectWatches = projectWatches;
+    this.projectWatch = projectWatches.get(projectRoot);
   }
 
   @Override
@@ -52,7 +52,6 @@ public class HybridGlobberFactory implements GlobberFactory {
   public Globber create(ForwardRelPath basePathRel) {
     final AbsPath basePath = projectRoot.resolve(basePathRel);
     String watchRoot = projectRoot.toString();
-    @Nullable ProjectWatch projectWatch = projectWatches.get(projectRoot);
     if (projectWatch != null) {
       watchRoot = projectWatch.getWatchRoot();
     }
