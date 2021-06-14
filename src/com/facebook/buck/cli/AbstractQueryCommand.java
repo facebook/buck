@@ -340,7 +340,9 @@ public abstract class AbstractQueryCommand<
       throws IOException {
     if (outputFile == null) {
       // use stdout for output, do not close stdout stream as it is not owned here
-      return CloseableWrapper.of(params.getConsole().getStdOut(), stream -> {});
+      return CloseableWrapper.of(
+          new PrintStream(new BufferedOutputStream(params.getConsole().getStdOut())),
+          stream -> stream.flush());
     }
     return CloseableWrapper.of(
         new PrintStream(new BufferedOutputStream(Files.newOutputStream(outputFile.toPath()))),
