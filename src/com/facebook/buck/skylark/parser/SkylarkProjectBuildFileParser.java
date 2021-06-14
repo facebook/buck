@@ -44,7 +44,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -109,7 +108,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
 
   @Override
   ParseResult getParseResult(
-      Path parseFile,
+      AbsPath parseFile,
       ParseContext context,
       ReadConfigContext readConfigContext,
       Globber globber,

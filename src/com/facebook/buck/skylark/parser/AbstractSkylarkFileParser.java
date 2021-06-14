@@ -60,7 +60,6 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -116,7 +115,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   abstract BuckOrPackage getBuckOrPackage();
 
   abstract ParseResult getParseResult(
-      Path parseFile,
+      AbsPath parseFile,
       ParseContext context,
       ReadConfigContext readConfigContext,
       Globber globber,
@@ -249,7 +248,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       loadedPaths.addAll(envData.getLoadedPaths());
 
       return getParseResult(
-          parseFile.getPath(), parseContext, readConfigContext, globber, loadedPaths.build());
+          parseFile, parseContext, readConfigContext, globber, loadedPaths.build());
     }
   }
 

@@ -35,7 +35,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -80,7 +79,7 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
 
   @Override
   ParseResult getParseResult(
-      Path parseFile,
+      AbsPath parseFile,
       ParseContext context,
       ReadConfigContext readConfigContext,
       Globber globber,
