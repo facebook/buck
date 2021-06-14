@@ -273,6 +273,6 @@ public class HostInfoTest {
             new KnownUserDefinedRuleTypes(),
             options.getPerFeatureProviders()),
         eventHandler,
-        NativeGlobber.Factory.INSTANCE);
+        new NativeGlobber.Factory(options.getProjectRoot()));
   }
 }

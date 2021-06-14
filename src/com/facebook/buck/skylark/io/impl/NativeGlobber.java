@@ -99,8 +99,17 @@ public class NativeGlobber implements Globber {
   }
 
   /** Factory for {@link com.facebook.buck.skylark.io.GlobberFactory}. */
-  public enum Factory implements GlobberFactory {
-    INSTANCE;
+  public static class Factory implements GlobberFactory {
+    private final AbsPath root;
+
+    public Factory(AbsPath root) {
+      this.root = root;
+    }
+
+    @Override
+    public AbsPath getRoot() {
+      return root;
+    }
 
     @Override
     public Globber create(AbsPath basePath) {

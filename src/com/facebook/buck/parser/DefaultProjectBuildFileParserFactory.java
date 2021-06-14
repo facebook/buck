@@ -422,7 +422,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       ProjectBuildFileParserOptions buildFileParserOptions, SkylarkGlobHandler skylarkGlobHandler) {
     return skylarkGlobHandler == SkylarkGlobHandler.JAVA
             || buildFileParserOptions.getWatchman() instanceof WatchmanFactory.NullWatchman
-        ? NativeGlobber.Factory.INSTANCE
+        ? new NativeGlobber.Factory(buildFileParserOptions.getProjectRoot())
         : HybridGlobberFactory.using(
             buildFileParserOptions.getWatchman(), buildFileParserOptions.getProjectRoot());
   }

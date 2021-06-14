@@ -93,7 +93,7 @@ public class SkylarkProjectBuildFileParserGlobTest {
 
     switch (skylarkGlobHandler) {
       case JAVA:
-        globberFactory = NativeGlobber.Factory.INSTANCE;
+        globberFactory = new NativeGlobber.Factory(projectFilesystem.getRootPath());
         break;
       case WATCHMAN:
         WatchmanTestUtils.setupWatchman(projectFilesystem.getRootPath());

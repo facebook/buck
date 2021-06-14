@@ -85,6 +85,11 @@ public class HybridGlobberFactory implements GlobberFactory {
   }
 
   @Override
+  public AbsPath getRoot() {
+    return projectRoot;
+  }
+
+  @Override
   public Globber create(AbsPath basePath) {
     AbsPath cellPath = projectRoot;
     String watchRoot = cellPath.toString();

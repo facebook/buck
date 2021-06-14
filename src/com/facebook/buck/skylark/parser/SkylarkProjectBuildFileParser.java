@@ -74,6 +74,12 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     super(options, buckGlobals, eventHandler);
     this.buckEventBus = buckEventBus;
     this.globberFactory = globberFactory;
+
+    Preconditions.checkArgument(
+        options.getProjectRoot().equals(globberFactory.getRoot()),
+        "project root %s must be equal to globber factory root %s",
+        options.getProjectRoot(),
+        globberFactory.getRoot());
   }
 
   /** Create an instance of Skylark project build file parser using provided options. */

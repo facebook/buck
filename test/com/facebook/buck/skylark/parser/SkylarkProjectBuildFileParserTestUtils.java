@@ -98,7 +98,11 @@ public class SkylarkProjectBuildFileParserTestUtils {
       KnownRuleTypesProvider knownRuleTypesProvider,
       Cell cell) {
     return createParserWithOptions(
-        eventHandler, options, knownRuleTypesProvider, cell, NativeGlobber.Factory.INSTANCE);
+        eventHandler,
+        options,
+        knownRuleTypesProvider,
+        cell,
+        new NativeGlobber.Factory(cell.getRoot()));
   }
 
   static SkylarkProjectBuildFileParser createParserWithOptions(

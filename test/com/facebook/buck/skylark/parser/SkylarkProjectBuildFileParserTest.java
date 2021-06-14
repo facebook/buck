@@ -829,7 +829,7 @@ public class SkylarkProjectBuildFileParserTest {
                 knownRuleTypesProvider.getUserDefinedRuleTypes(cell.getRootCell()),
                 options.getPerFeatureProviders()),
             new PrintingEventHandler(EnumSet.allOf(EventKind.class)),
-            NativeGlobber.Factory.INSTANCE);
+            new NativeGlobber.Factory(options.getProjectRoot()));
 
     Files.write(
         buildFile.getPath(),

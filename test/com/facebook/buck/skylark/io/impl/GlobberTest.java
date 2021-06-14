@@ -69,7 +69,7 @@ public class GlobberTest {
   public void before() throws Exception {
     switch (skylarkGlobHandler) {
       case JAVA:
-        globberFactory = NativeGlobber.Factory.INSTANCE;
+        globberFactory = new NativeGlobber.Factory(tmp.getRoot());
         break;
       case WATCHMAN:
         WatchmanTestUtils.setupWatchman(tmp.getRoot());

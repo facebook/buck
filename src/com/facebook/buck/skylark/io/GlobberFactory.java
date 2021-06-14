@@ -23,6 +23,9 @@ import java.io.IOException;
 /** Creates {@link Globber} instances to save clients from implementation details. */
 public interface GlobberFactory extends Closeable {
 
+  /** Only resolve paths under this root. */
+  AbsPath getRoot();
+
   /**
    * Create a globber which performs a glob against given base path. This operation is pure and
    * cheap.
