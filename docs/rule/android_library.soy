@@ -204,6 +204,15 @@ compiled class files and resources.
 
 {call buck.tests_arg /}
 
+{call buck.arg}
+  {param name : 'remove_classes' /}
+  {param default : '[]' /}
+  {param desc}
+  List of classes to remove from the output jar. It only removes classes from the target's own
+  sources, not from any of its dependencies.
+  {/param}
+{/call}
+
 {/param} // args
 
 {param examples}
