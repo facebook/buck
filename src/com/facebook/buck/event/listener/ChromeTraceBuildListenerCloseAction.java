@@ -131,7 +131,7 @@ class ChromeTraceBuildListenerCloseAction
         args.getTracePath(),
         args.getLogDirectoryPath());
 
-    String symlinkName = args.getConfig().getCompressTraces() ? "build.trace.gz" : "build.trace";
+    String symlinkName = args.getConfig().hasToCompressTraces() ? "build.trace.gz" : "build.trace";
     Path symlinkPath = args.getProjectFilesystem().getBuckPaths().getLogDir().resolve(symlinkName);
     args.getProjectFilesystem()
         .createSymLink(

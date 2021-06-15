@@ -51,6 +51,7 @@ import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
+import com.facebook.buck.support.bgtasks.BackgroundTask.Timeout;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.jvm.GCCollectionEvent;
@@ -92,24 +93,27 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final ExecutorService executor;
   private final ProjectFilesystem filesystem;
   private final ObjectWriter objectWriter;
-  private BufferedOutputStream outputStream;
+  private final BufferedOutputStream outputStream;
   private boolean outputStreamClosed;
 
-  private final ChromeTraceBuckConfig chromeTraceConfig;
+  private final ChromeTraceBuckConfig config;
   private final Path logFilePath;
   private final Path logDirectoryPath;
   private final BuildId buildId;
   private final TaskManagerCommandScope managerScope;
   private final boolean syncOnClose;
 
-  private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHits = Maps.newConcurrentMap();
-  private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHitAttempts =
+  private final ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHits =
       Maps.newConcurrentMap();
-  private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeErrors = Maps.newConcurrentMap();
-  private ConcurrentMap<ArtifactCacheMode, AtomicLong> cacheModeBytes = Maps.newConcurrentMap();
-  private AtomicInteger cacheMisses = new AtomicInteger(0);
-  private AtomicInteger cacheIgnores = new AtomicInteger(0);
-  private AtomicInteger localKeyUnchangedHits = new AtomicInteger(0);
+  private final ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHitAttempts =
+      Maps.newConcurrentMap();
+  private final ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeErrors =
+      Maps.newConcurrentMap();
+  private final ConcurrentMap<ArtifactCacheMode, AtomicLong> cacheModeBytes =
+      Maps.newConcurrentMap();
+  private final AtomicInteger cacheMisses = new AtomicInteger(0);
+  private final AtomicInteger cacheIgnores = new AtomicInteger(0);
+  private final AtomicInteger localKeyUnchangedHits = new AtomicInteger(0);
 
   @Nullable private PerfTimesStats latestPerfTimesStats;
 
@@ -117,15 +121,15 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private Optional<ExitCode> exitCode = Optional.empty();
 
   // Cache upload statistics
-  private AtomicInteger cacheUploadSuccessCount = new AtomicInteger();
-  private AtomicInteger cacheUploadFailureCount = new AtomicInteger();
+  private final AtomicInteger cacheUploadSuccessCount = new AtomicInteger();
+  private final AtomicInteger cacheUploadFailureCount = new AtomicInteger();
 
   public MachineReadableLoggerListener(
       InvocationInfo info,
       ProjectFilesystem filesystem,
       ExecutorService executor,
       ImmutableSet<ArtifactCacheMode> cacheModes,
-      ChromeTraceBuckConfig chromeTraceConfig,
+      ChromeTraceBuckConfig config,
       Path logFilePath,
       Path logDirectoryPath,
       BuildId buildId,
@@ -136,7 +140,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     this.info = info;
     this.filesystem = filesystem;
     this.executor = executor;
-    this.chromeTraceConfig = chromeTraceConfig;
+    this.config = config;
     this.logFilePath = logFilePath;
     this.logDirectoryPath = logDirectoryPath;
     this.buildId = buildId;
@@ -385,7 +389,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   public void close() {
     synchronized (this) {
       try {
-        executor.submit(() -> closeImpl());
+        executor.submit(this::closeImpl);
       } catch (RejectedExecutionException e) {
         // ignore: someone else has closed the executor
         return;
@@ -408,8 +412,8 @@ public class MachineReadableLoggerListener implements BuckEventListener {
           ImmutableMachineReadableLoggerListenerCloseArgs.ofImpl(
               executor,
               info.getLogDirectoryPath().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME),
-              chromeTraceConfig.getLogUploadMode().shouldUploadLogs(exitCode)
-                  ? chromeTraceConfig.getTraceUploadUri()
+              config.getLogUploadMode().shouldUploadLogs(exitCode)
+                  ? config.getTraceUploadUri()
                   : Optional.empty(),
               logDirectoryPath,
               logFilePath,
@@ -419,7 +423,8 @@ public class MachineReadableLoggerListener implements BuckEventListener {
           BackgroundTask.of(
               "MachineReadableLoggerListener_close",
               new MachineReadableLoggerListenerCloseAction(),
-              args);
+              args,
+              Timeout.of(config.getMaxUploadTimeoutInSeconds(), TimeUnit.SECONDS));
       managerScope.schedule(task);
     }
   }
@@ -448,7 +453,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       outputStream.write(
           String.format(
                   PREFIX_EXIT_CODE + " {\"exitCode\":%d}",
-                  exitCode.map(code -> code.getCode()).orElse(-1))
+                  exitCode.map(ExitCode::getCode).orElse(-1))
               .getBytes(StandardCharsets.UTF_8));
 
       outputStreamClosed = true;
@@ -464,6 +469,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
    */
   static class MachineReadableLoggerListenerCloseAction
       implements TaskAction<MachineReadableLoggerListenerCloseArgs> {
+
     @Override
     public void run(MachineReadableLoggerListenerCloseArgs args) {
       args.getExecutor().shutdown();
@@ -495,6 +501,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   /** Arguments to {@link MachineReadableLoggerListenerCloseAction}. */
   @BuckStyleValue
   abstract static class MachineReadableLoggerListenerCloseArgs {
+
     public abstract ExecutorService getExecutor();
 
     public abstract Path getMachineReadableLogFilePath();

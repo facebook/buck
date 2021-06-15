@@ -26,11 +26,12 @@ import com.google.common.base.Stopwatch;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter; // NOPMD this is just a log
+import java.io.PrintWriter; // NOPMD
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
@@ -40,11 +41,16 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 public final class Main {
+
+  private static final int SUCCESS_EXIT_CODE = 0;
+  private static final int ERROR_EXIT_CODE = 1;
+
   @Option(name = "--buildId", required = true)
   private String uuid;
 
@@ -63,8 +69,6 @@ public final class Main {
   @Option(name = "--compressionType", required = true)
   @Nullable
   private CompressionType compressionType;
-
-  private PrintWriter log;
 
   static {
     MacIpv6BugWorkaround.apply();
@@ -85,21 +89,17 @@ public final class Main {
   }
 
   private int run() throws IOException {
-    log = new PrintWriter(logFile); // NOPMD this is just a log
-    try {
-      return upload();
-    } finally {
-      log.close();
+    try (PrintWriter log = new PrintWriter(logFile)) { // NOPMD
+      return upload(log);
     }
   }
 
-  private int upload() {
+  private int upload(PrintWriter logWriter) {
     Stopwatch timer = Stopwatch.createStarted();
     NamedTemporaryFile tempFile = null;
     try {
-      OkHttpClient client = new OkHttpClient();
       HttpUrl url =
-          HttpUrl.get(baseUrl)
+          Objects.requireNonNull(HttpUrl.get(baseUrl))
               .newBuilder()
               .addQueryParameter("uuid", this.uuid)
               .addQueryParameter("trace_file_kind", this.traceFileKind)
@@ -121,68 +121,84 @@ public final class Main {
         }
       }
 
-      log.format("Build ID: %s\n", uuid);
-      log.format("Trace file: %s (%d) bytes\n", traceFilePath, Files.size(traceFilePath));
+      logWriter.format("Build ID: %s%n", uuid);
+      logWriter.format("Trace file: %s (%d) bytes%n", traceFilePath, Files.size(traceFilePath));
       if (compressionEnabled) {
-        log.format("Compressed size: %d bytes\n", Files.size(fileToUpload));
+        logWriter.format("Compressed size: %d bytes%n", Files.size(fileToUpload));
       }
-      log.format("Upload URL: %s\n", url);
+      logWriter.format("Upload URL: %s%n", url);
       if (compressionEnabled) {
-        log.format("Uploading compressed trace...\n");
+        logWriter.format("Uploading compressed trace...%n");
       } else {
-        log.format("Uploading trace...\n");
+        logWriter.format("Uploading trace...%n");
       }
 
       if (traceFileKind.equals("build_log")) {
-        // Copy the log to a temp file in case buck is still writing to it.
+        // Copy the logWriter to a temp file in case buck is still writing to it.
         // TODO launch uploader from buck *after* logs are flushed
-        tempFile = new NamedTemporaryFile(uuid, ".log");
+        tempFile = new NamedTemporaryFile(uuid, ".logWriter");
         Files.copy(fileToUpload, tempFile.get(), StandardCopyOption.REPLACE_EXISTING);
         fileToUpload = tempFile.get();
       }
 
-      Request request =
-          new Request.Builder()
-              .url(url)
-              .post(
-                  new MultipartBody.Builder()
-                      .setType(MultipartBody.FORM)
-                      .addFormDataPart(
-                          "trace_file",
-                          traceName,
-                          RequestBody.create(MediaType.parse(mediaType), fileToUpload.toFile()))
-                      .build())
-              .build();
-
-      try (Response response = client.newCall(request).execute()) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode root = objectMapper.readTree(response.body().byteStream());
-
-        if (root.has("error")) {
-          log.format("Failed!\n%s\n", root.toString());
-          return 1;
-        } else if (root.has("uri")) {
-          log.format("Success!\nFind it at %s\n", root.get("uri").asText());
-        } else {
-          log.format("Success!\n");
-        }
-        return 0;
-      }
+      return upload(logWriter, url, fileToUpload, mediaType, traceName);
 
     } catch (Exception e) {
-      log.format("\nFailed to upload trace; %s\n", e.getMessage());
-      e.printStackTrace(log);
-      return 1;
+      logWriter.format("%nFailed to upload trace; %s%n", e.getMessage());
+      e.printStackTrace(logWriter);
+      return ERROR_EXIT_CODE;
     } finally {
-      if (tempFile != null) {
-        try {
-          tempFile.close();
-        } catch (IOException e) {
-          log.format("Failed to clean up temp file: %s\n", e.getMessage());
-          e.printStackTrace(log);
-        }
+      closeTempFile(logWriter, tempFile);
+      logWriter.format("Elapsed time: %d millis", timer.elapsed(TimeUnit.MILLISECONDS));
+    }
+  }
+
+  private int upload(
+      PrintWriter log, HttpUrl url, Path fileToUpload, String mediaType, String traceName)
+      throws IOException {
+    Request request =
+        new Request.Builder()
+            .url(url)
+            .post(
+                new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart(
+                        "trace_file",
+                        traceName,
+                        RequestBody.create(MediaType.parse(mediaType), fileToUpload.toFile()))
+                    .build())
+            .build();
+
+    OkHttpClient client = new OkHttpClient();
+    try (Response response = client.newCall(request).execute()) {
+      ObjectMapper objectMapper = new ObjectMapper();
+      ResponseBody body = response.body();
+      if (body == null) {
+        log.println("Failed!");
+        return ERROR_EXIT_CODE;
       }
-      log.format("Elapsed time: %d millis", timer.elapsed(TimeUnit.MILLISECONDS));
+
+      JsonNode root = objectMapper.readTree(body.byteStream());
+      if (root.has("error")) {
+        log.format("Failed!%n%s%n", root);
+        return ERROR_EXIT_CODE;
+      } else if (root.has("uri")) {
+        log.format("Success!%nFind it at %s%n", root.get("uri").asText());
+      } else {
+        log.format("Success!%n");
+      }
+      return SUCCESS_EXIT_CODE;
+    }
+  }
+
+  private void closeTempFile(PrintWriter logWriter, NamedTemporaryFile tempFile) {
+    if (tempFile != null) {
+      try {
+        tempFile.close();
+      } catch (IOException e) {
+        logWriter.format("Failed to clean up temp file: %s%n", e.getMessage());
+        e.printStackTrace(logWriter);
+      }
     }
   }
 

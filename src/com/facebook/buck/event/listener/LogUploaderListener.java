@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
+import com.facebook.buck.support.bgtasks.BackgroundTask.Timeout;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.ExitCode;
@@ -31,6 +32,7 @@ import com.google.common.eventbus.Subscribe;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /** Upload the buck log file to the trace endpoint when the build is finished. */
 public class LogUploaderListener implements BuckEventListener {
@@ -81,7 +83,10 @@ public class LogUploaderListener implements BuckEventListener {
             traceUploadUri.get(), logDirectoryPath, logFilePath, buildId);
     BackgroundTask<LogUploaderListenerCloseArgs> task =
         BackgroundTask.of(
-            "LogUploaderListener_close", new LogUploaderListenerCloseAction(traceKindFile), args);
+            "LogUploaderListener_close",
+            new LogUploaderListenerCloseAction(traceKindFile),
+            args,
+            Timeout.of(config.getMaxUploadTimeoutInSeconds(), TimeUnit.SECONDS));
     managerScope.schedule(task);
   }
 
@@ -113,6 +118,7 @@ public class LogUploaderListener implements BuckEventListener {
   /** Task arguments passed to {@link LogUploaderListenerCloseAction}. */
   @BuckStyleValue
   abstract static class LogUploaderListenerCloseArgs {
+
     public abstract URI getTraceUploadURI();
 
     public abstract Path getLogDirectoryPath();

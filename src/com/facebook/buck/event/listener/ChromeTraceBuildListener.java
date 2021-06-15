@@ -56,6 +56,7 @@ import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionSessionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
+import com.facebook.buck.support.bgtasks.BackgroundTask.Timeout;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
@@ -234,7 +235,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     long timeMillis = clock.currentTimeMillis();
     String filenameTime = dateTimeFormatter.format(Instant.ofEpochMilli(timeMillis));
     String traceName = String.format("build.%s.%s.trace", filenameTime, buildId);
-    if (config.getCompressTraces()) {
+    if (config.hasToCompressTraces()) {
       traceName = traceName + ".gz";
     }
     Path tracePath = logDirectoryPath.resolve(traceName);
@@ -243,7 +244,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       tracePath = projectFilesystem.createNewFile(tracePath);
       OutputStream stream =
           logStreamFactory.createLogStream(tracePath.toString(), LogType.CHROME_TRACE_LOG);
-      if (config.getCompressTraces()) {
+      if (config.hasToCompressTraces()) {
         stream = new BestCompressionGZIPOutputStream(stream, true);
       }
       return new TracePathAndStream(tracePath, stream);
@@ -268,7 +269,11 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     ChromeTraceBuildListenerCloseAction closeAction = new ChromeTraceBuildListenerCloseAction();
 
     BackgroundTask<ChromeTraceBuildListenerCloseAction.ChromeTraceBuildListenerCloseArgs> task =
-        BackgroundTask.of("ChromeTraceBuildListener_close", closeAction, args);
+        BackgroundTask.of(
+            "ChromeTraceBuildListener_close",
+            closeAction,
+            args,
+            Timeout.of(config.getMaxUploadTimeoutInSeconds(), TimeUnit.SECONDS));
 
     managerScope.schedule(task);
   }

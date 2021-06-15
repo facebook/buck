@@ -1838,9 +1838,7 @@ public final class MainRunner {
             buckConfig.getView(ParserConfig.class),
             unconfiguredBuildTargetViewFactory,
             cellNameResolver);
-    Optional<TargetConfiguration> hostPlatform =
-        hostConfigurationDetector.detectHostConfiguration(Platform.detect());
-    return hostPlatform;
+    return hostConfigurationDetector.detectHostConfiguration(Platform.detect());
   }
 
   private boolean isReuseCurrentConfigPropertySet(AbstractContainerCommand command) {
@@ -2000,7 +1998,7 @@ public final class MainRunner {
 
     ParserConfig parserConfig = cells.getBuckConfig().getView(ParserConfig.class);
     TypeCoercerFactory typeCoercerFactory = buckGlobalState.getTypeCoercerFactory();
-    Optional<RuleKeyCacheRecycler<RuleKey>> defaultRuleKeyFactoryCacheRecycler = Optional.empty();
+    Optional<RuleKeyCacheRecycler<RuleKey>> defaultRuleKeyFactoryCacheRecycler;
 
     // Note that watchmanWatcher is non-null only when in daemon mode.
     if (watchmanWatcher.isPresent()) {
@@ -2009,7 +2007,7 @@ public final class MainRunner {
     }
 
     // Create or get Parser and invalidate cached command parameters.
-    // TODO we can probably just always use the rulekey recylcer even when no daemon. It would just
+    // TODO we can probably just always use the rulekey recycler even when no daemon. It would just
     // be empty
     if (daemonMode == DaemonMode.DAEMON
         && buckConfig.getView(BuildBuckConfig.class).getRuleKeyCaching()) {
@@ -2294,15 +2292,15 @@ public final class MainRunner {
     TopSlowTargetsEventListener slowTargetsEventListener = new TopSlowTargetsEventListener();
     buckEventBus.register(slowTargetsEventListener);
 
-    ChromeTraceBuckConfig chromeTraceConfig = buckConfig.getView(ChromeTraceBuckConfig.class);
-    if (chromeTraceConfig.isChromeTraceCreationEnabled()) {
+    ChromeTraceBuckConfig chromeTraceBuckConfig = buckConfig.getView(ChromeTraceBuckConfig.class);
+    if (chromeTraceBuckConfig.isChromeTraceCreationEnabled()) {
       try {
         ChromeTraceBuildListener chromeTraceBuildListener =
             new ChromeTraceBuildListener(
                 projectFilesystem,
                 invocationInfo,
                 clock,
-                chromeTraceConfig,
+                chromeTraceBuckConfig,
                 managerScope,
                 reStatsProvider,
                 criticalPathEventListener,
@@ -2324,7 +2322,7 @@ public final class MainRunner {
 
     eventListenersBuilder.add(
         new LogUploaderListener(
-            chromeTraceConfig,
+            chromeTraceBuckConfig,
             invocationInfo.getLogFilePath(),
             invocationInfo.getLogDirectoryPath(),
             invocationInfo.getBuildId(),
@@ -2332,7 +2330,7 @@ public final class MainRunner {
             "build_log"));
     eventListenersBuilder.add(
         new LogUploaderListener(
-            chromeTraceConfig,
+            chromeTraceBuckConfig,
             invocationInfo.getSimpleConsoleOutputFilePath(),
             invocationInfo.getLogDirectoryPath(),
             invocationInfo.getBuildId(),
@@ -2340,7 +2338,7 @@ public final class MainRunner {
             "simple_console_output"));
     eventListenersBuilder.add(
         new LogUploaderListener(
-            chromeTraceConfig,
+            chromeTraceBuckConfig,
             criticalPathLog,
             invocationInfo.getLogDirectoryPath(),
             invocationInfo.getBuildId(),
@@ -2385,7 +2383,7 @@ public final class MainRunner {
                 MostExecutors.newSingleThreadExecutor(
                     new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
                 artifactCacheConfig.getArtifactCacheModes(),
-                chromeTraceConfig,
+                chromeTraceBuckConfig,
                 invocationInfo.getLogFilePath(),
                 invocationInfo.getLogDirectoryPath(),
                 invocationInfo.getBuildId(),

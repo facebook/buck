@@ -159,20 +159,6 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
     managedTask.run();
   }
 
-  private void addTimeoutIfNeeded(Future<?> taskHandler, ManagedBackgroundTask<?> task) {
-    Optional<BackgroundTask.Timeout> timeout = task.getTimeout();
-    if (timeout.isPresent()) {
-      timeoutPool.schedule(
-          () -> {
-            if (taskHandler.cancel(true)) {
-              LOG.warn(String.format("Task %s timed out", task.getId()));
-            }
-          },
-          timeout.get().timeout(),
-          timeout.get().unit());
-    }
-  }
-
   private Future<?> submitTask(ManagedBackgroundTask<?> task) {
     Future<?> handler =
         taskPool.submit(
@@ -182,6 +168,24 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
             });
     addTimeoutIfNeeded(handler, task);
     return handler;
+  }
+
+  private void addTimeoutIfNeeded(Future<?> taskHandler, ManagedBackgroundTask<?> task) {
+    task.getTimeout()
+        .ifPresent(
+            timeout -> {
+              long delay = timeout.timeout();
+              // schedule cancel task that would be executed after specified delay
+              timeoutPool.schedule(createCancelTask(taskHandler, task), delay, timeout.unit());
+            });
+  }
+
+  private Runnable createCancelTask(Future<?> taskHandler, ManagedBackgroundTask<?> task) {
+    return () -> {
+      if (taskHandler.cancel(true)) {
+        LOG.warn(String.format("Task %s timed out", task.getId()));
+      }
+    };
   }
 
   private boolean taskCancelled(ManagedBackgroundTask<?> task) {

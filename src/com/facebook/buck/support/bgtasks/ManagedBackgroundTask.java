@@ -67,7 +67,7 @@ class ManagedBackgroundTask<T> {
   void run() {
     try {
       task.getAction().run(task.getActionArgs());
-      future.set(null);
+      future.set(Unit.UNIT);
     } catch (InterruptedException e) {
       future.cancel(true);
       LOG.warn(e, "Task %s interrupted.", getId());
@@ -96,6 +96,7 @@ class ManagedBackgroundTask<T> {
   /** Task ID object for {@link ManagedBackgroundTask}. */
   @BuckStyleValue
   abstract static class TaskId {
+
     abstract String name();
 
     abstract BuildId buildId();

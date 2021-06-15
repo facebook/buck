@@ -16,83 +16,79 @@
 
 package com.facebook.buck.event.chrome_trace;
 
-import static java.lang.Integer.parseInt;
-
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.LogUploadMode;
 import com.facebook.buck.util.environment.NetworkInfo;
+import com.google.common.collect.ImmutableSet;
 import java.net.URI;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
-public class ChromeTraceBuckConfig implements ConfigView<BuckConfig> {
-  private static final String DEFAULT_MAX_TRACES = "25";
+/** Chrome traces configuration */
+@BuckStyleValue
+public abstract class ChromeTraceBuckConfig implements ConfigView<BuckConfig> {
 
   private static final String LOG_SECTION = "log";
 
-  private final BuckConfig delegate;
-  private final ArtifactCacheBuckConfig artifactCacheBuckConfig;
+  private static final int DEFAULT_UPLOAD_TRACE_TIMEOUT_SECONDS =
+      (int) TimeUnit.MINUTES.toSeconds(1);
+  private static final int DEFAULT_MAX_TRACES = 25;
+
+  @Override
+  public abstract BuckConfig getDelegate();
+
+  abstract ImmutableSet<String> getBlocklistedWifiSsids();
 
   public static ChromeTraceBuckConfig of(BuckConfig delegate) {
-    return new ChromeTraceBuckConfig(delegate);
-  }
-
-  private ChromeTraceBuckConfig(BuckConfig delegate) {
-    this.delegate = delegate;
-    this.artifactCacheBuckConfig = delegate.getView(ArtifactCacheBuckConfig.class);
+    return ImmutableChromeTraceBuckConfig.ofImpl(
+        delegate, delegate.getView(ArtifactCacheBuckConfig.class).getBlacklistedWifiSsids());
   }
 
   public int getMaxTraces() {
-    return parseInt(delegate.getValue(LOG_SECTION, "max_traces").orElse(DEFAULT_MAX_TRACES));
+    return getDelegate().getInteger(LOG_SECTION, "max_traces").orElse(DEFAULT_MAX_TRACES);
   }
 
   public boolean isChromeTraceCreationEnabled() {
-    return delegate.getBooleanValue(LOG_SECTION, "chrome_trace_generation", true);
+    return getDelegate().getBooleanValue(LOG_SECTION, "chrome_trace_generation", true);
   }
 
-  public boolean getCompressTraces() {
-    return delegate.getBooleanValue(LOG_SECTION, "compress_traces", false);
+  public boolean hasToCompressTraces() {
+    return getDelegate().getBooleanValue(LOG_SECTION, "compress_traces", false);
   }
 
   /** Get URL to upload trace if the config is enabled. */
   public Optional<URI> getTraceUploadUriIfEnabled() {
-    if (!getShouldUploadBuildTraces()) {
-      return Optional.empty();
-    }
-    return getTraceUploadUri();
+    return shouldUploadBuildTraces() ? getTraceUploadUri() : Optional.empty();
   }
 
   /** Get URL to upload trace. */
   public Optional<URI> getTraceUploadUri() {
-    return delegate.getUrl(LOG_SECTION, "trace_upload_uri");
+    return getDelegate().getUrl(LOG_SECTION, "trace_upload_uri");
   }
 
   /** Returns whether and when to upload logs. */
   public LogUploadMode getLogUploadMode() {
-    return delegate
-        .getEnum("log", "log_upload_mode", LogUploadMode.class)
+    return getDelegate()
+        .getEnum(LOG_SECTION, "log_upload_mode", LogUploadMode.class)
         .orElse(LogUploadMode.NEVER);
   }
 
-  private boolean getShouldUploadBuildTraces() {
-    if (!delegate.getBooleanValue("experiments", "upload_build_traces", false)) {
+  public int getMaxUploadTimeoutInSeconds() {
+    return getDelegate()
+        .getInteger(LOG_SECTION, "max_upload_timeout_sec")
+        .orElse(DEFAULT_UPLOAD_TRACE_TIMEOUT_SECONDS);
+  }
+
+  private boolean shouldUploadBuildTraces() {
+    if (!getDelegate().getBooleanValue("experiments", "upload_build_traces", false)) {
       return false;
     }
 
     Optional<String> wifiSsid = NetworkInfo.getWifiSsid();
-    if (!wifiSsid.isPresent()) {
-      // Either we don't know how to detect the SSID, or we're wired. Either way, upload
-      return true;
-    }
-
-    boolean blacklisted =
-        artifactCacheBuckConfig.getBlacklistedWifiSsids().contains(wifiSsid.get());
-    return !blacklisted;
-  }
-
-  @Override
-  public BuckConfig getDelegate() {
-    return delegate;
+    // Either we don't know how to detect the SSID, or we're wired. Either way, upload
+    return wifiSsid.map(ssid -> !getBlocklistedWifiSsids().contains(ssid)).orElse(true);
   }
 }

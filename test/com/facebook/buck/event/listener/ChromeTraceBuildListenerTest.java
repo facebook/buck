@@ -312,7 +312,7 @@ public class ChromeTraceBuildListenerTest {
     String tracePath = invocationInfo.getLogDirectoryPath().resolve("build.trace").toString();
 
     File traceFile = new File(tracePath);
-    projectFilesystem.createParentDirs(tracePath);
+    projectFilesystem.createParentDirs(traceFile.toPath());
     traceFile.createNewFile();
     traceFile.setLastModified(0);
 
@@ -341,7 +341,8 @@ public class ChromeTraceBuildListenerTest {
     managerScope.close();
 
     ImmutableList<String> files =
-        projectFilesystem.getDirectoryContents(invocationInfo.getLogDirectoryPath()).stream()
+        projectFilesystem.asView().getDirectoryContents(invocationInfo.getLogDirectoryPath())
+            .stream()
             .filter(i -> i.toString().endsWith(".trace"))
             .map(path -> path.getFileName().toString())
             .collect(ImmutableList.toImmutableList());
@@ -513,10 +514,9 @@ public class ChromeTraceBuildListenerTest {
     String annotationProcessorName = "com.facebook.FakeProcessor";
     AnnotationProcessingEvent.Operation operation = AnnotationProcessingEvent.Operation.PROCESS;
     int annotationRound = 1;
-    boolean isLastRound = false;
     AnnotationProcessingEvent.Started annotationProcessingEventStarted =
         AnnotationProcessingEvent.started(
-            target, annotationProcessorName, operation, annotationRound, isLastRound);
+            target, annotationProcessorName, operation, annotationRound, false);
     eventBus.post(annotationProcessingEventStarted);
 
     HttpArtifactCacheEvent.Started httpStarted =

@@ -55,7 +55,7 @@ public abstract class BackgroundTask<T> {
       String name,
       TaskAction<T> action,
       T actionArgs,
-      Optional<? extends BackgroundTask.Timeout> timeout,
+      Optional<? extends Timeout> timeout,
       boolean shouldCancelOnRepeat) {
     return ImmutableBackgroundTask.ofImpl(name, action, actionArgs, timeout, shouldCancelOnRepeat);
   }
@@ -63,6 +63,7 @@ public abstract class BackgroundTask<T> {
   /** Timeout object for {@link BackgroundTask}. */
   @BuckStyleValue
   public abstract static class Timeout {
+
     abstract long timeout();
 
     abstract TimeUnit unit();
