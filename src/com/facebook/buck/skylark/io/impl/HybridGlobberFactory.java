@@ -59,7 +59,8 @@ public class HybridGlobberFactory implements GlobberFactory {
     String watchRoot = projectWatch.getWatchRoot();
     return new HybridGlobber(
         NativeGlobber.create(basePath),
-        WatchmanGlobber.create(watchmanClient, basePathRel, watchRoot));
+        WatchmanGlobber.create(
+            watchmanClient, projectWatch.getProjectPrefix().resolve(basePathRel), watchRoot));
   }
 
   @Override
