@@ -23,16 +23,16 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import javax.annotation.Nullable;
 
 /** Provides instances of {@link com.facebook.buck.skylark.io.impl.HybridGlobber}. */
 public class HybridGlobberFactory implements GlobberFactory {
 
   private final WatchmanClient watchmanClient;
   private final AbsPath projectRoot;
-  private final @Nullable ProjectWatch projectWatch;
+  private final ProjectWatch projectWatch;
 
   private HybridGlobberFactory(
       WatchmanClient watchmanClient,
@@ -41,6 +41,11 @@ public class HybridGlobberFactory implements GlobberFactory {
     this.watchmanClient = watchmanClient;
     this.projectRoot = projectRoot;
     this.projectWatch = projectWatches.get(projectRoot);
+    Preconditions.checkArgument(
+        projectWatch != null,
+        "project root %s must be in the set of project watches %s",
+        projectRoot,
+        projectWatches.keySet());
   }
 
   @Override
@@ -51,10 +56,7 @@ public class HybridGlobberFactory implements GlobberFactory {
   @Override
   public Globber create(ForwardRelPath basePathRel) {
     final AbsPath basePath = projectRoot.resolve(basePathRel);
-    String watchRoot = projectRoot.toString();
-    if (projectWatch != null) {
-      watchRoot = projectWatch.getWatchRoot();
-    }
+    String watchRoot = projectWatch.getWatchRoot();
     String relativeRoot = basePathRel.toString();
     return new HybridGlobber(
         NativeGlobber.create(basePath),
