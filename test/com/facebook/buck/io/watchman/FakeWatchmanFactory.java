@@ -17,6 +17,7 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
@@ -39,7 +40,8 @@ public class FakeWatchmanFactory {
       WatchmanClient client, Path rootPath, Path watchPath, String projectName) {
     return new Watchman(
         ImmutableMap.of(
-            AbsPath.of(rootPath), ProjectWatch.of(watchPath.toString(), Optional.of(projectName))),
+            AbsPath.of(rootPath),
+            ProjectWatch.of(watchPath.toString(), ForwardRelPath.of(projectName))),
         ImmutableSet.of(
             Capability.SUPPORTS_PROJECT_WATCH, Capability.DIRNAME, Capability.WILDMATCH_GLOB),
         ImmutableMap.of(rootPath.toString(), "123"),

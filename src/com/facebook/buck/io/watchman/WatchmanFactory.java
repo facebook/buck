@@ -17,6 +17,7 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.console.EventConsole;
 import com.facebook.buck.io.ExecutableFinder;
@@ -419,7 +420,7 @@ public class WatchmanFactory {
     WatchmanQueryResp.WatchProjectResp map = result.getLeft();
 
     String watchRoot = map.getWatch();
-    Optional<String> watchPrefix = Optional.of(map.getRelativePath()).filter(s -> !s.isEmpty());
+    ForwardRelPath watchPrefix = ForwardRelPath.of(map.getRelativePath());
     return Optional.of(ProjectWatch.of(watchRoot, watchPrefix));
   }
 

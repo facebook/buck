@@ -136,7 +136,7 @@ public class WatchmanWatcher {
       ImmutableSet<PathMatcher> ignorePaths,
       Set<Capability> watchmanCapabilities) {
     String watchRoot = projectWatch.getWatchRoot();
-    Optional<String> watchPrefix = projectWatch.getProjectPrefix();
+    ForwardRelPath watchPrefix = projectWatch.getProjectPrefix();
 
     // Exclude any expressions added to this list.
     List<Object> excludeAnyOf = Lists.newArrayList("anyof");
@@ -158,7 +158,7 @@ public class WatchmanWatcher {
         watchRoot,
         ImmutableList.of("not", excludeAnyOf),
         ImmutableList.of("name", "exists", "new", "type"),
-        watchPrefix);
+        watchPrefix.isEmpty() ? Optional.empty() : Optional.of(watchPrefix.toString()));
   }
 
   @VisibleForTesting
