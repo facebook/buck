@@ -58,7 +58,7 @@ public class WatchmanWatcherTest {
   private static final AbsPath FAKE_ROOT = AbsPath.of(Paths.get("/fake/root").toAbsolutePath());
   private static final WatchmanWatcherQuery FAKE_QUERY =
       ImmutableWatchmanWatcherQuery.ofImpl(
-          "/fake/root", "fake-expr", ImmutableList.of(), Optional.empty());
+          "/fake/root", "fake-expr", ImmutableList.of(), ForwardRelPath.EMPTY);
   private static final WatchmanQuery.Query FAKE_UUID_QUERY = FAKE_QUERY.toQuery("n:buckduuid");
   private static final WatchmanQuery.Query FAKE_CLOCK_QUERY = FAKE_QUERY.toQuery("c:0:0");
 
@@ -66,7 +66,7 @@ public class WatchmanWatcherTest {
       AbsPath.of(Paths.get("/fake/secondary").toAbsolutePath());
   private static final WatchmanWatcherQuery FAKE_SECONDARY_QUERY =
       ImmutableWatchmanWatcherQuery.ofImpl(
-          "/fake/SECONDARY", "fake-expr", ImmutableList.of(), Optional.empty());
+          "/fake/SECONDARY", "fake-expr", ImmutableList.of(), ForwardRelPath.EMPTY);
 
   private EventBus eventBus;
   private EventBuffer eventBuffer;
@@ -381,7 +381,7 @@ public class WatchmanWatcherTest {
             ImmutableSet.of(),
             ImmutableSet.of(Capability.DIRNAME));
 
-    assertEquals(query.toQuery("").getRelativeRoot().get(), "project");
+    assertEquals(query.toQuery("").getRelativeRoot(), ForwardRelPath.of("project"));
   }
 
   @Test
@@ -404,7 +404,7 @@ public class WatchmanWatcherTest {
                     ImmutableList.of("dirname", "foo"),
                     ImmutableList.of("dirname", MorePaths.pathWithPlatformSeparators("bar/baz")))),
             ImmutableList.of("name", "exists", "new", "type"),
-            Optional.empty()),
+            ForwardRelPath.EMPTY),
         query);
   }
 
@@ -431,7 +431,7 @@ public class WatchmanWatcherTest {
                         "bar" + File.separator + "baz" + File.separator + "**",
                         "wholename"))),
             ImmutableList.of("name", "exists", "new", "type"),
-            Optional.empty()),
+            ForwardRelPath.EMPTY),
         query);
   }
 
@@ -456,7 +456,7 @@ public class WatchmanWatcherTest {
                     ImmutableList.of("dirname", "foo"),
                     ImmutableList.of("dirname", MorePaths.pathWithPlatformSeparators("bar/baz")))),
             ImmutableList.of("name", "exists", "new", "type"),
-            Optional.empty()),
+            ForwardRelPath.EMPTY),
         query);
   }
 
@@ -481,7 +481,7 @@ public class WatchmanWatcherTest {
                         "wholename",
                         ImmutableMap.<String, Object>of("includedotfiles", true)))),
             ImmutableList.of("name", "exists", "new", "type"),
-            Optional.empty()),
+            ForwardRelPath.EMPTY),
         query);
   }
 
@@ -655,6 +655,7 @@ public class WatchmanWatcherTest {
     }
 
     /** Helper to retrieve the only event of the specific class that should be in the list. */
+    @SuppressWarnings("unchecked")
     public <E extends WatchmanEvent> List<E> filterEventsByClass(Class<E> clazz) {
       return events.stream()
           .filter(e -> clazz.isAssignableFrom(e.getClass()))

@@ -283,7 +283,8 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
       throw new FileSystemNotWatchedException(msg);
     }
 
-    WatchmanGlobber globber = WatchmanGlobber.create(watchmanClient, "", watch.getWatchRoot());
+    WatchmanGlobber globber =
+        WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, watch.getWatchRoot());
     return globber.run(patterns, ImmutableList.of(), options, TIMEOUT_NANOS, WARN_TIMEOUT_NANOS);
   }
 

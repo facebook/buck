@@ -227,7 +227,8 @@ class WatchmanPathsChecker implements PathsChecker {
     }
 
     WatchmanClient watchmanClient = watchman.getPooledClient();
-    WatchmanGlobber globber = WatchmanGlobber.create(watchmanClient, "", watch.getWatchRoot());
+    WatchmanGlobber globber =
+        WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, watch.getWatchRoot());
     return globber.run(patterns, ImmutableList.of(), options, TIMEOUT_NANOS, WARN_TIMEOUT_NANOS);
   }
 }

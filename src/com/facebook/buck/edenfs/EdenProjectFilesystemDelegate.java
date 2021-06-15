@@ -17,6 +17,7 @@
 package com.facebook.buck.edenfs;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
@@ -296,7 +297,8 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   private Optional<Sha1HashCode> glob(AbsPath path)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     WatchmanClient watchmanClient = realWatchman().getPooledClient();
-    WatchmanGlobber globber = WatchmanGlobber.create(watchmanClient, "", rootPath.toString());
+    WatchmanGlobber globber =
+        WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, rootPath.toString());
     String pathString = rootPath.relativize(path.getPath()).toString();
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> ret =
         globber.runWithExtraFields(

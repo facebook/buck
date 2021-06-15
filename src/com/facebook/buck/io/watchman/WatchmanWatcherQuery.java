@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -30,7 +31,7 @@ abstract class WatchmanWatcherQuery {
 
   abstract ImmutableList<String> getFields();
 
-  abstract Optional<String> getRelativeRoot();
+  abstract ForwardRelPath getRelativeRoot();
 
   public WatchmanQuery.Query toQuery(String sinceCursor) {
     return WatchmanQuery.query(

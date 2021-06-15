@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.watchman.StubWatchmanClient;
 import com.facebook.buck.io.watchman.Watchman;
@@ -83,7 +84,8 @@ public class HybridGlobberTest {
   }
 
   private WatchmanGlobber newGlobber(Either<WatchmanQueryResp, WatchmanClient.Timeout> result) {
-    return WatchmanGlobber.create(new StubWatchmanClient(result), "", root.toString());
+    return WatchmanGlobber.create(
+        new StubWatchmanClient(result), ForwardRelPath.EMPTY, root.toString());
   }
 
   @Test

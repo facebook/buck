@@ -19,6 +19,7 @@ package com.facebook.buck.io.watchman;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
@@ -72,7 +73,7 @@ public class WatchmanTransportClientTest {
                   60_000_000_000L,
                   WatchmanQuery.query(
                       tmp.getRoot().toString(),
-                      Optional.empty(),
+                      ForwardRelPath.EMPTY,
                       Optional.empty(),
                       Optional.of(ImmutableList.of("*.txt")),
                       ImmutableList.of("fgfg")));
@@ -88,7 +89,7 @@ public class WatchmanTransportClientTest {
             60_000_000_000L,
             WatchmanQuery.query(
                     tmp.getRoot().toString(),
-                    Optional.empty(),
+                    ForwardRelPath.EMPTY,
                     Optional.empty(),
                     Optional.of(ImmutableList.of("*.txt")),
                     ImmutableList.of())

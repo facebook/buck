@@ -18,6 +18,7 @@ package com.facebook.buck.io.watchman;
 
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -111,7 +112,7 @@ public class WatchmanClientIntegrationTest {
             pollingTimeNanos,
             WatchmanQuery.query(
                 watchRoot,
-                Optional.empty(),
+                ForwardRelPath.EMPTY,
                 Optional.empty(),
                 Optional.of(ImmutableList.of("**/X")),
                 ImmutableList.of("name")));

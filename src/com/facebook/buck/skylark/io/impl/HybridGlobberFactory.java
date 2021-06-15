@@ -57,10 +57,9 @@ public class HybridGlobberFactory implements GlobberFactory {
   public Globber create(ForwardRelPath basePathRel) {
     final AbsPath basePath = projectRoot.resolve(basePathRel);
     String watchRoot = projectWatch.getWatchRoot();
-    String relativeRoot = basePathRel.toString();
     return new HybridGlobber(
         NativeGlobber.create(basePath),
-        WatchmanGlobber.create(watchmanClient, relativeRoot, watchRoot));
+        WatchmanGlobber.create(watchmanClient, basePathRel, watchRoot));
   }
 
   @Override

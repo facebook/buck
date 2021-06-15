@@ -158,7 +158,7 @@ public class WatchmanWatcher {
         watchRoot,
         ImmutableList.of("not", excludeAnyOf),
         ImmutableList.of("name", "exists", "new", "type"),
-        watchPrefix.isEmpty() ? Optional.empty() : Optional.of(watchPrefix.toString()));
+        watchPrefix);
   }
 
   @VisibleForTesting

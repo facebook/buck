@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.watchman.StubWatchmanClient;
@@ -80,7 +81,7 @@ public class WatchmanGlobberTest {
             Optional.empty());
     assumeTrue(watchman.getTransportPath().isPresent());
     WatchmanClient watchmanClient = watchman.createClient();
-    globber = WatchmanGlobber.create(watchmanClient, "", root.toString());
+    globber = WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, root.toString());
   }
 
   private void sync() throws Exception {
@@ -199,7 +200,7 @@ public class WatchmanGlobberTest {
     globber =
         WatchmanGlobber.create(
             new StubWatchmanClient(Either.ofRight(WatchmanClient.Timeout.INSTANCE)),
-            "",
+            ForwardRelPath.EMPTY,
             root.toString());
     assertFalse(globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false).isPresent());
   }
@@ -207,7 +208,7 @@ public class WatchmanGlobberTest {
   @Test
   public void watchmanSyncIsNotIssuedForTheSecondInvocation() throws Exception {
     CapturingWatchmanClient watchmanClient = new CapturingWatchmanClient();
-    globber = WatchmanGlobber.create(watchmanClient, "", root.toString());
+    globber = WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, root.toString());
     globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
     assertTrue(watchmanClient.syncDisabled());
     globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
@@ -240,7 +241,7 @@ public class WatchmanGlobberTest {
         };
 
     String queryRoot = root.toString();
-    globber = WatchmanGlobber.create(client, "", queryRoot);
+    globber = WatchmanGlobber.create(client, ForwardRelPath.EMPTY, queryRoot);
 
     thrown.expect(WatchmanQueryFailedException.class);
     thrown.expect(

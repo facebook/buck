@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.io.impl;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
@@ -136,12 +137,12 @@ public class WatchmanGlobber {
   private static final ImmutableList<String> NAME_ONLY_FIELD = ImmutableList.of("name");
   private final WatchmanClient watchmanClient;
   /** Path used as a root when resolving patterns. */
-  private final String basePath;
+  private final ForwardRelPath basePath;
 
   private final String watchmanWatchRoot;
 
   private WatchmanGlobber(
-      WatchmanClient watchmanClient, String basePath, String watchmanWatchRoot) {
+      WatchmanClient watchmanClient, ForwardRelPath basePath, String watchmanWatchRoot) {
     this.watchmanClient = watchmanClient;
     this.basePath = basePath;
     this.watchmanWatchRoot = watchmanWatchRoot;
@@ -221,7 +222,7 @@ public class WatchmanGlobber {
     WatchmanQuery.Query query =
         WatchmanQuery.query(
             watchmanWatchRoot,
-            Optional.of(basePath),
+            basePath,
             Optional.of(toMatchExpressions(exclude, options)),
             Optional.of(ImmutableList.copyOf(include)),
             fields);
@@ -352,7 +353,7 @@ public class WatchmanGlobber {
    * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
   public static WatchmanGlobber create(
-      WatchmanClient watchmanClient, String basePath, String watchmanWatchRoot) {
+      WatchmanClient watchmanClient, ForwardRelPath basePath, String watchmanWatchRoot) {
     return new WatchmanGlobber(watchmanClient, basePath, watchmanWatchRoot);
   }
 }

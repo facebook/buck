@@ -18,6 +18,7 @@ package com.facebook.buck.io.watchman;
 
 import static org.junit.Assert.*;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.junit.Test;
@@ -32,7 +33,7 @@ public class WatchmanQueryTest {
   public void queryDescQuery() {
     WatchmanQuery.Query q =
         WatchmanQuery.query(
-            "/p", Optional.empty(), Optional.empty(), Optional.empty(), ImmutableList.of());
+            "/p", ForwardRelPath.EMPTY, Optional.empty(), Optional.empty(), ImmutableList.of());
     assertEquals("sync+query", q.queryDesc());
     assertEquals("sync+query", q.withSyncTimeout(10).queryDesc());
     assertEquals("query", q.withSyncTimeout(0).queryDesc());

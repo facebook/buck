@@ -17,6 +17,7 @@
 package com.facebook.buck.core.parser;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -145,7 +146,7 @@ public class WatchmanBuildPackageComputation
     WatchmanClient watchmanClient = watchman.getPooledClient();
     WatchmanGlobber globber =
         WatchmanGlobber.create(
-            watchmanClient, getWatchRelativePath(basePath).toString(), watch.getWatchRoot());
+            watchmanClient, getWatchRelativePath(basePath), watch.getWatchRoot());
     LOG.info("Globber with basepath %s, pattern: %s", basePath, pattern);
 
     paths =
@@ -226,9 +227,10 @@ public class WatchmanBuildPackageComputation
    * @throws IllegalArgumentException The given path is not a descendant of {@code
    *     watch.getWatchRoot()}.
    */
-  private Path getWatchRelativePath(Path path) throws IOException, IllegalArgumentException {
+  private ForwardRelPath getWatchRelativePath(Path path) throws IOException {
     Path realBasePath = filesystemView.resolve(path).toRealPath();
-    return filesystemView.resolve(watch.getWatchRoot()).relativize(realBasePath);
+    return ForwardRelPath.ofPath(
+        filesystemView.resolve(watch.getWatchRoot()).relativize(realBasePath));
   }
 
   private static String escapeGlobPattern(String pathComponent) {

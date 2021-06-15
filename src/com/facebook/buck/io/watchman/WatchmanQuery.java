@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -64,7 +65,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
       implements QueryWithSync {
     public abstract String getPath();
 
-    public abstract Optional<String> getRelativeRoot();
+    public abstract ForwardRelPath getRelativeRoot();
 
     public abstract Optional<Object> getExpression();
 
@@ -122,7 +123,9 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
     @Override
     public ImmutableList<Object> toProtocolArgs() {
       ImmutableMap.Builder<String, Object> args = ImmutableMap.builder();
-      getRelativeRoot().ifPresent(s -> args.put("relative_root", s));
+      if (!getRelativeRoot().isEmpty()) {
+        args.put("relative_root", getRelativeRoot().toString());
+      }
       getSince().ifPresent(s -> args.put("since", s));
       getCaseSensitive().ifPresent(c -> args.put("case_sensitive", c));
       getEmptyOnFreshInstance().ifPresent(e -> args.put("empty_on_fresh_instance", e));
@@ -218,7 +221,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
   /** {@code query} query. */
   public static Query query(
       String path,
-      Optional<String> relativeRoot,
+      ForwardRelPath relativeRoot,
       Optional<Object> expression,
       Optional<Object> glob,
       ImmutableList<String> fields) {
