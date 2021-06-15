@@ -149,7 +149,9 @@ def main():
         pex_builder.set_shebang(options.python_shebang)
 
     elif options.absolute_shebang:
-        pex_builder.set_shebang(options.python)
+        # Preface with `/usr/bin/env` because MacOS must execute a binary.
+        # See https://stackoverflow.com/questions/67100831/macos-shebang-with-absolute-path-not-working
+        pex_builder.set_shebang("/usr/bin/env {}".format(options.python))
 
     # Set whether this PEX as zip-safe, meaning everything will stayed zipped up
     # and we'll rely on python's zip-import mechanism to load modules from
