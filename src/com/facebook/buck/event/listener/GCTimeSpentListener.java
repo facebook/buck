@@ -165,7 +165,7 @@ public class GCTimeSpentListener implements BuckEventListener {
    * line to the console with amount of time spent in GC.
    */
   public static class GCTimeSpentWarningEvent extends AbstractBuckEvent {
-    long gcDurationInSec;
+    final long gcDurationInSec;
 
     public GCTimeSpentWarningEvent(long gcDurationInMillis) {
       super(EventKey.unique());

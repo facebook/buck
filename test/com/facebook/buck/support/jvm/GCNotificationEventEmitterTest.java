@@ -20,46 +20,60 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.google.common.collect.Iterables;
 import com.google.common.eventbus.Subscribe;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
 public class GCNotificationEventEmitterTest {
+
+  private static final int MAX_WAIT_TIMEOUT_SECONDS = 1;
+
+  @Rule public Timeout globalTestTimeout = Timeout.seconds(2 * MAX_WAIT_TIMEOUT_SECONDS);
+
   @Test
   public void smokeTestInducedCollection() throws InterruptedException {
     BuckEventBus bus = BuckEventBusForTests.newInstance();
-    MockGCListener listener = new MockGCListener();
+    CountDownLatch countDownLatch = new CountDownLatch(1);
+    MockGCListener listener = new MockGCListener(countDownLatch);
     GCNotificationEventEmitter.register(bus);
     bus.register(listener);
+
+    // GCs themselves are asynchronous and often happen in the background - give it a chance to
+    // finish and dispatch its event.
     System.gc();
 
-    long start = System.currentTimeMillis();
-    for (; ; ) {
-      if (!listener.getGcEvents().isEmpty()) {
-        break;
-      }
-
-      // Kill test if it runs too long
-      assertTrue(System.currentTimeMillis() - start < 60_000);
-
-      // GCs themselves are asynchronous and often happen in the background - give it a chance to
-      // finish and dispatch its event.
-      Thread.sleep(200);
-      bus.waitEvents(200);
+    // wait for at least one event
+    boolean ok = countDownLatch.await(MAX_WAIT_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    if (!ok) {
+      Assert.fail("No gc events have been received");
     }
+
+    GCCollectionEvent gcCollectionEvent = Iterables.getLast(listener.gcEvents);
+    long duration = gcCollectionEvent.getDurationInMillis();
+    assertTrue(duration > 0);
   }
 
-  public static class MockGCListener {
-    private final List<GCCollectionEvent> gcEvents = new ArrayList<>();
+  private static class MockGCListener {
+
+    private final CountDownLatch countDownLatch;
+    private final List<GCCollectionEvent> gcEvents;
+
+    private MockGCListener(CountDownLatch countDownLatch) {
+      this.countDownLatch = countDownLatch;
+      this.gcEvents = new ArrayList<>();
+    }
 
     @Subscribe
     public void onGcEvent(GCCollectionEvent gc) {
+      countDownLatch.countDown();
       gcEvents.add(gc);
-    }
-
-    public List<GCCollectionEvent> getGcEvents() {
-      return gcEvents;
     }
   }
 }

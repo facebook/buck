@@ -20,6 +20,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableSet;
 import com.sun.management.GarbageCollectionNotificationInfo;
+import com.sun.management.GcInfo;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import javax.management.Notification;
@@ -38,7 +39,8 @@ import javax.management.openmbean.CompositeData;
  * heuristics are tuned to that.
  */
 public final class GCNotificationEventEmitter implements NotificationListener {
-  private static Logger LOG = Logger.get(GCNotificationEventEmitter.class);
+
+  private static final Logger LOG = Logger.get(GCNotificationEventEmitter.class);
 
   /**
    * The set of collectors known to operate on the young generation. The JVM allows mixing and
@@ -62,32 +64,36 @@ public final class GCNotificationEventEmitter implements NotificationListener {
   private final BuckEventBus eventBus;
 
   /**
-   * Registers for GC notifications to be sent to the given event bus.
-   *
-   * @param bus The event bus to send GC events to.
-   */
-  public static void register(BuckEventBus bus) {
-    new GCNotificationEventEmitter(bus);
-  }
-
-  /**
    * Registers this event emitter with the JVM and subscribes itself to GC events, producing an
    * emitter that writes GC events to the given event bus. If the JVM doesn't support this, no
    * events are written.
    *
    * @param eventBus The event bus to write events to
    */
-  GCNotificationEventEmitter(BuckEventBus eventBus) {
+  private GCNotificationEventEmitter(BuckEventBus eventBus) {
     this.eventBus = eventBus;
+  }
 
+  /**
+   * Registers for GC notifications to be sent to the given event eventBus.
+   *
+   * @param eventBus The event eventBus to send GC events to.
+   */
+  public static void register(BuckEventBus eventBus) {
+    GCNotificationEventEmitter gcNotificationEventEmitter =
+        new GCNotificationEventEmitter(eventBus);
+    registerNotificationListener(gcNotificationEventEmitter);
+  }
+
+  private static void registerNotificationListener(NotificationListener notificationListener) {
     // Despite there being one GC, there are often multiple GC beans corresponding to different
     // parts of the GC subsystem.
     // For G1, there are separate beans for the young and tenured generations, which we use to
     // determine the nature of a GC.
     for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans()) {
       if (gcBean instanceof NotificationEmitter) {
-        ((NotificationEmitter) gcBean).addNotificationListener(this, null, gcBean);
-        LOG.info("Installed GC notification for GC " + gcBean.getName());
+        ((NotificationEmitter) gcBean).addNotificationListener(notificationListener, null, gcBean);
+        LOG.info("Installed GC notification for GC %s", gcBean.getName());
       }
     }
   }
@@ -115,12 +121,13 @@ public final class GCNotificationEventEmitter implements NotificationListener {
         .equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION)) {
       GarbageCollectionNotificationInfo notificationInfo =
           GarbageCollectionNotificationInfo.from((CompositeData) notification.getUserData());
+      GcInfo gcInfo = notificationInfo.getGcInfo();
       GCNotificationInfo info =
           GCNotificationInfo.of(
-              notificationInfo.getGcInfo().getId(),
-              notificationInfo.getGcInfo().getDuration(),
-              notificationInfo.getGcInfo().getMemoryUsageBeforeGc(),
-              notificationInfo.getGcInfo().getMemoryUsageAfterGc());
+              gcInfo.getId(),
+              gcInfo.getDuration(),
+              gcInfo.getMemoryUsageBeforeGc(),
+              gcInfo.getMemoryUsageAfterGc());
       if (isMinorGCBean((GarbageCollectorMXBean) handback)) {
         eventBus.post(new GCMinorCollectionEvent(info));
       } else {
