@@ -28,6 +28,7 @@ import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
+import com.facebook.buck.util.trace.uploader.types.TraceKind;
 import com.google.common.eventbus.Subscribe;
 import java.net.URI;
 import java.nio.file.Path;
@@ -43,7 +44,7 @@ public class LogUploaderListener implements BuckEventListener {
   private final Path logDirectoryPath;
   private final BuildId buildId;
   private final TaskManagerCommandScope managerScope;
-  private final String traceKindFile;
+  private final TraceKind traceKind;
 
   public LogUploaderListener(
       ChromeTraceBuckConfig config,
@@ -51,13 +52,13 @@ public class LogUploaderListener implements BuckEventListener {
       Path logDirectoryPath,
       BuildId buildId,
       TaskManagerCommandScope managerScope,
-      String traceKindFile) {
+      TraceKind traceKind) {
     this.config = config;
     this.logFilePath = logFilePath;
     this.logDirectoryPath = logDirectoryPath;
     this.buildId = buildId;
     this.managerScope = managerScope;
-    this.traceKindFile = traceKindFile;
+    this.traceKind = traceKind;
   }
 
   @Subscribe
@@ -84,7 +85,7 @@ public class LogUploaderListener implements BuckEventListener {
     BackgroundTask<LogUploaderListenerCloseArgs> task =
         BackgroundTask.of(
             "LogUploaderListener_close",
-            new LogUploaderListenerCloseAction(traceKindFile),
+            new LogUploaderListenerCloseAction(traceKind),
             args,
             Timeout.of(config.getMaxUploadTimeoutInSeconds(), TimeUnit.SECONDS));
     managerScope.schedule(task);
@@ -96,19 +97,19 @@ public class LogUploaderListener implements BuckEventListener {
    */
   static class LogUploaderListenerCloseAction implements TaskAction<LogUploaderListenerCloseArgs> {
 
-    private final String traceFileKind;
+    private final TraceKind traceKind;
 
-    public LogUploaderListenerCloseAction(String traceFileKind) {
-      this.traceFileKind = traceFileKind;
+    public LogUploaderListenerCloseAction(TraceKind traceKind) {
+      this.traceKind = traceKind;
     }
 
     @Override
     public void run(LogUploaderListenerCloseArgs args) {
-      Path logFile = args.getLogDirectoryPath().resolve("upload_" + traceFileKind + ".log");
+      Path logFile = args.getLogDirectoryPath().resolve("upload_" + traceKind + ".log");
       UploaderLauncher.uploadInBackground(
           args.getBuildId(),
           args.getLogFilePath(),
-          traceFileKind,
+          traceKind,
           args.getTraceUploadURI(),
           logFile,
           CompressionType.NONE);

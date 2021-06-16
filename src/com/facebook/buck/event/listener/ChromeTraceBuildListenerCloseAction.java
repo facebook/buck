@@ -27,6 +27,7 @@ import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
+import com.facebook.buck.util.trace.uploader.types.TraceKind;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -80,7 +81,12 @@ class ChromeTraceBuildListenerCloseAction
     Path logFile = projectFilesystem.resolve(logDirectoryPath.resolve("upload-build-trace.log"));
 
     UploaderLauncher.uploadInBackground(
-        buildId, fullPath, "default", traceUploadUri.get(), logFile, CompressionType.GZIP);
+        buildId,
+        fullPath,
+        TraceKind.BUILD_TRACE,
+        traceUploadUri.get(),
+        logFile,
+        CompressionType.GZIP);
   }
 
   @VisibleForTesting

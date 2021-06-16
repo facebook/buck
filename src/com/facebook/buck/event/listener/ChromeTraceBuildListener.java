@@ -44,6 +44,7 @@ import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.chrome_trace.ChromeTraceData;
 import com.facebook.buck.event.chrome_trace.ChromeTraceData.Phase;
 import com.facebook.buck.event.chrome_trace.ChromeTraceWriter;
+import com.facebook.buck.event.listener.ChromeTraceBuildListenerCloseAction.ChromeTraceBuildListenerCloseArgs;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
@@ -255,7 +256,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Override
   public void close() {
-    ChromeTraceBuildListenerCloseAction.ChromeTraceBuildListenerCloseArgs args =
+    ChromeTraceBuildListenerCloseArgs args =
         ImmutableChromeTraceBuildListenerCloseArgs.ofImpl(
             outputExecutor,
             tracePath,
@@ -266,12 +267,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
             buildId,
             projectFilesystem);
 
-    ChromeTraceBuildListenerCloseAction closeAction = new ChromeTraceBuildListenerCloseAction();
-
-    BackgroundTask<ChromeTraceBuildListenerCloseAction.ChromeTraceBuildListenerCloseArgs> task =
+    BackgroundTask<ChromeTraceBuildListenerCloseArgs> task =
         BackgroundTask.of(
             "ChromeTraceBuildListener_close",
-            closeAction,
+            new ChromeTraceBuildListenerCloseAction(),
             args,
             Timeout.of(config.getMaxUploadTimeoutInSeconds(), TimeUnit.SECONDS));
 

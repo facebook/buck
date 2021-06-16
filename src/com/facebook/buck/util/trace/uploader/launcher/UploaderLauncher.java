@@ -21,6 +21,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
+import com.facebook.buck.util.trace.uploader.types.TraceKind;
 import com.google.common.base.Strings;
 import java.io.IOException;
 import java.net.URI;
@@ -28,13 +29,17 @@ import java.nio.file.Path;
 
 /** Utility to upload chrome trace in background. */
 public class UploaderLauncher {
+
   private static final Logger LOG = Logger.get(UploaderLauncher.class);
+
+  private static final String UPLOADER_MAIN_CLASS =
+      "com.facebook.buck.util.trace.uploader.UploaderMain";
 
   /** Upload chrome trace in background process which runs even after current process dies. */
   public static void uploadInBackground(
       BuildId buildId,
       Path traceFilePath,
-      String traceFileKind,
+      TraceKind traceKind,
       URI traceUploadUri,
       Path logFile,
       CompressionType compressionType) {
@@ -53,13 +58,13 @@ public class UploaderLauncher {
         JavaRuntimeUtils.getBucksJavaBinCommand(),
         "-cp",
         buckClasspath,
-        "com.facebook.buck.util.trace.uploader.Main",
+        UPLOADER_MAIN_CLASS,
         "--buildId",
         buildId.toString(),
         "--traceFilePath",
         traceFilePath.toString(),
-        "--traceFileKind",
-        traceFileKind,
+        "--traceKind",
+        traceKind.name(),
         "--baseUrl",
         traceUploadUri.toString(),
         "--log",

@@ -221,6 +221,7 @@ import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.NanosAdjustedClock;
+import com.facebook.buck.util.trace.uploader.types.TraceKind;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
@@ -2327,7 +2328,7 @@ public final class MainRunner {
             invocationInfo.getLogDirectoryPath(),
             invocationInfo.getBuildId(),
             managerScope,
-            "build_log"));
+            TraceKind.BUILD_LOG));
     eventListenersBuilder.add(
         new LogUploaderListener(
             chromeTraceBuckConfig,
@@ -2335,7 +2336,7 @@ public final class MainRunner {
             invocationInfo.getLogDirectoryPath(),
             invocationInfo.getBuildId(),
             managerScope,
-            "simple_console_output"));
+            TraceKind.SIMPLE_CONSOLE_OUTPUT));
     eventListenersBuilder.add(
         new LogUploaderListener(
             chromeTraceBuckConfig,
@@ -2343,7 +2344,7 @@ public final class MainRunner {
             invocationInfo.getLogDirectoryPath(),
             invocationInfo.getBuildId(),
             managerScope,
-            "critical_path_log"));
+            TraceKind.CRITICAL_PATH_LOG));
 
     if (logBuckConfig.isRuleKeyLoggerEnabled()) {
 

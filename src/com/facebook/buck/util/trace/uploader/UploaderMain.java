@@ -19,6 +19,7 @@ package com.facebook.buck.util.trace.uploader;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
+import com.facebook.buck.util.trace.uploader.types.TraceKind;
 import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,7 +34,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -46,7 +46,12 @@ import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
-public final class Main {
+/** Main class used for uploading provided trace file into provided url */
+public final class UploaderMain {
+
+  static {
+    MacIpv6BugWorkaround.apply();
+  }
 
   private static final int SUCCESS_EXIT_CODE = 0;
   private static final int ERROR_EXIT_CODE = 1;
@@ -57,8 +62,8 @@ public final class Main {
   @Option(name = "--traceFilePath", required = true)
   private Path traceFilePath;
 
-  @Option(name = "--traceFileKind", required = true)
-  private String traceFileKind;
+  @Option(name = "--traceKind", required = true)
+  private TraceKind traceKind;
 
   @Option(name = "--baseUrl", required = true)
   private URI baseUrl;
@@ -67,15 +72,11 @@ public final class Main {
   private File logFile;
 
   @Option(name = "--compressionType", required = true)
-  @Nullable
   private CompressionType compressionType;
 
-  static {
-    MacIpv6BugWorkaround.apply();
-  }
-
+  /** Main method */
   public static void main(String[] args) throws IOException {
-    Main main = new Main();
+    UploaderMain main = new UploaderMain();
     CmdLineParser parser = new CmdLineParser(main);
     try {
       parser.parseArgument(args);
@@ -84,13 +85,13 @@ public final class Main {
     } catch (CmdLineException e) {
       System.err.println(e.getMessage());
       parser.printUsage(System.err);
-      System.exit(1);
+      System.exit(ERROR_EXIT_CODE);
     }
   }
 
   private int run() throws IOException {
-    try (PrintWriter log = new PrintWriter(logFile)) { // NOPMD
-      return upload(log);
+    try (PrintWriter logWriter = new PrintWriter(logFile)) { // NOPMD
+      return upload(logWriter);
     }
   }
 
@@ -98,45 +99,38 @@ public final class Main {
     Stopwatch timer = Stopwatch.createStarted();
     NamedTemporaryFile tempFile = null;
     try {
+      logWriter.format("Build ID: %s%n", uuid);
+      logWriter.format("Trace file: %s (%d) bytes%n", traceFilePath, Files.size(traceFilePath));
+
       HttpUrl url =
           Objects.requireNonNull(HttpUrl.get(baseUrl))
               .newBuilder()
-              .addQueryParameter("uuid", this.uuid)
-              .addQueryParameter("trace_file_kind", this.traceFileKind)
+              .addQueryParameter("uuid", uuid)
+              .addQueryParameter("trace_file_kind", traceKind.toString())
               .build();
-      Path fileToUpload = traceFilePath;
-      String mediaType = "application/data";
-      String traceName = traceFilePath.getFileName().toString();
-      boolean compressionEnabled = false;
-      if (compressionType != null) {
-        switch (compressionType) {
-          case GZIP:
-            fileToUpload = gzip(traceFilePath);
-            mediaType = "application/json+gzip";
-            traceName = traceName + ".gz";
-            compressionEnabled = true;
-            break;
-          case NONE:
-            break;
-        }
-      }
 
-      logWriter.format("Build ID: %s%n", uuid);
-      logWriter.format("Trace file: %s (%d) bytes%n", traceFilePath, Files.size(traceFilePath));
-      if (compressionEnabled) {
+      Path fileToUpload;
+      String mediaType;
+      String traceName;
+      if (compressionType == CompressionType.GZIP) {
+        fileToUpload = gzip(traceFilePath);
+        mediaType = "application/json+gzip";
+        traceName = traceFilePath.getFileName().toString() + ".gz";
+
         logWriter.format("Compressed size: %d bytes%n", Files.size(fileToUpload));
-      }
-      logWriter.format("Upload URL: %s%n", url);
-      if (compressionEnabled) {
-        logWriter.format("Uploading compressed trace...%n");
+        logWriter.println("Uploading compressed trace...");
       } else {
-        logWriter.format("Uploading trace...%n");
+        fileToUpload = traceFilePath;
+        mediaType = "application/data";
+        traceName = traceFilePath.getFileName().toString();
+
+        logWriter.println("Uploading trace...");
       }
 
-      if (traceFileKind.equals("build_log")) {
-        // Copy the logWriter to a temp file in case buck is still writing to it.
+      if (traceKind == TraceKind.BUILD_LOG) {
+        // Copy the file to a temp file in case buck is still writing to it.
         // TODO launch uploader from buck *after* logs are flushed
-        tempFile = new NamedTemporaryFile(uuid, ".logWriter");
+        tempFile = new NamedTemporaryFile(uuid, ".log");
         Files.copy(fileToUpload, tempFile.get(), StandardCopyOption.REPLACE_EXISTING);
         fileToUpload = tempFile.get();
       }
@@ -154,8 +148,9 @@ public final class Main {
   }
 
   private int upload(
-      PrintWriter log, HttpUrl url, Path fileToUpload, String mediaType, String traceName)
+      PrintWriter logWriter, HttpUrl url, Path fileToUpload, String mediaType, String traceName)
       throws IOException {
+    logWriter.format("Upload URL: %s%n", url);
     Request request =
         new Request.Builder()
             .url(url)
@@ -174,18 +169,18 @@ public final class Main {
       ObjectMapper objectMapper = new ObjectMapper();
       ResponseBody body = response.body();
       if (body == null) {
-        log.println("Failed!");
+        logWriter.println("Failed!");
         return ERROR_EXIT_CODE;
       }
 
       JsonNode root = objectMapper.readTree(body.byteStream());
       if (root.has("error")) {
-        log.format("Failed!%n%s%n", root);
+        logWriter.format("Failed!%n%s%n", root);
         return ERROR_EXIT_CODE;
       } else if (root.has("uri")) {
-        log.format("Success!%nFind it at %s%n", root.get("uri").asText());
+        logWriter.format("Success!%nFind it at %s%n", root.get("uri").asText());
       } else {
-        log.format("Success!%n");
+        logWriter.println("Success!");
       }
       return SUCCESS_EXIT_CODE;
     }

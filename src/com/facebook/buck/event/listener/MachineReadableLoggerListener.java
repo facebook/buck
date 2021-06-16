@@ -60,6 +60,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
+import com.facebook.buck.util.trace.uploader.types.TraceKind;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsEvent;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -478,7 +479,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
         UploaderLauncher.uploadInBackground(
             args.getBuildId(),
             args.getMachineReadableLogFilePath(),
-            "machine_readable_log",
+            TraceKind.MACHINE_READABLE_LOG,
             args.getTraceUploadURI().get(),
             args.getLogDirectoryPath().resolve("upload-machine-readable-log.log"),
             CompressionType.GZIP);
