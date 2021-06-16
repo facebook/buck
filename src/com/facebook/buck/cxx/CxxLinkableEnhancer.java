@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -222,7 +221,6 @@ public class CxxLinkableEnhancer {
       boolean useFocusedDebugging) {
 
     Linker linker = cxxPlatform.getLd().resolve(ruleResolver, target.getTargetConfiguration());
-    Tool strip = cxxPlatform.getStrip().resolve(ruleResolver, target.getTargetConfiguration());
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -307,7 +305,6 @@ public class CxxLinkableEnhancer {
         linkOptions.getFatLto(),
         downwardApiConfig.isEnabledForCxx(),
         filteredFocusedTargets,
-        Optional.of(strip),
         linkStrategy,
         debugStrategy);
   }

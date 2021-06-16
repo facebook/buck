@@ -121,14 +121,20 @@ public class DarwinLinker extends DelegatingTool
       // If we aren't uploading linked output to remote cache, scrub the linked binaries based
       // on the focused targets info available.
       if (focusedTargetsPath.isPresent()) {
-        return ImmutableList.of(
-            new OsoSymbolsContentsScrubber(focusedTargetsPath, targetToOutputPathMap));
+        return getFocusedDebugSymbolScrubbers(focusedTargetsPath, targetToOutputPathMap);
       } else if (focusedBuildOutputPaths.isPresent()) {
         return getFocusedDebugSymbolScrubbers(focusedBuildOutputPaths.get());
       } else {
         return ImmutableList.of();
       }
     }
+  }
+
+  private ImmutableList<FileScrubber> getFocusedDebugSymbolScrubbers(
+      Optional<AbsPath> focusedTargetsPath,
+      Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap) {
+    return ImmutableList.of(
+        new OsoSymbolsContentsScrubber(focusedTargetsPath, targetToOutputPathMap));
   }
 
   /**

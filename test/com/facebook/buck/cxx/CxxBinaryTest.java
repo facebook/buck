@@ -64,7 +64,6 @@ public class CxxBinaryTest {
                 ImmutableList.of(),
                 Optional.empty(),
                 Optional.empty(),
-                Optional.empty(),
                 /* linkerMapEnabled */ true,
                 /* cacheable */ true,
                 /* thinLto */ false,

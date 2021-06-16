@@ -17,8 +17,10 @@
 package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.FileContentsScrubber;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
@@ -31,6 +33,7 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +41,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
+
+  private static final Logger LOG = Logger.get(OsoSymbolsContentsScrubber.class);
 
   private final Optional<ImmutableMap<Path, Path>> cellRootMap;
   private final Optional<ImmutableSet<Path>> exemptPaths;
@@ -90,13 +95,29 @@ public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
     // swap absolute paths for relative paths.
     // If exemptPaths is present we're scrubbing all paths to fake
     // paths other than exempt paths to implement focused debugging.
-    // If neither is present we don't perform file scrubbing.
     if (cellRootMap.isPresent() || exemptPaths.isPresent()) {
       try {
         Machos.relativizeOsoSymbols(file, cellRootMap, exemptPaths);
       } catch (Machos.MachoException e) {
         throw new ScrubException(e.getMessage());
       }
+    } else {
+      stripDebugSymbolTableOfPath(filePath, processExecutor, environment);
+    }
+  }
+
+  private void stripDebugSymbolTableOfPath(
+      Path filePath, ProcessExecutor processExecutor, ImmutableMap<String, String> environment)
+      throws InterruptedException, IOException {
+    ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
+    builder.setCommand(Arrays.asList("strip", "-S", filePath.toAbsolutePath().toString()));
+    builder.setEnvironment(environment);
+
+    try {
+      processExecutor.launchAndExecute(builder.build());
+    } catch (Exception exception) {
+      LOG.error(exception.getMessage());
+      throw exception;
     }
   }
 
