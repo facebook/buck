@@ -65,6 +65,11 @@ public class PrebuiltRustLibraryDescription
     return new PrebuiltRustLibrary(
         buildTarget, context.getProjectFilesystem(), params, args.getRlib()) {
       @Override
+      public String getCrate() {
+        return args.getCrate();
+      }
+
+      @Override
       public com.facebook.buck.rules.args.Arg getLinkerArg(
           Optional<BuildTarget> directDependent,
           ProjectFilesystem dependentFilesystem,

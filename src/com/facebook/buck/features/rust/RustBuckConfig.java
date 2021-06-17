@@ -41,6 +41,8 @@ public class RustBuckConfig {
   private static final String RUSTC_LIBRARY_FLAGS = "rustc_library_flags";
   private static final String RUSTC_CHECK_FLAGS = "rustc_check_flags";
   private static final String RUSTDOC_FLAGS = "rustdoc_flags";
+  private static final String RUSTDOC_EXTERN_HTML_ROOT_URL_PREFIX =
+      "rustdoc_extern_html_root_url_prefix";
   private static final String RUSTC_TEST_FLAGS = "rustc_test_flags";
   private static final String UNFLAVORED_BINARIES = "unflavored_binaries";
   private static final String REMAP_SRC_PATHS = "remap_src_paths";
@@ -192,6 +194,18 @@ public class RustBuckConfig {
         .addAll(getRustCompilerFlags(platform))
         .addAll(getCompilerFlags(platform, RUSTDOC_FLAGS))
         .build();
+  }
+
+  /**
+   * URL prefix at which generated rustdoc is to be hosted, used for cross-crate links.
+   *
+   * <p>Generated cross-crate links are of the form "$PREFIX/$TARGET". For example if our
+   * rustdoc_extern_html_root_url_prefix is set to "/intern/rustdoc" and some generated
+   * documentation wants to link to data structures from the target "build_infra/buck_client:buck",
+   * those links would point to "/intern/rustdoc/build_infra/buck_client:buck/...".
+   */
+  public Optional<String> getRustdocExternHtmlRootUrlPrefix() {
+    return delegate.getValue(SECTION, RUSTDOC_EXTERN_HTML_ROOT_URL_PREFIX);
   }
 
   public Optional<ToolProvider> getRustLinker(String platform) {

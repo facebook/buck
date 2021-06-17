@@ -31,6 +31,8 @@ import java.util.Optional;
  * crate).
  */
 interface RustLinkable {
+  String getCrate();
+
   /**
    * Return Arg for dependency.
    *

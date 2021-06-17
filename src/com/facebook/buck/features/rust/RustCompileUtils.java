@@ -352,6 +352,8 @@ public class RustCompileUtils {
         Multimaps.invertFrom(
             Multimaps.forMap(depsAliases), MultimapBuilder.hashKeys().arrayListValues().build());
 
+    Optional<String> htmlRootUrlPrefix = rustConfig.getRustdocExternHtmlRootUrlPrefix();
+
     // Find direct and transitive Rust deps. We do this in two passes, since a dependency that's
     // both direct and transitive needs to be listed on the command line in each form.
     //
@@ -370,6 +372,37 @@ public class RustCompileUtils {
             rustDepType,
             Optional.of(target),
             projectFilesystem);
+
+        if (htmlRootUrlPrefix.isPresent() && crateType.isDoc()) {
+          BuildTarget buildTarget = rule.getBuildTarget();
+
+          // HTML links to a different cell are not supported yet.
+          if (buildTarget.getCell().getName() != "") {
+            continue;
+          }
+
+          String depCrate = ((RustLinkable) rule).getCrate();
+          String depAbsTarget = rule.getBuildTarget().getCellRelativeName();
+          String depTarget = depAbsTarget.replaceAll("^/+", "");
+
+          Collection<String> depAliasesColl = revAliasMap.get(buildTarget);
+          Stream<Optional<String>> depAliases;
+          if (depAliasesColl.isEmpty()) {
+            depAliases = Stream.of(Optional.empty());
+          } else {
+            depAliases = depAliasesColl.stream().map(Optional::of);
+          }
+          depAliases.forEach(
+              alias ->
+                  depArgs.add(
+                      StringArg.of(
+                          "--extern-html-root-url="
+                              + alias.orElse(depCrate)
+                              + "="
+                              + htmlRootUrlPrefix.get()
+                              + "/"
+                              + depTarget)));
+        }
       }
     }
 

@@ -234,6 +234,11 @@ public class RustLibraryDescription
         private final PlatformMappedCache<NativeLinkableInfo> linkableCache =
             new PlatformMappedCache<>();
 
+        @Override
+        public String getCrate() {
+          return crate;
+        }
+
         // Implementations for RustLinkable
 
         // Construct an argument to be put on the command-line of a dependent crate.
