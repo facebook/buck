@@ -97,7 +97,7 @@ public enum WindowsNamedPipeFactory implements NamedPipeFactory {
 
     if (handle.isInvalidHandle()) {
       throw new WindowsNamedPipeException(
-          "Could not create named pipe: %s, error: %s.",
+          "Could not connect to named pipe: %s, error: %s.",
           namedPipeName, Kernel32Util.getLastErrorMessage());
     }
 
