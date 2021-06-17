@@ -526,7 +526,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     if (useCompressedLine) {
       LINE_BUILDER.setLength(0);
       LINE_BUILDER.append("     - ");
-      LINE_BUILDER.append(threadsWithShortStatus);
+      // Format to avoid label length changing and flickering around on the screen
+      LINE_BUILDER.append(String.format("%3d", threadsWithShortStatus));
       if (fullLines == 0) {
         LINE_BUILDER.append(String.format(" %s:", renderer.getExecutorCollectionLabel()));
       } else {

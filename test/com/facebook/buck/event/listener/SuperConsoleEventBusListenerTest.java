@@ -2470,7 +2470,7 @@ public class SuperConsoleEventBusListenerTest {
                   "     - Status of thread 2",
                   "     - Status of thread 1",
                   "     - Status of thread 4",
-                  "     - 2 MORE THREADS: t8 t5")));
+                  "     -   2 MORE THREADS: t8 t5")));
       assertThat(fakeRenderer.lastSortWasByTime(), is(true));
 
       lines = ImmutableList.builder();
@@ -2478,12 +2478,13 @@ public class SuperConsoleEventBusListenerTest {
       assertThat(
           lines.build(),
           equalTo(
-              ImmutableList.of("     - Status of thread 2", "     - 4 MORE THREADS: t1 t4 t8 t5")));
+              ImmutableList.of(
+                  "     - Status of thread 2", "     -   4 MORE THREADS: t1 t4 t8 t5")));
       assertThat(fakeRenderer.lastSortWasByTime(), is(true));
 
       lines = ImmutableList.builder();
       listener.renderLinesWithMaybeCompression(fakeRenderer, lines, 1, false);
-      assertThat(lines.build(), equalTo(ImmutableList.of("     - 5 THREADS: t2 t1 t4 t8 t5")));
+      assertThat(lines.build(), equalTo(ImmutableList.of("     -   5 THREADS: t2 t1 t4 t8 t5")));
       assertThat(fakeRenderer.lastSortWasByTime(), is(true));
     }
   }
