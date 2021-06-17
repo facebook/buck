@@ -557,4 +557,44 @@ public class JavaBuckConfigTest {
             EnvVariablesProvider.getSystemEnv());
     return raw.getView(JavaBuckConfig.class);
   }
+
+  @Test
+  public void disabledForWindowsIsFalseByDefault() {
+    JavaBuckConfig javaBuckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    JavaBuckConfig.SECTION,
+                    ImmutableMap.of(
+                        JavaBuckConfig.PROPERTY_JAVACD_ENABLED, Boolean.toString(true))))
+            .build()
+            .getView(JavaBuckConfig.class);
+    assertThat(javaBuckConfig.isDisabledForWindows(), is(false));
+    assertThat(javaBuckConfig.isJavaCDEnabled(), is(true));
+  }
+
+  @Test
+  public void disabledForWindowsIfSet() {
+    JavaBuckConfig javaBuckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    JavaBuckConfig.SECTION,
+                    ImmutableMap.of(
+                        JavaBuckConfig.PROPERTY_JAVACD_ENABLED,
+                        Boolean.toString(true),
+                        JavaBuckConfig.PROPERTY_JAVACD_DISABLED_FOR_WINDOWS,
+                        Boolean.toString(true),
+                        JavaBuckConfig.PROPERTY_JAVACD_ROLLOUT_PERCENTAGE,
+                        Integer.toString(100))))
+            .build()
+            .getView(JavaBuckConfig.class);
+    assertThat(javaBuckConfig.isDisabledForWindows(), is(true));
+    boolean isWindows = Platform.detect() == Platform.WINDOWS;
+    // enabled for everything except windows
+    assertThat(javaBuckConfig.isJavaCDEnabled(), is(!isWindows));
+    JavaCDRolloutMode javaCDRolloutMode =
+        isWindows ? JavaCDRolloutMode.UNKNOWN : JavaCDRolloutMode.ENABLED;
+    assertThat(javaBuckConfig.getJavacdMode(), is(javaCDRolloutMode));
+  }
 }

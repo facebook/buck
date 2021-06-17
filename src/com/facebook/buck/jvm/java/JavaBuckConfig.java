@@ -31,6 +31,7 @@ import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.google.common.annotations.VisibleForTesting;
@@ -55,10 +56,13 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   private static final Logger LOGGER = Logger.get(JavaBuckConfig.class);
 
+  private static final boolean IS_WINDOWS = Platform.detect() == Platform.WINDOWS;
+
   public static final String SECTION = "java";
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
   public static final String PROPERTY_JAVACD_ENABLED = "javacd_enabled";
-  private static final String PROPERTY_JAVACD_ROLLOUT_PERCENTAGE = "javacd_rollout_percentage";
+  static final String PROPERTY_JAVACD_DISABLED_FOR_WINDOWS = "javacd_disabled_for_windows";
+  static final String PROPERTY_JAVACD_ROLLOUT_PERCENTAGE = "javacd_rollout_percentage";
 
   private static final CommandTool DEFAULT_JAVA_TOOL =
       new CommandTool.Builder().addArg(JavaRuntimeUtils.getBucksJavaBinCommand()).build();
@@ -86,6 +90,11 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     this.javacdMode =
         Suppliers.memoize(
             () -> {
+              if (IS_WINDOWS && isDisabledForWindows()) {
+                LOGGER.info("javacd disabled on windows");
+                return JavaCDRolloutMode.UNKNOWN;
+              }
+
               OptionalInt javacdRolloutPercentage =
                   delegate.getInteger(SECTION, PROPERTY_JAVACD_ROLLOUT_PERCENTAGE);
               if (javacdRolloutPercentage.isPresent()) {
@@ -339,7 +348,16 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public boolean isJavaCDEnabled() {
+    if (IS_WINDOWS && isDisabledForWindows()) {
+      LOGGER.info("javacd disabled on windows");
+      return false;
+    }
+
     return getDelegate().getBooleanValue(SECTION, PROPERTY_JAVACD_ENABLED, false);
+  }
+
+  public boolean isDisabledForWindows() {
+    return getDelegate().getBooleanValue(SECTION, PROPERTY_JAVACD_DISABLED_FOR_WINDOWS, false);
   }
 
   public JavaCDRolloutMode getJavacdMode() {
