@@ -32,6 +32,7 @@ abstract class AndroidAppModularityGraphEnhancementResult implements AddsToRuleK
 
   public abstract AndroidPackageableCollection getPackageableCollection();
 
+  @AddToRuleKey
   public abstract Optional<ImmutableMultimap<APKModule, String>> getModulesToSharedLibraries();
 
   @AddToRuleKey
