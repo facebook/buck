@@ -20,6 +20,7 @@ import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -46,7 +47,6 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 public class RobolectricTest extends JavaTest {
-
   private final AndroidPlatformTarget androidPlatformTarget;
   private final RobolectricTestHelper robolectricTestHelper;
   private final boolean includeBootClasspathInRequiredPaths;
@@ -76,6 +76,8 @@ public class RobolectricTest extends JavaTest {
       ImmutableSortedSet<SourcePath> resources,
       ImmutableSet<Path> externalResourcesPaths,
       Optional<SourcePath> robolectricRuntimeDependency,
+      ImmutableSortedSet<BuildRule> robolectricRuntimeDependencies,
+      Optional<RobolectricRuntimeDependencies> robolectricRuntimeDependenciesRule,
       SourcePath robolectricManifest,
       Tool javaRuntimeLauncher,
       OptionalInt javaRuntimeVersion,
@@ -122,6 +124,8 @@ public class RobolectricTest extends JavaTest {
             binaryResources,
             externalResourcesPaths,
             robolectricRuntimeDependency,
+            robolectricRuntimeDependencies,
+            robolectricRuntimeDependenciesRule,
             robolectricManifest,
             getProjectFilesystem());
     this.includeBootClasspathInRequiredPaths = includeBootClasspathInRequiredPaths;
