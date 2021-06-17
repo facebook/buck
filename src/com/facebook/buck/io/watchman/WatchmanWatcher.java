@@ -29,6 +29,7 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -108,6 +109,12 @@ public class WatchmanWatcher {
       ImmutableMap<AbsPath, WatchmanWatcherQuery> queries,
       Map<AbsPath, WatchmanCursor> cursors,
       int numThreads) {
+    Preconditions.checkArgument(
+        queries.keySet().equals(cursors.keySet()),
+        "watchman query keys %s should be equal to watchman cursor keys %s",
+        queries.keySet(),
+        cursors.keySet());
+
     this.fileChangeEventBus = fileChangeEventBus;
     this.watchmanClient = watchmanClient;
     this.timeoutMillis = timeoutMillis;
