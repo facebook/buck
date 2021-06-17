@@ -52,21 +52,21 @@ public final class DownwardApiExecutionContext implements AutoCloseable {
     return startExecutionInstant;
   }
 
-  public void registerStartChromeEvent(Integer key, SimplePerfEvent.Started started) {
+  public synchronized void registerStartChromeEvent(Integer key, SimplePerfEvent.Started started) {
     chromeTraceStartedEvents.put(key, started);
   }
 
   @Nullable
-  public SimplePerfEvent.Started getChromeTraceStartedEvent(int eventId) {
+  public synchronized SimplePerfEvent.Started getChromeTraceStartedEvent(int eventId) {
     return chromeTraceStartedEvents.remove(eventId);
   }
 
-  public void registerStartStepEvent(Integer key, StepEvent.Started started) {
+  public synchronized void registerStartStepEvent(Integer key, StepEvent.Started started) {
     stepStartedEvents.put(key, started);
   }
 
   @Nullable
-  public StepEvent.Started getStepStartedEvent(int eventId) {
+  public synchronized StepEvent.Started getStepStartedEvent(int eventId) {
     return stepStartedEvents.remove(eventId);
   }
 
@@ -116,7 +116,7 @@ public final class DownwardApiExecutionContext implements AutoCloseable {
   }
 
   @Override
-  public void close() {
+  public synchronized void close() {
     verifyAllEventsProcessed();
     chromeTraceStartedEvents.clear();
     stepStartedEvents.clear();
@@ -125,8 +125,7 @@ public final class DownwardApiExecutionContext implements AutoCloseable {
 
   private void verifyAllEventsProcessed() {
     int eventsSize = chromeTraceStartedEvents.size() + stepStartedEvents.size();
-    boolean hasUnprocessed = eventsSize > 0;
-    if (hasUnprocessed) {
+    if (eventsSize > 0) {
       LOG.warn(
           "There are %s unprocessed events%n. Unprocessed events: stepStarted: %s, chromeTraceStarted: %s",
           eventsSize, stepStartedEvents.values(), chromeTraceStartedEvents.values());

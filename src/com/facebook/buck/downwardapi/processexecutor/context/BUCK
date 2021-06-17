@@ -1,6 +1,7 @@
 java_library(
     name = "context",
     srcs = glob(["*.java"]),
+    tests = ["//test/com/facebook/buck/downwardapi/processexecutor/context:context"],
     visibility = [
         "//src/com/facebook/buck/downwardapi/processexecutor/...",
         "//src/com/facebook/buck/util:process_executor",
