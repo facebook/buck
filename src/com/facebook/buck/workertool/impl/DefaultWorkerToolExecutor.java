@@ -82,8 +82,8 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private final ImmutableList<String> startWorkerToolCommand;
 
   private final NamedPipeWriter namedPipeWriter;
-  private final OutputStream outputStream;
   private final DownwardApiLaunchedProcess launchedProcess;
+  private final OutputStream outputStream;
 
   private final ExecutorService workerToolProcessMonitorExecutor;
   private final Future<?> waitForLaunchedProcessFuture;
@@ -100,25 +100,12 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
         context.getDownwardApiProcessExecutor(WorkerToolExecutorNamedPipeEventHandler::new);
     this.startWorkerToolCommand = startWorkerToolCommand;
 
-    boolean launched = false;
-    try {
-      this.namedPipeWriter = NAMED_PIPE_FACTORY.createAsWriter();
+    this.namedPipeWriter = NAMED_PIPE_FACTORY.createAsWriter();
+    String namedPipeName = namedPipeWriter.getName();
 
-      this.launchedProcess =
-          downwardApiProcessExecutor.launchProcess(
-              ProcessExecutorParams.builder()
-                  .addAllCommand(startWorkerToolCommand)
-                  .setEnvironment(buildEnvs(envs, namedPipeWriter.getName()))
-                  .build());
-      launched = true;
-    } catch (IOException e) {
-      throw new IOException(
-          String.format("Cannot launch a new worker tool process %s", startWorkerToolCommand), e);
-    } finally {
-      if (!launched) {
-        closeNamedPipe();
-      }
-    }
+    this.launchedProcess = launchProcess(startWorkerToolCommand, envs, namedPipeName);
+    this.outputStream = openStream();
+
     this.workerToolProcessMonitorExecutor =
         MostExecutors.newSingleThreadExecutor("WorkerToolProcessMonitor_" + workerId);
     this.waitForLaunchedProcessFuture =
@@ -138,16 +125,46 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
                 closeNamedPipe();
               }
             });
+  }
 
+  private DownwardApiLaunchedProcess launchProcess(
+      ImmutableList<String> startWorkerToolCommand,
+      ImmutableMap<String, String> envs,
+      String namedPipeName)
+      throws IOException {
+    DownwardApiLaunchedProcess launchedProcess;
+    boolean launched = false;
+    try {
+      launchedProcess =
+          downwardApiProcessExecutor.launchProcess(
+              ProcessExecutorParams.builder()
+                  .addAllCommand(startWorkerToolCommand)
+                  .setEnvironment(buildEnvs(envs, namedPipeName))
+                  .build());
+      launched = true;
+    } catch (IOException e) {
+      throw new IOException(
+          String.format("Cannot launch a new worker tool process %s", startWorkerToolCommand), e);
+    } finally {
+      if (!launched) {
+        closeNamedPipe();
+      }
+    }
+    return launchedProcess;
+  }
+
+  private OutputStream openStream() throws IOException {
+    OutputStream outputStream;
     boolean streamOpened = false;
     try {
-      this.outputStream = DefaultWorkerToolUtils.openStreamFromNamedPipe(namedPipeWriter, workerId);
+      outputStream = DefaultWorkerToolUtils.openStreamFromNamedPipe(namedPipeWriter, workerId);
       streamOpened = true;
     } finally {
       if (!streamOpened) {
         closeNamedPipe();
       }
     }
+    return outputStream;
   }
 
   private class WorkerToolExecutorNamedPipeEventHandler extends DefaultNamedPipeEventHandler {
