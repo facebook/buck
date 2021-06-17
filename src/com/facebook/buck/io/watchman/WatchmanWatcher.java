@@ -80,11 +80,28 @@ public class WatchmanWatcher {
 
   private final EventBus fileChangeEventBus;
   private final WatchmanClient watchmanClient;
-  private final ImmutableMap<AbsPath, WatchmanWatcherQuery> queries;
-  private final Map<AbsPath, WatchmanCursor> cursors;
   private final int numThreads;
 
   private final long timeoutMillis;
+
+  private static class CellQueryState {
+    private final WatchmanWatcherQuery query;
+    /** This one is mutable. */
+    private final WatchmanCursor cursor;
+
+    public CellQueryState(WatchmanWatcherQuery query, WatchmanCursor cursor) {
+      Preconditions.checkArgument(query != null);
+      Preconditions.checkArgument(cursor != null);
+      this.query = query;
+      this.cursor = cursor;
+    }
+
+    private WatchmanQuery.Query toQuery() {
+      return query.toQuery(cursor.get());
+    }
+  }
+
+  private final ImmutableMap<AbsPath, CellQueryState> queriesByCell;
 
   public WatchmanWatcher(
       Watchman watchman,
@@ -118,9 +135,13 @@ public class WatchmanWatcher {
     this.fileChangeEventBus = fileChangeEventBus;
     this.watchmanClient = watchmanClient;
     this.timeoutMillis = timeoutMillis;
-    this.queries = queries;
-    this.cursors = cursors;
     this.numThreads = numThreads;
+
+    this.queriesByCell =
+        queries.keySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    k -> k, k -> new CellQueryState(queries.get(k), cursors.get(k))));
   }
 
   @VisibleForTesting
@@ -170,10 +191,8 @@ public class WatchmanWatcher {
 
   @VisibleForTesting
   Optional<WatchmanQuery.Query> getWatchmanQuery(AbsPath cellPath) {
-    if (queries.containsKey(cellPath) && cursors.containsKey(cellPath)) {
-      return Optional.of(queries.get(cellPath).toQuery(cursors.get(cellPath).get()));
-    }
-    return Optional.empty();
+    CellQueryState state = queriesByCell.get(cellPath);
+    return Optional.ofNullable(state.toQuery());
   }
 
   /**
@@ -196,32 +215,32 @@ public class WatchmanWatcher {
     try {
       ConcurrentLinkedQueue<WatchmanWatcherOneBigEvent> bigEvents = new ConcurrentLinkedQueue<>();
       List<Callable<Unit>> watchmanQueries = new ArrayList<>();
-      for (AbsPath cellPath : queries.keySet()) {
+      for (Map.Entry<AbsPath, CellQueryState> e : queriesByCell.entrySet()) {
+        AbsPath cellPath = e.getKey();
+        CellQueryState state = e.getValue();
         watchmanQueries.add(
             () -> {
-              WatchmanWatcherQuery query = queries.get(cellPath);
-              WatchmanCursor cursor = cursors.get(cellPath);
-              if (query != null && cursor != null) {
-                try (SimplePerfEvent.Scope perfEvent =
-                    SimplePerfEvent.scope(
-                        buckEventBus.isolated(),
-                        SimplePerfEvent.PerfEventTitle.of("check_watchman"),
-                        "cell",
-                        cellPath)) {
-                  // Include the cellPath in the finished event so it can be matched with the begin
-                  // event.
-                  perfEvent.appendFinishedInfo("cell", cellPath);
-                  postEvents(
-                      buckEventBus,
-                      freshInstanceAction,
-                      cellPath,
-                      watchmanClient,
-                      query,
-                      cursor,
-                      filesHaveChanged,
-                      perfEvent,
-                      bigEvents);
-                }
+              WatchmanWatcherQuery query = state.query;
+              WatchmanCursor cursor = state.cursor;
+              try (SimplePerfEvent.Scope perfEvent =
+                  SimplePerfEvent.scope(
+                      buckEventBus.isolated(),
+                      SimplePerfEvent.PerfEventTitle.of("check_watchman"),
+                      "cell",
+                      cellPath)) {
+                // Include the cellPath in the finished event so it can be matched with the begin
+                // event.
+                perfEvent.appendFinishedInfo("cell", cellPath);
+                postEvents(
+                    buckEventBus,
+                    freshInstanceAction,
+                    cellPath,
+                    watchmanClient,
+                    query,
+                    cursor,
+                    filesHaveChanged,
+                    perfEvent,
+                    bigEvents);
               }
               return Unit.UNIT;
             });
