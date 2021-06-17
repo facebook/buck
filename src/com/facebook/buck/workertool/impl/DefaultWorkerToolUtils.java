@@ -38,7 +38,7 @@ class DefaultWorkerToolUtils {
   private static final long WAIT_FOR_EXECUTOR_SHUTDOWN_TIMEOUT = 100;
   private static final TimeUnit WAIT_FOR_EXECUTOR_SHUTDOWN_TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
 
-  private static final long OPEN_OUTPUT_STREAM_TIMEOUT = 10;
+  private static final long OPEN_OUTPUT_STREAM_TIMEOUT = 30;
   private static final TimeUnit OPEN_OUTPUT_STREAM_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
   private DefaultWorkerToolUtils() {}

@@ -38,7 +38,7 @@ import java.util.OptionalInt;
  * com.facebook.buck.doctor.config.BuildLogEntry}
  */
 public class BuckFixSpecParser {
-  private static Logger LOG = Logger.get(BuckFixSpecParser.class);
+  private static final Logger LOG = Logger.get(BuckFixSpecParser.class);
 
   /** The various ways that trying to parse a FixSpec can fail */
   public enum FixSpecFailure {

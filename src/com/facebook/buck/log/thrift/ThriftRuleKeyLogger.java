@@ -36,7 +36,7 @@ import org.apache.thrift.protocol.TCompactProtocol;
 public class ThriftRuleKeyLogger implements AutoCloseable {
   private final OutputStream writer;
 
-  private static Logger logger = Logger.get(ThriftRuleKeyLogger.class);
+  private static final Logger LOG = Logger.get(ThriftRuleKeyLogger.class);
 
   /**
    * Creates a ThriftRuleKeyLogger
@@ -53,7 +53,7 @@ public class ThriftRuleKeyLogger implements AutoCloseable {
     try {
       this.writer.close();
     } catch (IOException e) {
-      logger.warn(e, "Could not close ruleKeyLogger");
+      LOG.warn(e, "Could not close ruleKeyLogger");
     }
   }
 
@@ -70,8 +70,7 @@ public class ThriftRuleKeyLogger implements AutoCloseable {
     try {
       out = serializer.serialize(ruleKey);
     } catch (TException e) {
-      logger.warn(
-          e, "Could not serialize key for target %s with hash %s", ruleKey.name, ruleKey.key);
+      LOG.warn(e, "Could not serialize key for target %s with hash %s", ruleKey.name, ruleKey.key);
       return;
     }
     synchronized (this) {
@@ -79,7 +78,7 @@ public class ThriftRuleKeyLogger implements AutoCloseable {
         writer.write(ByteBuffer.allocate(4).putInt(out.length).array());
         writer.write(out);
       } catch (IOException e) {
-        logger.warn(e, "Could not write key for target %s with hash %s", ruleKey.name, ruleKey.key);
+        LOG.warn(e, "Could not write key for target %s with hash %s", ruleKey.name, ruleKey.key);
       }
     }
   }

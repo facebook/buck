@@ -31,7 +31,7 @@ import java.util.Optional;
  */
 class ManagedBackgroundTask<T> {
 
-  private static Logger LOG = Logger.get(ManagedBackgroundTask.class);
+  private static final Logger LOG = Logger.get(ManagedBackgroundTask.class);
 
   private final BackgroundTask<T> task;
   private final TaskId id;

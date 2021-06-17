@@ -39,7 +39,6 @@ import javax.management.openmbean.CompositeData;
  * heuristics are tuned to that.
  */
 public final class GCNotificationEventEmitter implements NotificationListener {
-
   private static final Logger LOG = Logger.get(GCNotificationEventEmitter.class);
 
   /**
