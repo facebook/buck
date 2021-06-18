@@ -38,7 +38,7 @@ import org.junit.Test;
 
 public class DefaultWorkerToolUtilsTest {
 
-  private static final int TIMEOUT = 10;
+  private static final int TIMEOUT = 100;
   private static final TimeUnit TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
 
   private static final String TEST_EXECUTOR_NAME =

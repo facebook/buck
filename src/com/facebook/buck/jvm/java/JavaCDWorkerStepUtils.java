@@ -26,6 +26,7 @@ import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.worker.WorkerProcessPool;
@@ -148,13 +149,18 @@ public class JavaCDWorkerStepUtils {
       IsolatedExecutionContext context, ImmutableList<String> startupCommand) {
     return () -> {
       WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
+      String buckClasspath =
+          Objects.requireNonNull(
+              BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
+              BuckClasspath.ENV_VAR_NAME + " env variable is not set");
+      ImmutableMap<String, String> buckSystemEnvs = EnvVariablesProvider.getSystemEnv();
       return workerToolLauncher.launchWorker(
           startupCommand,
           ImmutableMap.of(
               BuckClasspath.ENV_VAR_NAME,
-              Objects.requireNonNull(
-                  BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
-                  BuckClasspath.ENV_VAR_NAME + " env variable is not set")));
+              buckClasspath,
+              "PATH",
+              buckSystemEnvs.getOrDefault("PATH", "")));
     };
   }
 }
