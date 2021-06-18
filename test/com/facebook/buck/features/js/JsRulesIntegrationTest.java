@@ -516,4 +516,12 @@ public class JsRulesIntegrationTest {
         genPath,
         JsRulesIntegrationTest::normalizeObservedContent);
   }
+
+  @Test
+  public void testBuildAssets() throws IOException {
+    workspace.runBuckBuild("//js:assets#transform-profile-default").assertSuccess();
+
+    workspace.verify(
+        Paths.get("assets.expected"), genPath, JsRulesIntegrationTest::normalizeObservedContent);
+  }
 }

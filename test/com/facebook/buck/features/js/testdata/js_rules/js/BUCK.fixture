@@ -247,3 +247,9 @@ export_file(
     mode = "reference",
     visibility = ["PUBLIC"],
 )
+
+js_library(
+    name = "assets",
+    srcs = glob(["assets/*.*"]),
+    worker = ":packager_worker",
+)
