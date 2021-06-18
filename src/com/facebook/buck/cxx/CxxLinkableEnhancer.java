@@ -222,7 +222,6 @@ public class CxxLinkableEnhancer {
       boolean useFocusedDebugging) {
 
     Linker linker = cxxPlatform.getLd().resolve(ruleResolver, target.getTargetConfiguration());
-    Tool strip = cxxPlatform.getStrip().resolve(ruleResolver, target.getTargetConfiguration());
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -282,12 +281,14 @@ public class CxxLinkableEnhancer {
     CxxDebugSymbolLinkStrategy debugStrategy =
         debugSymbolLinkStrategyFactory.createStrategy(cellPathResolver, ldArgs);
 
-    Optional<SourcePath> filteredFocusedTargets;
+    Optional<SourcePath> filteredFocusedTargets = Optional.empty();
+    Optional<Tool> strip = Optional.empty();
 
     if (useFocusedDebugging) {
       filteredFocusedTargets = debugStrategy.getFilteredFocusedTargets(target, graphBuilder);
-    } else {
-      filteredFocusedTargets = Optional.empty();
+      strip =
+          Optional.of(
+              cxxPlatform.getStrip().resolve(ruleResolver, target.getTargetConfiguration()));
     }
 
     return new CxxLink(
@@ -307,7 +308,7 @@ public class CxxLinkableEnhancer {
         linkOptions.getFatLto(),
         downwardApiConfig.isEnabledForCxx(),
         filteredFocusedTargets,
-        Optional.of(strip),
+        strip,
         linkStrategy,
         debugStrategy);
   }
