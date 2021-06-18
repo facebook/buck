@@ -34,6 +34,8 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.HasImportLibrary;
@@ -80,6 +82,8 @@ import javax.annotation.Nullable;
 public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     implements HasAppleDebugSymbolDeps, OverrideScheduleRule, HasSupplementaryOutputs {
 
+  private static final Logger LOG = Logger.get(CxxLink.class);
+
   private final Optional<RuleScheduleInfo> ruleScheduleInfo;
   private final boolean cacheable;
   private final boolean incremental;
@@ -102,6 +106,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       ImmutableList<Arg> args,
       Optional<LinkOutputPostprocessor> postprocessor,
       Optional<RuleScheduleInfo> ruleScheduleInfo,
+      Optional<Tool> strip,
       boolean linkerMapEnabled,
       boolean cacheable,
       boolean thinLto,
@@ -124,6 +129,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         fatLto,
         withDownwardApi,
         Optional.empty(),
+        strip,
         CxxConditionalLinkStrategyAlwaysLink.STRATEGY,
         CxxDebugSymbolLinkStrategyAlwaysDebug.STRATEGY);
   }
@@ -145,6 +151,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       boolean fatLto,
       boolean withDownwardApi,
       Optional<SourcePath> filteredFocusedTargets,
+      Optional<Tool> strip,
       CxxConditionalLinkStrategy linkStrategy,
       CxxDebugSymbolLinkStrategy debugSymbolLinkStrategy) {
     this(
@@ -163,6 +170,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         fatLto,
         withDownwardApi,
         filteredFocusedTargets,
+        strip,
         linkStrategy,
         debugSymbolLinkStrategy,
         computeCellRoots(cellResolver, buildTarget.getCell()));
@@ -184,6 +192,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       boolean fatLto,
       boolean withDownwardApi,
       Optional<SourcePath> filteredFocusedTargets,
+      Optional<Tool> strip,
       CxxConditionalLinkStrategy linkStrategy,
       CxxDebugSymbolLinkStrategy debugSymbolLinkStrategy,
       ImmutableSortedSet<String> cellRoots) {
@@ -204,6 +213,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
             cellRoots,
             withDownwardApi,
             filteredFocusedTargets,
+            strip,
             linkStrategy,
             debugSymbolLinkStrategy));
     this.output = output;
@@ -282,6 +292,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     @AddToRuleKey private final Optional<SourcePath> filteredFocusedTargets;
     @AddToRuleKey private final CxxConditionalLinkStrategy linkStrategy;
     @AddToRuleKey private final CxxDebugSymbolLinkStrategy debugStrategy;
+    @AddToRuleKey private final Optional<Tool> strip;
 
     public Impl(
         Linker linker,
@@ -296,9 +307,11 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         ImmutableSortedSet<String> relativeCellRoots,
         boolean withDownwardApi,
         Optional<SourcePath> filteredFocusedTargets,
+        Optional<Tool> strip,
         CxxConditionalLinkStrategy linkStrategy,
         CxxDebugSymbolLinkStrategy debugSymbolLinkStrategy) {
       this.linker = linker;
+      this.strip = strip;
       this.output = new PublicOutputPath(output);
       this.extraOutputs =
           extraOutputs.values().stream()
@@ -397,6 +410,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
 
       ImmutableSortedMap<Path, Path> cellRootMap = getCellRootMap(relativeCellRoots, filesystem);
       ImmutableList<FileScrubber> fileScrubbers;
+
+      ImmutableList<Step> debugSymbolStrippingSteps = ImmutableList.of();
       if (focusedTargetsPath.isPresent()) {
         ImmutableMultimap<String, AbsPath> targetToOutputPathMap =
             makeTargetToOutputPathsMap(context.getSourcePathResolver(), args);
@@ -407,6 +422,25 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                 Optional.empty(),
                 Optional.of(targetToOutputPathMap),
                 focusedTargetsPath);
+
+        if (strip.isPresent()) {
+          // Add the debug symbol stripping step to strip debug symbols on link outputs without
+          // focused targets.
+          debugSymbolStrippingSteps =
+              ImmutableList.of(
+                  new StripNonFocusedDebugSymbolStep(
+                      focusedTargetsPath.get(),
+                      outputPath.getPath(),
+                      strip.get(),
+                      context.getSourcePathResolver(),
+                      filesystem,
+                      filesystem.getRootPath(),
+                      ProjectFilesystemUtils.relativize(
+                          filesystem.getRootPath(), context.getBuildCellRootPath()),
+                      true));
+        } else {
+          LOG.warn("`strip` tool isn't available, skipping debug symbol stripping.");
+        }
       } else {
         fileScrubbers =
             linker.getScrubbers(
@@ -457,6 +491,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
               .add(
                   new FileScrubberStep(
                       filesystem, outputPath.getPath(), fileScrubbers, skipScrubbingCheck))
+              .addAll(debugSymbolStrippingSteps)
               .addAll(relinkWriteSteps);
       if (linkerMapPath.isPresent()) {
         // In some case (when there are no `dll_export`s eg) an import library is not produced by
