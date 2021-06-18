@@ -207,7 +207,9 @@ public class DefaultIsolatedEventBus implements IsolatedEventBus {
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    waitTillAllEventsProcessed();
+  }
 
   private void configureWithTimestamp(BuckEvent event, long threadId) {
     event.configure(
