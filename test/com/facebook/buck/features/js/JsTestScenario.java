@@ -17,6 +17,8 @@
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.apple.AppleLibraryBuilder;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -51,6 +53,7 @@ public class JsTestScenario {
   public final ActionGraphBuilder graphBuilder;
   public final BuildTarget workerTarget;
   public final ProjectFilesystem filesystem;
+  public final BuildContext buildContext;
 
   public static Builder builder() {
     return new Builder();
@@ -69,6 +72,8 @@ public class JsTestScenario {
     this.graphBuilder = graphBuilder;
     this.workerTarget = workerTarget;
     this.filesystem = filesystem;
+    this.buildContext =
+        FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver(), filesystem);
   }
 
   JsBundle createBundle(String target, ImmutableSortedSet<BuildTarget> deps) {

@@ -101,11 +101,6 @@ public class JsFile extends ModernBuildRule<JsFile.JsFileBuildable> {
     }
 
     @VisibleForTesting
-    Optional<String> getVirtualPath() {
-      return virtualPath;
-    }
-
-    @VisibleForTesting
     boolean isRelease() {
       return release;
     }

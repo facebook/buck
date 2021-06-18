@@ -26,6 +26,9 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -43,13 +46,17 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.js.JsLibrary.Files;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -257,10 +264,10 @@ public class JsLibraryDescriptionTest {
     String basePath = "base/path";
     String filePath = String.format("%s/sub/file.js", targetDirectory);
     JsTestScenario scenario = buildScenario(basePath, FakeSourcePath.of(filePath));
+    JsFile rule = findFirstJsFileDev(scenario.graphBuilder);
+    JsonNode args = getJobJson(scenario.buildContext, rule);
 
-    assertEquals(
-        "arbitrary/path/base/path/sub/file.js",
-        findFirstJsFileDevRule(scenario.graphBuilder).getVirtualPath().get());
+    assertEquals("arbitrary/path/base/path/sub/file.js", args.get("sourceJsFileName").asText());
   }
 
   @Test
@@ -268,10 +275,10 @@ public class JsLibraryDescriptionTest {
     String basePath = "../base/path";
     String filePath = String.format("%s/sub/file.js", targetDirectory);
     JsTestScenario scenario = buildScenario(basePath, FakeSourcePath.of(filePath));
+    JsFile rule = findFirstJsFileDev(scenario.graphBuilder);
+    JsonNode args = getJobJson(scenario.buildContext, rule);
 
-    assertEquals(
-        "arbitrary/base/path/sub/file.js",
-        findFirstJsFileDevRule(scenario.graphBuilder).getVirtualPath().get());
+    assertEquals("arbitrary/base/path/sub/file.js", args.get("sourceJsFileName").asText());
   }
 
   @Test
@@ -280,10 +287,10 @@ public class JsLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     scenarioBuilder.arbitraryRule(target);
     JsTestScenario scenario = buildScenario(basePath, DefaultBuildTargetSourcePath.of(target));
+    JsFile rule = findFirstJsFileDev(scenario.graphBuilder);
+    JsonNode args = getJobJson(scenario.buildContext, rule);
 
-    assertEquals(
-        "arbitrary/path/base/path.js",
-        findFirstJsFileDevRule(scenario.graphBuilder).getVirtualPath().get());
+    assertEquals("arbitrary/path/base/path.js", args.get("sourceJsFileName").asText());
   }
 
   @Test
@@ -292,9 +299,10 @@ public class JsLibraryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     scenarioBuilder.arbitraryRule(target);
     JsTestScenario scenario = buildScenario(basePath, DefaultBuildTargetSourcePath.of(target));
+    JsFile rule = findFirstJsFileDev(scenario.graphBuilder);
+    JsonNode args = getJobJson(scenario.buildContext, rule);
 
-    assertEquals(
-        "arbitrary/path.js", findFirstJsFileDevRule(scenario.graphBuilder).getVirtualPath().get());
+    assertEquals("arbitrary/path.js", args.get("sourceJsFileName").asText());
   }
 
   @Test
@@ -306,10 +314,11 @@ public class JsLibraryDescriptionTest {
         buildScenario(
             basePath,
             new Pair<>(DefaultBuildTargetSourcePath.of(target), "node_modules/left-pad/index.js"));
+    JsFile rule = findFirstJsFileDev(scenario.graphBuilder);
+    JsonNode args = getJobJson(scenario.buildContext, rule);
 
     assertEquals(
-        "arbitrary/path/node_modules/left-pad/index.js",
-        findFirstJsFileDevRule(scenario.graphBuilder).getVirtualPath().get());
+        "arbitrary/path/node_modules/left-pad/index.js", args.get("sourceJsFileName").asText());
   }
 
   @Test
@@ -552,10 +561,14 @@ public class JsLibraryDescriptionTest {
     return RichStream.from(internalFileRule(graphBuilder).getBuildDeps()).filter(JsFile.class);
   }
 
-  private JsFile.JsFileBuildable findFirstJsFileDevRule(ActionGraphBuilder graphBuilder) {
+  private JsFile.JsFileBuildable findFirstJsFileDevBuildable(ActionGraphBuilder graphBuilder) {
+    return findFirstJsFileDev(graphBuilder).getBuildable();
+  }
+
+  private JsFile findFirstJsFileDev(ActionGraphBuilder graphBuilder) {
+
     return findJsFileRules(graphBuilder)
-        .map(JsFile::getBuildable)
-        .filter(buildable -> !buildable.isRelease())
+        .filter(rule -> !rule.getBuildable().isRelease())
         .findFirst()
         .get();
   }
@@ -613,6 +626,26 @@ public class JsLibraryDescriptionTest {
     @Override
     public void describeTo(Description description) {
       description.appendText(String.format("<JsFile:%s>", source));
+    }
+  }
+
+  private String getJobArgs(BuildContext context, JsFile file) {
+    FakeBuildableContext buildableContext = new FakeBuildableContext();
+    return RichStream.from(file.getBuildSteps(context, buildableContext))
+        .filter(WorkerShellStep.class)
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new HumanReadableException("build steps don't contain a WorkerShellStep instance"))
+        .getWorkerJobParamsToUse(Platform.UNKNOWN)
+        .getJobArgs();
+  }
+
+  private JsonNode getJobJson(BuildContext context, JsFile file) {
+    try {
+      return ObjectMappers.readValue(getJobArgs(context, file), JsonNode.class);
+    } catch (IOException error) {
+      throw new HumanReadableException(error, "Couldn't read file args as JSON");
     }
   }
 }
