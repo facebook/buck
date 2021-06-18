@@ -269,7 +269,8 @@ public class CxxToolchainDescription
         new DefaultLinkerProvider(
             linkerType,
             ToolProviders.getToolProvider(args.getLinker()),
-            args.getCacheLinks() && cxxBuckConfig.shouldUploadToCache(),
+            args.getCacheLinks(),
+            cxxBuckConfig.shouldUploadToCache(),
             scrubConcurrently,
             args.getLinkPathNormalizationArgsEnabled()));
 

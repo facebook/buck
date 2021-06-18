@@ -135,6 +135,7 @@ public class ConfigBasedUnresolvedRustPlatform implements UnresolvedRustPlatform
                                 .orElse(cxxPlatform.getLd().getType()),
                             tp,
                             true,
+                            true,
                             cxxBuckConfig.getLinkPathNormalizationArgsEnabled()))
             .orElseGet(cxxPlatform::getLd);
 

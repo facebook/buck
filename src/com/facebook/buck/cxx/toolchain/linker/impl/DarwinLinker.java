@@ -82,17 +82,25 @@ public class DarwinLinker extends DelegatingTool
       inputs = DefaultFieldInputs.class)
   private final boolean shouldCreateHermeticLinkOutput;
 
+  @ExcludeFromRuleKey(
+      reason = "So that we can read from the remote cache and not write to it.",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class)
+  private final boolean shouldUploadToCache;
+
   @AddToRuleKey private final boolean scrubConcurrently;
 
   @AddToRuleKey private final boolean usePathNormalizationArgs;
 
   public DarwinLinker(
       Tool tool,
-      boolean shouldCreateHermeticLinkOutput,
+      boolean shouldCacheLinks,
+      boolean shouldUploadToCache,
       boolean scrubConcurrently,
       boolean usePathNormalizationArgs) {
     super(tool);
-    this.shouldCreateHermeticLinkOutput = shouldCreateHermeticLinkOutput;
+    this.shouldCreateHermeticLinkOutput = shouldCacheLinks;
+    this.shouldUploadToCache = shouldUploadToCache;
     this.scrubConcurrently = scrubConcurrently;
     this.usePathNormalizationArgs = usePathNormalizationArgs;
   }
@@ -104,11 +112,7 @@ public class DarwinLinker extends DelegatingTool
       Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap,
       Optional<AbsPath> focusedTargetsPath) {
     if (shouldCreateHermeticLinkOutput) {
-      if (focusedTargetsPath.isPresent()) {
-        // If we're caching link outputs and using focused debugging, strip the outputs' entire
-        // debug symbol tables to ensure they do not contain absolute paths.
-        return ImmutableList.of(new StripDebugSymbolTableScrubber());
-      } else {
+      if (shouldUploadToCache || !focusedTargetsPath.isPresent()) {
         // If we aren't using focused debugging, scrub all absolute OSO paths into relative paths.
         FileScrubber uuidScrubber = new LcUuidContentsScrubber(scrubConcurrently);
         if (usePathNormalizationArgs) {
@@ -116,6 +120,14 @@ public class DarwinLinker extends DelegatingTool
           return ImmutableList.of(uuidScrubber);
         }
         return ImmutableList.of(new OsoSymbolsContentsScrubber(cellRootMap), uuidScrubber);
+      } else {
+        // If we're using focused debugging and  don't plan to upload to remote cache, e.g. during
+        // local builds,
+        // scrub the output based on given focused targets. Since we don't plan to upload link
+        // outputs to remote
+        // cache, it's ok to leave absolute paths in the outputs.
+        return ImmutableList.of(
+            new OsoSymbolsContentsScrubber(focusedTargetsPath, targetToOutputPathMap));
       }
     } else {
       // If we aren't uploading linked output to remote cache, scrub the linked binaries based

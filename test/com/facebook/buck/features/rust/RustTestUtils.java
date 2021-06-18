@@ -39,7 +39,11 @@ public class RustTestUtils {
         .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
         .setLinkerProvider(
             new DefaultLinkerProvider(
-                Type.GNU, new ConstantToolProvider(new CommandTool.Builder().build()), true, true));
+                Type.GNU,
+                new ConstantToolProvider(new CommandTool.Builder().build()),
+                true,
+                true,
+                true));
   }
 
   public static final Flavor PLUGIN_FLAVOR = InternalFlavor.of("rustc-plugin");

@@ -71,7 +71,7 @@ public class CxxPlatformUtils {
   }
 
   public static LinkerProvider defaultLinkerProvider(LinkerProvider.Type linkerType, Tool tool) {
-    return new DefaultLinkerProvider(linkerType, new ConstantToolProvider(tool), true, true);
+    return new DefaultLinkerProvider(linkerType, new ConstantToolProvider(tool), true, true, true);
   }
 
   public static final DebugPathSanitizer DEFAULT_COMPILER_DEBUG_PATH_SANITIZER =

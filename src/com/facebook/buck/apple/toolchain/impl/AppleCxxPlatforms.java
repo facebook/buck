@@ -489,7 +489,8 @@ public class AppleCxxPlatforms {
             new DefaultLinkerProvider(
                 LinkerProvider.Type.DARWIN,
                 new ConstantToolProvider(clangXxPath),
-                cxxBuckConfig.shouldCacheLinks() && cxxBuckConfig.shouldUploadToCache(),
+                cxxBuckConfig.shouldCacheLinks(),
+                cxxBuckConfig.shouldUploadToCache(),
                 appleConfig.shouldLinkScrubConcurrently(),
                 cxxBuckConfig.getLinkPathNormalizationArgsEnabled()),
             StringArg.from(combinedLdFlags),

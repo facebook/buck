@@ -429,7 +429,8 @@ public class CxxBuckConfig {
         new DefaultLinkerProvider(
             type.orElse(defaultType),
             toolProvider.get(),
-            shouldCacheLinks() && shouldUploadToCache(),
+            shouldCacheLinks(),
+            shouldUploadToCache(),
             getLinkPathNormalizationArgsEnabled()));
   }
 

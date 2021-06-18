@@ -283,7 +283,8 @@ public class DefaultCxxPlatforms {
             linkerType,
             new ConstantToolProvider(
                 getToolchainTool(() -> cxxBuckConfig.getSourcePath(defaultLinker))),
-            cxxBuckConfig.shouldCacheLinks() && cxxBuckConfig.shouldUploadToCache(),
+            cxxBuckConfig.shouldCacheLinks(),
+            cxxBuckConfig.shouldUploadToCache(),
             false,
             cxxBuckConfig.getLinkPathNormalizationArgsEnabled()),
         ImmutableList.of(),

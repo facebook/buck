@@ -1110,10 +1110,14 @@ public class AppleBinaryIntegrationTest {
     workspace.addBuckConfigLocalOption("cxx", "cache_links", "true");
     workspace.addBuckConfigLocalOption("cache", "http_mode", "readwrite");
 
-    // Check that binary has no debug symbols
+    // Check that binary relative debug symbol paths because it contains focused targets
+    // and is meant to be uploaded.
     String binaryDebugSymbolFiles =
         buildAndGetMacBinaryDebugSymbolFiles("//Apps/TestApp:TestApp", workspace);
-    assertEquals(binaryDebugSymbolFiles, "");
+    assertThat(
+        binaryDebugSymbolFiles,
+        matchesRegex(
+            "(.*)\\./buck-out/gen/(.*)/helper.c.o(.*)[\\n\\r](.*)\\./buck-out/gen/(.*)/main.c.o(.*)"));
 
     // Check that Dylib1 has no debug symbols
     String dylibDebugSymbolFiles =
@@ -1147,7 +1151,7 @@ public class AppleBinaryIntegrationTest {
     assertThat(
         binaryDebugSymbolFiles,
         matchesRegex(
-            "(.*)buck-out/gen/(.*)/helper.c.o(.*)[\\n\\r](.*)buck-out/gen/(.*)/main.c.o(.*)"));
+            "(.*)/buck-out/gen/(.*)/helper.c.o(.*)[\\n\\r](.*)buck-out/gen/(.*)/main.c.o(.*)"));
 
     // Check that Dylib1 has no debug symbols
     String dylibDebugSymbolFiles =
@@ -1158,6 +1162,29 @@ public class AppleBinaryIntegrationTest {
     String dylib2DebugSymbolFiles =
         getMacDylibDebugSymbolFiles("//Apps/TestApp:Dylib2", "Dylib2.dylib", workspace);
     assertEquals(dylib2DebugSymbolFiles, "");
+  }
+
+  @Test
+  public void testAppleBinaryNoFocusedDebuggingCachedLinksEnabledReadOnly() throws Exception {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_binary_focused_debugging_executable_focus", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "conditional_relinking_enabled", "true");
+    workspace.addBuckConfigLocalOption("cxx", "cache_links", "true");
+    workspace.addBuckConfigLocalOption("cache", "http_mode", "readonly");
+
+    // Check that binary has relative paths to .o s
+    String binaryDebugSymbolFiles =
+        buildAndGetMacBinaryDebugSymbolFiles("//Apps/TestApp:TestApp", workspace);
+    assertThat(
+        binaryDebugSymbolFiles,
+        matchesRegex(
+            "(.*)\\./buck-out/gen/(.*)/helper.c.o(.*)[\\n\\r](.*)\\./buck-out/gen/(.*)/main.c.o(.*)"));
   }
 
   @Test

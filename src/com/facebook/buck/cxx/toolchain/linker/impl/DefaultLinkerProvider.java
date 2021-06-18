@@ -32,7 +32,8 @@ public class DefaultLinkerProvider implements LinkerProvider {
 
   private final Type type;
   private final ToolProvider toolProvider;
-  private final boolean shouldCreateHermeticLinkOutput;
+  private final boolean shouldCacheLinks;
+  private final boolean shouldUploadToCache;
   private final boolean scrubConcurrently;
   private final boolean usePathNormalizationArgs;
 
@@ -53,7 +54,8 @@ public class DefaultLinkerProvider implements LinkerProvider {
                               build(
                                   type,
                                   tool,
-                                  shouldCreateHermeticLinkOutput,
+                                  shouldCacheLinks,
+                                  shouldUploadToCache,
                                   scrubConcurrently,
                                   usePathNormalizationArgs));
                     }
@@ -62,20 +64,23 @@ public class DefaultLinkerProvider implements LinkerProvider {
   public DefaultLinkerProvider(
       Type type,
       ToolProvider toolProvider,
-      boolean shouldCreateHermeticLinkOutput,
+      boolean shouldCacheLinks,
+      boolean shouldUploadToCache,
       boolean usePathNormalization) {
-    this(type, toolProvider, shouldCreateHermeticLinkOutput, false, usePathNormalization);
+    this(type, toolProvider, shouldCacheLinks, shouldUploadToCache, false, usePathNormalization);
   }
 
   public DefaultLinkerProvider(
       Type type,
       ToolProvider toolProvider,
-      boolean shouldCreateHermeticLinkOutput,
+      boolean shouldCacheLinks,
+      boolean shouldUploadToCache,
       boolean scrubConcurrently,
       boolean usePathNormalizationArgs) {
     this.type = type;
     this.toolProvider = toolProvider;
-    this.shouldCreateHermeticLinkOutput = shouldCreateHermeticLinkOutput;
+    this.shouldCacheLinks = shouldCacheLinks;
+    this.shouldUploadToCache = shouldUploadToCache;
     this.scrubConcurrently = scrubConcurrently;
     this.usePathNormalizationArgs = usePathNormalizationArgs;
   }
@@ -83,13 +88,18 @@ public class DefaultLinkerProvider implements LinkerProvider {
   private static Linker build(
       Type type,
       Tool tool,
-      boolean shouldCreateHermeticLinkOutput,
+      boolean shouldCacheLinks,
+      boolean shouldUploadToCache,
       boolean scrubConcurrently,
       boolean usePathNormalizationArgs) {
     switch (type) {
       case DARWIN:
         return new DarwinLinker(
-            tool, shouldCreateHermeticLinkOutput, scrubConcurrently, usePathNormalizationArgs);
+            tool,
+            shouldCacheLinks,
+            shouldUploadToCache,
+            scrubConcurrently,
+            usePathNormalizationArgs);
       case GNU:
         return new GnuLinker(tool);
       case WINDOWS:
