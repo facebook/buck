@@ -17,6 +17,7 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.util.*;
 import javax.annotation.Nullable;
 import net.starlark.java.annot.internal.BcOpcodeHandler;
@@ -110,9 +111,9 @@ class BcEval {
     }
   }
 
-  @Nullable private Location errorLocation;
+  @Nullable private ImmutableList<StarlarkThread.CallStackEntry> errorLocation;
 
-  Location location() {
+  ImmutableList<StarlarkThread.CallStackEntry> location() {
     return errorLocation != null ? errorLocation : compiled.locationAt(currentIp);
   }
 
@@ -640,14 +641,14 @@ class BcEval {
 
     if (star != null) {
       if (!(star instanceof Sequence)) {
-        errorLocation = callSite.callLocs.starLocation(compiled.getFileLocations());
+        errorLocation = callSite.callLocs.starLocation();
         throw new EvalException("argument after * must be an iterable, not " + Starlark.type(star));
       }
     }
 
     if (starStar != null) {
       if (!(starStar instanceof Dict)) {
-        errorLocation = callSite.callLocs.starStarLocation(compiled.getFileLocations());
+        errorLocation = callSite.callLocs.starStarLocation();
         throw new EvalException("argument after ** must be a dict, not " + Starlark.type(starStar));
       }
     }
@@ -707,12 +708,12 @@ class BcEval {
     Object starStar = getSlotOrNull(nextOperand());
 
     if (star != null && !(star instanceof Sequence<?>)) {
-      errorLocation = locs.starLocation(compiled.getFileLocations());
+      errorLocation = locs.starLocation();
       throw new EvalException(
           String.format("argument after * must be an iterable, not %s", Starlark.type(star)));
     }
     if (starStar != null && !(starStar instanceof Dict<?, ?>)) {
-      errorLocation = locs.starStarLocation(compiled.getFileLocations());
+      errorLocation = locs.starStarLocation();
       throw new EvalException(
           String.format("argument after ** must be a dict, not %s", Starlark.type(starStar)));
     }

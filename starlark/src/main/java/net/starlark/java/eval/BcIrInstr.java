@@ -48,11 +48,11 @@ abstract class BcIrInstr {
   abstract void visitSlots(BcIrSlotVisitor visitor);
 
   static class Cp extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot src;
     final BcIrSlot.AnyLocal dest;
 
-    Cp(BcWriter.LocOffset locOffset, BcIrSlot src, BcIrSlot.AnyLocal dest) {
+    Cp(ImmutableList<BcWriter.LocOffset> locOffset, BcIrSlot src, BcIrSlot.AnyLocal dest) {
       this.locOffset = locOffset;
       this.src = src;
       this.dest = dest;
@@ -83,14 +83,14 @@ abstract class BcIrInstr {
   }
 
   static class SetGlobal extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot rhs;
     final int globalIndex;
     final String name;
     final boolean postAssignHook;
 
     public SetGlobal(
-        BcWriter.LocOffset locOffset,
+        ImmutableList<BcWriter.LocOffset> locOffset,
         BcIrSlot rhs,
         int globalIndex,
         String name,
@@ -125,11 +125,11 @@ abstract class BcIrInstr {
   }
 
   static class SetCell extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot rhs;
     final int cellIndex;
 
-    SetCell(BcWriter.LocOffset locOffset, BcIrSlot rhs, int cellIndex) {
+    SetCell(ImmutableList<BcWriter.LocOffset> locOffset, BcIrSlot rhs, int cellIndex) {
       this.locOffset = locOffset;
       this.rhs = rhs;
       this.cellIndex = cellIndex;
@@ -153,11 +153,11 @@ abstract class BcIrInstr {
   }
 
   static class List extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrListArg arg;
     final BcIrSlot.AnyLocal result;
 
-    List(BcWriter.LocOffset locOffset, BcIrListArg arg, BcIrSlot.AnyLocal result) {
+    List(ImmutableList<BcWriter.LocOffset> locOffset, BcIrListArg arg, BcIrSlot.AnyLocal result) {
       this.locOffset = locOffset;
       this.arg = arg;
       this.result = result;
@@ -182,11 +182,11 @@ abstract class BcIrInstr {
   }
 
   static class Tuple extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrListArg arg;
     final BcIrSlot.AnyLocal result;
 
-    Tuple(BcWriter.LocOffset locOffset, BcIrListArg arg, BcIrSlot.AnyLocal result) {
+    Tuple(ImmutableList<BcWriter.LocOffset> locOffset, BcIrListArg arg, BcIrSlot.AnyLocal result) {
       this.locOffset = locOffset;
       this.arg = arg;
       this.result = result;
@@ -211,11 +211,14 @@ abstract class BcIrInstr {
   }
 
   static class Dict extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final ImmutableList<BcIrSlot> arg;
     final BcIrSlot.AnyLocal result;
 
-    Dict(BcWriter.LocOffset locOffset, ImmutableList<BcIrSlot> arg, BcIrSlot.AnyLocal result) {
+    Dict(
+        ImmutableList<BcWriter.LocOffset> locOffset,
+        ImmutableList<BcIrSlot> arg,
+        BcIrSlot.AnyLocal result) {
       Preconditions.checkArgument(arg.size() % 2 == 0);
       this.locOffset = locOffset;
       this.arg = arg;
@@ -248,7 +251,7 @@ abstract class BcIrInstr {
   }
 
   static class Slice extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot object;
     final BcIrSlotOrNull start;
     final BcIrSlotOrNull stop;
@@ -256,7 +259,7 @@ abstract class BcIrInstr {
     final BcIrSlot.AnyLocal result;
 
     Slice(
-        BcWriter.LocOffset locOffset,
+        ImmutableList<BcWriter.LocOffset> locOffset,
         BcIrSlot object,
         BcIrSlotOrNull start,
         BcIrSlotOrNull stop,
@@ -298,12 +301,16 @@ abstract class BcIrInstr {
   }
 
   static class Index extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot object;
     final BcIrSlot index;
     final BcIrSlot.AnyLocal result;
 
-    Index(BcWriter.LocOffset locOffset, BcIrSlot object, BcIrSlot index, BcIrSlot.AnyLocal result) {
+    Index(
+        ImmutableList<BcWriter.LocOffset> locOffset,
+        BcIrSlot object,
+        BcIrSlot index,
+        BcIrSlot.AnyLocal result) {
       this.locOffset = locOffset;
       this.object = object;
       this.index = index;
@@ -334,13 +341,16 @@ abstract class BcIrInstr {
   }
 
   static class Dot extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot object;
     final BcDotSite field;
     final BcIrSlot.AnyLocal result;
 
     public Dot(
-        BcWriter.LocOffset locOffset, BcIrSlot object, BcDotSite field, BcIrSlot.AnyLocal result) {
+        ImmutableList<BcWriter.LocOffset> locOffset,
+        BcIrSlot object,
+        BcDotSite field,
+        BcIrSlot.AnyLocal result) {
       this.locOffset = locOffset;
       this.object = object;
       this.field = field;
@@ -370,12 +380,13 @@ abstract class BcIrInstr {
   }
 
   static class SetIndex extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot lhs;
     final BcIrSlot index;
     final BcIrSlot rhs;
 
-    SetIndex(BcWriter.LocOffset locOffset, BcIrSlot lhs, BcIrSlot index, BcIrSlot rhs) {
+    SetIndex(
+        ImmutableList<BcWriter.LocOffset> locOffset, BcIrSlot lhs, BcIrSlot index, BcIrSlot rhs) {
       this.locOffset = locOffset;
       this.lhs = lhs;
       this.index = index;
@@ -406,11 +417,11 @@ abstract class BcIrInstr {
   }
 
   static class ListAppend extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot list;
     final BcIrSlot item;
 
-    ListAppend(BcWriter.LocOffset locOffset, BcIrSlot list, BcIrSlot item) {
+    ListAppend(ImmutableList<BcWriter.LocOffset> locOffset, BcIrSlot list, BcIrSlot item) {
       this.locOffset = locOffset;
       this.list = list;
       this.item = item;
@@ -494,14 +505,14 @@ abstract class BcIrInstr {
   }
 
   static class BinOp extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BinOpOp op;
     final BcIrSlot lhs;
     final BcIrSlot rhs;
     final BcIrSlot.AnyLocal result;
 
     BinOp(
-        BcWriter.LocOffset locOffset,
+        ImmutableList<BcWriter.LocOffset> locOffset,
         BinOpOp op,
         BcIrSlot lhs,
         BcIrSlot rhs,
@@ -572,12 +583,16 @@ abstract class BcIrInstr {
   }
 
   static class UnOp extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final UnOpOp op;
     final BcIrSlot arg;
     final BcIrSlot.AnyLocal result;
 
-    UnOp(BcWriter.LocOffset locOffset, UnOpOp op, BcIrSlot arg, BcIrSlot.AnyLocal result) {
+    UnOp(
+        ImmutableList<BcWriter.LocOffset> locOffset,
+        UnOpOp op,
+        BcIrSlot arg,
+        BcIrSlot.AnyLocal result) {
       this.locOffset = locOffset;
       this.op = op;
       this.arg = arg;
@@ -615,10 +630,10 @@ abstract class BcIrInstr {
   }
 
   static class Br extends BcIrInstr implements Flow {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final JumpLabel jumpLabel;
 
-    Br(BcWriter.LocOffset locOffset, JumpLabel jumpLabel) {
+    Br(ImmutableList<BcWriter.LocOffset> locOffset, JumpLabel jumpLabel) {
       this.locOffset = locOffset;
       this.jumpLabel = jumpLabel;
     }
@@ -639,11 +654,11 @@ abstract class BcIrInstr {
 
   /** Conditional forward jump. */
   static class IfBr extends BcIrInstr implements Flow {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrIfCond cond;
     final JumpLabel jumpLabel;
 
-    IfBr(BcWriter.LocOffset locOffset, BcIrIfCond cond, JumpLabel jumpLabel) {
+    IfBr(ImmutableList<BcWriter.LocOffset> locOffset, BcIrIfCond cond, JumpLabel jumpLabel) {
       this.locOffset = locOffset;
       this.cond = cond;
       this.jumpLabel = jumpLabel;
@@ -687,12 +702,13 @@ abstract class BcIrInstr {
 
   /** For loop initialization routine. */
   static class ForInit extends BcIrInstr implements Flow {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot collection;
     /** A slot to store next collection item. */
     private final BcIrSlot.AnyLocal item;
 
-    public ForInit(BcWriter.LocOffset locOffset, BcIrSlot collection, BcIrSlot.AnyLocal item) {
+    public ForInit(
+        ImmutableList<BcWriter.LocOffset> locOffset, BcIrSlot collection, BcIrSlot.AnyLocal item) {
       this.locOffset = locOffset;
       this.collection = collection;
       this.item = item;
@@ -741,9 +757,9 @@ abstract class BcIrInstr {
   }
 
   static class Break extends BcIrInstr implements Flow {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
 
-    public Break(BcWriter.LocOffset locOffset) {
+    public Break(ImmutableList<BcWriter.LocOffset> locOffset) {
       this.locOffset = locOffset;
     }
 
@@ -762,9 +778,9 @@ abstract class BcIrInstr {
   }
 
   static class Continue extends BcIrInstr implements Flow {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
 
-    Continue(BcWriter.LocOffset locOffset) {
+    Continue(ImmutableList<BcWriter.LocOffset> locOffset) {
       this.locOffset = locOffset;
     }
 
@@ -783,13 +799,16 @@ abstract class BcIrInstr {
   }
 
   static class PlusList extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot lhs;
     final BcIrListArg rhs;
     final BcIrSlot.AnyLocal result;
 
     public PlusList(
-        BcWriter.LocOffset locOffset, BcIrSlot lhs, BcIrListArg rhs, BcIrSlot.AnyLocal result) {
+        ImmutableList<BcWriter.LocOffset> locOffset,
+        BcIrSlot lhs,
+        BcIrListArg rhs,
+        BcIrSlot.AnyLocal result) {
       this.locOffset = locOffset;
       this.lhs = lhs;
       this.rhs = rhs;
@@ -821,13 +840,16 @@ abstract class BcIrInstr {
   }
 
   static class PlusListInPlace extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot lhs;
     final BcIrListArg rhs;
     final BcIrSlot.AnyLocal result;
 
     public PlusListInPlace(
-        BcWriter.LocOffset locOffset, BcIrSlot lhs, BcIrListArg rhs, BcIrSlot.AnyLocal result) {
+        ImmutableList<BcWriter.LocOffset> locOffset,
+        BcIrSlot lhs,
+        BcIrListArg rhs,
+        BcIrSlot.AnyLocal result) {
       this.locOffset = locOffset;
       this.lhs = lhs;
       this.rhs = rhs;
@@ -859,13 +881,13 @@ abstract class BcIrInstr {
   }
 
   static class TypeIs extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot.AnyLocal expr;
     final String type;
     final BcIrSlot.AnyLocal result;
 
     public TypeIs(
-        BcWriter.LocOffset locOffset,
+        ImmutableList<BcWriter.LocOffset> locOffset,
         BcIrSlot.AnyLocal expr,
         String type,
         BcIrSlot.AnyLocal result) {
@@ -898,7 +920,7 @@ abstract class BcIrInstr {
   }
 
   static class PercentSOne extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final String format;
     final int indexOfPercent;
     final BcIrSlot arg;
@@ -906,7 +928,7 @@ abstract class BcIrInstr {
     final BcIrSlot.AnyLocal result;
 
     PercentSOne(
-        BcWriter.LocOffset locOffset,
+        ImmutableList<BcWriter.LocOffset> locOffset,
         String format,
         int indexOfPercent,
         BcIrSlot arg,
@@ -949,10 +971,10 @@ abstract class BcIrInstr {
   }
 
   static class Return extends BcIrInstr implements Flow {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot value;
 
-    Return(BcWriter.LocOffset locOffset, BcIrSlot value) {
+    Return(ImmutableList<BcWriter.LocOffset> locOffset, BcIrSlot value) {
       this.locOffset = locOffset;
       this.value = value;
     }
@@ -978,10 +1000,10 @@ abstract class BcIrInstr {
   }
 
   static class EvalException extends BcIrInstr implements Flow {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final String message;
 
-    public EvalException(BcWriter.LocOffset locOffset, String message) {
+    public EvalException(ImmutableList<BcWriter.LocOffset> locOffset, String message) {
       this.locOffset = locOffset;
       this.message = message;
     }
@@ -1001,7 +1023,7 @@ abstract class BcIrInstr {
   }
 
   static class Call extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcCallLocs callLocs;
     final BcIrSlot fn;
     final StarlarkCallableLinkSig linkSig;
@@ -1011,7 +1033,7 @@ abstract class BcIrInstr {
     final BcIrSlot.AnyLocal result;
 
     public Call(
-        BcWriter.LocOffset locOffset,
+        ImmutableList<BcWriter.LocOffset> locOffset,
         BcCallLocs callLocs,
         BcIrSlot fn,
         StarlarkCallableLinkSig linkSig,
@@ -1084,7 +1106,7 @@ abstract class BcIrInstr {
   }
 
   static class CallLinked extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcCallLocs callLocs;
     final StarlarkCallableLinked fn;
     final BcIrListArg listArg;
@@ -1093,7 +1115,7 @@ abstract class BcIrInstr {
     final BcIrSlot.AnyLocal result;
 
     public CallLinked(
-        BcWriter.LocOffset locOffset,
+        ImmutableList<BcWriter.LocOffset> locOffset,
         BcCallLocs callLocs,
         StarlarkCallableLinked fn,
         BcIrListArg listArg,
@@ -1159,11 +1181,14 @@ abstract class BcIrInstr {
   }
 
   static class CallCached extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcCallCached callCached;
     final BcIrSlot.AnyLocal result;
 
-    CallCached(BcWriter.LocOffset locOffset, BcCallCached callCached, BcIrSlot.AnyLocal result) {
+    CallCached(
+        ImmutableList<BcWriter.LocOffset> locOffset,
+        BcCallCached callCached,
+        BcIrSlot.AnyLocal result) {
       this.locOffset = locOffset;
       this.callCached = callCached;
       this.result = result;
@@ -1190,13 +1215,13 @@ abstract class BcIrInstr {
   }
 
   static class NewFunction extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final Resolver.Function rfn;
     final ImmutableList<BcIrSlot> defaults;
     final BcIrSlot.AnyLocal result;
 
     public NewFunction(
-        BcWriter.LocOffset locOffset,
+        ImmutableList<BcWriter.LocOffset> locOffset,
         Resolver.Function rfn,
         ImmutableList<BcIrSlot> defaults,
         BcIrSlot.AnyLocal result) {
@@ -1236,10 +1261,10 @@ abstract class BcIrInstr {
   }
 
   static class LoadStmt extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final LoadStatement loadStmt;
 
-    public LoadStmt(BcWriter.LocOffset locOffset, LoadStatement loadStmt) {
+    public LoadStmt(ImmutableList<BcWriter.LocOffset> locOffset, LoadStatement loadStmt) {
       this.locOffset = locOffset;
       this.loadStmt = loadStmt;
     }
@@ -1260,12 +1285,14 @@ abstract class BcIrInstr {
   }
 
   static class Unpack extends BcIrInstr {
-    final BcWriter.LocOffset locOffset;
+    final ImmutableList<BcWriter.LocOffset> locOffset;
     final BcIrSlot rhs;
     final ImmutableList<BcIrSlot.AnyLocal> lhs;
 
     public Unpack(
-        BcWriter.LocOffset locOffset, BcIrSlot rhs, ImmutableList<BcIrSlot.AnyLocal> lhs) {
+        ImmutableList<BcWriter.LocOffset> locOffset,
+        BcIrSlot rhs,
+        ImmutableList<BcIrSlot.AnyLocal> lhs) {
       this.locOffset = locOffset;
       this.rhs = rhs;
       this.lhs = lhs;

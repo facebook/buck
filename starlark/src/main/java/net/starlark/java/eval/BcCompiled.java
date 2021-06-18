@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.FileLocations;
-import net.starlark.java.syntax.Location;
 import net.starlark.java.syntax.Resolver;
 
 /** Function body as a bytecode block. */
@@ -197,7 +196,7 @@ class BcCompiled {
     return instructions.build();
   }
 
-  public Location locationAt(int ip) {
+  public ImmutableList<StarlarkThread.CallStackEntry> locationAt(int ip) {
     return instrToLoc.locationAt(ip);
   }
 

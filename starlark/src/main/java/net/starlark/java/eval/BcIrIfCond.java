@@ -16,6 +16,7 @@
 
 package net.starlark.java.eval;
 
+import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -24,7 +25,8 @@ import java.util.stream.Collectors;
 abstract class BcIrIfCond {
   private BcIrIfCond() {}
 
-  public abstract int write(BcIrWriteContext writeContext, BcWriter.LocOffset locOffset);
+  public abstract int write(
+      BcIrWriteContext writeContext, ImmutableList<BcWriter.LocOffset> locOffset);
 
   @Override
   public final String toString() {
@@ -48,7 +50,7 @@ abstract class BcIrIfCond {
     }
 
     @Override
-    public int write(BcIrWriteContext writeContext, BcWriter.LocOffset locOffset) {
+    public int write(BcIrWriteContext writeContext, ImmutableList<BcWriter.LocOffset> locOffset) {
       return writeContext.writer.writeForwardCondJump(
           jumpCond, locOffset, cond.encode(writeContext));
     }
@@ -76,7 +78,7 @@ abstract class BcIrIfCond {
     }
 
     @Override
-    public int write(BcIrWriteContext writeContext, BcWriter.LocOffset locOffset) {
+    public int write(BcIrWriteContext writeContext, ImmutableList<BcWriter.LocOffset> locOffset) {
       return writeContext.writer.writeForwardTypeIsJump(
           jumpCond, locOffset, expr.encode(writeContext), type);
     }
@@ -104,7 +106,7 @@ abstract class BcIrIfCond {
     }
 
     @Override
-    public int write(BcIrWriteContext writeContext, BcWriter.LocOffset locOffset) {
+    public int write(BcIrWriteContext writeContext, ImmutableList<BcWriter.LocOffset> locOffset) {
       return writeContext.writer.writeForwardBinCondJump(
           cond, locOffset, a.encode(writeContext), b.encode(writeContext));
     }

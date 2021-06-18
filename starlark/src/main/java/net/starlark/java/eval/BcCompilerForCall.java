@@ -282,7 +282,7 @@ class BcCompilerForCall {
     ir.add(
         new BcIrInstr.CallLinked(
             compiler.nodeToLocOffset(compiledArguments.callExpression),
-            BcCallLocs.forExpression(compiledArguments.callExpression),
+            BcCallLocs.forExpression(compiler, compiledArguments.callExpression),
             linked,
             compiledArguments.callArgs.listArg,
             compiledArguments.star.slot,
@@ -310,7 +310,7 @@ class BcCompilerForCall {
     ir.add(
         new BcIrInstr.Call(
             compiler.nodeToLocOffset(callExpression),
-            BcCallLocs.forExpression(callExpression),
+            BcCallLocs.forExpression(compiler, callExpression),
             compiledArguments.fn.result.slot,
             compiledArguments.linkSig,
             compiledArguments.callArgs.listArg,

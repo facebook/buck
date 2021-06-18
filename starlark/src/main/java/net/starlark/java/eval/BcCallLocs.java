@@ -17,44 +17,58 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import javax.annotation.Nullable;
 import net.starlark.java.syntax.Argument;
 import net.starlark.java.syntax.CallExpression;
-import net.starlark.java.syntax.FileLocations;
-import net.starlark.java.syntax.Location;
 
 /** Locations of call expression. */
 class BcCallLocs {
 
-  private final int starOffset;
-  private final int starStarOffset;
+  @Nullable private final ImmutableList<BcWriter.LocOffset> starLocs;
+  @Nullable private final ImmutableList<BcWriter.LocOffset> starStarLocs;
 
-  private BcCallLocs(int starOffset, int starStarOffset) {
-    this.starOffset = starOffset;
-    this.starStarOffset = starStarOffset;
+  public BcCallLocs(
+      @Nullable ImmutableList<BcWriter.LocOffset> starLocs,
+      @Nullable ImmutableList<BcWriter.LocOffset> starStarLocs) {
+    this.starLocs = starLocs;
+    this.starStarLocs = starStarLocs;
   }
 
-  private static final BcCallLocs NULLS = new BcCallLocs(-1, -1);
+  private static final BcCallLocs NULLS = new BcCallLocs(null, null);
 
-  static BcCallLocs forExpression(CallExpression callExpression) {
-    Argument.Star starArgument = callExpression.getStarArgument();
-    Argument.StarStar starStarArgument = callExpression.getStarStarArgument();
-    int starOffset = starArgument != null ? starArgument.getStartOffset() : -1;
-    int starStarOffset = starStarArgument != null ? starStarArgument.getStartOffset() : -1;
-    if (starOffset < 0 && starStarOffset < 0) {
+  private static BcCallLocs of(
+      @Nullable ImmutableList<BcWriter.LocOffset> starLoc,
+      @Nullable ImmutableList<BcWriter.LocOffset> starStarLoc) {
+    if (starLoc == null && starStarLoc == null) {
       return NULLS;
     } else {
-      return new BcCallLocs(starOffset, starStarOffset);
+      return new BcCallLocs(starLoc, starStarLoc);
     }
   }
 
-  Location starLocation(FileLocations fileLocations) {
-    Preconditions.checkState(starOffset >= 0);
-    return fileLocations.getLocation(starOffset);
+  static BcCallLocs forExpression(BcCompiler compiler, CallExpression callExpression) {
+    Argument.Star starArgument = callExpression.getStarArgument();
+    Argument.StarStar starStarArgument = callExpression.getStarStarArgument();
+    ImmutableList<BcWriter.LocOffset> starLoc =
+        starArgument != null ? compiler.nodeToLocOffset(starArgument) : null;
+    ImmutableList<BcWriter.LocOffset> starStarLoc =
+        starStarArgument != null ? compiler.nodeToLocOffset(starStarArgument) : null;
+    return of(starLoc, starStarLoc);
   }
 
-  Location starStarLocation(FileLocations fileLocations) {
-    Preconditions.checkState(starStarOffset >= 0);
-    return fileLocations.getLocation(starStarOffset);
+  ImmutableList<StarlarkThread.CallStackEntry> starLocation() {
+    Preconditions.checkState(starLocs != null);
+    return starLocs.stream()
+        .map(BcWriter.LocOffset::toCallStackEntry)
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  ImmutableList<StarlarkThread.CallStackEntry> starStarLocation() {
+    Preconditions.checkState(starStarLocs != null);
+    return starStarLocs.stream()
+        .map(BcWriter.LocOffset::toCallStackEntry)
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override

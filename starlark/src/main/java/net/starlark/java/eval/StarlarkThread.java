@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -177,9 +178,12 @@ public final class StarlarkThread {
       return fn;
     }
 
-    @Nullable
-    public Location getLocation() {
-      return bcEval != null ? bcEval.location() : null;
+    public ImmutableList<CallStackEntry> getLocation() {
+      if (bcEval != null) {
+        return bcEval.location();
+      } else {
+        return ImmutableList.of(new CallStackEntry(fn.getName(), Location.BUILTIN));
+      }
     }
 
     @Override
@@ -288,7 +292,17 @@ public final class StarlarkThread {
    * returns BUILTIN if called with fewer than two frames (such as within a test).
    */
   public Location getCallerLocation() {
-    return toplevel() ? Location.BUILTIN : frame(1).getLocation();
+    if (toplevel()) {
+      return Location.BUILTIN;
+    } else {
+      ImmutableList<CallStackEntry> callerLocations = frame(1).getLocation();
+      if (callerLocations.isEmpty()) {
+        // Stack should be non-empty, but it's safer to return something than crash.
+        return Location.BUILTIN;
+      } else {
+        return callerLocations.get(callerLocations.size() - 1).location;
+      }
+    }
   }
 
   /**
@@ -370,6 +384,23 @@ public final class StarlarkThread {
     public String toString() {
       return name + "@" + location;
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      CallStackEntry that = (CallStackEntry) o;
+      return Objects.equals(name, that.name) && Objects.equals(location, that.location);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(name, location);
+    }
   }
 
   /**
@@ -381,9 +412,7 @@ public final class StarlarkThread {
   public ImmutableList<CallStackEntry> getCallStack() {
     ImmutableList.Builder<CallStackEntry> stack = ImmutableList.builder();
     for (Frame fr : callstack) {
-      Location location = fr.getLocation();
-      stack.add(
-          new CallStackEntry(fr.fn.getName(), location != null ? location : Location.BUILTIN));
+      stack.addAll(fr.getLocation());
     }
     return stack.build();
   }

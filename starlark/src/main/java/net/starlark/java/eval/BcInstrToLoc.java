@@ -16,60 +16,90 @@
 
 package net.starlark.java.eval;
 
-import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import net.starlark.java.syntax.FileLocations;
 import net.starlark.java.syntax.Location;
 
 /** Map instruction to location. */
 class BcInstrToLoc {
-  private final FileLocations fileLocations;
-  /** (instruction, offset) pairs */
+  private final String[] fnNames;
+  private final FileLocations[] fileLocations;
+  /** {@code *(instruction stackSize *(fnNamesIndex, fileLocationsIndex, fileLocationsOffset))}. */
   private final int[] instrToOffset;
 
-  BcInstrToLoc(FileLocations fileLocations, int[] instrToOffset) {
-    Preconditions.checkArgument(instrToOffset.length % 2 == 0);
+  private BcInstrToLoc(String[] fnNames, FileLocations[] fileLocations, int[] instrToOffset) {
+    this.fnNames = fnNames;
     this.fileLocations = fileLocations;
     this.instrToOffset = instrToOffset;
   }
 
-  Location locationAt(int ip) {
+  ImmutableList<StarlarkThread.CallStackEntry> locationAt(int ip) {
+    int offset = 0;
     // Could use binary search here, but this code is on cold path
-    for (int i = 0; i < instrToOffset.length / 2; ++i) {
-      if (instrToOffset[i * 2] == ip) {
-        return fileLocations.getLocation(instrToOffset[i * 2 + 1]);
+    while (offset != instrToOffset.length) {
+      int nextIp = instrToOffset[offset++];
+      int count = instrToOffset[offset++];
+      if (ip == nextIp) {
+        ImmutableList.Builder<StarlarkThread.CallStackEntry> locations =
+            ImmutableList.builderWithExpectedSize(count);
+        for (int i = 0; i != count; ++i) {
+          String fnName = this.fnNames[instrToOffset[offset + 3 * i]];
+          FileLocations fileLocations = this.fileLocations[instrToOffset[offset + 3 * i + 1]];
+          Location loc = fileLocations.getLocation(instrToOffset[offset + 3 * i + 2]);
+          locations.add(new StarlarkThread.CallStackEntry(fnName, loc));
+        }
+        return locations.build();
       }
+      offset += count * 3;
     }
-
     throw new IllegalArgumentException("no offset at " + ip);
   }
 
   static class Builder {
-    private final FileLocations fileLocations;
-    /** Alternating (instr, offset). */
-    private IntArrayBuilder instrToOffset = new IntArrayBuilder();
+    private final ArrayList<String> fnNames = new ArrayList<>();
+    private final ArrayList<FileLocations> fileLocations = new ArrayList<>();
+    private final IntArrayBuilder instrToOffset = new IntArrayBuilder();
 
-    Builder(FileLocations fileLocations) {
-      this.fileLocations = fileLocations;
+    Builder() {}
+
+    private int indexFileLocations(FileLocations fileLocations) {
+      for (int i = 0; i < this.fileLocations.size(); i++) {
+        FileLocations fileLocation = this.fileLocations.get(i);
+        if (fileLocation == fileLocations) {
+          return i;
+        }
+      }
+      this.fileLocations.add(fileLocations);
+      return this.fileLocations.size() - 1;
     }
 
-    void reset(int ip) {
-      while (!instrToOffset.isEmpty() && (instrToOffset.get(instrToOffset.size() - 2) >= ip)) {
-        instrToOffset.pop();
-        instrToOffset.pop();
+    private int indexFnName(String fnName) {
+      for (int i = 0; i < fnNames.size(); i++) {
+        String next = fnNames.get(i);
+        if (fnName.equals(next)) {
+          return i;
+        }
       }
+      fnNames.add(fnName);
+      return fnNames.size() - 1;
     }
 
-    public void add(int ip, int offset) {
-      if (!instrToOffset.isEmpty()) {
-        Preconditions.checkArgument(ip > instrToOffset.get(instrToOffset.size() - 2));
-      }
-
+    public void add(int ip, ImmutableList<BcWriter.LocOffset> locOffsets) {
       instrToOffset.add(ip);
-      instrToOffset.add(offset);
+      instrToOffset.add(locOffsets.size());
+      for (BcWriter.LocOffset locOffset : locOffsets) {
+        instrToOffset.add(indexFnName(locOffset.fnName));
+        instrToOffset.add(indexFileLocations(locOffset.fileLocations));
+        instrToOffset.add(locOffset.offset);
+      }
     }
 
     BcInstrToLoc build() {
-      return new BcInstrToLoc(fileLocations, instrToOffset.buildArray());
+      return new BcInstrToLoc(
+          fnNames.toArray(new String[0]),
+          fileLocations.toArray(new FileLocations[0]),
+          instrToOffset.buildArray());
     }
   }
 }

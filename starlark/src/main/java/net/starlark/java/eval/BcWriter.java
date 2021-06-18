@@ -84,7 +84,7 @@ class BcWriter {
     this.locals = locals;
     this.freeVars = freeVars;
     this.maxSlots = nlocals;
-    this.instrToLoc = new BcInstrToLoc.Builder(fileLocations);
+    this.instrToLoc = new BcInstrToLoc.Builder();
   }
 
   public int getIp() {
@@ -132,11 +132,11 @@ class BcWriter {
   }
 
   /** Write an instruction which throws eval exception at evaluation. */
-  void writeEvalException(LocOffset locOffset, String message) {
+  void writeEvalException(ImmutableList<LocOffset> locOffset, String message) {
     write(BcInstrOpcode.EVAL_EXCEPTION, locOffset, allocString(message));
   }
 
-  void writeContinue(LocOffset locOffset) {
+  void writeContinue(ImmutableList<LocOffset> locOffset) {
     if (fors.isEmpty()) {
       writeEvalException(locOffset, "continue statement must be inside a for loop");
     } else {
@@ -150,7 +150,7 @@ class BcWriter {
     }
   }
 
-  void writeBreak(LocOffset locOffset) {
+  void writeBreak(ImmutableList<LocOffset> locOffset) {
     if (fors.isEmpty()) {
       writeEvalException(locOffset, "break statement must be inside a for loop");
     } else {
@@ -159,7 +159,8 @@ class BcWriter {
     }
   }
 
-  void writeForInit(LocOffset collectionLocOffset, int collectionSlot, int nextValueSlot) {
+  void writeForInit(
+      ImmutableList<LocOffset> collectionLocOffset, int collectionSlot, int nextValueSlot) {
     write(
         BcInstrOpcode.FOR_INIT,
         collectionLocOffset,
@@ -298,16 +299,24 @@ class BcWriter {
 
   /** Newtype for offset within {@link #fileLocations}. */
   static class LocOffset {
-    private final int offset;
+    final String fnName;
+    final FileLocations fileLocations;
+    final int offset;
 
-    LocOffset(int offset) {
+    LocOffset(String fnName, FileLocations fileLocations, int offset) {
+      this.fnName = fnName;
+      this.fileLocations = fileLocations;
       this.offset = offset;
+    }
+
+    StarlarkThread.CallStackEntry toCallStackEntry() {
+      return new StarlarkThread.CallStackEntry(fnName, fileLocations.getLocation(offset));
     }
   }
 
   /** Write complete opcode with validation. */
-  void write(BcInstrOpcode opcode, LocOffset locOffset, int... args) {
-    instrToLoc.add(ip, locOffset.offset);
+  void write(BcInstrOpcode opcode, ImmutableList<LocOffset> locOffset, int... args) {
+    instrToLoc.add(ip, locOffset);
 
     int prevIp = ip;
 
@@ -355,7 +364,7 @@ class BcWriter {
    * Write forward condition jump instruction. Return an address to be patched when the jump address
    * is known.
    */
-  int writeForwardCondJump(JumpCond jumpCond, LocOffset locOffset, int cond) {
+  int writeForwardCondJump(JumpCond jumpCond, ImmutableList<LocOffset> locOffset, int cond) {
     write(jumpCond.opcode, locOffset, cond, FORWARD_JUMP_ADDR);
     return ip - 1;
   }
@@ -375,7 +384,8 @@ class BcWriter {
    * Write forward condition jump instruction. Return an address to be patched when the jump address
    * is known.
    */
-  int writeForwardTypeIsJump(JumpCond jumpCond, LocOffset locOffset, int expr, String type) {
+  int writeForwardTypeIsJump(
+      JumpCond jumpCond, ImmutableList<LocOffset> locOffset, int expr, String type) {
     write(typeIsJumpOpcode(jumpCond), locOffset, expr, allocString(type), FORWARD_JUMP_ADDR);
     return ip - 1;
   }
@@ -384,7 +394,8 @@ class BcWriter {
    * Write forward condition jump instruction. Return an address to be patched when the jump address
    * is known.
    */
-  int writeForwardBinCondJump(JumpBindCond jumpBindCond, LocOffset locOffset, int a, int b) {
+  int writeForwardBinCondJump(
+      JumpBindCond jumpBindCond, ImmutableList<LocOffset> locOffset, int a, int b) {
     write(jumpBindCond.opcode, locOffset, a, b, FORWARD_JUMP_ADDR);
     return ip - 1;
   }
@@ -393,7 +404,7 @@ class BcWriter {
    * Write unconditional forward jump. Return an address to be patched when the jump address is
    * known.
    */
-  int writeForwardJump(LocOffset locOffset) {
+  int writeForwardJump(ImmutableList<LocOffset> locOffset) {
     write(BcInstrOpcode.BR, locOffset, FORWARD_JUMP_ADDR);
     return ip - 1;
   }

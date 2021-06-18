@@ -55,6 +55,10 @@ public final class FileLocations {
     return new FileLocations(computeLinestart(buffer), file, buffer.length);
   }
 
+  public static FileLocations create(String buffer, String file) {
+    return create(buffer.toCharArray(), file);
+  }
+
   String file() {
     return file;
   }

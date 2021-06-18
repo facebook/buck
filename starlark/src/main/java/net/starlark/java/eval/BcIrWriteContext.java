@@ -17,6 +17,7 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -156,13 +157,14 @@ class BcIrWriteContext {
     return local;
   }
 
-  void writeForwardJump(BcWriter.LocOffset locOffset, BcIrInstr.JumpLabel jumpLabel) {
+  void writeForwardJump(
+      ImmutableList<BcWriter.LocOffset> locOffset, BcIrInstr.JumpLabel jumpLabel) {
     int patchAddr = writer.writeForwardJump(locOffset);
     forwardJumpAddrsToPatch.computeIfAbsent(jumpLabel, k -> new IntArrayBuilder()).add(patchAddr);
   }
 
   void writeForwardCondJump(
-      BcWriter.LocOffset locOffset, BcIrIfCond cond, BcIrInstr.JumpLabel jumpLabel) {
+      ImmutableList<BcWriter.LocOffset> locOffset, BcIrIfCond cond, BcIrInstr.JumpLabel jumpLabel) {
     int patchAddr = cond.write(this, locOffset);
     forwardJumpAddrsToPatch.computeIfAbsent(jumpLabel, k -> new IntArrayBuilder()).add(patchAddr);
   }

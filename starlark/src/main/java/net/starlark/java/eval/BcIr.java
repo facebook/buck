@@ -17,6 +17,7 @@
 package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -61,7 +62,8 @@ class BcIr {
   }
 
   /** Copy slot to a fresh local slot if necessary. */
-  BcIrSlot.AnyLocal makeLocal(BcWriter.LocOffset locOffset, BcIrSlot slot, String label) {
+  BcIrSlot.AnyLocal makeLocal(
+      ImmutableList<BcWriter.LocOffset> locOffset, BcIrSlot slot, String label) {
     if (slot instanceof BcIrSlot.AnyLocal) {
       return (BcIrSlot.AnyLocal) slot;
     } else {
@@ -72,14 +74,14 @@ class BcIr {
   }
 
   /** Add forward jump instruction. */
-  BcIrInstr.JumpLabel br(BcWriter.LocOffset locOffset) {
+  BcIrInstr.JumpLabel br(ImmutableList<BcWriter.LocOffset> locOffset) {
     BcIrInstr.JumpLabel jumpLabel = new BcIrInstr.JumpLabel(Friend.FRIEND);
     add(new BcIrInstr.Br(locOffset, jumpLabel));
     return jumpLabel;
   }
 
   /** Add conditional forward jump instructions. */
-  BcIrInstr.JumpLabel ifBr(BcWriter.LocOffset locOffset, BcIrIfCond ifCond) {
+  BcIrInstr.JumpLabel ifBr(ImmutableList<BcWriter.LocOffset> locOffset, BcIrIfCond ifCond) {
     BcIrInstr.JumpLabel jumpLabel = new BcIrInstr.JumpLabel(Friend.FRIEND);
     add(new BcIrInstr.IfBr(locOffset, ifCond, jumpLabel));
     return jumpLabel;
@@ -87,13 +89,15 @@ class BcIr {
 
   /** Add conditional forward jump instruction. */
   BcIrInstr.JumpLabel ifBr(
-      BcWriter.LocOffset locOffset, BcIrSlot.AnyLocal cond, BcWriter.JumpCond jumpCond) {
+      ImmutableList<BcWriter.LocOffset> locOffset,
+      BcIrSlot.AnyLocal cond,
+      BcWriter.JumpCond jumpCond) {
     return ifBr(locOffset, new BcIrIfCond.Local(cond, jumpCond));
   }
 
   /** Add conditional forward jump instructions. */
   BcIrInstr.JumpLabel ifBr(
-      BcWriter.LocOffset locOffset, BcIrSlot cond, BcWriter.JumpCond jumpCond) {
+      ImmutableList<BcWriter.LocOffset> locOffset, BcIrSlot cond, BcWriter.JumpCond jumpCond) {
     BcIrSlot.AnyLocal condLocal = makeLocal(locOffset, cond, "cond");
     return ifBr(locOffset, condLocal, jumpCond);
   }

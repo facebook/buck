@@ -18,6 +18,7 @@ package net.starlark.java.eval;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import javax.annotation.Nullable;
 import net.starlark.java.syntax.BinaryOperatorExpression;
@@ -287,7 +288,7 @@ class BcCompilerForIf {
       boolean elseJumpCond,
       ArrayList<BcIrInstr.JumpLabel> elseJumps) {
     ir.addAll(otherExpr.result.ir);
-    BcWriter.LocOffset locOffset = compiler.nodeToLocOffset(otherExpr.expr);
+    ImmutableList<BcWriter.LocOffset> locOffset = compiler.nodeToLocOffset(otherExpr.expr);
     BcWriter.JumpCond jumpCond = elseJumpCond ? BcWriter.JumpCond.IF : BcWriter.JumpCond.IF_NOT;
     BcIrInstr.JumpLabel jumpLabel = ir.ifBr(locOffset, otherExpr.result.result.slot, jumpCond);
     elseJumps.add(jumpLabel);

@@ -33,7 +33,6 @@ import net.starlark.java.syntax.DictExpression;
 import net.starlark.java.syntax.DotExpression;
 import net.starlark.java.syntax.Expression;
 import net.starlark.java.syntax.ExpressionStatement;
-import net.starlark.java.syntax.FileLocations;
 import net.starlark.java.syntax.FloatLiteral;
 import net.starlark.java.syntax.FlowStatement;
 import net.starlark.java.syntax.ForStatement;
@@ -57,12 +56,11 @@ import net.starlark.java.syntax.UnaryOperatorExpression;
 /** The compiler implementation. */
 class BcCompiler {
 
-  private final FileLocations fileLocations;
   final StarlarkThread thread;
   private final Module module;
   private final Tuple freevars;
   private final ImmutableList<Parameter> parameters;
-  private final Resolver.Function rfn;
+  final Resolver.Function rfn;
 
   BcCompiler(StarlarkThread thread, Resolver.Function rfn, Module module, Tuple freevars) {
     Preconditions.checkArgument(
@@ -71,32 +69,30 @@ class BcCompiler {
             + " otherwise global indices won't match");
 
     this.rfn = rfn;
-    this.fileLocations = rfn.getFileLocations();
     this.thread = thread;
     this.module = module;
     this.freevars = freevars;
     this.parameters = rfn.getParameters();
   }
 
-  BcWriter.LocOffset nodeToLocOffset(Node node) {
-    Preconditions.checkState(
-        node.getLocs() == fileLocations,
-        "node does not share the same file locations as the rest of the function");
+  ImmutableList<BcWriter.LocOffset> nodeToLocOffset(Node node) {
+    int offset;
     if (node instanceof BinaryOperatorExpression) {
-      return new BcWriter.LocOffset(((BinaryOperatorExpression) node).getOpOffset());
+      offset = ((BinaryOperatorExpression) node).getOpOffset();
     } else if (node instanceof IndexExpression) {
-      return new BcWriter.LocOffset(((IndexExpression) node).getLbracketOffset());
+      offset = ((IndexExpression) node).getLbracketOffset();
     } else if (node instanceof SliceExpression) {
-      return new BcWriter.LocOffset(((SliceExpression) node).getLbracketOffset());
+      offset = ((SliceExpression) node).getLbracketOffset();
     } else if (node instanceof DotExpression) {
-      return new BcWriter.LocOffset(((DotExpression) node).getDotOffset());
+      offset = ((DotExpression) node).getDotOffset();
     } else if (node instanceof AssignmentStatement) {
-      return new BcWriter.LocOffset(((AssignmentStatement) node).getOpOffset());
+      offset = ((AssignmentStatement) node).getOpOffset();
     } else if (node instanceof CallExpression) {
-      return new BcWriter.LocOffset(((CallExpression) node).getLparenOffset());
+      offset = ((CallExpression) node).getLparenOffset();
     } else {
-      return new BcWriter.LocOffset(node.getStartOffset());
+      offset = node.getStartOffset();
     }
+    return ImmutableList.of(new BcWriter.LocOffset(rfn.getName(), node.getLocs(), offset));
   }
 
   private void cp(BcIr ir, Node node, BcIrSlot from, BcIrSlot.AnyLocal to) {
