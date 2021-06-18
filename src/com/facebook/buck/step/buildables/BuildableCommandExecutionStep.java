@@ -31,6 +31,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.environment.CommonChildProcessParams;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -164,13 +165,9 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
 
   private ImmutableMap<String, String> getEnvs() {
     String ruleCellRoot = projectFilesystem.getRootPath().toString();
-    String buckClassPath =
-        Objects.requireNonNull(
-            BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
-            BuckClasspath.ENV_VAR_NAME + " env variable is not set");
-
-    return ImmutableMap.of(
-        ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT, ruleCellRoot,
-        BuckClasspath.ENV_VAR_NAME, buckClassPath);
+    return ImmutableMap.<String, String>builder()
+        .put(ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT, ruleCellRoot)
+        .putAll(CommonChildProcessParams.getCommonChildProcessEnvsIncludingBuckClasspath())
+        .build();
   }
 }

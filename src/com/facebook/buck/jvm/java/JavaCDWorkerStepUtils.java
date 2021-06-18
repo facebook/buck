@@ -26,7 +26,7 @@ import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.env.BuckClasspath;
-import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.facebook.buck.util.environment.CommonChildProcessParams;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.worker.WorkerProcessPool;
@@ -36,7 +36,6 @@ import com.facebook.buck.workertool.impl.DefaultWorkerToolLauncher;
 import com.facebook.buck.workertool.impl.WorkerToolPoolFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -149,18 +148,9 @@ public class JavaCDWorkerStepUtils {
       IsolatedExecutionContext context, ImmutableList<String> startupCommand) {
     return () -> {
       WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
-      String buckClasspath =
-          Objects.requireNonNull(
-              BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
-              BuckClasspath.ENV_VAR_NAME + " env variable is not set");
-      ImmutableMap<String, String> buckSystemEnvs = EnvVariablesProvider.getSystemEnv();
       return workerToolLauncher.launchWorker(
           startupCommand,
-          ImmutableMap.of(
-              BuckClasspath.ENV_VAR_NAME,
-              buckClasspath,
-              "PATH",
-              buckSystemEnvs.getOrDefault("PATH", "")));
+          CommonChildProcessParams.getCommonChildProcessEnvsIncludingBuckClasspath());
     };
   }
 }

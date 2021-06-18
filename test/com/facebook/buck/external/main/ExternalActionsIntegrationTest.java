@@ -54,6 +54,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.environment.CommonChildProcessParams;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.util.timing.FakeClock;
@@ -366,16 +367,15 @@ public class ExternalActionsIntegrationTest {
 
   private ProcessExecutorParams createProcessExecutorParams(ImmutableList<String> command) {
     String ruleCellRoot = temporaryFolder.getRoot().toString();
-
     return ProcessExecutorParams.builder()
         .setCommand(command)
         .setEnvironment(
             EnvironmentSanitizer.getSanitizedEnvForTests(
-                ImmutableMap.of(
-                    ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT,
-                    ruleCellRoot,
-                    BuckClasspath.ENV_VAR_NAME,
-                    testBinary.toString())))
+                ImmutableMap.<String, String>builder()
+                    .put(ExternalBinaryBuckConstants.ENV_RULE_CELL_ROOT, ruleCellRoot)
+                    .putAll(CommonChildProcessParams.getCommonChildProcessEnvs())
+                    .put(BuckClasspath.ENV_VAR_NAME, testBinary.toString())
+                    .build()))
         .build();
   }
 

@@ -28,6 +28,7 @@ java_test(
         "//src/com/facebook/buck/step/buildables:buildables",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/util/env:env",
+        "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/java:java",
         "//test/com/facebook/buck/downwardapi/testutil:testutil",
         "//test/com/facebook/buck/event:testutil",

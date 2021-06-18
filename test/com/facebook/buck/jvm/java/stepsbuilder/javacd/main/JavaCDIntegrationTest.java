@@ -66,6 +66,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.env.BuckClasspath;
+import com.facebook.buck.util.environment.CommonChildProcessParams;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.util.timing.FakeClock;
@@ -621,7 +622,10 @@ public class JavaCDIntegrationTest {
   }
 
   private ImmutableMap<String, String> getEnvs() {
-    return ImmutableMap.of(BuckClasspath.ENV_VAR_NAME, testBinary.toString());
+    ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
+    envBuilder.putAll(CommonChildProcessParams.getCommonChildProcessEnvs());
+    envBuilder.put(BuckClasspath.ENV_VAR_NAME, testBinary.toString());
+    return envBuilder.build();
   }
 
   private void waitTillEventsProcessed() throws InterruptedException {
