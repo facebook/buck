@@ -265,7 +265,7 @@ def set_cache_settings(args, cwd, cache_mode, dir_cache_only=True):
     with open(buckconfig_path, "w") as buckconfig:
         buckconfig.write(buckconfig_contents)
         buckconfig.truncate()
-    buckversion_path = os.path.join(cwd, ".buckversion")
+    buckversion_path = os.path.join(cwd, ".buck-java11")
     with open(buckversion_path, "w") as buckversion:
         buckversion.write(args.new_buck_revision + os.linesep)
         buckversion.truncate()
