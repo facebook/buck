@@ -66,7 +66,7 @@ public class CxxLinkGroupMappingCoercer
     return new SkylarkSpec() {
       @Override
       public String spec() {
-        return "attr.tuple(attr.string(), attr.list(attr.tuple(attr.enum(Traversal), attr.label(), attr.option(attr.string()))))";
+        return "attr.tuple(attr.string(), attr.list(attr.tuple(attr.label(), attr.enum(Traversal), attr.option(attr.string()))))";
       }
 
       @Override
