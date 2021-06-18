@@ -623,9 +623,32 @@ class BcEval {
     return BcCall.callable(getSlot(nextOperand()));
   }
 
+  @Nullable
+  private Sequence<?> nextStarArg(BcCallLocs callLocs) throws EvalException {
+    Object star = getSlotOrNull(nextOperand());
+    if (star != null) {
+      if (!(star instanceof Sequence<?>)) {
+        errorLocation = callLocs.starLocation();
+        throw new EvalException("argument after * must be an iterable, not " + Starlark.type(star));
+      }
+    }
+    return (Sequence<?>) star;
+  }
+
+  @Nullable
+  private Dict<?, ?> nextStarStarArg(BcCallLocs callLocs) throws EvalException {
+    Object starStar = getSlotOrNull(nextOperand());
+    if (starStar != null) {
+      if (!(starStar instanceof Dict<?, ?>)) {
+        errorLocation = callLocs.starStarLocation();
+        throw new EvalException("argument after ** must be a dict, not " + Starlark.type(starStar));
+      }
+    }
+    return (Dict<?, ?>) starStar;
+  }
+
   private BcDynCallSite nextDynCallSite() {
-    BcDynCallSite callSite = (BcDynCallSite) compiled.objects[nextOperand()];
-    return callSite;
+    return (BcDynCallSite) compiled.objects[nextOperand()];
   }
 
   /** Call operator. */
@@ -636,25 +659,11 @@ class BcEval {
     StarlarkCallable fn = nextCallable();
     BcDynCallSite callSite = nextDynCallSite();
     Object[] args = nextNSlotsListSharedArray();
-    Object star = getSlotOrNull(nextOperand());
-    Object starStar = getSlotOrNull(nextOperand());
 
-    if (star != null) {
-      if (!(star instanceof Sequence)) {
-        errorLocation = callSite.callLocs.starLocation();
-        throw new EvalException("argument after * must be an iterable, not " + Starlark.type(star));
-      }
-    }
+    Sequence<?> star = nextStarArg(callSite.callLocs);
+    Dict<?, ?> starStar = nextStarStarArg(callSite.callLocs);
 
-    if (starStar != null) {
-      if (!(starStar instanceof Dict)) {
-        errorLocation = callSite.callLocs.starStarLocation();
-        throw new EvalException("argument after ** must be a dict, not " + Starlark.type(starStar));
-      }
-    }
-
-    Object result =
-        BcCall.linkAndCallCs(thread, fn, callSite, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+    Object result = BcCall.linkAndCallCs(thread, fn, callSite, args, star, starStar);
 
     setSlot(nextOperand(), result);
   }
@@ -704,21 +713,10 @@ class BcEval {
 
     Object[] args = nextNSlotsListSharedArray();
 
-    Object star = getSlotOrNull(nextOperand());
-    Object starStar = getSlotOrNull(nextOperand());
+    Sequence<?> star = nextStarArg(locs);
+    Dict<?, ?> starStar = nextStarStarArg(locs);
 
-    if (star != null && !(star instanceof Sequence<?>)) {
-      errorLocation = locs.starLocation();
-      throw new EvalException(
-          String.format("argument after * must be an iterable, not %s", Starlark.type(star)));
-    }
-    if (starStar != null && !(starStar instanceof Dict<?, ?>)) {
-      errorLocation = locs.starStarLocation();
-      throw new EvalException(
-          String.format("argument after ** must be a dict, not %s", Starlark.type(starStar)));
-    }
-
-    Object result = BcCall.callLinked(thread, fn, args, (Sequence<?>) star, (Dict<?, ?>) starStar);
+    Object result = BcCall.callLinked(thread, fn, args, star, starStar);
     setSlot(nextOperand(), result);
   }
 
