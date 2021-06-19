@@ -31,7 +31,7 @@ public abstract class Watchman implements Closeable {
 
   private final ImmutableMap<AbsPath, ProjectWatch> projectWatches;
   private final ImmutableSet<Capability> capabilities;
-  private final ImmutableMap<String, String> clockIdsByWatchRoot;
+  private final ImmutableMap<WatchRoot, String> clockIdsByWatchRoot;
   private final Optional<Path> transportPath;
   private final String version;
   private final PooledWatchmanClient pooledClient;
@@ -39,7 +39,7 @@ public abstract class Watchman implements Closeable {
   public Watchman(
       ImmutableMap<AbsPath, ProjectWatch> projectWatches,
       ImmutableSet<Capability> capabilities,
-      ImmutableMap<String, String> clockIdsByWatchRoot,
+      ImmutableMap<WatchRoot, String> clockIdsByWatchRoot,
       Optional<Path> transportPath,
       String version) {
     this.projectWatches = projectWatches;
@@ -70,7 +70,7 @@ public abstract class Watchman implements Closeable {
     return capabilities;
   }
 
-  public ImmutableMap<String, String> getClockIdsByWatchRoot() {
+  public ImmutableMap<WatchRoot, String> getClockIdsByWatchRoot() {
     return clockIdsByWatchRoot;
   }
 

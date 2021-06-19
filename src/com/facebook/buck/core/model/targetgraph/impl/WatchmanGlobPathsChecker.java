@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.targetgraph.impl;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -36,7 +37,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -169,13 +169,13 @@ class WatchmanPathsChecker implements PathsChecker {
 
     Set<String> uncheckedPaths = new HashSet<>();
     ProjectWatch watch = watchman.getProjectWatches().get(projectFilesystem.getRootPath());
-    Path watchmanRootPath = Paths.get(watch.getWatchRoot());
+    AbsPath watchmanRootPath = watch.getWatchRoot().toPath(projectFilesystem.getFileSystem());
     for (ForwardRelPath relativePath : paths) {
       if (!checkedPaths.add(relativePath)) {
         continue;
       }
       Path path = relativePath.toPath(projectFilesystem.getFileSystem());
-      Path watchmanPath = watchmanRootPath.relativize(projectFilesystem.resolve(path));
+      RelPath watchmanPath = watchmanRootPath.relativize(projectFilesystem.resolve(path));
       // TODO: paths could be patterns, such as containing *, maybe add a checker.
       uncheckedPaths.add(watchmanPath.toString());
     }

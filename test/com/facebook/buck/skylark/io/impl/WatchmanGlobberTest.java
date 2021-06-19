@@ -28,6 +28,7 @@ import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.watchman.StubWatchmanClient;
+import com.facebook.buck.io.watchman.WatchRoot;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
@@ -81,7 +82,9 @@ public class WatchmanGlobberTest {
             Optional.empty());
     assumeTrue(watchman.getTransportPath().isPresent());
     WatchmanClient watchmanClient = watchman.createClient();
-    globber = WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, root.toString());
+    globber =
+        WatchmanGlobber.create(
+            watchmanClient, ForwardRelPath.EMPTY, new WatchRoot(root.toString()));
   }
 
   private void sync() throws Exception {
@@ -201,14 +204,16 @@ public class WatchmanGlobberTest {
         WatchmanGlobber.create(
             new StubWatchmanClient(Either.ofRight(WatchmanClient.Timeout.INSTANCE)),
             ForwardRelPath.EMPTY,
-            root.toString());
+            new WatchRoot(root.toString()));
     assertFalse(globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false).isPresent());
   }
 
   @Test
   public void watchmanSyncIsNotIssuedForTheSecondInvocation() throws Exception {
     CapturingWatchmanClient watchmanClient = new CapturingWatchmanClient();
-    globber = WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, root.toString());
+    globber =
+        WatchmanGlobber.create(
+            watchmanClient, ForwardRelPath.EMPTY, new WatchRoot(root.toString()));
     globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
     assertTrue(watchmanClient.syncDisabled());
     globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
@@ -241,7 +246,7 @@ public class WatchmanGlobberTest {
         };
 
     String queryRoot = root.toString();
-    globber = WatchmanGlobber.create(client, ForwardRelPath.EMPTY, queryRoot);
+    globber = WatchmanGlobber.create(client, ForwardRelPath.EMPTY, new WatchRoot(queryRoot));
 
     thrown.expect(WatchmanQueryFailedException.class);
     thrown.expect(

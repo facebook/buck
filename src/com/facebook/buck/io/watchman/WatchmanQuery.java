@@ -63,7 +63,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
   @SuppressWarnings("immutables:untype")
   public abstract static class Query extends WatchmanQuery<WatchmanQueryResp.Generic>
       implements QueryWithSync {
-    public abstract String getPath();
+    public abstract WatchRoot getPath();
 
     public abstract ForwardRelPath getRelativeRoot();
 
@@ -133,7 +133,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
       getExpression().ifPresent(e -> args.put("expression", e));
       getGlob().ifPresent(g -> args.put("glob", g));
       args.put("fields", getFields());
-      return ImmutableList.of("query", getPath(), args.build());
+      return ImmutableList.of("query", getPath().toString(), args.build());
     }
   }
 
@@ -171,7 +171,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
             "watch-project response has no `watch` field: " + resp);
       }
       String relativePath = (String) resp.getOrDefault("relative_path", "");
-      return WatchmanQueryResp.watchProject(watch, relativePath);
+      return WatchmanQueryResp.watchProject(new WatchRoot(watch), relativePath);
     }
   }
 
@@ -182,7 +182,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
 
     @Override
     public ImmutableList<Object> toProtocolArgs() {
-      return ImmutableList.of("watch", getPath());
+      return ImmutableList.of("watch", getPath().toString());
     }
   }
 
@@ -190,7 +190,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
   @BuckStyleValue
   public abstract static class Clock extends WatchmanQuery<WatchmanQueryResp.Generic>
       implements QueryWithSync {
-    public abstract String getPath();
+    public abstract WatchRoot getPath();
 
     /** Milliseconds. */
     public abstract Optional<Integer> getSyncTimeout();
@@ -204,7 +204,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
     public ImmutableList<Object> toProtocolArgs() {
       return ImmutableList.of(
           "clock",
-          getPath(),
+          getPath().toString(),
           getSyncTimeout().map(t -> ImmutableMap.of("sync_timeout", t)).orElse(ImmutableMap.of()));
     }
   }
@@ -220,7 +220,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
 
   /** {@code query} query. */
   public static Query query(
-      String path,
+      WatchRoot path,
       ForwardRelPath relativeRoot,
       Optional<Object> expression,
       Optional<Object> glob,
@@ -229,7 +229,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
   }
 
   /** {@code clock} query. */
-  public static Clock clock(String path, Optional<Integer> syncTimeoutMillis) {
+  public static Clock clock(WatchRoot path, Optional<Integer> syncTimeoutMillis) {
     return ImmutableClock.ofImpl(path, syncTimeoutMillis);
   }
 

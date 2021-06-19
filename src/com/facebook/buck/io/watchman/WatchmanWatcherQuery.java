@@ -25,7 +25,7 @@ import java.util.Optional;
 @BuckStyleValue
 abstract class WatchmanWatcherQuery {
 
-  abstract String getQueryPath();
+  abstract WatchRoot getQueryPath();
 
   abstract Object getExpression();
 

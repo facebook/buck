@@ -72,7 +72,7 @@ public class WatchmanTransportClientTest {
                   60_000_000_000L,
                   60_000_000_000L,
                   WatchmanQuery.query(
-                      tmp.getRoot().toString(),
+                      new WatchRoot(tmp.getRoot()),
                       ForwardRelPath.EMPTY,
                       Optional.empty(),
                       Optional.of(ImmutableList.of("*.txt")),
@@ -88,7 +88,7 @@ public class WatchmanTransportClientTest {
             60_000_000_000L,
             60_000_000_000L,
             WatchmanQuery.query(
-                    tmp.getRoot().toString(),
+                    new WatchRoot(tmp.getRoot()),
                     ForwardRelPath.EMPTY,
                     Optional.empty(),
                     Optional.of(ImmutableList.of("*.txt")),

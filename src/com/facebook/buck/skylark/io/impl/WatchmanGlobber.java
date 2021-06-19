@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.io.impl;
 
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.io.watchman.WatchRoot;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
@@ -139,10 +140,10 @@ public class WatchmanGlobber {
   /** Path used as a root when resolving patterns. */
   private final ForwardRelPath basePath;
 
-  private final String watchmanWatchRoot;
+  private final WatchRoot watchmanWatchRoot;
 
   private WatchmanGlobber(
-      WatchmanClient watchmanClient, ForwardRelPath basePath, String watchmanWatchRoot) {
+      WatchmanClient watchmanClient, ForwardRelPath basePath, WatchRoot watchmanWatchRoot) {
     this.watchmanClient = watchmanClient;
     this.basePath = basePath;
     this.watchmanWatchRoot = watchmanWatchRoot;
@@ -353,7 +354,7 @@ public class WatchmanGlobber {
    * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
   public static WatchmanGlobber create(
-      WatchmanClient watchmanClient, ForwardRelPath basePath, String watchmanWatchRoot) {
+      WatchmanClient watchmanClient, ForwardRelPath basePath, WatchRoot watchmanWatchRoot) {
     return new WatchmanGlobber(watchmanClient, basePath, watchmanWatchRoot);
   }
 }

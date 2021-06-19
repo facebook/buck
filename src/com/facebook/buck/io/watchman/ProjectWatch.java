@@ -18,22 +18,15 @@ package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.google.common.base.Preconditions;
-import org.immutables.value.Value;
 
 @BuckStyleValue
 public abstract class ProjectWatch {
 
-  public abstract String getWatchRoot();
-
-  @Value.Check
-  protected void check() {
-    Preconditions.checkArgument(!getWatchRoot().isEmpty(), "watchRoot must not be empty");
-  }
+  public abstract WatchRoot getWatchRoot();
 
   public abstract ForwardRelPath getProjectPrefix();
 
-  public static ProjectWatch of(String watchRoot, ForwardRelPath projectPrefix) {
+  public static ProjectWatch of(WatchRoot watchRoot, ForwardRelPath projectPrefix) {
     return ImmutableProjectWatch.ofImpl(watchRoot, projectPrefix);
   }
 }

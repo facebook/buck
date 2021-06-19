@@ -32,7 +32,7 @@ public abstract class WatchmanQueryResp {
   /** Response to {@code watch-project} command. */
   @BuckStyleValue
   public abstract static class WatchProjectResp extends WatchmanQueryResp {
-    public abstract String getWatch();
+    public abstract WatchRoot getWatch();
 
     public abstract String getRelativePath();
   }
@@ -41,7 +41,7 @@ public abstract class WatchmanQueryResp {
     return ImmutableGeneric.ofImpl(resp);
   }
 
-  public static WatchProjectResp watchProject(String watch, String relativePath) {
+  public static WatchProjectResp watchProject(WatchRoot watch, String relativePath) {
     return ImmutableWatchProjectResp.ofImpl(watch, relativePath);
   }
 }

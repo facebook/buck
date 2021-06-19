@@ -33,7 +33,11 @@ public class WatchmanQueryTest {
   public void queryDescQuery() {
     WatchmanQuery.Query q =
         WatchmanQuery.query(
-            "/p", ForwardRelPath.EMPTY, Optional.empty(), Optional.empty(), ImmutableList.of());
+            new WatchRoot("/p", true),
+            ForwardRelPath.EMPTY,
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableList.of());
     assertEquals("sync+query", q.queryDesc());
     assertEquals("sync+query", q.withSyncTimeout(10).queryDesc());
     assertEquals("query", q.withSyncTimeout(0).queryDesc());

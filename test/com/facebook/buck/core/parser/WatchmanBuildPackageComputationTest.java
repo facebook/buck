@@ -28,6 +28,7 @@ import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
 import com.facebook.buck.io.watchman.ProjectWatch;
+import com.facebook.buck.io.watchman.WatchRoot;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
@@ -256,7 +257,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     public MockWatchmanFactory() {
       super(
           ImmutableMap.of(
-              tmp.getRoot(), ProjectWatch.of(tmp.getRoot().toString(), ForwardRelPath.EMPTY)),
+              tmp.getRoot(), ProjectWatch.of(new WatchRoot(tmp.getRoot()), ForwardRelPath.EMPTY)),
           ImmutableSet.of(),
           ImmutableMap.of(),
           Optional.of(Paths.get("(MockWatchmanFactory socket)")),

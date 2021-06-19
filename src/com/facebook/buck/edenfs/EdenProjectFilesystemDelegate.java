@@ -22,6 +22,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
 import com.facebook.buck.io.watchman.ProjectWatch;
+import com.facebook.buck.io.watchman.WatchRoot;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
@@ -297,8 +298,10 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   private Optional<Sha1HashCode> glob(AbsPath path)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     WatchmanClient watchmanClient = realWatchman().getPooledClient();
+    // TODO: `watchRoot` should be actually watch root, not cell root
+    WatchRoot watchRoot = new WatchRoot(rootPath);
     WatchmanGlobber globber =
-        WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, rootPath.toString());
+        WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, watchRoot);
     String pathString = rootPath.relativize(path.getPath()).toString();
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> ret =
         globber.runWithExtraFields(

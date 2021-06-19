@@ -229,8 +229,11 @@ public class WatchmanBuildPackageComputation
    */
   private ForwardRelPath getWatchRelativePath(Path path) throws IOException {
     Path realBasePath = filesystemView.resolve(path).toRealPath();
-    return ForwardRelPath.ofPath(
-        filesystemView.resolve(watch.getWatchRoot()).relativize(realBasePath));
+    return ForwardRelPath.ofRelPath(
+        watch
+            .getWatchRoot()
+            .toPath(filesystemView.getRootPath().getFileSystem())
+            .relativize(realBasePath));
   }
 
   private static String escapeGlobPattern(String pathComponent) {

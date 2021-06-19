@@ -289,14 +289,14 @@ public class WatchmanFactory {
       projectWatchesBuilder.put(projectRoot, projectWatch.get());
     }
     ImmutableMap<AbsPath, ProjectWatch> projectWatches = projectWatchesBuilder.build();
-    Iterable<String> watchRoots =
+    Iterable<WatchRoot> watchRoots =
         RichStream.from(projectWatches.values())
             .map(ProjectWatch::getWatchRoot)
             .distinct()
             .toOnceIterable();
 
-    ImmutableMap.Builder<String, String> clockIdsBuilder = ImmutableMap.builder();
-    for (String watchRoot : watchRoots) {
+    ImmutableMap.Builder<WatchRoot, String> clockIdsBuilder = ImmutableMap.builder();
+    for (WatchRoot watchRoot : watchRoots) {
       Optional<String> clockId;
       try {
         clockId =
@@ -419,7 +419,7 @@ public class WatchmanFactory {
 
     WatchmanQueryResp.WatchProjectResp map = result.getLeft();
 
-    String watchRoot = map.getWatch();
+    WatchRoot watchRoot = map.getWatch();
     ForwardRelPath watchPrefix = ForwardRelPath.of(map.getRelativePath());
     return Optional.of(ProjectWatch.of(watchRoot, watchPrefix));
   }
@@ -436,7 +436,7 @@ public class WatchmanFactory {
    */
   private static Optional<String> queryClock(
       WatchmanClient watchmanClient,
-      String watchRoot,
+      WatchRoot watchRoot,
       ImmutableSet<Capability> capabilities,
       Clock clock,
       long timeoutNanos,

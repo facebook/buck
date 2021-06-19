@@ -18,7 +18,9 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -38,7 +40,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -239,12 +240,12 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
       Set<ForwardRelPath> paths, ProjectFilesystem projectFilesystem)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     ProjectWatch watch = watchman.getProjectWatches().get(projectFilesystem.getRootPath());
-    Path watchmanRootPath = Paths.get(watch.getWatchRoot());
+    AbsPath watchmanRootPath = watch.getWatchRoot().toPath(projectFilesystem.getFileSystem());
 
     Set<String> watchmanPaths = new HashSet<>();
     for (ForwardRelPath path : paths) {
       Path actualPath = path.toPath(projectFilesystem.getFileSystem());
-      Path watchmanPath = watchmanRootPath.relativize(projectFilesystem.resolve(actualPath));
+      RelPath watchmanPath = watchmanRootPath.relativize(projectFilesystem.resolve(actualPath));
       watchmanPaths.add(watchmanPath.toString());
     }
     Optional<ImmutableSet<String>> watchmanGlob =

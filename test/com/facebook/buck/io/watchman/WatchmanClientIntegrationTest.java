@@ -104,7 +104,7 @@ public class WatchmanClientIntegrationTest {
     assertTrue(watch.isLeft());
 
     WatchmanQueryResp.WatchProjectResp map = watch.getLeft();
-    String watchRoot = map.getWatch();
+    WatchRoot watchRoot = map.getWatch();
 
     Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> queryResponse =
         client.queryWithTimeout(

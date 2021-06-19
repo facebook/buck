@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.AssumptionViolatedException;
 
@@ -36,14 +37,14 @@ public class WatchmanTestUtils {
   public static void sync(Watchman watchman)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     try (WatchmanClient client = watchman.createClient()) {
-      for (AbsPath root : watchman.getProjectWatches().keySet()) {
-        assertEquals(ImmutableSet.of(root), watchman.getProjectWatches().keySet());
+      for (Map.Entry<AbsPath, ProjectWatch> e : watchman.getProjectWatches().entrySet()) {
+        assertEquals(ImmutableSet.of(e.getKey()), watchman.getProjectWatches().keySet());
         // synchronize using clock request
         Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> clockResult =
             client.queryWithTimeout(
                 Long.MAX_VALUE,
                 Long.MAX_VALUE,
-                WatchmanQuery.clock(root.toString(), Optional.of(10000)));
+                WatchmanQuery.clock(e.getValue().getWatchRoot(), Optional.of(10000)));
         assertTrue(clockResult.isLeft());
       }
     }

@@ -451,7 +451,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       String projectPrefix = "";
       if (options.getWatchman().getProjectWatches().containsKey(cellPath)) {
         ProjectWatch projectWatch = options.getWatchman().getProjectWatches().get(cellPath);
-        watchRoot = projectWatch.getWatchRoot();
+        watchRoot = projectWatch.getWatchRoot().toString();
         projectPrefix = projectWatch.getProjectPrefix().toString();
       }
       currentBuildFile.set(buildFile);

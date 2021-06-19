@@ -163,7 +163,7 @@ public class WatchmanWatcher {
       ProjectWatch projectWatch,
       ImmutableSet<PathMatcher> ignorePaths,
       Set<Capability> watchmanCapabilities) {
-    String watchRoot = projectWatch.getWatchRoot();
+    WatchRoot watchRoot = projectWatch.getWatchRoot();
     ForwardRelPath watchPrefix = projectWatch.getProjectPrefix();
 
     // Exclude any expressions added to this list.

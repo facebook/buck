@@ -41,10 +41,10 @@ public class FakeWatchmanFactory {
     return new Watchman(
         ImmutableMap.of(
             AbsPath.of(rootPath),
-            ProjectWatch.of(watchPath.toString(), ForwardRelPath.of(projectName))),
+            ProjectWatch.of(new WatchRoot(watchPath), ForwardRelPath.of(projectName))),
         ImmutableSet.of(
             Capability.SUPPORTS_PROJECT_WATCH, Capability.DIRNAME, Capability.WILDMATCH_GLOB),
-        ImmutableMap.of(rootPath.toString(), "123"),
+        ImmutableMap.of(new WatchRoot(rootPath), "123"),
         Optional.of(Paths.get(".watchman-sock")),
         /* version */ "") {
       @Override

@@ -58,7 +58,7 @@ public class WatchmanWatcherTest {
   private static final AbsPath FAKE_ROOT = AbsPath.of(Paths.get("/fake/root").toAbsolutePath());
   private static final WatchmanWatcherQuery FAKE_QUERY =
       ImmutableWatchmanWatcherQuery.ofImpl(
-          "/fake/root", "fake-expr", ImmutableList.of(), ForwardRelPath.EMPTY);
+          new WatchRoot("/fake/root", true), "fake-expr", ImmutableList.of(), ForwardRelPath.EMPTY);
   private static final WatchmanQuery.Query FAKE_UUID_QUERY = FAKE_QUERY.toQuery("n:buckduuid");
   private static final WatchmanQuery.Query FAKE_CLOCK_QUERY = FAKE_QUERY.toQuery("c:0:0");
 
@@ -66,7 +66,10 @@ public class WatchmanWatcherTest {
       AbsPath.of(Paths.get("/fake/secondary").toAbsolutePath());
   private static final WatchmanWatcherQuery FAKE_SECONDARY_QUERY =
       ImmutableWatchmanWatcherQuery.ofImpl(
-          "/fake/SECONDARY", "fake-expr", ImmutableList.of(), ForwardRelPath.EMPTY);
+          new WatchRoot("/fake/SECONDARY", true),
+          "fake-expr",
+          ImmutableList.of(),
+          ForwardRelPath.EMPTY);
 
   private EventBus eventBus;
   private EventBuffer eventBuffer;
@@ -377,7 +380,7 @@ public class WatchmanWatcherTest {
   public void watchmanQueryWithRepoRelativePrefix() {
     WatchmanWatcherQuery query =
         WatchmanWatcher.createQuery(
-            ProjectWatch.of("path/to/repo", ForwardRelPath.of("project")),
+            ProjectWatch.of(new WatchRoot("path/to/repo", true), ForwardRelPath.of("project")),
             ImmutableSet.of(),
             ImmutableSet.of(Capability.DIRNAME));
 
@@ -388,14 +391,14 @@ public class WatchmanWatcherTest {
   public void watchmanQueryWithExcludePathsAddsExpressionToQuery() {
     WatchmanWatcherQuery query =
         WatchmanWatcher.createQuery(
-            ProjectWatch.of("/path/to/repo", ForwardRelPath.EMPTY),
+            ProjectWatch.of(new WatchRoot("/path/to/repo", true), ForwardRelPath.EMPTY),
             ImmutableSet.of(
                 RecursiveFileMatcher.of(RelPath.get("foo")),
                 RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
         ImmutableWatchmanWatcherQuery.ofImpl(
-            "/path/to/repo",
+            new WatchRoot("/path/to/repo", true),
             ImmutableList.of(
                 "not",
                 ImmutableList.of(
@@ -412,14 +415,14 @@ public class WatchmanWatcherTest {
   public void watchmanQueryWithExcludePathsAddsMatchExpressionToQueryIfDirnameNotAvailable() {
     WatchmanWatcherQuery query =
         WatchmanWatcher.createQuery(
-            ProjectWatch.of("/path/to/repo", ForwardRelPath.EMPTY),
+            ProjectWatch.of(new WatchRoot("/path/to/repo", true), ForwardRelPath.EMPTY),
             ImmutableSet.of(
                 RecursiveFileMatcher.of(RelPath.get("foo")),
                 RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of());
     assertEquals(
         ImmutableWatchmanWatcherQuery.ofImpl(
-            "/path/to/repo",
+            new WatchRoot("/path/to/repo", true),
             ImmutableList.of(
                 "not",
                 ImmutableList.of(
@@ -440,14 +443,14 @@ public class WatchmanWatcherTest {
     String watchRoot = Paths.get("/path/to/repo").toAbsolutePath().toString();
     WatchmanWatcherQuery query =
         WatchmanWatcher.createQuery(
-            ProjectWatch.of(watchRoot, ForwardRelPath.EMPTY),
+            ProjectWatch.of(new WatchRoot(watchRoot), ForwardRelPath.EMPTY),
             ImmutableSet.of(
                 RecursiveFileMatcher.of(RelPath.get("foo")),
                 RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
         ImmutableWatchmanWatcherQuery.ofImpl(
-            watchRoot,
+            new WatchRoot(watchRoot),
             ImmutableList.of(
                 "not",
                 ImmutableList.of(
@@ -464,12 +467,12 @@ public class WatchmanWatcherTest {
   public void watchmanQueryWithExcludeGlobsAddsExpressionToQuery() {
     WatchmanWatcherQuery query =
         WatchmanWatcher.createQuery(
-            ProjectWatch.of("/path/to/repo", ForwardRelPath.EMPTY),
+            ProjectWatch.of(new WatchRoot("/path/to/repo", true), ForwardRelPath.EMPTY),
             ImmutableSet.of(GlobPatternMatcher.of("*.pbxproj")),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
         ImmutableWatchmanWatcherQuery.ofImpl(
-            "/path/to/repo",
+            new WatchRoot("/path/to/repo", true),
             ImmutableList.of(
                 "not",
                 ImmutableList.of(

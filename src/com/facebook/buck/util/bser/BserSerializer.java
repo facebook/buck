@@ -150,7 +150,8 @@ public class BserSerializer {
         buffer = appendRecursive(buffer, obj, utf8Encoder);
       }
     } else {
-      throw new RuntimeException("Cannot encode object: " + value);
+      throw new RuntimeException(
+          "Cannot encode object: " + value + " (" + value.getClass().getName() + ")");
     }
 
     return buffer;
