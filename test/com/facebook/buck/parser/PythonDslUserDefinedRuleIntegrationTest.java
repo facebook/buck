@@ -51,7 +51,7 @@ public class PythonDslUserDefinedRuleIntegrationTest {
   public void ruleFunctionFailsIfNotEnabled() throws IOException {
     // All the configuration permutations are tested more thoroughly in ParserConfigTest
     workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "PYTHON_DSL");
-    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled", "true");
+    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled_deprecated", "true");
     workspace.addBuckConfigLocalOption("rule_analysis", "mode", "PROVIDER_COMPATIBLE");
     workspace.addBuckConfigLocalOption("parser", "user_defined_rules", "DISABLED");
     workspace.setUp();

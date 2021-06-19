@@ -1,5 +1,5 @@
 [parser]
-    polyglot_parsing_enabled = false
+    polyglot_parsing_enabled_deprecated = false
     default_build_file_syntax = SKYLARK
     require_target_platform = true
     target_platform_detector_spec = \

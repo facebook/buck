@@ -4053,7 +4053,7 @@ Pkg.Revision = 13.1.3345770
 
 {call buckconfig.entry}
   {param section: 'parser' /}
-  {param name: 'polyglot_parsing_enabled' /}
+  {param name: 'polyglot_parsing_enabled_deprecated' /}
   {param example_value: 'true' /}
   {param description}
     Indicates whether support for experimental polyglot parsing should be enabled. When enabled,
@@ -4070,7 +4070,7 @@ Pkg.Revision = 13.1.3345770
   {param description}
     Specifies the default syntax assumed when parsing build files without explicit build syntax
     marker (<code># BUILD FILE SYNTAX: </code>). This flag is only applicable when
-    <code>parser.polyglot_parsing_enabled</code> configuration is set to <code>true</code>.
+    <code>parser.polyglot_parsing_enabled_deprecated</code> configuration is set to <code>true</code>.
     By default it's value is set to <code>PYTHON_DSL</code>.
   {/param}
 {/call}

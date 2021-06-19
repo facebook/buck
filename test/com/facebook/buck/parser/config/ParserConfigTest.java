@@ -308,7 +308,7 @@ public class ParserConfigTest {
       ParserConfig config =
           parseConfig(
               "[parser]",
-              String.format("polyglot_parsing_enabled = %s", permutation.get(0)),
+              String.format("polyglot_parsing_enabled_deprecated = %s", permutation.get(0)),
               String.format("default_build_file_syntax = %s", permutation.get(1)),
               "[rule_analysis]",
               String.format("mode = %s", permutation.get(2)),

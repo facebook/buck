@@ -55,10 +55,10 @@ public class ConfigSettingIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
     workspace.setUp();
     if (enableSkylarkParsing) {
-      workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled", "true");
+      workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled_deprecated", "true");
       workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "SKYLARK");
     } else {
-      workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled", "false");
+      workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled_deprecated", "false");
       workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "PYTHON_DSL");
     }
     return workspace;

@@ -2419,7 +2419,7 @@ public class ParserWithConfigurableAttributesTest {
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem)
-            .setSections("[parser]", "polyglot_parsing_enabled=true")
+            .setSections("[parser]", "polyglot_parsing_enabled_deprecated=true")
             .build();
 
     Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();

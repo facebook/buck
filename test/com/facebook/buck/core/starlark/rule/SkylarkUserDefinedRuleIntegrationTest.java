@@ -80,7 +80,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     workspace.setUp();
     workspace.addBuckConfigLocalOption(
         "parser", "default_build_file_syntax", buildFileSyntax.name());
-    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled", "true");
+    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled_deprecated", "true");
     if (useVersions) {
       workspace.addBuckConfigLocalOption("build", "versions", "true");
     }

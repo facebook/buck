@@ -98,7 +98,7 @@ default_build_file_syntax = PYTHON_DSL
       <p>
         If your project includes build files that rely on legacy Python
         DSL features, you can enable <em>multi-language</em> support by setting
-        {sp}{call buckconfig.parser_polyglot_parsing_enabled /}{sp}
+        {sp}{call buckconfig.parser_polyglot_parsing_enabled_deprecated /}{sp}
         to <code>true</code> in {call buck.buckconfig_link /} file and use
         the file-specific parser directives described below.
       </p>
@@ -167,7 +167,7 @@ default_build_file_syntax = PYTHON_DSL
 <pre>
 {literal}
 [parser]
-  polyglot_parsing_enabled = true
+  polyglot_parsing_enabled_deprecated = true
 {/literal}
 </pre>
 </p>

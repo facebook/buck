@@ -70,7 +70,7 @@ public class AuditRulesCommandIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "audit_skylark_rules", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled", "true");
+    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled_deprecated", "true");
     workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "skylark");
 
     // Print all of the rules in a file.

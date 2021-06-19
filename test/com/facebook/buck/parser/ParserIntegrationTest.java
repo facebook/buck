@@ -372,13 +372,14 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "skylark", temporaryFolder);
     workspace.setUp();
     workspace
-        .runBuckBuild("//java/bar:bar", "-c", "parser.polyglot_parsing_enabled=true")
+        .runBuckBuild("//java/bar:bar", "-c", "parser.polyglot_parsing_enabled_deprecated=true")
         .assertSuccess();
     workspace
-        .runBuckBuild("//java/bar:main", "-c", "parser.polyglot_parsing_enabled=true")
+        .runBuckBuild("//java/bar:main", "-c", "parser.polyglot_parsing_enabled_deprecated=true")
         .assertSuccess();
     workspace
-        .runBuckBuild("//java/bar:bar_test", "-c", "parser.polyglot_parsing_enabled=true")
+        .runBuckBuild(
+            "//java/bar:bar_test", "-c", "parser.polyglot_parsing_enabled_deprecated=true")
         .assertSuccess();
   }
 
@@ -392,7 +393,7 @@ public class ParserIntegrationTest {
         workspace.runBuckBuild(
             "cell//:ext.bzl",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.default_build_file_syntax=python_dsl");
     System.out.println(result.getStderr());
@@ -409,7 +410,7 @@ public class ParserIntegrationTest {
         .runBuckBuild(
             "b//:lib2.bzl",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.default_build_file_syntax=skylark")
         .assertSuccess();
@@ -424,7 +425,7 @@ public class ParserIntegrationTest {
         .runBuckBuild(
             "b//:lib2.bzl",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.default_build_file_syntax=python_dsl")
         .assertSuccess();
@@ -542,7 +543,7 @@ public class ParserIntegrationTest {
         workspace.runBuckBuild(
             "//skylark/implicit_in_build_file:main",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.disable_implicit_native_rules=true"),
         "BUCK:2:1: name 'java_library' is not defined");
@@ -550,7 +551,7 @@ public class ParserIntegrationTest {
         workspace.runBuckBuild(
             "//skylark/implicit_in_extension_bzl:main",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.disable_implicit_native_rules=true"),
         "name 'java_library' is not defined",
@@ -560,7 +561,7 @@ public class ParserIntegrationTest {
         workspace.runBuckBuild(
             "//skylark/native_in_build_file:main",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.disable_implicit_native_rules=true"),
         "BUCK\", line 2, column 7",
@@ -569,7 +570,7 @@ public class ParserIntegrationTest {
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.disable_implicit_native_rules=true")
         .assertSuccess();
@@ -578,7 +579,7 @@ public class ParserIntegrationTest {
         .runBuckBuild(
             "//skylark/implicit_in_build_file:main",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.disable_implicit_native_rules=false")
         .assertSuccess();
@@ -586,7 +587,7 @@ public class ParserIntegrationTest {
         workspace.runBuckBuild(
             "//skylark/implicit_in_extension_bzl:main",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.disable_implicit_native_rules=false"),
         "name 'java_library' is not defined",
@@ -596,7 +597,7 @@ public class ParserIntegrationTest {
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.disable_implicit_native_rules=false")
         .assertSuccess();
@@ -605,7 +606,7 @@ public class ParserIntegrationTest {
         .runBuckBuild(
             "//skylark/implicit_in_build_file:main",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.default_build_file_syntax=SKYLARK")
         .assertSuccess();
@@ -613,7 +614,7 @@ public class ParserIntegrationTest {
         workspace.runBuckBuild(
             "//skylark/implicit_in_extension_bzl:main",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.default_build_file_syntax=SKYLARK"),
         "name 'java_library' is not defined",
@@ -623,7 +624,7 @@ public class ParserIntegrationTest {
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",
             "-c",
-            "parser.polyglot_parsing_enabled=true",
+            "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
             "parser.default_build_file_syntax=SKYLARK")
         .assertSuccess();
@@ -640,7 +641,7 @@ public class ParserIntegrationTest {
             .runBuckBuild(
                 "cell//:lib.bzl",
                 "-c",
-                "parser.polyglot_parsing_enabled=true",
+                "parser.polyglot_parsing_enabled_deprecated=true",
                 "-c",
                 "parser.default_build_file_syntax=python_dsl",
                 "-c",
@@ -669,7 +670,7 @@ public class ParserIntegrationTest {
             .runBuckBuild(
                 "cell//:lib.bzl",
                 "-c",
-                "parser.polyglot_parsing_enabled=true",
+                "parser.polyglot_parsing_enabled_deprecated=true",
                 "-c",
                 "parser.default_build_file_syntax=python_dsl",
                 "-c",

@@ -3,7 +3,7 @@ cell = cell
 root = .
 
 [parser]
-polyglot_parsing_enabled=true
+polyglot_parsing_enabled_deprecated=true
 default_build_file_syntax=PYTHON_DSL
 user_defined_rules=ENABLED
 

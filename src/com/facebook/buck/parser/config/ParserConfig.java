@@ -289,7 +289,7 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    */
   @Value.Lazy
   public boolean isPolyglotParsingEnabled() {
-    return getDelegate().getBooleanValue("parser", "polyglot_parsing_enabled", false);
+    return getDelegate().getBooleanValue("parser", "polyglot_parsing_enabled_deprecated", false);
   }
 
   /**
