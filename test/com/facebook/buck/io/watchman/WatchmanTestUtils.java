@@ -40,12 +40,15 @@ public class WatchmanTestUtils {
       for (Map.Entry<AbsPath, ProjectWatch> e : watchman.getProjectWatches().entrySet()) {
         assertEquals(ImmutableSet.of(e.getKey()), watchman.getProjectWatches().keySet());
         // synchronize using clock request
+        int syncTimeoutSeconds = 10;
         Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> clockResult =
             client.queryWithTimeout(
                 Long.MAX_VALUE,
                 Long.MAX_VALUE,
-                WatchmanQuery.clock(e.getValue().getWatchRoot(), Optional.of(10000)));
-        assertTrue(clockResult.isLeft());
+                WatchmanQuery.clock(
+                    e.getValue().getWatchRoot(), Optional.of(syncTimeoutSeconds * 1000)));
+        assertTrue(
+            "sync+clock query timed out in " + syncTimeoutSeconds + "s", clockResult.isLeft());
       }
     }
   }
