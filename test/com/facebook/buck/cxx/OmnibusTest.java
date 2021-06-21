@@ -88,6 +88,7 @@ public class OmnibusTest {
                 ImmutableList.of(root),
                 ImmutableList.of(),
                 false,
+                Optional.empty(),
                 Optional.empty()));
     assertThat(
         libs.keySet(),
@@ -144,6 +145,7 @@ public class OmnibusTest {
                 ImmutableList.of(root),
                 ImmutableList.of(),
                 false,
+                Optional.empty(),
                 Optional.empty()));
     assertThat(
         libs.keySet(),
@@ -205,6 +207,7 @@ public class OmnibusTest {
                 ImmutableList.of(root),
                 ImmutableList.of(),
                 false,
+                Optional.empty(),
                 Optional.empty()));
     assertThat(
         libs.keySet(),
@@ -273,6 +276,7 @@ public class OmnibusTest {
                 ImmutableList.of(root),
                 ImmutableList.of(excludedRoot),
                 false,
+                Optional.empty(),
                 Optional.empty()));
     assertThat(
         libs.keySet(),
@@ -338,6 +342,7 @@ public class OmnibusTest {
                 ImmutableList.of(root),
                 ImmutableList.of(excludedRoot),
                 false,
+                Optional.empty(),
                 Optional.empty()));
     assertThat(
         libs.keySet(),
@@ -394,6 +399,7 @@ public class OmnibusTest {
                 ImmutableList.of(root),
                 ImmutableList.of(),
                 false,
+                Optional.empty(),
                 Optional.empty()));
     assertThat(
         libs.keySet(),
@@ -454,6 +460,7 @@ public class OmnibusTest {
                 ImmutableList.of(includedRoot),
                 ImmutableList.of(excludedRoot),
                 false,
+                Optional.empty(),
                 Optional.empty()));
     assertThat(libs.keySet(), Matchers.hasItem(excludedRoot.getBuildTarget().toString()));
   }
@@ -484,6 +491,7 @@ public class OmnibusTest {
                 ImmutableList.of(root),
                 ImmutableList.of(),
                 false,
+                Optional.empty(),
                 Optional.empty()));
     assertThat(
         Arg.stringify(

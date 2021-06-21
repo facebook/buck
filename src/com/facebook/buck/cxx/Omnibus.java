@@ -317,20 +317,18 @@ public class Omnibus {
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
-      ImmutableList<? extends Arg> extraLdflags) {
+      ImmutableList<? extends Arg> extraLdflags,
+      Optional<BuildTarget> configutedDummyOmnibus) {
     return ((CxxLink)
-            cxxBuckConfig
-                .getDummyOmnibusTarget()
+            configutedDummyOmnibus
                 .map(
                     dummyTarget ->
                         graphBuilder.requireRule(
-                            dummyTarget
-                                .configure(baseTarget.getTargetConfiguration())
-                                .withAppendedFlavors(
-                                    cxxPlatform.getFlavor(),
-                                    cxxPlatform.getSharedLibraryInterfaceParams().isPresent()
-                                        ? CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor()
-                                        : CxxLibraryDescription.Type.SHARED.getFlavor())))
+                            dummyTarget.withAppendedFlavors(
+                                cxxPlatform.getFlavor(),
+                                cxxPlatform.getSharedLibraryInterfaceParams().isPresent()
+                                    ? CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor()
+                                    : CxxLibraryDescription.Type.SHARED.getFlavor())))
                 .orElseGet(
                     () -> {
                       String omnibusSoname = getOmnibusSoname(cxxPlatform);
@@ -971,7 +969,8 @@ public class Omnibus {
       Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
       Iterable<? extends NativeLinkable> nativeLinkableRoots,
       boolean preferStrippedObjects,
-      Optional<Boolean> deduplicateRoots) {
+      Optional<Boolean> deduplicateRoots,
+      Optional<BuildTarget> configuredDummyOmnibus) {
 
     ImmutableOmnibusLibraries.Builder libs = ImmutableOmnibusLibraries.builder();
 
@@ -980,7 +979,7 @@ public class Omnibus {
     // Create an empty dummy omnibus library, to give the roots something to link against before
     // we have the actual omnibus library available.  Note that this requires that the linker
     // supports linking shared libraries with undefined references.
-    BuildTargetSourcePath dummyOmnibus =
+    SourcePath dummyOmnibus =
         requireDummyOmnibus(
             buildTarget,
             projectFilesystem,
@@ -989,7 +988,8 @@ public class Omnibus {
             cxxBuckConfig,
             downwardApiConfig,
             cxxPlatform,
-            extraLdflags);
+            extraLdflags,
+            configuredDummyOmnibus);
 
     // The root target names to use.
     Function<BuildTarget, BuildTarget> independentRootLinkTargetFn =
@@ -997,7 +997,12 @@ public class Omnibus {
     Function<BuildTarget, BuildTarget> rootLinkTargetFn =
         deduplicateRoots.orElse(cxxBuckConfig.getOmnibusDeduplicateRoots())
             ? getDeduplicatedRootLinkTargetFn(
-                graphBuilder, cxxPlatform, extraLdflags, spec, dummyOmnibus, preferStrippedObjects)
+                graphBuilder,
+                cxxPlatform,
+                extraLdflags,
+                spec,
+                (BuildTargetSourcePath) dummyOmnibus,
+                preferStrippedObjects)
             : independentRootLinkTargetFn;
 
     // Create rule for each of the root nodes, linking against the dummy omnibus library above.

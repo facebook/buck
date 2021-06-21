@@ -445,7 +445,8 @@ public class PythonBinaryDescription
                   args.getPreloadDeps(),
                   args.getCompile().orElse(false),
                   args.getPreferStrippedNativeObjects(),
-                  args.getDeduplicateMergedLinkRoots());
+                  args.getDeduplicateMergedLinkRoots(),
+                  args.getDummyOmnibus());
           return createPackageRule(
               cellRoots,
               buildTarget,
@@ -491,11 +492,8 @@ public class PythonBinaryDescription
     if (constructorArg.getNativeLinkStrategy().orElse(pythonBuckConfig.getNativeLinkStrategy())
         == NativeLinkStrategy.MERGED) {
       cxxBuckConfig
-          .getDummyOmnibusTarget()
-          .ifPresent(
-              target ->
-                  targetGraphOnlyDepsBuilder.add(
-                      target.configure(buildTarget.getTargetConfiguration())));
+          .getDummyOmnibusTarget(buildTarget.getTargetConfiguration())
+          .ifPresent(targetGraphOnlyDepsBuilder::add);
     }
   }
 
@@ -540,6 +538,8 @@ public class PythonBinaryDescription
     Optional<PythonBuckConfig.PackageStyle> getPackageStyle();
 
     ImmutableSet<BuildTarget> getPreloadDeps();
+
+    Optional<BuildTarget> getDummyOmnibus();
 
     ImmutableList<StringWithMacros> getLinkerFlags();
 

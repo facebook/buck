@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.Omnibus;
@@ -395,7 +396,8 @@ public class PythonUtil {
       ImmutableSet<BuildTarget> preloadDeps,
       boolean compile,
       boolean preferStrippedNativeObjects,
-      Optional<Boolean> deduplicateOmnibusRoots) {
+      Optional<Boolean> deduplicateOmnibusRoots,
+      Optional<BuildTarget> dummyOmnibus) {
 
     PythonPackageComponents.Builder allComponents = new PythonPackageComponents.Builder();
 
@@ -472,7 +474,10 @@ public class PythonUtil {
               roots.getIncludedRoots().values(),
               roots.getExcludedRoots().values(),
               preferStrippedNativeObjects,
-              deduplicateOmnibusRoots);
+              deduplicateOmnibusRoots,
+              Optionals.firstOf(
+                  dummyOmnibus,
+                  cxxBuckConfig.getDummyOmnibusTarget(buildTarget.getTargetConfiguration())));
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
       // Otherwise, add it as a native library.

@@ -413,6 +413,7 @@ public class LuaBinaryDescription
               roots.getIncludedRoots().values(),
               roots.getExcludedRoots().values(),
               false,
+              Optional.empty(),
               Optional.empty());
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
@@ -830,11 +831,8 @@ public class LuaBinaryDescription
     // Make sure we parse the dummy omnibus target if we're using omnibus linking.
     if (luaPlatform.getNativeLinkStrategy() == NativeLinkStrategy.MERGED) {
       cxxBuckConfig
-          .getDummyOmnibusTarget()
-          .ifPresent(
-              target ->
-                  targetGraphOnlyDepsBuilder.add(
-                      target.configure(buildTarget.getTargetConfiguration())));
+          .getDummyOmnibusTarget(buildTarget.getTargetConfiguration())
+          .ifPresent(targetGraphOnlyDepsBuilder::add);
     }
   }
 

@@ -433,7 +433,8 @@ public class PythonTestDescription
                   args.getPreloadDeps(),
                   args.getCompile().orElse(false),
                   args.getPreferStrippedNativeObjects(),
-                  args.getDeduplicateMergedLinkRoots());
+                  args.getDeduplicateMergedLinkRoots(),
+                  args.getDummyOmnibus());
 
           // Build the PEX using a python binary rule with the minimum dependencies.
           PythonBinary binary =
@@ -594,11 +595,8 @@ public class PythonTestDescription
     if (constructorArg.getNativeLinkStrategy().orElse(pythonBuckConfig.getNativeLinkStrategy())
         == NativeLinkStrategy.MERGED) {
       cxxBuckConfig
-          .getDummyOmnibusTarget()
-          .ifPresent(
-              target ->
-                  targetGraphOnlyDepsBuilder.add(
-                      target.configure(buildTarget.getTargetConfiguration())));
+          .getDummyOmnibusTarget(buildTarget.getTargetConfiguration())
+          .ifPresent(targetGraphOnlyDepsBuilder::add);
     }
   }
 
@@ -647,5 +645,7 @@ public class PythonTestDescription
     ImmutableSet<BuildTarget> getAdditionalCoverageTargets();
 
     Optional<Boolean> getCompile();
+
+    Optional<BuildTarget> getDummyOmnibus();
   }
 }

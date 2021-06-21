@@ -493,8 +493,8 @@ public class CxxBuckConfig {
   }
 
   /** @return a target to use to generate the dummy omnibus links used by omnibus linking. */
-  public Optional<UnconfiguredBuildTarget> getDummyOmnibusTarget() {
-    return delegate.getUnconfiguredBuildTarget(cxxSection, "dummy_omnibus_target");
+  public Optional<BuildTarget> getDummyOmnibusTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getBuildTarget(cxxSection, "dummy_omnibus_target", targetConfiguration);
   }
 
   /**

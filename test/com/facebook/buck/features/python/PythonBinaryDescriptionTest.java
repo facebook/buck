@@ -39,7 +39,6 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -1089,8 +1088,9 @@ public class PythonBinaryDescriptionTest {
     CxxBuckConfig cxxBuckConfig =
         new CxxBuckConfig(FakeBuckConfig.empty()) {
           @Override
-          public Optional<UnconfiguredBuildTarget> getDummyOmnibusTarget() {
-            return Optional.of(dummyOmnibus.getTarget().getUnconfiguredBuildTarget());
+          public Optional<BuildTarget> getDummyOmnibusTarget(
+              TargetConfiguration targetConfiguration) {
+            return Optional.of(dummyOmnibus.getTarget());
           }
         };
 
