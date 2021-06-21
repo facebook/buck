@@ -17,6 +17,7 @@
 package com.facebook.buck.util.trace.uploader;
 
 import com.facebook.buck.util.NamedTemporaryFile;
+import com.facebook.buck.util.ThrowingPrintWriter;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.facebook.buck.util.trace.uploader.types.TraceKind;
@@ -24,10 +25,10 @@ import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Throwables;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter; // NOPMD
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -90,17 +91,19 @@ public final class UploaderMain {
   }
 
   private int run() throws IOException {
-    try (PrintWriter logWriter = new PrintWriter(logFile)) { // NOPMD
+    try (ThrowingPrintWriter logWriter =
+        new ThrowingPrintWriter(Files.newOutputStream(logFile.toPath()))) {
       return upload(logWriter);
     }
   }
 
-  private int upload(PrintWriter logWriter) {
+  private int upload(ThrowingPrintWriter logWriter) throws IOException {
     Stopwatch timer = Stopwatch.createStarted();
     NamedTemporaryFile tempFile = null;
     try {
       logWriter.format("Build ID: %s%n", uuid);
       logWriter.format("Trace file: %s (%d) bytes%n", traceFilePath, Files.size(traceFilePath));
+      logWriter.flush();
 
       HttpUrl url =
           Objects.requireNonNull(HttpUrl.get(baseUrl))
@@ -119,12 +122,14 @@ public final class UploaderMain {
 
         logWriter.format("Compressed size: %d bytes%n", Files.size(fileToUpload));
         logWriter.println("Uploading compressed trace...");
+        logWriter.flush();
       } else {
         fileToUpload = traceFilePath;
         mediaType = "application/data";
         traceName = traceFilePath.getFileName().toString();
 
         logWriter.println("Uploading trace...");
+        logWriter.flush();
       }
 
       if (traceKind == TraceKind.BUILD_LOG) {
@@ -138,8 +143,8 @@ public final class UploaderMain {
       return upload(logWriter, url, fileToUpload, mediaType, traceName);
 
     } catch (Exception e) {
-      logWriter.format("%nFailed to upload trace; %s%n", e.getMessage());
-      e.printStackTrace(logWriter);
+      logWriter.format(
+          "%nFailed to upload trace; %s%n%s", e.getMessage(), Throwables.getStackTraceAsString(e));
       return ERROR_EXIT_CODE;
     } finally {
       closeTempFile(logWriter, tempFile);
@@ -148,9 +153,14 @@ public final class UploaderMain {
   }
 
   private int upload(
-      PrintWriter logWriter, HttpUrl url, Path fileToUpload, String mediaType, String traceName)
+      ThrowingPrintWriter logWriter,
+      HttpUrl url,
+      Path fileToUpload,
+      String mediaType,
+      String traceName)
       throws IOException {
     logWriter.format("Upload URL: %s%n", url);
+    logWriter.flush();
     Request request =
         new Request.Builder()
             .url(url)
@@ -186,13 +196,15 @@ public final class UploaderMain {
     }
   }
 
-  private void closeTempFile(PrintWriter logWriter, NamedTemporaryFile tempFile) {
+  private void closeTempFile(ThrowingPrintWriter logWriter, NamedTemporaryFile tempFile)
+      throws IOException {
     if (tempFile != null) {
       try {
         tempFile.close();
       } catch (IOException e) {
-        logWriter.format("Failed to clean up temp file: %s%n", e.getMessage());
-        e.printStackTrace(logWriter);
+        logWriter.format(
+            "Failed to clean up temp file: %s%n%s",
+            e.getMessage(), Throwables.getStackTraceAsString(e));
       }
     }
   }

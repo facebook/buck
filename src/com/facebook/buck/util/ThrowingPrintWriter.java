@@ -88,6 +88,6 @@ public class ThrowingPrintWriter extends OutputStreamWriter {
   }
 
   public void println() throws IOException {
-    write("\n");
+    write(System.lineSeparator());
   }
 }
