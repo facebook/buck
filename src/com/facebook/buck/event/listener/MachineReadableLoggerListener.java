@@ -98,7 +98,6 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private boolean outputStreamClosed;
 
   private final ChromeTraceBuckConfig config;
-  private final Path logFilePath;
   private final Path logDirectoryPath;
   private final BuildId buildId;
   private final TaskManagerCommandScope managerScope;
@@ -131,7 +130,6 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       ExecutorService executor,
       ImmutableSet<ArtifactCacheMode> cacheModes,
       ChromeTraceBuckConfig config,
-      Path logFilePath,
       Path logDirectoryPath,
       BuildId buildId,
       TaskManagerCommandScope managerScope,
@@ -142,7 +140,6 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     this.filesystem = filesystem;
     this.executor = executor;
     this.config = config;
-    this.logFilePath = logFilePath;
     this.logDirectoryPath = logDirectoryPath;
     this.buildId = buildId;
     this.managerScope = managerScope;
@@ -417,7 +414,6 @@ public class MachineReadableLoggerListener implements BuckEventListener {
                   ? config.getTraceUploadUri()
                   : Optional.empty(),
               logDirectoryPath,
-              logFilePath,
               buildId);
 
       BackgroundTask<MachineReadableLoggerListenerCloseArgs> task =
@@ -523,8 +519,6 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     public abstract Optional<URI> getTraceUploadURI();
 
     public abstract Path getLogDirectoryPath();
-
-    public abstract Path getLogFilePath();
 
     public abstract BuildId getBuildId();
   }

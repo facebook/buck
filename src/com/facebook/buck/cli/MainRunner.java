@@ -2385,7 +2385,6 @@ public final class MainRunner {
                     new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
                 artifactCacheConfig.getArtifactCacheModes(),
                 chromeTraceBuckConfig,
-                invocationInfo.getLogFilePath(),
                 invocationInfo.getLogDirectoryPath(),
                 invocationInfo.getBuildId(),
                 managerScope,
