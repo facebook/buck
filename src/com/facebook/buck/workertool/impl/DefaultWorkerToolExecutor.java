@@ -127,6 +127,12 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     this.launchedProcess = pair.getFirst();
     this.outputStream = pair.getSecond();
 
+    checkState(launchedProcess.isAlive(), "Worker tool process has to be alive.");
+    checkState(
+        !namedPipeWriter.isClosed(),
+        "Named pipe %s used for communication with worker tool has to be open.",
+        namedPipeName);
+
     this.waitForLaunchedProcessFuture =
         WORKER_POO_THREAD_POOL.submit(
             () -> {
