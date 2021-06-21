@@ -23,10 +23,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UserFlavor;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.pathformat.PathFormatter;
-import com.facebook.buck.util.types.Either;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -118,9 +115,8 @@ public class JsFlavors {
     return InternalFlavor.of(fileFlavorPrefix + safeFileName + "-" + hash);
   }
 
-  public static Optional<Either<SourcePath, Pair<SourcePath, String>>> extractSourcePath(
-      ImmutableBiMap<Flavor, Either<SourcePath, Pair<SourcePath, String>>> flavorsToSources,
-      Stream<Flavor> flavors) {
+  public static Optional<JsSourcePath> extractSourcePath(
+      ImmutableBiMap<Flavor, JsSourcePath> flavorsToSources, Stream<Flavor> flavors) {
     return flavors.filter(JsFlavors::isFileFlavor).findFirst().map(flavorsToSources::get);
   }
 

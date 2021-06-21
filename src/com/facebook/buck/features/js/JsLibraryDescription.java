@@ -24,26 +24,22 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
@@ -61,13 +57,13 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
 public class JsLibraryDescription
     implements DescriptionWithTargetGraph<JsLibraryDescriptionArg>,
@@ -79,9 +75,7 @@ public class JsLibraryDescription
           JsFlavors.PLATFORM_DOMAIN,
           JsFlavors.OPTIMIZATION_DOMAIN,
           JsFlavors.TRANSFORM_PROFILE_DOMAIN);
-  private final Cache<
-          ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>>,
-          ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>>
+  private final Cache<ImmutableSet<JsSourcePath>, ImmutableBiMap<JsSourcePath, Flavor>>
       sourcesToFlavorsCache =
           CacheBuilder.newBuilder()
               .weakKeys()
@@ -112,16 +106,16 @@ public class JsLibraryDescription
       JsLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
 
-    ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors;
+    ImmutableBiMap<JsSourcePath, Flavor> sourcesToFlavors;
     try {
       sourcesToFlavors =
           sourcesToFlavorsCache.get(
-              args.getSrcs(),
-              () -> mapSourcesToFlavors(graphBuilder.getSourcePathResolver(), args.getSrcs()));
+              args.getFlatSrcs(),
+              () -> mapSourcesToFlavors(graphBuilder.getSourcePathResolver(), args.getFlatSrcs()));
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }
-    Optional<Either<SourcePath, Pair<SourcePath, String>>> file =
+    Optional<JsSourcePath> file =
         JsFlavors.extractSourcePath(
             sourcesToFlavors.inverse(), buildTarget.getFlavors().getSet().stream());
 
@@ -157,7 +151,7 @@ public class JsLibraryDescription
     } else {
       if (buildTarget.getFlavors().contains(JsFlavors.LIBRARY_FILES)) {
         return new LibraryFilesBuilder(graphBuilder, buildTarget, sourcesToFlavors, withDownwardApi)
-            .setSources(isMissingTransformProfile ? ImmutableSet.of() : args.getSrcs())
+            .setSources(isMissingTransformProfile ? ImmutableSet.of() : args.getFlatSrcs())
             .setForbidBuildingReason(
                 isMissingTransformProfile
                     ? Optional.of("missing transform profile")
@@ -210,7 +204,15 @@ public class JsLibraryDescription
   @RuleArg
   interface AbstractJsLibraryDescriptionArg
       extends BuildRuleArg, HasDepsQuery, HasExtraJson, HasTests {
+    // Sources in input format. Do not use this directly - use getFlatSrcs.
     ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> getSrcs();
+
+    // Sources in a simplified "flat" format for internal processing.
+    // TODO(moti): Use a coercer / other mechanism to achieve the same thing?
+    @Value.Lazy
+    default ImmutableSet<JsSourcePath> getFlatSrcs() {
+      return getSrcs().stream().map(JsSourcePath::of).collect(ImmutableSet.toImmutableSet());
+    }
 
     BuildTarget getWorker();
 
@@ -230,8 +232,7 @@ public class JsLibraryDescription
 
     private final ActionGraphBuilder graphBuilder;
     private final BuildTarget baseTarget;
-    private final ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>
-        sourcesToFlavors;
+    private final ImmutableBiMap<JsSourcePath, Flavor> sourcesToFlavors;
     private final BuildTarget fileBaseTarget;
     private final boolean withDownwardApi;
     private Optional<String> forbidBuildingReason = Optional.empty();
@@ -241,7 +242,7 @@ public class JsLibraryDescription
     public LibraryFilesBuilder(
         ActionGraphBuilder graphBuilder,
         BuildTarget baseTarget,
-        ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors,
+        ImmutableBiMap<JsSourcePath, Flavor> sourcesToFlavors,
         boolean withDownwardApi) {
       this.graphBuilder = graphBuilder;
       this.baseTarget = baseTarget;
@@ -262,8 +263,7 @@ public class JsLibraryDescription
       this.withDownwardApi = withDownwardApi;
     }
 
-    private LibraryFilesBuilder setSources(
-        ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> sources) {
+    private LibraryFilesBuilder setSources(ImmutableSet<JsSourcePath> sources) {
       this.jsFileRules = ImmutableList.copyOf(sources.stream().map(this::requireJsFile).iterator());
       return this;
     }
@@ -273,7 +273,7 @@ public class JsLibraryDescription
       return this;
     }
 
-    private JsFile requireJsFile(Either<SourcePath, Pair<SourcePath, String>> file) {
+    private JsFile requireJsFile(JsSourcePath file) {
       Flavor fileFlavor = sourcesToFlavors.get(file);
       BuildTarget target = fileBaseTarget.withAppendedFlavors(fileFlavor);
       graphBuilder.requireRule(target);
@@ -370,24 +370,9 @@ public class JsLibraryDescription
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       A args,
-      Either<SourcePath, Pair<SourcePath, String>> source,
+      JsSourcePath source,
       WorkerTool worker,
       boolean withDownwardApi) {
-    SourcePath sourcePath = source.transform(x -> x, Pair::getFirst);
-    Optional<String> subPath = Optional.ofNullable(source.transform(x -> null, Pair::getSecond));
-
-    Optional<Path> virtualPath =
-        args.getBasePath()
-            .map(
-                basePath ->
-                    changePathPrefix(
-                            sourcePath,
-                            basePath,
-                            projectFilesystem,
-                            graphBuilder.getSourcePathResolver(),
-                            cellRoots,
-                            buildTarget.getUnflavoredBuildTarget())
-                        .resolve(subPath.orElse("")));
 
     return JsFile.create(
         buildTarget,
@@ -395,57 +380,24 @@ public class JsLibraryDescription
         graphBuilder,
         JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
         worker,
-        sourcePath,
-        subPath,
-        virtualPath,
+        source,
+        args.getBasePath(),
         withDownwardApi,
         buildTarget.getFlavors().contains(JsFlavors.RELEASE));
   }
 
-  private static ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>
-      mapSourcesToFlavors(
-          SourcePathResolverAdapter sourcePathResolverAdapter,
-          ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> sources) {
+  private static ImmutableBiMap<JsSourcePath, Flavor> mapSourcesToFlavors(
+      SourcePathResolverAdapter sourcePathResolverAdapter, ImmutableSet<JsSourcePath> sources) {
 
-    ImmutableBiMap.Builder<Either<SourcePath, Pair<SourcePath, String>>, Flavor> builder =
-        ImmutableBiMap.builder();
-    for (Either<SourcePath, Pair<SourcePath, String>> source : sources) {
+    ImmutableBiMap.Builder<JsSourcePath, Flavor> builder = ImmutableBiMap.builder();
+    for (JsSourcePath source : sources) {
       RelPath relativePath =
-          source.transform(
-              sourcePathResolverAdapter::getCellUnsafeRelPath,
-              pair -> RelPath.get(pair.getSecond()));
+          source
+              .getInnerPath()
+              .map(RelPath::get)
+              .orElseGet(() -> sourcePathResolverAdapter.getCellUnsafeRelPath(source.getPath()));
       builder.put(source, JsFlavors.fileFlavorForSourcePath(relativePath));
     }
     return builder.build();
-  }
-
-  private static Path changePathPrefix(
-      SourcePath sourcePath,
-      String basePath,
-      ProjectFilesystem projectFilesystem,
-      SourcePathResolverAdapter sourcePathResolverAdapter,
-      CellPathResolver cellPathResolver,
-      UnflavoredBuildTarget target) {
-    AbsPath directoryOfBuildFile =
-        cellPathResolver.resolveCellRelativePath(target.getCellRelativeBasePath());
-    AbsPath transplantTo = MorePaths.normalize(directoryOfBuildFile.resolve(basePath));
-    AbsPath absolutePath =
-        PathSourcePath.from(sourcePath)
-            .map(
-                pathSourcePath -> // for sub paths, replace the leading directory with the base path
-                transplantTo.resolve(
-                        MorePaths.relativize(
-                            directoryOfBuildFile,
-                            sourcePathResolverAdapter.getAbsolutePath(sourcePath))))
-            .orElse(transplantTo); // build target output paths are replaced completely
-
-    return projectFilesystem
-        .getPathRelativeToProjectRoot(absolutePath.getPath())
-        .orElseThrow(
-            () ->
-                new HumanReadableException(
-                    "%s: Using '%s' as base path for '%s' would move the file "
-                        + "out of the project root.",
-                    target, basePath, sourcePathResolverAdapter.getCellUnsafeRelPath(sourcePath)));
   }
 }
