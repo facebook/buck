@@ -4,7 +4,10 @@ standard_java_test(
     name = "workertool_impl",
     deps = [
         "//src/com/facebook/buck/io/namedpipes:namedpipes",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/types:types",
+        "//src/com/facebook/buck/worker:worker_pool",
+        "//src/com/facebook/buck/workertool:workertool",
         "//src/com/facebook/buck/workertool/impl:impl",
         "//third-party/java/junit:junit",
     ],

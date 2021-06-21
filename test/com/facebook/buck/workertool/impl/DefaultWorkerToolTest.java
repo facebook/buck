@@ -16,7 +16,6 @@
 
 package com.facebook.buck.workertool.impl;
 
-import static com.facebook.buck.workertool.impl.DefaultWorkerToolUtils.runWithTimeout;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
@@ -24,29 +23,32 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 import static org.junit.Assert.assertThrows;
 
-import com.facebook.buck.io.namedpipes.NamedPipeFactory;
-import com.facebook.buck.io.namedpipes.NamedPipeWriter;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.types.Unit;
-import java.io.IOException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 
-public class DefaultWorkerToolUtilsTest {
+public class DefaultWorkerToolTest {
 
   private static final int TIMEOUT = 100;
   private static final TimeUnit TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
 
-  private static final String TEST_EXECUTOR_NAME =
-      DefaultWorkerToolUtilsTest.class.getSimpleName() + "_executor";
+  private static final ExecutorService TEST_EXECUTOR =
+      MostExecutors.newSingleThreadExecutor(
+          DefaultWorkerToolTest.class.getSimpleName() + "_executor");
+
+  @Rule public Timeout globalTestTimeout = Timeout.seconds(10);
 
   @Test
   public void runWithTimeoutSuccessful() throws ExecutionException {
-    Unit result = runWithTimeout(() -> Unit.UNIT, TEST_EXECUTOR_NAME, TIMEOUT, TIMEOUT_UNIT);
+    Unit result = runWithTimeout(() -> Unit.UNIT, TIMEOUT);
     assertThat(result, equalTo(Unit.UNIT));
   }
 
@@ -61,9 +63,7 @@ public class DefaultWorkerToolUtilsTest {
                       TIMEOUT_UNIT.sleep(TIMEOUT + 10);
                       return Unit.UNIT;
                     },
-                    TEST_EXECUTOR_NAME,
-                    TIMEOUT,
-                    TIMEOUT_UNIT));
+                    TIMEOUT));
 
     Throwable cause = executionException.getCause();
     assertThat(cause, notNullValue());
@@ -82,9 +82,7 @@ public class DefaultWorkerToolUtilsTest {
                     () -> {
                       throw new IllegalStateException("something went wrong");
                     },
-                    TEST_EXECUTOR_NAME,
-                    TIMEOUT,
-                    TIMEOUT_UNIT));
+                    TIMEOUT));
 
     Throwable cause = executionException.getCause();
     assertThat(cause, notNullValue());
@@ -103,9 +101,7 @@ public class DefaultWorkerToolUtilsTest {
                       TIMEOUT_UNIT.sleep(TIMEOUT);
                       throw new InterruptedException("test interrupted exception");
                     },
-                    TEST_EXECUTOR_NAME,
-                    TIMEOUT + 10,
-                    TIMEOUT_UNIT));
+                    TIMEOUT + 10));
 
     Throwable cause = executionException.getCause();
     assertThat(cause, notNullValue());
@@ -115,63 +111,32 @@ public class DefaultWorkerToolUtilsTest {
 
   @Test
   public void resourcesAreClosedForATimedOutOperation() {
-    ExecutorService executor = Executors.newSingleThreadExecutor();
-    Future<Unit> future =
-        executor.submit(
-            () -> {
-              // runs 3 times longer than timeout
-              TIMEOUT_UNIT.sleep(3 * TIMEOUT);
-              return Unit.UNIT;
-            });
-
     ExecutionException executionException =
         assertThrows(
             ExecutionException.class,
-            () -> runWithTimeout(future, executor, TIMEOUT, TIMEOUT_UNIT));
+            () ->
+                runWithTimeout(
+                    () -> {
+                      // runs 3 times longer than timeout
+                      TIMEOUT_UNIT.sleep(3 * TIMEOUT);
+                      return Unit.UNIT;
+                    },
+                    TIMEOUT));
 
     Throwable cause = executionException.getCause();
     assertThat(cause, notNullValue());
     assertThat(cause, instanceOf(TimeoutException.class));
     assertThat(
         executionException.getMessage(), equalTo("Timeout of " + TIMEOUT + "ms has been exceeded"));
-
-    assertThat(future.isDone(), is(true));
-    assertThat(executor.isShutdown(), is(true));
   }
 
-  @Test
-  public void resourcesAreClosedForATimedOutOperationForNamedPipesOperation() throws IOException {
-    ExecutionException executionException;
-    ExecutorService executor;
-    Future<Unit> future;
-
-    try (NamedPipeWriter namedPipeWriter = NamedPipeFactory.getFactory().createAsWriter()) {
-
-      executor = Executors.newSingleThreadExecutor();
-      future =
-          executor.submit(
-              () -> {
-                // blocks on windows
-                namedPipeWriter.getOutputStream();
-                // blocks on posix
-                // runs 3 times longer than timeout
-                TIMEOUT_UNIT.sleep(3 * TIMEOUT);
-                return Unit.UNIT;
-              });
-
-      executionException =
-          assertThrows(
-              ExecutionException.class,
-              () -> runWithTimeout(future, executor, TIMEOUT, TIMEOUT_UNIT));
+  static <T> T runWithTimeout(Callable<T> callable, long timeout) throws ExecutionException {
+    Future<T> future = TEST_EXECUTOR.submit(callable);
+    try {
+      return DefaultWorkerToolExecutor.getFutureResult(
+          future, timeout, DefaultWorkerToolTest.TIMEOUT_UNIT);
+    } finally {
+      assertThat(future.isDone(), is(true));
     }
-
-    Throwable cause = executionException.getCause();
-    assertThat(cause, notNullValue());
-    assertThat(cause, instanceOf(TimeoutException.class));
-    assertThat(
-        executionException.getMessage(), equalTo("Timeout of " + TIMEOUT + "ms has been exceeded"));
-
-    assertThat(future.isDone(), is(true));
-    assertThat(executor.isShutdown(), is(true));
   }
 }

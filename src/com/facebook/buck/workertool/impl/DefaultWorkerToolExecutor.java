@@ -35,7 +35,9 @@ import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.workertool.WorkerToolExecutor;
 import com.facebook.buck.workertool.impl.request.ExecutingAction;
 import com.facebook.buck.workertool.impl.request.ExecutionRequest;
@@ -58,9 +60,12 @@ import java.io.OutputStream;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -70,10 +75,25 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
 
   private static final Logger LOG = Logger.get(DefaultWorkerToolExecutor.class);
 
+  private static final ThreadPoolExecutor WORKER_POO_THREAD_POOL =
+      new ThreadPoolExecutor(
+          0,
+          Integer.MAX_VALUE,
+          1,
+          TimeUnit.SECONDS,
+          new SynchronousQueue<>(),
+          new MostExecutors.NamedThreadFactory("WorkerToolHelper"));
+
   private static final AtomicInteger COUNTER = new AtomicInteger();
 
   private static final long WAIT_FOR_PROCESS_SHUTDOWN_TIMEOUT = 2;
   private static final TimeUnit WAIT_FOR_PROCESS_SHUTDOWN_TIMEOUT_UNIT = TimeUnit.SECONDS;
+
+  private static final long LAUNCH_PROCESS_TIMEOUT = 10;
+  private static final TimeUnit LAUNCH_PROCESS_TIMEOUT_UNIT = TimeUnit.SECONDS;
+
+  private static final long OPEN_OUTPUT_STREAM_TIMEOUT = 30;
+  private static final TimeUnit OPEN_OUTPUT_STREAM_TIMEOUT_UNIT = TimeUnit.SECONDS;
 
   private static final NamedPipeFactory NAMED_PIPE_FACTORY = NamedPipeFactory.getFactory();
 
@@ -85,7 +105,6 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private final DownwardApiLaunchedProcess launchedProcess;
   private final OutputStream outputStream;
 
-  private final ExecutorService workerToolProcessMonitorExecutor;
   private final Future<?> waitForLaunchedProcessFuture;
 
   private final Map<ActionId, ExecutionRequest<?>> executionRequests = new ConcurrentHashMap<>();
@@ -103,13 +122,13 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     this.namedPipeWriter = NAMED_PIPE_FACTORY.createAsWriter();
     String namedPipeName = namedPipeWriter.getName();
 
-    this.launchedProcess = launchProcess(startWorkerToolCommand, envs, namedPipeName);
-    this.outputStream = openStream();
+    Pair<DownwardApiLaunchedProcess, OutputStream> pair =
+        launchProcessAndOpenOutputStream(startWorkerToolCommand, envs, namedPipeName);
+    this.launchedProcess = pair.getFirst();
+    this.outputStream = pair.getSecond();
 
-    this.workerToolProcessMonitorExecutor =
-        MostExecutors.newSingleThreadExecutor("WorkerToolProcessMonitor_" + workerId);
     this.waitForLaunchedProcessFuture =
-        workerToolProcessMonitorExecutor.submit(
+        WORKER_POO_THREAD_POOL.submit(
             () -> {
               boolean finishedSuccessfully =
                   waitTillLaunchedProcessFinish(WaitOption.INDEFINITELY)
@@ -125,6 +144,53 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
                 closeNamedPipe();
               }
             });
+  }
+
+  private Pair<DownwardApiLaunchedProcess, OutputStream> launchProcessAndOpenOutputStream(
+      ImmutableList<String> startWorkerToolCommand,
+      ImmutableMap<String, String> envs,
+      String namedPipeName)
+      throws IOException {
+
+    DownwardApiLaunchedProcess process;
+    OutputStream stream;
+
+    // open stream
+    Future<OutputStream> streamFuture = WORKER_POO_THREAD_POOL.submit(this::openStream);
+    // launch process
+    Future<DownwardApiLaunchedProcess> processFuture =
+        WORKER_POO_THREAD_POOL.submit(
+            () -> launchProcess(startWorkerToolCommand, envs, namedPipeName));
+
+    try {
+      process = getFutureResult(processFuture, LAUNCH_PROCESS_TIMEOUT, LAUNCH_PROCESS_TIMEOUT_UNIT);
+    } catch (ExecutionException e) {
+      throw new IOException(e.getCause());
+    }
+
+    try {
+      stream =
+          getFutureResult(
+              streamFuture, OPEN_OUTPUT_STREAM_TIMEOUT, OPEN_OUTPUT_STREAM_TIMEOUT_UNIT);
+    } catch (ExecutionException e) {
+      throw new IOException(e.getCause());
+    }
+
+    return new Pair<>(process, stream);
+  }
+
+  static <T> T getFutureResult(Future<T> future, long timeout, TimeUnit timeoutUnit)
+      throws ExecutionException {
+    try {
+      return future.get(timeout, timeoutUnit);
+    } catch (TimeoutException e) {
+      future.cancel(true);
+      throw new ExecutionException(
+          "Timeout of " + timeoutUnit.toMillis(timeout) + "ms has been exceeded", e);
+    } catch (InterruptedException e) {
+      Threads.interruptCurrentThread();
+      throw new ExecutionException("Thread has been interrupted", e);
+    }
   }
 
   private DownwardApiLaunchedProcess launchProcess(
@@ -157,8 +223,14 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     OutputStream outputStream;
     boolean streamOpened = false;
     try {
-      outputStream = DefaultWorkerToolUtils.openStreamFromNamedPipe(namedPipeWriter, workerId);
+      outputStream = namedPipeWriter.getOutputStream();
       streamOpened = true;
+    } catch (IOException e) {
+      throw new IOException(
+          String.format(
+              "Cannot open an output stream for named pipe: %s. Worker id: %s",
+              namedPipeWriter.getName(), workerId),
+          e);
     } finally {
       if (!streamOpened) {
         closeNamedPipe();
@@ -349,7 +421,6 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     if (waitForLaunchedProcessFuture != null && !waitForLaunchedProcessFuture.isDone()) {
       waitForLaunchedProcessFuture.cancel(true);
     }
-    DefaultWorkerToolUtils.shutdownExecutor(workerToolProcessMonitorExecutor);
   }
 
   private enum WaitOption {
