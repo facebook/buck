@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 /** TaskAction implementation for the close() logic in {@link ChromeTraceBuildListener}. */
 class ChromeTraceBuildListenerCloseAction
@@ -66,27 +67,33 @@ class ChromeTraceBuildListenerCloseAction
     public abstract ProjectFilesystem getProjectFilesystem();
   }
 
-  static void uploadTraceIfConfigured(
+  static Optional<Process> uploadTraceIfConfigured(
       BuildId buildId,
       ChromeTraceBuckConfig config,
       ProjectFilesystem projectFilesystem,
       Path tracePath,
       Path logDirectoryPath) {
-    Optional<URI> traceUploadUri = config.getTraceUploadUriIfEnabled();
-    if (!traceUploadUri.isPresent()) {
-      return;
+    return config
+        .getTraceUploadUriIfEnabled()
+        .map(
+            uri -> {
+              Path fullPath = projectFilesystem.resolve(tracePath);
+              Path logFile =
+                  projectFilesystem.resolve(logDirectoryPath.resolve("upload-build-trace.log"));
+              return launchUploader(buildId, uri, fullPath, logFile);
+            });
+  }
+
+  @Nullable
+  private static Process launchUploader(
+      BuildId buildId, URI traceUploadUri, Path fullPath, Path logFile) {
+    try {
+      return UploaderLauncher.uploadInBackground(
+          buildId, fullPath, TraceKind.BUILD_TRACE, traceUploadUri, logFile, CompressionType.GZIP);
+    } catch (IOException e) {
+      LOG.warn(e, "Can't launch uploader process");
     }
-
-    Path fullPath = projectFilesystem.resolve(tracePath);
-    Path logFile = projectFilesystem.resolve(logDirectoryPath.resolve("upload-build-trace.log"));
-
-    UploaderLauncher.uploadInBackground(
-        buildId,
-        fullPath,
-        TraceKind.BUILD_TRACE,
-        traceUploadUri.get(),
-        logFile,
-        CompressionType.GZIP);
+    return null;
   }
 
   @VisibleForTesting
@@ -115,36 +122,41 @@ class ChromeTraceBuildListenerCloseAction
   }
 
   @Override
-  public void run(ChromeTraceBuildListenerCloseArgs args) throws IOException {
+  public void run(ChromeTraceBuildListenerCloseArgs args) throws IOException, InterruptedException {
     LOG.debug("Writing Chrome trace to %s", args.getTracePath());
-    args.getOutputExecutor().shutdown();
+    ExecutorService outputExecutor = args.getOutputExecutor();
+    outputExecutor.shutdown();
     try {
-      if (!args.getOutputExecutor().awaitTermination(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+      if (!outputExecutor.awaitTermination(TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
         LOG.warn("Failed to log buck trace %s.  Trace might be corrupt", args.getTracePath());
       }
     } catch (InterruptedException e) {
       Threads.interruptCurrentThread();
     }
 
-    args.getChromeTraceWriter().writeEnd();
-    args.getChromeTraceWriter().close();
+    ChromeTraceWriter chromeTraceWriter = args.getChromeTraceWriter();
+    chromeTraceWriter.writeEnd();
+    chromeTraceWriter.close();
     args.getTraceStream().close();
 
-    uploadTraceIfConfigured(
-        args.getBuildId(),
-        args.getConfig(),
-        args.getProjectFilesystem(),
-        args.getTracePath(),
-        args.getLogDirectoryPath());
+    ProjectFilesystem projectFilesystem = args.getProjectFilesystem();
+    ChromeTraceBuckConfig config = args.getConfig();
+    Optional<Process> uploadProcess =
+        uploadTraceIfConfigured(
+            args.getBuildId(),
+            config,
+            projectFilesystem,
+            args.getTracePath(),
+            args.getLogDirectoryPath());
 
-    String symlinkName = args.getConfig().hasToCompressTraces() ? "build.trace.gz" : "build.trace";
-    Path symlinkPath = args.getProjectFilesystem().getBuckPaths().getLogDir().resolve(symlinkName);
-    args.getProjectFilesystem()
-        .createSymLink(
-            args.getProjectFilesystem().resolve(symlinkPath),
-            args.getProjectFilesystem().resolve(args.getTracePath()),
-            true);
+    String symlinkName = config.hasToCompressTraces() ? "build.trace.gz" : "build.trace";
+    Path symlinkPath = projectFilesystem.getBuckPaths().getLogDir().resolve(symlinkName);
+    projectFilesystem.createSymLink(
+        projectFilesystem.resolve(symlinkPath),
+        projectFilesystem.resolve(args.getTracePath()),
+        true);
 
-    deleteOldTraces(args.getProjectFilesystem(), args.getLogDirectoryPath(), args.getConfig());
+    deleteOldTraces(projectFilesystem, args.getLogDirectoryPath(), config);
+    UploaderLauncher.maybeWaitForProcessToFinish(uploadProcess);
   }
 }

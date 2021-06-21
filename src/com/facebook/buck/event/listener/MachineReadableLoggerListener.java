@@ -472,23 +472,17 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       implements TaskAction<MachineReadableLoggerListenerCloseArgs> {
 
     @Override
-    public void run(MachineReadableLoggerListenerCloseArgs args) {
-      args.getExecutor().shutdown();
+    public void run(MachineReadableLoggerListenerCloseArgs args) throws InterruptedException {
+      ExecutorService executor = args.getExecutor();
+      executor.shutdown();
 
-      if (args.getTraceUploadURI().isPresent()) {
-        UploaderLauncher.uploadInBackground(
-            args.getBuildId(),
-            args.getMachineReadableLogFilePath(),
-            TraceKind.MACHINE_READABLE_LOG,
-            args.getTraceUploadURI().get(),
-            args.getLogDirectoryPath().resolve("upload-machine-readable-log.log"),
-            CompressionType.GZIP);
-      }
+      Optional<Process> uploadProcess =
+          args.getTraceUploadURI().map(uri -> launchUploader(args, uri));
 
       // Allow SHUTDOWN_TIMEOUT_SECONDS seconds for already scheduled writeToLog calls
       // to complete.
       try {
-        if (!args.getExecutor().awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+        if (!executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
           String error =
               "Machine readable log failed to complete all jobs within timeout during shutdown";
           LOG.error(error);
@@ -496,6 +490,25 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
+
+      UploaderLauncher.maybeWaitForProcessToFinish(uploadProcess);
+    }
+
+    @Nullable
+    private Process launchUploader(
+        MachineReadableLoggerListenerCloseArgs args, URI traceUploadURI) {
+      try {
+        return UploaderLauncher.uploadInBackground(
+            args.getBuildId(),
+            args.getMachineReadableLogFilePath(),
+            TraceKind.MACHINE_READABLE_LOG,
+            traceUploadURI,
+            args.getLogDirectoryPath().resolve("upload-machine-readable-log.log"),
+            CompressionType.GZIP);
+      } catch (IOException e) {
+        LOG.warn(e, "Can't launch uploader process");
+      }
+      return null;
     }
   }
 

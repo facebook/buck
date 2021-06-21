@@ -22,10 +22,11 @@ import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.facebook.buck.util.trace.uploader.types.TraceKind;
-import com.google.common.base.Strings;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Optional;
 
 /** Utility to upload chrome trace in background. */
 public class UploaderLauncher {
@@ -36,46 +37,62 @@ public class UploaderLauncher {
       "com.facebook.buck.util.trace.uploader.UploaderMain";
 
   /** Upload chrome trace in background process which runs even after current process dies. */
-  public static void uploadInBackground(
+  public static Process uploadInBackground(
       BuildId buildId,
       Path traceFilePath,
       TraceKind traceKind,
       URI traceUploadUri,
       Path logFile,
-      CompressionType compressionType) {
+      CompressionType compressionType)
+      throws IOException {
 
     LOG.debug("Uploading build trace in the background. Upload will log to %s", logFile);
 
-    String buckClasspath = BuckClasspath.getBuckClasspathFromEnvVarOrNull();
-    if (Strings.isNullOrEmpty(buckClasspath)) {
-      LOG.error(
-          BuckClasspath.ENV_VAR_NAME + " env var is not set. Will not upload the trace file.");
-      return;
+    String buckClasspath =
+        Objects.requireNonNull(
+            BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
+            BuckClasspath.ENV_VAR_NAME + " env variable is not set");
+
+    String[] args = {
+      JavaRuntimeUtils.getBucksJavaBinCommand(),
+      "-cp",
+      buckClasspath,
+      UPLOADER_MAIN_CLASS,
+      "--buildId",
+      buildId.toString(),
+      "--traceFilePath",
+      traceFilePath.toString(),
+      "--traceKind",
+      traceKind.name(),
+      "--baseUrl",
+      traceUploadUri.toString(),
+      "--log",
+      logFile.toString(),
+      "--compressionType",
+      compressionType.name(),
+    };
+
+    return Runtime.getRuntime().exec(args);
+  }
+
+  /** Waits for process to finish if process is present */
+  public static void maybeWaitForProcessToFinish(Optional<Process> uploadProcess)
+      throws InterruptedException {
+    if (uploadProcess.isPresent()) {
+      waitForProcessToFinish(uploadProcess.get());
     }
+  }
 
+  /** Waits for process to finish */
+  public static void waitForProcessToFinish(Process process) throws InterruptedException {
     try {
-      String[] args = {
-        JavaRuntimeUtils.getBucksJavaBinCommand(),
-        "-cp",
-        buckClasspath,
-        UPLOADER_MAIN_CLASS,
-        "--buildId",
-        buildId.toString(),
-        "--traceFilePath",
-        traceFilePath.toString(),
-        "--traceKind",
-        traceKind.name(),
-        "--baseUrl",
-        traceUploadUri.toString(),
-        "--log",
-        logFile.toString(),
-        "--compressionType",
-        compressionType.name(),
-      };
-
-      Runtime.getRuntime().exec(args);
-    } catch (IOException e) {
-      LOG.error(e, e.getMessage());
+      // wait for process to finish
+      process.waitFor();
+    } finally {
+      if (process.isAlive()) {
+        LOG.warn("Killing uploader process...");
+        process.destroyForcibly();
+      }
     }
   }
 }

@@ -23,6 +23,7 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -115,6 +116,8 @@ public class TaskManagerCommandScope implements Scope {
       } catch (InterruptedException e) {
         LOG.info("Waiting for background tasks was interrupted");
         return;
+      } catch (CancellationException e) {
+        LOG.warn("Background task has been cancelled");
       } catch (ExecutionException e) {
         LOG.warn(e.getCause(), "Exception occurred executing background task");
       }

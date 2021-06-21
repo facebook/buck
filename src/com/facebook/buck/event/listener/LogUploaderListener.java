@@ -30,6 +30,7 @@ import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.facebook.buck.util.trace.uploader.types.TraceKind;
 import com.google.common.eventbus.Subscribe;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -104,15 +105,17 @@ public class LogUploaderListener implements BuckEventListener {
     }
 
     @Override
-    public void run(LogUploaderListenerCloseArgs args) {
+    public void run(LogUploaderListenerCloseArgs args) throws InterruptedException, IOException {
       Path logFile = args.getLogDirectoryPath().resolve("upload_" + traceKind + ".log");
-      UploaderLauncher.uploadInBackground(
-          args.getBuildId(),
-          args.getLogFilePath(),
-          traceKind,
-          args.getTraceUploadURI(),
-          logFile,
-          CompressionType.NONE);
+      Process uploadProcess =
+          UploaderLauncher.uploadInBackground(
+              args.getBuildId(),
+              args.getLogFilePath(),
+              traceKind,
+              args.getTraceUploadURI(),
+              logFile,
+              CompressionType.NONE);
+      UploaderLauncher.waitForProcessToFinish(uploadProcess);
     }
   }
 
