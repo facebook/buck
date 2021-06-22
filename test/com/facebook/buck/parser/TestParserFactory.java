@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
@@ -57,7 +58,7 @@ public class TestParserFactory {
             new DefaultConstructorArgMarshaller(),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
-            new WatchmanFactory.NullWatchman("test"),
+            new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
             eventBus,
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE),

@@ -51,6 +51,7 @@ import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
 import com.facebook.buck.parser.api.PackageFileManifest;
@@ -621,7 +622,7 @@ public class ParsePipelineTest {
               projectBuildFileParserPool,
               executorService,
               eventBus,
-              new WatchmanFactory.NullWatchman("test"));
+              new WatchmanFactory.NullWatchman("test", WatchmanError.TEST));
 
       BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline =
           new BuildTargetRawNodeParsePipeline(executorService, buildFileRawNodeParsePipeline);
@@ -649,7 +650,7 @@ public class ParsePipelineTest {
               packageFileParserPool,
               executorService,
               eventBus,
-              new WatchmanFactory.NullWatchman("test"));
+              new WatchmanFactory.NullWatchman("test", WatchmanError.TEST));
 
       PackagePipeline packagePipeline =
           new PackagePipeline(executorService, eventBus, packageFileParsePipeline);

@@ -107,6 +107,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.io.watchman.WatchmanWatcher.FreshInstanceAction;
@@ -938,7 +939,8 @@ public final class MainRunner {
               filesystem.getBuckPaths().getLogDir().getPath(),
               isRemoteExecutionBuild,
               cacheBuckConfig.getRepository(),
-              watchman.getVersion());
+              watchman.getVersion(),
+              watchman.getInitError());
 
       RemoteExecutionConfig remoteExecutionConfig = buckConfig.getView(RemoteExecutionConfig.class);
       if (isRemoteExecutionBuild) {
@@ -2160,7 +2162,7 @@ public final class MainRunner {
           String.format(
               "Not using Watchman, daemon mode: %s, glob handler: %s",
               daemonMode.isDaemon(), parserConfig.getGlobHandler());
-      watchman = new WatchmanFactory.NullWatchman(reason);
+      watchman = new WatchmanFactory.NullWatchman(reason, WatchmanError.NO_DAEMON_NO_WATCHMAN);
       LOG.debug(reason);
     }
     return watchman;

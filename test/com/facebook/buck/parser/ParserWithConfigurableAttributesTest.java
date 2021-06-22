@@ -85,6 +85,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
@@ -233,7 +234,7 @@ public class ParserWithConfigurableAttributesTest {
                 new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cells.getBuckConfig(), executableFinder),
-                new WatchmanFactory.NullWatchman("test"),
+                new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)
@@ -2558,7 +2559,7 @@ public class ParserWithConfigurableAttributesTest {
                 new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cells.getBuckConfig(), executableFinder),
-                new WatchmanFactory.NullWatchman("test"),
+                new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)

@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.log.InvocationInfo;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
@@ -37,6 +38,7 @@ public class FakeInvocationInfoFactory {
         Paths.get(""),
         false,
         "repository",
-        /* watchmanVersion */ "");
+        /* watchmanVersion */ "",
+        WatchmanError.TEST);
   }
 }

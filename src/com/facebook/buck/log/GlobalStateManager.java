@@ -19,6 +19,7 @@ package com.facebook.buck.log;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.logd.client.FileOutputStreamFactory;
 import com.facebook.buck.logd.client.LogStreamFactory;
@@ -93,7 +94,8 @@ public class GlobalStateManager {
                     LogConfigSetup.DEFAULT_SETUP.getLogDir(),
                     false,
                     "",
-                    "")
+                    "",
+                    WatchmanError.GLOBAL_STATE_MANAGER)
                 .getLogFilePath());
     putReferenceCountedWriter(DEFAULT_LOG_FILE_WRITER_KEY, defaultWriter);
   }

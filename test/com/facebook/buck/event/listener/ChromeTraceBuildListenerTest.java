@@ -57,6 +57,7 @@ import com.facebook.buck.event.chrome_trace.ChromeTraceData;
 import com.facebook.buck.event.chrome_trace.ChromeTraceData.Phase;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.log.InvocationInfo;
@@ -138,6 +139,7 @@ public class ChromeTraceBuildListenerTest {
             false,
             "repository",
             "3.1.0",
+            WatchmanError.TEST,
             CURRENT_TIME_MILLIS);
     durationTracker = new BuildRuleDurationTracker();
     eventBus = new DefaultBuckEventBus(FAKE_CLOCK, BUILD_ID);

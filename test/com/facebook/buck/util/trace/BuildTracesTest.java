@@ -23,6 +23,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.util.timing.FakeClock;
 import com.facebook.buck.util.timing.SettableFakeClock;
@@ -220,6 +221,7 @@ public class BuildTracesTest {
             false,
             "repository",
             "",
+            WatchmanError.TEST,
             TimeUnit.SECONDS.toMillis(seconds));
     return info.getLogDirectoryPath().resolve("build." + buildId + ".trace");
   }

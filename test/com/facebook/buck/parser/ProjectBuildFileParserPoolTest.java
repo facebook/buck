@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
@@ -354,7 +355,7 @@ public class ProjectBuildFileParserPoolTest {
           pool.getManifest(
               BuckEventBusForTests.newInstance(),
               cell,
-              new WatchmanFactory.NullWatchman("test"),
+              new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
               ForwardRelPath.of("BUCK"),
               executorService));
     }

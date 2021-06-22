@@ -31,6 +31,7 @@ import com.facebook.buck.io.watchman.StubWatchmanClient;
 import com.facebook.buck.io.watchman.WatchRoot;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanQuery;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
@@ -235,7 +236,8 @@ public class WatchmanGlobberTest {
                   String.format(
                       "RootResolveError: unable to resolve root %s: directory %s not watched",
                       ((WatchmanQuery.Query) query).getPath(),
-                      ((WatchmanQuery.Query) query).getPath()));
+                      ((WatchmanQuery.Query) query).getPath()),
+                  WatchmanError.TEST);
             } else {
               throw new RuntimeException("Watchman query not implemented");
             }

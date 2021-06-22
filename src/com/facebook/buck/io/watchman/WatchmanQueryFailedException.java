@@ -26,11 +26,21 @@ package com.facebook.buck.io.watchman;
 public class WatchmanQueryFailedException extends Exception {
 
   private final String watchmanErrorMessage;
+  private final WatchmanError watchmanError;
 
   /** @param watchmanErrorMessage The value of the {@code error} field in Watchman's response. */
-  public WatchmanQueryFailedException(String watchmanErrorMessage) {
+  public WatchmanQueryFailedException(String watchmanErrorMessage, WatchmanError watchmanError) {
     super("Watchman query failed: " + watchmanErrorMessage);
     this.watchmanErrorMessage = watchmanErrorMessage;
+    this.watchmanError = watchmanError;
+  }
+
+  public WatchmanError getWatchmanError() {
+    return watchmanError;
+  }
+
+  public WatchmanFactory.NullWatchman toNullWatchman() {
+    return new WatchmanFactory.NullWatchman(watchmanErrorMessage, watchmanError);
   }
 
   /** @return The human-readable error message reported by Watchman. */

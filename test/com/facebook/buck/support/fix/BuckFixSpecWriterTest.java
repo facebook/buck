@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.types.Either;
@@ -50,7 +51,8 @@ public class BuckFixSpecWriterTest {
             Paths.get("buck-out", "log"),
             false,
             "repository",
-            "");
+            "",
+            WatchmanError.TEST);
 
     BuckFixSpecWriter.writeSpecToLogDir(tmp.getRoot().getPath(), info, specWithPaths);
 

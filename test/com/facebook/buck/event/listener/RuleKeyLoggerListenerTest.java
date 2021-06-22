@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.event.TestEventConfigurator;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.logd.client.FileOutputStreamFactory;
@@ -77,7 +78,8 @@ public class RuleKeyLoggerListenerTest {
             tempDirectory.getRoot().toPath(),
             false,
             "repository",
-            "");
+            "",
+            WatchmanError.TEST);
     durationTracker = new BuildRuleDurationTracker();
     managerScope = TestBackgroundTaskManager.of().getNewScope(info.getBuildId());
   }

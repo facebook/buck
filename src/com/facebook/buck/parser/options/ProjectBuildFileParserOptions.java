@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.implicit.ImplicitIncludePath;
@@ -79,7 +80,9 @@ public abstract class ProjectBuildFileParserOptions {
 
   @Value.Default
   public Watchman getWatchman() {
-    return new WatchmanFactory.NullWatchman("default watchman for ProjectBuildFileParserOptions");
+    return new WatchmanFactory.NullWatchman(
+        "default watchman for ProjectBuildFileParserOptions",
+        WatchmanError.PROJECT_BUILD_FILE_PARSER_OPTIONS);
   }
 
   @Value.Default

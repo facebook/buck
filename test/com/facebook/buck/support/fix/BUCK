@@ -4,6 +4,7 @@ standard_java_test(
     name = "fix",
     with_test_data = True,
     deps = [
+        "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/support/fix:fix",
         "//src/com/facebook/buck/util:util",

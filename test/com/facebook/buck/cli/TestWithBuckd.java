@@ -20,6 +20,7 @@ import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
@@ -64,7 +65,7 @@ public class TestWithBuckd extends ExternalResource {
 
     // We assume watchman has been installed and configured properly on the system, and that setting
     // up the watch is successful.
-    assumeFalse(watchman == new WatchmanFactory.NullWatchman("test"));
+    assumeFalse(watchman == new WatchmanFactory.NullWatchman("test", WatchmanError.TEST));
   }
 
   private static ImmutableMap<String, String> getWatchmanEnv() {

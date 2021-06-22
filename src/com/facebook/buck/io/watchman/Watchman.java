@@ -86,6 +86,8 @@ public abstract class Watchman implements Closeable {
     return version;
   }
 
+  public abstract WatchmanError getInitError();
+
   /**
    * Note this method will throw an {@link IOException} if:
    *

@@ -53,6 +53,7 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -155,7 +156,8 @@ public abstract class IsolatedBuildableBuilder {
             canonicalProjectRoot,
             config,
             BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config),
-            new WatchmanFactory.NullWatchman("IsolatedBuildableBuilder"));
+            new WatchmanFactory.NullWatchman(
+                "IsolatedBuildableBuilder", WatchmanError.ISOLATED_BUILDABLE_BUILDER));
 
     Architecture architecture = Architecture.detect();
     Platform platform = Platform.detect();
@@ -195,7 +197,8 @@ public abstract class IsolatedBuildableBuilder {
             toolchainProviderFactory,
             projectFilesystemFactory,
             buildTargetFactory,
-            new WatchmanFactory.NullWatchman("IsolatedBuildableBuilder"),
+            new WatchmanFactory.NullWatchman(
+                "IsolatedBuildableBuilder", WatchmanError.ISOLATED_BUILDABLE_BUILDER),
             Optional.empty());
 
     this.filesystemFunction =

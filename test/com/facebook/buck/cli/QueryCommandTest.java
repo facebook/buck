@@ -34,6 +34,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
@@ -122,7 +123,7 @@ public class QueryCommandTest {
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
                     cell.getRootCell().getBuckConfig(), new ExecutableFinder()),
-                new WatchmanFactory.NullWatchman("test"),
+                new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
                 eventBus,
                 buildTargetViewFactory,
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))

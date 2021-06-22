@@ -46,6 +46,7 @@ import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.ToolType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -75,7 +76,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             cellName,
             fakeRoot,
             true,
-            new WatchmanFactory.NullWatchman("CxxCollectAndLogInferDependenciesStepTest"));
+            new WatchmanFactory.NullWatchman(
+                "CxxCollectAndLogInferDependenciesStepTest", WatchmanError.TEST));
   }
 
   private CxxInferCaptureRule createCaptureRule(

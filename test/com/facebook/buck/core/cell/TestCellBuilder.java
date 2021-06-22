@@ -29,6 +29,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -110,7 +111,7 @@ public class TestCellBuilder {
             toolchainProviderFactory,
             new DefaultProjectFilesystemFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
-            new WatchmanFactory.NullWatchman("TestCellBuilder"),
+            new WatchmanFactory.NullWatchman("TestCellBuilder", WatchmanError.TEST),
             Optional.empty()));
   }
 

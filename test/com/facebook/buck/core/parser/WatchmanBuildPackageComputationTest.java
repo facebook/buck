@@ -31,6 +31,7 @@ import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.WatchRoot;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanNotFoundException;
 import com.facebook.buck.io.watchman.WatchmanQuery;
@@ -145,7 +146,10 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
             filesystem.getRootPath(), ImmutableList.of()));
 
     new WatchmanBuildPackageComputation(
-        "BUCK", filesystem.asView(), new WatchmanFactory.NullWatchman("test"), WATCHMAN_TIME_OUT);
+        "BUCK",
+        filesystem.asView(),
+        new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
+        WATCHMAN_TIME_OUT);
   }
 
   @Test
@@ -173,7 +177,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
                     String.format(
                         "RootResolveError: unable to resolve root %s: directory %s not watched",
                         ((WatchmanQuery.Query) query).getPath(),
-                        ((WatchmanQuery.Query) query).getPath()));
+                        ((WatchmanQuery.Query) query).getPath()),
+                    WatchmanError.TEST);
               } else {
                 throw new RuntimeException("Watchman query not implemented");
               }
@@ -234,6 +239,11 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
   MockWatchmanFactory createMockWatchmanFactory(QueryWithTimeoutFunction mockQueryWithTimeout) {
     return new MockWatchmanFactory() {
+      @Override
+      public WatchmanError getInitError() {
+        return WatchmanError.TEST;
+      }
+
       @Override
       public WatchmanClient createClient() {
         return new WatchmanClient() {

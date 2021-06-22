@@ -25,6 +25,7 @@ import com.facebook.buck.io.watchman.ProjectWatch;
 import com.facebook.buck.io.watchman.WatchRoot;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanQueryFailedException;
 import com.facebook.buck.skylark.io.impl.WatchmanGlobber;
@@ -142,7 +143,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
         delegate, /* disableSha1FastPath */
         false,
         Sha1Hasher.EDEN_THRIFT,
-        new WatchmanFactory.NullWatchman("test"),
+        new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
         rootPath);
   }
 

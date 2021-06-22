@@ -23,6 +23,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.logd.client.FileOutputStreamFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -56,7 +57,8 @@ public class BuckConfigWriterTest {
             Paths.get("buck-out", "log"),
             false,
             "repository",
-            "");
+            "",
+            WatchmanError.TEST);
 
     AbsPath expectedPath =
         tmp.getRoot().resolve(info.getLogDirectoryPath()).resolve("buckconfig.json");

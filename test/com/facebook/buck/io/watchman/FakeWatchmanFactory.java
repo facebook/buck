@@ -48,6 +48,11 @@ public class FakeWatchmanFactory {
         Optional.of(Paths.get(".watchman-sock")),
         /* version */ "") {
       @Override
+      public WatchmanError getInitError() {
+        return WatchmanError.TEST;
+      }
+
+      @Override
       public WatchmanClient createClient() {
         return client;
       }

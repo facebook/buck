@@ -43,6 +43,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.parser.Parser;
@@ -115,7 +116,7 @@ public class TargetGraphHashingTest {
                 new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cells.getBuckConfig(), new ExecutableFinder()),
-                new WatchmanFactory.NullWatchman("test"),
+                new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)

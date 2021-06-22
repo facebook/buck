@@ -43,6 +43,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.TestParserFactory;
@@ -153,7 +154,7 @@ public class CommandRunnerParamsForTesting {
         BuckGlobalStateFactory.create(
             cells,
             knownRuleTypesProvider,
-            new WatchmanFactory.NullWatchman("test"),
+            new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
             Optional.empty(),
             buildTargetViewFactory,
             new TargetConfigurationSerializerForTests(cellPathResolver),
@@ -167,7 +168,7 @@ public class CommandRunnerParamsForTesting {
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         cells,
-        new WatchmanFactory.NullWatchman("test"),
+        new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
         new SingletonArtifactCacheFactory(artifactCache),

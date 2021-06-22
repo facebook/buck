@@ -41,6 +41,7 @@ import com.facebook.buck.event.BuckEventBusForTests.CapturingEventListener;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -128,7 +129,7 @@ public class ConfiguredQueryEnvironmentTest {
             new DefaultConstructorArgMarshaller(),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-            new WatchmanFactory.NullWatchman("test"),
+            new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
             eventBus,
             buildTargetViewFactory,
             UnconfiguredTargetConfiguration.INSTANCE);

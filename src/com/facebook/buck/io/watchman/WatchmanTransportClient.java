@@ -100,7 +100,8 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
           }
 
           throw new WatchmanQueryFailedException(
-              String.format("watchman query %s failed: %s", query.queryDesc(), error));
+              String.format("watchman query %s failed: %s", query.queryDesc(), error),
+              WatchmanError.UNCLASSIFIED_REMOTE_ERROR);
         }
 
         Object warning = result.getLeft().get("warning");

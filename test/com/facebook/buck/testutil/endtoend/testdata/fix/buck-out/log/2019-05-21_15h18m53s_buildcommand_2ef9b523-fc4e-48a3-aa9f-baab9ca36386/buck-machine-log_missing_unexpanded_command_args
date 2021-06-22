@@ -1,4 +1,4 @@
-InvocationInfo {"buildId":"2ef9b523-fc4e-48a3-aa9f-baab9ca36386","superConsoleEnabled":true,"isDaemon":true,"subCommand":"buildcommand","watchmanVersion":"something","commandArgs":["build","-c","foo.bar=baz","buck"],"buckLogDir":"buck-out/log","timestampMillis":1558451933604,"isRemoteExecution":false,"repository":"repo"}
+InvocationInfo {"buildId":"2ef9b523-fc4e-48a3-aa9f-baab9ca36386","superConsoleEnabled":true,"isDaemon":true,"subCommand":"buildcommand","watchmanVersion":"something","watchmanInitError":"NO_ERROR","commandArgs":["build","-c","foo.bar=baz","buck"],"buckLogDir":"buck-out/log","timestampMillis":1558451933604,"isRemoteExecution":false,"repository":"repo"}
 ParseStarted {"timestampMillis":1558451934866}
 ParseFinished {"timestampMillis":1558451935251}
 BuildFinished {"timestampMillis":1558452025981}

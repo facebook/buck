@@ -58,6 +58,7 @@ import com.facebook.buck.io.watchman.FakeWatchmanClient;
 import com.facebook.buck.io.watchman.FakeWatchmanFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.facebook.buck.support.cli.config.CliConfig;
@@ -921,7 +922,8 @@ public class BuckGlobalStateLifecycleManagerTest {
                 new EmptyToolchainProviderFactory(),
                 new DefaultProjectFilesystemFactory(),
                 unconfiguredBuildTargetFactory,
-                new WatchmanFactory.NullWatchman("BuckGlobalStateLifecycleManagerTest"),
+                new WatchmanFactory.NullWatchman(
+                    "BuckGlobalStateLifecycleManagerTest", WatchmanError.TEST),
                 Optional.empty()));
 
     return buckGlobalStateLifecycleManager

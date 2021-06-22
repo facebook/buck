@@ -30,6 +30,7 @@ import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.testutil.PlatformUtils;
 import com.facebook.buck.testutil.ProcessResult;
@@ -298,7 +299,7 @@ public class BuildEndToEndTest {
                         CanonicalCellName.rootCell(),
                         AbsPath.of(workspace.getDestPath()),
                         BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH,
-                        new WatchmanFactory.NullWatchman("BuildEndToEndTest")))
+                        new WatchmanFactory.NullWatchman("BuildEndToEndTest", WatchmanError.TEST)))
             .getBuildLogs();
 
     assertEquals(2, helper.size());

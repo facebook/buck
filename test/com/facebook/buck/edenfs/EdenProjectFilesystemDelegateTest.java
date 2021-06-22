@@ -33,6 +33,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanTestUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -226,7 +227,8 @@ public class EdenProjectFilesystemDelegateTest {
             mount,
             delegate,
             config,
-            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            new WatchmanFactory.NullWatchman(
+                "EdenProjectFilesystemDelegateTest", WatchmanError.TEST),
             AbsPath.of(root));
     assertEquals(DUMMY_SHA1, edenDelegate.computeSha1(path));
   }
@@ -256,7 +258,8 @@ public class EdenProjectFilesystemDelegateTest {
             mount,
             delegate,
             config,
-            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            new WatchmanFactory.NullWatchman(
+                "EdenProjectFilesystemDelegateTest", WatchmanError.TEST),
             AbsPath.of(root));
     assertEquals(
         "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of the contents",
@@ -284,7 +287,8 @@ public class EdenProjectFilesystemDelegateTest {
             mount,
             delegate,
             config,
-            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            new WatchmanFactory.NullWatchman(
+                "EdenProjectFilesystemDelegateTest", WatchmanError.TEST),
             AbsPath.of(root));
     assertEquals(
         "EdenProjectFilesystemDelegate.computeSha1() should return the SHA-1 of a file that is "
@@ -311,7 +315,8 @@ public class EdenProjectFilesystemDelegateTest {
             mount,
             delegate,
             configWithFileSystem,
-            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            new WatchmanFactory.NullWatchman(
+                "EdenProjectFilesystemDelegateTest", WatchmanError.TEST),
             AbsPath.of(tmp.getRoot().getPath()));
 
     Config configWithWatchman =
@@ -351,7 +356,8 @@ public class EdenProjectFilesystemDelegateTest {
             mount,
             delegate,
             configWithWatchman,
-            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            new WatchmanFactory.NullWatchman(
+                "EdenProjectFilesystemDelegateTest", WatchmanError.TEST),
             AbsPath.of(root));
     edenDelegate.computeSha1(path);
   }
@@ -377,7 +383,8 @@ public class EdenProjectFilesystemDelegateTest {
             mount,
             delegate,
             configWithFileSystem,
-            new WatchmanFactory.NullWatchman("EdenProjectFilesystemDelegateTest"),
+            new WatchmanFactory.NullWatchman(
+                "EdenProjectFilesystemDelegateTest", WatchmanError.TEST),
             tmp.getRoot());
 
     Config configWithWatchman =

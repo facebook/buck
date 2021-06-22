@@ -65,7 +65,7 @@ public class FakeWatchmanClient implements WatchmanClient {
     }
     Object error = result.get("error");
     if (error != null) {
-      throw new WatchmanQueryFailedException(error.toString());
+      throw new WatchmanQueryFailedException(error.toString(), WatchmanError.TEST);
     }
     return Either.ofLeft(query.decodeResponse(result));
   }

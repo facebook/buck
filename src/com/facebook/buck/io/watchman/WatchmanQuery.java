@@ -168,7 +168,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
       String watch = (String) resp.get("watch");
       if (watch == null) {
         throw new WatchmanQueryFailedException(
-            "watch-project response has no `watch` field: " + resp);
+            "watch-project response has no `watch` field: " + resp, WatchmanError.NO_WATCH_FIELD);
       }
       String relativePath = (String) resp.getOrDefault("relative_path", "");
       return WatchmanQueryResp.watchProject(new WatchRoot(watch), relativePath);

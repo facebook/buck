@@ -41,6 +41,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.TargetSpecResolver.FlavorEnhancer;
 import com.facebook.buck.parser.config.ParserConfig;
@@ -119,7 +120,7 @@ public class TargetSpecResolverTest {
             constructorArgMarshaller,
             knownRuleTypesProvider,
             parserPythonInterpreterProvider,
-            new WatchmanFactory.NullWatchman("test"),
+            new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
             eventBus,
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE);

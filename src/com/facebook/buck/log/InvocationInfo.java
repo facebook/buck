@@ -18,6 +18,7 @@ package com.facebook.buck.log;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.BuckConstant;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -86,6 +87,9 @@ public abstract class InvocationInfo {
   public abstract String getWatchmanVersion();
 
   @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract WatchmanError getWatchmanInitError();
+
+  @JsonView(JsonViews.MachineReadableLog.class)
   public abstract long getTimestampMillis();
 
   public Path getLogDirectoryPath() {
@@ -128,7 +132,8 @@ public abstract class InvocationInfo {
       Path buckLogDir,
       boolean isRemoteExecution,
       String repository,
-      String watchmanVersion) {
+      String watchmanVersion,
+      WatchmanError watchmanInitError) {
     return of(
         buildId,
         superConsoleEnabled,
@@ -140,6 +145,7 @@ public abstract class InvocationInfo {
         isRemoteExecution,
         repository,
         watchmanVersion,
+        watchmanInitError,
         System.currentTimeMillis());
   }
 
@@ -154,6 +160,7 @@ public abstract class InvocationInfo {
       boolean isRemoteExecution,
       String repository,
       String watchmanVersion,
+      WatchmanError watchmanInitError,
       long timestampMillis) {
     return ImmutableInvocationInfo.ofImpl(
         buildId,
@@ -166,6 +173,7 @@ public abstract class InvocationInfo {
         isRemoteExecution,
         repository,
         watchmanVersion,
+        watchmanInitError,
         timestampMillis);
   }
 }

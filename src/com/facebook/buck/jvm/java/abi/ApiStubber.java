@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java.abi;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -41,7 +42,7 @@ public class ApiStubber {
                     CanonicalCellName.unsafeNotACell(),
                     AbsPath.of(Paths.get("").toAbsolutePath()),
                     false,
-                    new WatchmanFactory.NullWatchman("ApiStubber")),
+                    new WatchmanFactory.NullWatchman("ApiStubber", WatchmanError.API_STUBBER)),
             destination);
   }
 }

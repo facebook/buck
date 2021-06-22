@@ -58,6 +58,7 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
@@ -722,7 +723,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
         toolchainProviderFactory,
         new DefaultProjectFilesystemFactory(),
         new ParsingUnconfiguredBuildTargetViewFactory(),
-        new WatchmanFactory.NullWatchman("ProjectWorkspace"),
+        new WatchmanFactory.NullWatchman("ProjectWorkspace", WatchmanError.TEST),
         Optional.empty());
   }
 
