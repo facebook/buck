@@ -70,8 +70,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.CounterBuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
-import com.facebook.buck.doctor.DefaultDefectReporter;
-import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.BuckInitializationDurationEvent;
@@ -82,32 +80,17 @@ import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.EventBusEventConsole;
 import com.facebook.buck.event.ExperimentEvent;
-import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.console.EventConsole;
 import com.facebook.buck.event.listener.AbstractConsoleEventBusListener;
-import com.facebook.buck.event.listener.CacheRateStatsListener;
-import com.facebook.buck.event.listener.ChromeTraceBuildListener;
-import com.facebook.buck.event.listener.CriticalPathEventListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
 import com.facebook.buck.event.listener.GCTimeSpentListener;
 import com.facebook.buck.event.listener.GCTimeSpentListenerConfig;
-import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
-import com.facebook.buck.event.listener.LoadBalancerEventsListener;
-import com.facebook.buck.event.listener.LogUploaderListener;
-import com.facebook.buck.event.listener.LoggingBuildListener;
-import com.facebook.buck.event.listener.MachineReadableLoggerListener;
-import com.facebook.buck.event.listener.ParserProfilerLoggerListener;
 import com.facebook.buck.event.listener.PublicAnnouncementManager;
 import com.facebook.buck.event.listener.RenderingConsole;
-import com.facebook.buck.event.listener.RuleKeyCheckListener;
-import com.facebook.buck.event.listener.RuleKeyCheckListenerConfig;
-import com.facebook.buck.event.listener.RuleKeyDiagnosticsListener;
-import com.facebook.buck.event.listener.RuleKeyLoggerListener;
 import com.facebook.buck.event.listener.SilentConsoleEventBusListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
-import com.facebook.buck.event.listener.TopSlowTargetsEventListener;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.event.utils.EventBusUtils;
@@ -124,7 +107,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.Watchman;
-import com.facebook.buck.io.watchman.WatchmanDiagnosticEventListener;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.io.watchman.WatchmanWatcher.FreshInstanceAction;
@@ -146,7 +128,6 @@ import com.facebook.buck.parser.detector.HostConfigurationDetector;
 import com.facebook.buck.parser.detector.HostConfigurationDetectorFactory;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
-import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionConsoleLineProvider;
 import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionEventListener;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
@@ -163,11 +144,8 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
-import com.facebook.buck.support.build.report.BuildReportConfig;
-import com.facebook.buck.support.build.report.BuildReportFileUploader;
 import com.facebook.buck.support.build.report.BuildReportUpload;
 import com.facebook.buck.support.build.report.BuildReportUtils;
-import com.facebook.buck.support.build.report.RuleKeyLogFileUploader;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.cli.config.BuckConfigWriter;
@@ -221,7 +199,6 @@ import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.NanosAdjustedClock;
-import com.facebook.buck.util.trace.uploader.types.TraceKind;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
@@ -247,7 +224,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.sun.jna.Native;
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -1266,7 +1242,7 @@ public final class MainRunner {
           maybeSetupProgressEstimator(command, filesystem, buildEventBus, consoleListener);
 
           BuildEnvironmentDescription buildEnvironmentDescription =
-              getBuildEnvironmentDescription(
+              MainRunnerEventListeners.getBuildEnvironmentDescription(
                   executionEnvironment,
                   buckConfig);
 
@@ -1291,7 +1267,8 @@ public final class MainRunner {
           }
 
           eventListeners =
-              addEventListeners(
+              MainRunnerEventListeners.addEventListeners(
+                  buildId,
                   buildEventBus,
                   cells.getRootCell().getFilesystem(),
                   invocationInfo,
@@ -2254,204 +2231,6 @@ public final class MainRunner {
     };
   }
 
-
-  @SuppressWarnings("PMD.PrematureDeclaration")
-  private ImmutableList<BuckEventListener> addEventListeners(
-      BuckEventBus buckEventBus,
-      ProjectFilesystem projectFilesystem,
-      InvocationInfo invocationInfo,
-      BuckConfig buckConfig,
-      Optional<WebServer> webServer,
-      Clock clock,
-      ExecutionEnvironment executionEnvironment,
-      CounterRegistry counterRegistry,
-      Iterable<BuckEventListener> commandSpecificEventListeners,
-      Optional<RemoteExecutionStatsProvider> reStatsProvider,
-      TaskManagerCommandScope managerScope,
-      LogStreamFactory logStreamFactory)
-      throws IOException {
-    ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
-        ImmutableList.<BuckEventListener>builder().add(new LoggingBuildListener());
-    RuleKeyCheckListenerConfig ruleKeyCheckListenerConfig =
-        buckConfig.getView(RuleKeyCheckListenerConfig.class);
-    if (ruleKeyCheckListenerConfig.getEndpoint().isPresent()) {
-      buckEventBus.register(
-          new RuleKeyCheckListener(
-              ruleKeyCheckListenerConfig, buckEventBus, executionEnvironment.getUsername()));
-    }
-    LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
-    if (logBuckConfig.isJavaUtilsLoggingEnabled()) {
-      eventListenersBuilder.add(new JavaUtilsLoggingBuildListener(projectFilesystem));
-    }
-    Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
-    Path criticalPathDir = projectFilesystem.resolve(logDirectoryPath);
-    Path criticalPathLog = criticalPathDir.resolve(BuckConstant.BUCK_CRITICAL_PATH_LOG_FILE_NAME);
-    projectFilesystem.mkdirs(criticalPathDir);
-    CriticalPathEventListener criticalPathEventListener =
-        new CriticalPathEventListener(logStreamFactory, criticalPathLog);
-    buckEventBus.register(criticalPathEventListener);
-    TopSlowTargetsEventListener slowTargetsEventListener = new TopSlowTargetsEventListener();
-    buckEventBus.register(slowTargetsEventListener);
-
-    ChromeTraceBuckConfig chromeTraceBuckConfig = buckConfig.getView(ChromeTraceBuckConfig.class);
-    if (chromeTraceBuckConfig.isChromeTraceCreationEnabled()) {
-      try {
-        ChromeTraceBuildListener chromeTraceBuildListener =
-            new ChromeTraceBuildListener(
-                projectFilesystem,
-                invocationInfo,
-                clock,
-                chromeTraceBuckConfig,
-                managerScope,
-                reStatsProvider,
-                criticalPathEventListener,
-                logStreamFactory);
-        eventListenersBuilder.add(chromeTraceBuildListener);
-      } catch (IOException e) {
-        LOG.error("Unable to create ChromeTrace listener!");
-      }
-    } else {
-      LOG.info("::: ChromeTrace listener disabled");
-    }
-    webServer.map(WebServer::createListener).ifPresent(eventListenersBuilder::add);
-
-    ArtifactCacheBuckConfig artifactCacheConfig = new ArtifactCacheBuckConfig(buckConfig);
-
-
-    CommonThreadFactoryState commonThreadFactoryState =
-        GlobalStateManager.singleton().getThreadToCommandRegister();
-
-    eventListenersBuilder.add(
-        new LogUploaderListener(
-            chromeTraceBuckConfig,
-            invocationInfo.getLogFilePath(),
-            invocationInfo.getLogDirectoryPath(),
-            invocationInfo.getBuildId(),
-            managerScope,
-            TraceKind.BUILD_LOG));
-    eventListenersBuilder.add(
-        new LogUploaderListener(
-            chromeTraceBuckConfig,
-            invocationInfo.getSimpleConsoleOutputFilePath(),
-            invocationInfo.getLogDirectoryPath(),
-            invocationInfo.getBuildId(),
-            managerScope,
-            TraceKind.SIMPLE_CONSOLE_OUTPUT));
-    eventListenersBuilder.add(
-        new LogUploaderListener(
-            chromeTraceBuckConfig,
-            criticalPathLog,
-            invocationInfo.getLogDirectoryPath(),
-            invocationInfo.getBuildId(),
-            managerScope,
-            TraceKind.CRITICAL_PATH_LOG));
-
-    if (logBuckConfig.isRuleKeyLoggerEnabled()) {
-
-      Optional<RuleKeyLogFileUploader> keyLogFileUploader =
-          createRuleKeyLogFileUploader(
-              buckConfig, projectFilesystem, buckEventBus, clock, executionEnvironment, buildId);
-
-      eventListenersBuilder.add(
-          new RuleKeyLoggerListener(
-              projectFilesystem,
-              invocationInfo,
-              MostExecutors.newSingleThreadExecutor(
-                  new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
-              managerScope,
-              keyLogFileUploader,
-              logStreamFactory));
-    }
-
-    Optional<BuildReportFileUploader> buildReportFileUploader =
-        createBuildReportFileUploader(buckConfig, buildId);
-
-    eventListenersBuilder.add(
-        new RuleKeyDiagnosticsListener(
-            projectFilesystem,
-            invocationInfo,
-            MostExecutors.newSingleThreadExecutor(
-                new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
-            managerScope,
-            buildReportFileUploader));
-
-    if (logBuckConfig.isMachineReadableLoggerEnabled()) {
-      try {
-        eventListenersBuilder.add(
-            new MachineReadableLoggerListener(
-                invocationInfo,
-                projectFilesystem,
-                MostExecutors.newSingleThreadExecutor(
-                    new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
-                artifactCacheConfig.getArtifactCacheModes(),
-                chromeTraceBuckConfig,
-                invocationInfo.getLogDirectoryPath(),
-                invocationInfo.getBuildId(),
-                managerScope,
-                logStreamFactory,
-                logBuckConfig.isMachineReadableLoggerSyncOnClose()));
-      } catch (FileNotFoundException e) {
-        LOG.warn("Unable to open stream for machine readable log file.");
-      }
-    }
-
-    eventListenersBuilder.add(new ParserProfilerLoggerListener(invocationInfo, projectFilesystem));
-    eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
-    eventListenersBuilder.add(new CacheRateStatsListener(buckEventBus));
-    eventListenersBuilder.add(new WatchmanDiagnosticEventListener(buckEventBus));
-    eventListenersBuilder.addAll(commandSpecificEventListeners);
-
-    ImmutableList<BuckEventListener> eventListeners = eventListenersBuilder.build();
-    EventBusUtils.registerListeners(eventListeners, buckEventBus);
-    return eventListeners;
-  }
-
-  private BuildEnvironmentDescription getBuildEnvironmentDescription(
-      ExecutionEnvironment executionEnvironment,
-      BuckConfig buckConfig) {
-    ImmutableMap.Builder<String, String> environmentExtraData = ImmutableMap.builder();
-
-    return BuildEnvironmentDescription.of(
-        executionEnvironment,
-        new ArtifactCacheBuckConfig(buckConfig).getArtifactCacheModesRaw(),
-        environmentExtraData.build());
-  }
-
-  private Optional<RuleKeyLogFileUploader> createRuleKeyLogFileUploader(
-      BuckConfig buckConfig,
-      ProjectFilesystem projectFilesystem,
-      BuckEventBus buckEventBus,
-      Clock clock,
-      ExecutionEnvironment executionEnvironment,
-      BuildId buildId) {
-    if (BuildReportUtils.shouldUploadBuildReport(buckConfig)) {
-      BuildReportConfig buildReportConfig = buckConfig.getView(BuildReportConfig.class);
-      return Optional.of(
-          new RuleKeyLogFileUploader(
-              new DefaultDefectReporter(
-                  projectFilesystem, buckConfig.getView(DoctorConfig.class), buckEventBus, clock),
-              getBuildEnvironmentDescription(
-                  executionEnvironment,
-                  buckConfig),
-              buildReportConfig.getEndpointUrl().get(),
-              buildReportConfig.getEndpointTimeoutMs(),
-              buildId));
-    }
-    return Optional.empty();
-  }
-
-  private Optional<BuildReportFileUploader> createBuildReportFileUploader(
-      BuckConfig buckConfig, BuildId buildId) {
-    if (BuildReportUtils.shouldUploadBuildReport(buckConfig)) {
-      BuildReportConfig buildReportConfig = buckConfig.getView(BuildReportConfig.class);
-      return Optional.of(
-          new BuildReportFileUploader(
-              buildReportConfig.getEndpointUrl().get(),
-              buildReportConfig.getEndpointTimeoutMs(),
-              buildId));
-    }
-    return Optional.empty();
-  }
 
   private AbstractConsoleEventBusListener createConsoleEventListener(
       Clock clock,
