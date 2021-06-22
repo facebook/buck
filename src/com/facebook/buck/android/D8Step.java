@@ -48,6 +48,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** Runs d8. */
@@ -211,7 +212,9 @@ public class D8Step extends IsolatedStep {
         if (Files.isRegularFile(toDex)) {
           inputs.add(toDex);
         } else {
-          Files.walk(toDex).filter(path -> path.toFile().isFile()).forEach(inputs::add);
+          try (Stream<Path> paths = Files.walk(toDex)) {
+            paths.filter(path -> path.toFile().isFile()).forEach(inputs::add);
+          }
         }
       }
 

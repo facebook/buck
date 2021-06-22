@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.jar.JarFile;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** The default implementation of JavaAbiInfo. */
@@ -107,13 +108,15 @@ public class DefaultJavaAbiInfo extends DefaultBaseJavaAbiInfo implements JavaAb
       AbsPath jarAbsolutePath = resolver.getAbsolutePath(jarSourcePath);
       if (Files.isDirectory(jarAbsolutePath.getPath())) {
         BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) jarSourcePath;
-        contents =
-            Files.walk(jarAbsolutePath.getPath())
-                .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
-                .map(
-                    path ->
-                        ExplicitBuildTargetSourcePath.of(buildTargetSourcePath.getTarget(), path))
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+        try (Stream<Path> paths = Files.walk(jarAbsolutePath.getPath())) {
+          contents =
+              paths
+                  .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
+                  .map(
+                      path ->
+                          ExplicitBuildTargetSourcePath.of(buildTargetSourcePath.getTarget(), path))
+                  .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+        }
       } else {
         SourcePath nonNullJarSourcePath = Assertions.assertNotNull(jarSourcePath);
         contents =

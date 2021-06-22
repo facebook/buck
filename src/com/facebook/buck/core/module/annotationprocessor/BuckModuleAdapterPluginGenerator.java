@@ -32,6 +32,7 @@ import org.stringtemplate.v4.ST;
 
 /** Generates adapter plugin source code from Buck module descriptor. */
 class BuckModuleAdapterPluginGenerator {
+
   public static final String ADAPTER_PLUGIN_TEMPLATE = "BuckModuleAdapterPlugin.st";
   public static final String MANIFEST_TEMPLATE = "MANIFEST.st";
 
@@ -94,16 +95,16 @@ class BuckModuleAdapterPluginGenerator {
   }
 
   private ST getStringTemplate(String templateFileName) throws IOException {
-    InputStream in = getClass().getResourceAsStream(templateFileName);
-
-    ByteArrayOutputStream result = new ByteArrayOutputStream();
-    byte[] buffer = new byte[1024];
-    int length;
-    while ((length = in.read(buffer)) != -1) {
-      result.write(buffer, 0, length);
+    String template;
+    try (InputStream in = getClass().getResourceAsStream(templateFileName)) {
+      ByteArrayOutputStream result = new ByteArrayOutputStream();
+      byte[] buffer = new byte[1024];
+      int length;
+      while ((length = in.read(buffer)) != -1) {
+        result.write(buffer, 0, length);
+      }
+      template = result.toString(StandardCharsets.UTF_8.name());
     }
-    String template = result.toString(StandardCharsets.UTF_8.name());
-
     return new ST(template, '%', '%');
   }
 

@@ -35,8 +35,10 @@ import javax.annotation.Nullable;
  * added to a jar.
  */
 class DirectoryJarEntryContainer implements JarEntryContainer {
+
   private final Path directory;
   private final String owner;
+  private Stream<Path> directoryPathStream;
 
   public DirectoryJarEntryContainer(Path directory) {
     this.directory = directory;
@@ -59,7 +61,8 @@ class DirectoryJarEntryContainer implements JarEntryContainer {
 
   @Override
   public Stream<JarEntrySupplier> stream() throws IOException {
-    return Files.walk(directory, FileVisitOption.FOLLOW_LINKS)
+    this.directoryPathStream = Files.walk(directory, FileVisitOption.FOLLOW_LINKS);
+    return directoryPathStream
         .map(
             path -> {
               String relativePath =
@@ -85,5 +88,9 @@ class DirectoryJarEntryContainer implements JarEntryContainer {
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    if (directoryPathStream != null) {
+      directoryPathStream.close();
+    }
+  }
 }

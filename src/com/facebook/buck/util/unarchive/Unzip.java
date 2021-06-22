@@ -42,6 +42,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 import java.util.zip.ZipError;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
@@ -320,11 +321,13 @@ public class Unzip extends Unarchiver {
   public static ImmutableSet<Path> getZipMembers(Path archiveAbsolutePath) throws IOException {
     try (FileSystem zipFs = FileSystems.newFileSystem(archiveAbsolutePath, null)) {
       Path root = Iterables.getOnlyElement(zipFs.getRootDirectories());
-      return Files.walk(root)
-          .filter(path -> !Files.isDirectory(path))
-          .map(root::relativize)
-          .map(path -> Paths.get(path.toString())) // Clear the filesystem from the path
-          .collect(ImmutableSet.toImmutableSet());
+      try (Stream<Path> paths = Files.walk(root)) {
+        return paths
+            .filter(path -> !Files.isDirectory(path))
+            .map(root::relativize)
+            .map(path -> Paths.get(path.toString())) // Clear the filesystem from the path
+            .collect(ImmutableSet.toImmutableSet());
+      }
     } catch (ZipError error) {
       // For some reason the zip filesystem support throws an error when an IOException would do
       // just as well.

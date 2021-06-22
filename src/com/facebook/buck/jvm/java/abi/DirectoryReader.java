@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 
@@ -36,10 +37,12 @@ class DirectoryReader implements LibraryReader {
 
   @Override
   public List<Path> getRelativePaths() throws IOException {
-    return Files.walk(root)
-        .filter(path -> !Files.isDirectory(path))
-        .map(root::relativize)
-        .collect(Collectors.toList());
+    try (Stream<Path> paths = Files.walk(root)) {
+      return paths
+          .filter(path -> !Files.isDirectory(path))
+          .map(root::relativize)
+          .collect(Collectors.toList());
+    }
   }
 
   @Override

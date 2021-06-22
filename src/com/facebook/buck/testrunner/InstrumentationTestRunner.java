@@ -30,11 +30,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class InstrumentationTestRunner {
+
   private static final long ADB_CONNECT_TIMEOUT_MS = 5000;
   private static final long ADB_CONNECT_TIME_STEP_MS = ADB_CONNECT_TIMEOUT_MS / 10;
 
@@ -384,15 +384,14 @@ public class InstrumentationTestRunner {
     Path remoteBase = Paths.get(metadataContents.trim());
     // TODO: speed this up by checking for already installed items
     // TODO: speed this up by only installing ABI-compatible shared-objects
-    List<Path> localFiles =
-        Files.walk(localBase, FileVisitOption.FOLLOW_LINKS)
-            .filter(p -> !Files.isDirectory(p))
-            .collect(Collectors.toList());
-    for (Path p : localFiles) {
-      Path localSuffix = localBase.relativize(p);
-      Path fullRemotePath = remoteBase.resolve(localSuffix);
-      // Remote path is always a unix path
-      device.pushFile(p.toString(), fullRemotePath.toString().replace('\\', '/'));
+    try (Stream<Path> paths = Files.walk(localBase, FileVisitOption.FOLLOW_LINKS)) {
+      Iterable<Path> localFiles = () -> paths.filter(p -> !Files.isDirectory(p)).iterator();
+      for (Path p : localFiles) {
+        Path localSuffix = localBase.relativize(p);
+        Path fullRemotePath = remoteBase.resolve(localSuffix);
+        // Remote path is always a unix path
+        device.pushFile(p.toString(), fullRemotePath.toString().replace('\\', '/'));
+      }
     }
   }
 

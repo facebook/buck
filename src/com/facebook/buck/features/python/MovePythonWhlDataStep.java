@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * A {@link Step} that moves the contents of the {package}-{version}.data directory within an
@@ -56,11 +57,14 @@ public class MovePythonWhlDataStep implements Step {
     // to just list the couple of entries inside of the root of the extracted dir, rather than
     // parsing out the *.dist-info/METADATA file (we also would need the package name/version
     // anyways to find the .dist-info dir.
-    Optional<Path> dataDir =
-        Files.list(resolvedWhlDir)
-            .filter(
-                path -> path.getFileName().toString().endsWith(".data") && Files.isDirectory(path))
-            .findFirst();
+    Optional<Path> dataDir;
+    try (Stream<Path> paths = Files.list(resolvedWhlDir)) {
+      dataDir =
+          paths
+              .filter(Files::isDirectory)
+              .filter(path -> path.getFileName().toString().endsWith(".data"))
+              .findFirst();
+    }
     if (!dataDir.isPresent()) {
       return StepExecutionResults.SUCCESS;
     }
