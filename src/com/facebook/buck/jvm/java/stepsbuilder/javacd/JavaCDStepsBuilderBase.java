@@ -40,6 +40,7 @@ import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.JarParameters;
+import com.facebook.buck.jvm.java.JavaCDEvent;
 import com.facebook.buck.jvm.java.JavaCDRolloutMode;
 import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.jvm.java.ResolvedJavac;
@@ -61,7 +62,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.protobuf.Message;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 /** Creates a worker tool step that would communicate with JavaCD process. */
@@ -126,21 +126,27 @@ abstract class JavaCDStepsBuilderBase<T extends Message> implements JavaCompileS
 
   private boolean hasJavaCDEnabled(BuckEventBus eventBus) {
     JavaCDRolloutModeValue javaCDRolloutModeValue = javaCDParams.getJavaCDRolloutModeValue();
-
     JavaCDRolloutMode javaCDRolloutMode = javaCDRolloutModeValue.getJavacdMode();
-    if (javaCDRolloutMode == JavaCDRolloutMode.UNKNOWN) {
-      LOG.info("JavaCD mode is not set. Using javacd_enabled property");
-      return javaCDParams.hasJavaCDEnabled();
+    boolean hasJavaCDEnabled = getJavaCDEnabledValue(javaCDRolloutMode);
+
+    // Emit events only for the very first invocation
+    if (javaCDRolloutModeValue.isFirstInvocation().compareAndSet(true, false)) {
+      if (javaCDRolloutMode != JavaCDRolloutMode.UNKNOWN) {
+        eventBus.post(new ExperimentEvent("javacd_mode", javaCDRolloutMode.toString()));
+      }
+      eventBus.post(new JavaCDEvent(hasJavaCDEnabled));
     }
 
-    AtomicBoolean needToEmitExperimentEvent = javaCDRolloutModeValue.needToEmitExperimentEvent();
-    // emit ExperimentEvent only for the very first invocation
-    if (needToEmitExperimentEvent.compareAndSet(true, false)) {
-      LOG.info("Experiment event: %s", javaCDRolloutMode);
-      eventBus.post(new ExperimentEvent("javacd_mode", javaCDRolloutMode.toString()));
+    return hasJavaCDEnabled;
+  }
+
+  private boolean getJavaCDEnabledValue(JavaCDRolloutMode javaCDRolloutMode) {
+    if (javaCDRolloutMode != JavaCDRolloutMode.UNKNOWN) {
+      return javaCDRolloutMode == JavaCDRolloutMode.ENABLED;
     }
 
-    return javaCDRolloutMode == JavaCDRolloutMode.ENABLED;
+    LOG.info("JavaCD mode is not set. Using javacd_enabled property");
+    return javaCDParams.hasJavaCDEnabled();
   }
 
   protected abstract T buildCommand();

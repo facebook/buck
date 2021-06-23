@@ -26,8 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.immutables.value.Value;
 
 /**
- * Wrapper around {@link JavaCDRolloutMode} that also exposes {@link #needToEmitExperimentEvent()}
- * method.
+ * Wrapper around {@link JavaCDRolloutMode} that also exposes {@link #isFirstInvocation()} method.
  */
 @BuckStyleValue
 public abstract class JavaCDRolloutModeValue implements AddsToRuleKey {
@@ -41,7 +40,7 @@ public abstract class JavaCDRolloutModeValue implements AddsToRuleKey {
       serialization = DefaultFieldSerialization.class,
       inputs = IgnoredFieldInputs.class)
   @Value.Auxiliary // do not include this value into generated equals, hashCode and toString methods
-  public abstract AtomicBoolean needToEmitExperimentEvent();
+  public abstract AtomicBoolean isFirstInvocation();
 
   public static JavaCDRolloutModeValue of(JavaCDRolloutMode javacdMode) {
     return ImmutableJavaCDRolloutModeValue.ofImpl(javacdMode, new AtomicBoolean(true));

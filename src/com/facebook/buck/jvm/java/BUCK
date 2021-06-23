@@ -107,6 +107,7 @@ java_immutables_library(
         "JarDumper.java",
         "JarFileObject.java",
         "JarParameters.java",
+        "JavaCDEvent.java",
         "JavaInMemoryFileManager.java",
         "JavaInMemoryFileObject.java",
         "JavaLibraryClasspathProvider.java",
