@@ -155,7 +155,9 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       LOG.debug("The first step execution. Obtaining worker tool. Action id: %s", actionId);
 
       if (runWithoutPool) {
-        workerToolExecutor = JavaCDWorkerStepUtils.getLaunchedWorker(context, launchJavaCDCommand);
+        workerToolExecutor =
+            JavaCDWorkerStepUtils.getLaunchedWorker(
+                context, launchJavaCDCommand, javaCDParams.isIncludeAllBucksEnvVariables());
       } else {
         WorkerProcessPool<WorkerToolExecutor> workerToolPool =
             JavaCDWorkerStepUtils.getWorkerToolPool(context, launchJavaCDCommand, javaCDParams);

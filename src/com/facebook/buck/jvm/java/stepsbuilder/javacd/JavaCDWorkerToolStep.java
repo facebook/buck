@@ -59,7 +59,8 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
 
     if (runWithoutPool) {
       try (WorkerToolExecutor workerToolExecutor =
-          JavaCDWorkerStepUtils.getLaunchedWorker(context, launchJavaCDCommand)) {
+          JavaCDWorkerStepUtils.getLaunchedWorker(
+              context, launchJavaCDCommand, javaCDParams.isIncludeAllBucksEnvVariables())) {
         return executeBuildJavaCommand(context, workerToolExecutor, launchJavaCDCommand);
       }
     }

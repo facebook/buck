@@ -133,24 +133,32 @@ public class JavaCDWorkerStepUtils {
     return WorkerToolPoolFactory.getPool(
         context,
         startupCommand,
-        getLaunchWorkerSupplier(context, startupCommand),
+        getLaunchWorkerSupplier(
+            context, startupCommand, javaCDParams.isIncludeAllBucksEnvVariables()),
         javaCDParams.getWorkerToolPoolSize(),
         javaCDParams.getWorkerToolMaxInstancesSize());
   }
 
   /** Returns {@link WorkerToolExecutor} created for the passed {@code command} */
   public static WorkerToolExecutor getLaunchedWorker(
-      IsolatedExecutionContext context, ImmutableList<String> startupCommand) throws IOException {
-    return getLaunchWorkerSupplier(context, startupCommand).get();
+      IsolatedExecutionContext context,
+      ImmutableList<String> startupCommand,
+      boolean pathAllEnvVariablesFromBuckProcess)
+      throws IOException {
+    return getLaunchWorkerSupplier(context, startupCommand, pathAllEnvVariablesFromBuckProcess)
+        .get();
   }
 
   private static ThrowingSupplier<WorkerToolExecutor, IOException> getLaunchWorkerSupplier(
-      IsolatedExecutionContext context, ImmutableList<String> startupCommand) {
+      IsolatedExecutionContext context,
+      ImmutableList<String> startupCommand,
+      boolean includeBucksEnvVariables) {
     return () -> {
       WorkerToolLauncher workerToolLauncher = new DefaultWorkerToolLauncher(context);
       return workerToolLauncher.launchWorker(
           startupCommand,
-          CommonChildProcessParams.getCommonChildProcessEnvsIncludingBuckClasspath());
+          CommonChildProcessParams.getCommonChildProcessEnvsIncludingBuckClasspath(
+              includeBucksEnvVariables));
     };
   }
 }

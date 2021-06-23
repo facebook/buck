@@ -40,4 +40,6 @@ public interface RulesJavaCDParams extends AddsToRuleKey {
   int getMaxWaitForResultTimeoutInSeconds();
 
   boolean pipeliningDisabled();
+
+  boolean isIncludeAllBucksEnvVariables();
 }

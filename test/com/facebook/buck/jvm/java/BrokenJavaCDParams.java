@@ -72,6 +72,12 @@ public abstract class BrokenJavaCDParams implements RulesJavaCDParams {
       inputs = IgnoredFieldInputs.class)
   public abstract boolean pipeliningDisabled();
 
+  @Override
+  @ExcludeFromRuleKey(
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  public abstract boolean isIncludeAllBucksEnvVariables();
+
   public abstract boolean getParamWithNoAnnotation();
 
   public static BrokenJavaCDParams of() {
@@ -83,6 +89,7 @@ public abstract class BrokenJavaCDParams implements RulesJavaCDParams {
         1,
         1,
         1,
+        false,
         false,
         false);
   }

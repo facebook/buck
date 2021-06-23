@@ -83,6 +83,13 @@ public abstract class DefaultRulesJavaCDParams implements RulesJavaCDParams {
       inputs = IgnoredFieldInputs.class)
   public abstract boolean pipeliningDisabled();
 
+  @Override
+  @ExcludeFromRuleKey(
+      reason = "javacd env variables option is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
+  public abstract boolean isIncludeAllBucksEnvVariables();
+
   /** Creates {@link DefaultRulesJavaCDParams} */
   static DefaultRulesJavaCDParams of(
       boolean hasJavaCDEnabled,
@@ -92,7 +99,8 @@ public abstract class DefaultRulesJavaCDParams implements RulesJavaCDParams {
       int workerToolMaxInstancesSize,
       int borrowFromPoolTimeoutInSeconds,
       int maxWaitForResultTimeoutInSeconds,
-      boolean pipeliningDisabled) {
+      boolean pipeliningDisabled,
+      boolean includeAllBucksEnvVariables) {
     return ImmutableDefaultRulesJavaCDParams.ofImpl(
         hasJavaCDEnabled,
         JavaCDRolloutModeValue.of(javacdMode),
@@ -101,6 +109,7 @@ public abstract class DefaultRulesJavaCDParams implements RulesJavaCDParams {
         workerToolMaxInstancesSize,
         borrowFromPoolTimeoutInSeconds,
         maxWaitForResultTimeoutInSeconds,
-        pipeliningDisabled);
+        pipeliningDisabled,
+        includeAllBucksEnvVariables);
   }
 }

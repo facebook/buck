@@ -38,7 +38,8 @@ public class JavaCDParamsUtils {
               javaCDBuckConfig.getWorkerToolMaxInstancesSize(),
               javaCDBuckConfig.getBorrowFromPoolTimeoutInSeconds(),
               javaCDBuckConfig.getMaxWaitForResultTimeoutInSeconds(),
-              javaBuckConfig.isPipeliningDisabled());
+              javaBuckConfig.isPipeliningDisabled(),
+              javaCDBuckConfig.isPathAllEnvVariablesToJavacd());
     }
     return javaCDParams;
   }

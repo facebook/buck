@@ -207,11 +207,15 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     DownwardApiLaunchedProcess launchedProcess;
     boolean launched = false;
     try {
+      ImmutableMap<String, String> environment = buildEnvs(envs, namedPipeName);
+      LOG.info(
+          "Launching worker tool process with command: %s and envs: %s",
+          startWorkerToolCommand, envs);
       launchedProcess =
           downwardApiProcessExecutor.launchProcess(
               ProcessExecutorParams.builder()
                   .addAllCommand(startWorkerToolCommand)
-                  .setEnvironment(buildEnvs(envs, namedPipeName))
+                  .setEnvironment(environment)
                   .build());
       launched = true;
     } catch (IOException e) {

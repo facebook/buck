@@ -97,6 +97,11 @@ public abstract class JavaCDBuckConfig implements ConfigView<BuckConfig> {
     return maxWaitForResultTimeoutSec;
   }
 
+  @Value.Lazy
+  public boolean isPathAllEnvVariablesToJavacd() {
+    return getDelegate().getBooleanValue(SECTION, "path_env_variables_to_javacd", false);
+  }
+
   private void verifyNonNegative(int value, String propertyName) {
     Preconditions.checkState(value >= 0, propertyName + " has to be non negative");
   }

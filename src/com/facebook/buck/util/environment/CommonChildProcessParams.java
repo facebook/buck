@@ -34,13 +34,27 @@ public class CommonChildProcessParams {
    * by buck.
    */
   public static ImmutableMap<String, String> getCommonChildProcessEnvsIncludingBuckClasspath() {
+    return getCommonChildProcessEnvsIncludingBuckClasspath(false);
+  }
+
+  /**
+   * Returns common env params with buck classpath that could be passed into child processes spawned
+   * by buck. If {@code includeBucksEnvVariables} is set then all env variables from buck process is
+   * returned.
+   */
+  public static ImmutableMap<String, String> getCommonChildProcessEnvsIncludingBuckClasspath(
+      boolean includeBucksEnvVariables) {
     ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
-    String buckClasspath =
-        Objects.requireNonNull(
-            BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
-            BuckClasspath.ENV_VAR_NAME + " env variable is not set");
-    envBuilder.put(BuckClasspath.ENV_VAR_NAME, buckClasspath);
-    envBuilder.putAll(getCommonChildProcessEnvs());
+    if (includeBucksEnvVariables) {
+      envBuilder.putAll(SYSTEM_ENV);
+    } else {
+      String buckClasspath =
+          Objects.requireNonNull(
+              BuckClasspath.getBuckClasspathFromEnvVarOrNull(),
+              BuckClasspath.ENV_VAR_NAME + " env variable is not set");
+      envBuilder.put(BuckClasspath.ENV_VAR_NAME, buckClasspath);
+      envBuilder.putAll(getCommonChildProcessEnvs());
+    }
     return envBuilder.build();
   }
 

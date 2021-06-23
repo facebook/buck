@@ -67,6 +67,11 @@ public abstract class JavaCDParams {
     return getRulesJavaCDParams().getMaxWaitForResultTimeoutInSeconds();
   }
 
+  @Value.Derived
+  public boolean isIncludeAllBucksEnvVariables() {
+    return getRulesJavaCDParams().isIncludeAllBucksEnvVariables();
+  }
+
   public abstract RelPath getLogDirectory();
 
   /** Creates {@link JavaCDParams} */
