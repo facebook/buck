@@ -94,6 +94,7 @@ import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -665,6 +666,12 @@ public class ProjectGeneratorTest {
         FakeBuckConfig.builder().setFilesystem(projectFilesystem).setSections(sections).build();
     appleConfig = buckConfig.getView(AppleConfig.class);
 
+    BuildTarget pchTarget = BuildTargetFactory.newInstance("//foo", "pch");
+    TargetNode<?> pchNode =
+        CxxPrecompiledHeaderBuilder.createBuilder(pchTarget, projectFilesystem)
+            .setSrc(FakeSourcePath.of("Foo/Foo-Prefix.pch"))
+            .build();
+
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> libNode =
@@ -674,9 +681,13 @@ public class ProjectGeneratorTest {
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setSwiftVersion(Optional.of("3"))
             .setModular(true)
+            .setPrefixHeader(
+                Optional.of(
+                    ExplicitBuildTargetSourcePath.of(pchTarget, Paths.get("Foo/Foo-Prefix.pch"))))
             .build();
 
-    ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(libNode), libTarget);
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(ImmutableSet.of(libNode, pchNode), libTarget);
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
@@ -725,6 +736,8 @@ public class ProjectGeneratorTest {
     assertTrue(m.find());
     RelPath clangResponseFilePath = projectFilesystem.relativize(Paths.get(m.group(1)));
     List<String> clangArgs = projectFilesystem.readLines(clangResponseFilePath.getPath());
+    assertEquals(clangArgs.get(0), "-include");
+    assertEquals(clangArgs.get(1), projectFilesystem.resolve("Foo/Foo-Prefix.pch").toString());
     assertThat(clangArgs, hasItem("-I" + projectFilesystem.resolve(swiftHeaderMapPath)));
 
     BuildTarget privateHeadersTarget =
@@ -741,6 +754,7 @@ public class ProjectGeneratorTest {
             vfsOverlayTarget,
             exportedHeadersTarget,
             privateHeadersTarget,
+            pchTarget,
             swiftCompileTarget));
   }
 

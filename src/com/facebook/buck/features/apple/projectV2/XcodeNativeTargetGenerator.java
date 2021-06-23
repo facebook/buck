@@ -1474,7 +1474,9 @@ public class XcodeNativeTargetGenerator {
 
     Optional<SourcePath> prefixHeaderOptional =
         getPrefixHeaderSourcePath(targetNode.getConstructorArg());
-    if (prefixHeaderOptional.isPresent()) {
+    // Don't use Xcode's PCH generation when indexing with build flags. We will already have the
+    // correct include in the indexing flags.
+    if (prefixHeaderOptional.isPresent() && !appleConfig.getProjectGeneratorIndexViaBuildFlags()) {
       RelPath prefixHeaderRelative = resolveSourcePath(prefixHeaderOptional.get());
       Path prefixHeaderPath =
           pathRelativizer.outputDirToRootRelative(prefixHeaderRelative.getPath());

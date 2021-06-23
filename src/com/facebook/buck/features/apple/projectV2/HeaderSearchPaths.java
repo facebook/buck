@@ -44,12 +44,17 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxPrecompiledHeaderDescription;
+import com.facebook.buck.cxx.CxxPrecompiledHeaderDescriptionArg;
+import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -186,6 +191,23 @@ class HeaderSearchPaths {
     ImmutableList.Builder<String> includeFlags = ImmutableList.builder();
     ImmutableList.Builder<String> swiftIncludeFlags = ImmutableList.builder();
     ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
+
+    // We need to include any PCH files explicitly. It would be better to rely on modules, but
+    // unfortunately lots of the code is missing the required imports of Foundation and UIKit and
+    // relies on the presence of the PCH file instead.
+    Optional<SourcePath> prefixHeader =
+        targetNode.getConstructorArg().getPrefixHeader().isPresent()
+            ? targetNode.getConstructorArg().getPrefixHeader()
+            : targetNode.getConstructorArg().getPrecompiledHeader();
+    if (prefixHeader.isPresent() && prefixHeader.get() instanceof BuildTargetSourcePath) {
+      BuildTargetSourcePath sourcePath = (BuildTargetSourcePath) prefixHeader.get();
+      BuildRule prefixHeaderRule = actionGraphBuilder.getRule(sourcePath);
+      if (prefixHeaderRule instanceof CxxPrecompiledHeaderTemplate) {
+        includeFlags.add(
+            "-include",
+            ((CxxPrecompiledHeaderTemplate) prefixHeaderRule).getHeaderSourcePath().toString());
+      }
+    }
 
     // Paths need to be absolute as the Swift indexing system will override -working-directory
     visitRecursiveHeaderSymlinkTrees(
