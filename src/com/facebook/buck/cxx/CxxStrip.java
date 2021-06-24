@@ -182,13 +182,17 @@ public class CxxStrip extends ModernBuildRule<CxxStrip.Impl> implements Supports
       // Modern build rules will automatically create the output resolver root dir, so handle the
       // weird case when a passed in `PublicOutputPath` wants to write a file to the same location.
       if (output.equals(outputPathResolver.getRootPath().getPath())) {
-        steps.add(RmStep.of(BuildCellRelativePath.of(output), true));
+        steps.add(
+            RmStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), filesystem, output),
+                true));
       }
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
       steps.add(
           new StripSymbolsStep(
               buildContext.getSourcePathResolver().getAbsolutePath(unstrippedBinary).getPath(),
-              output,
+              filesystem.resolve(output),
               strip.getCommandPrefix(resolver),
               strip.getEnvironment(resolver),
               Arg.stringify(stripArgs, resolver),
