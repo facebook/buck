@@ -349,7 +349,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
           buildTarget.getFullyQualifiedName(),
           realSize,
           outputSize,
-          artifactMetadata.get(BuildInfo.MetadataKey.RULE_KEY));
+          getRuleKey(BuildInfo.MetadataKey.RULE_KEY).orElse(null));
     }
 
     validateExistenceOfPaths(artifactMetadata);
