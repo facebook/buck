@@ -52,8 +52,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxPrecompiledHeaderDescription;
-import com.facebook.buck.cxx.CxxPrecompiledHeaderDescriptionArg;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
