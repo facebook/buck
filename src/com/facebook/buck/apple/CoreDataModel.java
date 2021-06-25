@@ -62,7 +62,8 @@ public class CoreDataModel extends AbstractBuildRule {
 
   @AddToRuleKey private final String minOSVersion;
 
-  private final Path sdkRoot;
+  @AddToRuleKey private final SourcePath sdkRoot;
+
   private final Path outputDir;
   private BuildableSupport.DepsSupplier depsSupplier;
 
@@ -86,7 +87,7 @@ public class CoreDataModel extends AbstractBuildRule {
             .replace('#', '-'); // momc doesn't like # in paths
     this.outputDir = Paths.get(outputDirString);
     this.sdkName = appleCxxPlatform.getAppleSdk().getName();
-    this.sdkRoot = appleCxxPlatform.getAppleSdkPaths().getSdkPath();
+    this.sdkRoot = appleCxxPlatform.getAppleSdkPaths().getSdkSourcePath();
     this.minOSVersion = appleCxxPlatform.getMinVersion();
     this.momc = appleCxxPlatform.getMomc();
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
@@ -115,7 +116,7 @@ public class CoreDataModel extends AbstractBuildRule {
               commandBuilder.addAll(momc.getCommandPrefix(context.getSourcePathResolver()));
               commandBuilder.add(
                   "--sdkroot",
-                  sdkRoot.toString(),
+                  context.getSourcePathResolver().getAbsolutePath(sdkRoot).toString(),
                   "--" + sdkName + "-deployment-target",
                   minOSVersion,
                   "--module",

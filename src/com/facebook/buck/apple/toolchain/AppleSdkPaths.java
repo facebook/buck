@@ -69,6 +69,9 @@ public abstract class AppleSdkPaths {
    */
   public abstract Path getSdkPath();
 
+  /** Source path to tools and files which depend on a particular SDK on a particular platform. */
+  public abstract SourcePath getSdkSourcePath();
+
   public static Builder builder() {
     return new Builder();
   }

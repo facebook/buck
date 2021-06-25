@@ -158,6 +158,11 @@ public class FakeAppleRuleDescriptions {
           .setSdkPath(
               FAKE_PROJECT_FILESYSTEM.getPath(
                   "Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"))
+          .setSdkSourcePath(
+              PathSourcePath.of(
+                  FAKE_PROJECT_FILESYSTEM,
+                  FAKE_PROJECT_FILESYSTEM.getPath(
+                      "Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk")))
           .build();
 
   public static final AppleSdkPaths DEFAULT_IPHONEOS_SDK_PATHS =
@@ -172,6 +177,11 @@ public class FakeAppleRuleDescriptions {
           .setSdkPath(
               FAKE_PROJECT_FILESYSTEM.getPath(
                   "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
+          .setSdkSourcePath(
+              PathSourcePath.of(
+                  FAKE_PROJECT_FILESYSTEM,
+                  FAKE_PROJECT_FILESYSTEM.getPath(
+                      "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk")))
           .build();
 
   public static final AppleCxxPlatforms.XcodeBuildVersionCache FAKE_XCODE_BUILD_VERSION_CACHE =

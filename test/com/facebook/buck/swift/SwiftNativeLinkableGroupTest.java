@@ -79,6 +79,11 @@ public class SwiftNativeLinkableGroupTest {
                 developerDir
                     .resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")
                     .getPath())
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir
+                        .resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")
+                        .getPath()))
             .build();
     macosxSdk =
         AppleSdk.builder()
@@ -97,6 +102,11 @@ public class SwiftNativeLinkableGroupTest {
                 developerDir
                     .resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14sdk")
                     .getPath())
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir
+                        .resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14sdk")
+                        .getPath()))
             .build();
   }
 

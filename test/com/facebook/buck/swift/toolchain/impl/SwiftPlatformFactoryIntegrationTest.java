@@ -72,7 +72,12 @@ public class SwiftPlatformFactoryIntegrationTest {
             .setSdkPath(
                 developerDir
                     .resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")
-                    .getPath());
+                    .getPath())
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir
+                        .resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")
+                        .getPath()));
     for (AbsPath toolchainPath : toolchainPaths) {
       appleSdkPathsBuilder.addToolchainPaths(toolchainPath.getPath());
     }

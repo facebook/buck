@@ -153,6 +153,7 @@ public class AppleSdkDiscovery {
                         .setPlatformPath(platformDir)
                         .setPlatformSourcePath(PathSourcePath.of(projectFilesystem, platformDir))
                         .setSdkPath(sdkDir)
+                        .setSdkSourcePath(PathSourcePath.of(projectFilesystem, sdkDir))
                         .build();
                 appleSdkPathsBuilder.put(sdk, xcodePaths);
                 orderedSdksForPlatform.put(sdk.getApplePlatform(), sdk);

@@ -172,6 +172,10 @@ public class AppleCxxPlatformsTest {
             .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir.resolve(
+                        "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")))
             .build();
 
     AppleToolchain toolchain =
@@ -342,6 +346,10 @@ public class AppleCxxPlatformsTest {
             .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/WatchOS.platform/Developer/SDKs/WatchOS2.0.sdk"))
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir.resolve(
+                        "Platforms/WatchOS.platform/Developer/SDKs/WatchOS2.0.sdk")))
             .build();
 
     AppleToolchain toolchain =
@@ -456,6 +464,10 @@ public class AppleCxxPlatformsTest {
             .setSdkPath(
                 developerDir.resolve(
                     "Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk"))
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir.resolve(
+                        "Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.1.sdk")))
             .build();
 
     AppleToolchain toolchain =
@@ -584,6 +596,10 @@ public class AppleCxxPlatformsTest {
             .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir.resolve(
+                        "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")))
             .build();
 
     ImmutableSet<Path> paths =
@@ -637,6 +653,10 @@ public class AppleCxxPlatformsTest {
             .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir.resolve(
+                        "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")))
             .build();
 
     ImmutableSet<Path> paths =
@@ -709,6 +729,10 @@ public class AppleCxxPlatformsTest {
             .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir.resolve(
+                        "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")))
             .build();
 
     AppleToolchain toolchain =
@@ -750,6 +774,10 @@ public class AppleCxxPlatformsTest {
             .setSdkPath(
                 developerDir.resolve(
                     "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir.resolve(
+                        "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneSimulator8.0.sdk")))
             .build();
 
     ImmutableSet<Path> paths =
@@ -812,6 +840,10 @@ public class AppleCxxPlatformsTest {
             .setSdkPath(
                 developerDir.resolve(
                     "Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator2.0.sdk"))
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir.resolve(
+                        "Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator2.0.sdk")))
             .build();
 
     ImmutableSet<Path> paths =
@@ -874,6 +906,10 @@ public class AppleCxxPlatformsTest {
             .setSdkPath(
                 developerDir.resolve(
                     "Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator9.1.sdk"))
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir.resolve(
+                        "Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator9.1.sdk")))
             .build();
 
     ImmutableSet<Path> paths =
@@ -1041,6 +1077,10 @@ public class AppleCxxPlatformsTest {
             .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir.resolve(
+                        "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneSimulator8.0.sdk")))
             .build();
     AppleToolchain toolchain =
         AppleToolchain.builder()
@@ -1409,6 +1449,10 @@ public class AppleCxxPlatformsTest {
             .setPlatformSourcePath(FakeSourcePath.of(platformPath))
             .setSdkPath(
                 developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
+            .setSdkSourcePath(
+                FakeSourcePath.of(
+                    developerDir.resolve(
+                        "Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk")))
             .build(),
         buckConfig,
         new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),

@@ -126,6 +126,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformPath(macosxPlatformPath)
             .setPlatformSourcePath(macosxPlatformSourcePath)
             .setSdkPath(root.resolve("MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk")))
             .build();
     AppleSdkPaths macosxDebugPaths =
         AppleSdkPaths.builder()
@@ -134,6 +138,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformPath(macosxPlatformPath)
             .setPlatformSourcePath(macosxPlatformSourcePath)
             .setSdkPath(root.resolve("MacOSX.platform/Developer/SDKs/MacOSX-Debug10.9.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("MacOSX.platform/Developer/SDKs/MacOSX-Debug10.9.sdk")))
             .build();
 
     ImmutableMap<AppleSdk, AppleSdkPaths> expected =
@@ -186,6 +194,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformSourcePath(
                 PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(root.resolve("MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk")))
             .build();
 
     ImmutableMap<AppleSdk, AppleSdkPaths> expected =
@@ -233,6 +245,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformSourcePath(
                 PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk")))
             .build();
 
     ImmutableMap<AppleSdk, AppleSdkPaths> expected =
@@ -312,6 +328,7 @@ public class AppleSdkDiscoveryTest {
             .setPlatformSourcePath(
                 PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(actualSdkPath)
+            .setSdkSourcePath(PathSourcePath.of(workspace.getProjectFileSystem(), actualSdkPath))
             .build();
 
     ImmutableMap<AppleSdk, AppleSdkPaths> expected =
@@ -358,6 +375,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformSourcePath(
                 PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk")))
             .build();
 
     AppleSdk iphoneos80Sdk =
@@ -377,6 +398,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformSourcePath(
                 PathSourcePath.of(workspace.getProjectFileSystem(), iphonePlatformPath))
             .setSdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk")))
             .build();
 
     AppleSdk iphonesimulator80Sdk =
@@ -398,6 +423,11 @@ public class AppleSdkDiscoveryTest {
             .setSdkPath(
                 root.resolve(
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve(
+                        "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk")))
             .build();
 
     AppleSdk watchos20Sdk =
@@ -417,6 +447,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformSourcePath(
                 PathSourcePath.of(workspace.getProjectFileSystem(), watchosPlatformPath))
             .setSdkPath(root.resolve("Platforms/WatchOS.platform/Developer/SDKs/WatchOS.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("Platforms/WatchOS.platform/Developer/SDKs/WatchOS.sdk")))
             .build();
 
     AppleSdk watchsimulator20Sdk =
@@ -437,6 +471,11 @@ public class AppleSdkDiscoveryTest {
                 PathSourcePath.of(workspace.getProjectFileSystem(), watchsimulatorPlatformPath))
             .setSdkPath(
                 root.resolve("Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve(
+                        "Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator.sdk")))
             .build();
 
     AppleSdk appletvos91Sdk =
@@ -456,6 +495,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformSourcePath(
                 PathSourcePath.of(workspace.getProjectFileSystem(), appletvosPlatformPath))
             .setSdkPath(root.resolve("Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS.sdk")))
             .build();
 
     AppleSdk appletvsimulator91Sdk =
@@ -477,6 +520,11 @@ public class AppleSdkDiscoveryTest {
             .setSdkPath(
                 root.resolve(
                     "Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve(
+                        "Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator.sdk")))
             .build();
 
     ImmutableMap<String, AppleToolchain> toolchains =
@@ -556,6 +604,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformSourcePath(
                 PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk")))
             .build();
 
     AppleSdk iphoneos80Sdk =
@@ -576,6 +628,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformPath(iphoneosPlatformPath)
             .setPlatformSourcePath(iphoneosPlatformSourcePath)
             .setSdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")))
             .build();
 
     AppleSdk iphonesimulator80Sdk =
@@ -598,6 +654,11 @@ public class AppleSdkDiscoveryTest {
             .setSdkPath(
                 root.resolve(
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve(
+                        "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator8.0.sdk")))
             .build();
 
     AppleSdk iphoneos81Sdk =
@@ -615,6 +676,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformPath(iphoneosPlatformPath)
             .setPlatformSourcePath(iphoneosPlatformSourcePath)
             .setSdkPath(root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk")))
             .build();
 
     AppleSdk iphonesimulator81Sdk =
@@ -634,6 +699,11 @@ public class AppleSdkDiscoveryTest {
             .setSdkPath(
                 root.resolve(
                     "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve(
+                        "Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk")))
             .build();
 
     ImmutableMap<AppleSdk, AppleSdkPaths> expected =
@@ -694,6 +764,7 @@ public class AppleSdkDiscoveryTest {
             .setPlatformSourcePath(
                 PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(actualSdkPath)
+            .setSdkSourcePath(PathSourcePath.of(workspace.getProjectFileSystem(), actualSdkPath))
             .build();
 
     ImmutableMap<AppleSdk, AppleSdkPaths> expected =
@@ -825,6 +896,10 @@ public class AppleSdkDiscoveryTest {
             .setPlatformSourcePath(
                 PathSourcePath.of(workspace.getProjectFileSystem(), macosxPlatformPath))
             .setSdkPath(root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"))
+            .setSdkSourcePath(
+                PathSourcePath.of(
+                    workspace.getProjectFileSystem(),
+                    root.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk")))
             .build();
 
     ImmutableMap<AppleSdk, AppleSdkPaths> expected =
