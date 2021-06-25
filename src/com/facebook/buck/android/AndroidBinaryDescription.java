@@ -59,6 +59,7 @@ import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.step.fs.XzStep;
+import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -75,7 +76,8 @@ public class AndroidBinaryDescription
     implements DescriptionWithTargetGraph<AndroidBinaryDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<
-            AndroidBinaryDescription.AbstractAndroidBinaryDescriptionArg> {
+            AndroidBinaryDescription.AbstractAndroidBinaryDescriptionArg>,
+        VersionRoot<AndroidBinaryDescriptionArg> {
 
   private static final ImmutableSet<Flavor> FLAVORS =
       ImmutableSet.of(

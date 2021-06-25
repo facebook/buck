@@ -54,6 +54,7 @@ import com.facebook.buck.jvm.java.nullsafe.NullsafeConfig;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreFunctions;
+import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
@@ -65,7 +66,8 @@ public class AndroidLibraryDescription
     implements DescriptionWithTargetGraph<AndroidLibraryDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<
-            AndroidLibraryDescription.AbstractAndroidLibraryDescriptionArg> {
+            AndroidLibraryDescription.AbstractAndroidLibraryDescriptionArg>,
+        VersionPropagator<AndroidLibraryDescriptionArg> {
 
   private static final Flavor DUMMY_R_DOT_JAVA_FLAVOR =
       AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR;
