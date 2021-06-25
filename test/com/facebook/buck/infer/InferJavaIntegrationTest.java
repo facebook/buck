@@ -49,7 +49,6 @@ public class InferJavaIntegrationTest {
 
     Path output = workspace.buildAndReturnOutput("//:java-smoke-test#infer-java-capture");
     assertTrue(Files.isRegularFile(output.resolve("results.db")));
-    assertTrue(Files.isDirectory(output.resolve("specs")));
   }
 
   @Test

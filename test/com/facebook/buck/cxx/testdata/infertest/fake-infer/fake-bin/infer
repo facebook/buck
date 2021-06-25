@@ -38,13 +38,7 @@ PROJECT_ROOT=$(cd "$INPUT_PROJECT_ROOT" && pwd)
 
 case $FIRST_ARG in
     analyze)
-        # --specs-dir-list-file must have absolute path
-        SPECS_DIR_LIST_FILE="$(get_infer_argument "--specs-dir-list-file" "$@")"
-        ([ -f "$SPECS_DIR_LIST_FILE" ] && [[ "$SPECS_DIR_LIST_FILE" = /* ]]) \
-            || { echo "path passed to --specs-dir-list-file must exist and be absolute"; exit 1; }
-        # analyze case: create a specs file and a fake json report
-        mkdir -p $OUT/specs
-        touch $OUT/specs/mockedSpec.specs
+        # analyze case: create a fake json report
         echo '[{"file":"aFile.c", "type":"NULL_DEREFERENCE", "line":123}]' > "$OUT/report.json"
         ;;
     capture)
