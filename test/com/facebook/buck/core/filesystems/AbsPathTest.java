@@ -16,12 +16,20 @@
 
 package com.facebook.buck.core.filesystems;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
 
 public class AbsPathTest {
+
   @Test
   public void removePrefix() {
     AbsPath root = AbsPath.of(Paths.get(".").toAbsolutePath());
@@ -37,5 +45,20 @@ public class AbsPathTest {
     assertEquals(RelPath.get("foo"), root.resolve("foo").removePrefixIfStartsWith(root));
     assertEquals(RelPath.get("foo/bar"), root.resolve("foo/bar").removePrefixIfStartsWith(root));
     assertNull(root.resolve("foo/bar").removePrefixIfStartsWith(root.resolve("baz")));
+  }
+
+  @Test
+  public void absPath() throws IOException {
+    Path absPath = BuckUnixPathUtils.createPath("/a/b/c");
+    assertSame(AbsPath.of(absPath), absPath);
+  }
+
+  @Test
+  public void relPath() throws IOException {
+    Path relPath = RelPath.get("a/b/c/testFile.txt").getPath();
+
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, () -> AbsPath.of(relPath));
+    assertThat(exception.getMessage(), startsWith("path must be absolute: "));
   }
 }

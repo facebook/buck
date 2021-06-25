@@ -28,10 +28,10 @@ public interface RelPath extends PathWrapper {
    *
    * <p>Note this operation is just a cast if the path is {@link BuckUnixPath}.
    *
-   * @throws RuntimeException the path is not absolute.
+   * @throws RuntimeException the path is not relative.
    */
   static RelPath of(Path path) {
-    if (path instanceof AbsPath) {
+    if (path instanceof RelPath) {
       return (RelPath) path;
     } else {
       return new RelPathImpl(path);
