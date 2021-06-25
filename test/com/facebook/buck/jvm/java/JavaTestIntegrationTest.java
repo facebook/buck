@@ -75,6 +75,7 @@ public class JavaTestIntegrationTest {
     String stderr = result.getStderr();
 
     String lookFor;
+    assumeThat(Platform.detect(), not(Platform.WINDOWS));
     if (JavaVersion.getMajorVersion() <= 8) {
       // Javac emits different errors on Windows !?!
       if (Platform.detect() == Platform.WINDOWS) {
@@ -90,16 +91,29 @@ public class JavaTestIntegrationTest {
             "cannot find symbol" + System.lineSeparator() + "import javax.annotation.Nullable;";
       }
     } else {
-      lookFor =
-          "cannot find symbol"
-              + System.lineSeparator()
-              + "  @Nullable private String foobar;"
-              + System.lineSeparator()
-              + "   ^"
-              + System.lineSeparator()
-              + "  symbol:   class Nullable"
-              + System.lineSeparator()
-              + "  location: class com.facebook.buck.example.UsesNullable";
+      if (Platform.detect() == Platform.WINDOWS) {
+        lookFor =
+            "cannot find symbol\n"
+                + System.lineSeparator()
+                + "  symbol:   class Nullable\n"
+                + System.lineSeparator()
+                + "  location: class com.facebook.buck.example.UsesNullable\n"
+                + System.lineSeparator()
+                + "  @Nullable private String foobar\n"
+                + System.lineSeparator() +
+                "   ^";
+      } else {
+        lookFor =
+            "cannot find symbol"
+                + System.lineSeparator()
+                + "  @Nullable private String foobar;"
+                + System.lineSeparator()
+                + "   ^"
+                + System.lineSeparator()
+                + "  symbol:   class Nullable"
+                + System.lineSeparator()
+                + "  location: class com.facebook.buck.example.UsesNullable";
+      }
     }
     assertTrue(stderr, stderr.contains(lookFor));
   }
