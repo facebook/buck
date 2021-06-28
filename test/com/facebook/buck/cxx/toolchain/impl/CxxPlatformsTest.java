@@ -87,7 +87,13 @@ public class CxxPlatformsTest {
             .setCxxpp(createPreprocessorProvider(filesystem, ToolType.CXXPP))
             .setLd(
                 new DefaultLinkerProvider(
-                    LinkerProvider.Type.GNU, new ConstantToolProvider(borland), true, true, true))
+                    LinkerProvider.Type.GNU,
+                    new ConstantToolProvider(borland),
+                    true,
+                    true,
+                    false,
+                    false,
+                    true))
             .setStrip(new ConstantToolProvider(borland))
             .setSymbolNameTool(new PosixNmSymbolNameTool(new ConstantToolProvider(borland), false))
             .setAr(ArchiverProvider.from(new GnuArchiver(borland)))

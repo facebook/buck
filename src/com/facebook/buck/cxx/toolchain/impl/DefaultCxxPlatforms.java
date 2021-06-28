@@ -285,6 +285,7 @@ public class DefaultCxxPlatforms {
                 getToolchainTool(() -> cxxBuckConfig.getSourcePath(defaultLinker))),
             cxxBuckConfig.shouldCacheLinks(),
             cxxBuckConfig.shouldUploadToCache(),
+            cxxBuckConfig.getFocusedDebuggingEnabled(),
             false,
             cxxBuckConfig.getLinkPathNormalizationArgsEnabled()),
         ImmutableList.of(),

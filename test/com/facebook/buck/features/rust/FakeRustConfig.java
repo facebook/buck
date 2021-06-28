@@ -43,6 +43,7 @@ public class FakeRustConfig extends RustBuckConfig {
                       new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("/bin/rustc")))),
                   true,
                   true,
+                  false,
                   true));
 
   private Optional<ToolProvider> compiler = Optional.empty();

@@ -271,6 +271,7 @@ public class CxxToolchainDescription
             ToolProviders.getToolProvider(args.getLinker()),
             args.getCacheLinks(),
             cxxBuckConfig.shouldUploadToCache(),
+            cxxBuckConfig.getFocusedDebuggingEnabled(),
             scrubConcurrently,
             args.getLinkPathNormalizationArgsEnabled()));
 

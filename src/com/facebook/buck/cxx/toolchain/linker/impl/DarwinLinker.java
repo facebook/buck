@@ -90,17 +90,21 @@ public class DarwinLinker extends DelegatingTool
 
   @AddToRuleKey private final boolean scrubConcurrently;
 
+  @AddToRuleKey private final boolean useFocusedDebugging;
+
   @AddToRuleKey private final boolean usePathNormalizationArgs;
 
   public DarwinLinker(
       Tool tool,
       boolean shouldCacheLinks,
       boolean shouldUploadToCache,
+      boolean useFocusedDebugging,
       boolean scrubConcurrently,
       boolean usePathNormalizationArgs) {
     super(tool);
     this.shouldCreateHermeticLinkOutput = shouldCacheLinks;
     this.shouldUploadToCache = shouldUploadToCache;
+    this.useFocusedDebugging = useFocusedDebugging;
     this.scrubConcurrently = scrubConcurrently;
     this.usePathNormalizationArgs = usePathNormalizationArgs;
   }
@@ -112,7 +116,7 @@ public class DarwinLinker extends DelegatingTool
       Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap,
       Optional<AbsPath> focusedTargetsPath) {
     if (shouldCreateHermeticLinkOutput) {
-      if (shouldUploadToCache || !focusedTargetsPath.isPresent()) {
+      if (shouldUploadToCache || !useFocusedDebugging) {
         // If we aren't using focused debugging, scrub all absolute OSO paths into relative paths.
         FileScrubber uuidScrubber = new LcUuidContentsScrubber(scrubConcurrently);
         if (usePathNormalizationArgs) {
@@ -189,7 +193,7 @@ public class DarwinLinker extends DelegatingTool
 
   @Override
   public Iterable<Arg> pathNormalizationArgs(ImmutableMap<Path, Path> cellRootMap) {
-    if (shouldCreateHermeticLinkOutput && usePathNormalizationArgs) {
+    if (shouldCreateHermeticLinkOutput && usePathNormalizationArgs && !useFocusedDebugging) {
       Optional<String> maybeOsoPrefix =
           OsoSymbolsContentsScrubber.computeOsoPrefixForCellRootMap(cellRootMap);
       return maybeOsoPrefix
@@ -206,7 +210,7 @@ public class DarwinLinker extends DelegatingTool
 
   @Override
   public Optional<String> pathNormalizationPrefix(ImmutableMap<Path, Path> cellRootMap) {
-    if (shouldCreateHermeticLinkOutput && usePathNormalizationArgs) {
+    if (shouldCreateHermeticLinkOutput && usePathNormalizationArgs && !useFocusedDebugging) {
       return OsoSymbolsContentsScrubber.computeOsoPrefixForCellRootMap(cellRootMap);
     }
     return Optional.empty();

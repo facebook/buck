@@ -43,6 +43,7 @@ public class RustTestUtils {
                 new ConstantToolProvider(new CommandTool.Builder().build()),
                 true,
                 true,
+                false,
                 true));
   }
 

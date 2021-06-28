@@ -491,6 +491,7 @@ public class AppleCxxPlatforms {
                 new ConstantToolProvider(clangXxPath),
                 cxxBuckConfig.shouldCacheLinks(),
                 cxxBuckConfig.shouldUploadToCache(),
+                cxxBuckConfig.getFocusedDebuggingEnabled(),
                 appleConfig.shouldLinkScrubConcurrently(),
                 cxxBuckConfig.getLinkPathNormalizationArgsEnabled()),
             StringArg.from(combinedLdFlags),

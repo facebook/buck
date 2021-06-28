@@ -431,6 +431,7 @@ public class CxxBuckConfig {
             toolProvider.get(),
             shouldCacheLinks(),
             shouldUploadToCache(),
+            getFocusedDebuggingEnabled(),
             getLinkPathNormalizationArgsEnabled()));
   }
 
