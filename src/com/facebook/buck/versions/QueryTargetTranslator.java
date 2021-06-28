@@ -76,7 +76,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
         .map(t -> ":" + t.getShortNameAndFlavorPostfix())
         .map(Pattern::quote)
         // Use a positive look-behind assertion to avoid matching in a fully qualified target.
-        .map(p -> "(?<=[( ])" + p)
+        .map(p -> "(?<=[( \"])" + p)
         .forEach(patterns::add);
 
     // A pattern matching all of the build targets in the query string.
