@@ -100,8 +100,8 @@ public class JavaTestIntegrationTest {
                 + "  location: class com.facebook.buck.example.UsesNullable\n"
                 + System.lineSeparator()
                 + "  @Nullable private String foobar\n"
-                + System.lineSeparator() +
-                "   ^";
+                + System.lineSeparator()
+                + "   ^";
       } else {
         lookFor =
             "cannot find symbol"
