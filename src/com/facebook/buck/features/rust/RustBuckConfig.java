@@ -182,18 +182,12 @@ public class RustBuckConfig {
    * @return List of rustc_check_flags.
    */
   public ImmutableList<String> getRustcCheckFlags(String platform) {
-    return ImmutableList.<String>builder()
-        .addAll(getRustCompilerFlags(platform))
-        .addAll(getCompilerFlags(platform, RUSTC_CHECK_FLAGS))
-        .build();
+    return getCompilerFlags(platform, RUSTC_CHECK_FLAGS);
   }
 
   /** Preliminary: get rust flags for #doc flavored builds. */
   public ImmutableList<String> getRustDocFlags(String platform) {
-    return ImmutableList.<String>builder()
-        .addAll(getRustCompilerFlags(platform))
-        .addAll(getCompilerFlags(platform, RUSTDOC_FLAGS))
-        .build();
+    return getCompilerFlags(platform, RUSTDOC_FLAGS);
   }
 
   /**
