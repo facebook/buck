@@ -74,13 +74,13 @@ public class ConfiguredQueryTargetTranslatorTest {
             BaseName.of("//foo"),
             translator,
             Query.of(
-                "deps(set(:a \":a\" ':a' //blah:a))",
+                "deps(set(:a \":a\" ':a' :a_suffix ':a_suffix' \":a_suffix\" //blah:a))",
                 UnconfiguredTargetConfiguration.INSTANCE,
                 BaseName.ROOT)),
         Matchers.equalTo(
             Optional.of(
                 Query.of(
-                    "deps(set(//bar:b \"//bar:b\" '//bar:b' //blah:a))",
+                    "deps(set(//bar:b \"//bar:b\" '//bar:b' :a_suffix ':a_suffix' \":a_suffix\" //blah:a))",
                     UnconfiguredTargetConfiguration.INSTANCE,
                     BaseName.ROOT))));
   }

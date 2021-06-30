@@ -76,7 +76,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
         .map(t -> ":" + t.getShortNameAndFlavorPostfix())
         .map(Pattern::quote)
         // Use a positive look-behind assertion to avoid matching in a fully qualified target.
-        .map(p -> "(?<=[( \"'])" + p)
+        .map(p -> "((?<=[( \"'])" + p + "(?=[) '\"]))")
         .forEach(patterns::add);
 
     // A pattern matching all of the build targets in the query string.
@@ -95,7 +95,10 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
               .configure(query.getTargetConfiguration());
       Optional<BuildTarget> translated =
           translator.translate(cellNameResolver, targetBaseName, target);
-      builder.append(translated.orElse(target).getFullyQualifiedName());
+      builder.append(
+          translated
+              .map(BuildTarget::getFullyQualifiedName)
+              .orElse(queryString.substring(matcher.start(), matcher.end())));
       lastEnd = matcher.end();
     }
     builder.append(queryString, lastEnd, queryString.length());
