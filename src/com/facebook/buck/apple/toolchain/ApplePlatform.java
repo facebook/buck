@@ -43,7 +43,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
       ImmutableApplePlatform.builder()
           .setName("iphonesimulator")
           .setSwiftName("ios")
-          .setArchitectures(ImmutableList.of("i386", "x86_64"))
+          .setArchitectures(ImmutableList.of("i386", "x86_64", "arm64"))
           .setMinVersionFlagPrefix("-mios-simulator-version-min=")
           // only used for legacy watch apps
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
@@ -59,7 +59,7 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
   public static final ApplePlatform WATCHSIMULATOR =
       ImmutableApplePlatform.builder()
           .setName("watchsimulator")
-          .setArchitectures(ImmutableList.of("i386", "x86_64"))
+          .setArchitectures(ImmutableList.of("i386", "x86_64", "arm64"))
           .setMinVersionFlagPrefix("-mwatchos-simulator-version-min=")
           .setStubBinaryPath(Optional.of("Library/Application Support/WatchKit/WK"))
           .build();
@@ -73,14 +73,14 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
   public static final ApplePlatform APPLETVSIMULATOR =
       ImmutableApplePlatform.builder()
           .setName("appletvsimulator")
-          .setArchitectures(ImmutableList.of("x86_64"))
+          .setArchitectures(ImmutableList.of("arm64", "x86_64"))
           .setMinVersionFlagPrefix("-mtvos-simulator-version-min=")
           .setSwiftName("tvos")
           .build();
   public static final ApplePlatform MACOSX =
       ImmutableApplePlatform.builder()
           .setName("macosx")
-          .setArchitectures(ImmutableList.of("i386", "x86_64"))
+          .setArchitectures(ImmutableList.of("i386", "x86_64", "arm64"))
           .setAppIncludesFrameworks(true)
           .build();
   public static final ApplePlatform DRIVERKIT =
@@ -142,6 +142,10 @@ public abstract class ApplePlatform implements Comparable<ApplePlatform>, AddsTo
 
   public ApplePlatformType getType() {
     return ApplePlatformType.of(getName());
+  }
+
+  public boolean getIsSimulator() {
+    return isSimulator(getName());
   }
 
   public static boolean needsCodeSign(String name) {
