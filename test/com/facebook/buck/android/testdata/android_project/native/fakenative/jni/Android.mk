@@ -4,6 +4,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES:= fakesystem.c
 
 LOCAL_CFLAGS := -Wall -Werror
+LOCAL_LDFLAGS += -stdlib=libstdc++
 
 LOCAL_MODULE := fakenative
 
