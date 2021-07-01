@@ -9,6 +9,8 @@ java_library_with_plugins(
     provided_deps = [
         "//third-party/java/gson:gson",
     ],
+    source = "8",
+    target = "8",
     tests = [
         "//test/com/facebook/buck/features/project/intellij/targetinfo:targetinfo",
     ],
