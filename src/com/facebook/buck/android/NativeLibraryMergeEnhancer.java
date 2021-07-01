@@ -344,7 +344,9 @@ class NativeLibraryMergeEnhancer {
       for (Pattern pattern : patterns) {
         for (NativeLinkable linkable : allLinkables) {
           // TODO(dreiss): Might be a good idea to cache .getBuildTarget().toString().
-          if (pattern.matcher(linkable.getBuildTarget().toString()).find()) {
+          if (pattern
+              .matcher(linkable.getBuildTarget().getUnflavoredBuildTarget().toString())
+              .find()) {
             constituentsBuilder.addLinkables(linkable);
           }
         }
