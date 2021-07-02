@@ -223,9 +223,14 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
 
   @Override
   public void close() {
-    packagePipeline.close();
     perfEventScope.close();
     shuttingDown.set(true);
+
+    // `packagePipeline` was created prior to this object getting created and also holds on to its
+    // own `perfEventScope`.
+    // We need to `close()` it after we close our local `perfEventScope` so the perf event scopes
+    // nest correctly.
+    packagePipeline.close();
 
     // At this point external callers should not schedule more work, internally job creation
     // should also stop. Any scheduled futures should eventually cancel themselves (all of the
