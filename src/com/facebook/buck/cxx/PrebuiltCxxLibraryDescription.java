@@ -63,7 +63,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -287,11 +286,7 @@ public class PrebuiltCxxLibraryDescription
                     .resolve(graphBuilder, buildTarget.getTargetConfiguration())
                     .linkWhole(SourcePathArg.of(library), graphBuilder.getSourcePathResolver()))
             .addAllArgs(
-                StringArg.from(
-                    CxxFlags.getFlagsWithPlatformMacroExpansion(
-                        args.getExportedPostLinkerFlags(),
-                        args.getExportedPostPlatformLinkerFlags(),
-                        cxxPlatform)))
+                getExportedPostLinkerArgs(cxxPlatform, args, buildTarget, cellRoots, graphBuilder))
             .build(),
         Optional.empty(),
         cellRoots);
@@ -708,15 +703,8 @@ public class PrebuiltCxxLibraryDescription
       }
 
       public ImmutableList<Arg> getExportedPostLinkerFlags(CxxPlatform cxxPlatform) {
-        // TODO(cjhopman): Why wasn't this updated to handle macros correctly like
-        // exported_linker_flags?
-        return CxxFlags.getFlagsWithPlatformMacroExpansion(
-                args.getExportedPostLinkerFlags(),
-                args.getExportedPostPlatformLinkerFlags(),
-                cxxPlatform)
-            .stream()
-            .map(s -> (Arg) StringArg.from(s))
-            .collect(ImmutableList.toImmutableList());
+        return PrebuiltCxxLibraryDescription.this.getExportedPostLinkerArgs(
+            cxxPlatform, args, buildTarget, cellRoots, graphBuilder);
       }
 
       @Override
@@ -1045,6 +1033,24 @@ public class PrebuiltCxxLibraryDescription
         .collect(ImmutableList.toImmutableList());
   }
 
+  private ImmutableList<Arg> getExportedPostLinkerArgs(
+      CxxPlatform cxxPlatform,
+      PrebuiltCxxLibraryDescriptionArg args,
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      ActionGraphBuilder graphBuilder) {
+    return CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+            args.getExportedPostLinkerFlags(),
+            args.getExportedPostPlatformLinkerFlags(),
+            cxxPlatform)
+        .stream()
+        .map(
+            CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                    buildTarget, cellRoots, graphBuilder, cxxPlatform)
+                ::convert)
+        .collect(ImmutableList.toImmutableList());
+  }
+
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
@@ -1185,7 +1191,7 @@ public class PrebuiltCxxLibraryDescription
 
     ImmutableList<StringWithMacros> getExportedLinkerFlags();
 
-    ImmutableList<String> getExportedPostLinkerFlags();
+    ImmutableList<StringWithMacros> getExportedPostLinkerFlags();
 
     @Value.Default
     default PatternMatchedCollection<ImmutableList<StringWithMacros>>
@@ -1194,7 +1200,8 @@ public class PrebuiltCxxLibraryDescription
     }
 
     @Value.Default
-    default PatternMatchedCollection<ImmutableList<String>> getExportedPostPlatformLinkerFlags() {
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>>
+        getExportedPostPlatformLinkerFlags() {
       return PatternMatchedCollection.of();
     }
 
