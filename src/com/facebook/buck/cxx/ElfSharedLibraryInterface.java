@@ -294,7 +294,8 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
                   buildTarget.getCell(),
                   filesystem.getRootPath().getPath(),
                   sourcePathResolverAdapter,
-                  ImmutableMap.of()))
+                  ImmutableMap.of(),
+                  ImmutableList.of()))
           .add(
               new CxxLinkStep(
                   filesystem.getRootPath(),

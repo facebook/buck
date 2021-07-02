@@ -279,7 +279,8 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
               buildTarget.getCell(),
               filesystem.getRootPath().getPath(),
               resolver,
-              ImmutableMap.of()));
+              ImmutableMap.of(),
+              ImmutableList.of()));
 
       // Accumulate Args into set to dedup them while retaining their order,
       // since there are often many duplicates for things like library paths.

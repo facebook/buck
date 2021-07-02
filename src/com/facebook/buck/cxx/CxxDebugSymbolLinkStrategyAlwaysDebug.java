@@ -21,6 +21,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.rules.args.Arg;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
@@ -43,5 +45,10 @@ public class CxxDebugSymbolLinkStrategyAlwaysDebug implements CxxDebugSymbolLink
   public Optional<SourcePath> getFilteredFocusedTargets(
       BuildTarget target, ActionGraphBuilder graphBuilder) {
     return Optional.empty();
+  }
+
+  @Override
+  public ImmutableList<Arg> getFocusedDebuggingLinkerArgs(AbsPath focusedTargetsPath) {
+    return ImmutableList.of();
   }
 }

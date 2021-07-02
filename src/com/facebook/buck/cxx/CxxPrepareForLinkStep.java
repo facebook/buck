@@ -49,7 +49,8 @@ public class CxxPrepareForLinkStep {
       CanonicalCellName currentCellName,
       Path currentCellPath,
       SourcePathResolverAdapter resolver,
-      ImmutableMap<Path, Path> cellRootMap) {
+      ImmutableMap<Path, Path> cellRootMap,
+      ImmutableList<Arg> focusedDebuggingArgs) {
 
     ImmutableList<Arg> allArgs =
         new ImmutableList.Builder<Arg>()
@@ -57,6 +58,7 @@ public class CxxPrepareForLinkStep {
             .addAll(args)
             .addAll(linkerArgsToSupportFileList)
             .addAll(linker.pathNormalizationArgs(cellRootMap))
+            .addAll(focusedDebuggingArgs)
             .build();
 
     boolean hasLinkArgsToSupportFileList = linkerArgsToSupportFileList.iterator().hasNext();

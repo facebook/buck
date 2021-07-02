@@ -28,10 +28,15 @@ import com.facebook.buck.cxx.CxxDebugSymbolLinkStrategy;
 import com.facebook.buck.cxx.CxxFocusedDebugTargets;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
+import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -81,6 +86,28 @@ public class AppleCxxDebugSymbolLinkStrategy implements CxxDebugSymbolLinkStrate
         graphBuilder
             .requireRule(target.withAppendedFlavors(CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS))
             .getSourcePathToOutput());
+  }
+
+  @Override
+  public ImmutableList<Arg> getFocusedDebuggingLinkerArgs(AbsPath focusedTargetsPath) {
+    try {
+      List<String> focusedTargets =
+          ObjectMappers.READER.readValue(
+              ObjectMappers.createParser(focusedTargetsPath.getPath()),
+              new TypeReference<List<String>>() {});
+      // If we have focused targets, do not tell the linker to build without debug symbols.
+      if (!focusedTargets.isEmpty()) {
+        return ImmutableList.of();
+      }
+    } catch (IOException exception) {
+      // If we can't read from the focused targets paths, log the error and still apply the
+      // `-S` flag as if the file has no focused targets.
+      LOG.error(exception.getMessage());
+    }
+
+    // If we have no focused targets, give the linker the `-S` flag to make it
+    // not put debug information (STABS or DWARF) in the output file.
+    return ImmutableList.of(StringArg.of("-Xlinker"), StringArg.of("-S"));
   }
 
   private ImmutableSet<AbsPath> createFocusedBuildOutputPaths(

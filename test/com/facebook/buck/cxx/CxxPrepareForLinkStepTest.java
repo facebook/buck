@@ -73,7 +73,8 @@ public class CxxPrepareForLinkStepTest {
             CanonicalCellName.rootCell(),
             dummyPath,
             buildRuleResolver.getSourcePathResolver(),
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            ImmutableList.of());
 
     assertThat(cxxPrepareForLinkStepSupportFileList.size(), Matchers.equalTo(2));
     Step firstStep = cxxPrepareForLinkStepSupportFileList.get(0);
@@ -95,7 +96,8 @@ public class CxxPrepareForLinkStepTest {
             CanonicalCellName.rootCell(),
             dummyPath,
             buildRuleResolver.getSourcePathResolver(),
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            ImmutableList.of());
 
     assertThat(cxxPrepareForLinkStepNoSupportFileList.size(), Matchers.equalTo(1));
     assertThat(
@@ -186,7 +188,8 @@ public class CxxPrepareForLinkStepTest {
             CanonicalCellName.rootCell(),
             currentCellPath.getPath(),
             buildRuleResolver.getSourcePathResolver(),
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            ImmutableList.of());
 
     for (Step step : steps) {
       step.execute(context);
@@ -255,7 +258,8 @@ public class CxxPrepareForLinkStepTest {
             CanonicalCellName.rootCell(),
             currentCellPath.getPath(),
             buildRuleResolver.getSourcePathResolver(),
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            ImmutableList.of());
 
     for (Step step : steps) {
       step.execute(context);

@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -282,13 +281,9 @@ public class CxxLinkableEnhancer {
         debugSymbolLinkStrategyFactory.createStrategy(cellPathResolver, ldArgs);
 
     Optional<SourcePath> filteredFocusedTargets = Optional.empty();
-    Optional<Tool> strip = Optional.empty();
 
     if (useFocusedDebugging) {
       filteredFocusedTargets = debugStrategy.getFilteredFocusedTargets(target, graphBuilder);
-      strip =
-          Optional.of(
-              cxxPlatform.getStrip().resolve(ruleResolver, target.getTargetConfiguration()));
     }
 
     return new CxxLink(
@@ -308,7 +303,6 @@ public class CxxLinkableEnhancer {
         linkOptions.getFatLto(),
         downwardApiConfig.isEnabledForCxx(),
         filteredFocusedTargets,
-        strip,
         linkStrategy,
         debugStrategy);
   }

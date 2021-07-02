@@ -196,7 +196,8 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
               getBuildTarget().getCell(),
               getProjectFilesystem().getRootPath().getPath(),
               resolver,
-              ImmutableMap.of()));
+              ImmutableMap.of(),
+              ImmutableList.of()));
       externalLinkerFlags.add(String.format("@%s", argFilePath));
     }
 
