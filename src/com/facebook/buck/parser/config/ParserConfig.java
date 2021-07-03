@@ -300,10 +300,10 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   public DefaultBuildFileSyntaxMapping getDefaultBuildFileSyntax() {
     Syntax defaultValue =
         getDelegate()
-            .getEnum("parser", "default_build_file_syntax", Syntax.class)
+            .getEnum("parser", "default_build_file_syntax_deprecated", Syntax.class)
             .orElse(Syntax.SKYLARK);
     Optional<String> byPath =
-        getDelegate().getValue("parser", "default_build_file_syntax_by_prefix");
+        getDelegate().getValue("parser", "default_build_file_syntax_by_prefix_deprecated");
     return DefaultBuildFileSyntaxMapping.parse(byPath.orElse(""), defaultValue);
   }
 

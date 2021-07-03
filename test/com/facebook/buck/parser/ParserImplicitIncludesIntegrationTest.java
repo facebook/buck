@@ -44,7 +44,8 @@ public class ParserImplicitIncludesIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "parser_implicit_includes", temporaryFolder);
-    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", syntax.name());
+    workspace.addBuckConfigLocalOption(
+        "parser", "default_build_file_syntax_deprecated", syntax.name());
     workspace.setUp();
 
     workspace.runBuckBuild("//:foo").assertSuccess();

@@ -95,6 +95,6 @@
   build_rule_minimum_duration_millis=500
 
 [parser]
-  default_build_file_syntax=skylark
+  default_build_file_syntax_deprecated=skylark
   python_interpreter = python3
 

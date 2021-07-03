@@ -61,9 +61,11 @@ public class BuildEndToEndTest {
     return new EndToEndEnvironment()
         .withCommand("build")
         .addLocalConfigSet(
-            ImmutableMap.of("parser", ImmutableMap.of("default_build_file_syntax", "SKYLARK")))
+            ImmutableMap.of(
+                "parser", ImmutableMap.of("default_build_file_syntax_deprecated", "SKYLARK")))
         .addLocalConfigSet(
-            ImmutableMap.of("parser", ImmutableMap.of("default_build_file_syntax", "PYTHON_DSL")));
+            ImmutableMap.of(
+                "parser", ImmutableMap.of("default_build_file_syntax_deprecated", "PYTHON_DSL")));
   }
 
   @EnvironmentFor(testNames = {"shouldRewriteFailureMessagesAndAppendThem"})

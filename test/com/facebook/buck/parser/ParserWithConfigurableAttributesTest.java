@@ -197,7 +197,7 @@ public class ParserWithConfigurableAttributesTest {
 
   @Parameterized.Parameters(
       name =
-          "project.parsing_threads={0}, project.parallel_parsing={1}, parser.default_build_file_syntax={2}")
+          "project.parsing_threads={0}, project.parallel_parsing={1}, parser.default_build_file_syntax_deprecated={2}")
   public static Collection<Object[]> generateData() {
     return Arrays.asList(
         new Object[][] {
@@ -296,7 +296,7 @@ public class ParserWithConfigurableAttributesTest {
         "buildfile", ImmutableMap.of("includes", "//java/com/facebook/defaultIncludeFile"));
     configSectionsBuilder.put("project", projectSectionBuilder.build());
     configSectionsBuilder.put(
-        "parser", ImmutableMap.of("default_build_file_syntax", syntax.name()));
+        "parser", ImmutableMap.of("default_build_file_syntax_deprecated", syntax.name()));
 
     BuckConfig config =
         FakeBuckConfig.builder()
@@ -2441,7 +2441,7 @@ public class ParserWithConfigurableAttributesTest {
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem)
-            .setSections("[parser]", "default_build_file_syntax=skylark")
+            .setSections("[parser]", "default_build_file_syntax_deprecated=skylark")
             .build();
 
     Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();

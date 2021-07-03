@@ -1,3 +1,3 @@
 [parser]
-default_build_file_syntax = skylark
+default_build_file_syntax_deprecated = skylark
 user_defined_rules = enabled

@@ -59,7 +59,7 @@ public class KnownRuleTypesProviderTest {
                     ImmutableMap.of("mode", "PROVIDER_COMPATIBLE"),
                     "parser",
                     ImmutableMap.of(
-                        "default_build_file_syntax",
+                        "default_build_file_syntax_deprecated",
                         "SKYLARK",
                         "user_defined_rules",
                         enableUserDefinedRules ? "enabled" : "disabled")))

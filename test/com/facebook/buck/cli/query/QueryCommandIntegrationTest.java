@@ -1625,7 +1625,7 @@ public class QueryCommandIntegrationTest {
             "query",
             "--target-platforms=//:p",
             "-c",
-            "parser.default_build_file_syntax=" + syntax,
+            "parser.default_build_file_syntax_deprecated=" + syntax,
             "//:ccc",
             "--output-attributes",
             ".*");

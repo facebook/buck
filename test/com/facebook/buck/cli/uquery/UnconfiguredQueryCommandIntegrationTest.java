@@ -76,7 +76,8 @@ public class UnconfiguredQueryCommandIntegrationTest {
   private ProjectWorkspace createProjectWorkspaceForScenario(String scenario) throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
-    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", syntax.name());
+    workspace.addBuckConfigLocalOption(
+        "parser", "default_build_file_syntax_deprecated", syntax.name());
     return workspace;
   }
 

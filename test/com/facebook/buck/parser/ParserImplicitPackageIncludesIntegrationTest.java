@@ -67,7 +67,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "-c",
             "buildfile.package_includes=root=>//root:name.bzl::NAME,root/foo/bar=>//root/foo/bar:name.bzl::NAME=SOME_OTHER_NAME",
             "-c",
-            "parser.default_build_file_syntax=" + parser);
+            "parser.default_build_file_syntax_deprecated=" + parser);
 
     result.assertSuccess();
   }
@@ -86,7 +86,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "-c",
             "buildfile.package_includes=root=>@cell//:name.bzl::NAME",
             "-c",
-            "parser.default_build_file_syntax=" + parser);
+            "parser.default_build_file_syntax_deprecated=" + parser);
 
     result.assertSuccess();
   }
@@ -108,7 +108,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "-c",
             "buildfile.package_includes=default/no_symbol=>//default/no_symbol:name.bzl::NAME,default/has_symbol=>//default/has_symbol:name.bzl::NAME",
             "-c",
-            "parser.default_build_file_syntax=" + parser);
+            "parser.default_build_file_syntax_deprecated=" + parser);
 
     result.assertSuccess();
   }
@@ -126,7 +126,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "-c",
             "buildfile.package_includes=default=>//:get_suffix.bzl::MISSING",
             "-c",
-            "parser.default_build_file_syntax=" + parser);
+            "parser.default_build_file_syntax_deprecated=" + parser);
 
     result.assertExitCode(ExitCode.PARSE_ERROR);
   }
@@ -144,7 +144,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "-c",
             "buildfile.package_includes=default=>//:missing.bzl::NAME",
             "-c",
-            "parser.default_build_file_syntax=" + parser);
+            "parser.default_build_file_syntax_deprecated=" + parser);
 
     result.assertExitCode(ExitCode.PARSE_ERROR);
   }
@@ -185,7 +185,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "-c",
             implicits,
             "-c",
-            "parser.default_build_file_syntax=" + parser,
+            "parser.default_build_file_syntax_deprecated=" + parser,
             "default/BUCK",
             "default/has_symbol/BUCK",
             "default/no_symbol/BUCK");
@@ -198,7 +198,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "-c",
             implicits,
             "-c",
-            "parser.default_build_file_syntax=" + parser,
+            "parser.default_build_file_syntax_deprecated=" + parser,
             "default/no_symbol/BUCK");
 
     ProcessResult hasSymbolResult =
@@ -209,7 +209,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "-c",
             implicits,
             "-c",
-            "parser.default_build_file_syntax=" + parser,
+            "parser.default_build_file_syntax_deprecated=" + parser,
             "default/has_symbol/BUCK");
 
     rootResult.assertSuccess();

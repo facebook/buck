@@ -265,7 +265,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
           throw new HumanReadableException(
               defaultBuildFileSyntax
                   + " is not supported by this version of Buck. Please update your Buck version or "
-                  + "change parser.default_build_file_syntax configuration to one of "
+                  + "change parser.default_build_file_syntax_deprecated configuration to one of "
                   + Arrays.toString(Syntax.values()));
       }
     }

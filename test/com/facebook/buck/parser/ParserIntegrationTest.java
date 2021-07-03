@@ -395,7 +395,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
-            "parser.default_build_file_syntax=python_dsl");
+            "parser.default_build_file_syntax_deprecated=python_dsl");
     System.out.println(result.getStderr());
     assertThat(result.getStderr(), not(containsString("Warning raised by BUCK file parser")));
     result.assertSuccess();
@@ -412,7 +412,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
-            "parser.default_build_file_syntax=skylark")
+            "parser.default_build_file_syntax_deprecated=skylark")
         .assertSuccess();
   }
 
@@ -427,7 +427,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
-            "parser.default_build_file_syntax=python_dsl")
+            "parser.default_build_file_syntax_deprecated=python_dsl")
         .assertSuccess();
   }
 
@@ -452,7 +452,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.disable_implicit_native_rules=true",
             "-c",
-            "parser.default_build_file_syntax=python_dsl"),
+            "parser.default_build_file_syntax_deprecated=python_dsl"),
         "NameError: name 'java_library' is not defined",
         "BUCK\", line 1");
     assertParseFailedWithSubstrings(
@@ -461,7 +461,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.disable_implicit_native_rules=true",
             "-c",
-            "parser.default_build_file_syntax=python_dsl"),
+            "parser.default_build_file_syntax_deprecated=python_dsl"),
         "NameError: global name 'java_library' is not defined",
         "extension.bzl\", line 5",
         "BUCK\", line 5");
@@ -471,7 +471,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.disable_implicit_native_rules=true",
             "-c",
-            "parser.default_build_file_syntax=python_dsl"),
+            "parser.default_build_file_syntax_deprecated=python_dsl"),
         "AttributeError: 'native' object has no attribute 'java_library'",
         "BUCK\", line 1");
     workspace
@@ -480,7 +480,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.disable_implicit_native_rules=true",
             "-c",
-            "parser.default_build_file_syntax=python_dsl")
+            "parser.default_build_file_syntax_deprecated=python_dsl")
         .assertSuccess();
 
     workspace
@@ -489,7 +489,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.disable_implicit_native_rules=false",
             "-c",
-            "parser.default_build_file_syntax=python_dsl")
+            "parser.default_build_file_syntax_deprecated=python_dsl")
         .assertSuccess();
     workspace
         .runBuckBuild(
@@ -497,7 +497,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.disable_implicit_native_rules=false",
             "-c",
-            "parser.default_build_file_syntax=python_dsl")
+            "parser.default_build_file_syntax_deprecated=python_dsl")
         .assertSuccess();
     workspace
         .runBuckBuild(
@@ -505,26 +505,26 @@ public class ParserIntegrationTest {
             "-c",
             "parser.disable_implicit_native_rules=false",
             "-c",
-            "parser.default_build_file_syntax=python_dsl")
+            "parser.default_build_file_syntax_deprecated=python_dsl")
         .assertSuccess();
 
     workspace
         .runBuckBuild(
             "//python/implicit_in_build_file:main",
             "-c",
-            "parser.default_build_file_syntax=python_dsl")
+            "parser.default_build_file_syntax_deprecated=python_dsl")
         .assertSuccess();
     workspace
         .runBuckBuild(
             "//python/implicit_in_extension_bzl:main",
             "-c",
-            "parser.default_build_file_syntax=python_dsl")
+            "parser.default_build_file_syntax_deprecated=python_dsl")
         .assertSuccess();
     workspace
         .runBuckBuild(
             "//python/native_in_extension_bzl:main",
             "-c",
-            "parser.default_build_file_syntax=python_dsl")
+            "parser.default_build_file_syntax_deprecated=python_dsl")
         .assertSuccess();
   }
 
@@ -608,7 +608,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
-            "parser.default_build_file_syntax=SKYLARK")
+            "parser.default_build_file_syntax_deprecated=SKYLARK")
         .assertSuccess();
     assertParseFailedWithSubstrings(
         workspace.runBuckBuild(
@@ -616,7 +616,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
-            "parser.default_build_file_syntax=SKYLARK"),
+            "parser.default_build_file_syntax_deprecated=SKYLARK"),
         "name 'java_library' is not defined",
         "extension.bzl:5",
         "BUCK:2");
@@ -626,7 +626,7 @@ public class ParserIntegrationTest {
             "-c",
             "parser.polyglot_parsing_enabled_deprecated=true",
             "-c",
-            "parser.default_build_file_syntax=SKYLARK")
+            "parser.default_build_file_syntax_deprecated=SKYLARK")
         .assertSuccess();
   }
 
@@ -643,7 +643,7 @@ public class ParserIntegrationTest {
                 "-c",
                 "parser.polyglot_parsing_enabled_deprecated=true",
                 "-c",
-                "parser.default_build_file_syntax=python_dsl",
+                "parser.default_build_file_syntax_deprecated=python_dsl",
                 "-c",
                 "parser.warn_about_deprecated_syntax=true")
             .assertSuccess();
@@ -672,7 +672,7 @@ public class ParserIntegrationTest {
                 "-c",
                 "parser.polyglot_parsing_enabled_deprecated=true",
                 "-c",
-                "parser.default_build_file_syntax=python_dsl",
+                "parser.default_build_file_syntax_deprecated=python_dsl",
                 "-c",
                 "parser.warn_about_deprecated_syntax=false")
             .assertSuccess();
@@ -721,7 +721,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
     assertParseFailedWithSubstrings(
         workspace.runBuckCommand(
-            "build", "//:glob", "-c", "parser.default_build_file_syntax=skylark"),
+            "build", "//:glob", "-c", "parser.default_build_file_syntax_deprecated=skylark"),
         "Recursive globs are prohibited at top-level directory");
   }
 
@@ -744,7 +744,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "sha256", temporaryFolder);
     workspace.setUp();
     workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
         .assertSuccess();
   }
 
@@ -756,7 +756,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "not_just_list", temporaryFolder);
     workspace.setUp();
     workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
         .assertSuccess();
   }
 
@@ -767,7 +767,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "load_symbols", temporaryFolder);
     workspace.setUp();
     workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
         .assertSuccess();
   }
 
@@ -778,7 +778,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "partial", temporaryFolder);
     workspace.setUp();
     workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
         .assertSuccess();
   }
 
@@ -790,7 +790,7 @@ public class ParserIntegrationTest {
             this, "select_introspection", temporaryFolder);
     workspace.setUp();
     workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
         .assertSuccess();
   }
 
@@ -818,7 +818,7 @@ public class ParserIntegrationTest {
             .runBuckBuild(
                 "//:",
                 "-c",
-                "parser.default_build_file_syntax=" + syntax,
+                "parser.default_build_file_syntax_deprecated=" + syntax,
                 "-c",
                 "foo.bar=br",
                 "-c",
@@ -835,7 +835,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
     ProcessResult result =
         workspace
-            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax=" + syntax)
+            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
             .assertSuccess();
     assertThat(result.getStderr(), containsString("factorial of 5 is 120"));
   }
@@ -849,7 +849,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
     ProcessResult result =
         workspace
-            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax=" + syntax)
+            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
             .assertSuccess();
     assertThat(result.getStderr(), containsString("x=1 y=2 z=3 w=4"));
   }
@@ -863,7 +863,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
     ProcessResult result =
         workspace
-            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax=" + syntax)
+            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
             .assertSuccess();
     assertThat(result.getStderr(), containsString("x=1 y=2 z=3 w=4"));
   }
@@ -876,7 +876,7 @@ public class ParserIntegrationTest {
     workspace.setUp();
     ProcessResult result =
         workspace
-            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax=" + syntax)
+            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
             .assertSuccess();
     assertThat(result.getStderr(), containsString("x = 17"));
   }
@@ -888,7 +888,8 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "recursive_load", temporaryFolder);
     workspace.setUp();
     ProcessResult processResult =
-        workspace.runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax);
+        workspace.runBuckBuild(
+            "//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax);
     assertEquals(ExitCode.PARSE_ERROR, processResult.getExitCode());
     switch (syntax) {
       case PYTHON_DSL:
@@ -913,7 +914,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "select_equal", temporaryFolder);
     workspace.setUp();
     workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
         .assertSuccess();
   }
 
@@ -924,7 +925,7 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "select_add", temporaryFolder);
     workspace.setUp();
     workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
         .assertSuccess();
   }
 

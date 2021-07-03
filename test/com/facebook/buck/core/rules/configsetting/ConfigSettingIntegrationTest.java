@@ -56,10 +56,12 @@ public class ConfigSettingIntegrationTest {
     workspace.setUp();
     if (enableSkylarkParsing) {
       workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled_deprecated", "true");
-      workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "SKYLARK");
+      workspace.addBuckConfigLocalOption(
+          "parser", "default_build_file_syntax_deprecated", "SKYLARK");
     } else {
       workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled_deprecated", "false");
-      workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "PYTHON_DSL");
+      workspace.addBuckConfigLocalOption(
+          "parser", "default_build_file_syntax_deprecated", "PYTHON_DSL");
     }
     return workspace;
   }
