@@ -22,6 +22,8 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -547,6 +549,29 @@ public class JsLibraryDescriptionTest {
     JsLibrary jsLibraryRule = (JsLibrary) scenario.graphBuilder.getRule(target);
     Stream<JsFile> jsFiles = jsLibraryRule.getJsFiles(scenario.graphBuilder);
     jsFiles.collect(countAssertions(jsFile -> assertThat(referenced, in(jsFile.getBuildDeps()))));
+  }
+
+  @Test
+  public void groupedAssetsWithSubpaths() {
+    String basePath = ".";
+    BuildTarget target = BuildTargetFactory.newInstance("//:node_modules");
+    scenarioBuilder.arbitraryRule(target);
+    JsTestScenario scenario =
+        buildScenario(
+            basePath,
+            new Pair<>(
+                DefaultBuildTargetSourcePath.of(target), "node_modules/left-pad/test.ios.png"),
+            new Pair<>(
+                DefaultBuildTargetSourcePath.of(target), "node_modules/left-pad/test@2x.ios.png"));
+    JsFile rule = findFirstJsFileDev(scenario.graphBuilder);
+    JsonNode args = getJobJson(scenario.buildContext, rule);
+
+    assertEquals(
+        "arbitrary/path/node_modules/left-pad/test.ios.png", args.get("sourceJsFileName").asText());
+    assertThat(args.get("additionalSources"), is(iterableWithSize(1)));
+    assertThat(
+        args.get("additionalSources").get(0).get("virtualPath").asText(),
+        is("arbitrary/path/node_modules/left-pad/test@2x.ios.png"));
   }
 
   private JsTestScenario buildScenario(String basePath, SourcePath source) {

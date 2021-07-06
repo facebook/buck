@@ -48,6 +48,7 @@ import com.facebook.buck.shell.ProvidesWorkerTool;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.Weigher;
@@ -59,12 +60,15 @@ import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import com.google.common.io.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -217,6 +221,10 @@ public class JsLibraryDescription
     default ImmutableSet<JsSourcePath> getFlatSrcs() {
       return getSrcs().stream().map(JsSourcePath::of).collect(ImmutableSet.toImmutableSet());
     }
+
+    Optional<ImmutableSet<String>> getAssetExtensions();
+
+    Optional<ImmutableSet<String>> getAssetPlatforms();
 
     BuildTarget getWorker();
 
@@ -393,6 +401,13 @@ public class JsLibraryDescription
   }
 
   /**
+   * A regex that, when matching against a possible asset filename minus its file extension, matches
+   * the name without any suffix that specifies a scale factor, e.g. "@1.5x".
+   */
+  private static final Pattern STRIP_SCALE_FROM_ASSET_NAME =
+      Pattern.compile("^.*?(?=(?:@[0-9.]+x)?$)");
+
+  /**
    * Represents the set of main source files in a JS library, the internal build flavor uniquely
    * associated with each one, and any additional sources that should be processed along with each
    * main source.
@@ -410,8 +425,11 @@ public class JsLibraryDescription
     /** A mapping from main sources to their additional sources, if any. */
     public final ImmutableSetMultimap<JsSourcePath, JsSourcePath> additionalSourcesByMainSource;
 
+    private final JsLibraryDescriptionArg args;
+
     public GroupedJsSourceSet(
         JsLibraryDescriptionArg args, SourcePathResolverAdapter sourcePathResolverAdapter) {
+      this.args = args;
 
       ImmutableSet<JsSourcePath> ungroupedSources = args.getFlatSrcs();
 
@@ -442,13 +460,12 @@ public class JsLibraryDescription
         ImmutableSet<JsSourcePath> ungroupedSources,
         SourcePathResolverAdapter sourcePathResolverAdapter) {
       ImmutableSetMultimap.Builder<JsSourcePath, JsSourcePath> builder =
-          ImmutableSetMultimap.<JsSourcePath, JsSourcePath>builder();
+          ImmutableSetMultimap.builder();
       // Since canonical paths may or may not be concrete source paths, iterate
       // over the sources in order and use the first concrete path we encounter
       // as the "main source" for each group of sources that share a canonical
       // path.
-      HashMap<AbsPath, JsSourcePath> mainSourceByCanonicalPath =
-          new HashMap<AbsPath, JsSourcePath>();
+      Map<AbsPath, JsSourcePath> mainSourceByCanonicalPath = new HashMap<>();
       ungroupedSources.stream()
           .sorted()
           .forEachOrdered(
@@ -467,8 +484,7 @@ public class JsLibraryDescription
     // represent an actual file on disk.
     private AbsPath canonicalize(
         JsSourcePath source, SourcePathResolverAdapter sourcePathResolverAdapter) {
-      AbsPath combinedPath = sourcePathResolverAdapter.getAbsolutePath(source.getPath());
-      combinedPath =
+      AbsPath combinedPath =
           source
               .getInnerPath()
               .map(
@@ -482,8 +498,39 @@ public class JsLibraryDescription
           .resolve(canonicalizeBaseName(combinedPath.getFileName().toString()));
     }
 
+    private ImmutableSet<String> getAssetPlatforms() {
+      return args.getAssetPlatforms().orElseGet(jsConfig::getAssetPlatforms);
+    }
+
+    private ImmutableSet<String> getAssetExtensions() {
+      return args.getAssetExtensions().orElseGet(jsConfig::getAssetExtensions);
+    }
+
+    private String stripPlatformFromAssetName(String nameWithoutExt) {
+      String maybePlatform = Files.getFileExtension(nameWithoutExt);
+      if (getAssetPlatforms().contains(maybePlatform)) {
+        return Files.getNameWithoutExtension(nameWithoutExt);
+      }
+      return nameWithoutExt;
+    }
+
+    private String stripScaleFromAssetName(String nameWithoutPlatformAndExt) {
+      Matcher nameWithoutScaleMatcher =
+          STRIP_SCALE_FROM_ASSET_NAME.matcher(nameWithoutPlatformAndExt);
+      boolean found = nameWithoutScaleMatcher.find();
+      Preconditions.checkState(
+          found,
+          "Expected STRIP_SCALE_FROM_ASSET_NAME regex to always return a match (even an empty string)");
+      return nameWithoutScaleMatcher.group();
+    }
+
     private String canonicalizeBaseName(String baseName) {
-      // TODO(moti): Canonicalize the path here to get a 1:many grouping
+      String ext = Files.getFileExtension(baseName);
+      if (getAssetExtensions().contains(ext)) {
+        String nameWithoutExt = Files.getNameWithoutExtension(baseName);
+        String nameWithoutPlatform = stripPlatformFromAssetName(nameWithoutExt);
+        return stripScaleFromAssetName(nameWithoutPlatform) + "." + ext;
+      }
       return baseName;
     }
   }

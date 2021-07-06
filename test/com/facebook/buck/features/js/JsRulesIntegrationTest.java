@@ -524,4 +524,16 @@ public class JsRulesIntegrationTest {
     workspace.verify(
         Paths.get("assets.expected"), genPath, JsRulesIntegrationTest::normalizeObservedContent);
   }
+
+  @Test
+  public void testBuildAssetsWithCustomSettings() throws IOException {
+    workspace
+        .runBuckBuild("//js:assets-with-custom-settings#transform-profile-default")
+        .assertSuccess();
+
+    workspace.verify(
+        Paths.get("assets_with_custom_settings.expected"),
+        genPath,
+        JsRulesIntegrationTest::normalizeObservedContent);
+  }
 }

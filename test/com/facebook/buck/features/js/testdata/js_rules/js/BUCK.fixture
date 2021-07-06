@@ -253,3 +253,11 @@ js_library(
     srcs = glob(["assets/*.*"]),
     worker = ":packager_worker",
 )
+
+js_library(
+    name = "assets-with-custom-settings",
+    srcs = glob(["assets/*.*"]),
+    asset_extensions = ["custom_ext"],
+    asset_platforms = ["custom_platform"],
+    worker = ":packager_worker",
+)

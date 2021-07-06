@@ -1,0 +1,143 @@
+{
+  "command" : "library-dependencies",
+  "release" : false,
+  "rootPath" : "@",
+  "outputPath" : "@/buck-out/gen/js/assets-with-custom-settings#transform-profile-default.jslib",
+  "dependencyLibraryFilePaths" : [ ],
+  "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#_files_,transform-profile-default.jslib",
+  "flavors" : [ ]
+}
+{
+  "command" : "library-files",
+  "release" : false,
+  "rootPath" : "@",
+  "outputFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#_files_,transform-profile-default.jslib",
+  "sourceFilePaths" : [
+    "@/buck-out/gen/js/assets-with-custom-settings#file-bundle.png-b784f55bd4,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/assets-with-custom-settings#file-canonical_path_does_not_exist.ios.png-45a6090804,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/assets-with-custom-settings#file-canonical_path_does_not_exist_3x.png-092f0c6b21,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/assets-with-custom-settings#file-test.custom_ext-90f220a3e4,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/assets-with-custom-settings#file-test.custom_platform.png-c2da91586c,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/assets-with-custom-settings#file-test.ios.png-a5d150600d,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/assets-with-custom-settings#file-test.png-bb679d150b,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/assets-with-custom-settings#file-test_2x.android.png-bd9249b56f,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/assets-with-custom-settings#file-test_2x.ios.png-4c828e08a2,transform-profile-default.jsfile",
+    "@/buck-out/gen/js/assets-with-custom-settings#file-test_2x.png-719264d23f,transform-profile-default.jsfile"
+  ],
+  "flavors" : [ ]
+}
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#file-bundle.png-b784f55bd4,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/assets/bundle.png",
+  "sourceJsFileName" : "js/assets/bundle.png",
+  "additionalSources" : [ ],
+  "transformProfile" : "default",
+  "release" : false,
+  "flavors" : [ ]
+}
+contents of bundle.png
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#file-canonical_path_does_not_exist.ios.png-45a6090804,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/assets/canonical_path_does_not_exist.ios.png",
+  "sourceJsFileName" : "js/assets/canonical_path_does_not_exist.ios.png",
+  "additionalSources" : [ ],
+  "transformProfile" : "default",
+  "release" : false,
+  "flavors" : [ ]
+}
+contents of canonical_path_does_not_exist.ios.png
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#file-canonical_path_does_not_exist_3x.png-092f0c6b21,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/assets/canonical_path_does_not_exist@3x.png",
+  "sourceJsFileName" : "js/assets/canonical_path_does_not_exist@3x.png",
+  "additionalSources" : [ ],
+  "transformProfile" : "default",
+  "release" : false,
+  "flavors" : [ ]
+}
+contents of canonical_path_does_not_exist@3x.png
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#file-test.custom_ext-90f220a3e4,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/assets/test.custom_ext",
+  "sourceJsFileName" : "js/assets/test.custom_ext",
+  "additionalSources" : [
+    {
+      "sourcePath" : "@/js/assets/test@1.5x.custom_ext",
+      "virtualPath" : "js/assets/test@1.5x.custom_ext"
+    }
+  ],
+  "transformProfile" : "default",
+  "release" : false,
+  "flavors" : [ ]
+}
+contents of test.custom_ext
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#file-test.custom_platform.png-c2da91586c,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/assets/test.custom_platform.png",
+  "sourceJsFileName" : "js/assets/test.custom_platform.png",
+  "additionalSources" : [ ],
+  "transformProfile" : "default",
+  "release" : false,
+  "flavors" : [ ]
+}
+contents of test.custom_platform.png
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#file-test.ios.png-a5d150600d,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/assets/test.ios.png",
+  "sourceJsFileName" : "js/assets/test.ios.png",
+  "additionalSources" : [ ],
+  "transformProfile" : "default",
+  "release" : false,
+  "flavors" : [ ]
+}
+contents of test.ios.png
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#file-test.png-bb679d150b,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/assets/test.png",
+  "sourceJsFileName" : "js/assets/test.png",
+  "additionalSources" : [ ],
+  "transformProfile" : "default",
+  "release" : false,
+  "flavors" : [ ]
+}
+contents of test.png
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#file-test_2x.android.png-bd9249b56f,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/assets/test@2x.android.png",
+  "sourceJsFileName" : "js/assets/test@2x.android.png",
+  "additionalSources" : [ ],
+  "transformProfile" : "default",
+  "release" : false,
+  "flavors" : [ ]
+}
+contents of test@2x.android.png
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#file-test_2x.ios.png-4c828e08a2,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/assets/test@2x.ios.png",
+  "sourceJsFileName" : "js/assets/test@2x.ios.png",
+  "additionalSources" : [ ],
+  "transformProfile" : "default",
+  "release" : false,
+  "flavors" : [ ]
+}
+contents of test@2x.ios.png
+{
+  "command" : "transform",
+  "outputFilePath" : "@/buck-out/gen/js/assets-with-custom-settings#file-test_2x.png-719264d23f,transform-profile-default.jsfile",
+  "sourceJsFilePath" : "@/js/assets/test@2x.png",
+  "sourceJsFileName" : "js/assets/test@2x.png",
+  "additionalSources" : [ ],
+  "transformProfile" : "default",
+  "release" : false,
+  "flavors" : [ ]
+}
+contents of test@2x.png
