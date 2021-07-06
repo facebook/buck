@@ -242,7 +242,7 @@ public class AndroidResourceDescription
         return new Pair<>(Optional.empty(), Optional.of(inputSourcePath));
       }
     }
-    BuildTarget symlinkTreeTarget = resourceRuleTarget.withFlavors(symlinkTreeFlavor);
+    BuildTarget symlinkTreeTarget = resourceRuleTarget.withAppendedFlavors(symlinkTreeFlavor);
     MappedSymlinkTree symlinkTree;
     symlinkTree = (MappedSymlinkTree) graphBuilder.requireRule(symlinkTreeTarget);
     return new Pair<>(Optional.of(symlinkTree), Optional.of(symlinkTree.getSourcePathToOutput()));
