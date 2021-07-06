@@ -10,6 +10,7 @@ parser = impl.argparser()
 
 parser.add_argument("-o", dest="output", action=impl.StripQuotesAction)
 parser.add_argument("-test-arg", action=impl.StripQuotesAction)
+parser.add_argument("-echo-rule-name", action="store_true")
 
 (options, args) = parser.parse_known_args()
 
@@ -21,6 +22,9 @@ if not os.path.exists(input):
 
 with open(options.output, "w") as output:
     output.write("linker:\n")
+    target_from_env = os.environ.get("BUCK_BUILD_TARGET")
+    if target_from_env and options.echo_rule_name:
+        output.write("BUCK_BUILD_TARGET: " + target_from_env + "\n")
     if options.test_arg:
         with open(options.test_arg) as inputfile:
             output.write("test arg: " + inputfile.read())

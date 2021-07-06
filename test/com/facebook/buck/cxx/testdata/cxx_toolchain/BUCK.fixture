@@ -13,3 +13,9 @@ cxx_binary(
     name = "binary",
     deps = [":library"],
 )
+
+cxx_binary(
+    name = "binary_with_debug_output",
+    deps = [":library"],
+    linker_flags = ["-echo-rule-name"],
+)

@@ -351,7 +351,11 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
           requiresPostprocessing
               ? scratchDir.resolve("link-output").getPath()
               : outputPath.getPath();
-      ImmutableMap<String, String> env = linker.getEnvironment(context.getSourcePathResolver());
+      ImmutableMap<String, String> env =
+          ImmutableMap.<String, String>builder()
+              .putAll(linker.getEnvironment(context.getSourcePathResolver()))
+              .put("BUCK_BUILD_TARGET", buildTarget.getFullyQualifiedName())
+              .build();
       ImmutableList<String> commandPrefix =
           linker.getCommandPrefix(context.getSourcePathResolver());
       Optional<AbsPath> focusedTargetsPath =

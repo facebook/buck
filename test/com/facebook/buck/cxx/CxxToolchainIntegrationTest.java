@@ -243,4 +243,26 @@ public class CxxToolchainIntegrationTest {
                 + "ranlib applied.%n"),
         workspace.getFileContents(output));
   }
+
+  @Test
+  public void testLinkerGetsEnvVarWithRuleName() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_toolchain", tmp);
+
+    workspace.addBuckConfigLocalOption("cxx#good", "toolchain_target", "//toolchain:good");
+
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("//:binary_with_debug_output#good");
+
+    assertEquals(
+        String.format(
+            "linker:%n"
+                + "BUCK_BUILD_TARGET: //:binary_with_debug_output#binary,good%n"
+                + "archive:%n"
+                + "object: compile output: not a real cpp%n"
+                + "object: compile output: also not a real cpp%n"
+                + "ranlib applied.%n"),
+        workspace.getFileContents(output));
+  }
 }
