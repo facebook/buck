@@ -100,4 +100,30 @@ public class ConfiguredQueryTargetTranslatorTest {
             Query.of("$declared_deps", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
         Matchers.equalTo(Optional.empty()));
   }
+
+  @Test
+  public void translateFullTargets() {
+    BuildTarget a = BuildTargetFactory.newInstance("//foo:a");
+    BuildTarget b = BuildTargetFactory.newInstance("//bar:b");
+    FixedTargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(a, b), new TestCellBuilder().build());
+    QueryTargetTranslator queryTranslator =
+        new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetViewFactory());
+    assertThat(
+        queryTranslator.translateTargets(
+            CELL_PATH_RESOLVER.getCellNameResolver(),
+            BaseName.of("//foo"),
+            translator,
+            Query.of(
+                "deps(set(//foo:a \"//foo:a\" '//foo:a' //foo:a_suffix '//foo:a_suffix' \"//foo:a_suffix\" //blah:a))",
+                UnconfiguredTargetConfiguration.INSTANCE,
+                BaseName.ROOT)),
+        Matchers.equalTo(
+            Optional.of(
+                Query.of(
+                    "deps(set(//bar:b \"//bar:b\" '//bar:b' //foo:a_suffix '//foo:a_suffix' \"//foo:a_suffix\" //blah:a))",
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    BaseName.ROOT))));
+  }
 }

@@ -68,7 +68,12 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
 
     List<String> patterns = new ArrayList<>();
     // Match all fully qualified targets.
-    targets.stream().map(Object::toString).map(Pattern::quote).forEach(patterns::add);
+    targets.stream()
+        .map(Object::toString)
+        .map(Pattern::quote)
+        // Use a positive look-behind assertion to avoid matching other targets.
+        .map(p -> p + "(?=[) '\"])")
+        .forEach(patterns::add);
     // Match all short name targets (e.g. `:foo`) for targets matching the top-level target
     // basename.
     targets.stream()
