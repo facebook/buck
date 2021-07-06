@@ -122,5 +122,7 @@ java_library(
     ],
     resources = glob(["resources/**/*"]),
     resources_root = "resources/",
+    source = "8",
+    target = "8",
     visibility = ["//tools/ideabuck/..."],
 )
