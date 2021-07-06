@@ -54,7 +54,7 @@ public class KotlincStep extends IsolatedStep {
   private static final String EXCLUDE_REFLECT = "-no-reflect";
 
   private final Kotlinc kotlinc;
-  private final ImmutableSortedSet<Path> combinedClassPathEntries;
+  private final ImmutableSortedSet<AbsPath> combinedClassPathEntries;
   private final Path outputDirectory;
   private final ImmutableList<String> extraArguments;
   private final ImmutableList<String> verboseModeOnlyExtraArguments;
@@ -72,7 +72,7 @@ public class KotlincStep extends IsolatedStep {
       Path outputDirectory,
       ImmutableSortedSet<RelPath> sourceFilePaths,
       Path pathToSrcsList,
-      ImmutableSortedSet<Path> combinedClassPathEntries,
+      ImmutableSortedSet<AbsPath> combinedClassPathEntries,
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
       ImmutableList<String> verboseModeOnlyExtraArguments,
@@ -174,7 +174,7 @@ public class KotlincStep extends IsolatedStep {
    */
   @VisibleForTesting
   ImmutableList<String> getOptions(
-      IsolatedExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
+      IsolatedExecutionContext context, ImmutableSortedSet<AbsPath> buildClasspathEntries) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     AbsPath ruleCellRoot = context.getRuleCellRoot();
@@ -187,8 +187,7 @@ public class KotlincStep extends IsolatedStep {
       builder.add(
           CLASSPATH_FLAG,
           Joiner.on(File.pathSeparator)
-              .join(
-                  transform(buildClasspathEntries, path -> ruleCellRoot.resolve(path).toString())));
+              .join(transform(buildClasspathEntries, path -> path.getPath().toString())));
     }
 
     builder.add(INCLUDE_RUNTIME_FLAG);
@@ -224,7 +223,7 @@ public class KotlincStep extends IsolatedStep {
 
   /** @return The classpath entries used to invoke javac. */
   @VisibleForTesting
-  ImmutableSortedSet<Path> getClasspathEntries() {
+  ImmutableSortedSet<AbsPath> getClasspathEntries() {
     return combinedClassPathEntries;
   }
 

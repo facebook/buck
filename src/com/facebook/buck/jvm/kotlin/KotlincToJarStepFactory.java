@@ -56,11 +56,13 @@ import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessin
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.CopyIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.ZipIsolatedStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
@@ -77,6 +79,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -225,25 +228,56 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(genOutputFolder));
       steps.addAll(MakeCleanDirectoryIsolatedStep.of(reportsOutput));
 
-      ImmutableSortedSet<Path> allClasspaths =
-          ImmutableSortedSet.<Path>naturalOrder()
+      ImmutableSortedSet.Builder<AbsPath> friendAbsPathsBuilder =
+          ImmutableSortedSet.orderedBy(Comparator.comparing(AbsPath::getPath));
+
+      // Currently, kotlinc can't handle commas (`,`) in paths when passed to the `-Xfriend-paths`
+      // flag, so if we see a comma, we copy the JAR to a new path w/o one.
+      RelPath friendPathScratchDir =
+          getScratchPath(buckPaths, invokingRule, "__%s_friend_path_jars__");
+      friendPathScratchDir =
+          friendPathScratchDir
+              .getParent()
+              .resolveRel(friendPathScratchDir.getFileName().toString().replace(",", "__"));
+      Map<AbsPath, AbsPath> remappedClasspathEntries = new HashMap<>();
+
+      for (SourcePath friendPath : friendPaths) {
+        AbsPath friendAbsPath = resolver.getAbsolutePath(friendPath);
+        // If this path has a comma, copy to a new location that doesn't have one.
+        if (friendAbsPath.getPath().toString().contains(",")) {
+          if (remappedClasspathEntries.isEmpty()) {
+            steps.add(MkdirIsolatedStep.of(friendPathScratchDir));
+          }
+          AbsPath dest =
+              rootPath.resolve(friendPathScratchDir.resolve(friendAbsPath.getFileName()));
+          steps.add(
+              CopyIsolatedStep.of(friendAbsPath.getPath(), dest.getPath(), CopySourceMode.FILE));
+          remappedClasspathEntries.put(friendAbsPath, dest);
+          friendAbsPath = dest;
+        }
+        friendAbsPathsBuilder.add(friendAbsPath);
+      }
+      ImmutableSortedSet<AbsPath> friendAbsPaths = friendAbsPathsBuilder.build();
+
+      ImmutableSortedSet<AbsPath> allClasspaths =
+          ImmutableSortedSet.orderedBy(Comparator.comparing(AbsPath::getPath))
               .addAll(
                   RichStream.from(extraClasspathProvider.getExtraClasspath())
-                      .map(AbsPath::getPath)
+                      .map(p -> remappedClasspathEntries.getOrDefault(p, p))
                       .iterator())
               .addAll(
                   RichStream.from(declaredClasspathEntries)
                       .map(rootPath::resolve)
                       .map(AbsPath::normalize)
-                      .map(AbsPath::getPath)
+                      .map(p -> remappedClasspathEntries.getOrDefault(p, p))
                       .iterator())
               .addAll(
                   RichStream.from(kotlinHomeLibraries)
-                      .map(x -> resolver.getAbsolutePath(x).getPath())
+                      .map(x -> resolver.getAbsolutePath(x))
                       .iterator())
               .build();
 
-      String friendPathsArg = getFriendsPath(resolver, friendPaths);
+      String friendPathsArg = getFriendsPath(friendAbsPaths);
       String moduleName = getModuleName(invokingRule);
 
       ImmutableList.Builder<String> annotationProcessingOptionsBuilder = ImmutableList.builder();
@@ -528,9 +562,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     }
   }
 
-  private String getFriendsPath(
-      SourcePathResolverAdapter sourcePathResolverAdapter,
-      ImmutableList<SourcePath> friendPathsSourcePaths) {
+  private String getFriendsPath(ImmutableCollection<AbsPath> friendPathsSourcePaths) {
     if (friendPathsSourcePaths.isEmpty()) {
       return "";
     }
@@ -538,7 +570,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     // https://youtrack.jetbrains.com/issue/KT-29933
     ImmutableSortedSet<String> absoluteFriendPaths =
         friendPathsSourcePaths.stream()
-            .map(path -> sourcePathResolverAdapter.getAbsolutePath(path).toString())
+            .map(AbsPath::toString)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
     return "-Xfriend-paths="
@@ -614,8 +646,14 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
   /** Returns `gen` directory path for the given {@code target} and {@code format} */
   public static RelPath getGenPath(BuckPaths buckPaths, BuildTargetValue target, String format) {
     checkArgument(!format.startsWith("/"), "format string should not start with a slash");
-
     return getRelativePath(target, format, buckPaths.getGenDir());
+  }
+
+  /** Returns `gen` directory path for the given {@code target} and {@code format} */
+  public static RelPath getScratchPath(
+      BuckPaths buckPaths, BuildTargetValue target, String format) {
+    checkArgument(!format.startsWith("/"), "format string should not start with a slash");
+    return getRelativePath(target, format, buckPaths.getScratchDir());
   }
 
   private static RelPath getRelativePath(
