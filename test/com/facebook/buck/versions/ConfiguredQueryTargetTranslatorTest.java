@@ -91,6 +91,15 @@ public class ConfiguredQueryTargetTranslatorTest {
             CELL_PATH_RESOLVER.getCellNameResolver(),
             BaseName.of("//foo"),
             translator,
+            Query.of(":a", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
+        Matchers.equalTo(
+            Optional.of(
+                Query.of("//bar:b", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))));
+    assertThat(
+        queryTranslator.translateTargets(
+            CELL_PATH_RESOLVER.getCellNameResolver(),
+            BaseName.of("//foo"),
+            translator,
             Query.of(
                 "deps(set(:a \":a\" ':a' :a_suffix ':a_suffix' \":a_suffix\" //blah:a))",
                 UnconfiguredTargetConfiguration.INSTANCE,
@@ -133,6 +142,15 @@ public class ConfiguredQueryTargetTranslatorTest {
             CELL_PATH_RESOLVER.getCellNameResolver(),
             BaseName.of("//foo"),
             translator,
+            Query.of("//foo:a", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
+        Matchers.equalTo(
+            Optional.of(
+                Query.of("//bar:b", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))));
+    assertThat(
+        queryTranslator.translateTargets(
+            CELL_PATH_RESOLVER.getCellNameResolver(),
+            BaseName.of("//foo"),
+            translator,
             Query.of(
                 "deps(set(//foo:a \"//foo:a\" '//foo:a' //foo:a_suffix '//foo:a_suffix' \"//foo:a_suffix\" //blah:a))",
                 UnconfiguredTargetConfiguration.INSTANCE,
@@ -154,6 +172,15 @@ public class ConfiguredQueryTargetTranslatorTest {
             new DefaultTypeCoercerFactory(), ImmutableMap.of(a, b), new TestCellBuilder().build());
     QueryTargetTranslator queryTranslator =
         new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetViewFactory());
+    assertThat(
+        queryTranslator.translateTargets(
+            SUBCELL_CELL_PATH_RESOLVER.getCellNameResolver(),
+            BaseName.ROOT,
+            translator,
+            Query.of("//:a", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
+        Matchers.equalTo(
+            Optional.of(
+                Query.of("subcell//:b", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))));
     assertThat(
         queryTranslator.translateTargets(
             SUBCELL_CELL_PATH_RESOLVER.getCellNameResolver(),
