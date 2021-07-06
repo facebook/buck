@@ -272,7 +272,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     expectedOutput +=
         linesToText(
-            FINISHED_DOWNLOAD_STRING + ", 100.0% CACHE MISS",
+            FINISHED_DOWNLOAD_STRING + ", 100.0% CACHE MISS (FOR UPDATED RULES)",
             "BUILDING: FINISHED IN 1.2s",
             "WAITING FOR HTTP CACHE UPLOADS 0.00 BYTES (0 COMPLETE/0 FAILED/1 UPLOADING/1 PENDING)",
             "BUILD SUCCEEDED",
@@ -361,9 +361,10 @@ public class SimpleConsoleEventBusListenerTest {
             /* threadId */ 0L));
 
     expectedOutput += getAdditionalLineProviderText();
-    expectedOutput += FINISHED_DOWNLOAD_STRING + ", 0.0% CACHE MISS" + System.lineSeparator();
     expectedOutput +=
-        linesToText("BUILDING: FINISHED IN 1.0s 0/10 JOBS, 0 UPDATED", "BUILD SUCCEEDED", "");
+        FINISHED_DOWNLOAD_STRING + ", 0.0% CACHE MISS (FOR UPDATED RULES)" + System.lineSeparator();
+    expectedOutput +=
+        linesToText("BUILDING: FINISHED IN 1.0s 0/10 JOBS, 0/10 UPDATED", "BUILD SUCCEEDED", "");
 
     assertOutput(expectedOutput, console);
   }
@@ -418,7 +419,7 @@ public class SimpleConsoleEventBusListenerTest {
     expectedOutput += getAdditionalLineProviderText();
     expectedOutput +=
         linesToText(
-            FINISHED_DOWNLOAD_STRING + ", 0.0% CACHE MISS",
+            FINISHED_DOWNLOAD_STRING + ", 0.0% CACHE MISS (FOR UPDATED RULES)",
             "BUILDING: FINISHED IN 0.1s",
             "BUILD SUCCEEDED",
             "");
@@ -496,7 +497,7 @@ public class SimpleConsoleEventBusListenerTest {
 
     expectedOutput +=
         linesToText(
-            FINISHED_DOWNLOAD_STRING + ", 100.0% CACHE MISS",
+            FINISHED_DOWNLOAD_STRING + ", 100.0% CACHE MISS (FOR UPDATED RULES)",
             "BUILDING: FINISHED IN 1.2s",
             "BUILD SUCCEEDED",
             "");

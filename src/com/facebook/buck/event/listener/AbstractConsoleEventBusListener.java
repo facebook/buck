@@ -722,8 +722,9 @@ public abstract class AbstractConsoleEventBusListener
       columns.add(
           String.format(
               locale,
-              "%d " + convertToAllCapsIfNeeded("updated"),
-              cacheRateStats.getUpdatedRulesCount()));
+              "%d/%d " + convertToAllCapsIfNeeded("updated"),
+              cacheRateStats.getUpdatedRulesCount(),
+              cacheRateStats.getTotalRulesCount()));
       jobSummary = String.join(", ", columns);
     }
 
@@ -760,7 +761,7 @@ public abstract class AbstractConsoleEventBusListener
     columns.add(
         String.format(
             locale,
-            "%.1f%% " + convertToAllCapsIfNeeded("cache miss"),
+            "%.1f%% " + convertToAllCapsIfNeeded("cache miss (for updated rules)"),
             cacheRateStats.getCacheMissRate()));
     if (cacheRateStats.getCacheErrorCount() > 0) {
       columns.add(

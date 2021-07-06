@@ -142,7 +142,7 @@ public class SuperConsoleEventBusListenerTest {
     String operationString = running ? "Downloading..." : "Downloaded";
     String sizeString = size == 0 ? "0.00 bytes" : String.format("%.2f Mbytes", size);
     return String.format(
-        "%s %d/%d artifacts, %s, %.1f%% cache miss",
+        "%s %d/%d artifacts, %s, %.1f%% cache miss (for updated rules)",
         operationString, artifacts, artifactStartedDownload, sizeString, ratio);
   }
 
@@ -880,7 +880,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             actionGraphLine,
             formatCacheStatsLine(true, 0, 0, 0f, 0f),
-            "Building... 0.1 sec" + " (0%) 0/10 jobs, 0 updated"));
+            "Building... 0.1 sec" + " (0%) 0/10 jobs, 0/10 updated"));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(fakeRule, durationTracker);
     eventBus.postWithoutConfiguring(
@@ -894,7 +894,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             actionGraphLine,
             formatCacheStatsLine(true, 0, 0, 0f, 0f),
-            "Building... 0.4 sec" + " (0%) 0/10 jobs, 0 updated",
+            "Building... 0.4 sec" + " (0%) 0/10 jobs, 0/10 updated",
             "     - //banana:stand... 0.2 sec (preparing)"));
 
     String stepShortName = "doing_something";
@@ -911,7 +911,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             actionGraphLine,
             formatCacheStatsLine(true, 0, 0, 0f, 0f),
-            "Building... 0.5 sec" + " (0%) 0/10 jobs, 0 updated",
+            "Building... 0.5 sec" + " (0%) 0/10 jobs, 0/10 updated",
             "     - //banana:stand... 0.3 sec (running doing_something[0.1 sec])"));
 
     eventBus.postWithoutConfiguring(
@@ -952,7 +952,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             actionGraphLine,
             formatCacheStatsLine(true, 0, 0, 0f, 100f),
-            "Building... 0.6 sec (10%) 1/10 jobs, 1 updated",
+            "Building... 0.6 sec (10%) 1/10 jobs, 1/10 updated",
             "     - IDLE"));
 
     BuildRuleEvent.Started startedCached = BuildRuleEvent.started(cachedRule, durationTracker);
@@ -967,7 +967,7 @@ public class SuperConsoleEventBusListenerTest {
             parsingLine,
             actionGraphLine,
             formatCacheStatsLine(true, 0, 0, 0f, 100f),
-            "Building... 0.7 sec (10%) 1/10 jobs, 1 updated",
+            "Building... 0.7 sec (10%) 1/10 jobs, 1/10 updated",
             "     - IDLE",
             "     - //chicken:dance... 0.0 sec (preparing)"));
 
@@ -1002,7 +1002,7 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
 
-    String buildingLine = "Building: finished in 0.8 sec" + " (100%) 2/10 jobs, 2 updated";
+    String buildingLine = "Building: finished in 0.8 sec" + " (100%) 2/10 jobs, 2/10 updated";
     String totalTime = "  Total time: 1.0 sec";
 
     validateConsole(
