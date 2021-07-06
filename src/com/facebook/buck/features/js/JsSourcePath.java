@@ -22,6 +22,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.collect.Comparators;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -30,7 +32,7 @@ import java.util.function.Function;
  * individual file out of a source directory using an "inner path" component.
  */
 @BuckStyleValue
-abstract class JsSourcePath implements AddsToRuleKey {
+abstract class JsSourcePath implements AddsToRuleKey, Comparable<JsSourcePath> {
   @AddToRuleKey
   public abstract SourcePath getPath();
 
@@ -44,5 +46,15 @@ abstract class JsSourcePath implements AddsToRuleKey {
             (SourcePath path) -> Optional.empty(),
             (Pair<SourcePath, String> compoundPath) -> Optional.of(compoundPath.getSecond()));
     return ImmutableJsSourcePath.ofImpl(sourcePath, innerPath);
+  }
+
+  private static final Comparator<JsSourcePath> naturalOrdering =
+      Comparator.comparing(JsSourcePath::getPath)
+          .thenComparing(
+              JsSourcePath::getInnerPath, Comparators.emptiesFirst(Comparator.naturalOrder()));
+
+  @Override
+  public int compareTo(JsSourcePath other) {
+    return naturalOrdering.compare(this, other);
   }
 }

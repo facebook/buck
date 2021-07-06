@@ -23,6 +23,7 @@
   "outputFilePath" : "@/buck-out/gen/external/replace-file-prefix#file-mango.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/external/tropical-fruit/mango.js",
   "sourceJsFileName" : "js/node_modules/tropical-fruit/mango.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "flavors" : [ ]
@@ -33,6 +34,7 @@ var mango;
   "outputFilePath" : "@/buck-out/gen/external/replace-file-prefix#file-papaya.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/external/tropical-fruit/papaya.js",
   "sourceJsFileName" : "js/node_modules/tropical-fruit/papaya.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "flavors" : [ ]

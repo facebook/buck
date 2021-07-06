@@ -22,6 +22,7 @@
   "outputFilePath" : "@/buck-out/gen/js/build-target-output#file-exported.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/buck-out/gen/external/exported.js/exported.js",
   "sourceJsFileName" : "buck-out/gen/external/exported.js/exported.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "flavors" : [ ]

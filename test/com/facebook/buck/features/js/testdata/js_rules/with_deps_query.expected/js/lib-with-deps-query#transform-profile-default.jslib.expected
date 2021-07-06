@@ -35,6 +35,7 @@
   "outputFilePath" : "@/buck-out/gen/js/build-target-output#file-exported.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/buck-out/gen/external/exported.js/exported.js",
   "sourceJsFileName" : "buck-out/gen/external/exported.js/exported.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "flavors" : [ ]
@@ -64,6 +65,7 @@ var exported;
   "outputFilePath" : "@/buck-out/gen/js/native-js/photo-album-js#file-photo-album.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/native-js/photo-album.js",
   "sourceJsFileName" : "js/native-js/photo-album.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "flavors" : [ ]
@@ -93,6 +95,7 @@ var photoAlbum;
   "outputFilePath" : "@/buck-out/gen/js/native-js/text-widget-js#file-text-widget.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/native-js/text-widget.js",
   "sourceJsFileName" : "js/native-js/text-widget.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "flavors" : [ ]

@@ -23,6 +23,7 @@
   "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "extraData" : {
@@ -37,6 +38,7 @@ var choclateChips;
   "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "extraData" : {

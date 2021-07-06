@@ -42,6 +42,7 @@
   "outputFilePath" : "@/buck-out/gen/js/extras#file-choclate-chips.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/choclate-chips.js",
   "sourceJsFileName" : "js/extras/choclate-chips.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "extraData" : {
@@ -56,6 +57,7 @@ var choclateChips;
   "outputFilePath" : "@/buck-out/gen/js/extras#file-yoghurt.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/extras/yoghurt.js",
   "sourceJsFileName" : "js/extras/yoghurt.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "extraData" : {
@@ -91,6 +93,7 @@ var yoghurt;
   "outputFilePath" : "@/buck-out/gen/js/fruit#file-apple.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/apple.js",
   "sourceJsFileName" : "js/apple.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "flavors" : [ ]
@@ -101,6 +104,7 @@ var apple;
   "outputFilePath" : "@/buck-out/gen/js/fruit#file-banana.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/banana.js",
   "sourceJsFileName" : "js/banana.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "flavors" : [ ]
@@ -111,6 +115,7 @@ var banana;
   "outputFilePath" : "@/buck-out/gen/js/fruit#file-pear.js-<HASH>,transform-profile-default.jsfile",
   "sourceJsFilePath" : "@/js/pear.js",
   "sourceJsFileName" : "js/pear.js",
+  "additionalSources" : [ ],
   "transformProfile" : "default",
   "release" : false,
   "flavors" : [ ]

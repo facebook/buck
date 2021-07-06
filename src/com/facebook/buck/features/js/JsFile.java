@@ -46,6 +46,7 @@ import com.facebook.buck.util.json.JsonBuilder;
 import com.facebook.buck.util.json.JsonBuilder.ObjectBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -71,6 +72,7 @@ public class JsFile extends ModernBuildRule<JsFile.JsFileBuildable> {
     @AddToRuleKey final Optional<String> transformProfile;
     @AddToRuleKey private final boolean withDownwardApi;
     @AddToRuleKey private final JsSourcePath src;
+    @AddToRuleKey private final ImmutableSet<JsSourcePath> additionalSources;
     @AddToRuleKey private final Optional<String> basePath;
     @AddToRuleKey private final boolean release;
 
@@ -80,6 +82,7 @@ public class JsFile extends ModernBuildRule<JsFile.JsFileBuildable> {
         Optional<Arg> extraJson,
         WorkerTool workerTool,
         JsSourcePath src,
+        ImmutableSet<JsSourcePath> additionalSources,
         Optional<String> basePath,
         boolean withDownwardApi,
         boolean release) {
@@ -92,6 +95,7 @@ public class JsFile extends ModernBuildRule<JsFile.JsFileBuildable> {
                   projectFilesystem.getBuckPaths(), buildTarget, "%s.jsfile"));
       this.transformProfile = JsFlavors.transformProfileArg(buildTarget.getFlavors());
       this.src = src;
+      this.additionalSources = additionalSources;
       this.basePath = basePath;
       this.release = release;
       this.withDownwardApi = withDownwardApi;
@@ -128,17 +132,32 @@ public class JsFile extends ModernBuildRule<JsFile.JsFileBuildable> {
               withDownwardApi));
     }
 
-    ObjectBuilder getJobArgs(
-        BuildContext buildContext, ProjectFilesystem filesystem, String outputPath) {
+    private static AbsPath resolveSourcePath(BuildContext buildContext, JsSourcePath src) {
       SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
       AbsPath srcPath = sourcePathResolverAdapter.getAbsolutePath(src.getPath());
+      return src.getInnerPath().map(innerPath -> srcPath.resolve(innerPath)).orElse(srcPath);
+    }
+
+    ObjectBuilder getJobArgs(
+        BuildContext buildContext, ProjectFilesystem filesystem, String outputPath) {
       return JsonBuilder.object()
           .addString("command", "transform")
           .addString("outputFilePath", outputPath)
-          .addString(
-              "sourceJsFilePath",
-              src.getInnerPath().map(srcPath::resolve).orElse(srcPath).toString())
+          .addString("sourceJsFilePath", resolveSourcePath(buildContext, src).toString())
           .addString("sourceJsFileName", getVirtualPath(buildContext, filesystem, src))
+          .addArray(
+              "additionalSources",
+              additionalSources.stream()
+                  .map(
+                      additionalSource ->
+                          JsonBuilder.object()
+                              .addString(
+                                  "sourcePath",
+                                  resolveSourcePath(buildContext, additionalSource).toString())
+                              .addString(
+                                  "virtualPath",
+                                  getVirtualPath(buildContext, filesystem, additionalSource)))
+                  .collect(JsonBuilder.toArrayOfObjects()))
           .addString("transformProfile", transformProfile)
           .addBoolean("release", release);
     }
@@ -171,7 +190,7 @@ public class JsFile extends ModernBuildRule<JsFile.JsFileBuildable> {
                               buildContext.getCellPathResolver(),
                               buildTarget.getUnflavoredBuildTarget())
                           .resolveRel(source.getInnerPath().orElse("")))
-              .orElse(buildContext.getSourcePathResolver().getCellUnsafeRelPath(src.getPath()));
+              .orElse(buildContext.getSourcePathResolver().getCellUnsafeRelPath(source.getPath()));
       return PathFormatter.pathWithUnixSeparators(virtualPath);
     }
 
@@ -227,6 +246,7 @@ public class JsFile extends ModernBuildRule<JsFile.JsFileBuildable> {
       Optional<Arg> extraJson,
       WorkerTool worker,
       JsSourcePath src,
+      ImmutableSet<JsSourcePath> additionalSources,
       Optional<String> basePath,
       boolean withDownwardApi,
       boolean release) {
@@ -237,6 +257,7 @@ public class JsFile extends ModernBuildRule<JsFile.JsFileBuildable> {
             extraJson,
             worker,
             src,
+            additionalSources,
             basePath,
             withDownwardApi,
             release);

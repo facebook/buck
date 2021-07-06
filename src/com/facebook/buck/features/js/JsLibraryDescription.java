@@ -24,6 +24,7 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -54,9 +55,12 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -75,15 +79,14 @@ public class JsLibraryDescription
           JsFlavors.PLATFORM_DOMAIN,
           JsFlavors.OPTIMIZATION_DOMAIN,
           JsFlavors.TRANSFORM_PROFILE_DOMAIN);
-  private final Cache<ImmutableSet<JsSourcePath>, ImmutableBiMap<JsSourcePath, Flavor>>
-      sourcesToFlavorsCache =
-          CacheBuilder.newBuilder()
-              .weakKeys()
-              .maximumWeight(1 << 16)
-              .weigher(
-                  (Weigher<ImmutableSet<?>, ImmutableBiMap<?, ?>>)
-                      (sources, flavors) -> sources.size())
-              .build();
+  private final Cache<JsLibraryDescriptionArg, GroupedJsSourceSet> groupedSourcesCache =
+      CacheBuilder.newBuilder()
+          .weakKeys()
+          .maximumWeight(1 << 16)
+          .weigher(
+              (Weigher<JsLibraryDescriptionArg, GroupedJsSourceSet>)
+                  (args, groupedSources) -> args.getFlatSrcs().size())
+          .build();
 
   private final DownwardApiConfig downwardApiConfig;
   private final JsConfig jsConfig;
@@ -106,18 +109,18 @@ public class JsLibraryDescription
       JsLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
 
-    ImmutableBiMap<JsSourcePath, Flavor> sourcesToFlavors;
+    GroupedJsSourceSet groupedSources;
     try {
-      sourcesToFlavors =
-          sourcesToFlavorsCache.get(
-              args.getFlatSrcs(),
-              () -> mapSourcesToFlavors(graphBuilder.getSourcePathResolver(), args.getFlatSrcs()));
+      groupedSources =
+          groupedSourcesCache.get(
+              args, () -> new GroupedJsSourceSet(args, graphBuilder.getSourcePathResolver()));
     } catch (ExecutionException e) {
       throw new RuntimeException(e);
     }
     Optional<JsSourcePath> file =
         JsFlavors.extractSourcePath(
-            sourcesToFlavors.inverse(), buildTarget.getFlavors().getSet().stream());
+            groupedSources.mainSourcesToFlavors.inverse(),
+            buildTarget.getFlavors().getSet().stream());
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
@@ -146,12 +149,13 @@ public class JsLibraryDescription
           cellRoots,
           args,
           file.get(),
+          groupedSources.additionalSourcesByMainSource.get(file.get()),
           worker,
           withDownwardApi);
     } else {
       if (buildTarget.getFlavors().contains(JsFlavors.LIBRARY_FILES)) {
-        return new LibraryFilesBuilder(graphBuilder, buildTarget, sourcesToFlavors, withDownwardApi)
-            .setSources(isMissingTransformProfile ? ImmutableSet.of() : args.getFlatSrcs())
+        return new LibraryFilesBuilder(graphBuilder, buildTarget, groupedSources, withDownwardApi)
+            .setSources(isMissingTransformProfile ? ImmutableSet.of() : groupedSources.mainSources)
             .setForbidBuildingReason(
                 isMissingTransformProfile
                     ? Optional.of("missing transform profile")
@@ -232,7 +236,7 @@ public class JsLibraryDescription
 
     private final ActionGraphBuilder graphBuilder;
     private final BuildTarget baseTarget;
-    private final ImmutableBiMap<JsSourcePath, Flavor> sourcesToFlavors;
+    private final GroupedJsSourceSet groupedSources;
     private final BuildTarget fileBaseTarget;
     private final boolean withDownwardApi;
     private Optional<String> forbidBuildingReason = Optional.empty();
@@ -242,11 +246,11 @@ public class JsLibraryDescription
     public LibraryFilesBuilder(
         ActionGraphBuilder graphBuilder,
         BuildTarget baseTarget,
-        ImmutableBiMap<JsSourcePath, Flavor> sourcesToFlavors,
+        GroupedJsSourceSet groupedSources,
         boolean withDownwardApi) {
       this.graphBuilder = graphBuilder;
       this.baseTarget = baseTarget;
-      this.sourcesToFlavors = sourcesToFlavors;
+      this.groupedSources = groupedSources;
 
       // Platform information is only relevant when building release-optimized files.
       // Stripping platform targets from individual files allows us to use the base version of
@@ -274,7 +278,7 @@ public class JsLibraryDescription
     }
 
     private JsFile requireJsFile(JsSourcePath file) {
-      Flavor fileFlavor = sourcesToFlavors.get(file);
+      Flavor fileFlavor = groupedSources.mainSourcesToFlavors.get(file);
       BuildTarget target = fileBaseTarget.withAppendedFlavors(fileFlavor);
       graphBuilder.requireRule(target);
       return graphBuilder.getRuleWithType(target, JsFile.class);
@@ -371,6 +375,7 @@ public class JsLibraryDescription
       CellPathResolver cellRoots,
       A args,
       JsSourcePath source,
+      ImmutableSet<JsSourcePath> additionalSources,
       WorkerTool worker,
       boolean withDownwardApi) {
 
@@ -381,23 +386,105 @@ public class JsLibraryDescription
         JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
         worker,
         source,
+        additionalSources,
         args.getBasePath(),
         withDownwardApi,
         buildTarget.getFlavors().contains(JsFlavors.RELEASE));
   }
 
-  private static ImmutableBiMap<JsSourcePath, Flavor> mapSourcesToFlavors(
-      SourcePathResolverAdapter sourcePathResolverAdapter, ImmutableSet<JsSourcePath> sources) {
+  /**
+   * Represents the set of main source files in a JS library, the internal build flavor uniquely
+   * associated with each one, and any additional sources that should be processed along with each
+   * main source.
+   */
+  class GroupedJsSourceSet {
+    /**
+     * All "main" sources in a library. Each main source can be transformed independently of other
+     * main sources.
+     */
+    public final ImmutableSet<JsSourcePath> mainSources;
 
-    ImmutableBiMap.Builder<JsSourcePath, Flavor> builder = ImmutableBiMap.builder();
-    for (JsSourcePath source : sources) {
-      RelPath relativePath =
+    /** A 1:1 mapping from main sources to generated flavors. */
+    public final ImmutableBiMap<JsSourcePath, Flavor> mainSourcesToFlavors;
+
+    /** A mapping from main sources to their additional sources, if any. */
+    public final ImmutableSetMultimap<JsSourcePath, JsSourcePath> additionalSourcesByMainSource;
+
+    public GroupedJsSourceSet(
+        JsLibraryDescriptionArg args, SourcePathResolverAdapter sourcePathResolverAdapter) {
+
+      ImmutableSet<JsSourcePath> ungroupedSources = args.getFlatSrcs();
+
+      ImmutableSetMultimap<JsSourcePath, JsSourcePath> groupings =
+          buildGroupings(ungroupedSources, sourcePathResolverAdapter);
+      mainSources = groupings.keySet();
+
+      additionalSourcesByMainSource =
+          groupings.entries().stream()
+              .filter(entry -> entry.getKey() != entry.getValue())
+              .collect(
+                  ImmutableSetMultimap.toImmutableSetMultimap(
+                      Map.Entry::getKey, Map.Entry::getValue));
+
+      ImmutableBiMap.Builder<JsSourcePath, Flavor> flavorsBuilder = ImmutableBiMap.builder();
+      for (JsSourcePath source : mainSources) {
+        RelPath relativePath =
+            source
+                .getInnerPath()
+                .map(RelPath::get)
+                .orElseGet(() -> sourcePathResolverAdapter.getCellUnsafeRelPath(source.getPath()));
+        flavorsBuilder.put(source, JsFlavors.fileFlavorForSourcePath(relativePath));
+      }
+      mainSourcesToFlavors = flavorsBuilder.build();
+    }
+
+    private ImmutableSetMultimap<JsSourcePath, JsSourcePath> buildGroupings(
+        ImmutableSet<JsSourcePath> ungroupedSources,
+        SourcePathResolverAdapter sourcePathResolverAdapter) {
+      ImmutableSetMultimap.Builder<JsSourcePath, JsSourcePath> builder =
+          ImmutableSetMultimap.<JsSourcePath, JsSourcePath>builder();
+      // Since canonical paths may or may not be concrete source paths, iterate
+      // over the sources in order and use the first concrete path we encounter
+      // as the "main source" for each group of sources that share a canonical
+      // path.
+      HashMap<AbsPath, JsSourcePath> mainSourceByCanonicalPath =
+          new HashMap<AbsPath, JsSourcePath>();
+      ungroupedSources.stream()
+          .sorted()
+          .forEachOrdered(
+              // TODO(moti): Use a collector instead of sorted().forEachOrdered() and a separate map
+              (JsSourcePath source) -> {
+                AbsPath canonicalSource = canonicalize(source, sourcePathResolverAdapter);
+                JsSourcePath mainSource =
+                    mainSourceByCanonicalPath.computeIfAbsent(canonicalSource, unused -> source);
+                builder.put(mainSource, source);
+              });
+      return builder.build();
+    }
+
+    // Returns a canonical path for the given source, used for grouping sources
+    // to be transformed together. The canonical path does not necessarily
+    // represent an actual file on disk.
+    private AbsPath canonicalize(
+        JsSourcePath source, SourcePathResolverAdapter sourcePathResolverAdapter) {
+      AbsPath combinedPath = sourcePathResolverAdapter.getAbsolutePath(source.getPath());
+      combinedPath =
           source
               .getInnerPath()
-              .map(RelPath::get)
-              .orElseGet(() -> sourcePathResolverAdapter.getCellUnsafeRelPath(source.getPath()));
-      builder.put(source, JsFlavors.fileFlavorForSourcePath(relativePath));
+              .map(
+                  innerPath ->
+                      sourcePathResolverAdapter
+                          .getAbsolutePath(source.getPath())
+                          .resolve(innerPath))
+              .orElseGet(() -> sourcePathResolverAdapter.getAbsolutePath(source.getPath()));
+      return combinedPath
+          .getParent()
+          .resolve(canonicalizeBaseName(combinedPath.getFileName().toString()));
     }
-    return builder.build();
+
+    private String canonicalizeBaseName(String baseName) {
+      // TODO(moti): Canonicalize the path here to get a 1:many grouping
+      return baseName;
+    }
   }
 }
