@@ -16,6 +16,7 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
@@ -74,6 +75,15 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
         // Use a positive look-behind assertion to avoid matching other targets.
         .map(p -> p + "(?=[) '\"])")
         .forEach(patterns::add);
+    if (!cellNameResolver.getCurrentCellName().equals(CanonicalCellName.rootCell())) {
+      targets.stream()
+          .filter(t -> t.getCell().equals(cellNameResolver.getCurrentCellName()))
+          .map(t -> "//" + t.getFullyQualifiedName().split("//")[1])
+          .map(Pattern::quote)
+          // Use a positive look-behind assertion to avoid matching other targets.
+          .map(p -> p + "(?=[) '\"])")
+          .forEach(patterns::add);
+    }
     // Match all short name targets (e.g. `:foo`) for targets matching the top-level target
     // basename.
     targets.stream()
