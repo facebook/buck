@@ -93,6 +93,7 @@ public class WorkspaceAndProjectGenerator {
   private final XcodeWorkspaceConfigDescriptionArg workspaceArguments;
   private final BuildTarget workspaceBuildTarget;
   private final FocusedTargetMatcher focusedTargetMatcher; // @audited (chatatap)
+  private final FocusedTargetMatcher excludedTargetMatcher;
   private final ProjectGeneratorOptions projectGeneratorOptions;
   private final boolean parallelizeBuild;
   private final CxxPlatform defaultCxxPlatform;
@@ -141,6 +142,7 @@ public class WorkspaceAndProjectGenerator {
       BuildTarget workspaceBuildTarget,
       ProjectGeneratorOptions projectGeneratorOptions,
       FocusedTargetMatcher focusedTargetMatcher,
+      FocusedTargetMatcher excludedTargetMatcher,
       boolean parallelizeBuild,
       CxxPlatform defaultCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
@@ -176,6 +178,8 @@ public class WorkspaceAndProjectGenerator {
     this.sharedLibraryToBundle = sharedLibraryToBundle;
 
     this.focusedTargetMatcher = focusedTargetMatcher;
+    this.excludedTargetMatcher = excludedTargetMatcher;
+
     // Add the workspace target to the focused target matcher.
     workspaceArguments
         .getSrcTarget()
@@ -369,7 +373,8 @@ public class WorkspaceAndProjectGenerator {
     HashSet<BuildTarget> unflavoredTargetsToGenerate = new HashSet<>();
 
     ProjectExcludeResolver projectExcludeResolver =
-        new ProjectExcludeResolver(projectGraph, appleConfig.getProjectExcludeLabels());
+        new ProjectExcludeResolver(
+            projectGraph, appleConfig.getProjectExcludeLabels(), excludedTargetMatcher);
 
     for (TargetNode<?> targetNode : projectGraph.getNodes()) {
       BuildTarget buildTarget = targetNode.getBuildTarget();
@@ -404,7 +409,7 @@ public class WorkspaceAndProjectGenerator {
    * Determine whether we want to include the target node in the generated project, based on,
    *
    * <ul>
-   *   <li>whether the target is specifically excluded based on any labels.
+   *   <li>whether the target is excluded based on labels/exclude set passed.
    *   <li>included in the focus set.
    *   <li>contains flavors that have been previously generated:
    *       <ul>
@@ -471,6 +476,7 @@ public class WorkspaceAndProjectGenerator {
             ruleKeyConfiguration,
             workspaceArguments.getSrcTarget().get(),
             targetsInRequiredProjects,
+            excludedTargetMatcher,
             defaultCxxPlatform,
             appleCxxFlavors,
             actionGraphBuilder,

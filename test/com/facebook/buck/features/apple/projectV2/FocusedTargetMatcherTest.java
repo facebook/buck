@@ -102,4 +102,15 @@ public class FocusedTargetMatcherTest {
     assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo/barbeta:baz")));
     assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:fubar")));
   }
+
+  @Test
+  public void testNullPattern() {
+    FocusedTargetMatcher inclusiveTargetMatcher =
+        new FocusedTargetMatcher(null, true, TestCellNameResolver.forRoot());
+    FocusedTargetMatcher exclusiveTargetMatcher =
+        new FocusedTargetMatcher(null, false, TestCellNameResolver.forRoot());
+
+    assertTrue(inclusiveTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
+    assertFalse(exclusiveTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
+  }
 }

@@ -28,7 +28,12 @@ public class ProjectExcludeResolver {
   private final TargetGraph graph;
   private final ImmutableList<String> excludedLabels;
 
-  ProjectExcludeResolver(TargetGraph graph, ImmutableList<String> excludedLabels) {
+  @SuppressWarnings(
+      "unused") // TODO will be removed in next commit where excludedTargetMatcher is used
+  ProjectExcludeResolver(
+      TargetGraph graph,
+      ImmutableList<String> excludedLabels,
+      FocusedTargetMatcher excludedTargetMatcher) {
     this.graph = graph;
     this.excludedLabels = excludedLabels;
   }

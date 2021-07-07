@@ -64,6 +64,27 @@ public class FocusedTargetMatcher {
             }
           });
 
+  private static final FocusedTargetMatcher NO_EXCLUDE =
+      new FocusedTargetMatcher(
+          null,
+          false,
+          new CellNameResolver() {
+            @Override
+            public Optional<CanonicalCellName> getNameIfResolvable(Optional<String> localName) {
+              throw new AssertionError("unreachable");
+            }
+
+            @Override
+            public CanonicalCellName getName(Optional<String> localName) {
+              throw new AssertionError("unreachable");
+            }
+
+            @Override
+            public ImmutableMap<Optional<String>, CanonicalCellName> getKnownCells() {
+              throw new AssertionError("unreachable");
+            }
+          });
+
   final boolean hasEntries;
 
   // Match targets defined in given package.
@@ -119,6 +140,10 @@ public class FocusedTargetMatcher {
     return NO_FOCUS;
   }
 
+  /** @return A matcher configured to match no targets. */
+  public static FocusedTargetMatcher noExclude() {
+    return NO_EXCLUDE;
+  }
   /**
    * Add a build target to always match.
    *

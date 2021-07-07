@@ -1605,16 +1605,18 @@ public class XcodeNativeTargetGenerator {
    * node.
    *
    * @param buildTargets The build target for which to generate
+   * @param projectExcludeResolver matches targets to exclude
    * @return A result with a set of all of the data aggregated for these nodes.
    */
   public ImmutableSet<Result> generateMergedTargetDependencies(
-      ImmutableSet<BuildTarget> buildTargets) {
+      ImmutableSet<BuildTarget> buildTargets, ProjectExcludeResolver projectExcludeResolver) {
     ImmutableSet.Builder<Result> resultsBuilder = new ImmutableSet.Builder<>();
     getRecursiveDependenciesMap(buildTargets)
         .forEach(
             (targetNode, dependencies) -> {
               try {
-                generateMergedDependenciesForTargetNode(targetNode, dependencies)
+                generateMergedDependenciesForTargetNode(
+                        targetNode, dependencies, projectExcludeResolver)
                     .ifPresent(resultsBuilder::add);
               } catch (Exception e) {
                 LOG.warn(
@@ -1660,10 +1662,13 @@ public class XcodeNativeTargetGenerator {
   }
 
   private Optional<Result> generateMergedDependenciesForTargetNode(
-      TargetNode<?> targetNode, ImmutableSet<TargetNode<?>> recursiveBuildDependencies)
+      TargetNode<?> targetNode,
+      ImmutableSet<TargetNode<?>> recursiveBuildDependencies,
+      ProjectExcludeResolver projectExcludeResolver)
       throws IOException {
 
-    if (targetNode.getBuildTarget().isFlavored()) {
+    if (targetNode.getBuildTarget().isFlavored()
+        || projectExcludeResolver.excludeTarget(targetNode.getBuildTarget())) {
       return Optional.empty();
     }
 
@@ -1719,6 +1724,10 @@ public class XcodeNativeTargetGenerator {
     recursiveBuildDependencies.stream()
         .forEach(
             depTargetNode -> {
+              if (projectExcludeResolver.excludeTarget(depTargetNode.getBuildTarget())) {
+                return;
+              }
+
               try {
                 ConstructorArg constructorArg = depTargetNode.getConstructorArg();
                 if (constructorArg instanceof CommonArg) {

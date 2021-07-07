@@ -508,6 +508,7 @@ public class XCodeProjectCommandHelperTest {
             .build(),
         ImmutableSet.of(),
         FocusedTargetMatcher.noFocus(),
+        FocusedTargetMatcher.noExclude(),
         Optional.empty(),
         EasyMock.createMock(ActionGraphBuilder.class));
   }

@@ -81,7 +81,9 @@ public class XcodeNativeTargetProjectWriterTest {
     sourcePathResolverAdapter =
         AppleProjectHelper.defaultSourcePathResolverAdapter(new TestActionGraphBuilder());
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
-    projectExcludeResolver = new ProjectExcludeResolver(targetGraph, ImmutableList.of());
+    projectExcludeResolver =
+        new ProjectExcludeResolver(
+            targetGraph, ImmutableList.of(), FocusedTargetMatcher.noExclude());
     pathRelativizer =
         new PathRelativizer(Paths.get("_output"), sourcePathResolverAdapter::getCellUnsafeRelPath);
     newCellPathResolver =

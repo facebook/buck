@@ -130,6 +130,7 @@ public class ProjectGenerator {
       RuleKeyConfiguration ruleKeyConfiguration,
       BuildTarget workspaceTarget,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
+      FocusedTargetMatcher excludedTargetMatcher,
       CxxPlatform defaultCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       ActionGraphBuilder actionGraphBuilder,
@@ -193,7 +194,8 @@ public class ProjectGenerator {
         new SwiftAttributeParser(swiftBuckConfig, projGenerationStateCache, projectFilesystem);
 
     this.projectExcludeResolver =
-        new ProjectExcludeResolver(targetGraph, appleConfig.getProjectExcludeLabels());
+        new ProjectExcludeResolver(
+            targetGraph, appleConfig.getProjectExcludeLabels(), excludedTargetMatcher);
   }
 
   /** The output from generating an Xcode project. */
@@ -321,7 +323,10 @@ public class ProjectGenerator {
         List<XcodeNativeTargetGenerator.Result> flavoredTargetResults =
             Futures.allAsList(
                     projectTargets.stream()
-                        .filter(BuildTarget::isFlavored)
+                        .filter(
+                            buildTarget ->
+                                buildTarget.isFlavored()
+                                    && !projectExcludeResolver.excludeTarget(buildTarget))
                         .map(targetGraph::get)
                         .filter(targetNode -> !targetNode.equals(workspaceTargetNode))
                         .map(
@@ -336,7 +341,10 @@ public class ProjectGenerator {
         List<XcodeNativeTargetGenerator.Result> unflavoredTargetResults =
             Futures.allAsList(
                     projectTargets.stream()
-                        .filter(buildTarget -> !buildTarget.isFlavored())
+                        .filter(
+                            buildTarget ->
+                                !buildTarget.isFlavored()
+                                    && !projectExcludeResolver.excludeTarget(buildTarget))
                         .map(targetGraph::get)
                         .filter(targetNode -> !targetNode.equals(workspaceTargetNode))
                         .map(
@@ -355,7 +363,8 @@ public class ProjectGenerator {
 
       if (options.shouldMergeTargets()) {
         ImmutableSet<XcodeNativeTargetGenerator.Result> mergedTargetsResults =
-            targetGenerator.generateMergedTargetDependencies(projectTargets);
+            targetGenerator.generateMergedTargetDependencies(
+                projectTargets, projectExcludeResolver);
         generationResultsBuilder.addAll(mergedTargetsResults);
       }
 

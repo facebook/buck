@@ -141,6 +141,7 @@ public class XCodeProjectCommandHelper {
   private final Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier;
 
   private final FocusedTargetMatcher focusedTargetMatcher;
+  private final FocusedTargetMatcher excludedTargetMatcher;
   private final ActionGraphProvider actionGraphProvider;
 
   public XCodeProjectCommandHelper(
@@ -168,6 +169,7 @@ public class XCodeProjectCommandHelper {
       boolean withoutDependenciesTests,
       boolean shouldMergeTargets,
       String focus,
+      String exclude,
       boolean createProjectSchemes,
       boolean dryRun,
       boolean readOnly,
@@ -214,6 +216,8 @@ public class XCodeProjectCommandHelper {
 
     this.focusedTargetMatcher =
         new FocusedTargetMatcher(focus, true, cells.getRootCell().getCellNameResolver());
+    this.excludedTargetMatcher =
+        new FocusedTargetMatcher(exclude, false, cells.getRootCell().getCellNameResolver());
     this.actionGraphProvider = actionGraphProvider;
   }
 
@@ -424,6 +428,7 @@ public class XCodeProjectCommandHelper {
             options,
             appleCxxFlavors,
             focusedTargetMatcher,
+            excludedTargetMatcher,
             sharedLibraryToBundle,
             actionGraphBuilder);
     ImmutableSet<BuildTarget> requiredBuildTargets =
@@ -496,6 +501,7 @@ public class XCodeProjectCommandHelper {
       ProjectGeneratorOptions options,
       ImmutableSet<Flavor> appleCxxFlavors,
       FocusedTargetMatcher focusedTargetMatcher, // @audited(chatatap)]
+      FocusedTargetMatcher excludedTargetMatcher,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle,
       ActionGraphBuilder actionGraphBuilder)
       throws IOException, InterruptedException {
@@ -558,6 +564,7 @@ public class XCodeProjectCommandHelper {
               inputTarget,
               options,
               focusedTargetMatcher,
+              excludedTargetMatcher,
               !appleConfig.getXcodeDisableParallelizeBuild(),
               defaultCxxPlatform,
               appleCxxFlavors,

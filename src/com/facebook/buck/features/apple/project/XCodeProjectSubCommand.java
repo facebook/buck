@@ -62,6 +62,15 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
   private String modulesToFocusOn = null;
 
   @Option(
+      name = "--exclude",
+      usage =
+          "Space separated list of build target full qualified names that should NOT be part of "
+              + "focused project even if parent is in --focus. "
+              + "For example, //Libs/CommonLibs:BaseLib //Libs/ImportantLib:ImportantLib")
+  @Nullable
+  private String modulesToExclude = null;
+
+  @Option(
       name = "--read-only",
       usage =
           "If true, generate project files read-only. Defaults to '"
@@ -187,6 +196,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
                   projectGeneratorParameters.isWithoutDependenciesTests(),
                   shouldMergeTargets,
                   modulesToFocusOn,
+                  modulesToExclude,
                   getProjectSchemes(params.getBuckConfig()),
                   projectGeneratorParameters.isDryRun(),
                   getReadOnly(params.getBuckConfig()),
