@@ -27,6 +27,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.CxxGenruleDescription;
+import com.facebook.buck.cxx.CxxResourceUtils;
+import com.facebook.buck.cxx.CxxResourcesProvider;
 import com.facebook.buck.cxx.Omnibus;
 import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -371,7 +373,7 @@ public class PythonUtil {
         } else if (node instanceof PythonPackagable) {
           PythonPackagable packagable = (PythonPackagable) node;
           packagableConsumer.accept(packagable);
-          return packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
+          deps = packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
         } else if (node instanceof NativeLinkableGroup) {
           nativeLinkableConsumer.accept((NativeLinkableGroup) node);
         }
@@ -403,6 +405,7 @@ public class PythonUtil {
 
     Map<BuildTarget, CxxPythonExtension> extensions = new LinkedHashMap<>();
     Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
+    Map<BuildTarget, CxxResourcesProvider> cxxResourceProviders = new LinkedHashMap<>();
 
     OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(preloadDeps, graphBuilder);
 
@@ -454,7 +457,23 @@ public class PythonUtil {
           NativeLinkable linkable = linkableGroup.getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
           omnibusRoots.addPotentialRoot(linkable, false, preferStrippedNativeObjects);
+          if (linkableGroup instanceof CxxResourcesProvider) {
+            cxxResourceProviders.put(
+                linkableGroup.getBuildTarget(), (CxxResourcesProvider) linkableGroup);
+          }
         });
+
+    // Add C++ resources.
+    Path cxxResourceBase = projectFilesystem.getPath("__cxx_resources__");
+    ImmutableMap<Path, SourcePath> cxxResources =
+        MoreMaps.transformKeys(
+            CxxResourceUtils.gatherResources(
+                graphBuilder, ImmutableMap.of(), cxxResourceProviders.values()),
+            name -> cxxResourceBase.resolve(name.getNameAsPath().toString()));
+    if (!cxxResources.isEmpty()) {
+      allComponents.putResources(
+          buildTarget, PythonMappedComponents.of(ImmutableSortedMap.copyOf(cxxResources)));
+    }
 
     // For the merged strategy, build up the lists of included native linkable roots, and the
     // excluded native linkable roots.

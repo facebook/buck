@@ -759,4 +759,9 @@ public class PythonBinaryIntegrationTest {
     Path linkedPath = BuildPaths.removeHashFrom(path, target).get();
     assertTrue(Files.isSymbolicLink(linkedPath));
   }
+
+  @Test
+  public void cxxResources() {
+    workspace.runBuckCommand("run", "//cxx_resources:bin").assertSuccess();
+  }
 }

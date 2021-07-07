@@ -1,0 +1,29 @@
+python_binary(
+    name = "bin",
+    main_module = "main",
+    deps = [
+        ":lib",
+    ],
+)
+
+python_library(
+    name = "lib",
+    base_module = "",
+    srcs = [
+        "main.py",
+    ],
+    deps = [
+        ":cxx",
+    ],
+)
+
+cxx_library(
+    name = "cxx",
+    header_namespace = "blah",
+    srcs = [
+        "lib.cpp",
+    ],
+    resources = {
+        "foo.dat": "bar.dat",
+    },
+)
