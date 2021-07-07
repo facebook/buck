@@ -13,6 +13,7 @@ buck_module(
         "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/shell:rules",
         "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/versions:versions",
     ],
     tests = [
         "//test/com/facebook/buck/features/alias:alias",

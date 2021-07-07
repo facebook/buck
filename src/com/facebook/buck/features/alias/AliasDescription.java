@@ -19,9 +19,11 @@ package com.facebook.buck.features.alias;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.versions.VersionPropagator;
 
 /** {@code Description} class which represents the {@code alias} rule */
-public class AliasDescription extends AbstractAliasDescription<AliasDescriptionArg> {
+public class AliasDescription extends AbstractAliasDescription<AliasDescriptionArg>
+    implements VersionPropagator<AliasDescriptionArg> {
 
   @Override
   public Class<AliasDescriptionArg> getConstructorArgType() {
