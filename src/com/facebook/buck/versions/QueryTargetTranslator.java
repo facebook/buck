@@ -73,7 +73,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
         .map(Object::toString)
         .map(Pattern::quote)
         // Use a positive look-behind assertion to avoid matching other targets.
-        .map(p -> p + "(?=[) '\"]|$)")
+        .map(p -> p + "(?=[) '\",]|$)")
         .forEach(patterns::add);
     if (!cellNameResolver.getCurrentCellName().equals(CanonicalCellName.rootCell())) {
       targets.stream()
@@ -81,7 +81,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
           .map(t -> "//" + t.getFullyQualifiedName().split("//")[1])
           .map(Pattern::quote)
           // Use a positive look-behind assertion to avoid matching other targets.
-          .map(p -> p + "(?=[) '\"]|$)")
+          .map(p -> p + "(?=[) '\",]|$)")
           .forEach(patterns::add);
     }
     // Match all short name targets (e.g. `:foo`) for targets matching the top-level target
@@ -91,7 +91,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
         .map(t -> ":" + t.getShortNameAndFlavorPostfix())
         .map(Pattern::quote)
         // Use a positive look-behind assertion to avoid matching in a fully qualified target.
-        .map(p -> "((?<=[( \"']|^)" + p + "(?=[) '\"]|$))")
+        .map(p -> "((?<=[( \"',]|^)" + p + "(?=[) '\",]|$))")
         .forEach(patterns::add);
 
     // A pattern matching all of the build targets in the query string.

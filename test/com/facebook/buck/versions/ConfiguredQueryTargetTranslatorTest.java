@@ -194,4 +194,33 @@ public class ConfiguredQueryTargetTranslatorTest {
                     UnconfiguredTargetConfiguration.INSTANCE,
                     BaseName.ROOT))));
   }
+
+  @Test
+  public void translateTargetsWithCommas() {
+    BuildTarget a = BuildTargetFactory.newInstance("//:a");
+    BuildTarget b = BuildTargetFactory.newInstance("//:b");
+    FixedTargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(a, b), new TestCellBuilder().build());
+    QueryTargetTranslator queryTranslator =
+        new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetViewFactory());
+    assertThat(
+        queryTranslator.translateTargets(
+            CELL_PATH_RESOLVER.getCellNameResolver(),
+            BaseName.ROOT,
+            translator,
+            Query.of("deps(//:a, 2)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
+        Matchers.equalTo(
+            Optional.of(
+                Query.of("deps(//:b, 2)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))));
+    assertThat(
+        queryTranslator.translateTargets(
+            CELL_PATH_RESOLVER.getCellNameResolver(),
+            BaseName.ROOT,
+            translator,
+            Query.of("deps(:a, 2)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
+        Matchers.equalTo(
+            Optional.of(
+                Query.of("deps(//:b, 2)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))));
+  }
 }
