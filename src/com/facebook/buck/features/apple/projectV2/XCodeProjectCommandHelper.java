@@ -213,7 +213,7 @@ public class XCodeProjectCommandHelper {
             .build();
 
     this.focusedTargetMatcher =
-        new FocusedTargetMatcher(focus, cells.getRootCell().getCellNameResolver());
+        new FocusedTargetMatcher(focus, true, cells.getRootCell().getCellNameResolver());
     this.actionGraphProvider = actionGraphProvider;
   }
 

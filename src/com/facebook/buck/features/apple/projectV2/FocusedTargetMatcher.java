@@ -46,6 +46,7 @@ public class FocusedTargetMatcher {
   private static final FocusedTargetMatcher NO_FOCUS =
       new FocusedTargetMatcher(
           null,
+          true,
           new CellNameResolver() {
             @Override
             public Optional<CanonicalCellName> getNameIfResolvable(Optional<String> localName) {
@@ -79,21 +80,26 @@ public class FocusedTargetMatcher {
 
   private final Set<UnflavoredBuildTarget> matchedTargets = new HashSet<>();
   private final Set<UnflavoredBuildTarget> unMatchedTargets = new HashSet<>();
+  private final Boolean nullPatternMatches;
 
   /**
    * Returns a matcher configured to match any Build Target Patterns or String Regular Expressions.
    *
-   * @param focus Space separated list of build target patterns or regular expressions to focus on.
+   * @param pattern Space separated list of build target patterns or regular expressions to match.
+   * @param nullPatternMatches Determines if a null pattern is considered to always or never match
+   * @param cellNameResolver Helper class that translates relative build target paths
    */
-  public FocusedTargetMatcher(@Nullable String focus, CellNameResolver cellNameResolver) {
-    if (focus == null) {
+  public FocusedTargetMatcher(
+      @Nullable String pattern, Boolean nullPatternMatches, CellNameResolver cellNameResolver) {
+    this.nullPatternMatches = nullPatternMatches;
+    if (pattern == null) {
       this.hasEntries = false;
       return;
     }
 
     this.hasEntries = true;
 
-    List<String> entries = Splitter.on(' ').trimResults().omitEmptyStrings().splitToList(focus);
+    List<String> entries = Splitter.on(' ').trimResults().omitEmptyStrings().splitToList(pattern);
 
     for (String entry : entries) {
       BuildTargetPattern buildTargetPattern = parseBuildPattern(entry, cellNameResolver);
@@ -143,7 +149,7 @@ public class FocusedTargetMatcher {
   @VisibleForTesting
   boolean matches(UnflavoredBuildTarget buildTarget) {
     if (!hasEntries) {
-      return true;
+      return this.nullPatternMatches;
     }
 
     String entry = buildTarget.getFullyQualifiedName();

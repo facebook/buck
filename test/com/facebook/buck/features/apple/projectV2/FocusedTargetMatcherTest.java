@@ -35,7 +35,7 @@ public class FocusedTargetMatcherTest {
   @Test
   public void testFocusSingleTarget() {
     FocusedTargetMatcher focusTargetMatcher =
-        new FocusedTargetMatcher("//foo:bar", TestCellNameResolver.forRoot());
+        new FocusedTargetMatcher("//foo:bar", true, TestCellNameResolver.forRoot());
 
     assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
     assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:baz")));
@@ -44,7 +44,7 @@ public class FocusedTargetMatcherTest {
   @Test
   public void testFocusPackageTarget() {
     FocusedTargetMatcher focusTargetMatcher =
-        new FocusedTargetMatcher("//foo:", TestCellNameResolver.forRoot());
+        new FocusedTargetMatcher("//foo:", true, TestCellNameResolver.forRoot());
 
     assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
     assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:baz")));
@@ -55,7 +55,7 @@ public class FocusedTargetMatcherTest {
   @Test
   public void testFocusRecursiveTarget() {
     FocusedTargetMatcher focusTargetMatcher =
-        new FocusedTargetMatcher("//foo/...", TestCellNameResolver.forRoot());
+        new FocusedTargetMatcher("//foo/...", true, TestCellNameResolver.forRoot());
 
     assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
     assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:baz")));
@@ -66,7 +66,7 @@ public class FocusedTargetMatcherTest {
   @Test
   public void testFocusRegex() {
     FocusedTargetMatcher focusTargetMatcher =
-        new FocusedTargetMatcher("oo", TestCellNameResolver.forRoot("oo"));
+        new FocusedTargetMatcher("oo", true, TestCellNameResolver.forRoot("oo"));
 
     assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
     assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:baz")));
@@ -77,7 +77,7 @@ public class FocusedTargetMatcherTest {
   @Test
   public void testCell() {
     FocusedTargetMatcher focusTargetMatcher =
-        new FocusedTargetMatcher("foo//bar/...", TestCellNameResolver.forRoot("foo"));
+        new FocusedTargetMatcher("foo//bar/...", true, TestCellNameResolver.forRoot("foo"));
 
     assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("foo//bar:baz")));
     assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("baz//bar:foo")));
@@ -87,7 +87,7 @@ public class FocusedTargetMatcherTest {
   public void testCombination() {
     FocusedTargetMatcher focusTargetMatcher =
         new FocusedTargetMatcher(
-            "//foo:bar //foo/alpha: //foo/baz/... beta", TestCellNameResolver.forRoot());
+            "//foo:bar //foo/alpha: //foo/baz/... beta", true, TestCellNameResolver.forRoot());
 
     assertTrue(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:bar")));
     assertFalse(focusTargetMatcher.matches(BuildTargetFactory.newInstance("//foo:barbaz")));
