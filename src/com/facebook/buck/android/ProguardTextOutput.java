@@ -65,6 +65,12 @@ class ProguardTextOutput extends AbstractBuildRule {
   }
 
   @Override
+  public boolean isCacheable() {
+    // Do not cache since command-line.txt contains absolute paths
+    return false;
+  }
+
+  @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
     SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
