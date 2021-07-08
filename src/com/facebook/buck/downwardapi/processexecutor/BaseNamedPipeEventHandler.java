@@ -149,9 +149,9 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
     while (true) {
       try {
         EventType eventType =
-            requireNonNull(downwardProtocol.readEventType(inputStream), "event type is missing");
+            requireValid(downwardProtocol.readEventType(inputStream), "event type is missing");
         AbstractMessage event =
-            requireNonNull(
+            requireValid(
                 downwardProtocol.readEvent(inputStream, eventType),
                 "message with event type:" + eventType + " is missing");
 
@@ -176,17 +176,19 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
             });
 
       } catch (PipeNotConnectedException e) {
-        LOGGER.info(e, "Named pipe %s is closed", namedPipeName);
+        LOGGER.info(e, "Named pipe `%s` is closed", namedPipeName);
         break;
       } catch (IOException e) {
-        LOGGER.warn(e, "Malformed downward api event from named pipe: %s", namedPipeName);
+        LOGGER.warn(e, "Malformed downward api event from named pipe: `%s`", namedPipeName);
         break;
       }
     }
   }
 
-  private static <T> T requireNonNull(T message, String errorMessage) throws IOException {
+  private static <T> T requireValid(T message, String errorMessage)
+      throws PipeNotConnectedException {
     if (message == null) {
+      // reading null bytes from stream usually indicates that the pipe has been closed
       throw new PipeNotConnectedException(errorMessage);
     }
     return message;
