@@ -83,6 +83,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -393,10 +394,11 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   /** @return a test case result, named "main", signifying a failure of the entire test class. */
   private TestCaseSummary getTestClassFailedSummary(String testClass, String message, long time) {
     return new TestCaseSummary(
-        testClass,
-        ImmutableList.of(
-            new TestResultSummary(
-                testClass, "main", ResultType.FAILURE, time, message, "", "", "")));
+      testClass,
+      false,
+      ImmutableList.of(
+        new TestResultSummary(
+          testClass, "main", ResultType.FAILURE, time, message, "", "", "")));
   }
 
   @Override
@@ -444,7 +446,12 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
           // definitively say whether or not a class should be run.  It's not possible, for example,
           // to filter testClassNames here at the buck end.
         } else if (Files.isRegularFile(testResultFile)) {
-          summaries.add(XmlTestResultParser.parse(testResultFile));
+          TestCaseSummary summary = XmlTestResultParser.parse(testResultFile);
+          if (summary.isTestSuite()) {
+            summaries.addAll(unrollTestSuiteSummary(summary));
+          } else {
+            summaries.add(summary);
+          }
         }
       }
 
@@ -613,6 +620,15 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .orElse(ImmutableList.of()))
         .addAll(getBootClasspathEntries())
         .build();
+  }
+
+  private List<TestCaseSummary> unrollTestSuiteSummary(TestCaseSummary summary) {
+    Map<String, List<TestResultSummary>> summariesByActualTestCase = summary.getTestResults()
+      .stream().collect(Collectors.groupingBy(TestResultSummary::getTestCaseName));
+
+    return summariesByActualTestCase.entrySet().stream()
+      .map(entry -> new TestCaseSummary(entry.getKey(), false, entry.getValue()))
+      .collect(Collectors.toList());
   }
 
   public interface AdditionalClasspathEntriesProvider {

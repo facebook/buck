@@ -139,6 +139,7 @@ public class XmlTestResultParser {
     Element root = doc.getDocumentElement();
     Preconditions.checkState("testcase".equals(root.getTagName()));
     String testCaseName = root.getAttribute("name");
+    boolean testSuite = false;
 
     NodeList testElements = doc.getElementsByTagName("test");
     List<TestResultSummary> testResults = Lists.newArrayListWithCapacity(testElements.getLength());
@@ -176,13 +177,20 @@ public class XmlTestResultParser {
         stdErr = null;
       }
 
+      String actualTestCaseName = node.getAttribute("suite");
+      if (actualTestCaseName != null && !actualTestCaseName.isEmpty()) {
+        testSuite |= !actualTestCaseName.equals(testCaseName);
+      } else {
+        actualTestCaseName = testCaseName;
+      }
+
       TestResultSummary testResult =
           new TestResultSummary(
-              testCaseName, testName, type, time, message, stacktrace, stdOut, stdErr);
+              actualTestCaseName, testName, type, time, message, stacktrace, stdOut, stdErr);
       testResults.add(testResult);
     }
 
-    return new TestCaseSummary(testCaseName, testResults);
+    return new TestCaseSummary(testCaseName, testSuite, testResults);
   }
 
   private static String createDetailedExceptionMessage(Path xmlFile, String xmlFileContents) {

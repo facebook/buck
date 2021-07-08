@@ -29,6 +29,7 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
   private static final int MAX_STATUS_WIDTH = 7;
 
   private final String testCaseName;
+  private final boolean testSuite;
   private final ImmutableList<TestResultSummary> testResults;
   private final boolean isDryRun;
   private final boolean hasAssumptionViolations;
@@ -38,7 +39,15 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
   private final long totalTime;
 
   public TestCaseSummary(String testCaseName, List<TestResultSummary> testResults) {
+    this(testCaseName, false, testResults);
+  }
+
+  public TestCaseSummary(
+      String testCaseName,
+      boolean testSuite,
+      List<TestResultSummary> testResults) {
     this.testCaseName = testCaseName;
+    this.testSuite = testSuite;
     this.testResults = ImmutableList.copyOf(testResults);
 
     boolean isDryRun = false;
@@ -108,6 +117,11 @@ public class TestCaseSummary implements TestCaseSummaryExternalInterface<TestRes
   @Override
   public long getTotalTime() {
     return totalTime;
+  }
+
+  /** @return whether this summary represents a suite of tests or a single class */
+  public boolean isTestSuite() {
+    return testSuite;
   }
 
   /** @return a one-line, printable summary */

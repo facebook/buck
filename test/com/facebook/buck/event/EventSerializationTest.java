@@ -237,8 +237,8 @@ public class EventSerializationTest {
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,"
-            + "\"results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{"
-            + "\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0}],"
+            + "\"results\":[{\"testCases\":[{\"testCaseName\":\"Test1\",\"testSuite\":false,"
+            + "\"testResults\":[{\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0}],"
             + "\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0,"
             + "\"success\":false}],"
             + "\"failureCount\":1,\"contacts\":[],\"labels\":[],"
@@ -324,8 +324,8 @@ public class EventSerializationTest {
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"eventKey\":{\"value\":-594614477},"
-            + "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testResults\":[{"
-            + "\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0}],"
+            + "\"results\":{\"testCases\":[{\"testCaseName\":\"Test1\",\"testSuite\":false,"
+            + "\"testResults\":[{\"testCaseName\":\"Test1\",\"type\":\"FAILURE\",\"time\":0}],"
             + "\"failureCount\":1,\"skippedCount\":0,\"totalTime\":0,"
             + "\"success\":false}],"
             + "\"failureCount\":1,\"contacts\":[],\"labels\":[],"

@@ -312,44 +312,45 @@ public class TestRunningTest {
 
     // Check for exactly one <tests> tag.
     NodeList testsList = doc.getElementsByTagName("tests");
-    assertEquals(testsList.getLength(), 1);
+    assertEquals(1, testsList.getLength());
 
     // Check for exactly one <test> tag.
     Element testsEl = (Element) testsList.item(0);
     NodeList testList = testsEl.getElementsByTagName("test");
-    assertEquals(testList.getLength(), 1);
+    assertEquals(1, testList.getLength());
 
     // Check the target has been set
     Element testEl = (Element) testList.item(0);
-    assertEquals(testEl.getAttribute("target"), "//foo/bar:baz");
+    assertEquals("//foo/bar:baz", testEl.getAttribute("target"));
+
+    assertEquals("TestCase", testEl.getAttribute("name"));
 
     // Check for exactly three <testresult> tags.
     // There should be two failures and one success.
     NodeList resultsList = testEl.getElementsByTagName("testresult");
-    assertEquals(resultsList.getLength(), 3);
+    assertEquals(3, resultsList.getLength());
 
     // Verify the text elements of the first <testresult> tag.
     Element passResultEl = (Element) resultsList.item(0);
-    assertEquals(passResultEl.getAttribute("name"), "passTest");
-    assertEquals(passResultEl.getAttribute("time"), "5000");
-    assertEquals(passResultEl.getAttribute("status"), "PASS");
+    assertEquals("passTest", passResultEl.getAttribute("name"));
+    assertEquals("5000", passResultEl.getAttribute("time"));
+    assertEquals("PASS", passResultEl.getAttribute("status"));
     checkXmlTextContents(passResultEl, "message", "");
     checkXmlTextContents(passResultEl, "stacktrace", "");
 
     // Verify the text elements of the second <testresult> tag.
-    assertEquals(testEl.getAttribute("name"), "TestCase");
     Element failResultEl1 = (Element) resultsList.item(1);
-    assertEquals(failResultEl1.getAttribute("name"), "failWithMsg");
-    assertEquals(failResultEl1.getAttribute("time"), "7000");
-    assertEquals(failResultEl1.getAttribute("status"), "FAIL");
+    assertEquals("failWithMsg", failResultEl1.getAttribute("name"));
+    assertEquals("7000", failResultEl1.getAttribute("time"));
+    assertEquals("FAIL", failResultEl1.getAttribute("status"));
     checkXmlTextContents(failResultEl1, "message", "Index out of bounds!");
     checkXmlTextContents(failResultEl1, "stacktrace", "Stacktrace");
 
     // Verify the text elements of the third <testresult> tag.
     Element failResultEl2 = (Element) resultsList.item(2);
-    assertEquals(failResultEl2.getAttribute("name"), "failNoMsg");
-    assertEquals(failResultEl2.getAttribute("time"), "4000");
-    assertEquals(failResultEl2.getAttribute("status"), "PASS");
+    assertEquals("failNoMsg", failResultEl2.getAttribute("name"));
+    assertEquals("4000", failResultEl2.getAttribute("time"));
+    assertEquals("PASS", failResultEl2.getAttribute("status"));
     checkXmlTextContents(failResultEl2, "message", "");
     checkXmlTextContents(failResultEl2, "stacktrace", "");
   }
