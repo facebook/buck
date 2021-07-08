@@ -323,6 +323,14 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "generate_missing_umbrella_headers", false);
   }
 
+  /**
+   * If true, project generation will skip embedding transitive frameworks within the extension
+   * binary. This can be a significant disk-usage savings for many projects.
+   */
+  public boolean shouldSkipAppexCopyFrameworksInXcodeProject() {
+    return delegate.getBooleanValue(APPLE_SECTION, "skip_appex_copy_frameworks_in_xcode", false);
+  }
+
   public boolean shouldUseSwiftDelegate() {
     // TODO(mgd): Remove Swift delegation from Apple rules
     return delegate.getBooleanValue(APPLE_SECTION, "use_swift_delegate", true);
