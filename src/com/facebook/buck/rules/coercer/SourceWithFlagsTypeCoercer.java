@@ -56,7 +56,7 @@ public class SourceWithFlagsTypeCoercer
 
   @Override
   public TypeCoercer.SkylarkSpec getSkylarkSpec() {
-    return () -> "attr.one_of(attr.source(), attr.tuple(attr.source(), attr.list(attr.string())))";
+    return () -> "attr.one_of(attr.source(), attr.tuple(attr.source(), attr.list(attr.arg())))";
   }
 
   @Override
