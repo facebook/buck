@@ -179,7 +179,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
         LOGGER.info(e, "Named pipe %s is closed", namedPipeName);
         break;
       } catch (IOException e) {
-        LOGGER.error(e, "Exception during processing events from named pipe: %s", namedPipeName);
+        LOGGER.warn(e, "Malformed downward api event from named pipe: %s", namedPipeName);
         break;
       }
     }
