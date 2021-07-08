@@ -97,7 +97,7 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
                           : UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT,
                       getLinks().keySet())));
 
-          Path umbrellaHeaderPath = Paths.get(moduleName, moduleName + ".h");
+          Path umbrellaHeaderPath = Paths.get(moduleName, moduleName + "-umbrella.h");
           if (moduleMapMode.shouldGenerateMissingUmbrellaHeader()
               && !paths.contains(umbrellaHeaderPath)) {
             builder.add(

@@ -3237,8 +3237,8 @@ public class ProjectGenerator {
             .map(Path::getFileName)
             .map(Path::toString)
             .collect(ImmutableList.toImmutableList());
-    if (!headerPathStrings.contains(moduleName + ".h")) {
-      Path umbrellaPath = headerSymlinkTreeRoot.resolve(Paths.get(moduleName, moduleName + ".h"));
+    if (!headerPathStrings.contains(moduleName + "-umbrella.h")) {
+      Path umbrellaPath = headerSymlinkTreeRoot.resolve(Paths.get(moduleName, moduleName + "-umbrella.h"));
       Preconditions.checkState(!projectFilesystem.exists(umbrellaPath));
       projectFilesystem.writeContentsToPath(
           new UmbrellaHeader(moduleName, headerPathStrings).render(), umbrellaPath);
