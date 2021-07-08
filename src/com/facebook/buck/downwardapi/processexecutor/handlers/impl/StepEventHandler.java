@@ -48,7 +48,9 @@ enum StepEventHandler implements EventHandler<StepEvent> {
         Started started =
             Objects.requireNonNull(
                 context.getStepStartedEvent(eventId),
-                "Started step with event id: " + eventId + " is not found");
+                "Got step finished event, but no corresponding Started step event found for event id: `"
+                    + eventId
+                    + "`");
         context.postEvent(finished(started, 0), actionId, timestamp);
         break;
 
