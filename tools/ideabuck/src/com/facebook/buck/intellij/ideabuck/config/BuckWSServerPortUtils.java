@@ -19,14 +19,38 @@ package com.facebook.buck.intellij.ideabuck.config;
 import com.google.common.base.Strings;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.EnvironmentUtil;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public final class BuckWSServerPortUtils {
   private static final String SEARCH_FOR = "http.port=";
+
+  /** @return true if buckd is running */
+  public static boolean hasBuckd(Project project) {
+    if (project.getBasePath() == null) {
+      return false;
+    }
+    Path pidFile = Paths.get(project.getBasePath(), ".buckd", "pid");
+    if (Files.exists(pidFile)) {
+      try {
+        if (PathEnvironmentVariableUtil.findInPath("ps") != null) {
+          String pid = new String(Files.readAllBytes(pidFile));
+          GeneralCommandLine commandLine = new GeneralCommandLine("ps", "-p", pid);
+          return commandLine.createProcess().exitValue() == 0;
+        }
+      } catch (IOException | ExecutionException e) {
+        return false;
+      }
+    }
+    return false;
+  }
 
   /** Returns the port number of Buck's HTTP server, if it can be determined. */
   public static int getPort(Project project, String path)

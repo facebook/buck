@@ -72,6 +72,9 @@ public class BuckClient {
             new Runnable() {
               @Override
               public void run() {
+                if (!BuckWSServerPortUtils.hasBuckd(mProject)) {
+                  return;
+                }
                 try {
                   int port = BuckWSServerPortUtils.getPort(mProject, mProject.getBasePath());
                   if (port < 0) {

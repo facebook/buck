@@ -61,7 +61,7 @@ public final class BuckModule implements ProjectComponent {
     projectClosed = new AtomicBoolean(false);
 
     // connect to the Buck client
-    BuckClientManager.getOrCreateClient(mProject, mEventHandler).connect();
+    connect();
 
     if (!UISettings.getInstance().SHOW_MAIN_TOOLBAR) {
       BuckPluginNotifications.notifyActionToolbar(mProject);
@@ -77,6 +77,10 @@ public final class BuckModule implements ProjectComponent {
     if (mBuckEventsConsumer != null) {
       mBuckEventsConsumer.detach();
     }
+  }
+
+  public void connect() {
+    BuckClientManager.getOrCreateClient(mProject, mEventHandler).connect();
   }
 
   public boolean isConnected() {
@@ -108,6 +112,9 @@ public final class BuckModule implements ProjectComponent {
    * @param text The text to be displayed in the BuckTextNode
    */
   public void attachWithText(String text) {
+    if (!isConnected()) {
+      connect();
+    }
     mBuckEventsConsumer.detach();
 
     mBuckEventsConsumer.attach(text);
