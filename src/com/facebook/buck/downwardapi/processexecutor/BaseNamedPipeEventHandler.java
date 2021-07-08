@@ -169,7 +169,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
               try {
                 processEvent(eventType, event);
               } catch (Exception e) {
-                LOGGER.error(e, "Cannot process event: %s", event);
+                LOGGER.warn(e, "Malformed downward api event: %s", event);
               } finally {
                 eventProcessingPhaser.arriveAndDeregister();
               }
