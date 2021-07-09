@@ -212,7 +212,8 @@ public class ConfiguredQueryTargetTranslatorTest {
             Query.of("deps(//:a, 2)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
         Matchers.equalTo(
             Optional.of(
-                Query.of("deps(//:b, 2)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))));
+                Query.of(
+                    "deps(//:b, 2)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))));
     assertThat(
         queryTranslator.translateTargets(
             CELL_PATH_RESOLVER.getCellNameResolver(),
@@ -221,6 +222,7 @@ public class ConfiguredQueryTargetTranslatorTest {
             Query.of("deps(:a, 2)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT)),
         Matchers.equalTo(
             Optional.of(
-                Query.of("deps(//:b, 2)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))));
+                Query.of(
+                    "deps(//:b, 2)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT))));
   }
 }
