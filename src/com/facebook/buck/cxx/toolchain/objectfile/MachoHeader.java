@@ -23,5 +23,7 @@ abstract class MachoHeader {
 
   abstract int getCommandsCount();
 
+  abstract long getCommandsSize();
+
   abstract boolean getIs64Bit();
 }

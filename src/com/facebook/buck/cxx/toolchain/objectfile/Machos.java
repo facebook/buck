@@ -79,8 +79,11 @@ public class Machos {
       }
 
       try (ByteBufferUnmapper unmapper =
+          // FileChannel.map() is limited to mapping a maximum of 2GiB, but that's more than enough
+          // to read the file's load commands.
           ByteBufferUnmapper.createUnsafe(
-              file.map(FileChannel.MapMode.READ_ONLY, 0, file.size()))) {
+              file.map(
+                  FileChannel.MapMode.READ_ONLY, 0, Math.min(file.size(), Integer.MAX_VALUE)))) {
 
         try {
           Optional<byte[]> maybeUuid = Machos.getUuidIfPresent(unmapper.getByteBuffer());
@@ -105,6 +108,12 @@ public class Machos {
   public static Optional<byte[]> getUuidIfPresent(ByteBuffer fileBuffer) throws MachoException {
     fileBuffer.position(0);
     MachoHeader header = getHeader(fileBuffer);
+
+    // The caller may have truncated the Mach-O file if it's >= 2GiB. Verify the size of the file
+    // header and load command data fit within that limit.
+    if (header.getCommandsSize() > Integer.MAX_VALUE - fileBuffer.position()) {
+      throw new RuntimeException("Cannot map all load commands");
+    }
 
     for (int i = 0; i < header.getCommandsCount(); i++) {
       int commandType = ObjectFileScrubbers.getLittleEndianInt(fileBuffer);
@@ -409,14 +418,13 @@ public class Machos {
     /* File type */
     ObjectFileScrubbers.getLittleEndianInt(map);
     int commandsCount = ObjectFileScrubbers.getLittleEndianInt(map);
-    /* Commands size */
-    ObjectFileScrubbers.getLittleEndianInt(map);
+    long commandsSize = Integer.toUnsignedLong(ObjectFileScrubbers.getLittleEndianInt(map));
     /* Flags */
     ObjectFileScrubbers.getLittleEndianInt(map);
     if (is64bit) {
       /* reserved */ ObjectFileScrubbers.getLittleEndianInt(map);
     }
-    return ImmutableMachoHeader.ofImpl(commandsCount, is64bit);
+    return ImmutableMachoHeader.ofImpl(commandsCount, commandsSize, is64bit);
   }
 
   public static class MachoException extends Exception {
