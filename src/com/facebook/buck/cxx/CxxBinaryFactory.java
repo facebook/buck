@@ -268,7 +268,7 @@ public class CxxBinaryFactory {
                 CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
                     graphBuilder,
                     args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
-                    LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph),
+                    LinkableListFilterFactory.from(args, targetGraph),
                     allNativeLinkables,
                     ImmutableSet.of()),
                 linkable -> linkable.getBuildTarget()));

@@ -50,7 +50,6 @@ public class CxxLinkGroupMapDatabaseIntegrationTest {
   private void runCreateLinkGroupMapDatabaseTestForScenario(
       String scenario, Map<String, String> expectedValues) throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.setUp();
     for (String library : expectedValues.keySet()) {
       BuildTarget target = BuildTargetFactory.newInstance(library);

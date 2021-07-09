@@ -1512,7 +1512,6 @@ public class AppleBundleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "app_bundle_with_embedded_framework_and_resource_groups", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:App#no-debug,macosx-x86_64");

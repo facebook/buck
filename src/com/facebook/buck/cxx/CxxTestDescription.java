@@ -218,7 +218,7 @@ public class CxxTestDescription
                   CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
                       graphBuilder,
                       Linker.LinkableDepType.SHARED,
-                      LinkableListFilterFactory.from(cxxBuckConfig, args, context.getTargetGraph()),
+                      LinkableListFilterFactory.from(args, context.getTargetGraph()),
                       allNativeLinkables,
                       ImmutableSet.of()),
                   linkable -> linkable.getBuildTarget()));

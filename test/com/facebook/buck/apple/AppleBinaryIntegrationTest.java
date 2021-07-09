@@ -690,7 +690,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_single_dylib", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
 
     // Check that binary contains symbols _only_ from A and not from B, C
     String binarySymbolTable = buildAndGetMacBinarySymbolTable(appTargetName, workspace);
@@ -726,7 +725,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_with_label_filter_with_tree_traversal", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
 
     // Check that binary contains symbols _only_ from A and not from B, C (infra labelled)
     String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:App", workspace);
@@ -751,7 +749,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_with_label_filter_with_node_traversal", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
 
     // Check that binary contains symbols _only_ from C and not from A, B (product labelled)
     String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:App", workspace);
@@ -776,7 +773,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_with_pattern_filter_with_tree_traversal", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
 
     // Check that binary contains symbols _only_ from A and not from B, C (infra labelled)
     String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:App", workspace);
@@ -801,7 +797,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_with_pattern_filter_with_node_traversal", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
 
     // Check that binary contains symbols _only_ from C and not from A, B (product labelled)
     String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:App", workspace);
@@ -826,7 +821,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_with_mixed_filter_with_tree_traversal", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
 
     // Check that binary contains symbols _only_ from A and not from B, C (infra labelled)
     String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:App", workspace);
@@ -851,7 +845,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_with_genrule", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
 
     String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);
     assertThat(binarySymbolTable, not(containsString("T _get_value_from_a")));
@@ -872,7 +865,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_multiples_dylibs_select_debug_info", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     // Check that binary has path to main.c.o
     String binaryDebugSymbolFiles =
         buildAndGetMacBinaryDebugSymbolFiles("//Apps/TestApp:TestApp", workspace);
@@ -908,7 +900,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_multiples_dylibs_select_debug_info", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "cache_links", "false");
     workspace.addBuckConfigLocalOption(
         "apple", "focused_targets_path", focusedTargetsPath.toString());
@@ -946,7 +937,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_multiples_dylibs_select_debug_info", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "cache_links", "false");
     workspace.addBuckConfigLocalOption(
         "apple", "focused_targets_path", focusedTargetsPath.toString());
@@ -975,7 +965,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_focused_debugging_dylib_focus", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "focused_debugging_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "conditional_relinking_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "cache_links", "false");
@@ -1007,7 +996,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_focused_debugging_executable_focus", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "conditional_relinking_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "cache_links", "false");
 
@@ -1041,7 +1029,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_focused_debugging_executable_focus", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "focused_debugging_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "conditional_relinking_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "cache_links", "false");
@@ -1074,7 +1061,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_focused_debugging_partially_set", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "focused_debugging_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "conditional_relinking_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "cache_links", "false");
@@ -1104,7 +1090,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_focused_debugging_executable_focus", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "focused_debugging_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "conditional_relinking_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "cache_links", "true");
@@ -1139,7 +1124,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_focused_debugging_executable_focus", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "focused_debugging_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "conditional_relinking_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "cache_links", "true");
@@ -1174,7 +1158,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_focused_debugging_executable_focus", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "focused_debugging_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "conditional_relinking_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "cache_links", "true");
@@ -1208,7 +1191,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_focused_debugging_executable_focus", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "conditional_relinking_enabled", "true");
     workspace.addBuckConfigLocalOption("cxx", "cache_links", "true");
     workspace.addBuckConfigLocalOption("cache", "http_mode", "readonly");
@@ -1231,7 +1213,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_multiples_dylibs", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
 
     // Check that binary does _not_ contain any symbols from the libraries
     String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);
@@ -1264,7 +1245,6 @@ public class AppleBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_binary_with_link_groups_multiples_dylibs_with_duplicate_symbols", tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
 
     // Check that binary does _not_ contain any symbols from the libraries
     String binarySymbolTable = buildAndGetMacBinarySymbolTable("//Apps/TestApp:TestApp", workspace);

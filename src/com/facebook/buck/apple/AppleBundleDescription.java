@@ -188,10 +188,7 @@ public class AppleBundleDescription
 
     Predicate<BuildTarget> resourceFilter =
         LinkableListFilterFactory.resourcePredicateFrom(
-            cxxBuckConfig,
-            args.getResourceGroup(),
-            args.getResourceGroupMap(),
-            context.getTargetGraph());
+            args.getResourceGroup(), args.getResourceGroupMap(), context.getTargetGraph());
 
     Optional<String> minOSVersion = getMinimumOSVersionForBundle(args, context.getTargetGraph());
     return AppleDescriptions.createAppleBundle(

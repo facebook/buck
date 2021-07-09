@@ -1101,7 +1101,7 @@ public class CxxDescriptionEnhancer {
             );
 
     Optional<LinkableListFilter> linkableListFilter =
-        LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph);
+        LinkableListFilterFactory.from(args, targetGraph);
 
     return createBuildRulesForCxxBinary(
         target,

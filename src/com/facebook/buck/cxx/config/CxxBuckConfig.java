@@ -83,7 +83,6 @@ public class CxxBuckConfig {
   private static final String ARCHIVER_TYPE = "archiver_type";
   private static final String MAX_TEST_OUTPUT_SIZE = "max_test_output_size";
   private static final String LINKER_PLATFORM = "linker_platform";
-  private static final String LINK_GROUPS_ENABLED = "link_groups_enabled";
   private static final String FOCUSED_DEBUGGING_ENABLED = "focused_debugging_enabled";
   private static final String UNTRACKED_HEADERS = "untracked_headers";
   private static final String UNTRACKED_HEADERS_WHITELIST = "untracked_headers_whitelist";
@@ -443,14 +442,6 @@ public class CxxBuckConfig {
         ImmutableSortedSet.copyOf(
             delegate.getListWithoutComments(cxxSection, UNTRACKED_HEADERS_WHITELIST)),
         ImmutableSortedSet.of());
-  }
-
-  public Optional<Boolean> getLinkGroupsEnabledSetting() {
-    return delegate.getBoolean(cxxSection, LINK_GROUPS_ENABLED);
-  }
-
-  public boolean getLinkGroupsEnabled() {
-    return getLinkGroupsEnabledSetting().orElse(false);
   }
 
   public Optional<Boolean> getFocusedDebuggingEnabledSetting() {

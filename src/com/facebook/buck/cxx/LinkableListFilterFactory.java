@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.LinkableListFilter;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -73,16 +72,12 @@ public class LinkableListFilterFactory {
 
   /** Convenience method that unpacks a {@link LinkableCxxConstructorArg} and forwards the call. */
   public static Optional<LinkableListFilter> from(
-      CxxBuckConfig cxxBuckConfig, LinkableCxxConstructorArg linkableArg, TargetGraph targetGraph) {
+      LinkableCxxConstructorArg linkableArg, TargetGraph targetGraph) {
     if (!linkableArg.getLinkGroupMap().isPresent()) {
       return Optional.empty();
     }
 
-    return from(
-        cxxBuckConfig,
-        linkableArg.getLinkGroup(),
-        linkableArg.getLinkGroupMap().get(),
-        targetGraph);
+    return from(linkableArg.getLinkGroup(), linkableArg.getLinkGroupMap().get(), targetGraph);
   }
 
   /**
@@ -90,8 +85,6 @@ public class LinkableListFilterFactory {
    * libraries will get linked as normal and no filtering would occur. Static libraries will be
    * linked according to the link group membership.
    *
-   * @param cxxBuckConfig If link groups are not enabled in the config, an empty {@link Optional}
-   *     would be returned.
    * @param linkGroup Defines the link group of the executable being linked. By definition, it will
    *     be linked against libraries which belong to the same link group. If the link group is
    *     empty, the executable would linked against libraries which do not belong to any link
@@ -101,15 +94,10 @@ public class LinkableListFilterFactory {
    * @param targetGraph The target graph which is used by the mapping to compute link group
    *     membership.
    */
-  public static Optional<LinkableListFilter> from(
-      CxxBuckConfig cxxBuckConfig,
+  private static Optional<LinkableListFilter> from(
       Optional<String> linkGroup,
       ImmutableList<CxxLinkGroupMapping> mapping,
       TargetGraph targetGraph) {
-    if (!cxxBuckConfig.getLinkGroupsEnabled()) {
-      return Optional.empty();
-    }
-
     Map<BuildTarget, String> buildTargetToLinkGroupMap =
         getCachedBuildTargetToLinkGroupMap(mapping, targetGraph);
 
@@ -154,11 +142,10 @@ public class LinkableListFilterFactory {
 
   /** Creates a predicate to filter resources that will be included in an apple_bundle. */
   public static Predicate<BuildTarget> resourcePredicateFrom(
-      CxxBuckConfig cxxBuckConfig,
       Optional<String> resourceGroup,
       Optional<ImmutableList<CxxLinkGroupMapping>> mapping,
       TargetGraph graph) {
-    if (!cxxBuckConfig.getLinkGroupsEnabled() || !mapping.isPresent()) {
+    if (!mapping.isPresent()) {
       return buildTarget -> true;
     }
 

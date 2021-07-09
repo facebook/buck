@@ -544,7 +544,7 @@ public class CxxLibraryFactory {
 
   private Optional<LinkableListFilter> makeLinkableListFilter(
       CxxLibraryDescriptionArg args, TargetGraph targetGraph) {
-    return LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph);
+    return LinkableListFilterFactory.from(args, targetGraph);
   }
 
   public Iterable<BuildTarget> getPlatformParseTimeDeps(TargetConfiguration targetConfiguration) {
