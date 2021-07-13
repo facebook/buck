@@ -275,6 +275,7 @@ public class TargetsCommand extends AbstractCommand {
 
   private enum TargetHashFunction {
     SHA1,
+    SHA256,
     MURMUR_HASH3
   }
 
@@ -1583,6 +1584,8 @@ public class TargetsCommand extends AbstractCommand {
     switch (targetHashFunction) {
       case SHA1:
         return Hashing.sha1();
+      case SHA256:
+        return Hashing.sha256();
       case MURMUR_HASH3:
         return Hashing.murmur3_128();
     }
