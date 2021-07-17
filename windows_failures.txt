@@ -26,6 +26,8 @@
 !com.facebook.buck.cxx.ToolTest
 !com.facebook.buck.cxx.toolchain.DebugPathSanitizerTest
 !com.facebook.buck.jvm.java.ExternalJavacIntegrationTest#whenBuckdUsesExternalJavacThenClientEnvironmentUsed
+!com.facebook.buck.jvm.java.abi.source.InterfaceScannerTest#testIgnoresReferencesToNonexistentTypes
+!com.facebook.buck.util.versioncontrol.HgCmdLineInterfaceIntegrationTest.*
 !com.facebook.buck.util.ListeningProcessExecutorTest#clearsEnvWhenExplicitlySet
 !com.facebook.buck.jvm.java.JavacStepTest
 !com.facebook.buck.core.build.engine.impl.CachingBuildEngineTest
