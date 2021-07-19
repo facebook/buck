@@ -79,6 +79,8 @@ class ClassVisitorDriverFromElement {
     descriptorFactory = new DescriptorFactory(elements);
     this.messager = messager;
     this.types = types;
+    // TODO: Fully remove includeParameterMetadata. This feature is no longer needed and wasn't
+    // fully supported during the Jacoco 0.8.7 upgrade.
     this.includeParameterMetadata = includeParameterMetadata;
     signatureFactory = new SignatureFactory(descriptorFactory);
     accessFlagsUtils = new AccessFlags(elements);

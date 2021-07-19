@@ -2572,38 +2572,6 @@ public class StubJarTest {
   }
 
   @Test
-  public void preservesParameterNameMetadata() throws IOException {
-    // TODO(jkeljo): We should not be preserving parameter metadata. The parameter metadata is not
-    // technically part of the ABI, but the class ABI logic has historically not stripped it out and
-    // some projects (Litho) have taken a dependency on it being there.
-
-    tester
-        .setSourceFile(
-            "A.java",
-            "package com.example.buck;",
-            "public class A {",
-            "  public void foo(String aString) { }",
-            "}")
-        .addCompilerOptions("-parameters")
-        .addExpectedStub(
-            "com/example/buck/A",
-            "JDK8:// class version 52.0 (52)",
-            "JDK11:// class version 55.0 (55)",
-            "// access flags 0x21",
-            "public class com/example/buck/A {",
-            "",
-            "",
-            "  // access flags 0x1",
-            "  public <init>()V",
-            "",
-            "  // access flags 0x1",
-            "  public foo(Ljava/lang/String;)V",
-            "    // parameter  aString",
-            "}")
-        .createAndCheckStubJar();
-  }
-
-  @Test
   public void preservesAnnotationsOnParameters() throws IOException {
     notYetImplementedForMissingClasspath();
 
@@ -6591,7 +6559,6 @@ public class StubJarTest {
             "  public @Anno A getThis(@Anno final int i) throws IOException { return this; }",
             "  public A varargsMethod(int... args) { return this; };",
             "}")
-        .addCompilerOptions("-parameters")
         .addExpectedFullAbi(
             "com/example/buck/A",
             "JDK8:// class version 52.0 (52)",
@@ -6605,22 +6572,18 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  public getThis(I)Lcom/example/buck/A; throws java/io/IOException ",
-            "    // parameter final  i",
             "  @Lcom/example/buck/Anno;() // invisible",
             "    // annotable parameter count: 1 (invisible)",
             "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
             "",
             "  // access flags 0x81",
             "  public varargs varargsMethod([I)Lcom/example/buck/A;",
-            "    // parameter  args",
             "",
             "  // access flags 0x1041",
             "  public synthetic bridge varargsMethod([I)Lcom/example/buck/Super;",
-            "    // parameter synthetic  args",
             "",
             "  // access flags 0x1041",
             "  public synthetic bridge getThis(I)Lcom/example/buck/Super; throws java/lang/Exception ",
-            "    // parameter final synthetic  i",
             "  @Lcom/example/buck/Anno;() // invisible",
             "    // annotable parameter count: 1 (invisible)",
             "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
@@ -6638,22 +6601,18 @@ public class StubJarTest {
             "",
             "  // access flags 0x1",
             "  public getThis(I)Lcom/example/buck/A; throws java/io/IOException ",
-            "    // parameter final  i",
             "  @Lcom/example/buck/Anno;() // invisible",
             "    // annotable parameter count: 1 (invisible)",
             "    @Lcom/example/buck/Anno;() // invisible, parameter 0",
             "",
             "  // access flags 0x81",
             "  public varargs varargsMethod([I)Lcom/example/buck/A;",
-            "    // parameter  args",
             "",
             "  // access flags 0x1041",
             "  public synthetic bridge varargsMethod([I)Lcom/example/buck/Super;",
-            "    // parameter synthetic  args",
             "",
             "  // access flags 0x1041",
             "  public synthetic bridge getThis(I)Lcom/example/buck/Super; throws java/lang/Exception ",
-            "    // parameter final synthetic  i",
             "  @Lcom/example/buck/Anno;() // invisible",
             "    // annotable parameter count: 1 (invisible)",
             "    @Lcom/example/buck/Anno;() // invisible, parameter 0",

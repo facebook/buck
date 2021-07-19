@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="jacoco">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/jacoco/org.jacoco.core-0.8.3.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/jacoco/org.jacoco.report-0.8.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jacoco/org.jacoco.core-0.8.7.202105040129.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jacoco/org.jacoco.report-0.8.7.202105040129.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
