@@ -633,9 +633,6 @@ public class AppleCxxPlatforms {
       ImmutableList<Path> toolSearchPaths,
       XcodeToolFinder xcodeToolFinder,
       ProjectFilesystem filesystem) {
-    ImmutableList<String> swiftParams =
-        ImmutableList.of("-frontend", "-sdk", sdkPaths.getSdkPath().toString());
-
     String platformName = sdk.getApplePlatform().getName();
     ImmutableList.Builder<String> swiftStdlibToolParamsBuilder = ImmutableList.builder();
     swiftStdlibToolParamsBuilder
@@ -651,7 +648,7 @@ public class AppleCxxPlatforms {
 
     Optional<VersionedTool> swiftc =
         getOptionalToolWithParams(
-            "swiftc", toolSearchPaths, xcodeToolFinder, version, swiftParams, filesystem);
+            "swiftc", toolSearchPaths, xcodeToolFinder, version, ImmutableList.of(), filesystem);
     Optional<VersionedTool> swiftStdLibTool =
         getOptionalToolWithParams(
             "swift-stdlib-tool",

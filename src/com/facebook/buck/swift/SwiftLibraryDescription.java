@@ -346,6 +346,7 @@ public class SwiftLibraryDescription
           downwardApiConfig.isEnabledForApple(),
           swiftPlatform.get().getPrefixSerializedDebugInfo(),
           swiftBuckConfig.getAddXctestImportPaths(),
+          args.getUseSwiftDriver(),
           appleCxxPlatform.getAppleSdk());
     }
 
@@ -527,6 +528,7 @@ public class SwiftLibraryDescription
         downwardApiConfig.isEnabledForApple(),
         swiftPlatform.getPrefixSerializedDebugInfo(),
         swiftBuckConfig.getAddXctestImportPaths(),
+        args.getUseSwiftDriver(),
         appleCxxPlatform.getAppleSdk());
   }
 
@@ -619,6 +621,7 @@ public class SwiftLibraryDescription
         downwardApiConfig.isEnabledForApple(),
         swiftPlatform.getPrefixSerializedDebugInfo(),
         swiftBuckConfig.getAddXctestImportPaths(),
+        args.getUseSwiftDriver(),
         appleSdk);
   }
 
@@ -678,5 +681,10 @@ public class SwiftLibraryDescription
      * config-level option.
      */
     Optional<String> getTargetSdkVersion();
+
+    @Value.Default
+    default boolean getUseSwiftDriver() {
+      return false;
+    }
   }
 }

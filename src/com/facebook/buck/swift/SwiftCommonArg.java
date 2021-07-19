@@ -20,10 +20,16 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /** Common argument for swift rules */
 public interface SwiftCommonArg extends BuildRuleArg {
   ImmutableList<StringWithMacros> getSwiftCompilerFlags();
 
   Optional<String> getSwiftVersion();
+
+  @Value.Default
+  default boolean getUseSwiftDriver() {
+    return false;
+  }
 }

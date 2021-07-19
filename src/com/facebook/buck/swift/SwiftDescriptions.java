@@ -74,6 +74,7 @@ public class SwiftDescriptions {
       }
       output.setCompilerFlags(((SwiftCommonArg) args).getSwiftCompilerFlags());
       output.setVersion(swiftVersion);
+      output.setUseSwiftDriver(((SwiftCommonArg) args).getUseSwiftDriver());
     } else {
       output.setCompilerFlags(args.getCompilerFlags());
     }

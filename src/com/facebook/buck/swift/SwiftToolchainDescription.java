@@ -52,9 +52,6 @@ public class SwiftToolchainDescription
     ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
     CommandTool.Builder swiftcBuilder =
         new CommandTool.Builder(Tools.resolveTool(args.getSwiftc(), actionGraphBuilder));
-    // The frontend flag is mandatory and has to come first. Keep that logic internal until we
-    // migrate the SwiftCompile logic to use the driver.
-    swiftcBuilder.addArg("-frontend");
     Tool swiftc = swiftcBuilder.build();
 
     StringWithMacrosConverter macrosConverter =

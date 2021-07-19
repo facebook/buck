@@ -74,6 +74,7 @@ public class SwiftCompile extends SwiftCompileBase {
       boolean withDownwardApi,
       boolean hasPrefixSerializedDebugInfo,
       boolean addXCTestImportPaths,
+      boolean useSwiftDriver,
       AppleSdk appleSdk) {
     super(
         swiftBuckConfig,
@@ -100,6 +101,7 @@ public class SwiftCompile extends SwiftCompileBase {
         withDownwardApi,
         hasPrefixSerializedDebugInfo,
         addXCTestImportPaths,
+        useSwiftDriver,
         appleSdk);
 
     transformErrorsToAbsolutePaths = swiftBuckConfig.getTransformErrorsToAbsolutePaths();

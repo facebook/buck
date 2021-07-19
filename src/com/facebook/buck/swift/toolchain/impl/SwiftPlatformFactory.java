@@ -36,6 +36,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class SwiftPlatformFactory {
 
@@ -65,12 +66,17 @@ public class SwiftPlatformFactory {
                     sdkPaths.getPlatformPath(),
                     sdkPaths.getDeveloperPath()));
 
+    ImmutableList.Builder<String> swiftFlagsBuilder = ImmutableList.builder();
+    swiftFlagsBuilder.add("-sdk", sdkPaths.getSdkPath().toString());
+
     if (sdk.getApplePlatform() == ApplePlatform.WATCHOS) {
       // Watch binaries need to embed bitcode to pass app store submission. It is sufficient to
       // only compile as bitcode, the linker will generate the object code from the bitcode as well
       // as embedding the bitcode in the linked binary.
-      builder.setSwiftFlags(ImmutableList.of(StringArg.of("-emit-bc")));
+      swiftFlagsBuilder.add("-emit-bc");
     }
+    builder.setSwiftFlags(
+        swiftFlagsBuilder.build().stream().map(StringArg::of).collect(Collectors.toList()));
 
     for (String systemFrameworkPath : sdk.getAdditionalSystemFrameworkSearchPaths()) {
       builder.addAdditionalSystemFrameworkSearchPaths(Paths.get(systemFrameworkPath));

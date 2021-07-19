@@ -143,6 +143,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean addXCTestImportPaths;
 
+  @AddToRuleKey private final boolean useSwiftDriver;
+
   @AddToRuleKey private final String appleSdkVersion;
 
   // We need the dependent swiftmodule paths to contribute to the rulekey. These
@@ -194,6 +196,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       boolean withDownwardApi,
       boolean hasPrefixSerializedDebugInfo,
       boolean addXCTestImportPaths,
+      boolean useSwiftDriver,
       AppleSdk appleSdk) {
     super(buildTarget, projectFilesystem);
     this.systemFrameworkSearchPaths = systemFrameworkSearchPaths;
@@ -246,6 +249,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.shouldEmitClangModuleBreadcrumbs = swiftBuckConfig.getEmitClangModuleBreadcrumbs();
     this.prefixSerializedDebugInfo =
         hasPrefixSerializedDebugInfo || swiftBuckConfig.getPrefixSerializedDebugInfo();
+    this.useSwiftDriver = useSwiftDriver;
     this.appleSdkVersion = appleSdk.getVersion();
 
     // TODO: the swiftmodule dependencies should be passed in the constructor instead of being
@@ -284,6 +288,10 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   /** Creates the list of arguments to pass to the Swift compiler */
   protected ImmutableList<String> constructCompilerArgs(SourcePathResolverAdapter resolver) {
     ImmutableList.Builder<String> compilerArgs = ImmutableList.builder();
+    if (!useSwiftDriver) {
+      compilerArgs.add("-frontend");
+    }
+
     compilerArgs.add("-target", swiftTarget.getVersionedTriple());
 
     if (bridgingHeader.isPresent()) {
