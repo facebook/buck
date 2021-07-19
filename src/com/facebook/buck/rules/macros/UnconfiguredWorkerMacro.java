@@ -34,7 +34,11 @@ public abstract class UnconfiguredWorkerMacro extends UnconfiguredBuildTargetMac
   public WorkerMacro configure(
       TargetConfiguration targetConfiguration,
       HostTargetConfigurationResolver hostConfigurationResolver) {
-    return WorkerMacro.of(getTargetWithOutputs().configure(targetConfiguration));
+    return WorkerMacro.of(
+        getTargetWithOutputs()
+            .configure(
+                hostConfigurationResolver.getTargetConfiguration(
+                    getTargetWithOutputs().getBuildTarget())));
   }
 
   public static UnconfiguredWorkerMacro of(UnconfiguredBuildTargetWithOutputs buildTarget) {
