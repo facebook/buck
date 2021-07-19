@@ -371,6 +371,10 @@ public class AppleDescriptions {
     setHeaderNamespace.accept("");
 
     addSDKVersionFlagForTargetIfNecessary(ruleResolver, appleCxxPlatform, arg, addCompilerFlags);
+
+    if (arg.getUsesModules()) {
+      addCompilerFlags.accept(StringWithMacros.ofConstantString("-fmodules"));
+    }
   }
 
   private static void addSDKVersionFlagForTargetIfNecessary(

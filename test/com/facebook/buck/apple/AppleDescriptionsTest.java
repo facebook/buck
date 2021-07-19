@@ -18,19 +18,25 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -156,5 +162,34 @@ public class AppleDescriptionsTest {
                 FakeSourcePath.of("path/to/another_file.h"),
                 FakeSourcePath.of("different/path/to/a_file.h"),
                 FakeSourcePath.of("file.h"))));
+  }
+
+  @Test
+  public void testModularFlags() {
+    BuildRuleResolver resolver = new TestActionGraphBuilder();
+    CxxLibraryDescriptionArg.Builder cxxLibraryDescriptionArgBuilder =
+        CxxLibraryDescriptionArg.builder();
+    cxxLibraryDescriptionArgBuilder.setName("hello");
+    AppleLibraryDescriptionArg.Builder appleLibraryDescriptionArgBuilder =
+        AppleLibraryDescriptionArg.builder();
+    appleLibraryDescriptionArgBuilder.setModular(true);
+    appleLibraryDescriptionArgBuilder.setModuleName("MyModule");
+    appleLibraryDescriptionArgBuilder.setName("hello");
+    appleLibraryDescriptionArgBuilder.setUsesModules(true);
+    BuildTarget target = BuildTargetFactory.newInstance("//:hello");
+
+    AppleDescriptions.populateCxxLibraryDescriptionArg(
+        resolver,
+        cxxLibraryDescriptionArgBuilder,
+        Optional.empty(),
+        appleLibraryDescriptionArgBuilder.build(),
+        target,
+        false);
+
+    CxxLibraryDescriptionArg arg = cxxLibraryDescriptionArgBuilder.build();
+
+    assertTrue(arg.getCompilerFlags().contains(StringWithMacros.ofConstantString("-fmodules")));
+    assertTrue(
+        arg.getCompilerFlags().contains(StringWithMacros.ofConstantString("-fmodule-name=hello")));
   }
 }

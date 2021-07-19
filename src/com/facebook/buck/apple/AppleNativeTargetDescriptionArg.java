@@ -37,6 +37,11 @@ public interface AppleNativeTargetDescriptionArg
     return false;
   }
 
+  @Value.Default
+  default boolean getUsesModules() {
+    return false;
+  }
+
   @Value.Check
   default void checkModularUsage() {
     if (isModular() && getBridgingHeader().isPresent()) {
