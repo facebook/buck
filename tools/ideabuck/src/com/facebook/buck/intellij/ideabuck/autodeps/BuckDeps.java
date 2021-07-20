@@ -203,7 +203,7 @@ public class BuckDeps {
    * @param target The fully qualified target to be modified.
    * @param dependency The fully qualified dependency required by the target.
    */
-  static boolean modifyTargetToAddDependency(
+  public static boolean modifyTargetToAddDependency(
       VirtualFile buckFile, String target, String dependency) {
     try {
       File file = new File(buckFile.getPath());
