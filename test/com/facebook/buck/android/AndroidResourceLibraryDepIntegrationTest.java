@@ -44,7 +44,7 @@ public class AndroidResourceLibraryDepIntegrationTest {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     String appTarget = "//apps/sample:app_res_lib_dep";
     String resTarget = "//res/com/sample/base:base_with_lib_dep";
-    String libTarget = "//java/com/sample/small:small";
+    String libTarget = "//java/com/sample/dep:dep";
 
     // Do the initial resource build.
     ProcessResult first = workspace.runBuckCommand("build", appTarget);
@@ -58,7 +58,7 @@ public class AndroidResourceLibraryDepIntegrationTest {
 
     // Update the java library dependency, which will force it to be rebuilt.
     workspace.replaceFileContents(
-        "java/com/sample/small/Small.java", "savedInstanceState", "savedInstanceState2");
+        "java/com/sample/dep/Dep.java", "savedInstanceState", "savedInstanceState2");
 
     workspace.resetBuildLogFile();
 

@@ -19,6 +19,6 @@ android_resource(
         "PUBLIC",
     ],
     deps = [
-        "//java/com/sample/small:small",
+        "//java/com/sample/dep:dep",
     ],
 )
