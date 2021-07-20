@@ -52,15 +52,18 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -113,7 +116,12 @@ public class HeaderSymlinkTreeWithModuleMapTest {
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
         HeaderSymlinkTreeWithModuleMap.create(
-            buildTarget, projectFilesystem, symlinkTreeRoot.getPath(), links, Optional.empty());
+            buildTarget,
+            projectFilesystem,
+            symlinkTreeRoot.getPath(),
+            links,
+            Optional.empty(),
+            false);
   }
 
   @Test
@@ -146,7 +154,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                             buildTarget,
                             "%s/SomeModule/module.modulemap")
                         .getPath(),
-                    ModuleMap.create("SomeModule", ModuleMap.SwiftMode.NO_SWIFT, links.keySet())))
+                    ModuleMap.create(
+                        "SomeModule", ModuleMap.SwiftMode.NO_SWIFT, links.keySet(), false)))
             .build();
     ImmutableList<Step> actualBuildSteps =
         symlinkTreeBuildRule.getBuildSteps(buildContext, buildableContext);
@@ -167,7 +176,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 .putAll(links)
                 .put(Paths.get("SomeModule", "SomeModule-Swift.h"), FakeSourcePath.of("SomeModule"))
                 .build(),
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     ImmutableList<Step> actualBuildSteps =
         linksWithSwiftHeader.getBuildSteps(buildContext, buildableContext);
@@ -179,7 +189,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                     projectFilesystem.getBuckPaths(), buildTarget, "%s/SomeModule/module.modulemap")
                 .getPath(),
             ModuleMap.create(
-                "SomeModule", ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER, links.keySet()));
+                "SomeModule", ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER, links.keySet(), false));
     assertThat(actualBuildSteps, hasItem(moduleMapStep));
   }
 
@@ -196,7 +206,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 Paths.get("OtherModule", "Header.h"),
                 PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
@@ -210,5 +221,52 @@ public class HeaderSymlinkTreeWithModuleMapTest {
     RuleKey key2 =
         new TestDefaultRuleKeyFactory(hashLoader, ruleResolver).build(modifiedSymlinkTreeBuildRule);
     assertNotEquals(key1, key2);
+  }
+
+  @Test
+  public void testModuleMapOutput() {
+    Assume.assumeTrue(ImmutableSet.of(Platform.MACOS, Platform.LINUX).contains(Platform.detect()));
+
+    ModuleMap moduleMapWithSwift =
+        ModuleMap.create(
+            "MyModule",
+            ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER,
+            ImmutableSet.of(
+                Paths.get("MyModule", "firstheader.h"), Paths.get("MyModule", "secondheader.h")),
+            false);
+
+    assertEquals(
+        moduleMapWithSwift.render(),
+        "module MyModule {\n"
+            + "\theader \"firstheader.h\"\n"
+            + "\theader \"secondheader.h\"\n"
+            + "\texport *\n"
+            + "}\n\n"
+            + "module MyModule.Swift {\n"
+            + "\theader \"MyModule-Swift.h\"\n"
+            + "\trequires objc\n}\n");
+
+    ModuleMap moduleMapWithSubmodules =
+        ModuleMap.create(
+            "MyModule",
+            ModuleMap.SwiftMode.NO_SWIFT,
+            ImmutableSet.of(
+                Paths.get("MyModule", "header.with.dots and spaces+and+plus-and-hyphen.h"),
+                Paths.get("MyModule", "secondheader.h"),
+                Paths.get("MyModule", "3rd_header.h")),
+            true);
+    assertEquals(
+        moduleMapWithSubmodules.render(),
+        "module MyModule {\n"
+            + "\tmodule _3rd_header {\n"
+            + "\t\theader \"3rd_header.h\"\n"
+            + "\t\texport *\n\t}\n"
+            + "\tmodule header_with_dots_and_spaces_and_plus_and_hyphen {\n"
+            + "\t\theader \"header.with.dots and spaces+and+plus-and-hyphen.h\"\n"
+            + "\t\texport *\n\t}\n"
+            + "\tmodule secondheader {\n"
+            + "\t\theader \"secondheader.h\"\n"
+            + "\t\texport *\n\t}\n"
+            + "}\n");
   }
 }

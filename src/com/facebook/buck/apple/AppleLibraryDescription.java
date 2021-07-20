@@ -864,7 +864,8 @@ public class AppleLibraryDescription
         projectFilesystem,
         HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
         headers.build(),
-        HeaderVisibility.PUBLIC);
+        HeaderVisibility.PUBLIC,
+        args.getUseSubmodules());
   }
 
   private HeaderSymlinkTree createUnderlyingModuleSymlinkTreeBuildRule(
@@ -892,7 +893,8 @@ public class AppleLibraryDescription
         root.getPath(),
         headers,
         HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
-        Optional.of(moduleName));
+        Optional.of(moduleName),
+        args.getUseSubmodules());
   }
 
   <U> Optional<U> createMetadataForLibrary(

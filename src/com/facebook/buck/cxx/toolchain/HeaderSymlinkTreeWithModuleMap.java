@@ -38,15 +38,18 @@ import java.util.Optional;
 public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
 
   @AddToRuleKey private final Optional<String> moduleName;
+  @AddToRuleKey private final boolean useSubmodules;
 
   private HeaderSymlinkTreeWithModuleMap(
       BuildTarget target,
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
-      Optional<String> moduleName) {
+      Optional<String> moduleName,
+      boolean useSubmodules) {
     super(target, filesystem, root, links);
     this.moduleName = moduleName;
+    this.useSubmodules = useSubmodules;
   }
 
   public static HeaderSymlinkTreeWithModuleMap create(
@@ -54,10 +57,12 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
-      Optional<String> inputModuleName) {
+      Optional<String> inputModuleName,
+      boolean useSubmodules) {
     Optional<String> moduleName =
         inputModuleName.isPresent() ? inputModuleName : getModuleName(links);
-    return new HeaderSymlinkTreeWithModuleMap(target, filesystem, root, links, moduleName);
+    return new HeaderSymlinkTreeWithModuleMap(
+        target, filesystem, root, links, moduleName, useSubmodules);
   }
 
   @Override
@@ -97,7 +102,8 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
                       paths.contains(expectedSwiftHeaderPath)
                           ? ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER
                           : ModuleMap.SwiftMode.NO_SWIFT,
-                      pathsWithoutSwiftHeader)));
+                      pathsWithoutSwiftHeader,
+                      useSubmodules)));
         });
     return builder.build();
   }

@@ -50,6 +50,12 @@ public interface AppleNativeTargetDescriptionArg
     }
   }
 
+  /** A temporary attribute to help migrate the modular libraries to using submodules by default. */
+  @Value.Default
+  default boolean getUseSubmodules() {
+    return false;
+  }
+
   /**
    * The minimum OS version for which this target should be built. If set, this will override the
    * config-level option.

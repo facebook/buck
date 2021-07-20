@@ -3215,14 +3215,16 @@ public class ProjectGenerator {
               ModuleMap.create(
                       moduleName.get(),
                       ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER,
-                      headerPathsWithoutSwiftObjCHeader)
+                      headerPathsWithoutSwiftObjCHeader,
+                      false)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
           projectFilesystem.writeContentsToPath(
               ModuleMap.create(
                       moduleName.get(),
                       ModuleMap.SwiftMode.NO_SWIFT,
-                      headerPathsWithoutSwiftObjCHeader)
+                      headerPathsWithoutSwiftObjCHeader,
+                      false)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
 
@@ -3244,7 +3246,8 @@ public class ProjectGenerator {
               ModuleMap.create(
                       moduleName.get(),
                       ModuleMap.SwiftMode.NO_SWIFT,
-                      headerPathsWithoutSwiftObjCHeader)
+                      headerPathsWithoutSwiftObjCHeader,
+                      false)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
         }

@@ -21,8 +21,29 @@ import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
+
+/** Utility class to provide submodule names inside the ST templates. */
+class Header {
+  public final String filename;
+  public final String submodule;
+
+  Header(String filename) {
+    this.filename = filename;
+    this.submodule = getSubmodule(filename);
+  }
+
+  private String getSubmodule(String filename) {
+    String submodule =
+        filename.substring(0, filename.lastIndexOf('.')).replaceAll("[^A-Za-z0-9_]", "_");
+    if (Character.isDigit(submodule.charAt(0))) {
+      submodule = "_" + submodule;
+    }
+    return submodule;
+  }
+}
 
 /**
  * Creates a modulemap file that uses an explicit `header` declaration for each header in the
@@ -56,11 +77,13 @@ public class ModuleMap {
   private String moduleName;
   private List<String> headers;
   private SwiftMode swiftMode;
+  private boolean useSubmodules;
 
-  ModuleMap(String moduleName, SwiftMode swiftMode, List<String> headers) {
+  ModuleMap(String moduleName, SwiftMode swiftMode, List<String> headers, boolean useSubmodules) {
     this.moduleName = moduleName;
     this.swiftMode = swiftMode;
     this.headers = headers;
+    this.useSubmodules = useSubmodules;
   }
 
   /**
@@ -71,37 +94,41 @@ public class ModuleMap {
    * @param swiftMode Whether or not to include the "-Swift.h" header in the modulemap.
    * @return A module map instance.
    */
-  public static ModuleMap create(String moduleName, SwiftMode swiftMode, Set<Path> headerPaths) {
+  public static ModuleMap create(
+      String moduleName, SwiftMode swiftMode, Set<Path> headerPaths, boolean useSubmodules) {
     String stripPrefix = moduleName + "/";
     List<String> headers =
         headerPaths.stream()
             .map(
                 path -> {
                   String relativePath = path.toString();
-                  return relativePath.startsWith(stripPrefix)
-                      ? relativePath.substring(stripPrefix.length())
-                      : relativePath;
+                  String s =
+                      relativePath.startsWith(stripPrefix)
+                          ? relativePath.substring(stripPrefix.length())
+                          : relativePath;
+                  return s;
                 })
             .sorted()
             .collect(ImmutableList.toImmutableList());
 
-    return new ModuleMap(moduleName, swiftMode, headers);
+    return new ModuleMap(moduleName, swiftMode, headers, useSubmodules);
   }
 
   private static final String template =
       "module <module_name> {\n"
-          + "    <headers :{ name | header \"<name>\"\n }>"
-          + "\n"
-          + "    export *\n"
-          + "}\n"
-          + "\n"
-          + "<if(include_swift_header)>"
-          + "module <module_name>.Swift {\n"
-          + "    header \"<module_name>-Swift.h\"\n"
-          + "    requires objc\n"
-          + "}\n"
+          + "<if(use_submodules)>"
+          + "<headers :{ h | \tmodule <h.submodule> {\n\t\theader \"<h.filename>\"\n\t\texport *\n\t\\}\n }>"
+          + "<else>"
+          + "<headers :{ h | \theader \"<h.filename>\"\n }>"
+          + "\texport *\n"
           + "<endif>"
-          + "\n";
+          + "}\n"
+          + "<if(include_swift_header)>"
+          + "\n\nmodule <module_name>.Swift {\n"
+          + "\theader \"<module_name>-Swift.h\"\n"
+          + "\trequires objc\n"
+          + "}\n"
+          + "<endif>";
 
   /**
    * Renders the modulemap to a string, to be written to a .modulemap file.
@@ -111,8 +138,9 @@ public class ModuleMap {
   public String render() {
     return new ST(new STGroup(), template)
         .add("module_name", moduleName)
-        .add("headers", headers)
+        .add("headers", headers.stream().map(Header::new).collect(Collectors.toList()))
         .add("include_swift_header", swiftMode.includeSwift())
+        .add("use_submodules", useSubmodules)
         .render();
   }
 
@@ -125,7 +153,8 @@ public class ModuleMap {
     ModuleMap other = (ModuleMap) obj;
     return Objects.equal(moduleName, other.moduleName)
         && Objects.equal(headers, other.headers)
-        && Objects.equal(swiftMode, other.swiftMode);
+        && Objects.equal(swiftMode, other.swiftMode)
+        && useSubmodules == other.useSubmodules;
   }
 
   @Override

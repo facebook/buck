@@ -918,7 +918,8 @@ public class CxxLibraryFactory {
         mode,
         CxxDescriptionEnhancer.parseExportedHeaders(
             buildTarget, graphBuilder, projectFilesystem, Optional.empty(), args),
-        HeaderVisibility.PUBLIC);
+        HeaderVisibility.PUBLIC,
+        false);
   }
 
   /** @return a {@link HeaderSymlinkTree} for the exported headers of this C/C++ library. */

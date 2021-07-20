@@ -173,6 +173,7 @@ public class CxxDescriptionEnhancer {
       HeaderMode mode,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility,
+      boolean useSubmodules,
       Flavor... flavors) {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
@@ -187,7 +188,8 @@ public class CxxDescriptionEnhancer {
         headerSymlinkTreeRoot.getPath(),
         headers,
         mode,
-        Optional.empty());
+        Optional.empty(),
+        useSubmodules);
   }
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
@@ -208,6 +210,7 @@ public class CxxDescriptionEnhancer {
             shouldCreateHeadersSymlinks),
         headers,
         headerVisibility,
+        false,
         cxxPlatform.getFlavor());
   }
 
