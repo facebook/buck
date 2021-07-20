@@ -110,7 +110,7 @@ public abstract class InferConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public Boolean executeRemotely() {
-    return getDelegate().getBooleanValue(SECTION, "execute_remotely", false);
+    return getDelegate().getBooleanValue(SECTION, "execute_remotely", true);
   }
 
   private ToolProvider mkDistProviderFromTarget(UnconfiguredBuildTarget target) {
