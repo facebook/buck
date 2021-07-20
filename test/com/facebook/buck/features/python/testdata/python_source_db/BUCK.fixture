@@ -23,6 +23,14 @@ python_binary(
     ],
 )
 
+python_binary(
+    name = "bin_with_relative_path",
+    main = "./bin.py",
+    deps = [
+        ":foo",
+    ],
+)
+
 python_test(
     name = "test",
     srcs = [

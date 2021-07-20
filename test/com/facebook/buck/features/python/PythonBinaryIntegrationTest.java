@@ -746,6 +746,18 @@ public class PythonBinaryIntegrationTest {
   }
 
   @Test
+  public void sourceDbWithRelativePath() throws Exception {
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_source_db", tmp);
+    workspace.setUp();
+    assertThat(
+        PythonSourceDatabaseEntry.parse(
+            workspace.buildAndReturnOutput("//:bin_with_relative_path#source-db")),
+        equalTo(
+            ImmutablePythonSourceDatabaseEntry.ofImpl(
+                ImmutableMap.of("bin.py", "bin.py"), ImmutableMap.of("foo.py", "foo.py"))));
+  }
+
+  @Test
   public void inplaceBinaryAvoidsHashedBuckOutCompatHardLinking() {
     assumeThat(Platform.detect(), is(not(Platform.WINDOWS)));
     BuildTarget target = BuildTargetFactory.newInstance("//:bin");

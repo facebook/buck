@@ -317,7 +317,7 @@ public class PythonUtil {
               });
       for (ImmutableMap.Entry<String, SourcePath> entry : namesAndSourcePaths.entrySet()) {
         consumer.accept(
-            baseModule.resolve(entry.getKey()),
+            baseModule.resolve(baseModule.getFileSystem().getPath(entry.getKey()).normalize()),
             CxxGenruleDescription.fixupSourcePath(
                 actionGraphBuilder, cxxPlatform.getFlavor(), entry.getValue()));
       }
