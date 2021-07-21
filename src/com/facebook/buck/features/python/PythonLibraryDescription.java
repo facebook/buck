@@ -127,7 +127,7 @@ public class PythonLibraryDescription
                 pythonPlatforms.getValue(
                     args.getPlatform()
                         .<Flavor>map(InternalFlavor::of)
-                        .orElseThrow(IllegalArgumentException::new)));
+                        .orElse(pythonPlatforms.getFlavors().iterator().next())));
   }
 
   private UnresolvedCxxPlatform getCxxPlatform(
@@ -145,7 +145,7 @@ public class PythonLibraryDescription
             () ->
                 args.getCxxPlatform()
                     .map(cxxPlatforms::getValue)
-                    .orElseThrow(IllegalArgumentException::new));
+                    .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform()));
   }
 
   @Override
