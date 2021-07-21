@@ -90,7 +90,7 @@ public class FileClassPathRunner {
 
   private static boolean shouldPopulateClassLoader() {
     return JavaVersion.getMajorVersion() <= 8
-        || System.getProperty(TESTRUNNER_CLASSES_PROPERTY) != null;
+        || System.getProperty(CLASSPATH_FILE_PROPERTY) != null;
   }
 
   private static String readRequiredProperty(String propertyName) {
