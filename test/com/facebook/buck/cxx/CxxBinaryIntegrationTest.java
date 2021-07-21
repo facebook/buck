@@ -934,7 +934,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinarySkipsBlacklistedFiles() throws IOException {
+  public void testInferCxxBinarySkipsBlockListedFiles() throws IOException {
     ProjectWorkspace workspace =
         InferHelper.setupCxxInferWorkspace(this, tmp, Optional.of(".*one\\.c"));
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
@@ -987,7 +987,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
-  public void testInferCxxBinaryRunsOnAllFilesWhenBlacklistIsNotSpecified() throws IOException {
+  public void testInferCxxBinaryRunsOnAllFilesWhenBlockListIsNotSpecified() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 

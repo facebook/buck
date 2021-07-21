@@ -22,16 +22,16 @@ import java.util.regex.Pattern;
 
 class CxxInferSourceFilter {
 
-  private final Optional<Pattern> blacklistRegex;
+  private final Optional<Pattern> blockListRegex;
 
   CxxInferSourceFilter(InferBuckConfig inferConfig) {
-    Optional<String> rawFilterRegex = inferConfig.getBlacklistRegex();
+    Optional<String> rawFilterRegex = inferConfig.getBlockListRegex();
 
-    blacklistRegex = rawFilterRegex.map(Pattern::compile);
+    blockListRegex = rawFilterRegex.map(Pattern::compile);
   }
 
-  public boolean isBlacklisted(CxxSource source) {
-    return blacklistRegex.isPresent()
-        && blacklistRegex.get().matcher(source.getPath().toString()).matches();
+  public boolean isBlockListed(CxxSource source) {
+    return blockListRegex.isPresent()
+        && blockListRegex.get().matcher(source.getPath().toString()).matches();
   }
 }

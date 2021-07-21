@@ -107,8 +107,8 @@ public class InferBuckConfig implements AddsToRuleKey {
             });
   }
 
-  public Optional<String> getBlacklistRegex() {
-    return getValueFromConfig(delegate, "blacklist_regex");
+  public Optional<String> getBlockListRegex() {
+    return getValueFromConfig(delegate, "block_list_regex");
   }
 
   private Path getInferTopLevel() {

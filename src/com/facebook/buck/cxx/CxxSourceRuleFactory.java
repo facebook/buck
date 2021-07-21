@@ -886,7 +886,7 @@ public abstract class CxxSourceRuleFactory {
     for (Map.Entry<String, CxxSource> entry : sources.entrySet()) {
       String name = entry.getKey();
       CxxSource source = entry.getValue();
-      if (sourceFilter.isBlacklisted(source)) {
+      if (sourceFilter.isBlockListed(source)) {
         continue;
       }
 
