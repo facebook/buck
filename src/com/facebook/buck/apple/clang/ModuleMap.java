@@ -78,12 +78,19 @@ public class ModuleMap {
   private List<String> headers;
   private SwiftMode swiftMode;
   private boolean useSubmodules;
+  private boolean requiresCplusplus;
 
-  ModuleMap(String moduleName, SwiftMode swiftMode, List<String> headers, boolean useSubmodules) {
+  ModuleMap(
+      String moduleName,
+      SwiftMode swiftMode,
+      List<String> headers,
+      boolean useSubmodules,
+      boolean requiresCplusplus) {
     this.moduleName = moduleName;
     this.swiftMode = swiftMode;
     this.headers = headers;
     this.useSubmodules = useSubmodules;
+    this.requiresCplusplus = requiresCplusplus;
   }
 
   /**
@@ -92,10 +99,15 @@ public class ModuleMap {
    * @param moduleName The name of the module.
    * @param headerPaths The exported headers of the module.
    * @param swiftMode Whether or not to include the "-Swift.h" header in the modulemap.
+   * @param requiresCplusplus Whether or not to include "requires cplusplus" in the modulemap.
    * @return A module map instance.
    */
   public static ModuleMap create(
-      String moduleName, SwiftMode swiftMode, Set<Path> headerPaths, boolean useSubmodules) {
+      String moduleName,
+      SwiftMode swiftMode,
+      Set<Path> headerPaths,
+      boolean useSubmodules,
+      boolean requiresCplusplus) {
     String stripPrefix = moduleName + "/";
     List<String> headers =
         headerPaths.stream()
@@ -111,7 +123,20 @@ public class ModuleMap {
             .sorted()
             .collect(ImmutableList.toImmutableList());
 
-    return new ModuleMap(moduleName, swiftMode, headers, useSubmodules);
+    return new ModuleMap(moduleName, swiftMode, headers, useSubmodules, requiresCplusplus);
+  }
+
+  /**
+   * Creates a module map.
+   *
+   * @param moduleName The name of the module.
+   * @param headerPaths The exported headers of the module.
+   * @param swiftMode Whether or not to include the "-Swift.h" header in the modulemap.
+   * @return A module map instance.
+   */
+  public static ModuleMap create(
+      String moduleName, SwiftMode swiftMode, Set<Path> headerPaths, boolean useSubmodules) {
+    return ModuleMap.create(moduleName, swiftMode, headerPaths, useSubmodules, false);
   }
 
   private static final String template =
@@ -121,6 +146,9 @@ public class ModuleMap {
           + "<else>"
           + "<headers :{ h | \theader \"<h.filename>\"\n }>"
           + "\texport *\n"
+          + "<endif>"
+          + "<if(requires_cplusplus)>"
+          + "    requires cplusplus\n"
           + "<endif>"
           + "}\n"
           + "<if(include_swift_header)>"
@@ -141,6 +169,7 @@ public class ModuleMap {
         .add("headers", headers.stream().map(Header::new).collect(Collectors.toList()))
         .add("include_swift_header", swiftMode.includeSwift())
         .add("use_submodules", useSubmodules)
+        .add("requires_cplusplus", requiresCplusplus)
         .render();
   }
 
@@ -154,11 +183,12 @@ public class ModuleMap {
     return Objects.equal(moduleName, other.moduleName)
         && Objects.equal(headers, other.headers)
         && Objects.equal(swiftMode, other.swiftMode)
-        && useSubmodules == other.useSubmodules;
+        && useSubmodules == other.useSubmodules
+        && Objects.equal(requiresCplusplus, other.requiresCplusplus);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(moduleName, headers, swiftMode);
+    return Objects.hashCode(moduleName, headers, swiftMode, requiresCplusplus);
   }
 }

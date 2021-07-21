@@ -39,6 +39,7 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
 
   @AddToRuleKey private final Optional<String> moduleName;
   @AddToRuleKey private final boolean useSubmodules;
+  @AddToRuleKey private boolean moduleRequiresCplusplus;
 
   private HeaderSymlinkTreeWithModuleMap(
       BuildTarget target,
@@ -46,10 +47,26 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
       Path root,
       ImmutableMap<Path, SourcePath> links,
       Optional<String> moduleName,
-      boolean useSubmodules) {
+      boolean useSubmodules,
+      boolean moduleRequiresCplusplus) {
     super(target, filesystem, root, links);
     this.moduleName = moduleName;
     this.useSubmodules = useSubmodules;
+    this.moduleRequiresCplusplus = moduleRequiresCplusplus;
+  }
+
+  public static HeaderSymlinkTreeWithModuleMap create(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      Path root,
+      ImmutableMap<Path, SourcePath> links,
+      Optional<String> inputModuleName,
+      boolean useSubmodules,
+      boolean moduleRequiresCplusplus) {
+    Optional<String> moduleName =
+        inputModuleName.isPresent() ? inputModuleName : getModuleName(links);
+    return new HeaderSymlinkTreeWithModuleMap(
+        target, filesystem, root, links, moduleName, useSubmodules, moduleRequiresCplusplus);
   }
 
   public static HeaderSymlinkTreeWithModuleMap create(
@@ -59,10 +76,7 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
       ImmutableMap<Path, SourcePath> links,
       Optional<String> inputModuleName,
       boolean useSubmodules) {
-    Optional<String> moduleName =
-        inputModuleName.isPresent() ? inputModuleName : getModuleName(links);
-    return new HeaderSymlinkTreeWithModuleMap(
-        target, filesystem, root, links, moduleName, useSubmodules);
+    return create(target, filesystem, root, links, inputModuleName, useSubmodules, false);
   }
 
   @Override
@@ -103,7 +117,8 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
                           ? ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER
                           : ModuleMap.SwiftMode.NO_SWIFT,
                       pathsWithoutSwiftHeader,
-                      useSubmodules)));
+                      useSubmodules,
+                      moduleRequiresCplusplus)));
         });
     return builder.build();
   }

@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.clang.ModuleMap;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
@@ -191,6 +192,23 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             ModuleMap.create(
                 "SomeModule", ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER, links.keySet(), false));
     assertThat(actualBuildSteps, hasItem(moduleMapStep));
+  }
+
+  @Test
+  public void testModuleRequiresCplusplus() {
+    ModuleMapStep moduleMapStep =
+        new ModuleMapStep(
+            projectFilesystem,
+            BuildTargetPaths.getGenPath(
+                    projectFilesystem.getBuckPaths(), buildTarget, "%s/SomeModule/module.modulemap")
+                .getPath(),
+            ModuleMap.create(
+                "SomeModule",
+                ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER,
+                links.keySet(),
+                false,
+                true));
+    assertTrue(moduleMapStep.toString().contains("requires cplusplus"));
   }
 
   @Test

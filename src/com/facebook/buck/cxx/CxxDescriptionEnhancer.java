@@ -174,6 +174,7 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility,
       boolean useSubmodules,
+      boolean moduleRequiresCplusplus,
       Flavor... flavors) {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
@@ -189,7 +190,27 @@ public class CxxDescriptionEnhancer {
         headers,
         mode,
         Optional.empty(),
-        useSubmodules);
+        useSubmodules,
+        moduleRequiresCplusplus);
+  }
+
+  public static HeaderSymlinkTree createHeaderSymlinkTree(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      HeaderMode mode,
+      ImmutableMap<Path, SourcePath> headers,
+      HeaderVisibility headerVisibility,
+      boolean useSubmodules,
+      Flavor... flavors) {
+    return createHeaderSymlinkTree(
+        buildTarget,
+        projectFilesystem,
+        mode,
+        headers,
+        headerVisibility,
+        useSubmodules,
+        false,
+        flavors);
   }
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
@@ -210,6 +231,7 @@ public class CxxDescriptionEnhancer {
             shouldCreateHeadersSymlinks),
         headers,
         headerVisibility,
+        false,
         false,
         cxxPlatform.getFlavor());
   }

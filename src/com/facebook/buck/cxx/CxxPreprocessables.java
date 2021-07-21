@@ -137,19 +137,32 @@ public class CxxPreprocessables {
       ImmutableMap<Path, SourcePath> links,
       HeaderMode headerMode,
       Optional<String> moduleName,
-      boolean useSubmodules) {
+      boolean useSubmodules,
+      boolean moduleRequiresCplusplus) {
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
         return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links);
       case SYMLINK_TREE_WITH_MODULEMAP:
         return HeaderSymlinkTreeWithModuleMap.create(
-            target, filesystem, root, links, moduleName, useSubmodules);
+            target, filesystem, root, links, moduleName, useSubmodules, moduleRequiresCplusplus);
       case HEADER_MAP_ONLY:
         return new DirectHeaderMap(target, filesystem, root, links);
       default:
       case SYMLINK_TREE_ONLY:
         return new HeaderSymlinkTree(target, filesystem, root, links);
     }
+  }
+
+  public static HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      Path root,
+      ImmutableMap<Path, SourcePath> links,
+      HeaderMode headerMode,
+      Optional<String> moduleName,
+      boolean useSubmodules) {
+    return createHeaderSymlinkTreeBuildRule(
+        target, filesystem, root, links, headerMode, moduleName, useSubmodules, false);
   }
 
   /**
