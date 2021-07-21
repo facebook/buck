@@ -212,13 +212,19 @@ public class AppleTestDescription
     }
 
     if (!appleConfig.shouldUseSwiftDelegate()) {
+      // Tests should serialize debugging options as they are the top level module for a link unit.
+      AppleTestDescriptionArg.Builder argBuilder = AppleTestDescriptionArg.builder();
+      argBuilder.from(args);
+      argBuilder.addSwiftCompilerFlags(
+          StringWithMacros.ofConstantString("-serialize-debugging-options"));
+
       Optional<BuildRule> buildRule =
           appleLibraryDescription.createSwiftBuildRule(
               buildTarget,
               projectFilesystem,
               graphBuilder,
               context.getCellPathResolver(),
-              args,
+              argBuilder.build(),
               Optional.of(this));
 
       if (buildRule.isPresent()) {

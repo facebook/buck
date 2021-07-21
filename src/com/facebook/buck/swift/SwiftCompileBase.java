@@ -147,6 +147,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final String appleSdkVersion;
 
+  @AddToRuleKey private final boolean serializeDebuggingOptions;
+
   // We need the dependent swiftmodule paths to contribute to the rulekey. These
   // paths are not used directly in the compilation action as the compiler does
   // not take explicit swiftmodule paths. Instead we use the containing folders
@@ -250,6 +252,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.prefixSerializedDebugInfo =
         hasPrefixSerializedDebugInfo || swiftBuckConfig.getPrefixSerializedDebugInfo();
     this.useSwiftDriver = useSwiftDriver;
+    this.serializeDebuggingOptions = swiftBuckConfig.getAlwaysSerializeDebuggingOptions();
     this.appleSdkVersion = appleSdk.getVersion();
 
     // TODO: the swiftmodule dependencies should be passed in the constructor instead of being
@@ -342,7 +345,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
         hasMainEntry ? "" : "-parse-as-library",
-        "-serialize-debugging-options",
         "-module-name",
         moduleName,
         "-emit-module",
@@ -395,6 +397,13 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       // Disable Clang module breadcrumbs in the DWARF info. These will not be debug prefix mapped
       // and are not shareable across machines.
       compilerArgs.add("-no-clang-module-breadcrumbs");
+    }
+
+    if (serializeDebuggingOptions) {
+      // We only want to serialize debug info for top level modules. This reduces the amount of
+      // work done by the debugger when constructing type contexts and speeds up attach time.
+      // Tests will pass this in their constructor args explicitly.
+      compilerArgs.add("-serialize-debugging-options");
     }
 
     if (prefixSerializedDebugInfo) {
