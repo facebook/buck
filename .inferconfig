@@ -2,11 +2,11 @@
   "biabduction": false,
   "buck-java-flavor": true,
   "eradicate": true,
-  "report-whitelist-path-regex": [
+  "report-allow-list-path-regex": [
     "src",
     "ideabuck"
   ],
-  "report-blacklist-path-regex": [
+  "report-block-list-path-regex": [
     "src/com/facebook/buck/jvm/java/runner",
     "src/com/facebook/buck/testrunner",
     "src-gen",
