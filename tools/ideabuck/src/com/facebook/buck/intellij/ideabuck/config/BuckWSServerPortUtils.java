@@ -42,10 +42,11 @@ public final class BuckWSServerPortUtils {
       try {
         if (PathEnvironmentVariableUtil.findInPath("ps") != null) {
           String pid = new String(Files.readAllBytes(pidFile));
-          GeneralCommandLine commandLine = new GeneralCommandLine("ps", "-p", pid);
-          return commandLine.createProcess().exitValue() == 0;
+          Process process = new GeneralCommandLine("ps", "-p", pid).createProcess();
+          process.waitFor();
+          return process.exitValue() == 0;
         }
-      } catch (IOException | ExecutionException e) {
+      } catch (IOException | ExecutionException | InterruptedException e) {
         return false;
       }
     }

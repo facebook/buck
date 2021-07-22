@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.configurations;
 
+import com.facebook.buck.intellij.ideabuck.config.BuckModule;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckBuildEndConsumer;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckBuildStartConsumer;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.CompilerErrorConsumer;
@@ -70,6 +71,10 @@ public class BuckToGeneralTestEventsConverter extends OutputToGeneralTestEventsC
 
   @Override
   public void onStartTesting() {
+    BuckModule buckModule = mProject.getComponent(BuckModule.class);
+    if (!buckModule.isConnected()) {
+      buckModule.connect();
+    }
     mConnection = mProject.getMessageBus().connect();
     mConnection.subscribe(TestResultsAvailableConsumer.BUCK_TEST_RESULTS_AVAILABLE, this);
     mConnection.subscribe(TestRunCompleteConsumer.BUCK_TEST_RUN_COMPLETE, this);
