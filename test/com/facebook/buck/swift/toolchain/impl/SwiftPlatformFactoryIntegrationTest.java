@@ -97,7 +97,8 @@ public class SwiftPlatformFactoryIntegrationTest {
   public void testBuildSwiftPlatformWithEmptyToolchainPaths() throws IOException {
     AbsPath developerDir = tmp.newFolder("Developer");
     AppleCompilerTargetTriple triple =
-        AppleCompilerTargetTriple.of("x86_64", "apple", "ios", "9.3");
+        AppleCompilerTargetTriple.of(
+            "x86_64", "apple", "ios", Optional.of("9.3"), Optional.empty());
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
             createAppleSdk(),
@@ -114,6 +115,25 @@ public class SwiftPlatformFactoryIntegrationTest {
   }
 
   @Test
+  public void testSwiftPlatformTripleContainsEnvironment() throws IOException {
+    AbsPath developerDir = tmp.newFolder("Developer");
+    AppleCompilerTargetTriple triple =
+        AppleCompilerTargetTriple.of(
+            "x86_64", "apple", "ios", Optional.of("9.3"), Optional.of("simulator"));
+    SwiftPlatform swiftPlatform =
+        SwiftPlatformFactory.build(
+            createAppleSdk(),
+            createAppleSdkPaths(developerDir),
+            swiftcTool,
+            Optional.of(swiftStdTool),
+            true,
+            triple);
+    assertThat(
+        swiftPlatform.getSwiftTarget().getVersionedTriple(),
+        equalTo("x86_64-apple-ios9.3-simulator"));
+  }
+
+  @Test
   public void testBuildSwiftPlatformWithNonEmptyLookupPathWithoutTools() throws IOException {
     AbsPath developerDir = tmp.newFolder("Developer");
     AbsPath toolchainDir = tmp.newFolder("foo");
@@ -124,7 +144,8 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            AppleCompilerTargetTriple.of("x86_64", "apple", "ios", "9.3"));
+            AppleCompilerTargetTriple.of(
+                "x86_64", "apple", "ios", Optional.of("9.3"), Optional.empty()));
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
@@ -147,7 +168,8 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            AppleCompilerTargetTriple.of("x86_64", "apple", "ios", "9.3"));
+            AppleCompilerTargetTriple.of(
+                "x86_64", "apple", "ios", Optional.of("9.3"), Optional.empty()));
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), hasSize(1));
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), hasSize(2));
   }

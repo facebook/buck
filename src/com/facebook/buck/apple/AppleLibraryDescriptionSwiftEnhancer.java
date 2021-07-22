@@ -291,11 +291,13 @@ public class AppleLibraryDescriptionSwiftEnhancer {
   /** Creates a target triple to be used to compile Swift code. */
   public static AppleCompilerTargetTriple createSwiftTargetTriple(
       String architecture, AppleSdk appleSdk, String targetSdkVersion) {
-    String vendor = appleSdk.getTargetTripleVendor().orElse("apple");
     String fallbackPlatformName =
         appleSdk.getApplePlatform().getSwiftName().orElse(appleSdk.getApplePlatform().getName());
-    String platformName = appleSdk.getTargetTriplePlatformName().orElse(fallbackPlatformName);
-    return AppleCompilerTargetTriple.ofVersionedABI(
-        architecture, vendor, platformName, appleSdk.getTargetTripleABI(), targetSdkVersion);
+    return AppleCompilerTargetTriple.of(
+        architecture,
+        appleSdk.getTargetTripleVendor().orElse("apple"),
+        appleSdk.getTargetTriplePlatformName().orElse(fallbackPlatformName),
+        Optional.of(targetSdkVersion),
+        appleSdk.getTargetTripleEnvironment());
   }
 }

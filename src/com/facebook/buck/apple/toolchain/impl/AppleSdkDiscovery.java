@@ -285,7 +285,11 @@ public class AppleSdkDiscovery {
     AppleSdk.Builder sdkBuilder = AppleSdk.builder();
     sdkBuilder.addAllToolchains(sdkToolchains);
     ApplePlatform applePlatform = ApplePlatform.of(platformName.toString());
+
     sdkBuilder.setName(name).setVersion(version).setApplePlatform(applePlatform);
+
+    setTargetTripleFromBuildSettings(sdkBuilder, sdkSettings, platformName.toString());
+
     ImmutableList<String> architectures = validArchitecturesForPlatform(applePlatform, sdkDir);
     sdkBuilder.addAllArchitectures(architectures);
     AppleSdk sdk = sdkBuilder.build();
@@ -306,6 +310,31 @@ public class AppleSdkDiscovery {
         sdkList);
 
     return sdkList.build();
+  }
+
+  private static void setTargetTripleFromBuildSettings(
+      AppleSdk.Builder sdkBuilder, NSDictionary sdkSettings, String platformName) {
+    NSObject supportedTargets = sdkSettings.get("SupportedTargets");
+    if (supportedTargets == null
+        || !(supportedTargets instanceof NSDictionary)
+        || !((NSDictionary) supportedTargets).containsKey(platformName)) {
+      return;
+    }
+
+    NSObject targetSettings = ((NSDictionary) supportedTargets).get(platformName);
+    if (!(targetSettings instanceof NSDictionary)) {
+      LOG.error("Unexpected SDK target settings for " + platformName);
+      return;
+    }
+
+    NSDictionary targetSettingsDict = (NSDictionary) targetSettings;
+    sdkBuilder
+        .setTargetTripleVendor(
+            extractStringFromNSDictionary(targetSettingsDict, "LLVMTargetTripleVendor"))
+        .setTargetTriplePlatformName(
+            extractStringFromNSDictionary(targetSettingsDict, "LLVMTargetTripleSys"))
+        .setTargetTripleEnvironment(
+            extractStringFromNSDictionary(targetSettingsDict, "LLVMTargetTripleEnvironment"));
   }
 
   private static ImmutableList<String> validArchitecturesForPlatform(
@@ -355,7 +384,7 @@ public class AppleSdkDiscovery {
           .addAllToolchains(sdkToolchains)
           .addAllArchitectures(architectures);
 
-      updateCatalystSDKTargetTripleProperties(catalystSdkBuilder, sdkSettings);
+      setTargetTripleFromBuildSettings(catalystSdkBuilder, sdkSettings, "iosmac");
       updateCatalystSDKAdditionalSearchPaths(
           catalystSdkBuilder, catalystBuildSettings, sdkDir, defaultProperties, defaultToolchain);
       updateCatalystSDKResourceFamilies(catalystSdkBuilder, catalystBuildSettings);
@@ -368,8 +397,10 @@ public class AppleSdkDiscovery {
       NSDictionary dictionary, String key) {
     NSObject untypedValue = dictionary.get(key);
     if (untypedValue instanceof NSString) {
-      NSString stringValue = (NSString) untypedValue;
-      return Optional.of(stringValue.getContent());
+      String stringValue = ((NSString) untypedValue).getContent();
+      if (!stringValue.isEmpty()) {
+        return Optional.of(stringValue);
+      }
     }
 
     return Optional.empty();
@@ -382,29 +413,6 @@ public class AppleSdkDiscovery {
             extractStringFromNSDictionary(buildSettings, "RESOURCES_TARGETED_DEVICE_FAMILY"))
         .setResourcesUIFrameworkFamily(
             extractStringFromNSDictionary(buildSettings, "RESOURCES_UI_FRAMEWORK_FAMILY"));
-  }
-
-  private static void updateCatalystSDKTargetTripleProperties(
-      AppleSdk.Builder sdkBuilder, NSDictionary sdkSettings) {
-    NSObject untypedSupportedTargets = sdkSettings.get("SupportedTargets");
-    if (!(untypedSupportedTargets instanceof NSDictionary)) {
-      return;
-    }
-
-    NSDictionary supportedTargets = (NSDictionary) untypedSupportedTargets;
-    NSObject untypedCatalystTargetDict = supportedTargets.get("iosmac");
-    if (!(untypedCatalystTargetDict instanceof NSDictionary)) {
-      return;
-    }
-
-    NSDictionary catalystTargetDict = (NSDictionary) untypedCatalystTargetDict;
-    sdkBuilder
-        .setTargetTripleVendor(
-            extractStringFromNSDictionary(catalystTargetDict, "LLVMTargetTripleVendor"))
-        .setTargetTriplePlatformName(
-            extractStringFromNSDictionary(catalystTargetDict, "LLVMTargetTripleSys"))
-        .setTargetTripleABI(
-            extractStringFromNSDictionary(catalystTargetDict, "LLVMTargetTripleEnvironment"));
   }
 
   private static void updateCatalystSDKAdditionalSearchPaths(

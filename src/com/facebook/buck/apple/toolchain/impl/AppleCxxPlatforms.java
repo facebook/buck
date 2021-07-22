@@ -573,15 +573,20 @@ public class AppleCxxPlatforms {
     Optional<String> sdkVendor = targetSdk.getTargetTripleVendor();
     Optional<String> sdkPlatform = targetSdk.getTargetTriplePlatformName();
     if (sdkVendor.isPresent() && sdkPlatform.isPresent()) {
-      return AppleCompilerTargetTriple.ofUnversionedABI(
-          targetArchitecture, sdkVendor.get(), sdkPlatform.get(), targetSdk.getTargetTripleABI());
+      return AppleCompilerTargetTriple.of(
+          targetArchitecture,
+          sdkVendor.get(),
+          sdkPlatform.get(),
+          Optional.empty(),
+          targetSdk.getTargetTripleEnvironment());
     }
 
-    String fallbackVendor = "apple";
-    String fallbackPlatform = targetSdk.getApplePlatform().getPlatformName();
-    Optional<String> fallbackABI = Optional.empty();
-    return AppleCompilerTargetTriple.ofUnversionedABI(
-        targetArchitecture, fallbackVendor, fallbackPlatform, fallbackABI);
+    return AppleCompilerTargetTriple.of(
+        targetArchitecture,
+        "apple",
+        targetSdk.getApplePlatform().getPlatformName(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   private static ImmutableList<String> getLdFlags(

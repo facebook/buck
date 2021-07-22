@@ -25,9 +25,9 @@ import java.util.Optional;
  * Expresses the compiler triple for Apple platforms when using Clang. For more details, see the
  * LLVM documentation at https://clang.llvm.org/docs/CrossCompilation.html#target-triple
  *
- * <p>The triple has the general format <arch><sub>-<vendor>-<sys>-<abi>, where: arch = x86_64,
- * i386, arm, etc. sub = v5, v6m, v7a, v7m, etc. vendor = apple sys = macosx, ios, watchos, etc. abi
- * = macabi (catalyst), etc. [optional]
+ * <p>The triple has the general format <arch><sub>-<vendor>-<sys>-<environment>, where: arch =
+ * x86_64, i386, arm, etc. sub = v5, v6m, v7a, v7m, etc. vendor = apple sys = macosx, ios, watchos,
+ * etc. environment = macabi (catalyst), simulator, etc. [optional]
  *
  * <p>Note that the "sys" component can optionally have a target SDK version.
  */
@@ -43,43 +43,36 @@ public abstract class AppleCompilerTargetTriple implements AddsToRuleKey {
   public abstract String getPlatformName();
 
   @AddToRuleKey
-  public abstract Optional<String> getABI();
+  public abstract Optional<String> getTargetSdkVersion();
 
   @AddToRuleKey
-  public abstract Optional<String> getTargetSdkVersion();
+  public abstract Optional<String> getEnvironment();
 
   public String getVersionedTriple() {
     String sdkVersion = getTargetSdkVersion().orElse("");
-    String abiSuffix = getABI().map(abi -> "-" + abi).orElse("");
-    return getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + sdkVersion + abiSuffix;
+    String environmentSuffix = getEnvironment().map(env -> "-" + env).orElse("");
+    return getArchitecture()
+        + "-"
+        + getVendor()
+        + "-"
+        + getPlatformName()
+        + sdkVersion
+        + environmentSuffix;
   }
 
   public String getUnversionedTriple() {
-    String abiSuffix = getABI().map(abi -> "-" + abi).orElse("");
-    return getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + abiSuffix;
+    String environmentSuffix = getEnvironment().map(env -> "-" + env).orElse("");
+    return getArchitecture() + "-" + getVendor() + "-" + getPlatformName() + environmentSuffix;
   }
 
   public static AppleCompilerTargetTriple of(
-      String architecture, String vendor, String platformName, String targetSdkVersion) {
-    Optional<String> abi = Optional.empty();
-    return ImmutableAppleCompilerTargetTriple.ofImpl(
-        architecture, vendor, platformName, abi, Optional.of(targetSdkVersion));
-  }
-
-  public static AppleCompilerTargetTriple ofVersionedABI(
       String architecture,
       String vendor,
       String platformName,
-      Optional<String> abi,
-      String targetSdkVersion) {
+      Optional<String> targetSdkVersion,
+      Optional<String> environment) {
     return ImmutableAppleCompilerTargetTriple.ofImpl(
-        architecture, vendor, platformName, abi, Optional.of(targetSdkVersion));
-  }
-
-  public static AppleCompilerTargetTriple ofUnversionedABI(
-      String architecture, String vendor, String platformName, Optional<String> abi) {
-    return ImmutableAppleCompilerTargetTriple.ofImpl(
-        architecture, vendor, platformName, abi, Optional.empty());
+        architecture, vendor, platformName, targetSdkVersion, environment);
   }
 
   /** Creates a copy of the triple with a different SDK version. */
@@ -88,6 +81,7 @@ public abstract class AppleCompilerTargetTriple implements AddsToRuleKey {
     if (maybeTargetSDkVersion.equals(getTargetSdkVersion())) {
       return this;
     }
-    return of(getArchitecture(), getVendor(), getPlatformName(), targetSdkVersion);
+    return of(
+        getArchitecture(), getVendor(), getPlatformName(), maybeTargetSDkVersion, getEnvironment());
   }
 }

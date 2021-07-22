@@ -42,7 +42,7 @@ public abstract class AppleSdk {
 
   public abstract Optional<String> getTargetTriplePlatformName();
 
-  public abstract Optional<String> getTargetTripleABI();
+  public abstract Optional<String> getTargetTripleEnvironment();
 
   /**
    * This is the prefix path for iOS for Catalyst, it's the IOS_UNZIPPERED_TWIN_PREFIX_PATH field

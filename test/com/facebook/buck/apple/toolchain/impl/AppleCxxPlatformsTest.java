@@ -1309,7 +1309,9 @@ public class AppleCxxPlatformsTest {
     assertThat(swiftc, instanceOf(VersionedTool.class));
     assertThat(
         swiftPlatform.getSwiftTarget(),
-        equalTo(AppleCompilerTargetTriple.of("i386", "apple", "ios", "7.0")));
+        equalTo(
+            AppleCompilerTargetTriple.of(
+                "i386", "apple", "ios", Optional.of("7.0"), Optional.empty())));
   }
 
   @Test

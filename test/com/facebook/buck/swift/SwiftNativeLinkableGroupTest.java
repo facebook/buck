@@ -130,7 +130,8 @@ public class SwiftNativeLinkableGroupTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            AppleCompilerTargetTriple.of("x86_64", "apple", "ios", "9.3"));
+            AppleCompilerTargetTriple.of(
+                "x86_64", "apple", "ios", Optional.of("9.3"), Optional.empty()));
 
     ImmutableList.Builder<Arg> staticArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(
@@ -171,7 +172,8 @@ public class SwiftNativeLinkableGroupTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            AppleCompilerTargetTriple.of("x86_64", "apple", "ios", "9.3"));
+            AppleCompilerTargetTriple.of(
+                "x86_64", "apple", "ios", Optional.of("9.3"), Optional.empty()));
 
     ImmutableList.Builder<Arg> sharedArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(
