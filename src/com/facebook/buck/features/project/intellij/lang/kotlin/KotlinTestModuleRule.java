@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.features.project.intellij.BaseIjModuleRule;
 import com.facebook.buck.features.project.intellij.IjKotlinHelper;
+import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
@@ -44,9 +45,11 @@ public class KotlinTestModuleRule extends BaseIjModuleRule<KotlinTestDescription
 
   @Override
   public void apply(TargetNode<KotlinTestDescriptionArg> target, ModuleBuildContext context) {
-    addDepsAndTestSources(target, false /* wantsPackagePrefix */, context);
+    addDepsAndTestSources(target, true /* wantsPackagePrefix */, context);
 
     IjKotlinHelper.addKotlinJavaRuntimeLibraryDependencyIfNecessary(target, context);
+    // for java files under kotlin rule, with custom java language level.
+    context.setJavaLanguageLevel(JavaLanguageLevelHelper.getLanguageLevel(projectConfig, target));
   }
 
   @Override
