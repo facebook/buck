@@ -127,6 +127,7 @@ public class AppleToolchainDescription
             .setToolchains(ImmutableList.of())
             .setApplePlatform(applePlatform)
             .setArchitectures(applePlatform.getArchitectures())
+            .setTargetTripleEnvironment(args.getSdkEnvironment())
             .build();
 
     AppleCompilerTargetTriple swiftTarget =
@@ -241,6 +242,9 @@ public class AppleToolchainDescription
 
     /** Path to Apple SDK. */
     SourcePath getSdkPath();
+
+    /** Environment for target triple, eg simulator, macabi */
+    Optional<String> getSdkEnvironment();
 
     /** Version of SDK. */
     String getVersion();
