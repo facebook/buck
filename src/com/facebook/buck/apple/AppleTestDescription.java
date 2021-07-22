@@ -216,6 +216,7 @@ public class AppleTestDescription
       AppleTestDescriptionArg.Builder argBuilder = AppleTestDescriptionArg.builder();
       argBuilder.from(args);
       argBuilder.addSwiftCompilerFlags(
+          StringWithMacros.ofConstantString("-Xfrontend"),
           StringWithMacros.ofConstantString("-serialize-debugging-options"));
 
       Optional<BuildRule> buildRule =

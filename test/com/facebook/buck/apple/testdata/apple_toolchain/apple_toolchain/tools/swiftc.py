@@ -7,7 +7,7 @@ from tools import impl
 
 parser = impl.argparser()
 
-parser.add_argument("-c", dest="compile", action="store_true")
+parser.add_argument("-emit-object", dest="compile", action="store_true")
 parser.add_argument("-o", dest="output", action=impl.StripQuotesAction)
 parser.add_argument("-target")
 parser.add_argument("-module-name")
