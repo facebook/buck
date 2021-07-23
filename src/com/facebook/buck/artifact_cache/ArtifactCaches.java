@@ -722,6 +722,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                         .setScheduleType(buckConfig.getScheduleType())
                         .setRepository(buckConfig.getRepository())
                         .build())
+                .setUseCaseId("buck-default")
                 .build();
 
         casClient =
