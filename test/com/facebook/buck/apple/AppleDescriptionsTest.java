@@ -189,6 +189,7 @@ public class AppleDescriptionsTest {
     CxxLibraryDescriptionArg arg = cxxLibraryDescriptionArgBuilder.build();
 
     assertTrue(arg.getCompilerFlags().contains(StringWithMacros.ofConstantString("-fmodules")));
+    assertTrue(arg.getCompilerFlags().contains(StringWithMacros.ofConstantString("-fcxx-modules")));
     assertTrue(
         arg.getCompilerFlags().contains(StringWithMacros.ofConstantString("-fmodule-name=hello")));
   }

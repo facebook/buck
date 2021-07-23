@@ -373,6 +373,10 @@ public class AppleDescriptions {
     addSDKVersionFlagForTargetIfNecessary(ruleResolver, appleCxxPlatform, arg, addCompilerFlags);
 
     if (arg.getUsesModules()) {
+      // Apple inverts the default clang logic to enable fcxx-modules by default, so we explicitly
+      // pass this flag too. This enables fmodules when compiling cxx files, it is not related to
+      // c++ modules.
+      addCompilerFlags.accept(StringWithMacros.ofConstantString("-fcxx-modules"));
       addCompilerFlags.accept(StringWithMacros.ofConstantString("-fmodules"));
     }
   }
