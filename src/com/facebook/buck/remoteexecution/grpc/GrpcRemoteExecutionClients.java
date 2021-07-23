@@ -204,12 +204,16 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
 
   @Override
   public RemoteExecutionServiceClient getRemoteExecutionService() {
-    long len = this.executionEngineChannels.length;
-    long ctr = this.executionEngineChannelCtr.getAndIncrement() % len;
+    long len = executionEngineChannels.length;
+    long ctr = executionEngineChannelCtr.getAndIncrement() % len;
 
-    ExecutionStub executionStub = ExecutionGrpc.newStub(this.executionEngineChannels[(int) ctr]);
+    ExecutionStub executionStub = ExecutionGrpc.newStub(executionEngineChannels[(int) ctr]);
     return new GrpcRemoteExecutionServiceClient(
-        executionStub, this.byteStreamStub, this.instanceName, getProtocol(), this.casDeadline);
+        executionStub,
+        GrpcHeaderHandler.wrapStubToSendMetadata(byteStreamStub, metadataProvider.get()),
+        instanceName,
+        getProtocol(),
+        casDeadline);
   }
 
   @Override
