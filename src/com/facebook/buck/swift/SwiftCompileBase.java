@@ -122,6 +122,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   private final Flavor flavor;
 
   @AddToRuleKey private final boolean enableObjcInterop;
+  @AddToRuleKey private final boolean enableCxxInterop;
   @AddToRuleKey protected final Optional<SourcePath> bridgingHeader;
 
   @AddToRuleKey private final Preprocessor cPreprocessor;
@@ -191,6 +192,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       Optional<String> version,
       ImmutableList<Arg> compilerFlags,
       Optional<Boolean> enableObjcInterop,
+      boolean enableCxxInterop,
       Optional<SourcePath> bridgingHeader,
       Preprocessor preprocessor,
       PreprocessorFlags cxxDeps,
@@ -241,6 +243,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.version = version;
     this.compilerFlags = compilerFlags;
     this.enableObjcInterop = enableObjcInterop.orElse(true);
+    this.enableCxxInterop = enableCxxInterop;
     this.bridgingHeader = bridgingHeader;
     this.cPreprocessor = preprocessor;
     this.cxxDeps = cxxDeps;
@@ -420,6 +423,10 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
     if (enableObjcInterop) {
       builder.addFrontendOnlyFlag("-enable-objc-interop");
+    }
+
+    if (enableCxxInterop) {
+      builder.addFrontendFlag("-enable-cxx-interop");
     }
 
     if (!hasMainEntry) {

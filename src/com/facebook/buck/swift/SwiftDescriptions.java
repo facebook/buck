@@ -75,6 +75,7 @@ public class SwiftDescriptions {
       output.setCompilerFlags(((SwiftCommonArg) args).getSwiftCompilerFlags());
       output.setVersion(swiftVersion);
       output.setUseSwiftDriver(((SwiftCommonArg) args).getUseSwiftDriver());
+      output.setEnableCxxInterop(((SwiftCommonArg) args).getEnableCxxInterop());
     } else {
       output.setCompilerFlags(args.getCompilerFlags());
     }

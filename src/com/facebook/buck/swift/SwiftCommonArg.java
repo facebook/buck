@@ -32,4 +32,9 @@ public interface SwiftCommonArg extends BuildRuleArg {
   default boolean getUseSwiftDriver() {
     return false;
   }
+
+  @Value.Default
+  default boolean getEnableCxxInterop() {
+    return false;
+  }
 }

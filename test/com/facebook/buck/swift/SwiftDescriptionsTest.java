@@ -74,5 +74,11 @@ public class SwiftDescriptionsTest {
     output = outputBuilder.build();
     assertThat(output.getModuleName().get(), equalTo("baz"));
     assertThat(output.getVersion().get(), equalTo("4"));
+
+    args.setEnableCxxInterop(true);
+    SwiftDescriptions.populateSwiftLibraryDescriptionArg(
+        swiftBuckConfig, pathResolver, outputBuilder, args.build(), buildTarget);
+    output = outputBuilder.build();
+    assertThat("Contains -enable-cxx-interop flag", output.toString().contains("enableCxxInterop"));
   }
 }

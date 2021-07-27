@@ -338,6 +338,7 @@ public class SwiftLibraryDescription
               cellRoots,
               args),
           args.getEnableObjcInterop(),
+          args.getEnableCxxInterop(),
           args.getBridgingHeader(),
           preprocessor,
           cxxDeps,
@@ -520,6 +521,7 @@ public class SwiftLibraryDescription
             cellRoots,
             args),
         args.getEnableObjcInterop(),
+        args.getEnableCxxInterop(),
         args.getBridgingHeader(),
         preprocessor,
         preprocessFlags,
@@ -613,6 +615,7 @@ public class SwiftLibraryDescription
             cellRoots,
             args),
         args.getEnableObjcInterop(),
+        args.getEnableCxxInterop(),
         args.getBridgingHeader(),
         preprocessor,
         preprocessFlags,
@@ -684,6 +687,11 @@ public class SwiftLibraryDescription
 
     @Value.Default
     default boolean getUseSwiftDriver() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean getEnableCxxInterop() {
       return false;
     }
   }
