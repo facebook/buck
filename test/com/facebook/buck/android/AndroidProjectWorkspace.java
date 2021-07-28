@@ -47,6 +47,8 @@ final class AndroidProjectWorkspace {
         workspace, "BUCK_TEST_ANDROID_BUILD_TOOLS_VERSION", "build_tools_version");
     addConfigOptionFromEnvironment(
         workspace, "BUCK_TEST_ANDROID_COMPILE_SDK_VERSION", "compile_sdk_version");
+    workspace.addBuckConfigLocalOption(
+        "build", "are_external_actions_enabled", Boolean.FALSE.toString());
 
     return workspace;
   }
