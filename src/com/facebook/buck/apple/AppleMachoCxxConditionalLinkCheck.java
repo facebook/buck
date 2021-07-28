@@ -322,6 +322,14 @@ public class AppleMachoCxxConditionalLinkCheck extends AbstractExecutionStep {
       return StepExecutionResults.SUCCESS;
     }
 
+    if (filesystem.exists(linkedExecutablePath)
+        && filesystem.getFileSize(filesystem.resolve(linkedExecutablePath).getPath())
+            > Integer.MAX_VALUE) {
+      // If the file is >= 2GiB, it can't be memory mapped and parsed so fallback to standard
+      // linking by not writing the signal file.
+      return StepExecutionResults.SUCCESS;
+    }
+
     AppleCxxConditionalLinkInfo relinkInfo =
         ObjectMappers.READER.readValue(
             ObjectMappers.createParser(infoPath.getPath()),
