@@ -40,7 +40,7 @@ import java.util.Arrays;
 public class ObjectFileScrubbers {
 
   private static final int GLOBAL_HEADER_SIZE = 8;
-  private static final ImmutableSet<String> SPECIAL_ENTRIES = ImmutableSet.of("/", "//");
+  private static final ImmutableSet<String> SPECIAL_ENTRIES = ImmutableSet.of("/", "//", "/SYM64/");
   public static final byte[] GLOBAL_HEADER = "!<arch>\n".getBytes(StandardCharsets.US_ASCII);
   public static final byte[] GLOBAL_THIN_HEADER = "!<thin>\n".getBytes(StandardCharsets.US_ASCII);
   public static final byte[] END_OF_FILE_HEADER_MARKER = {0x60, 0x0A};
