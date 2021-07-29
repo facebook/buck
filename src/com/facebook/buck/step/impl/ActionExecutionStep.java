@@ -67,7 +67,7 @@ public class ActionExecutionStep implements Step {
      * already exist. We do this, rather than deleting the whole directory, because if a rule
      * has multiple outputs, we don't want to delete outputs whose actions may not be run
      */
-    // TODO(pjameson): If an output is removed from an action, find a way to delete these orphaned
+    // TODO(nmj): If an output is removed from an action, find a way to delete these orphaned
     //                 artifacts
     executionContext.getArtifactFilesystem().createPackagePaths(action.getOutputs());
     executionContext.getArtifactFilesystem().removeBuildArtifacts(action.getOutputs());

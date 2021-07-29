@@ -186,7 +186,7 @@ public class RunActionTest {
 
   @Test
   public void returnsOutputOnFailure() throws CommandLineArgException, IOException {
-    // TODO(pjameson): The actual error message with the exit code needs to be propagated somewhere
+    // TODO(nmj): The actual error message with the exit code needs to be propagated somewhere
     //                 It's currently swallowed up by the legacy framework
     ImmutableList<String> expectedStderr =
         ImmutableList.of(

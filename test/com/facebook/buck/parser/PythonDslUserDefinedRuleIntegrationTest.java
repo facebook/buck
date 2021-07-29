@@ -311,7 +311,7 @@ public class PythonDslUserDefinedRuleIntegrationTest {
   public void printsErrorFromSkylarkIfInvalid() throws IOException {
     workspace.setUp();
 
-    // TODO(pjameson): We do not currently pass the location from the parser -> UDR implementation
+    // TODO(nmj): We do not currently pass the location from the parser -> UDR implementation
     //                 This makes the error a little less useful right now. Once that attribute is
     //                 added, we can make skylark error message more helpful.
     String stderr =

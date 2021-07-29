@@ -81,7 +81,7 @@ class BuckStarlarkCallable {
       String namedParam = namedParamsIndex >= 0 ? namedParams.get(namedParamsIndex--) : null;
       String defaultValue =
           defaultValuesIndex >= 0 ? defaultSkylarkValues.get(defaultValuesIndex--) : null;
-      // TODO(pjameson): T60486516, ideally we can infer this by seeing an Optional/SkylarkOptional
+      // TODO(nmj): T60486516, ideally we can infer this by seeing an Optional/SkylarkOptional
       skylarkParams[i] = BuckStarlarkParam.fromParam(parameters[i], namedParam, defaultValue);
     }
 

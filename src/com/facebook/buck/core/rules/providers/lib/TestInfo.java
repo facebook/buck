@@ -44,7 +44,7 @@ public abstract class TestInfo extends BuiltInProviderInfo<TestInfo> {
   public static final BuiltInProvider<TestInfo> PROVIDER =
       BuiltInProvider.of(ImmutableTestInfo.class);
 
-  // TODO(pjameson): Even more fields like needed_cvoerage
+  // TODO(nmj): Even more fields like needed_cvoerage
 
   /** @return the type of test. This should generally be the rule name */
   public abstract String testName();

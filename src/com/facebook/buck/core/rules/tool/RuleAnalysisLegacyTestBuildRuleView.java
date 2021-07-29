@@ -202,8 +202,8 @@ public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBinar
             .setTarget(getBuildTarget())
             //    .setNeededCoverage(testInfo.neededCoverage())
             .setType(testInfo.type());
-    // TODO(pjameson): Add needed coverage
-    // TODO(pjameson): Add required paths when Runtime files API is implemented/stabilized
+    // TODO(nmj): Add needed coverage
+    // TODO(nmj): Add required paths when Runtime files API is implemented/stabilized
     return builder.build();
   }
 }

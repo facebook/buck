@@ -76,7 +76,7 @@ class AggregateCommandLineArgs extends StarlarkValue implements CommandLineArgs 
       return builder.build();
     } catch (IllegalArgumentException e) {
       // Thrown if two arguments have the same keys
-      // TODO(pjameson): Decide if we want to have a way to override instead
+      // TODO(nmj): Decide if we want to have a way to override instead
       throw new HumanReadableException(
           e, "Error getting commandline arguments: %s", e.getMessage());
     }

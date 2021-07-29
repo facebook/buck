@@ -59,16 +59,16 @@ public class ConsoleEventHandlerTest {
         ConsoleEvent.severe("ERROR: No location given"),
         ConsoleEvent.severe(
             "ERROR: foo/bar:15:1: Traceback (most recent call last):\n"
-                + "\tFile \"/Users/pjameson/local/buck/BUCK\", line 2\n"
+                + "\tFile \"/Users/nmj/local/buck/BUCK\", line 2\n"
                 + "\t\tfoo()\n"
-                + "\tFile \"/Users/pjameson/local/buck/defs.bzl\", line 3, in foo\n"
+                + "\tFile \"/Users/nmj/local/buck/defs.bzl\", line 3, in foo\n"
                 + "\t\tcxx_binary\n"
                 + "name 'unknown_function' is not defined"),
         ConsoleEvent.severe(
             "ERROR: foo/bar:16:1: Traceback (most recent call last):\n"
-                + "\tFile \"/Users/pjameson/local/buck/BUCK\", line 2\n"
+                + "\tFile \"/Users/nmj/local/buck/BUCK\", line 2\n"
                 + "\t\tfoo()\n"
-                + "\tFile \"/Users/pjameson/local/buck/defs.bzl\", line 3, in foo\n"
+                + "\tFile \"/Users/nmj/local/buck/defs.bzl\", line 3, in foo\n"
                 + "\t\tcxx_binary\n"
                 + "name 'cxx_binary' is not defined. Did you mean native.cxx_binary?"));
 
@@ -128,18 +128,18 @@ public class ConsoleEventHandlerTest {
             EventKind.ERROR,
             Location.fromFileLineColumn("foo/bar", 15, 1),
             "Traceback (most recent call last):\n"
-                + "\tFile \"/Users/pjameson/local/buck/BUCK\", line 2\n"
+                + "\tFile \"/Users/nmj/local/buck/BUCK\", line 2\n"
                 + "\t\tfoo()\n"
-                + "\tFile \"/Users/pjameson/local/buck/defs.bzl\", line 3, in foo\n"
+                + "\tFile \"/Users/nmj/local/buck/defs.bzl\", line 3, in foo\n"
                 + "\t\tcxx_binary\n"
                 + "name 'unknown_function' is not defined"),
         Event.of(
             EventKind.ERROR,
             Location.fromFileLineColumn("foo/bar", 16, 1),
             "Traceback (most recent call last):\n"
-                + "\tFile \"/Users/pjameson/local/buck/BUCK\", line 2\n"
+                + "\tFile \"/Users/nmj/local/buck/BUCK\", line 2\n"
                 + "\t\tfoo()\n"
-                + "\tFile \"/Users/pjameson/local/buck/defs.bzl\", line 3, in foo\n"
+                + "\tFile \"/Users/nmj/local/buck/defs.bzl\", line 3, in foo\n"
                 + "\t\tcxx_binary\n"
                 + "name 'cxx_binary' is not defined"));
 

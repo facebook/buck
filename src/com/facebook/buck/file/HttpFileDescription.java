@@ -73,7 +73,7 @@ public class HttpFileDescription
             .getToolchainProvider()
             .getByName(
                 Downloader.DEFAULT_NAME, buildTarget.getTargetConfiguration(), Downloader.class);
-    // TODO(pjameson): Pull `out` from the providers once we've defaulted to compatible/RAG mode
+    // TODO(nmj): Pull `out` from the providers once we've defaulted to compatible/RAG mode
     String output = outputName(buildTarget, args);
     if (executable) {
       return new HttpFileBinary(

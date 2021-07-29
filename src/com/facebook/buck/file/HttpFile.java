@@ -77,7 +77,7 @@ public class HttpFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   static Path outputPath(ProjectFilesystem filesystem, BuildTarget target, String outFilename) {
-    // TODO(pjameson): Convert this to use BuildPaths instead of BuildTargetPaths
+    // TODO(nmj): Convert this to use BuildPaths instead of BuildTargetPaths
     return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s")
         .resolve(outFilename);
   }

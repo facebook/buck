@@ -48,7 +48,7 @@ class OutputAttributeValidator {
     if (!(coercedValue instanceof String)) {
       throw new IllegalArgumentException(String.format("Value %s must be a String", coercedValue));
     }
-    // TODO(pjameson): pass the location of the UDR invocation all the way down to the coercer
+    // TODO(nmj): pass the location of the UDR invocation all the way down to the coercer
     return registry.declareArtifact((String) coercedValue, Location.BUILTIN);
   }
 }

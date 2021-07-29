@@ -75,7 +75,7 @@ public class HttpArchiveDescription
     HttpCommonDescriptionArg.HttpCommonDescriptionArgHelpers.validateUris(
         args.getUrls(), buildTarget);
 
-    // TODO(pjameson): Pull `out` from the providers once we've defaulted to compatible/RAG mode
+    // TODO(nmj): Pull `out` from the providers once we've defaulted to compatible/RAG mode
     String out = outputName(buildTarget, args);
     ArchiveFormat format =
         args.getType()

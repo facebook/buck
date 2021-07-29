@@ -9,7 +9,7 @@ def _output_list_rule_impl(ctx):
     if not first.endswith(expected_first):
         fail("Expected short path endswith {}, got {}".format(expected_first, first))
 
-    # TODO(pjameson): Make sure this works properly later when multiple actions are
+    # TODO(nmj): Make sure this works properly later when multiple actions are
     #                 working
     if ctx.attr.contents:
         for output in ctx.attr.outputs:
