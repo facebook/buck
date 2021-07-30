@@ -40,27 +40,21 @@ import java.util.stream.Collectors;
 public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
 
   private final Optional<ImmutableMap<Path, Path>> cellRootMap;
-  private final Optional<ImmutableSet<Path>> exemptPaths;
   private final Optional<AbsPath> exemptTargetsListPath;
   private final Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap;
 
   public OsoSymbolsContentsScrubber(ImmutableMap<Path, Path> cellRootMap) {
-    this(Optional.of(cellRootMap), Optional.empty(), Optional.empty(), Optional.empty());
-  }
-
-  public OsoSymbolsContentsScrubber(ImmutableSet<Path> exemptPaths) {
-    this(Optional.empty(), Optional.of(exemptPaths), Optional.empty(), Optional.empty());
+    this(Optional.of(cellRootMap), Optional.empty(), Optional.empty());
   }
 
   public OsoSymbolsContentsScrubber(
       Optional<AbsPath> focusedTargetsPath,
       Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap) {
-    this(Optional.empty(), Optional.empty(), focusedTargetsPath, targetToOutputPathMap);
+    this(Optional.empty(), focusedTargetsPath, targetToOutputPathMap);
   }
 
   private OsoSymbolsContentsScrubber(
       Optional<ImmutableMap<Path, Path>> cellRootMap,
-      Optional<ImmutableSet<Path>> exemptPaths,
       Optional<AbsPath> exemptTargetsListPath,
       Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap) {
     if (exemptTargetsListPath.isPresent()) {
@@ -68,7 +62,6 @@ public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
     }
 
     this.cellRootMap = cellRootMap;
-    this.exemptPaths = exemptPaths;
     this.exemptTargetsListPath = exemptTargetsListPath;
     this.targetToOutputPathMap = targetToOutputPathMap;
   }
@@ -101,9 +94,7 @@ public class OsoSymbolsContentsScrubber implements FileContentsScrubber {
   }
 
   private Optional<ImmutableSet<Path>> getExemptPaths() throws IOException {
-    if (this.exemptPaths.isPresent()) {
-      return this.exemptPaths;
-    } else if (this.exemptTargetsListPath.isPresent()) {
+    if (this.exemptTargetsListPath.isPresent()) {
       List<String> exemptTargets =
           ObjectMappers.READER.readValue(
               ObjectMappers.createParser(exemptTargetsListPath.get().getPath()),

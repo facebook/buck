@@ -40,7 +40,6 @@ import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.objectfile.LcUuidContentsScrubber;
 import com.facebook.buck.cxx.toolchain.objectfile.OsoSymbolsContentsScrubber;
-import com.facebook.buck.cxx.toolchain.objectfile.StripDebugSymbolTableScrubber;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -54,7 +53,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -112,7 +110,6 @@ public class DarwinLinker extends DelegatingTool
   @Override
   public ImmutableList<FileScrubber> getScrubbers(
       ImmutableMap<Path, Path> cellRootMap,
-      Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths,
       Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap,
       Optional<AbsPath> focusedTargetsPath) {
     if (shouldCreateHermeticLinkOutput) {
@@ -139,55 +136,9 @@ public class DarwinLinker extends DelegatingTool
       if (focusedTargetsPath.isPresent()) {
         return ImmutableList.of(
             new OsoSymbolsContentsScrubber(focusedTargetsPath, targetToOutputPathMap));
-      } else if (focusedBuildOutputPaths.isPresent()) {
-        return getFocusedDebugSymbolScrubbers(focusedBuildOutputPaths.get());
       } else {
         return ImmutableList.of();
       }
-    }
-  }
-
-  /**
-   * Acquires the scrubber to enable focused debug symbols - loading debug symbols only for focused
-   * targets. To do that, we'll scrub all unfocused targets to have fake paths to their .o files in
-   * the linked binaries' symbol tables. We'll preserve the correct paths to .o files for only the
-   * focused targets.
-   *
-   * <p>For example:
-   *
-   * <p>For a binary that original includes: /Users/tmp/buck-out/some/object/file1.o
-   * /Users/tmp/buck-out/some/object/file2.o /Users/tmp/buck-out/some/object/libTest.a(file3.o)
-   * /Users/tmp/buck-out/some/object/libTest.a(file4.o)
-   * /Users/tmp/buck-out/some/object/libHouse.a(file5.o)
-   *
-   * <p>And when given these focused targets absolute paths: /Users/tmp/buck-out/some/object/file1.o
-   * /Users/tmp/buck-out/some/object/libTest.a
-   *
-   * <p>Then scrub the linked binary with OsoSymbolsContentsScrubber. Eventually the linked binary
-   * will have: /Users/tmp/buck-out/some/object/file1.o -> SAME
-   * /Users/tmp/buck-out/some/object/file2.o -> fake/path/file.o
-   * /Users/tmp/buck-out/some/object/libTest.a(file3.o) -> SAME
-   * /Users/tmp/buck-out/some/object/libTest.a(file4.o) -> SAME
-   * /Users/tmp/buck-out/some/object/libHouse.a(file5.o) -> fake/path/file.o
-   *
-   * <p>For linked binaries with no focused targets, we call "strip -S" on them to strip their debug
-   * symbol tables.
-   *
-   * @param focusedTargetsAbsolutePaths the relative paths to the focused targets' build outputs.
-   * @return the file scrubber that'll scrub the binary to only contain debug symbols for focused
-   *     targets.
-   */
-  private ImmutableList<FileScrubber> getFocusedDebugSymbolScrubbers(
-      ImmutableSet<AbsPath> focusedTargetsAbsolutePaths) {
-    if (!focusedTargetsAbsolutePaths.isEmpty()) {
-      ImmutableSet<Path> focusedTargetsPaths =
-          focusedTargetsAbsolutePaths.stream()
-              .map(AbsPath::getPath)
-              .collect(ImmutableSet.toImmutableSet());
-
-      return ImmutableList.of(new OsoSymbolsContentsScrubber(focusedTargetsPaths));
-    } else {
-      return ImmutableList.of(new StripDebugSymbolTableScrubber());
     }
   }
 

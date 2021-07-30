@@ -278,15 +278,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * The path to the json file containing the focused targets, which are specified by the user.
-   *
-   * @return optional path to the focused targets json file.
-   */
-  public Optional<Path> getFocusedTargetsPath() {
-    return getOptionalPath(APPLE_SECTION, "focused_targets_path");
-  }
-
-  /**
    * Buck config that indicates whether we should cache hashes from conditional relinking.
    *
    * @return optional bool for enabling hash caching

@@ -147,7 +147,6 @@ public class RustCompileTest {
       @Override
       public ImmutableList<FileScrubber> getScrubbers(
           ImmutableMap<Path, Path> cellRootMap,
-          Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths,
           Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap,
           Optional<AbsPath> focusedTargetsPath) {
         return null;

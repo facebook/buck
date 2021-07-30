@@ -51,7 +51,6 @@ import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
@@ -77,7 +76,6 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
   @Override
   public ImmutableList<FileScrubber> getScrubbers(
       ImmutableMap<Path, Path> cellRootMap,
-      Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths,
       Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap,
       Optional<AbsPath> focusedTargetsPath) {
     return ImmutableList.of();

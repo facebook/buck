@@ -23,7 +23,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 /**
@@ -31,14 +30,6 @@ import java.util.Optional;
  * we limit loading debug symbols to only the focused targets.
  */
 public interface CxxDebugSymbolLinkStrategy extends AddsToRuleKey {
-
-  /**
-   * Acquires the build output paths for Focused targets. To be used for scrubbing linker outputs to
-   * limit the debug symbols loaded.
-   *
-   * @return A set to focused build output paths.
-   */
-  Optional<ImmutableSet<AbsPath>> getFocusedBuildOutputPaths();
 
   /**
    * Get the build target's deps that are included in the focused debug targets - targets that

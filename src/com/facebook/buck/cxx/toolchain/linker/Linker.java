@@ -30,7 +30,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -46,8 +45,6 @@ public interface Linker extends Tool {
    *
    * @param cellRootMap Replacement map for cell roots found in paths, to some suitably normalized
    *     form (such as a relative path from root cell).
-   * @param focusedBuildOutputPaths Paths to the build outputs of focused targets. Focused targets
-   *     are a set of targets specified by the user, intended for local developments.
    * @param targetToOutputPathMap a map from targets to their output paths, used in conjunction with
    *     focusedTargetsPath to acquire output paths to focused targets at execution time.
    * @param focusedTargetsPath path to file containing focused targets belonging to the binary to be
@@ -56,14 +53,13 @@ public interface Linker extends Tool {
    */
   ImmutableList<FileScrubber> getScrubbers(
       ImmutableMap<Path, Path> cellRootMap,
-      Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths,
       Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap,
       Optional<AbsPath> focusedTargetsPath);
 
   /**
    * Provides a way to pass normalization arguments to the linker. If the linker does not support
-   * such arguments, then {@link #getScrubbers(ImmutableMap, Optional, Optional, Optional)} can be
-   * used to perform post-processing instead.
+   * such arguments, then {@link #getScrubbers(ImmutableMap, Optional, Optional)} can be used to
+   * perform post-processing instead.
    *
    * @param cellRootMap Replacement map for cell roots found in paths.
    */

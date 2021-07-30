@@ -35,7 +35,6 @@ import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -81,7 +80,6 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
   @Override
   public ImmutableList<FileScrubber> getScrubbers(
       ImmutableMap<Path, Path> cellRootMap,
-      Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths,
       Optional<ImmutableMultimap<String, AbsPath>> targetToOutputPathMap,
       Optional<AbsPath> focusedTargetsPath) {
     return ImmutableList.of();

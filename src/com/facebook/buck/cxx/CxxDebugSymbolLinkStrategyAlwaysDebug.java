@@ -23,7 +23,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 /**
@@ -35,11 +34,6 @@ public class CxxDebugSymbolLinkStrategyAlwaysDebug implements CxxDebugSymbolLink
       new CxxDebugSymbolLinkStrategyAlwaysDebug();
 
   @AddToRuleKey private final String debugStrategyType = "cxx-always-debug-strategy";
-
-  @Override
-  public Optional<ImmutableSet<AbsPath>> getFocusedBuildOutputPaths() {
-    return Optional.empty();
-  }
 
   @Override
   public Optional<SourcePath> getFilteredFocusedTargets(

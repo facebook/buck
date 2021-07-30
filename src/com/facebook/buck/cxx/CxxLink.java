@@ -390,9 +390,6 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                 commandPrefix,
                 focusedTargetsPath);
       }
-
-      Optional<ImmutableSet<AbsPath>> focusedBuildOutputPaths =
-          debugStrategy.getFocusedBuildOutputPaths();
       Supplier<Boolean> skipScrubbingCheck =
           () -> {
             // Skip scrubbing if the executable was not modified, as there's no need to re-scrub
@@ -409,16 +406,11 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
 
         fileScrubbers =
             linker.getScrubbers(
-                cellRootMap,
-                Optional.empty(),
-                Optional.of(targetToOutputPathMap),
-                focusedTargetsPath);
+                cellRootMap, Optional.of(targetToOutputPathMap), focusedTargetsPath);
         focusedDebuggingLinkerArgs =
             debugStrategy.getFocusedDebuggingLinkerArgs(focusedTargetsPath.get());
       } else {
-        fileScrubbers =
-            linker.getScrubbers(
-                cellRootMap, focusedBuildOutputPaths, Optional.empty(), Optional.empty());
+        fileScrubbers = linker.getScrubbers(cellRootMap, Optional.empty(), Optional.empty());
         focusedDebuggingLinkerArgs = ImmutableList.of();
       }
 
