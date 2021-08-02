@@ -917,10 +917,6 @@ public class NdkCxxPlatforms {
     // NDK builds enable stack protector and debug symbols by default.
     flags.add("-fstack-protector", "-g3");
 
-    if (toolchainPaths.isUnifiedHeaders()) {
-      flags.add("-D__ANDROID_API__=" + targetConfiguration.getTargetAppPlatformLevel());
-    }
-
     return flags.build();
   }
 
