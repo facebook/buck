@@ -160,7 +160,13 @@ public class NdkCxxPlatforms {
   }
   
   static int getNdkMinorVersion(String ndkVersion) {
-    return Integer.parseInt(NDK_MINOR_VERSION_PATTERN.matcher(ndkVersion).replaceAll("$1"));
+    Matcher minorMatch = NDK_MINOR_VERSION_PATTERN.matcher(ndkVersion);
+    
+    // ndkVersion does not always contain the minor version (e.g. r10e)
+    if(minorMatch.matches()){
+      return Integer.parseInt(minorMatch.replaceAll("$1"));
+    }
+    return 0
   }
 
   public static NdkCompilerType getDefaultCompilerTypeForNdk(String ndkVersion) {
