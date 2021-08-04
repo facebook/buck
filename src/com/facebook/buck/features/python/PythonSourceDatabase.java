@@ -87,7 +87,8 @@ public class PythonSourceDatabase extends ModernBuildRule<PythonSourceDatabase.I
                 .getPythonModulesForTyping(pythonPlatform, cxxPlatform, graphBuilder)
                 .ifPresent(modules -> builder.putComponent(packagable.getBuildTarget(), modules)),
         extension -> {},
-        linkable -> {});
+        linkable -> {},
+        cxxResourcesProvider -> {});
     return new PythonSourceDatabase(target, filesystem, graphBuilder, sources, builder.build());
   }
 

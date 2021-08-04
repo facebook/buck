@@ -515,7 +515,6 @@ public class CxxPythonExtensionDescription
                 pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
             .stream()
             .map(graphBuilder::getRule)
-            .filter(PythonPackagable.class::isInstance)
             .collect(ImmutableList.toImmutableList());
       }
 

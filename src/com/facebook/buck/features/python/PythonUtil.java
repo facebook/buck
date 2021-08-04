@@ -76,9 +76,11 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -348,7 +350,8 @@ public class PythonUtil {
       Iterable<?> roots,
       Consumer<PythonPackagable> packagableConsumer,
       Consumer<CxxPythonExtension> extensionConsumer,
-      Consumer<NativeLinkableGroup> nativeLinkableConsumer) {
+      Consumer<NativeLinkableGroup> nativeLinkableConsumer,
+      Consumer<CxxResourcesProvider> cxxResourcesProviderConsumer) {
 
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
@@ -368,6 +371,9 @@ public class PythonUtil {
             if (dep instanceof PythonPackagable) {
               cxxpydeps.add(dep);
             }
+            if (dep instanceof CxxResourcesProvider) {
+              cxxResourcesProviderConsumer.accept((CxxResourcesProvider) dep);
+            }
           }
           deps = cxxpydeps;
         } else if (node instanceof PythonPackagable) {
@@ -376,7 +382,11 @@ public class PythonUtil {
           deps = packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
         } else if (node instanceof NativeLinkableGroup) {
           nativeLinkableConsumer.accept((NativeLinkableGroup) node);
+          if (node instanceof CxxResourcesProvider) {
+            cxxResourcesProviderConsumer.accept((CxxResourcesProvider) node);
+          }
         }
+
         return deps;
       }
     }.start();
@@ -405,7 +415,7 @@ public class PythonUtil {
 
     Map<BuildTarget, CxxPythonExtension> extensions = new LinkedHashMap<>();
     Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
-    Map<BuildTarget, CxxResourcesProvider> cxxResourceProviders = new LinkedHashMap<>();
+    Set<CxxResourcesProvider> cxxResourceProviders = new LinkedHashSet<>();
 
     OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(preloadDeps, graphBuilder);
 
@@ -457,18 +467,14 @@ public class PythonUtil {
           NativeLinkable linkable = linkableGroup.getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
           omnibusRoots.addPotentialRoot(linkable, false, preferStrippedNativeObjects);
-          if (linkableGroup instanceof CxxResourcesProvider) {
-            cxxResourceProviders.put(
-                linkableGroup.getBuildTarget(), (CxxResourcesProvider) linkableGroup);
-          }
-        });
+        },
+        cxxResourceProviders::add);
 
     // Add C++ resources.
     Path cxxResourceBase = projectFilesystem.getPath("__cxx_resources__");
     ImmutableMap<Path, SourcePath> cxxResources =
         MoreMaps.transformKeys(
-            CxxResourceUtils.gatherResources(
-                graphBuilder, ImmutableMap.of(), cxxResourceProviders.values()),
+            CxxResourceUtils.gatherResources(graphBuilder, ImmutableMap.of(), cxxResourceProviders),
             name -> cxxResourceBase.resolve(name.getNameAsPath().toString()));
     if (!cxxResources.isEmpty()) {
       allComponents.putResources(
