@@ -59,9 +59,11 @@ go_test(
 go_test(
     name = "test-with-env",
     srcs = [
-        "env_test.go",
+        "env_test_macros.go",
     ],
     env = {
+        "AS_EXE": "$(exe :genbin)",
+        "AS_LOC": "$(location :genbin-test)",
         "FOO": "BAR",
     },
     deps = [":base"],
@@ -153,4 +155,19 @@ go_test(
         "test_scores.go",
         "test_scores_test.go",
     ],
+)
+
+# Leads to a "binary"
+genrule(
+    name = "genbin",
+    out = "foobar.sh",
+    cmd = "echo so many hoops > $OUT",
+    executable = True,
+)
+
+# Leads to a file out
+genrule(
+    name = "genbin-test",
+    out = "bar.txt",
+    cmd = "echo blah > $OUT",
 )

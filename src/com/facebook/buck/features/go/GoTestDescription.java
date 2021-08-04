@@ -51,6 +51,8 @@ import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableMacro;
+import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -82,8 +84,13 @@ public class GoTestDescription
         VersionRoot<GoTestDescriptionArg> {
 
   private static final Flavor TEST_LIBRARY_FLAVOR = InternalFlavor.of("test-library");
+
+  // ExecutableMacroExpander enables env expansion in go_test
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE);
+      ImmutableList.of(
+          LocationMacroExpander.INSTANCE,
+          AbsoluteOutputMacroExpander.INSTANCE,
+          new ExecutableMacroExpander<>(ExecutableMacro.class));
 
   private final GoBuckConfig goBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
