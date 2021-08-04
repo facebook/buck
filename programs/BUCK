@@ -227,10 +227,7 @@ python_binary(
     build_args = interpreter_override_args(),
     main = "buck.py",
     visibility = [
-        "//buck_e2e/...",
-        "//scripts/...",
-        "//test/...",
-        "//tools/...",
+        "PUBLIC",
     ],
     deps = [
         ":buck_package_info_lib",
