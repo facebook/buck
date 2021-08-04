@@ -105,7 +105,10 @@ public class JavaCDWorkerStepUtils {
         "-Dfile.encoding=" + UTF_8.name(),
         "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"),
         "-XX:+HeapDumpOnOutOfMemoryError",
-        "-XX:HeapDumpPath=" + logDirectory.toString());
+        "-XX:HeapDumpPath=" + logDirectory.toString(),
+        // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+        // https://stackoverflow.com/a/16535804/5208808
+        "-XX:-MaxFDLimit");
   }
 
   /** Returns {@link WorkerProcessPool.BorrowedWorkerProcess} from the passed pool. */

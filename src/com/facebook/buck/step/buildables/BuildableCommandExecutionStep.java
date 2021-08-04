@@ -160,7 +160,10 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   public static ImmutableList<String> getCommonJvmParams() {
     return ImmutableList.of(
         "-Dfile.encoding=" + UTF_8.name(),
-        "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"));
+        "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"),
+        // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+        // https://stackoverflow.com/a/16535804/5208808
+        "-XX:-MaxFDLimit");
   }
 
   private ImmutableMap<String, String> getEnvs() {
