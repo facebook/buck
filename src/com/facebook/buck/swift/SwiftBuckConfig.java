@@ -42,8 +42,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String USE_DEBUG_PREFIX_MAP = "use_debug_prefix_map";
   public static final String PREFIX_SERIALIZED_DEBUG_INFO = "prefix_serialized_debug_info";
   public static final String ADD_XCTEST_IMPORT_PATHS = "add_xctest_import_paths";
-  public static final String ALWAYS_SERIALIZE_DEBUGGING_OPTIONS =
-      "always_serialize_debugging_options";
   private final BuckConfig delegate;
 
   @Override
@@ -190,14 +188,5 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getAddXctestImportPaths() {
     return delegate.getBooleanValue(SECTION_NAME, ADD_XCTEST_IMPORT_PATHS, true);
-  }
-
-  /**
-   * If true always pass -serialize-debugging-options when compiling Swift. When false use the
-   * compiler default behavior of only serializing debug options for not externally consumed modules
-   * (ie binaries). -serialize-debugging-options is always passed for apple_test.
-   */
-  public boolean getAlwaysSerializeDebuggingOptions() {
-    return delegate.getBooleanValue(SECTION_NAME, ALWAYS_SERIALIZE_DEBUGGING_OPTIONS, true);
   }
 }

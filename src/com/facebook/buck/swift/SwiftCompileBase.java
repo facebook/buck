@@ -202,6 +202,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       boolean hasPrefixSerializedDebugInfo,
       boolean addXCTestImportPaths,
       boolean useSwiftDriver,
+      boolean serializeDebuggingOptions,
       AppleSdk appleSdk) {
     super(buildTarget, projectFilesystem);
     this.systemFrameworkSearchPaths = systemFrameworkSearchPaths;
@@ -256,7 +257,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.prefixSerializedDebugInfo =
         hasPrefixSerializedDebugInfo || swiftBuckConfig.getPrefixSerializedDebugInfo();
     this.useSwiftDriver = useSwiftDriver;
-    this.serializeDebuggingOptions = swiftBuckConfig.getAlwaysSerializeDebuggingOptions();
+    this.serializeDebuggingOptions = serializeDebuggingOptions;
     this.appleSdkVersion = appleSdk.getVersion();
 
     // TODO: the swiftmodule dependencies should be passed in the constructor instead of being

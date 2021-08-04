@@ -348,6 +348,7 @@ public class SwiftLibraryDescription
           swiftPlatform.get().getPrefixSerializedDebugInfo(),
           swiftBuckConfig.getAddXctestImportPaths(),
           args.getUseSwiftDriver(),
+          args.getSerializeDebuggingOptions(),
           appleCxxPlatform.getAppleSdk());
     }
 
@@ -531,6 +532,7 @@ public class SwiftLibraryDescription
         swiftPlatform.getPrefixSerializedDebugInfo(),
         swiftBuckConfig.getAddXctestImportPaths(),
         args.getUseSwiftDriver(),
+        args.getSerializeDebuggingOptions(),
         appleCxxPlatform.getAppleSdk());
   }
 
@@ -625,6 +627,7 @@ public class SwiftLibraryDescription
         swiftPlatform.getPrefixSerializedDebugInfo(),
         swiftBuckConfig.getAddXctestImportPaths(),
         args.getUseSwiftDriver(),
+        args.getSerializeDebuggingOptions(),
         appleSdk);
   }
 
@@ -688,6 +691,11 @@ public class SwiftLibraryDescription
     @Value.Default
     default boolean getUseSwiftDriver() {
       return false;
+    }
+
+    @Value.Default
+    default boolean getSerializeDebuggingOptions() {
+      return true;
     }
 
     @Value.Default

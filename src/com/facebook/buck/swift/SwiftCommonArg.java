@@ -34,6 +34,11 @@ public interface SwiftCommonArg extends BuildRuleArg {
   }
 
   @Value.Default
+  default boolean getSerializeDebuggingOptions() {
+    return true;
+  }
+
+  @Value.Default
   default boolean getEnableCxxInterop() {
     return false;
   }

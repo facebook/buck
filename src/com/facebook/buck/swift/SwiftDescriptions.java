@@ -68,14 +68,16 @@ public class SwiftDescriptions {
     output.setName(args.getName());
     output.setSrcs(filterSwiftSources(sourcePathResolverAdapter, args.getSrcs()));
     if (args instanceof SwiftCommonArg) {
-      Optional<String> swiftVersion = ((SwiftCommonArg) args).getSwiftVersion();
+      SwiftCommonArg swiftArgs = (SwiftCommonArg) args;
+      Optional<String> swiftVersion = swiftArgs.getSwiftVersion();
       if (!swiftVersion.isPresent()) {
         swiftVersion = swiftBuckConfig.getVersion();
       }
-      output.setCompilerFlags(((SwiftCommonArg) args).getSwiftCompilerFlags());
+      output.setCompilerFlags(swiftArgs.getSwiftCompilerFlags());
       output.setVersion(swiftVersion);
-      output.setUseSwiftDriver(((SwiftCommonArg) args).getUseSwiftDriver());
-      output.setEnableCxxInterop(((SwiftCommonArg) args).getEnableCxxInterop());
+      output.setUseSwiftDriver(swiftArgs.getUseSwiftDriver());
+      output.setSerializeDebuggingOptions(swiftArgs.getSerializeDebuggingOptions());
+      output.setEnableCxxInterop(swiftArgs.getEnableCxxInterop());
     } else {
       output.setCompilerFlags(args.getCompilerFlags());
     }

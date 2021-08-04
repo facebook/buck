@@ -77,6 +77,7 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
       boolean hasPrefixSerializedDebugInfo,
       boolean addXCTestImportPaths,
       boolean useSwiftDriver,
+      boolean serializeDebuggingOptions,
       AppleSdk appleSdk) {
     super(
         swiftBuckConfig,
@@ -105,6 +106,7 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
         hasPrefixSerializedDebugInfo,
         addXCTestImportPaths,
         useSwiftDriver,
+        serializeDebuggingOptions,
         appleSdk);
     this.outputCommandPath = RelPath.of(this.outputPath.resolve("swift_compile_commands.json"));
   }
