@@ -155,12 +155,15 @@ public class CxxPythonExtensionDescription
         target.withAppendedFlavors(pythonPlatform), platform, Linker.LinkType.SHARED);
   }
 
+  private static String getName(String moduleName, String ext) {
+    return String.format("%s.%s", moduleName, ext);
+  }
+
   @VisibleForTesting
   static String getExtensionName(String moduleName, CxxPlatform cxxPlatform) {
     // *.so is used on OS X too (as opposed to *.dylib)
     // *.pyd is used on Windows (as opposed to *.dll)
-    return String.format(
-        "%s.%s",
+    return getName(
         moduleName, cxxPlatform.getLd().getType() == LinkerProvider.Type.WINDOWS ? "pyd" : "so");
   }
 
@@ -501,11 +504,17 @@ public class CxxPythonExtensionDescription
                     CxxDescriptionEnhancer.SHARED_FLAVOR));
       }
 
+      private Path getBaseModule() {
+        return PythonUtil.getBasePath(buildTarget, args.getBaseModule());
+      }
+
+      private String getModuleName() {
+        return args.getModuleName().orElse(buildTarget.getShortName());
+      }
+
       @Override
       public Path getModule(CxxPlatform cxxPlatform) {
-        Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
-        String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
-        return baseModule.resolve(getExtensionName(moduleName, cxxPlatform));
+        return getBaseModule().resolve(getExtensionName(getModuleName(), cxxPlatform));
       }
 
       @Override
@@ -525,6 +534,17 @@ public class CxxPythonExtensionDescription
         SourcePath output = extension.getSourcePathToOutput();
         return Optional.of(
             PythonMappedComponents.of(ImmutableSortedMap.of(getModule(cxxPlatform), output)));
+      }
+
+      @Override
+      public Optional<PythonMappedComponents> getPythonModulesForTyping(
+          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+        return args.getTypeStub()
+            .map(
+                stub ->
+                    PythonMappedComponents.of(
+                        ImmutableSortedMap.of(
+                            getBaseModule().resolve(getName(getModuleName(), "pyi")), stub)));
       }
 
       @Override
@@ -672,5 +692,7 @@ public class CxxPythonExtensionDescription
     Optional<String> getModuleName();
 
     Optional<Linker.LinkableDepType> getLinkStyle();
+
+    Optional<SourcePath> getTypeStub();
   }
 }
