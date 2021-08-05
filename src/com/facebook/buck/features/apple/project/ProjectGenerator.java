@@ -3205,9 +3205,11 @@ public class ProjectGenerator {
       if (moduleName.isPresent() && resolvedContents.size() > 0) {
         boolean containsSwift = !nonSourcePaths.isEmpty();
         String generatedHeaderName = getSwiftObjCGeneratedHeaderName(moduleName.get());
+        Path moduleRoot = headerSymlinkTreeRoot.resolve(moduleName.get());
+
         Set<Path> headerPathsWithoutSwiftObjCHeader =
             resolvedContents.keySet().stream()
-                .map(path -> headerSymlinkTreeRoot.relativize(path))
+                .map(path -> moduleRoot.relativize(path))
                 .filter(path -> !path.endsWith(generatedHeaderName))
                 .collect(ImmutableSet.toImmutableSet());
         if (containsSwift) {
@@ -3218,7 +3220,7 @@ public class ProjectGenerator {
                       headerPathsWithoutSwiftObjCHeader,
                       false)
                   .render(),
-              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
+              moduleRoot.resolve("module.modulemap"));
           projectFilesystem.writeContentsToPath(
               ModuleMap.create(
                       moduleName.get(),
@@ -3226,7 +3228,7 @@ public class ProjectGenerator {
                       headerPathsWithoutSwiftObjCHeader,
                       false)
                   .render(),
-              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
+              moduleRoot.resolve("objc.modulemap"));
 
           AbsPath absoluteModuleRoot =
               projectFilesystem
@@ -3249,7 +3251,7 @@ public class ProjectGenerator {
                       headerPathsWithoutSwiftObjCHeader,
                       false)
                   .render(),
-              headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
+              moduleRoot.resolve("module.modulemap"));
         }
         AbsPath absoluteModuleRoot =
             projectFilesystem

@@ -83,8 +83,7 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
   public SourcePath getSourcePathToOutput() {
     if (moduleName.isPresent()) {
       return ExplicitBuildTargetSourcePath.of(
-          getBuildTarget(),
-          moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName.get()));
+          getBuildTarget(), moduleMapPath(getProjectFilesystem(), getBuildTarget()));
     } else {
       return super.getSourcePathToOutput();
     }
@@ -104,8 +103,7 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
               paths.stream()
                   .filter(path -> !path.equals(expectedSwiftHeaderPath))
                   .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-          Path moduleMapPath =
-              moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName).getPath();
+          Path moduleMapPath = moduleMapPath(getProjectFilesystem(), getBuildTarget()).getPath();
 
           builder.add(
               new ModuleMapStep(
@@ -131,9 +129,7 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
     }
   }
 
-  static RelPath moduleMapPath(
-      ProjectFilesystem filesystem, BuildTarget target, String moduleName) {
-    return BuildTargetPaths.getGenPath(
-        filesystem.getBuckPaths(), target, "%s/" + moduleName + "/module.modulemap");
+  static RelPath moduleMapPath(ProjectFilesystem filesystem, BuildTarget target) {
+    return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s/module.modulemap");
   }
 }

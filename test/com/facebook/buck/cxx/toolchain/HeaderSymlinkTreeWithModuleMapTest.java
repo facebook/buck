@@ -151,9 +151,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 new ModuleMapStep(
                     projectFilesystem,
                     BuildTargetPaths.getGenPath(
-                            projectFilesystem.getBuckPaths(),
-                            buildTarget,
-                            "%s/SomeModule/module.modulemap")
+                            projectFilesystem.getBuckPaths(), buildTarget, "%s/module.modulemap")
                         .getPath(),
                     ModuleMap.create(
                         "SomeModule", ModuleMap.SwiftMode.NO_SWIFT, links.keySet(), false)))
@@ -187,7 +185,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
         new ModuleMapStep(
             projectFilesystem,
             BuildTargetPaths.getGenPath(
-                    projectFilesystem.getBuckPaths(), buildTarget, "%s/SomeModule/module.modulemap")
+                    projectFilesystem.getBuckPaths(), buildTarget, "%s/module.modulemap")
                 .getPath(),
             ModuleMap.create(
                 "SomeModule", ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER, links.keySet(), false));
@@ -254,37 +252,121 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             false);
 
     assertEquals(
-        moduleMapWithSwift.render(),
         "module MyModule {\n"
-            + "\theader \"firstheader.h\"\n"
-            + "\theader \"secondheader.h\"\n"
+            + "\theader \"MyModule/firstheader.h\"\n"
+            + "\theader \"MyModule/secondheader.h\"\n"
             + "\texport *\n"
             + "}\n\n"
             + "module MyModule.Swift {\n"
-            + "\theader \"MyModule-Swift.h\"\n"
-            + "\trequires objc\n}\n");
+            + "\theader \"MyModule/MyModule-Swift.h\"\n"
+            + "\trequires objc\n}\n",
+        moduleMapWithSwift.render());
 
     ModuleMap moduleMapWithSubmodules =
         ModuleMap.create(
             "MyModule",
-            ModuleMap.SwiftMode.NO_SWIFT,
+            ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER,
             ImmutableSet.of(
                 Paths.get("MyModule", "header.with.dots and spaces+and+plus-and-hyphen.h"),
                 Paths.get("MyModule", "secondheader.h"),
-                Paths.get("MyModule", "3rd_header.h")),
+                Paths.get("MyModule", "3rd_header.h"),
+                Paths.get("MyModule", "conflict.h"),
+                Paths.get("MyModule", "conflict.hh")),
             true);
     assertEquals(
-        moduleMapWithSubmodules.render(),
         "module MyModule {\n"
             + "\tmodule _3rd_header {\n"
-            + "\t\theader \"3rd_header.h\"\n"
+            + "\t\theader \"MyModule/3rd_header.h\"\n"
+            + "\t\texport *\n\t}\n"
+            + "\tmodule conflict {\n"
+            + "\t\theader \"MyModule/conflict.h\"\n"
+            + "\t\texport *\n\t}\n"
+            + "\tmodule conflict_ {\n"
+            + "\t\theader \"MyModule/conflict.hh\"\n"
             + "\t\texport *\n\t}\n"
             + "\tmodule header_with_dots_and_spaces_and_plus_and_hyphen {\n"
-            + "\t\theader \"header.with.dots and spaces+and+plus-and-hyphen.h\"\n"
+            + "\t\theader \"MyModule/header.with.dots and spaces+and+plus-and-hyphen.h\"\n"
             + "\t\texport *\n\t}\n"
             + "\tmodule secondheader {\n"
-            + "\t\theader \"secondheader.h\"\n"
+            + "\t\theader \"MyModule/secondheader.h\"\n"
             + "\t\texport *\n\t}\n"
-            + "}\n");
+            + "}\n\n"
+            + "module MyModule.Swift {\n"
+            + "\theader \"MyModule/MyModule-Swift.h\"\n"
+            + "\trequires objc\n}\n",
+        moduleMapWithSubmodules.render());
+
+    ModuleMap moduleMapWithMultiplePrefixes =
+        ModuleMap.create(
+            "MyModule",
+            ModuleMap.SwiftMode.NO_SWIFT,
+            ImmutableSet.of(
+                Paths.get("MyModule", "root_header1.h"),
+                Paths.get("MyModule", "root_header2.h"),
+                Paths.get("APrefix", "Sub.1", "a_header1.h"),
+                Paths.get("APrefix", "Sub.1", "a_header2.h"),
+                Paths.get("APrefix", "Sub.2", "a_header1.h"),
+                Paths.get("APrefix", "Sub.2", "a_header2.h"),
+                Paths.get("BPrefix", "Sub.1", "a_header1.h"),
+                Paths.get("BPrefix", "Sub.1", "a_header2.h"),
+                Paths.get("BPrefix", "Sub.2", "a_header1.h"),
+                Paths.get("BPrefix", "Sub.2", "a_header2.h")),
+            true);
+    assertEquals(
+        "module MyModule {\n"
+            + "\tmodule APrefix {\n"
+            + "\t\tmodule Sub_1 {\n"
+            + "\t\t\tmodule a_header1 {\n"
+            + "\t\t\t\theader \"APrefix/Sub.1/a_header1.h\"\n"
+            + "\t\t\t\texport *\n"
+            + "\t\t\t}\n"
+            + "\t\t\tmodule a_header2 {\n"
+            + "\t\t\t\theader \"APrefix/Sub.1/a_header2.h\"\n"
+            + "\t\t\t\texport *\n"
+            + "\t\t\t}\n"
+            + "\t\t}\n"
+            + "\t\tmodule Sub_2 {\n"
+            + "\t\t\tmodule a_header1 {\n"
+            + "\t\t\t\theader \"APrefix/Sub.2/a_header1.h\"\n"
+            + "\t\t\t\texport *\n"
+            + "\t\t\t}\n"
+            + "\t\t\tmodule a_header2 {\n"
+            + "\t\t\t\theader \"APrefix/Sub.2/a_header2.h\"\n"
+            + "\t\t\t\texport *\n"
+            + "\t\t\t}\n"
+            + "\t\t}\n"
+            + "\t}\n"
+            + "\tmodule BPrefix {\n"
+            + "\t\tmodule Sub_1 {\n"
+            + "\t\t\tmodule a_header1 {\n"
+            + "\t\t\t\theader \"BPrefix/Sub.1/a_header1.h\"\n"
+            + "\t\t\t\texport *\n"
+            + "\t\t\t}\n"
+            + "\t\t\tmodule a_header2 {\n"
+            + "\t\t\t\theader \"BPrefix/Sub.1/a_header2.h\"\n"
+            + "\t\t\t\texport *\n"
+            + "\t\t\t}\n"
+            + "\t\t}\n"
+            + "\t\tmodule Sub_2 {\n"
+            + "\t\t\tmodule a_header1 {\n"
+            + "\t\t\t\theader \"BPrefix/Sub.2/a_header1.h\"\n"
+            + "\t\t\t\texport *\n"
+            + "\t\t\t}\n"
+            + "\t\t\tmodule a_header2 {\n"
+            + "\t\t\t\theader \"BPrefix/Sub.2/a_header2.h\"\n"
+            + "\t\t\t\texport *\n"
+            + "\t\t\t}\n"
+            + "\t\t}\n"
+            + "\t}\n"
+            + "\tmodule root_header1 {\n"
+            + "\t\theader \"MyModule/root_header1.h\"\n"
+            + "\t\texport *\n"
+            + "\t}\n"
+            + "\tmodule root_header2 {\n"
+            + "\t\theader \"MyModule/root_header2.h\"\n"
+            + "\t\texport *\n"
+            + "\t}\n"
+            + "}\n",
+        moduleMapWithMultiplePrefixes.render());
   }
 }

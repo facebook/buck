@@ -17,31 +17,85 @@
 package com.facebook.buck.apple.clang;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.List;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import org.stringtemplate.v4.ST;
-import org.stringtemplate.v4.STGroup;
 
-/** Utility class to provide submodule names inside the ST templates. */
-class Header {
-  public final String filename;
-  public final String submodule;
+/** Class to create module header tree for rendering. */
+class Module {
+  public Path name;
+  public Path header;
+  public Map<Path, Module> submodules;
 
-  Header(String filename) {
-    this.filename = filename;
-    this.submodule = getSubmodule(filename);
+  Module(Path name) {
+    this.name = name;
+    this.submodules = new HashMap<>();
   }
 
-  private String getSubmodule(String filename) {
-    String submodule =
-        filename.substring(0, filename.lastIndexOf('.')).replaceAll("[^A-Za-z0-9_]", "_");
-    if (Character.isDigit(submodule.charAt(0))) {
-      submodule = "_" + submodule;
+  Module getSubmodule(Path name) {
+    Module submodule = submodules.get(name);
+    if (submodule == null) {
+      submodule = new Module(name);
+      submodules.put(name, submodule);
     }
     return submodule;
+  }
+
+  void render(StringBuilder s, boolean requiresCxx, int level) {
+    indent(s, level).append("module ").append(name).append(" {\n");
+
+    // Module names can only include letters, numbers and underscores, and may not start with a
+    // number.
+    HashSet<String> submoduleNames = new HashSet<>();
+    submodules.keySet().stream()
+        .sorted()
+        .forEach(
+            name -> {
+              Module submodule = submodules.get(name);
+              String sanitized = name.toString();
+
+              // A leaf submodule name is a filename, remove its extension for readability
+              if (submodule.submodules.isEmpty()) {
+                int extensionIndex = sanitized.lastIndexOf('.');
+                if (extensionIndex > 0) {
+                  sanitized = sanitized.substring(0, extensionIndex);
+                }
+              }
+
+              sanitized = sanitized.replaceAll("[^A-Za-z0-9_]", "_");
+              if (Character.isDigit(sanitized.charAt(0))) {
+                sanitized = "_" + sanitized;
+              }
+
+              // Its possible to have collisions either from matching filenames with different
+              // extensions or with matching names with differing invalid characters. Keep adding
+              // underscores until we have a unique module name.
+              while (submoduleNames.contains(sanitized)) {
+                sanitized += "_";
+              }
+              submoduleNames.add(sanitized);
+              submodule.name = Paths.get(sanitized);
+              submodule.render(s, false, level + 1);
+            });
+
+    if (header != null) {
+      indent(s, level + 1).append("header \"").append(header).append("\"\n");
+      indent(s, level + 1).append("export *\n");
+    }
+    if (requiresCxx) {
+      indent(s, level + 1).append("requires cplusplus\n");
+    }
+    indent(s, level).append("}\n");
+  }
+
+  private StringBuilder indent(StringBuilder s, int level) {
+    for (int i = 0; i < level; i++) {
+      s.append("\t");
+    }
+    return s;
   }
 }
 
@@ -75,7 +129,7 @@ public class ModuleMap {
   }
 
   private String moduleName;
-  private List<String> headers;
+  private Set<Path> headers;
   private SwiftMode swiftMode;
   private boolean useSubmodules;
   private boolean requiresCplusplus;
@@ -83,7 +137,7 @@ public class ModuleMap {
   ModuleMap(
       String moduleName,
       SwiftMode swiftMode,
-      List<String> headers,
+      Set<Path> headers,
       boolean useSubmodules,
       boolean requiresCplusplus) {
     this.moduleName = moduleName;
@@ -108,22 +162,7 @@ public class ModuleMap {
       Set<Path> headerPaths,
       boolean useSubmodules,
       boolean requiresCplusplus) {
-    String stripPrefix = moduleName + "/";
-    List<String> headers =
-        headerPaths.stream()
-            .map(
-                path -> {
-                  String relativePath = path.toString();
-                  String s =
-                      relativePath.startsWith(stripPrefix)
-                          ? relativePath.substring(stripPrefix.length())
-                          : relativePath;
-                  return s;
-                })
-            .sorted()
-            .collect(ImmutableList.toImmutableList());
-
-    return new ModuleMap(moduleName, swiftMode, headers, useSubmodules, requiresCplusplus);
+    return new ModuleMap(moduleName, swiftMode, headerPaths, useSubmodules, requiresCplusplus);
   }
 
   /**
@@ -139,38 +178,62 @@ public class ModuleMap {
     return ModuleMap.create(moduleName, swiftMode, headerPaths, useSubmodules, false);
   }
 
-  private static final String template =
-      "module <module_name> {\n"
-          + "<if(use_submodules)>"
-          + "<headers :{ h | \tmodule <h.submodule> {\n\t\theader \"<h.filename>\"\n\t\texport *\n\t\\}\n }>"
-          + "<else>"
-          + "<headers :{ h | \theader \"<h.filename>\"\n }>"
-          + "\texport *\n"
-          + "<endif>"
-          + "<if(requires_cplusplus)>"
-          + "    requires cplusplus\n"
-          + "<endif>"
-          + "}\n"
-          + "<if(include_swift_header)>"
-          + "\n\nmodule <module_name>.Swift {\n"
-          + "\theader \"<module_name>-Swift.h\"\n"
-          + "\trequires objc\n"
-          + "}\n"
-          + "<endif>";
-
   /**
    * Renders the modulemap to a string, to be written to a .modulemap file.
    *
    * @return A string representation of the modulemap.
    */
   public String render() {
-    return new ST(new STGroup(), template)
-        .add("module_name", moduleName)
-        .add("headers", headers.stream().map(Header::new).collect(Collectors.toList()))
-        .add("include_swift_header", swiftMode.includeSwift())
-        .add("use_submodules", useSubmodules)
-        .add("requires_cplusplus", requiresCplusplus)
-        .render();
+    StringBuilder s = new StringBuilder();
+    if (useSubmodules) {
+      renderSubmodules(s);
+    } else {
+      renderSingleModule(s);
+    }
+
+    if (swiftMode.includeSwift()) {
+      s.append("\nmodule ")
+          .append(moduleName)
+          .append(".Swift {\n\theader \"")
+          .append(moduleName)
+          .append("/")
+          .append(moduleName)
+          .append("-Swift.h\"\n\trequires objc\n}\n");
+    }
+
+    return s.toString();
+  }
+
+  private void renderSubmodules(StringBuilder s) {
+    // Create a tree of nested Module, one for each path component.
+    Module rootModule = new Module(Paths.get(moduleName));
+    for (Path header : headers) {
+      Module module = rootModule;
+      for (int i = 0; i < header.getNameCount(); i++) {
+        Path component = header.getName(i);
+        if (i == 0 && component.equals(rootModule.name)) {
+          // The common case is we have a single header path prefix that matches the module name.
+          // In that case add the headers directly to the top level module.
+          continue;
+        }
+        module = module.getSubmodule(component);
+      }
+      module.header = header;
+    }
+
+    rootModule.render(s, requiresCplusplus, 0);
+  }
+
+  private void renderSingleModule(StringBuilder s) {
+    s.append("module ").append(moduleName).append(" {\n");
+    headers.stream()
+        .sorted()
+        .forEach(p -> s.append("\theader \"").append(p.toString()).append("\"\n"));
+    s.append("\texport *\n");
+    if (requiresCplusplus) {
+      s.append("\trequires cplusplus\n");
+    }
+    s.append("}\n");
   }
 
   @Override
