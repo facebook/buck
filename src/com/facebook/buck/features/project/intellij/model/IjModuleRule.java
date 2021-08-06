@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
+import java.nio.file.Path;
 
 /**
  * Rule describing which aspects of the supplied {@link TargetNode} to transfer to the {@link
@@ -36,4 +37,6 @@ public interface IjModuleRule<T extends BuildRuleArg> {
   IjModuleType detectModuleType(TargetNode<T> targetNode);
 
   void applyDuringAggregation(AggregationContext context, TargetNode<T> targetNode);
+
+  Path adjustModulePath(TargetNode<T> targetNode, Path modulePath);
 }

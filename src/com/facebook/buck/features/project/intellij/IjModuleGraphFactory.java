@@ -28,6 +28,7 @@ import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactory;
+import com.facebook.buck.features.project.intellij.model.IjModuleRule;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.IjProjectElement;
@@ -56,6 +57,7 @@ public final class IjModuleGraphFactory {
    *     BuildTarget can point to one IjModule (many:one mapping), the BuildTargetPaths which can't
    *     be prepresented in IntelliJ are missing from this mapping.
    */
+  @SuppressWarnings({"unchecked", "rawtypes"})
   private static ImmutableMap<BuildTarget, IjModule> createModules(
       ProjectFilesystem projectFilesystem,
       IjProjectConfig projectConfig,
@@ -63,7 +65,8 @@ public final class IjModuleGraphFactory {
       IjModuleFactory moduleFactory,
       AggregationModuleFactory aggregationModuleFactory,
       int minimumPathDepth,
-      ImmutableSet<String> ignoredTargetLabels) {
+      ImmutableSet<String> ignoredTargetLabels,
+      SupportedTargetTypeRegistry typeRegistry) {
 
     Stream<TargetNode<?>> nodes =
         targetGraph.getNodes().stream()
@@ -91,17 +94,16 @@ public final class IjModuleGraphFactory {
                             projectFilesystem, projectConfig.getProjectRoot(), targetNode)))
             .collect(
                 ImmutableListMultimap.toImmutableListMultimap(
-                    targetNode ->
-                        projectFilesystem
-                            .relativize(
-                                targetNode
-                                    .getFilesystem()
-                                    .resolve(
-                                        targetNode
-                                            .getBuildTarget()
-                                            .getCellRelativeBasePath()
-                                            .getPath()))
-                            .getPath(),
+                    targetNode -> {
+                      Path modulePath =
+                          IjProjectPaths.getModulePathForNode(targetNode, projectFilesystem);
+                      IjModuleRule<?> rule =
+                          typeRegistry.getModuleRuleByTargetNodeType(
+                              targetNode.getDescription().getClass());
+                      return rule != null
+                          ? rule.adjustModulePath((TargetNode) targetNode, modulePath)
+                          : modulePath;
+                    },
                     targetNode -> targetNode));
 
     AggregationTree aggregationTree =
@@ -225,7 +227,8 @@ public final class IjModuleGraphFactory {
       IjLibraryFactory libraryFactory,
       IjModuleFactory moduleFactory,
       AggregationModuleFactory aggregationModuleFactory,
-      TargetInfoMapManager targetInfoMapManager) {
+      TargetInfoMapManager targetInfoMapManager,
+      SupportedTargetTypeRegistry typeRegistry) {
     ImmutableSet<String> ignoredTargetLabels = projectConfig.getIgnoredTargetLabels();
     ImmutableMap<BuildTarget, IjModule> rulesToModules =
         createModules(
@@ -235,7 +238,8 @@ public final class IjModuleGraphFactory {
             moduleFactory,
             aggregationModuleFactory,
             projectConfig.getAggregationMode().getGraphMinimumDepth(targetGraph.getNodes().size()),
-            ignoredTargetLabels);
+            ignoredTargetLabels,
+            typeRegistry);
     ExportedDepsClosureResolver exportedDepsClosureResolver =
         new ExportedDepsClosureResolver(targetGraph, ignoredTargetLabels);
     TransitiveDepsClosureResolver transitiveDepsClosureResolver =

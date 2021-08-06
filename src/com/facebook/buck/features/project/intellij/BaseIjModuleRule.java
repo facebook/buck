@@ -344,4 +344,10 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
   public void applyDuringAggregation(AggregationContext context, TargetNode<T> targetNode) {
     context.setModuleType(detectModuleType(targetNode));
   }
+
+  /** The default implementation returns the original module path directly */
+  @Override
+  public Path adjustModulePath(TargetNode<T> targetNode, Path modulePath) {
+    return modulePath;
+  }
 }

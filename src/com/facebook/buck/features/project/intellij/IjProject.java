@@ -120,7 +120,8 @@ public class IjProject {
             libraryFactory,
             new DefaultIjModuleFactory(projectFilesystem, projectConfig, typeRegistry),
             new DefaultAggregationModuleFactory(typeRegistry),
-            targetInfoMapManager);
+            targetInfoMapManager,
+            typeRegistry);
     JavaPackageFinder parsingJavaPackageFinder =
         ParsingJavaPackageFinder.preparse(
             javaFileParser,

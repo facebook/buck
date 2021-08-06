@@ -18,6 +18,7 @@ package com.facebook.buck.features.project.intellij.lang.python;
 
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.features.project.intellij.BaseIjModuleRule;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
@@ -26,9 +27,11 @@ import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.python.PythonLibraryDescription;
 import com.facebook.buck.features.python.PythonLibraryDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import java.nio.file.Path;
 
 /** Support for transforming a python_library declaration to an intellij module */
 public class PythonLibraryModuleRule extends BaseIjModuleRule<PythonLibraryDescriptionArg> {
+  private static final Logger LOG = Logger.get(PythonLibraryModuleRule.class);
 
   public PythonLibraryModuleRule(
       ProjectFilesystem projectFilesystem,
@@ -50,5 +53,34 @@ public class PythonLibraryModuleRule extends BaseIjModuleRule<PythonLibraryDescr
   @Override
   public IjModuleType detectModuleType(TargetNode<PythonLibraryDescriptionArg> targetNode) {
     return IjModuleType.PYTHON_MODULE;
+  }
+
+  /**
+   * For python modules, we need to fix the module path by trimming the module path with the
+   * "base_module" property of the rule. For example, if the module path is foo/bar/baz, and the
+   * "base_module" of the rule is "bar.baz", the adjusted module path will be foo. If they don't
+   * match, we just return the original module path.
+   */
+  @Override
+  public Path adjustModulePath(
+      TargetNode<PythonLibraryDescriptionArg> targetNode, Path modulePath) {
+    String baseModule = targetNode.getConstructorArg().getBaseModule().orElse(null);
+    if (baseModule == null || baseModule.isEmpty()) {
+      return modulePath;
+    }
+    String[] components = baseModule.split("\\.");
+    int index = components.length - 1;
+    Path adjustedModulePath = modulePath;
+    while (index >= 0) {
+      if (components[index].equals(adjustedModulePath.getFileName().toString())) {
+        adjustedModulePath = adjustedModulePath.getParent();
+        index--;
+      } else {
+        LOG.warn("Base module \"" + baseModule + "\" doesn't match the path: " + modulePath);
+        // Python plugin doesn't support package prefix so we don't have a better choice
+        return modulePath;
+      }
+    }
+    return adjustedModulePath;
   }
 }

@@ -16,10 +16,12 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -53,6 +55,17 @@ public class IjProjectPaths {
 
   public Path getLibrariesDir() {
     return librariesDir;
+  }
+
+  /** Returns the module path for the target node */
+  public static Path getModulePathForNode(
+      TargetNode<?> targetNode, ProjectFilesystem projectFilesystem) {
+    return projectFilesystem
+        .relativize(
+            targetNode
+                .getFilesystem()
+                .resolve(targetNode.getBuildTarget().getCellRelativeBasePath().getPath()))
+        .getPath();
   }
 
   private static String truncateNameWithHash(String name, int length) {
