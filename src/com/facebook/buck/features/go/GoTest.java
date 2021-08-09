@@ -357,6 +357,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             testMain
                 .getExecutableCommand(OutputLabel.defaultLabel())
                 .getEnvironment(buildContext.getSourcePathResolver()))
+        .putAllEnv(Arg.stringify(env, buildContext.getSourcePathResolver()))
         .addAllCommand(
             testMain
                 .getExecutableCommand(OutputLabel.defaultLabel())
