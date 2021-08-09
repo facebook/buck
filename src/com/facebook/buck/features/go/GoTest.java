@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
@@ -54,6 +55,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Streams;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -331,11 +333,14 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return Stream.concat(
+    return Streams.concat(
         Stream.of((testMain.getBuildTarget())),
         resources.stream()
             .map(buildRuleResolver::filterBuildRuleInputs)
             .flatMap(ImmutableSet::stream)
+            .map(BuildRule::getBuildTarget),
+        env.values().stream()
+            .flatMap(arg -> BuildableSupport.deriveDeps(arg, buildRuleResolver))
             .map(BuildRule::getBuildTarget));
   }
 
