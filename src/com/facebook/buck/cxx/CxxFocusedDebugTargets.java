@@ -18,11 +18,14 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -40,6 +43,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -99,6 +103,7 @@ public class CxxFocusedDebugTargets extends ModernBuildRule<CxxFocusedDebugTarge
       RelPath outputPath = outputPathResolver.resolvePath(output);
       builder.add(
           new GenerateFilteredFocusedDebugTargetsJson(
+              buildContext.getCellPathResolver().getCellNameResolver(),
               filesystem,
               outputPath.getPath(),
               focusedTargetsList.map(buildContext.getSourcePathResolver()::getAbsolutePath),
@@ -129,17 +134,24 @@ public class CxxFocusedDebugTargets extends ModernBuildRule<CxxFocusedDebugTarge
 
   /** Writes out focused targets included in the list of given targets to a JSON array. */
   static class GenerateFilteredFocusedDebugTargetsJson extends AbstractExecutionStep {
+
+    private static final BuildTargetMatcherParser<BuildTargetMatcher> buildTargetPatternParser =
+        BuildTargetMatcherParser.forVisibilityArgument();
+
+    private final CellNameResolver cellNameResolver;
     private final Path outputRelativePath;
     private final ProjectFilesystem filesystem;
     private final ImmutableList<BuildTarget> targets;
     private final Optional<AbsPath> focusedTargetsList;
 
     public GenerateFilteredFocusedDebugTargetsJson(
+        CellNameResolver cellNameResolver,
         ProjectFilesystem fs,
         Path outputRelativePath,
         Optional<AbsPath> focusedTargetsList,
         ImmutableList<BuildTarget> targets) {
       super("generate " + OUTPUT_FILENAME);
+      this.cellNameResolver = cellNameResolver;
       this.filesystem = fs;
       this.outputRelativePath = outputRelativePath;
       this.focusedTargetsList = focusedTargetsList;
@@ -148,30 +160,29 @@ public class CxxFocusedDebugTargets extends ModernBuildRule<CxxFocusedDebugTarge
 
     @Override
     public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-      List<BuildTarget> filteredTargets;
+      Set<BuildTarget> filteredTargetSet;
       if (focusedTargetsList.isPresent()) {
         Map<String, Object> focusedDict =
             ObjectMappers.READER.readValue(
                 ObjectMappers.createParser(focusedTargetsList.get().getPath()),
                 new TypeReference<LinkedHashMap<String, Object>>() {});
         @SuppressWarnings("unchecked")
-        List<String> focusedTargets = (List<String>) focusedDict.get("targets");
-        Set<String> focusedTargetsSet = new HashSet<>(focusedTargets);
+        List<String> focusedTargetPatterns = (List<String>) focusedDict.get("targets");
 
-        filteredTargets =
-            targets.stream()
-                .filter(
-                    target ->
-                        focusedTargetsSet.contains(target.getUnflavoredBuildTarget().toString()))
-                .collect(Collectors.toList());
+        filteredTargetSet = new HashSet<>();
+
+        for (String focusedPattern : focusedTargetPatterns) {
+          filteredTargetSet.addAll(getMatchingFocusedTargets(targets, focusedPattern));
+        }
       } else {
         // If no focused targets list is provided, then none of this rule's deps is used for
         // debugging.
-        filteredTargets = ImmutableList.of();
+        filteredTargetSet = ImmutableSet.of();
       }
 
       // Ensure we sort the targets to prevent running into rule key differs.
-      filteredTargets = filteredTargets.stream().sorted().collect(Collectors.toList());
+      List<BuildTarget> filteredTargets =
+          filteredTargetSet.stream().sorted().collect(Collectors.toList());
 
       try (OutputStream outputStream = filesystem.newFileOutputStream(outputRelativePath)) {
         try (JsonGenerator jsonGen = ObjectMappers.createGenerator(outputStream)) {
@@ -184,6 +195,17 @@ public class CxxFocusedDebugTargets extends ModernBuildRule<CxxFocusedDebugTarge
       }
 
       return StepExecutionResults.SUCCESS;
+    }
+
+    private Set<BuildTarget> getMatchingFocusedTargets(
+        ImmutableList<BuildTarget> targets, String focusedPattern) {
+
+      BuildTargetMatcher targetMatcher =
+          buildTargetPatternParser.parse(focusedPattern, cellNameResolver);
+
+      return targets.stream()
+          .filter(target -> targetMatcher.matches(target.getUnconfiguredBuildTarget()))
+          .collect(Collectors.toSet());
     }
   }
 }
