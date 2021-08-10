@@ -71,7 +71,7 @@ public class PythonLibraryModuleRule extends BaseIjModuleRule<PythonLibraryDescr
     String[] components = baseModule.split("\\.");
     int index = components.length - 1;
     Path adjustedModulePath = modulePath;
-    while (index >= 0) {
+    while (index >= 0 && adjustedModulePath != null) {
       if (components[index].equals(adjustedModulePath.getFileName().toString())) {
         adjustedModulePath = adjustedModulePath.getParent();
         index--;
@@ -80,6 +80,17 @@ public class PythonLibraryModuleRule extends BaseIjModuleRule<PythonLibraryDescr
         // Python plugin doesn't support package prefix so we don't have a better choice
         return modulePath;
       }
+    }
+    if (adjustedModulePath == null) {
+      // If this adjusted module path is at the cell root, it will be invalid because the cell root
+      // is owned by the "project_root" module. In this case, return the original path instead
+      LOG.warn(
+          "Adjusted module path is null for "
+              + modulePath
+              + " with base_module \""
+              + baseModule
+              + "\"");
+      return modulePath;
     }
     return adjustedModulePath;
   }

@@ -134,4 +134,13 @@ public class PythonLibraryModuleRuleTest {
             .build();
     assertEquals(MODULE_PATH, rule.adjustModulePath(targetNode, MODULE_PATH));
   }
+
+  @Test
+  public void adjustModulePathWithNullResult() {
+    TargetNode<PythonLibraryDescriptionArg> targetNode =
+        PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(TARGET))
+            .setBaseModule("foo.bar.baz")
+            .build();
+    assertEquals(MODULE_PATH, rule.adjustModulePath(targetNode, MODULE_PATH));
+  }
 }
