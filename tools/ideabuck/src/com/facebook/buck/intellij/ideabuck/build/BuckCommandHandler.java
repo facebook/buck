@@ -20,6 +20,7 @@ import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
 import com.facebook.buck.intellij.ideabuck.api.BuckCellManager.Cell;
 import com.facebook.buck.intellij.ideabuck.config.BuckExecutableSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.config.BuckModule;
+import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.ui.tree.BuckTextNode.TextType;
 import com.google.common.base.Strings;
 import com.intellij.execution.ExecutionException;
@@ -140,6 +141,12 @@ public abstract class BuckCommandHandler {
     commandLine.addParameter(command.name());
     for (String parameter : command.getParameters()) {
       commandLine.addParameter(parameter);
+    }
+    BuckProjectSettingsProvider buckProjectSettingsProvider =
+        BuckProjectSettingsProvider.getInstance(project);
+    if (buckProjectSettingsProvider.isUseCustomizedTargetPlatforms()) {
+      commandLine.addParameters(
+          "--target-platforms", buckProjectSettingsProvider.getCustomizedTargetPlatforms());
     }
   }
 
