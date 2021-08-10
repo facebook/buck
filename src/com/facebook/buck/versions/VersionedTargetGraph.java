@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -39,7 +40,7 @@ public class VersionedTargetGraph extends TargetGraph {
 
   private final FlavorSearchTargetNodeFinder nodeFinder;
 
-  private final LoadingCache<BuildTarget, TargetNode<?>> internalTargetCache;
+  private final LoadingCache<BuildTarget, Optional<TargetNode<?>>> internalTargetCache;
 
   private VersionedTargetGraph(
       DirectedAcyclicGraph<TargetNode<?>> graph, FlavorSearchTargetNodeFinder nodeFinder) {
@@ -53,13 +54,14 @@ public class VersionedTargetGraph extends TargetGraph {
     }
     this.nodeFinder = nodeFinder;
     this.internalTargetCache =
-        CacheBuilder.newBuilder().build(CacheLoader.from(this::getTargetWithFlavors));
+        CacheBuilder.newBuilder()
+            .build(CacheLoader.from(target -> Optional.ofNullable(getTargetWithFlavors(target))));
   }
 
   @Nullable
   @Override
   protected TargetNode<?> getInternal(BuildTarget target) {
-    return internalTargetCache.getUnchecked(target);
+    return internalTargetCache.getUnchecked(target).orElse(null);
   }
 
   private TargetNode<?> getTargetWithFlavors(BuildTarget target) {
