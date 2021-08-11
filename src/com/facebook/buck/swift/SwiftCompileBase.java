@@ -359,6 +359,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     builder.add("-target", swiftTarget.getVersionedTriple());
 
     if (bridgingHeader.isPresent()) {
+      // Disable bridging header -> PCH compilation to mitigate an issue in Xcode 13 beta.
+      builder.addDriverOnlyFlag("-disable-bridging-pch");
       builder.add(
           "-import-objc-header", resolver.getCellUnsafeRelPath(bridgingHeader.get()).toString());
     }
