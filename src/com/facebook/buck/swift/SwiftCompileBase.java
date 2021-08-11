@@ -165,7 +165,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   private final ImmutableSet<SourcePath> swiftIncludePaths;
 
   private BuildableSupport.DepsSupplier depsSupplier;
-  protected final Optional<AbsPath> swiftFileListPath; // internal scratch temp path
   protected final Optional<AbsPath> argfilePath; // internal scratch temp path
 
   // We can't make the debug prefix map part of the rulekey as it is machine specific.
@@ -223,11 +222,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
     RelPath scratchDir =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
-    this.swiftFileListPath =
-        swiftBuckConfig.getUseFileList()
-            ? Optional.of(
-                getProjectFilesystem().getRootPath().resolve(scratchDir.resolve("filelist.txt")))
-            : Optional.empty();
 
     this.useArgfile = swiftBuckConfig.getUseArgfile();
     this.argfilePath =
@@ -445,12 +439,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
     builder.addTargetFlags(compilerFlags);
 
-    if (swiftFileListPath.isPresent()) {
-      builder.add("-filelist", swiftFileListPath.get().toString());
-    } else {
-      for (SourcePath sourcePath : srcs) {
-        builder.add(resolver.getCellUnsafeRelPath(sourcePath).toString());
-      }
+    for (SourcePath sourcePath : srcs) {
+      builder.add(resolver.getCellUnsafeRelPath(sourcePath).toString());
     }
 
     if (useDebugPrefixMap) {

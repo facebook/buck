@@ -1144,15 +1144,6 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testBuildAppleLibraryThatHasSwiftWithFilelist() throws Exception {
-    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
-    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
-
-    testBuildAppleLibraryThatHasSwiftWithLocalConfig(
-        ImmutableMap.of("swift", ImmutableMap.of("use_filelist", "true")));
-  }
-
-  @Test
   public void testBuildAppleLibraryThatHasSwift() throws Exception {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

@@ -121,8 +121,6 @@ public class SwiftCompile extends SwiftCompileBase {
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)));
-    swiftFileListPath.map(
-        path -> steps.add(makeFileListStep(context.getSourcePathResolver(), path)));
     steps.add(makeCompileStep(context.getSourcePathResolver()));
 
     return steps.build();

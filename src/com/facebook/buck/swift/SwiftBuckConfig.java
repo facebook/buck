@@ -26,7 +26,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   private static final String SECTION_NAME = "swift";
   public static final String COMPILER_FLAGS_NAME = "compiler_flags";
   public static final String VERSION_NAME = "version";
-  public static final String USE_FILELIST = "use_filelist";
   public static final String USE_ARGFILE = "use_argfile";
   public static final String PROJECT_WMO = "project_wmo";
   public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
@@ -69,10 +68,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
 
   public Optional<String> getVersion() {
     return delegate.getValue(SECTION_NAME, VERSION_NAME);
-  }
-
-  public boolean getUseFileList() {
-    return delegate.getBooleanValue(SECTION_NAME, USE_FILELIST, false);
   }
 
   public boolean getUseArgfile() {

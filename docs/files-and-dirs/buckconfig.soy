@@ -5001,16 +5001,6 @@ buck = .
 
 {call buckconfig.entry}
   {param section: 'swift' /}
-  {param name: 'use_filelist' /}
-  {param example_value: 'true' /}
-  {param description}
-  If enabled, the list of input files to the Swift compiler is passed in a file.
-  This is useful when trying to shorten the number of arguments. Also see <code>swift.use_argfile</code>.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'swift' /}
   {param name: 'use_argfile' /}
   {param example_value: 'true' /}
   {param description}
