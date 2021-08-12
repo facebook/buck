@@ -18,6 +18,8 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRule;
@@ -27,9 +29,13 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.args.StringArg;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -63,10 +69,40 @@ public class StripLinkableTest {
     SourcePath libraryPath = DefaultBuildTargetSourcePath.of(libraryTarget);
     Tool stripTool = new HashedFileTool(DefaultBuildTargetSourcePath.of(toolTarget));
 
+    NdkCxxPlatform platform =
+        NdkCxxPlatform.builder()
+            .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+            .setCxxRuntime(NdkCxxRuntime.GNUSTL)
+            .setObjdump(new CommandTool.Builder().addArg("objdump").build())
+            .build();
+
     StripLinkable stripRule =
         new StripLinkable(
-            target, filesystem, ruleFinder, stripTool, libraryPath, "somename.so", false);
+            platform, target, filesystem, ruleFinder, stripTool, libraryPath, "somename.so", false);
 
     assertEquals(stripRule.getBuildDeps(), ImmutableSortedSet.of(libraryRule, toolRule));
+  }
+
+  @Test
+  public void testStripFlags() {
+    NdkCxxPlatform platformDefaultFlags =
+        NdkCxxPlatform.builder()
+            .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+            .setCxxRuntime(NdkCxxRuntime.GNUSTL)
+            .setObjdump(new CommandTool.Builder().addArg("objdump").build())
+            .build();
+
+    NdkCxxPlatform platformCustomFlags =
+        NdkCxxPlatform.builder()
+            .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+            .setCxxRuntime(NdkCxxRuntime.GNUSTL)
+            .setObjdump(new CommandTool.Builder().addArg("objdump").build())
+            .setStripApkLibsFlags(ImmutableList.of(StringArg.of("-s")))
+            .build();
+
+    assertEquals(
+        ImmutableList.of(StringArg.of("--strip-unneeded")),
+        platformDefaultFlags.getStripApkLibsFlags());
+    assertEquals(ImmutableList.of(StringArg.of("-s")), platformCustomFlags.getStripApkLibsFlags());
   }
 }

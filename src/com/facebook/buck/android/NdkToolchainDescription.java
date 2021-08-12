@@ -29,7 +29,11 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.google.common.base.Verify;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 /**
@@ -52,6 +56,13 @@ public class NdkToolchainDescription
       throw new HumanReadableException(
           "Expected %s to be an instance of cxx_platform.", cxxPlatformRule.getBuildTarget());
     }
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            context.getActionGraphBuilder(),
+            ImmutableList.of(LocationMacroExpander.INSTANCE),
+            Optional.empty());
 
     return new NdkToolchainBuildRule(
         buildTarget,
@@ -59,6 +70,12 @@ public class NdkToolchainDescription
         (ProvidesCxxPlatform) cxxPlatformRule,
         args.getSharedRuntimePath(),
         args.getCxxRuntime(),
+        args.getStripApkLibsFlags()
+            .map(
+                flags ->
+                    flags.stream()
+                        .map(macrosConverter::convert)
+                        .collect(ImmutableList.toImmutableList())),
         Tools.resolveTool(args.getObjdump(), context.getActionGraphBuilder()));
   }
 
@@ -87,5 +104,8 @@ public class NdkToolchainDescription
 
     /** Ndk runtime type. */
     NdkCxxRuntime getCxxRuntime();
+
+    /** Flags to pass to the strip command. */
+    Optional<ImmutableList<StringWithMacros>> getStripApkLibsFlags();
   }
 }

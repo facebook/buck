@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -26,6 +27,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -41,6 +43,7 @@ import com.google.common.collect.ImmutableList;
 public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
 
   public StripLinkable(
+      NdkCxxPlatform ndkPlatform,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
@@ -52,23 +55,31 @@ public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new Impl(stripTool, sourcePathToStrip, strippedObjectName, withDownwardApi));
+        new Impl(
+            stripTool,
+            ndkPlatform.getStripApkLibsFlags(),
+            sourcePathToStrip,
+            strippedObjectName,
+            withDownwardApi));
   }
 
   /** internal buildable implementation */
   static class Impl implements Buildable {
 
     @AddToRuleKey private final Tool stripTool;
+    @AddToRuleKey private final ImmutableList<Arg> stripArgs;
     @AddToRuleKey private final SourcePath sourcePathToStrip;
     @AddToRuleKey private final OutputPath output;
     @AddToRuleKey private final boolean withDownwardApi;
 
     Impl(
         Tool stripTool,
+        ImmutableList<Arg> stripArgs,
         SourcePath sourcePathToStrip,
         String strippedObjectName,
         boolean withDownwardApi) {
       this.stripTool = stripTool;
+      this.stripArgs = stripArgs;
       this.sourcePathToStrip = sourcePathToStrip;
       this.output = new OutputPath(strippedObjectName);
       this.withDownwardApi = withDownwardApi;
@@ -89,7 +100,7 @@ public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
               filesystem.getRootPath(),
               stripTool.getEnvironment(sourcePathResolverAdapter),
               stripTool.getCommandPrefix(sourcePathResolverAdapter),
-              ImmutableList.of("--strip-unneeded"),
+              Arg.stringify(this.stripArgs, sourcePathResolverAdapter),
               sourcePathResolverAdapter.getAbsolutePath(sourcePathToStrip),
               filesystem.resolve(destination),
               ProjectFilesystemUtils.relativize(

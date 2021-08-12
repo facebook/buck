@@ -27,6 +27,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.ProvidesCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.google.common.collect.ImmutableList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,6 +41,7 @@ public class NdkToolchainBuildRule extends NoopBuildRule implements ProvidesNdkC
 
   private final ProvidesCxxPlatform cxxPlatformRule;
   private final Optional<SourcePath> sharedRuntimePath;
+  private final Optional<ImmutableList<Arg>> stripApkLibsFlags;
   private final NdkCxxRuntime cxxRuntime;
   private final Tool objdump;
 
@@ -50,11 +53,13 @@ public class NdkToolchainBuildRule extends NoopBuildRule implements ProvidesNdkC
       ProvidesCxxPlatform cxxPlatformRule,
       Optional<SourcePath> sharedRuntimePath,
       NdkCxxRuntime cxxRuntime,
+      Optional<ImmutableList<Arg>> stripApkLibsFlags,
       Tool objdump) {
     super(buildTarget, projectFilesystem);
 
     this.cxxPlatformRule = cxxPlatformRule;
     this.sharedRuntimePath = sharedRuntimePath;
+    this.stripApkLibsFlags = stripApkLibsFlags;
     this.cxxRuntime = cxxRuntime;
     this.objdump = objdump;
     this.resolvedCache = new ConcurrentHashMap<>();
@@ -64,12 +69,15 @@ public class NdkToolchainBuildRule extends NoopBuildRule implements ProvidesNdkC
   public NdkCxxPlatform getNdkCxxPlatform(Flavor flavor) {
     return resolvedCache.computeIfAbsent(
         flavor,
-        ignored ->
-            NdkCxxPlatform.builder()
-                .setCxxPlatform(cxxPlatformRule.getPlatformWithFlavor(flavor))
-                .setCxxSharedRuntimePath(sharedRuntimePath)
-                .setCxxRuntime(cxxRuntime)
-                .setObjdump(objdump)
-                .build());
+        ignored -> {
+          NdkCxxPlatform.Builder builder =
+              NdkCxxPlatform.builder()
+                  .setCxxPlatform(cxxPlatformRule.getPlatformWithFlavor(flavor))
+                  .setCxxSharedRuntimePath(sharedRuntimePath)
+                  .setCxxRuntime(cxxRuntime)
+                  .setObjdump(objdump);
+          stripApkLibsFlags.ifPresent(flags -> builder.setStripApkLibsFlags(flags));
+          return builder.build();
+        });
   }
 }

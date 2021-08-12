@@ -40,6 +40,7 @@ ndk_toolchain(
     cxx_toolchain = ":ndk_cxx_toolchain_linker_flags",
     objdump = "//:objdump",
     shared_runtime_path = "//data:runtime.so",
+    strip_apk_libs_flags = ["--strip-unneeded"],
     visibility = ["PUBLIC"],
 )
 

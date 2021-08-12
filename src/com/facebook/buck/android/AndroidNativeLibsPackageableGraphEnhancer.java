@@ -571,6 +571,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             targetForStripRule,
             (buildTarget) ->
                 new StripLinkable(
+                    platform,
                     targetForStripRule,
                     projectFilesystem,
                     graphBuilder,

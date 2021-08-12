@@ -20,8 +20,12 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /** Adds Android-specific tools to {@link CxxPlatform}. */
 @BuckStyleValueWithBuilder
@@ -35,6 +39,11 @@ public interface NdkCxxPlatform {
 
   /** @return the {@link Path} to the C/C++ runtime library, if one is required. */
   Optional<SourcePath> getCxxSharedRuntimePath();
+
+  @Value.Default
+  default ImmutableList<Arg> getStripApkLibsFlags() {
+    return ImmutableList.of(StringArg.of("--strip-unneeded"));
+  }
 
   static Builder builder() {
     return new Builder();
