@@ -233,6 +233,34 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testAttemptToGenerateWorkspaceFromBuckModuleContainingInvalidTargets()
+      throws IOException {
+    ProjectWorkspace workspace = createWorkspace(this, "project_implicit_workspace_generation");
+
+    ProcessResult processResult = workspace.runBuckCommand("project", "//mixed:", "--experimental");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            "//mixed:res must be a xcode_workspace_config, apple_binary, apple_bundle, apple_library"));
+  }
+
+  @Test
+  public void testGenerateWorkspaceFromBuckModuleContainingInvalidTargets() throws IOException {
+    ProjectWorkspace workspace = createWorkspace(this, "project_implicit_workspace_generation");
+
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "project",
+            "//mixed:",
+            "--experimental",
+            "--config",
+            "apple.project_generator_ignore_invalid_targets=true");
+    processResult.assertSuccess();
+    Files.exists(workspace.resolve("mixed/lib.xcodeproj/project.pbxproj"));
+  }
+
+  @Test
   public void testGeneratingProjectWithTargetUsingGenruleSourceBuildsGenrule() throws IOException {
     ProjectWorkspace workspace = createWorkspace(this, "target_using_genrule_source");
 

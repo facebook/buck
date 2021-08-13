@@ -118,6 +118,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String PROJECT_GENERATOR_SWIFT_LABELS = "project_generator_swift_labels";
   private static final String PROJECT_GENERATOR_INDEX_VIA_BUILD_FLAGS =
       "project_generator_index_via_build_flags";
+  private static final String PROJECT_GENERATOR_IGNORE_INVALID_TARGETS =
+      "project_generator_ignore_invalid_targets";
 
   private final BuckConfig delegate;
 
@@ -672,6 +674,16 @@ public class AppleConfig implements ConfigView<BuckConfig> {
    */
   public boolean getProjectGeneratorIndexViaBuildFlags() {
     return delegate.getBooleanValue(APPLE_SECTION, PROJECT_GENERATOR_INDEX_VIA_BUILD_FLAGS, false);
+  }
+
+  /**
+   * @return If true does not raise exceptions when given targets that can't be used to generate an
+   *     Xcode workspace. This is useful when running `buck project` on Buck modules, since it
+   *     enables project generation for valid targets under the given Buck module and ignores the
+   *     invalid targets.
+   */
+  public boolean getProjectGeneratorIgnoreInvalidTargets() {
+    return delegate.getBooleanValue(APPLE_SECTION, PROJECT_GENERATOR_IGNORE_INVALID_TARGETS, false);
   }
 
   @BuckStyleValue

@@ -507,6 +507,7 @@ public class XCodeProjectCommandHelper {
       throws IOException, InterruptedException {
 
     XCodeDescriptions xcodeDescriptions = XCodeDescriptionsFactory.create(pluginManager);
+    AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
 
     LOG.debug(
         "Generating workspace for config targets %s", targetGraphCreationResult.getBuildTargets());
@@ -524,19 +525,34 @@ public class XCodeProjectCommandHelper {
         if (canGenerateImplicitWorkspaceForDescription(actualNode.getDescription())) {
           workspaceArgs = createImplicitWorkspaceArgs(actualNode);
         } else {
-          throw new HumanReadableException(
-              "%s must point to a xcode_workspace_config, apple_binary, apple_bundle, apple_library, or apple_test",
-              inputNode);
+          if (appleConfig.getProjectGeneratorIgnoreInvalidTargets()) {
+            LOG.warn(
+                String.format(
+                    "Ignoring %s since a target must point to a xcode_workspace_config, apple_binary, apple_bundle, apple_library, or apple_test.",
+                    inputNode));
+            continue;
+          } else {
+            throw new HumanReadableException(
+                "%s must point to a xcode_workspace_config, apple_binary, apple_bundle, apple_library, or apple_test",
+                inputNode);
+          }
         }
       } else if (canGenerateImplicitWorkspaceForDescription(inputNode.getDescription())) {
         workspaceArgs = createImplicitWorkspaceArgs(inputNode);
       } else {
-        throw new HumanReadableException(
-            "%s must be a xcode_workspace_config, apple_binary, apple_bundle, apple_library, apple_test, or an alias pointing to one of the above.",
-            inputNode);
+        if (appleConfig.getProjectGeneratorIgnoreInvalidTargets()) {
+          LOG.warn(
+              String.format(
+                  "Ignoring %s since a target must point to a xcode_workspace_config, apple_binary, apple_bundle, apple_library, or apple_test.",
+                  inputNode));
+          continue;
+        } else {
+          throw new HumanReadableException(
+              "%s must be a xcode_workspace_config, apple_binary, apple_bundle, apple_library, apple_test, or an alias pointing to one of the above.",
+              inputNode);
+        }
       }
 
-      AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
       HalideBuckConfig halideBuckConfig = new HalideBuckConfig(buckConfig);
       CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
       SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(buckConfig);
