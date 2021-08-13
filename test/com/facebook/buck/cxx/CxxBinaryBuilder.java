@@ -29,10 +29,10 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -67,7 +67,7 @@ public class CxxBinaryBuilder
             toolchainProvider,
             cxxBuckConfig,
             DownwardApiConfig.of(buckConfig),
-            new InferBuckConfig(buckConfig)),
+            InferConfig.of(buckConfig)),
         new CxxBinaryMetadataFactory(toolchainProvider),
         new CxxBinaryFlavored(toolchainProvider, cxxBuckConfig));
   }

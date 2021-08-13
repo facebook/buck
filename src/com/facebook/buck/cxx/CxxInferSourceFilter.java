@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
+import com.facebook.buck.infer.InferConfig;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -24,7 +24,7 @@ class CxxInferSourceFilter {
 
   private final Optional<Pattern> blockListRegex;
 
-  CxxInferSourceFilter(InferBuckConfig inferConfig) {
+  CxxInferSourceFilter(InferConfig inferConfig) {
     Optional<String> rawFilterRegex = inferConfig.getBlockListRegex();
 
     blockListRegex = rawFilterRegex.map(Pattern::compile);

@@ -178,7 +178,10 @@ public class MultiarchFileTest {
     assertThat(
         "Should throw exception about different architectures",
         exception.getHumanReadableErrorMessage(),
-        endsWith("Fat binaries can only be generated from binaries compiled for the same SDK."));
+        Matchers.either(
+                endsWith(
+                    "Fat binaries can only be generated from binaries compiled for the same SDK."))
+            .or(endsWith("infer platform not configured")));
   }
 
   @Test
@@ -205,7 +208,9 @@ public class MultiarchFileTest {
       assertThat(
           "Should throw exception about special build actions.",
           exception.getHumanReadableErrorMessage(),
-          endsWith("Fat binaries is only supported when building an actual binary."));
+          Matchers.either(
+                  endsWith("Fat binaries is only supported when building an actual binary."))
+              .or(endsWith("infer platform not configured")));
     }
   }
 

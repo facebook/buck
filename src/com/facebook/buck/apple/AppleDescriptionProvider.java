@@ -30,8 +30,8 @@ import com.facebook.buck.cxx.CxxLibraryFlavored;
 import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
 import com.facebook.buck.cxx.CxxLibraryMetadataFactory;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import java.util.Arrays;
@@ -46,14 +46,14 @@ public class AppleDescriptionProvider implements DescriptionProvider {
     BuckConfig config = context.getBuckConfig();
     SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
+    InferConfig inferConfig = InferConfig.of(config);
     AppleConfig appleConfig = config.getView(AppleConfig.class);
     DownwardApiConfig downwardApiConfig = config.getView(DownwardApiConfig.class);
 
     CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
         new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig);
     CxxBinaryFactory cxxBinaryFactory =
-        new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, downwardApiConfig, inferBuckConfig);
+        new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, downwardApiConfig, inferConfig);
     CxxBinaryMetadataFactory cxxBinaryMetadataFactory =
         new CxxBinaryMetadataFactory(toolchainProvider);
     CxxBinaryFlavored cxxBinaryFlavored = new CxxBinaryFlavored(toolchainProvider, cxxBuckConfig);
@@ -63,7 +63,7 @@ public class AppleDescriptionProvider implements DescriptionProvider {
     CxxLibraryFlavored cxxLibraryFlavored =
         new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig);
     CxxLibraryFactory cxxLibraryFactory =
-        new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig, downwardApiConfig);
+        new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferConfig, downwardApiConfig);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(
             toolchainProvider, config.getFilesystem(), cxxBuckConfig, downwardApiConfig);

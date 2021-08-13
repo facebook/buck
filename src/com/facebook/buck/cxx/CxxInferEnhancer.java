@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -30,9 +31,10 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.infer.InferConfig;
+import com.facebook.buck.infer.InferPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
@@ -78,13 +80,19 @@ public final class CxxInferEnhancer {
       return result;
     }
 
-    private static void checkNoInferFlavors(ImmutableSet<Flavor> flavors) {
+    private static void assertNoInferFlavors(ImmutableSet<Flavor> flavors) {
+      Optional<Flavor> f = findSupportedFlavor(FlavorSet.copyOf(flavors));
+      Preconditions.checkArgument(
+          !f.isPresent(), "Unexpected infer-related flavor found: %s", f.toString());
+    }
+
+    public static Optional<Flavor> findSupportedFlavor(FlavorSet flavors) {
       for (InferFlavors f : InferFlavors.values()) {
-        Preconditions.checkArgument(
-            !flavors.contains(f.getFlavor()),
-            "Unexpected infer-related flavor found: %s",
-            f.toString());
+        if (flavors.contains(f.getFlavor())) {
+          return Optional.of(f.getFlavor());
+        }
       }
+      return Optional.empty();
     }
   }
 
@@ -99,30 +107,34 @@ public final class CxxInferEnhancer {
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
+      InferPlatform inferPlatform,
       CxxConstructorArg args,
-      InferBuckConfig inferBuckConfig) {
+      InferConfig inferConfig) {
     return new CxxInferEnhancer(
-            graphBuilder, cxxBuckConfig, inferBuckConfig, downwardApiConfig, cxxPlatform)
+            graphBuilder, cxxBuckConfig, inferConfig, downwardApiConfig, cxxPlatform, inferPlatform)
         .requireInferRule(target, cellRoots, filesystem, args);
   }
 
   private final ActionGraphBuilder graphBuilder;
   private final CxxBuckConfig cxxBuckConfig;
-  private final InferBuckConfig inferBuckConfig;
+  private final InferConfig inferConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final CxxPlatform cxxPlatform;
+  private final InferPlatform inferPlatform;
 
   private CxxInferEnhancer(
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
-      InferBuckConfig inferBuckConfig,
+      InferConfig inferConfig,
       DownwardApiConfig downwardApiConfig,
-      CxxPlatform cxxPlatform) {
+      CxxPlatform cxxPlatform,
+      InferPlatform inferPlatform) {
     this.graphBuilder = graphBuilder;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.inferBuckConfig = inferBuckConfig;
+    this.inferConfig = inferConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.cxxPlatform = cxxPlatform;
+    this.inferPlatform = inferPlatform;
   }
 
   private BuildRule requireInferRule(
@@ -158,7 +170,7 @@ public final class CxxInferEnhancer {
 
     return graphBuilder.addToIndex(
         new CxxInferCaptureTransitiveRule(
-            target, filesystem, graphBuilder, captureRules, inferBuckConfig.canExecuteRemotely()));
+            target, filesystem, graphBuilder, captureRules, inferConfig.executeRemotely()));
   }
 
   private CxxInferCaptureRulesAggregator requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
@@ -203,7 +215,7 @@ public final class CxxInferEnhancer {
 
   private ImmutableMap<String, CxxSource> collectSources(
       BuildTarget buildTarget, CellPathResolver cellRoots, CxxConstructorArg args) {
-    InferFlavors.checkNoInferFlavors(buildTarget.getFlavors().getSet());
+    InferFlavors.assertNoInferFlavors(buildTarget.getFlavors().getSet());
     return CxxDescriptionEnhancer.parseCxxSources(
         buildTarget, cellRoots, graphBuilder, cxxPlatform, args);
   }
@@ -276,7 +288,7 @@ public final class CxxInferEnhancer {
       ImmutableMap<String, CxxSource> sources,
       CxxConstructorArg args) {
 
-    InferFlavors.checkNoInferFlavors(target.getFlavors().getSet());
+    InferFlavors.assertNoInferFlavors(target.getFlavors().getSet());
 
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
@@ -354,6 +366,7 @@ public final class CxxInferEnhancer {
             args.getPrefixHeader(),
             args.getPrecompiledHeader(),
             PicType.PDC);
-    return factory.requireInferCaptureBuildRules(sources, inferBuckConfig, downwardApiConfig);
+    return factory.requireInferCaptureBuildRules(
+        sources, inferConfig, downwardApiConfig, inferPlatform);
   }
 }

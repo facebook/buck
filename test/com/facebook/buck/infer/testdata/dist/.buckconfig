@@ -3,6 +3,6 @@
     compile_against_abis = true
     jar_spool_mode = direct_to_jar
 
-[infer_java]
+[infer]
     dist = "//:infer_dist"
     dist_binary = "fake_infer"

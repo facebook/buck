@@ -18,16 +18,17 @@ package com.facebook.buck.infer;
 
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.infer.toolchain.InferPlatformFactory;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import java.io.IOException;
 import java.util.Optional;
 
 public class InferAssumptions {
-  public static void assumeInferIsConfigured() {
+  public static void assumeInferIsConfigured(ProjectWorkspace workspace) throws IOException {
     Optional<UnresolvedInferPlatform> unresolvedPlatform =
         InferPlatformFactory.getBasedOnConfigAndPath(
-            FakeBuckConfig.empty(), new ExecutableFinder());
+            InferConfig.of(workspace.asCell().getBuckConfig()), new ExecutableFinder());
 
     assumeTrue("infer is not available", unresolvedPlatform.isPresent());
   }

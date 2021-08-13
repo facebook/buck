@@ -33,7 +33,7 @@ import java.util.Optional;
  * Default implementation of {@link UnresolvedInferPlatform} which build platform based on values
  * from config and (if provided) environment.
  */
-class DefaultUnresolvedInferPlatform implements UnresolvedInferPlatform {
+class DefaultUnresolvedInferPlatform extends UnresolvedInferPlatform {
   private final InferConfig inferConfig;
   private final ToolProvider toolProvider;
 
@@ -57,7 +57,7 @@ class DefaultUnresolvedInferPlatform implements UnresolvedInferPlatform {
   }
 
   @Override
-  public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration configuration) {
+  protected Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration configuration) {
     ImmutableList.Builder<BuildTarget> deps = ImmutableList.builder();
 
     deps.addAll(toolProvider.getParseTimeDeps(configuration));

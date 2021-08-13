@@ -55,6 +55,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxDiagnosticsEnhancer;
 import com.facebook.buck.cxx.CxxFocusedDebugTargets;
 import com.facebook.buck.cxx.CxxHeaders;
+import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxLibraryDescriptionDelegate;
@@ -1165,6 +1166,13 @@ public class AppleLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     MultiarchFileInfos.checkTargetSupportsMultiarch(buildTarget);
     AppleDescriptions.findToolchainDeps(buildTarget, targetGraphOnlyDepsBuilder, toolchainProvider);
+
+    // Infer target/binary added as a parse-time dep to flavoured ObjcLibrary
+    if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
+      cxxLibraryFactory
+          .getUnresolvedInferPlatform(buildTarget.getTargetConfiguration())
+          .addParseTimeDepsToInferFlavored(targetGraphOnlyDepsBuilder, buildTarget);
+    }
   }
 
   public static boolean isNotStaticallyLinkedLibraryNode(

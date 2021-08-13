@@ -30,21 +30,19 @@ import com.google.common.collect.ImmutableCollection;
  *
  * <p>During action graph creation it can be resolved to {@link InferPlatform}.
  */
-public interface UnresolvedInferPlatform {
+public abstract class UnresolvedInferPlatform {
   /** Resolves to the platform. */
-  InferPlatform resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration);
+  public abstract InferPlatform resolve(
+      BuildRuleResolver resolver, TargetConfiguration targetConfiguration);
 
   /** Returns {@link InferPlatform} parse-time deps. */
-  Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration);
+  protected abstract Iterable<BuildTarget> getParseTimeDeps(
+      TargetConfiguration targetConfiguration);
 
   /** Helper method to add parse-time deps to target graph for nullsafe flavored targets. */
-  static void addParseTimeDepsToInferFlavored(
+  public void addParseTimeDepsToInferFlavored(
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder,
-      BuildTarget buildTarget,
-      UnresolvedInferPlatform platform) {
-    if (InferJava.findSupportedFlavor(buildTarget.getFlavors()).isPresent()) {
-      targetGraphOnlyDepsBuilder.addAll(
-          platform.getParseTimeDeps(buildTarget.getTargetConfiguration()));
-    }
+      BuildTarget buildTarget) {
+    targetGraphOnlyDepsBuilder.addAll(this.getParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
 }

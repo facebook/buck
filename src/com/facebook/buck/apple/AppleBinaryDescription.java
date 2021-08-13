@@ -52,6 +52,7 @@ import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxFocusedDebugTargets;
+import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.cxx.CxxLinkGroupMapDatabase;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
@@ -790,6 +791,13 @@ public class AppleBinaryDescription
               cxxPlatformsProvider, buildTarget, Optional.empty()));
     }
     AppleDescriptions.findToolchainDeps(buildTarget, targetGraphOnlyDepsBuilder, toolchainProvider);
+
+    // Infer target/binary added as a parse-time dep to flavoured ObjCBinary
+    if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
+      cxxBinaryFactory
+          .getUnresolvedInferPlatform(buildTarget.getTargetConfiguration())
+          .addParseTimeDepsToInferFlavored(targetGraphOnlyDepsBuilder, buildTarget);
+    }
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider(

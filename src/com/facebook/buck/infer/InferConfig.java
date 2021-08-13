@@ -33,8 +33,7 @@ import org.immutables.value.Value;
 /** Infer specific buck config */
 @BuckStyleValue
 public abstract class InferConfig implements ConfigView<BuckConfig> {
-  // TODO(arr): change to just "infer" when cxx and java configs are consolidated
-  private static final String SECTION = "infer_java";
+  private static final String SECTION = "infer";
 
   private static final String DIST_FIELD = "dist";
   private static final String DEFAULT_DIST_BINARY = "infer";
@@ -83,6 +82,11 @@ public abstract class InferConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public Optional<String> getVersion() {
     return getDelegate().getValue(SECTION, "version");
+  }
+
+  @Value.Lazy
+  public Optional<String> getBlockListRegex() {
+    return getDelegate().getValue(SECTION, "block_list_regex");
   }
 
   @Value.Lazy

@@ -119,6 +119,13 @@ public class CxxBinaryDescription
             depsQuery ->
                 QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
                     .forEach(targetGraphOnlyDepsBuilder::add));
+
+    // Infer target/binary added as a parse-time dep to flavoured ObjCBinary
+    if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
+      cxxBinaryFactory
+          .getUnresolvedInferPlatform(buildTarget.getTargetConfiguration())
+          .addParseTimeDepsToInferFlavored(targetGraphOnlyDepsBuilder, buildTarget);
+    }
   }
 
   @Override

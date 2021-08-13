@@ -247,14 +247,14 @@ public class AndroidLibraryDescription
     javacFactory.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
 
-    unresolvedInferPlatform
-        .apply(buildTarget.getTargetConfiguration())
-        .ifPresent(
-            p ->
-                UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
-                    targetGraphOnlyDepsBuilder, buildTarget, p));
-    Nullsafe.addParseTimeDeps(
-        targetGraphOnlyDepsBuilder, buildTarget, NullsafeConfig.of(javaBuckConfig.getDelegate()));
+    if (InferJava.findSupportedFlavor(buildTarget.getFlavors()).isPresent()) {
+      unresolvedInferPlatform
+          .apply(buildTarget.getTargetConfiguration())
+          .ifPresent(
+              p -> p.addParseTimeDepsToInferFlavored(targetGraphOnlyDepsBuilder, buildTarget));
+      Nullsafe.addParseTimeDeps(
+          targetGraphOnlyDepsBuilder, buildTarget, NullsafeConfig.of(javaBuckConfig.getDelegate()));
+    }
   }
 
   public interface CoreArg

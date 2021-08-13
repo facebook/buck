@@ -22,8 +22,8 @@ import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.support.cli.config.CliConfig;
@@ -39,7 +39,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
     BuckConfig buckConfig = context.getBuckConfig();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(buckConfig);
+    InferConfig inferConfig = InferConfig.of(buckConfig);
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
     CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
@@ -48,7 +48,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
     CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
         new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig);
     CxxBinaryFactory cxxBinaryFactory =
-        new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, downwardApiConfig, inferBuckConfig);
+        new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, downwardApiConfig, inferConfig);
     CxxBinaryMetadataFactory cxxBinaryMetadataFactory =
         new CxxBinaryMetadataFactory(toolchainProvider);
     CxxBinaryFlavored cxxBinaryFlavored = new CxxBinaryFlavored(toolchainProvider, cxxBuckConfig);
@@ -66,7 +66,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
     CxxLibraryFlavored cxxLibraryFlavored =
         new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig);
     CxxLibraryFactory cxxLibraryFactory =
-        new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig, downwardApiConfig);
+        new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferConfig, downwardApiConfig);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(
             toolchainProvider, buckConfig.getFilesystem(), cxxBuckConfig, downwardApiConfig);

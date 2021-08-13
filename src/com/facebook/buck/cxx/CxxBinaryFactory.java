@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -33,7 +34,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
@@ -42,6 +42,9 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.infer.InferConfig;
+import com.facebook.buck.infer.UnresolvedInferPlatform;
+import com.facebook.buck.infer.toolchain.InferToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.Collections2;
@@ -56,17 +59,28 @@ public class CxxBinaryFactory {
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
-  private final InferBuckConfig inferBuckConfig;
+  private final InferConfig inferConfig;
 
   public CxxBinaryFactory(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
-      InferBuckConfig inferBuckConfig) {
+      InferConfig inferConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
-    this.inferBuckConfig = inferBuckConfig;
+    this.inferConfig = inferConfig;
+  }
+
+  public UnresolvedInferPlatform getUnresolvedInferPlatform(
+      TargetConfiguration targetConfiguration) {
+    return toolchainProvider
+        .getByNameIfPresent(InferToolchain.DEFAULT_NAME, targetConfiguration, InferToolchain.class)
+        .map(InferToolchain::getDefaultPlatform)
+        .orElseThrow(
+            () ->
+                new HumanReadableException(
+                    "Cannot use infer flavor: infer platform not configured"));
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -161,6 +175,7 @@ public class CxxBinaryFactory {
     }
 
     if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)) {
+      TargetConfiguration tc = target.getTargetConfiguration();
       return CxxInferEnhancer.requireInferRule(
           target,
           projectFilesystem,
@@ -169,8 +184,9 @@ public class CxxBinaryFactory {
           cxxBuckConfig,
           downwardApiConfig,
           cxxPlatform,
+          getUnresolvedInferPlatform(tc).resolve(graphBuilder, tc),
           args,
-          inferBuckConfig);
+          inferConfig);
     }
 
     CxxLinkAndCompileRules cxxLinkAndCompileRules =

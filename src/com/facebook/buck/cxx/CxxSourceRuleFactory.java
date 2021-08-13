@@ -38,13 +38,13 @@ import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.infer.InferConfig;
+import com.facebook.buck.infer.InferPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.ArgFactory;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -76,7 +76,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 import org.immutables.value.Value;
@@ -569,8 +568,9 @@ public abstract class CxxSourceRuleFactory {
   private CxxInferCaptureRule requireInferCaptureBuildRule(
       String name,
       CxxSource source,
-      InferBuckConfig inferConfig,
-      DownwardApiConfig downwardApiConfig) {
+      InferConfig inferConfig,
+      DownwardApiConfig downwardApiConfig,
+      InferPlatform inferPlatform) {
     return (CxxInferCaptureRule)
         getActionGraphBuilder()
             .computeIfAbsent(
@@ -586,20 +586,9 @@ public abstract class CxxSourceRuleFactory {
                   PreprocessorDelegateCacheValue preprocessorDelegateValue =
                       getPreprocessorDelegateCacheValue(source);
 
-                  Stream<Arg> commandPrefixFlags =
-                      CxxSourceTypes.getCompiler(
-                              getCxxPlatform(),
-                              CxxSourceTypes.getPreprocessorOutputType(sourceType))
-                          .resolve(graphBuilder, getBaseBuildTarget().getTargetConfiguration())
-                          .getCommandPrefix(getPathResolver()).stream()
-                          .skip(1) // drop the binary
-                          .map(ArgFactory::from);
-
                   CxxToolFlags ppFlags =
                       CxxToolFlags.copyOf(
-                          Stream.concat(
-                                  commandPrefixFlags,
-                                  getPlatformPreprocessorFlags(sourceType).stream())
+                          getPlatformPreprocessorFlags(sourceType).stream()
                               .collect(ImmutableList.toImmutableList()),
                           rulePreprocessorFlags.apply(sourceType),
                           ImmutableList.of());
@@ -615,6 +604,7 @@ public abstract class CxxSourceRuleFactory {
                       getPreInclude(),
                       getCompileOutputName(name),
                       makeCompilerDelegateForPreprocessAndCompile(source),
+                      inferPlatform,
                       preprocessorDelegateValue.getPreprocessorDelegate(),
                       inferConfig,
                       downwardApiConfig.isEnabledForCxx());
@@ -877,8 +867,9 @@ public abstract class CxxSourceRuleFactory {
   /** Returns a set of {@link CxxInferCaptureRule} derived from {@code sources} param */
   public ImmutableSet<CxxInferCaptureRule> requireInferCaptureBuildRules(
       ImmutableMap<String, CxxSource> sources,
-      InferBuckConfig inferConfig,
-      DownwardApiConfig downwardApiConfig) {
+      InferConfig inferConfig,
+      DownwardApiConfig downwardApiConfig,
+      InferPlatform inferPlatform) {
 
     ImmutableSet.Builder<CxxInferCaptureRule> rules = ImmutableSet.builder();
 
@@ -893,7 +884,9 @@ public abstract class CxxSourceRuleFactory {
       Preconditions.checkState(
           CxxSourceTypes.isPreprocessableType(source.getType()),
           "Only preprocessable source types are currently supported");
-      rules.add(requireInferCaptureBuildRule(name, source, inferConfig, downwardApiConfig));
+      rules.add(
+          requireInferCaptureBuildRule(
+              name, source, inferConfig, downwardApiConfig, inferPlatform));
     }
 
     return rules.build();

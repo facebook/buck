@@ -42,8 +42,8 @@ import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.GccCompiler;
 import com.facebook.buck.cxx.toolchain.GccPreprocessor;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.ToolType;
+import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.WatchmanError;
@@ -81,7 +81,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
   }
 
   private CxxInferCaptureRule createCaptureRule(
-      BuildTarget buildTarget, ProjectFilesystem filesystem, InferBuckConfig inferBuckConfig) {
+      BuildTarget buildTarget, ProjectFilesystem filesystem, InferConfig inferConfig) {
     class FrameworkPathFunction implements AddsToRuleKeyFunction<FrameworkPath, Optional<Path>> {
 
       @Override
@@ -131,8 +131,9 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         Optional.empty(),
         "src.o",
         compilerDelegate,
+        null,
         preprocessorDelegate,
-        inferBuckConfig,
+        inferConfig,
         false);
   }
 
@@ -152,10 +153,9 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         BuildTargetFactory.newInstance("//target:short")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
 
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
+    InferConfig inferConfig = InferConfig.of(FakeBuckConfig.empty());
 
-    CxxInferCaptureRule captureRule =
-        createCaptureRule(testBuildTarget, filesystem, inferBuckConfig);
+    CxxInferCaptureRule captureRule = createCaptureRule(testBuildTarget, filesystem, inferConfig);
 
     RelPath outputFile = CxxInferCaptureTransitiveRule.OUTPUT_PATH;
     CxxCollectAndLogInferDependenciesStep step =
@@ -186,10 +186,9 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         BuildTargetFactory.newInstance("cellname//target:short")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
 
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
+    InferConfig inferConfig = InferConfig.of(FakeBuckConfig.empty());
 
-    CxxInferCaptureRule captureRule =
-        createCaptureRule(testBuildTarget, filesystem, inferBuckConfig);
+    CxxInferCaptureRule captureRule = createCaptureRule(testBuildTarget, filesystem, inferConfig);
 
     RelPath outputFile = CxxInferCaptureTransitiveRule.OUTPUT_PATH;
     CxxCollectAndLogInferDependenciesStep step =
@@ -230,12 +229,10 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         BuildTargetFactory.newInstance("cell2//target/in_cell_two:short2")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_NO_DEPS.getFlavor());
 
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
+    InferConfig inferConfig = InferConfig.of(FakeBuckConfig.empty());
 
-    CxxInferCaptureRule captureRule2 =
-        createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
-    CxxInferCaptureRule captureRule1 =
-        createCaptureRule(buildTarget1, filesystem1, inferBuckConfig);
+    CxxInferCaptureRule captureRule2 = createCaptureRule(buildTarget2, filesystem2, inferConfig);
+    CxxInferCaptureRule captureRule1 = createCaptureRule(buildTarget1, filesystem1, inferConfig);
 
     RelPath outputFile = CxxInferCaptureTransitiveRule.OUTPUT_PATH;
     CxxCollectAndLogInferDependenciesStep step =
@@ -278,12 +275,10 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         BuildTargetFactory.newInstance("cell2//target/in_cell_two:short2")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_NO_DEPS.getFlavor());
 
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
+    InferConfig inferConfig = InferConfig.of(FakeBuckConfig.empty());
 
-    CxxInferCaptureRule captureRule1 =
-        createCaptureRule(buildTarget1, filesystem1, inferBuckConfig);
-    CxxInferCaptureRule captureRule2 =
-        createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
+    CxxInferCaptureRule captureRule1 = createCaptureRule(buildTarget1, filesystem1, inferConfig);
+    CxxInferCaptureRule captureRule2 = createCaptureRule(buildTarget2, filesystem2, inferConfig);
 
     RelPath outputFile = CxxInferCaptureTransitiveRule.OUTPUT_PATH;
     CxxCollectAndLogInferDependenciesStep step =

@@ -30,14 +30,15 @@ import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.infer.InferConfig;
+import com.facebook.buck.infer.InferPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.ArgFactory;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
@@ -60,10 +61,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 
 /** Generate the CFG for a source file */
 class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
@@ -82,8 +83,9 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
       Optional<PreInclude> preInclude,
       String outputName,
       CompilerDelegate compilerDelegate,
+      InferPlatform inferPlatform,
       PreprocessorDelegate preprocessorDelegate,
-      InferBuckConfig inferConfig,
+      InferConfig inferConfig,
       boolean withDownwardApi) {
     super(
         buildTarget,
@@ -92,25 +94,25 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
         new Impl(
             buildTarget,
             filesystem,
-            inferConfig,
             preprocessorFlags,
             compilerFlags,
             input,
             compilerDelegate,
+            inferPlatform,
             preprocessorDelegate,
             outputName,
             withDownwardApi,
             inputType,
             preInclude,
-            inferConfig.canExecuteRemotely()));
+            inferConfig.executeRemotely()));
   }
 
   /** Internal Buildable for {@link CxxInferCaptureRule} rule. */
   static class Impl implements Buildable {
 
     // used to retrieve compiler dependencies
+    @AddToRuleKey private final InferPlatform inferPlatform;
     @AddToRuleKey private final CompilerDelegate compilerDelegate;
-    @AddToRuleKey private final Supplier<VersionedTool> inferToolSupplier;
     @AddToRuleKey private final CxxToolFlags preprocessorFlags;
     @AddToRuleKey private final CxxToolFlags compilerFlags;
     @AddToRuleKey private final SourcePath input;
@@ -130,21 +132,21 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
     Impl(
         BuildTarget buildTarget,
         ProjectFilesystem filesystem,
-        InferBuckConfig inferConfig,
         CxxToolFlags preprocessorFlags,
         CxxToolFlags compilerFlags,
         SourcePath input,
         CompilerDelegate compilerDelegate,
+        InferPlatform inferPlatform,
         PreprocessorDelegate preprocessorDelegate,
         String outputName,
         boolean withDownwardApi,
         CxxSource.Type inputType,
         Optional<PreInclude> preInclude,
         boolean executeRemotely) {
-      this.inferToolSupplier = inferConfig.getInferToolSupplier();
       this.preprocessorFlags = preprocessorFlags;
       this.compilerFlags = compilerFlags;
       this.input = input;
+      this.inferPlatform = inferPlatform;
       this.compilerDelegate = compilerDelegate;
       this.preprocessorDelegate = preprocessorDelegate;
       this.buildTargetFullyQualifiedName = buildTarget.getFullyQualifiedName();
@@ -188,17 +190,24 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
               outputPathResolver));
 
       AbsPath rootPath = filesystem.getRootPath();
+      AbsPath buildCellRootPath = context.getBuildCellRootPath();
       steps.add(
           new IsolatedShellStep(
               rootPath,
-              ProjectFilesystemUtils.relativize(rootPath, context.getBuildCellRootPath()),
+              ProjectFilesystemUtils.relativize(rootPath, buildCellRootPath),
               withDownwardApi) {
 
             @Override
             protected ImmutableList<String> getShellCommandInternal(
                 IsolatedExecutionContext executionContext) {
               return ImmutableList.<String>builder()
-                  .addAll(inferToolSupplier.get().getCommandPrefix(sourcePathResolver))
+                  // We are now in the build-phase and can extract the path to the infer binary.
+                  // Depending on configuration this will be either
+                  // 1/ relative to a dotslash cache folder
+                  // 2/ somewhere in buck-out where the infer 'toolchain' has been extracted.
+                  //    this buck-out folder will work with RE since it part of the folder
+                  //    that gets shipped as input to a RE job
+                  .addAll(inferPlatform.getInferBin().getCommandPrefix(sourcePathResolver))
                   .add("capture")
                   .add(
                       "--results-dir",
@@ -214,7 +223,13 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
 
             @Override
             public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
-              return ImmutableMap.of();
+              // For buck-cell capture using remote-exection, we need to help infer find its config.
+              Path inferconfigPath = Paths.get(buildCellRootPath.toString(), ".inferconfig");
+              if (filesystem.exists(inferconfigPath)) {
+                return ImmutableMap.of("INFERCONFIG", inferconfigPath.toString());
+              } else {
+                return ImmutableMap.of();
+              }
             }
 
             @Override
@@ -279,12 +294,21 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
 
       private ImmutableList<String> getCompilerArgs(AbsPath ruleCellRoot) {
         ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
+
+        ImmutableList<Arg> commandPrefixFlags =
+            compilerDelegate.getCompiler().getCommandPrefix(sourcePathResolver).stream()
+                .skip(1) // drop the binary
+                .map(ArgFactory::from)
+                .collect(ImmutableList.toImmutableList());
+
         return commandBuilder
             .add("-MD", "-MF", getDepFilePath(outputPathResolver).toString())
             .addAll(getPreIncludeArgs(ruleCellRoot))
             .addAll(
                 Arg.stringify(
                     CxxToolFlags.concat(
+                            CxxToolFlags.copyOf(
+                                commandPrefixFlags, ImmutableList.of(), ImmutableList.of()),
                             preprocessorFlags,
                             preprocessorDelegate.getFlagsWithSearchPaths(
                                 /* no precompiled headers */ Optional.empty(), sourcePathResolver),

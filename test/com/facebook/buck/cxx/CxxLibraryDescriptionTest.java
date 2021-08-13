@@ -93,7 +93,6 @@ import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
@@ -1382,32 +1381,6 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         rule.getCxxPreprocessorDeps(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
         Matchers.contains(graphBuilder.requireRule(depABuilder.getTarget())));
-  }
-
-  @Test
-  public void inferCaptureAllIncludesExportedDeps() {
-    CxxLibraryBuilder exportedDepBuilder =
-        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:exported_dep"))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))));
-    CxxLibraryBuilder ruleBuilder =
-        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setExportedDeps(ImmutableSortedSet.of(exportedDepBuilder.getTarget()));
-    TargetGraph targetGraph =
-        TargetGraphFactory.newInstance(exportedDepBuilder.build(), ruleBuilder.build());
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    BuildRule rule =
-        graphBuilder.requireRule(
-            ruleBuilder
-                .getTarget()
-                .withFlavors(
-                    CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor(),
-                    CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR));
-    assertThat(
-        RichStream.from(rule.getBuildDeps())
-            .map(BuildRule::getBuildTarget)
-            .map(BuildTarget::withFlavors)
-            .toImmutableSet(),
-        hasItem(exportedDepBuilder.getTarget()));
   }
 
   @Test

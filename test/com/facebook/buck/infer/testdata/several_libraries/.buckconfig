@@ -3,6 +3,6 @@
     compile_against_abis = true
     jar_spool_mode = direct_to_jar
 
-[infer_java]
+[infer]
   # TODO(arr): switch to 'latest' when supported by infer wrapper
   version=f6f368aa182402a8405730a3459f9226319a2ac4

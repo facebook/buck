@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import java.util.Optional;
 
@@ -34,7 +35,7 @@ public class InferToolchainFactory implements ToolchainFactory<InferToolchain> {
     BuckConfig config = context.getBuckConfig();
     ExecutableFinder executableFinder = context.getExecutableFinder();
 
-    return InferPlatformFactory.getBasedOnConfigAndPath(config, executableFinder)
+    return InferPlatformFactory.getBasedOnConfigAndPath(InferConfig.of(config), executableFinder)
         .map(ImmutableInferToolchain::ofImpl);
   }
 }

@@ -70,15 +70,12 @@ public class InferHelper {
         fakeInferRootPathOpt.orElse(AbsPath.of(workspace.getPath("fake-infer")));
 
     AbsPath inferBin = fakeInferRootPath.resolve("fake-bin");
-    AbsPath facebookClangPluginsRoot = fakeInferRootPath.resolve("fake-clang");
 
     // create .buckconfig with the right path to the tools
     workspace.setUp();
 
     workspace.writeContentsToPath(
-        new InferConfigGenerator(
-                inferBin.getPath(), facebookClangPluginsRoot.getPath(), rawBlockListRegex)
-            .toBuckConfigLines(),
+        new InferConfigGenerator(inferBin.getPath(), rawBlockListRegex).toBuckConfigLines(),
         ".buckconfig");
 
     return workspace;
@@ -87,23 +84,16 @@ public class InferHelper {
   public static String[] getCxxCLIConfigurationArgs(
       Path fakeInferRootPath, Optional<String> rawBlockListRegex, BuildTarget buildTarget) {
     Path inferBin = fakeInferRootPath.resolve("fake-bin");
-    Path facebookClangPluginRoot = fakeInferRootPath.resolve("fake-clang");
-    return new InferConfigGenerator(inferBin, facebookClangPluginRoot, rawBlockListRegex)
-        .toCrossCellCLIArgs(buildTarget);
+    return new InferConfigGenerator(inferBin, rawBlockListRegex).toCrossCellCLIArgs(buildTarget);
   }
 
   private static class InferConfigGenerator {
 
     private final Path inferBin;
-    private final Path clangCompiler;
-    private final Path clangPlugin;
     private final Optional<String> rawBlockListRegex;
 
-    public InferConfigGenerator(
-        Path inferBin, Path facebookClangPluginRoot, Optional<String> rawBlockListRegex) {
+    public InferConfigGenerator(Path inferBin, Optional<String> rawBlockListRegex) {
       this.inferBin = inferBin;
-      this.clangCompiler = facebookClangPluginRoot.resolve("fake-clang");
-      this.clangPlugin = facebookClangPluginRoot.resolve("fake-plugin");
       this.rawBlockListRegex = rawBlockListRegex;
     }
 
@@ -112,11 +102,7 @@ public class InferHelper {
           ImmutableList.of(
               buildTarget.getFullyQualifiedName(),
               "--config",
-              "*//infer.infer_bin=" + inferBin,
-              "--config",
-              "*//infer.clang_compiler=" + clangCompiler,
-              "--config",
-              "*//infer.clang_plugin=" + clangPlugin,
+              "*//infer.binary=" + inferBin + "/infer",
               "--config",
               "build.depfiles=cache");
 
@@ -136,14 +122,8 @@ public class InferHelper {
       }
 
       return String.format(
-          "[infer]\n"
-              + "infer_bin = %s\n"
-              + "clang_compiler = %s\n"
-              + "clang_plugin = %s\n"
-              + "%s\n"
-              + "[build]\n"
-              + "depfiles = cache",
-          inferBin.toString(), clangCompiler, clangPlugin, blockListRegexConfig);
+          "[infer]\n" + "binary = %s/infer\n" + "%s\n" + "[build]\n" + "depfiles = cache",
+          inferBin.toString(), blockListRegexConfig);
     }
   }
 }

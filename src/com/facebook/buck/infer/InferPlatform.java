@@ -34,7 +34,7 @@ import java.util.Optional;
 public abstract class InferPlatform implements AddsToRuleKey {
   // TODO(arr): use content hash as a rule key instead
   @AddToRuleKey
-  abstract Tool getInferBin();
+  public abstract Tool getInferBin();
 
   @AddToRuleKey
   abstract Optional<String> getInferVersion();

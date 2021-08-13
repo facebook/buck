@@ -297,11 +297,12 @@ public class JavaLibraryDescription
     javacFactory.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
 
-    unresolvedInferPlatform(toolchainProvider, buildTarget.getTargetConfiguration())
-        .ifPresent(
-            p ->
-                UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
-                    targetGraphOnlyDepsBuilder, buildTarget, p));
+    if (InferJava.findSupportedFlavor(buildTarget.getFlavors()).isPresent()) {
+
+      unresolvedInferPlatform(toolchainProvider, buildTarget.getTargetConfiguration())
+          .ifPresent(
+              p -> p.addParseTimeDepsToInferFlavored(targetGraphOnlyDepsBuilder, buildTarget));
+    }
 
     Nullsafe.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, buildTarget, NullsafeConfig.of(javaBuckConfig.getDelegate()));

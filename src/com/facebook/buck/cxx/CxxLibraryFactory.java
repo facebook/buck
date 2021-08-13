@@ -37,7 +37,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
@@ -52,6 +51,9 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.infer.InferConfig;
+import com.facebook.buck.infer.UnresolvedInferPlatform;
+import com.facebook.buck.infer.toolchain.InferToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
@@ -79,18 +81,29 @@ import java.util.function.Supplier;
 public class CxxLibraryFactory {
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
-  private final InferBuckConfig inferBuckConfig;
+  private final InferConfig inferConfig;
   private final DownwardApiConfig downwardApiConfig;
 
   public CxxLibraryFactory(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      InferBuckConfig inferBuckConfig,
+      InferConfig inferConfig,
       DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.inferBuckConfig = inferBuckConfig;
+    this.inferConfig = inferConfig;
     this.downwardApiConfig = downwardApiConfig;
+  }
+
+  public UnresolvedInferPlatform getUnresolvedInferPlatform(
+      TargetConfiguration targetConfiguration) {
+    return toolchainProvider
+        .getByNameIfPresent(InferToolchain.DEFAULT_NAME, targetConfiguration, InferToolchain.class)
+        .map(InferToolchain::getDefaultPlatform)
+        .orElseThrow(
+            () ->
+                new HumanReadableException(
+                    "Cannot use infer flavor: infer platform not configured"));
   }
 
   public BuildRule createBuildRule(
@@ -266,8 +279,10 @@ public class CxxLibraryFactory {
           cxxBuckConfig,
           downwardApiConfig,
           cxxPlatformOrDefaultSupplier.get(),
+          getUnresolvedInferPlatform(buildTarget.getTargetConfiguration())
+              .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           args,
-          inferBuckConfig);
+          inferConfig);
     } else if (type.isPresent() && !platform.isPresent()) {
       BuildTarget untypedBuildTarget = CxxLibraryDescription.getUntypedBuildTarget(buildTarget);
       switch (type.get().getValue()) {

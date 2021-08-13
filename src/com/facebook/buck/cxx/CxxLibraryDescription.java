@@ -263,6 +263,13 @@ public class CxxLibraryDescription
     // Get any parse time deps from the C/C++ platforms.
     targetGraphOnlyDepsBuilder.addAll(
         cxxLibraryFactory.getPlatformParseTimeDeps(buildTarget.getTargetConfiguration()));
+
+    // Infer target/binary added as a parse-time dep to flavored CxxLibrary
+    if (CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
+      cxxLibraryFactory
+          .getUnresolvedInferPlatform(buildTarget.getTargetConfiguration())
+          .addParseTimeDepsToInferFlavored(targetGraphOnlyDepsBuilder, buildTarget);
+    }
   }
 
   /**

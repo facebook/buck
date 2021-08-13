@@ -46,10 +46,10 @@ import com.facebook.buck.cxx.CxxLibraryMetadataFactory;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
+import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -321,7 +321,7 @@ public class FakeAppleRuleDescriptions {
         new CxxLibraryFactory(
             toolchainProvider,
             CxxPlatformUtils.DEFAULT_CONFIG,
-            new InferBuckConfig(DEFAULT_BUCK_CONFIG),
+            InferConfig.of(DEFAULT_BUCK_CONFIG),
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(
@@ -366,7 +366,7 @@ public class FakeAppleRuleDescriptions {
             toolchainProvider,
             CxxPlatformUtils.DEFAULT_CONFIG,
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
-            new InferBuckConfig(DEFAULT_BUCK_CONFIG));
+            InferConfig.of(DEFAULT_BUCK_CONFIG));
     CxxBinaryMetadataFactory cxxBinaryMetadataFactory =
         new CxxBinaryMetadataFactory(toolchainProvider);
     CxxBinaryFlavored cxxBinaryFlavored =

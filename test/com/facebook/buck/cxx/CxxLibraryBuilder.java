@@ -30,10 +30,10 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
-import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -72,7 +72,7 @@ public class CxxLibraryBuilder
         new CxxLibraryFactory(
             toolchainProvider,
             cxxBuckConfig,
-            new InferBuckConfig(FakeBuckConfig.empty()),
+            InferConfig.of(FakeBuckConfig.empty()),
             DEFAULT_DOWNWARD_API_CONFIG);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(
