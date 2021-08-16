@@ -153,8 +153,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                     BuildTargetPaths.getGenPath(
                             projectFilesystem.getBuckPaths(), buildTarget, "%s/module.modulemap")
                         .getPath(),
-                    ModuleMap.create(
-                        "SomeModule", ModuleMap.SwiftMode.NO_SWIFT, links.keySet(), false)))
+                    ModuleMap.create("SomeModule", links.keySet(), Optional.empty(), false)))
             .build();
     ImmutableList<Step> actualBuildSteps =
         symlinkTreeBuildRule.getBuildSteps(buildContext, buildableContext);
@@ -166,6 +165,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(resolver);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
+    Path swiftHeaderPath = Paths.get("SomeModule", "SomeModule-Swift.h");
     HeaderSymlinkTreeWithModuleMap linksWithSwiftHeader =
         HeaderSymlinkTreeWithModuleMap.create(
             buildTarget,
@@ -173,7 +173,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             symlinkTreeRoot.getPath(),
             new ImmutableMap.Builder<Path, SourcePath>()
                 .putAll(links)
-                .put(Paths.get("SomeModule", "SomeModule-Swift.h"), FakeSourcePath.of("SomeModule"))
+                .put(swiftHeaderPath, FakeSourcePath.of("SomeModule"))
                 .build(),
             Optional.empty(),
             false);
@@ -187,8 +187,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             BuildTargetPaths.getGenPath(
                     projectFilesystem.getBuckPaths(), buildTarget, "%s/module.modulemap")
                 .getPath(),
-            ModuleMap.create(
-                "SomeModule", ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER, links.keySet(), false));
+            ModuleMap.create("SomeModule", links.keySet(), Optional.of(swiftHeaderPath), false));
     assertThat(actualBuildSteps, hasItem(moduleMapStep));
   }
 
@@ -200,12 +199,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             BuildTargetPaths.getGenPath(
                     projectFilesystem.getBuckPaths(), buildTarget, "%s/SomeModule/module.modulemap")
                 .getPath(),
-            ModuleMap.create(
-                "SomeModule",
-                ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER,
-                links.keySet(),
-                false,
-                true));
+            ModuleMap.create("SomeModule", links.keySet(), Optional.empty(), false, true));
     assertTrue(moduleMapStep.toString().contains("requires cplusplus"));
   }
 
@@ -246,9 +240,9 @@ public class HeaderSymlinkTreeWithModuleMapTest {
     ModuleMap moduleMapWithSwift =
         ModuleMap.create(
             "MyModule",
-            ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER,
             ImmutableSet.of(
                 Paths.get("MyModule", "firstheader.h"), Paths.get("MyModule", "secondheader.h")),
+            Optional.of(Paths.get("MyModule", "MyModule-Swift.h")),
             false);
 
     assertEquals(
@@ -265,13 +259,13 @@ public class HeaderSymlinkTreeWithModuleMapTest {
     ModuleMap moduleMapWithSubmodules =
         ModuleMap.create(
             "MyModule",
-            ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER,
             ImmutableSet.of(
                 Paths.get("MyModule", "header.with.dots and spaces+and+plus-and-hyphen.h"),
                 Paths.get("MyModule", "secondheader.h"),
                 Paths.get("MyModule", "3rd_header.h"),
                 Paths.get("MyModule", "conflict.h"),
                 Paths.get("MyModule", "conflict.hh")),
+            Optional.of(Paths.get("MyModule", "MyModule-Swift.h")),
             true);
     assertEquals(
         "module MyModule {\n"
@@ -299,7 +293,6 @@ public class HeaderSymlinkTreeWithModuleMapTest {
     ModuleMap moduleMapWithMultiplePrefixes =
         ModuleMap.create(
             "MyModule",
-            ModuleMap.SwiftMode.NO_SWIFT,
             ImmutableSet.of(
                 Paths.get("MyModule", "root_header1.h"),
                 Paths.get("MyModule", "root_header2.h"),
@@ -311,6 +304,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 Paths.get("BPrefix", "Sub.1", "a_header2.h"),
                 Paths.get("BPrefix", "Sub.2", "a_header1.h"),
                 Paths.get("BPrefix", "Sub.2", "a_header2.h")),
+            Optional.empty(),
             true);
     assertEquals(
         "module MyModule {\n"

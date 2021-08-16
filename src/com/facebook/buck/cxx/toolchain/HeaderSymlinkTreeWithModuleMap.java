@@ -111,10 +111,10 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
                   moduleMapPath,
                   ModuleMap.create(
                       moduleName,
-                      paths.contains(expectedSwiftHeaderPath)
-                          ? ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER
-                          : ModuleMap.SwiftMode.NO_SWIFT,
                       pathsWithoutSwiftHeader,
+                      paths.contains(expectedSwiftHeaderPath)
+                          ? Optional.of(expectedSwiftHeaderPath)
+                          : Optional.empty(),
                       useSubmodules,
                       moduleRequiresCplusplus)));
         });

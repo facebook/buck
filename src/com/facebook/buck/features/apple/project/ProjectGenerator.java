@@ -3212,20 +3212,26 @@ public class ProjectGenerator {
                 .map(path -> moduleRoot.relativize(path))
                 .filter(path -> !path.endsWith(generatedHeaderName))
                 .collect(ImmutableSet.toImmutableSet());
+
         if (containsSwift) {
+          Optional<Path> swiftHeaderPath = Optional.empty();
+          for (Path p : resolvedContents.keySet()) {
+            if (p.endsWith(generatedHeaderName)) {
+              swiftHeaderPath = Optional.of(moduleRoot.relativize(p));
+              break;
+            }
+          }
+
           projectFilesystem.writeContentsToPath(
               ModuleMap.create(
-                      moduleName.get(),
-                      ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER,
-                      headerPathsWithoutSwiftObjCHeader,
-                      false)
+                      moduleName.get(), headerPathsWithoutSwiftObjCHeader, swiftHeaderPath, false)
                   .render(),
               moduleRoot.resolve("module.modulemap"));
           projectFilesystem.writeContentsToPath(
               ModuleMap.create(
                       moduleName.get(),
-                      ModuleMap.SwiftMode.NO_SWIFT,
                       headerPathsWithoutSwiftObjCHeader,
+                      Optional.empty(), /* do not use the -Swift.h header */
                       false)
                   .render(),
               moduleRoot.resolve("objc.modulemap"));
@@ -3246,10 +3252,7 @@ public class ProjectGenerator {
         } else {
           projectFilesystem.writeContentsToPath(
               ModuleMap.create(
-                      moduleName.get(),
-                      ModuleMap.SwiftMode.NO_SWIFT,
-                      headerPathsWithoutSwiftObjCHeader,
-                      false)
+                      moduleName.get(), headerPathsWithoutSwiftObjCHeader, Optional.empty(), false)
                   .render(),
               moduleRoot.resolve("module.modulemap"));
         }
