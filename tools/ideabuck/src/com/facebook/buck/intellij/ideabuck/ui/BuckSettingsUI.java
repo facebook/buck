@@ -92,7 +92,7 @@ public class BuckSettingsUI extends JPanel {
   private TextFieldWithBrowseButton buildifierPathField;
   private TextFieldWithBrowseButton buildozerPathField;
   private JBTextField customizedInstallSettingField;
-  private JBTextField customizedTargetPlatformsField;
+  private JBTextField buckExtraArgsField;
   private JCheckBox autoFormatOnSave;
   private JCheckBox autoFormatOnBlur;
   private JCheckBox showDebug;
@@ -100,7 +100,7 @@ public class BuckSettingsUI extends JPanel {
   private JCheckBox multiInstallMode;
   private JCheckBox uninstallBeforeInstall;
   private JCheckBox customizedInstallSetting;
-  private JCheckBox customizedTargetPlatforms;
+  private JCheckBox buckExtraArgs;
   private ListTableModel<BuckCell> cellTableModel;
   private BuckCellSettingsProvider buckCellSettingsProvider;
   private BuckExecutableSettingsProvider buckExecutableSettingsProvider;
@@ -194,7 +194,7 @@ public class BuckSettingsUI extends JPanel {
     constraints.gridy = 2;
     container.add(initInstallSettingsSection(), constraints);
     constraints.gridy = 3;
-    container.add(initTargetPlatformsSection(), constraints);
+    container.add(initBuckArgsSection(), constraints);
     constraints.gridy = 4;
     container.add(initBuckCellSection(), constraints);
 
@@ -406,23 +406,23 @@ public class BuckSettingsUI extends JPanel {
     return panel;
   }
 
-  private JPanel initTargetPlatformsSection() {
+  private JPanel initBuckArgsSection() {
+    JPanel panel = new JPanel(new GridBagLayout());
+    panel.setBorder(IdeBorderFactory.createTitledBorder("Buck Arguments", true));
+
     JBLabel label =
         new JBLabel(
-            "Enabling this setting will add the target platforms flag "
-                + "(--target-platforms VAL) to all Buck commands.");
-    customizedTargetPlatforms = new JCheckBox("Use customized target platforms:  ");
-    customizedTargetPlatformsField = new JBTextField();
-    customizedTargetPlatformsField
+            "Enabling this setting will pass in extra command line args for all Buck commands.");
+    buckExtraArgs = new JCheckBox("Use extra Buck arguments: ");
+    buckExtraArgsField = new JBTextField();
+    buckExtraArgsField
         .getEmptyText()
-        .setText("input your value for --target-platforms: e.g. //platforms/android:arm32");
-    customizedTargetPlatformsField.setEnabled(false);
-
-    JPanel panel = new JPanel(new GridBagLayout());
-    panel.setBorder(IdeBorderFactory.createTitledBorder("Target Platforms", true));
+        .setText("extra args for Buck, e.g. @mode/android32/mac/dev --verbose 8");
+    buckExtraArgsField.setEnabled(false);
 
     GridBagConstraints constraints = new GridBagConstraints();
     constraints.fill = GridBagConstraints.HORIZONTAL;
+    constraints.anchor = GridBagConstraints.LINE_START;
     constraints.gridx = 0;
     constraints.gridy = 0;
     constraints.gridwidth = 2;
@@ -433,21 +433,22 @@ public class BuckSettingsUI extends JPanel {
     constraints.gridwidth = 1;
     constraints.insets = new Insets(5, 0, 0, 0);
     constraints.weightx = 0;
-    panel.add(customizedTargetPlatforms, constraints);
+    panel.add(buckExtraArgs, constraints);
 
     constraints.fill = GridBagConstraints.HORIZONTAL;
     constraints.gridx = 1;
     constraints.weightx = 1;
-    panel.add(customizedTargetPlatformsField, constraints);
+    panel.add(buckExtraArgsField, constraints);
 
-    customizedTargetPlatforms.addItemListener(
+    buckExtraArgs.addItemListener(
         e -> {
           if (e.getStateChange() == ItemEvent.SELECTED) {
-            customizedTargetPlatformsField.setEnabled(true);
+            buckExtraArgsField.setEnabled(true);
           } else {
-            customizedTargetPlatformsField.setEnabled(false);
+            buckExtraArgsField.setEnabled(false);
           }
         });
+
     return panel;
   }
 
@@ -696,11 +697,8 @@ public class BuckSettingsUI extends JPanel {
         || !buckProjectSettingsProvider
             .getCustomizedInstallSettingCommand()
             .equals(customizedInstallSettingField.getText())
-        || buckProjectSettingsProvider.isUseCustomizedTargetPlatforms()
-            != customizedTargetPlatforms.isSelected()
-        || !buckProjectSettingsProvider
-            .getCustomizedTargetPlatforms()
-            .equals(customizedTargetPlatformsField.getText())
+        || buckProjectSettingsProvider.isUseBuckExtraArgs() != buckExtraArgs.isSelected()
+        || !buckProjectSettingsProvider.getBuckExtraArgs().equals(buckExtraArgsField.getText())
         || !buckCellSettingsProvider.getCells().equals(cellTableModel.getItems());
   }
 
@@ -722,10 +720,8 @@ public class BuckSettingsUI extends JPanel {
         customizedInstallSetting.isSelected());
     buckProjectSettingsProvider.setCustomizedInstallSettingCommand(
         customizedInstallSettingField.getText());
-    buckProjectSettingsProvider.setUseCustomizedTargetPlatforms(
-        customizedTargetPlatforms.isSelected());
-    buckProjectSettingsProvider.setCustomizedTargetPlatforms(
-        customizedTargetPlatformsField.getText());
+    buckProjectSettingsProvider.setUseBuckExtraArgs(buckExtraArgs.isSelected());
+    buckProjectSettingsProvider.setBuckExtraArgs(buckExtraArgsField.getText());
     buckCellSettingsProvider.setCells(cellTableModel.getItems());
   }
 
@@ -746,10 +742,8 @@ public class BuckSettingsUI extends JPanel {
         buckProjectSettingsProvider.isUseCustomizedInstallSetting());
     customizedInstallSettingField.setText(
         buckProjectSettingsProvider.getCustomizedInstallSettingCommand());
-    customizedTargetPlatforms.setSelected(
-        buckProjectSettingsProvider.isUseCustomizedTargetPlatforms());
-    customizedTargetPlatformsField.setText(
-        buckProjectSettingsProvider.getCustomizedTargetPlatforms());
+    buckExtraArgs.setSelected(buckProjectSettingsProvider.isUseBuckExtraArgs());
+    buckExtraArgsField.setText(buckProjectSettingsProvider.getBuckExtraArgs());
     cellTableModel.setItems(buckCellSettingsProvider.getCells());
   }
 }

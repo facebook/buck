@@ -228,20 +228,20 @@ public class BuckProjectSettingsProvider
     state.customizedInstallSettingCommand = customizedInstallSettingCommand;
   }
 
-  public boolean isUseCustomizedTargetPlatforms() {
-    return state.useCustomizedTargetPlatforms;
+  public boolean isUseBuckExtraArgs() {
+    return state.useBuckExtraArgs;
   }
 
-  public void setUseCustomizedTargetPlatforms(boolean useCustomizedTargetPlatforms) {
-    state.useCustomizedTargetPlatforms = useCustomizedTargetPlatforms;
+  public void setUseBuckExtraArgs(boolean useBuckExtraArgs) {
+    state.useBuckExtraArgs = useBuckExtraArgs;
   }
 
-  public String getCustomizedTargetPlatforms() {
-    return state.customizedTargetPlatforms;
+  public String getBuckExtraArgs() {
+    return state.buckExtraArgs;
   }
 
-  public void setCustomizedTargetPlatforms(String customizedTargetPlatforms) {
-    state.customizedTargetPlatforms = customizedTargetPlatforms;
+  public void setBuckExtraArgs(String buckExtraArgs) {
+    state.buckExtraArgs = buckExtraArgs;
   }
 
   @Override
@@ -308,11 +308,11 @@ public class BuckProjectSettingsProvider
     /** User's customized install command string, e.g. "-a -b -c". */
     public String customizedInstallSettingCommand = "";
 
-    /** If true, use user's customized "--target-platforms". */
-    public boolean useCustomizedTargetPlatforms = false;
+    /** If true, pass in user's extra buck args. */
+    public boolean useBuckExtraArgs = false;
 
-    /** User's customized "--target-platforms" parameter for all buck commands */
-    public String customizedTargetPlatforms = "";
+    /** User's extra Buck args for all buck commands */
+    public String buckExtraArgs = "";
 
     /**
      * Buck cells supported in this project.
@@ -343,11 +343,11 @@ public class BuckProjectSettingsProvider
           && multiInstallMode == state.multiInstallMode
           && uninstallBeforeInstalling == state.uninstallBeforeInstalling
           && customizedInstallSetting == state.customizedInstallSetting
-          && useCustomizedTargetPlatforms == state.useCustomizedTargetPlatforms
+          && useBuckExtraArgs == state.useBuckExtraArgs
           && Objects.equal(buckExecutable, state.buckExecutable)
           && Objects.equal(adbExecutable, state.adbExecutable)
           && Objects.equal(customizedInstallSettingCommand, state.customizedInstallSettingCommand)
-          && Objects.equal(customizedTargetPlatforms, state.customizedTargetPlatforms)
+          && Objects.equal(buckExtraArgs, state.buckExtraArgs)
           && Objects.equal(cells, state.cells)
           && Objects.equal(macroTargetTypeToTargetType, state.macroTargetTypeToTargetType)
           && Objects.equal(directoryToAndroidxTargetName, state.directoryToAndroidxTargetName);
@@ -366,8 +366,8 @@ public class BuckProjectSettingsProvider
           uninstallBeforeInstalling,
           customizedInstallSetting,
           customizedInstallSettingCommand,
-          useCustomizedTargetPlatforms,
-          customizedTargetPlatforms,
+          useBuckExtraArgs,
+          buckExtraArgs,
           cells,
           macroTargetTypeToTargetType,
           directoryToAndroidxTargetName);

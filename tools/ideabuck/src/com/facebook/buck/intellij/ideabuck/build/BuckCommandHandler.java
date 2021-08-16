@@ -33,6 +33,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vcs.LineHandlerHelper;
 import com.intellij.openapi.vfs.CharsetToolkit;
 import com.intellij.util.EnvironmentUtil;
@@ -144,9 +145,9 @@ public abstract class BuckCommandHandler {
     }
     BuckProjectSettingsProvider buckProjectSettingsProvider =
         BuckProjectSettingsProvider.getInstance(project);
-    if (buckProjectSettingsProvider.isUseCustomizedTargetPlatforms()) {
+    if (buckProjectSettingsProvider.isUseBuckExtraArgs()) {
       commandLine.addParameters(
-          "--target-platforms", buckProjectSettingsProvider.getCustomizedTargetPlatforms());
+          StringUtil.splitHonorQuotes(buckProjectSettingsProvider.getBuckExtraArgs().trim(), ' '));
     }
   }
 
