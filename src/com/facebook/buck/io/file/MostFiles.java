@@ -426,6 +426,36 @@ public final class MostFiles {
     }
   }
 
+  /**
+   * Tries to make the specified file writable. For file systems that do support the POSIX-style
+   * permissions, the writable permission is set for each category of users that already has the
+   * read permission.
+   *
+   * <p>If the file system does not support the writable permission or the operation fails, a {@code
+   * java.io.IOException} is thrown.
+   */
+  public static void makeWritable(Path file) throws IOException {
+    if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+      Set<PosixFilePermission> permissions = Files.getPosixFilePermissions(file);
+
+      if (permissions.contains(PosixFilePermission.OWNER_READ)) {
+        permissions.add(PosixFilePermission.OWNER_WRITE);
+      }
+      if (permissions.contains(PosixFilePermission.GROUP_READ)) {
+        permissions.add(PosixFilePermission.GROUP_WRITE);
+      }
+      if (permissions.contains(PosixFilePermission.OTHERS_READ)) {
+        permissions.add(PosixFilePermission.OTHERS_WRITE);
+      }
+
+      Files.setPosixFilePermissions(file, permissions);
+    } else {
+      if (!file.toFile().setWritable(/* writable */ true, /* ownerOnly */ true)) {
+        throw new IOException("The file could not be made writable");
+      }
+    }
+  }
+
   /** Abs-path version of {@link #makeExecutable(Path)}. */
   public static void makeExecutable(AbsPath file) throws IOException {
     makeExecutable(file.getPath());
