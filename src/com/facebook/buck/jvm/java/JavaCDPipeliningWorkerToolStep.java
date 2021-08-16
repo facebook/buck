@@ -194,7 +194,9 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
           resultEvent.getExitCode(), actionId);
       return JavaCDWorkerStepUtils.createStepExecutionResult(
           launchJavaCDCommand, resultEvent, actionId);
-    } catch (ExecutionException | TimeoutException e) {
+    } catch (ExecutionException e) {
+      return JavaCDWorkerStepUtils.createFailStepExecutionResult(launchJavaCDCommand, actionId, e);
+    } catch (TimeoutException e) {
       return JavaCDWorkerStepUtils.createFailStepExecutionResult(launchJavaCDCommand, actionId, e);
     }
   }

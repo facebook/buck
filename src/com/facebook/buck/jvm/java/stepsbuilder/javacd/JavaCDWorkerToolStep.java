@@ -98,7 +98,9 @@ public class JavaCDWorkerToolStep extends AbstractIsolatedExecutionStep {
               javaCDParams.getMaxWaitForResultTimeoutInSeconds(), TimeUnit.SECONDS);
       return JavaCDWorkerStepUtils.createStepExecutionResult(
           launchJavaCDCommand, resultEvent, actionId);
-    } catch (ExecutionException | TimeoutException e) {
+    } catch (ExecutionException e) {
+      return JavaCDWorkerStepUtils.createFailStepExecutionResult(launchJavaCDCommand, actionId, e);
+    } catch (TimeoutException e) {
       return JavaCDWorkerStepUtils.createFailStepExecutionResult(launchJavaCDCommand, actionId, e);
     }
   }

@@ -38,7 +38,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /** Collection of constants/methods used in JavaCD worker tool steps. */
 public class JavaCDWorkerStepUtils {
@@ -66,11 +68,32 @@ public class JavaCDWorkerStepUtils {
 
   /** Creates failed {@link StepExecutionResult} from the occurred {@link Exception} */
   public static StepExecutionResult createFailStepExecutionResult(
-      ImmutableList<String> executedCommand, ActionId actionId, Exception e) {
+      ImmutableList<String> executedCommand, ActionId actionId, ExecutionException e) {
+    Exception causeException;
+    if (e.getCause() instanceof Exception) {
+      causeException = (Exception) e.getCause();
+    } else {
+      causeException = e;
+    }
     return StepExecutionResult.builder()
         .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
         .setExecutedCommand(executedCommand)
-        .setStderr(String.format("ActionId: %s", actionId))
+        .setStderr(
+            String.format("ActionId: %s. Caused by: %s", actionId, causeException.getMessage()))
+        .setCause(causeException)
+        .build();
+  }
+
+  /** Creates failed {@link StepExecutionResult} from the occurred {@link TimeoutException} */
+  public static StepExecutionResult createFailStepExecutionResult(
+      ImmutableList<String> executedCommand, ActionId actionId, TimeoutException e) {
+    return StepExecutionResult.builder()
+        .setExitCode(StepExecutionResults.ERROR_EXIT_CODE)
+        .setExecutedCommand(executedCommand)
+        .setStderr(
+            String.format(
+                "ActionId: %s. Caused by timeout while waiting for the result event from javacd: %s",
+                actionId, e.getMessage()))
         .setCause(e)
         .build();
   }
