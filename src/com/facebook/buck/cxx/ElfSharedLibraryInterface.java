@@ -65,6 +65,7 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
       Tool objcopy,
       SourcePath input,
       boolean removeUndefinedSymbols,
+      boolean objcopyRecalculatesLayout,
       boolean withDownwardApi) {
     String libName =
         ruleFinder.getSourcePathResolver().getCellUnsafeRelPath(input).getFileName().toString();
@@ -73,7 +74,13 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
         projectFilesystem,
         ruleFinder,
         new ExistingBasedElfSharedLibraryImpl(
-            target, objcopy, libName, removeUndefinedSymbols, input, withDownwardApi));
+            target,
+            objcopy,
+            libName,
+            removeUndefinedSymbols,
+            objcopyRecalculatesLayout,
+            input,
+            withDownwardApi));
   }
 
   /**
@@ -89,13 +96,21 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
       Linker linker,
       ImmutableList<Arg> args,
       boolean removeUndefinedSymbols,
+      boolean objcopyRecalculatesLayout,
       boolean withDownwardApi) {
     return new ElfSharedLibraryInterface<>(
         target,
         projectFilesystem,
         ruleFinder,
         new LinkerBasedElfSharedLibraryImpl(
-            target, objcopy, libName, removeUndefinedSymbols, linker, args, withDownwardApi));
+            target,
+            objcopy,
+            libName,
+            removeUndefinedSymbols,
+            objcopyRecalculatesLayout,
+            linker,
+            args,
+            withDownwardApi));
   }
 
   /**
@@ -109,6 +124,7 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
     @AddToRuleKey private final OutputPath outputPath;
     @AddToRuleKey protected final String libName;
     @AddToRuleKey private final boolean removeUndefinedSymbols;
+    @AddToRuleKey private final boolean objcopyRecalculatesLayout;
     @AddToRuleKey protected final boolean withDownwardApi;
 
     private AbstractBuildable(
@@ -116,12 +132,14 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
         Tool objcopy,
         String libName,
         boolean removeUndefinedSymbols,
+        boolean objcopyRecalculatesLayout,
         boolean withDownwardApi) {
       this.buildTarget = buildTarget;
       this.objcopy = objcopy;
       this.libName = libName;
       this.outputPath = new OutputPath(libName);
       this.removeUndefinedSymbols = removeUndefinedSymbols;
+      this.objcopyRecalculatesLayout = objcopyRecalculatesLayout;
       this.withDownwardApi = withDownwardApi;
     }
 
@@ -193,6 +211,7 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
               outputScratch.getPath(),
               filesystem,
               output.getPath(),
+              objcopyRecalculatesLayout,
               withDownwardApi),
           ImmutableElfClearProgramHeadersStep.ofImpl(filesystem, output.getPath()));
       return steps.build();
@@ -230,9 +249,16 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
         Tool objcopy,
         String libName,
         boolean removeUndefinedSymbols,
+        boolean objcopyRecalculatesLayout,
         SourcePath input,
         boolean withDownwardApi) {
-      super(buildTarget, objcopy, libName, removeUndefinedSymbols, withDownwardApi);
+      super(
+          buildTarget,
+          objcopy,
+          libName,
+          removeUndefinedSymbols,
+          objcopyRecalculatesLayout,
+          withDownwardApi);
       this.input = input;
     }
 
@@ -259,10 +285,17 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
         Tool objcopy,
         String libName,
         boolean removeUndefinedSymbols,
+        boolean objcopyRecalculatesLayout,
         Linker linker,
         ImmutableList<Arg> args,
         boolean withDownwardApi) {
-      super(buildTarget, objcopy, libName, removeUndefinedSymbols, withDownwardApi);
+      super(
+          buildTarget,
+          objcopy,
+          libName,
+          removeUndefinedSymbols,
+          objcopyRecalculatesLayout,
+          withDownwardApi);
       this.linker = linker;
       this.args = args;
     }

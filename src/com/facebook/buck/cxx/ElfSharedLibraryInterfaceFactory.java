@@ -37,6 +37,8 @@ abstract class ElfSharedLibraryInterfaceFactory implements SharedLibraryInterfac
 
   abstract boolean isRemoveUndefinedSymbols();
 
+  abstract boolean doesObjcopyRecalculateLayout();
+
   @Override
   public final BuildRule createSharedInterfaceLibraryFromLibrary(
       BuildTarget target,
@@ -52,6 +54,7 @@ abstract class ElfSharedLibraryInterfaceFactory implements SharedLibraryInterfac
         getObjcopy().resolve(resolver, target.getTargetConfiguration()),
         library,
         isRemoveUndefinedSymbols(),
+        doesObjcopyRecalculateLayout(),
         withDownwardApi);
   }
 
@@ -73,11 +76,14 @@ abstract class ElfSharedLibraryInterfaceFactory implements SharedLibraryInterfac
         linker,
         args,
         isRemoveUndefinedSymbols(),
+        doesObjcopyRecalculateLayout(),
         withDownwardApi);
   }
 
   public static ElfSharedLibraryInterfaceFactory from(ElfSharedLibraryInterfaceParams params) {
     return ImmutableElfSharedLibraryInterfaceFactory.ofImpl(
-        params.getObjcopy(), params.isRemoveUndefinedSymbols());
+        params.getObjcopy(),
+        params.isRemoveUndefinedSymbols(),
+        params.doesObjcopyRecalculateLayout());
   }
 }

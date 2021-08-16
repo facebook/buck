@@ -58,6 +58,8 @@ abstract class ElfCompactSectionsStep implements Step {
 
   abstract Path getOutput();
 
+  abstract boolean doesObjcopyRecalculateLayout();
+
   abstract boolean isWithDownwardApi();
 
   @Value.Check
@@ -92,12 +94,21 @@ abstract class ElfCompactSectionsStep implements Step {
   private ImmutableList<String> getObjcopyCommand(ImmutableMap<String, Long> addresses) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(getObjcopyPrefix());
-    args.add("--no-change-warnings");
-    for (Map.Entry<String, Long> ent : addresses.entrySet()) {
-      String section = ent.getKey();
-      long address = ent.getValue();
-      args.add("--change-section-address", String.format("%s=0x%x", section, address));
+
+    // llvm-objcopy does not support --change-section-address, and supporting it would be
+    // complicated (see https://llvm.org/PR45217). However, llvm-objcopy also automatically
+    // calculates binary layout (which is what makes supporting --change-section-address hard), so
+    // just calling it without arguments will compact sections, which is all we need. Any other
+    // objcopy variant which recalculates binary layout automatically will also behave similarly.
+    if (!doesObjcopyRecalculateLayout()) {
+      args.add("--no-change-warnings");
+      for (Map.Entry<String, Long> ent : addresses.entrySet()) {
+        String section = ent.getKey();
+        long address = ent.getValue();
+        args.add("--change-section-address", String.format("%s=0x%x", section, address));
+      }
     }
+
     args.add(getInputFilesystem().resolve(getInput()).toString());
     args.add(getOutputFilesystem().resolve(getOutput()).toString());
     return args.build();
@@ -106,7 +117,13 @@ abstract class ElfCompactSectionsStep implements Step {
   @Override
   public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
-    ImmutableMap<String, Long> addresses = getNewSectionAddresses();
+    ImmutableMap<String, Long> addresses = null;
+    // See the above comment in getObjcopyCommand for why we don't need to compute new section
+    // addresses ourselves if our objcopy variant recalculates layouts.
+    if (!doesObjcopyRecalculateLayout()) {
+      addresses = getNewSectionAddresses();
+    }
+
     Step objcopy =
         new DefaultShellStep(
             getOutputFilesystem().getRootPath(),

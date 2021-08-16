@@ -26,9 +26,12 @@ import com.google.common.collect.ImmutableList;
 public abstract class ElfSharedLibraryInterfaceParams implements SharedLibraryInterfaceParams {
 
   public static ElfSharedLibraryInterfaceParams of(
-      ToolProvider objcopy, ImmutableList<String> ldflags, boolean removeUndefinedSymbols) {
+      ToolProvider objcopy,
+      ImmutableList<String> ldflags,
+      boolean removeUndefinedSymbols,
+      boolean objcopyRecalculatesLayout) {
     return ImmutableElfSharedLibraryInterfaceParams.ofImpl(
-        objcopy, ldflags, removeUndefinedSymbols);
+        objcopy, ldflags, removeUndefinedSymbols, objcopyRecalculatesLayout);
   }
 
   public abstract ToolProvider getObjcopy();
@@ -37,6 +40,8 @@ public abstract class ElfSharedLibraryInterfaceParams implements SharedLibraryIn
   public abstract ImmutableList<String> getLdflags();
 
   public abstract boolean isRemoveUndefinedSymbols();
+
+  public abstract boolean doesObjcopyRecalculateLayout();
 
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {

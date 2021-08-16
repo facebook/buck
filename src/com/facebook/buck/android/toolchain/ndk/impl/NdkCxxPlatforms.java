@@ -555,7 +555,8 @@ public class NdkCxxPlatforms {
                   new ConstantToolProvider(
                       getGccTool(toolchainPaths, "objcopy", version, executableFinder)),
                   ImmutableList.of(),
-                  sharedLibType.get() == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
+                  sharedLibType.get() == SharedLibraryInterfaceParams.Type.DEFINED_ONLY,
+                  /*objcopyRecalculatesLayout=*/ false));
     }
 
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();

@@ -94,7 +94,8 @@ public class CxxPlatforms {
                   ElfSharedLibraryInterfaceParams.of(
                       config.getObjcopy().get(),
                       config.getIndependentShlibInterfacesLdflags().orElse(ImmutableList.of()),
-                      type.get() == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
+                      type.get() == SharedLibraryInterfaceParams.Type.DEFINED_ONLY,
+                      /*objcopyRecalculatesLayout=*/ false));
           break;
 
         case MACOS:

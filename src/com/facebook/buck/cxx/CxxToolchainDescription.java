@@ -383,7 +383,8 @@ public class CxxToolchainDescription
           ElfSharedLibraryInterfaceParams.of(
               ToolProviders.getToolProvider(args.getObjcopyForSharedLibraryInterface()),
               args.getSharedLibraryInterfaceFlags(),
-              sharedLibraryInterfaceType == Type.DEFINED_ONLY));
+              sharedLibraryInterfaceType == Type.DEFINED_ONLY,
+              args.getObjcopyRecalculatesLayout()));
     }
 
     // TODO(cjhopman): Is this reasonable?
@@ -626,6 +627,12 @@ public class CxxToolchainDescription
 
     /** Linker flags to use when linking independent shared library interfaces. */
     ImmutableList<String> getSharedLibraryInterfaceFlags();
+
+    /** Whether objcopy automatically recalculates binary layout. */
+    @Value.Default
+    default boolean getObjcopyRecalculatesLayout() {
+      return false;
+    }
 
     /** Whether to use header maps. */
     boolean getUseHeaderMap();
