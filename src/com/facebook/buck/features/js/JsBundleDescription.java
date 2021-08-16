@@ -32,6 +32,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -387,6 +388,7 @@ public class JsBundleDescription
 
     Either<ImmutableSet<String>, String> getEntry();
 
+    @Hint(execConfiguration = true)
     BuildTarget getWorker();
 
     /** For R.java */

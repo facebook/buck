@@ -226,6 +226,7 @@ public class JsLibraryDescription
 
     Optional<ImmutableSet<String>> getAssetPlatforms();
 
+    @Hint(execConfiguration = true)
     BuildTarget getWorker();
 
     @Hint(isDep = false, isInput = false)
