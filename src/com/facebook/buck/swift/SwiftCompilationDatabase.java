@@ -17,7 +17,6 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
-import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -66,7 +65,6 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
       Iterable<SourcePath> srcs,
       Optional<String> version,
       ImmutableList<Arg> compilerFlags,
-      Optional<Boolean> enableObjcInterop,
       boolean enableCxxInterop,
       Optional<SourcePath> bridgingHeader,
       Preprocessor preprocessor,
@@ -76,9 +74,7 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
       boolean withDownwardApi,
       boolean hasPrefixSerializedDebugInfo,
       boolean addXCTestImportPaths,
-      boolean useSwiftDriver,
-      boolean serializeDebuggingOptions,
-      AppleSdk appleSdk) {
+      boolean serializeDebuggingOptions) {
     super(
         swiftBuckConfig,
         buildTarget,
@@ -95,7 +91,6 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
         srcs,
         version,
         compilerFlags,
-        enableObjcInterop,
         enableCxxInterop,
         bridgingHeader,
         preprocessor,
@@ -105,9 +100,7 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
         withDownwardApi,
         hasPrefixSerializedDebugInfo,
         addXCTestImportPaths,
-        useSwiftDriver,
-        serializeDebuggingOptions,
-        appleSdk);
+        serializeDebuggingOptions);
     this.outputCommandPath = RelPath.of(this.outputPath.resolve("swift_compile_commands.json"));
   }
 

@@ -17,7 +17,6 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
-import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -70,7 +69,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -121,8 +119,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   @AddToRuleKey(stringify = true)
   private final Flavor flavor;
 
-  @AddToRuleKey private final boolean enableObjcInterop;
   @AddToRuleKey private final boolean enableCxxInterop;
+
   @AddToRuleKey protected final Optional<SourcePath> bridgingHeader;
 
   @AddToRuleKey private final Preprocessor cPreprocessor;
@@ -144,10 +142,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   @AddToRuleKey protected final boolean prefixSerializedDebugInfo;
 
   @AddToRuleKey private final boolean addXCTestImportPaths;
-
-  @AddToRuleKey private final boolean useSwiftDriver;
-
-  @AddToRuleKey private final String appleSdkVersion;
 
   @AddToRuleKey private final boolean serializeDebuggingOptions;
 
@@ -190,7 +184,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       Iterable<SourcePath> srcs,
       Optional<String> version,
       ImmutableList<Arg> compilerFlags,
-      Optional<Boolean> enableObjcInterop,
       boolean enableCxxInterop,
       Optional<SourcePath> bridgingHeader,
       Preprocessor preprocessor,
@@ -200,9 +193,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       boolean withDownwardApi,
       boolean hasPrefixSerializedDebugInfo,
       boolean addXCTestImportPaths,
-      boolean useSwiftDriver,
-      boolean serializeDebuggingOptions,
-      AppleSdk appleSdk) {
+      boolean serializeDebuggingOptions) {
     super(buildTarget, projectFilesystem);
     this.systemFrameworkSearchPaths = systemFrameworkSearchPaths;
     this.frameworks = frameworks;
@@ -237,7 +228,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.swiftTarget = swiftTarget;
     this.version = version;
     this.compilerFlags = compilerFlags;
-    this.enableObjcInterop = enableObjcInterop.orElse(true);
     this.enableCxxInterop = enableCxxInterop;
     this.bridgingHeader = bridgingHeader;
     this.cPreprocessor = preprocessor;
@@ -250,9 +240,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.shouldEmitClangModuleBreadcrumbs = swiftBuckConfig.getEmitClangModuleBreadcrumbs();
     this.prefixSerializedDebugInfo =
         hasPrefixSerializedDebugInfo || swiftBuckConfig.getPrefixSerializedDebugInfo();
-    this.useSwiftDriver = useSwiftDriver;
     this.serializeDebuggingOptions = serializeDebuggingOptions;
-    this.appleSdkVersion = appleSdk.getVersion();
 
     // TODO: the swiftmodule dependencies should be passed in the constructor instead of being
     // determined from getBuildDeps().
@@ -287,97 +275,36 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         !buildTarget.getFlavors().contains(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 
-  private class CompilerArgBuilder {
-    private final ImmutableList.Builder<String> argBuilder;
-    private final SourcePathResolverAdapter resolver;
-    private static final String XFRONTEND_FLAG = "-Xfrontend";
-
-    public CompilerArgBuilder(SourcePathResolverAdapter resolver) {
-      this.argBuilder = ImmutableList.builder();
-      this.resolver = resolver;
-    }
-
-    public void add(String flag) {
-      argBuilder.add(flag);
-    }
-
-    public void add(String... flags) {
-      argBuilder.add(flags);
-    }
-
-    public void addAll(Iterable<String> flags) {
-      argBuilder.addAll(flags);
-    }
-
-    public void addAll(Iterator<String> flags) {
-      argBuilder.addAll(flags);
-    }
-
-    public void addDriverOnlyFlag(String flag) {
-      if (useSwiftDriver) {
-        argBuilder.add(flag);
-      }
-    }
-
-    public void addFrontendFlag(String flag) {
-      if (useSwiftDriver) {
-        argBuilder.add(XFRONTEND_FLAG);
-      }
-      argBuilder.add(flag);
-    }
-
-    public void addFrontendOnlyFlag(String flag) {
-      if (!useSwiftDriver) {
-        argBuilder.add(flag);
-      }
-    }
-
-    public void addTargetFlags(ImmutableList<? extends Arg> flags) {
-      // The target flags are assumed to be driver flags. Any -Xfrontend prefixes need to be
-      // removed in the frontend mode.
-      for (Arg f : flags) {
-        String stringFlag = Arg.stringify(f, resolver);
-        if (useSwiftDriver || !stringFlag.equals(XFRONTEND_FLAG)) {
-          argBuilder.add(stringFlag);
-        }
-      }
-    }
-
-    public ImmutableList<String> build() {
-      return argBuilder.build();
-    }
-  }
-
   /** Creates the list of arguments to pass to the Swift compiler */
   protected ImmutableList<String> constructCompilerArgs(SourcePathResolverAdapter resolver) {
-    CompilerArgBuilder builder = new CompilerArgBuilder(resolver);
+    String frontendFlag = "-Xfrontend";
+    ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
 
     // Driver invocations use whole module optimization by default to
     // match the single object file output of the frontend implementation.
-    builder.addDriverOnlyFlag("-wmo");
-    builder.addFrontendOnlyFlag("-frontend");
-    builder.add("-target", swiftTarget.getVersionedTriple());
+    argBuilder.add("-wmo", "-target", swiftTarget.getVersionedTriple());
 
     if (bridgingHeader.isPresent()) {
       // Disable bridging header -> PCH compilation to mitigate an issue in Xcode 13 beta.
-      builder.addDriverOnlyFlag("-disable-bridging-pch");
-      builder.add(
-          "-import-objc-header", resolver.getCellUnsafeRelPath(bridgingHeader.get()).toString());
+      argBuilder.add(
+          "-disable-bridging-pch",
+          "-import-objc-header",
+          resolver.getCellUnsafeRelPath(bridgingHeader.get()).toString());
     }
 
     if (importUnderlyingModule) {
-      builder.add("-import-underlying-module");
+      argBuilder.add("-import-underlying-module");
     }
 
-    builder.addAll(
+    argBuilder.addAll(
         MoreIterables.zipAndConcat(
             Iterables.cycle("-Fsystem"), Arg.stringify(systemFrameworkSearchPaths, resolver)));
 
     if (addXCTestImportPaths) {
-      builder.addAll(xctestImportArgs(resolver));
+      argBuilder.addAll(xctestImportArgs(resolver));
     }
 
-    builder.addAll(
+    argBuilder.addAll(
         Streams.concat(frameworks.stream(), cxxDeps.getFrameworkPaths().stream())
             .filter(x -> !x.isSDKROOTFrameworkPath())
             .map(frameworkPathToSearchPath)
@@ -386,11 +313,11 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
             .flatMap(searchPath -> ImmutableSet.of("-F", searchPath.toString()).stream())
             .iterator());
 
-    builder.addAll(
+    argBuilder.addAll(
         MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"), getSwiftIncludeArgs(resolver)));
 
     for (SourcePath includePath : swiftIncludePaths) {
-      builder.add(
+      argBuilder.add(
           INCLUDE_FLAG,
           getProjectFilesystem().relativize(resolver.getAbsolutePath(includePath)).toString());
     }
@@ -400,7 +327,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
             .map(input -> resolver.getAbsolutePath(input).getFileName().toString())
             .anyMatch(SwiftDescriptions.SWIFT_MAIN_FILENAME::equalsIgnoreCase);
 
-    builder.add(
+    argBuilder.add(
         "-module-name",
         moduleName,
         "-emit-module",
@@ -412,42 +339,34 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         "-o",
         objectFilePath.toString());
 
-    // The target SDK version is the version of the SDK we are building against.
-    // This is different to the -target triple which specifies the deployment
-    // target to use for code generation. This is added by the driver automatically.
-    builder.addFrontendOnlyFlag("-target-sdk-version");
-    builder.addFrontendOnlyFlag(appleSdkVersion);
-
-    if (enableObjcInterop) {
-      builder.addFrontendOnlyFlag("-enable-objc-interop");
-    }
-
     if (enableCxxInterop) {
-      builder.addFrontendFlag("-enable-cxx-interop");
+      argBuilder.add(frontendFlag, "-enable-cxx-interop");
     }
 
     if (!hasMainEntry) {
-      builder.add("-parse-as-library");
+      argBuilder.add("-parse-as-library");
     }
 
     if (shouldEmitSwiftdocs) {
-      builder.add("-emit-module-doc", "-emit-module-doc-path", swiftdocPath.toString());
+      argBuilder.add("-emit-module-doc", "-emit-module-doc-path", swiftdocPath.toString());
     }
 
     version.ifPresent(
         v -> {
-          builder.add("-swift-version", validVersionString(v));
+          argBuilder.add("-swift-version", validVersionString(v));
         });
 
-    builder.addTargetFlags(compilerFlags);
+    for (Arg f : compilerFlags) {
+      argBuilder.add(Arg.stringify(f, resolver));
+    }
 
     for (SourcePath sourcePath : srcs) {
-      builder.add(resolver.getCellUnsafeRelPath(sourcePath).toString());
+      argBuilder.add(resolver.getCellUnsafeRelPath(sourcePath).toString());
     }
 
     if (useDebugPrefixMap) {
       // The Swift compiler always adds an implicit -working-directory flag which we need to remap.
-      builder.add(DEBUG_PREFIX_MAP_FLAG, getProjectFilesystem().getRootPath().toString() + "=.");
+      argBuilder.add(DEBUG_PREFIX_MAP_FLAG, getProjectFilesystem().getRootPath().toString() + "=.");
 
       // We reverse sort the paths by length as we want the longer paths to take precedence over
       // the shorter paths.
@@ -459,30 +378,30 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
                   .thenComparing(entry -> entry.getKey()))
           .forEach(
               entry ->
-                  builder.add(
+                  argBuilder.add(
                       DEBUG_PREFIX_MAP_FLAG, entry.getKey().toString() + "=" + entry.getValue()));
     }
 
     if (!shouldEmitClangModuleBreadcrumbs) {
       // Disable Clang module breadcrumbs in the DWARF info. These will not be debug prefix mapped
       // and are not shareable across machines.
-      builder.addFrontendFlag("-no-clang-module-breadcrumbs");
+      argBuilder.add(frontendFlag, "-no-clang-module-breadcrumbs");
     }
 
     if (serializeDebuggingOptions) {
       // We only want to serialize debug info for top level modules. This reduces the amount of
       // work done by the debugger when constructing type contexts and speeds up attach time.
       // Tests will pass this in their constructor args explicitly.
-      builder.addFrontendFlag("-serialize-debugging-options");
+      argBuilder.add(frontendFlag, "-serialize-debugging-options");
     }
 
     if (prefixSerializedDebugInfo) {
       // Apply path prefixes to swiftmodule debug info to make compiler output cacheable.
       // NOTE: not yet supported in upstream Swift
-      builder.addFrontendFlag("-prefix-serialized-debug-info");
+      argBuilder.add(frontendFlag, "-prefix-serialized-debug-info");
     }
 
-    return builder.build();
+    return argBuilder.build();
   }
 
   private Iterable<String> xctestImportArgs(SourcePathResolverAdapter resolver) {
