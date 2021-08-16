@@ -24,6 +24,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,6 +74,8 @@ public abstract class FileBundler {
       PatternsMatcher entriesToExclude) {
 
     ImmutableMap<Path, AbsPath> relativeMap = pathResolver.createRelativeMap(basePath, toCopy);
+
+    steps.add(MkdirStep.of(buildCellRelativePathFactory.from(destinationDir)));
 
     for (Map.Entry<Path, AbsPath> pathEntry : relativeMap.entrySet()) {
       Path relativePath = pathEntry.getKey();

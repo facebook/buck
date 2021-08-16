@@ -96,4 +96,15 @@ public class FilegroupIntegrationTest {
         workspace.getFileContents(
             outputPath.resolve("dir").resolve("subdir").resolve("another_file.txt")));
   }
+
+  @Test
+  public void testEmptyFilegroupCanBeUsedAsASource() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "filegroup", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("build", "//empty/:use_empty");
+
+    result.assertSuccess();
+  }
 }

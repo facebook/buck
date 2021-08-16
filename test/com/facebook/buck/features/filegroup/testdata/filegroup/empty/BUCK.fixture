@@ -1,0 +1,11 @@
+filegroup(
+    name = "empty",
+    srcs = [],
+)
+
+genrule(
+    name = "use_empty",
+    srcs = [":empty"],
+    out = "dummy.txt",
+    cmd = "echo hello > $OUT",
+)
