@@ -35,6 +35,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
+import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -326,13 +327,14 @@ public class ConstructorArgMarshallerImmutableTest {
         invokePopulate(
             DtoWithBuildTargetList.class,
             ImmutableMap.of(
-                "single", UnconfiguredBuildTargetParser.parse("//com/example:cheese"),
+                "single",
+                UnconfiguredBuildTargetParser.parse("//com/example:cheese"),
                 "same_build_file_target",
-                    UnconfiguredBuildTargetParser.parse("//example/path:cake"),
+                UnconfiguredBuildTargetParser.parse("//example/path:cake"),
                 "targets",
-                    ImmutableList.of(
-                        UnconfiguredBuildTargetParser.parse("//example/path:cake"),
-                        UnconfiguredBuildTargetParser.parse("//com/example:cheese"))));
+                ImmutableList.of(
+                    UnconfiguredBuildTargetParser.parse("//example/path:cake"),
+                    UnconfiguredBuildTargetParser.parse("//com/example:cheese"))));
 
     BuildTarget cheese = BuildTargetFactory.newInstance("//com/example:cheese");
     BuildTarget cake = BuildTargetFactory.newInstance("//example/path:cake");
@@ -732,13 +734,51 @@ public class ConstructorArgMarshallerImmutableTest {
     assertEquals(execConfiguration, compiler.getTarget().getTargetConfiguration());
   }
 
+  @Test
+  public void populateBuildTargetWithExecSwitch() {
+    SelectorListResolver selectorListResolver =
+        new DefaultSelectorListResolver(new TestSelectableResolver());
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(
+            (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
+    UnconfiguredBuildTarget compiler = UnconfiguredBuildTargetParser.parse("//tools:compiler");
+    RuleBasedTargetConfiguration execConfiguration =
+        RuleBasedTargetConfiguration.of(
+            ConfigurationBuildTargetFactoryForTests.newInstance("//:p"));
+    HostTargetConfigurationResolver hostTargetConfigurationResolver =
+        target -> target.equals(compiler) ? execConfiguration : null;
+    DtoWithExecTarget d =
+        marshaller.populate(
+            createCellRoots(filesystem).getCellNameResolver(),
+            filesystem,
+            selectorListResolver,
+            SelectableConfigurationContextFactory.UNCONFIGURED,
+            targetConfigurationTransformer,
+            new ThrowingPlatformResolver(),
+            TARGET,
+            hostTargetConfigurationResolver,
+            DependencyStack.root(),
+            builder(DtoWithExecTarget.class),
+            ImmutableSet.builder(),
+            ImmutableSet.builder(),
+            ImmutableMap.of(
+                ParamName.bySnakeCase("name"),
+                TARGET.getShortName(),
+                ParamName.bySnakeCase("compiler"),
+                compiler),
+            LabelledAnySelectable.any());
+    assertEquals(execConfiguration, d.getCompiler().getTargetConfiguration());
+  }
+
   @RuleArg
   abstract static class AbstractDtoWithString implements BuildRuleArg {
+
     abstract String getString();
   }
 
   @RuleArg
   abstract static class AbstractDtoWithBoolean implements BuildRuleArg {
+
     abstract boolean getBooleanOne();
 
     abstract boolean isBooleanTwo();
@@ -746,11 +786,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithListOfStrings implements BuildRuleArg {
+
     abstract List<String> getList();
   }
 
   @RuleArg
   abstract static class AbstractDtoWithFakeDeps implements BuildRuleArg {
+
     @Hint(isDep = false)
     abstract Set<BuildTarget> getDeps();
 
@@ -760,6 +802,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithCollections implements BuildRuleArg {
+
     abstract Set<String> getSet();
 
     abstract ImmutableSet<String> getImmutableSet();
@@ -781,16 +824,19 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithOptionalSetOfStrings implements BuildRuleArg {
+
     abstract Optional<Set<String>> getStrings();
   }
 
   @RuleArg
   abstract static class AbstractDtoWithSetOfStrings implements BuildRuleArg {
+
     abstract Set<String> getStrings();
   }
 
   @RuleArg
   abstract static class AbstractDtoWithPath implements BuildRuleArg {
+
     abstract Path getPath();
   }
 
@@ -799,6 +845,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithBuildTargets implements BuildRuleArg {
+
     abstract BuildTarget getTarget();
 
     abstract BuildTarget getLocal();
@@ -806,11 +853,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithLong implements BuildRuleArg {
+
     abstract long getNumber();
   }
 
   @RuleArg
   abstract static class AbstractDtoWithSourcePaths implements BuildRuleArg {
+
     abstract SourcePath getFilePath();
 
     abstract SourcePath getTargetPath();
@@ -818,11 +867,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithImmutableSortedSet implements BuildRuleArg {
+
     abstract ImmutableSortedSet<BuildTarget> getStuff();
   }
 
   @RuleArg
   abstract static class AbstractDtoWithDeclaredDeps implements BuildRuleArg {
+
     abstract ImmutableSet<BuildTarget> getDeps();
 
     abstract ImmutableSet<SourcePath> getPaths();
@@ -830,11 +881,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithSetOfPaths implements BuildRuleArg {
+
     abstract Set<Path> getPaths();
   }
 
   @RuleArg
   abstract static class AbstractDtoWithDepsAndNotDeps implements BuildRuleArg {
+
     abstract Set<BuildTarget> getDeps();
 
     abstract Set<BuildTarget> getNotDeps();
@@ -842,6 +895,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithBuildTargetList implements BuildRuleArg {
+
     abstract BuildTarget getSingle();
 
     abstract BuildTarget getSameBuildFileTarget();
@@ -851,6 +905,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithVariousTypes implements BuildRuleArg {
+
     abstract String getRequired();
 
     abstract Optional<String> getNotRequired();
@@ -874,6 +929,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithOptionalValues implements BuildRuleArg {
+
     abstract Optional<String> getNoString();
 
     abstract Optional<String> getDefaultString();
@@ -885,6 +941,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithDefaultValues implements BuildRuleArg {
+
     @Value.Default
     public String getSomething() {
       return "foo";
@@ -908,11 +965,13 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithSetOfSourcePaths implements BuildRuleArg {
+
     abstract ImmutableSortedSet<SourcePath> getSrcs();
   }
 
   @RuleArg
   abstract static class AbstractDtoWithCheck implements BuildRuleArg {
+
     abstract String getString();
 
     @Value.Check
@@ -923,6 +982,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithDerivedAndOrdinaryMethods implements BuildRuleArg {
+
     abstract String getString();
 
     public String getConstant() {
@@ -936,6 +996,7 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   interface HasDefaultMethod extends BuildRuleArg {
+
     @Value.Default
     default String getString() {
       return "foo";
@@ -947,13 +1008,22 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @RuleArg
   abstract static class AbstractDtoWithSplit implements BuildRuleArg {
+
     @Hint(splitConfiguration = true)
     abstract ImmutableSortedSet<BuildTarget> getDeps();
   }
 
   @RuleArg
   abstract static class AbstractDtoWithExec implements BuildRuleArg {
+
     @Hint(execConfiguration = true)
     abstract SourcePath getCompiler();
+  }
+
+  @RuleArg
+  abstract static class AbstractDtoWithExecTarget implements BuildRuleArg {
+
+    @Hint(execConfiguration = true)
+    abstract BuildTarget getCompiler();
   }
 }

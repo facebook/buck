@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.select.CompatibleWithUtil;
@@ -269,7 +270,10 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
                           cellNameResolver,
                           filesystem,
                           buildTarget,
-                          targetConfiguration,
+                          (info.execConfiguration() && (v instanceof UnconfiguredBuildTarget))
+                              ? hostConfigurationResolver.getTargetConfiguration(
+                                  (UnconfiguredBuildTarget) v)
+                              : targetConfiguration,
                           hostConfigurationResolver,
                           info,
                           coercer,
@@ -288,7 +292,10 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
           cellNameResolver,
           filesystem,
           buildTarget,
-          targetConfiguration,
+          (info.execConfiguration() && (attribute instanceof UnconfiguredBuildTarget))
+              ? hostConfigurationResolver.getTargetConfiguration(
+                  (UnconfiguredBuildTarget) attribute)
+              : targetConfiguration,
           hostConfigurationResolver,
           info,
           coercer,
