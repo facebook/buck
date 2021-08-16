@@ -20,8 +20,8 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
@@ -94,7 +94,7 @@ public class SourcePathTypeCoercer extends LeafTypeNewCoercer<UnconfiguredSource
       ProjectFilesystem filesystem,
       ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       UnconfiguredSourcePath object)
       throws CoerceFailedException {
     return object.configure(cellRoots, filesystem, targetConfiguration);

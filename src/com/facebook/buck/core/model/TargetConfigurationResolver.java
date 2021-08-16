@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model;
 
-public interface HostTargetConfigurationResolver {
+public interface TargetConfigurationResolver {
 
   TargetConfiguration getTargetConfiguration(UnconfiguredBuildTarget target);
 }

@@ -21,8 +21,8 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
@@ -74,7 +74,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       TargetConfigurationTransformer targetConfigurationTransformer,
       TargetPlatformResolver platformResolver,
       BuildTarget buildTarget,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       DependencyStack dependencyStack,
       DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
@@ -189,7 +189,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       SelectableConfigurationContext configurationContext,
       TargetPlatformResolver platformResolver,
       BuildTarget buildTarget,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       DependencyStack dependencyStack,
       TargetConfiguration targetConfiguration,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
@@ -237,7 +237,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
       ParamInfo<T> info,
       TypeCoercer<U, T> coercer,
@@ -308,7 +308,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       ParamInfo<T> paramInfo,
       TypeCoercer<U, T> coercer,
       U attribute)

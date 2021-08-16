@@ -21,8 +21,8 @@ import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -159,7 +159,7 @@ public class FrameworkPathTypeCoercer
       ProjectFilesystem filesystem,
       ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       UnconfiguredFrameworkPath object)
       throws CoerceFailedException {
     return object.match(

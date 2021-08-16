@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.select.LabelledAnySelectable;
@@ -82,7 +82,7 @@ public interface ConstructorArgMarshaller {
       TargetConfigurationTransformer targetConfigurationTransformer,
       TargetPlatformResolver platformResolver,
       BuildTarget buildTarget,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       DependencyStack dependencyStack,
       DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,

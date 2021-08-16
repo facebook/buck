@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.query.UnconfiguredQuery;
 
@@ -36,7 +36,7 @@ public abstract class UnconfiguredQueryOutputsMacro extends UnconfiguredQueryMac
   @Override
   public QueryOutputsMacro configure(
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver) {
+      TargetConfigurationResolver hostConfigurationResolver) {
     return QueryOutputsMacro.of(getQuery().configure(targetConfiguration));
   }
 

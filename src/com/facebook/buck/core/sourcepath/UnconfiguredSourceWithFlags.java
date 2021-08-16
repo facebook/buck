@@ -17,8 +17,8 @@
 package com.facebook.buck.core.sourcepath;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
@@ -42,7 +42,7 @@ public abstract class UnconfiguredSourceWithFlags {
       CellNameResolver cellNameResolver,
       ProjectFilesystem projectFilesystem,
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver) {
+      TargetConfigurationResolver hostConfigurationResolver) {
     return SourceWithFlags.of(
         getSourcePath().configure(cellNameResolver, projectFilesystem, targetConfiguration),
         getFlags().stream()

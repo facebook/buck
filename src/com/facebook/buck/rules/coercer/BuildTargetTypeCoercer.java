@@ -19,8 +19,8 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
@@ -73,7 +73,7 @@ public class BuildTargetTypeCoercer
       ProjectFilesystem alsoUnused,
       ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       UnconfiguredBuildTarget object)
       throws CoerceFailedException {
     return object.configure(targetConfiguration);

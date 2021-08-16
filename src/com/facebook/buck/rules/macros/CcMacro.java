@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** <code>$(cc)</code> macro type. */
@@ -41,7 +41,7 @@ public interface CcMacro extends Macro, UnconfiguredMacro {
   @Override
   default Macro configure(
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver) {
+      TargetConfigurationResolver hostConfigurationResolver) {
     return this;
   }
 }

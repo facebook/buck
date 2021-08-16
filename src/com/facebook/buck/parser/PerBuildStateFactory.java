@@ -23,9 +23,9 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.impl.ConfigurationPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -247,7 +247,7 @@ public class PerBuildStateFactory {
             ? new ThrowingCellBoundaryChecker(cells)
             : new NoopCellBoundaryChecker();
 
-    HostTargetConfigurationResolver hostTargetConfigurationResolver =
+    TargetConfigurationResolver hostTargetConfigurationResolver =
         target -> {
           // First, see if the rule sets an explicit host platform to use.
           ListenableFuture<UnconfiguredTargetNode> nodeJob =

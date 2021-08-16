@@ -22,8 +22,8 @@ import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMappingTarget;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -134,7 +134,7 @@ public class CxxLinkGroupMappingCoercer
       ProjectFilesystem filesystem,
       ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       UnconfiguredCxxLinkGroupMapping object)
       throws CoerceFailedException {
     return CxxLinkGroupMapping.of(

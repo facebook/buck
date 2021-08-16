@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.reflect.TypeParameter;
@@ -117,7 +117,7 @@ public class SortedMapTypeCoercer<KU extends Comparable<KU>, VU, K extends Compa
       ProjectFilesystem filesystem,
       ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       ImmutableSortedMap<KU, VU> object)
       throws CoerceFailedException {
     ImmutableSortedMap.Builder<K, V> builder = ImmutableSortedMap.naturalOrder();

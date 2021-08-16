@@ -16,8 +16,8 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 
 /** Unconfigured version of {@link Macro} */
 public interface UnconfiguredMacro {
@@ -26,5 +26,5 @@ public interface UnconfiguredMacro {
 
   Macro configure(
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver);
+      TargetConfigurationResolver hostConfigurationResolver);
 }

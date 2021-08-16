@@ -21,8 +21,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -82,7 +82,7 @@ public class ZeroArgMacroTypeCoercerTest {
     @Override
     public Macro configure(
         TargetConfiguration targetConfiguration,
-        HostTargetConfigurationResolver hostConfigurationResolver) {
+        TargetConfigurationResolver hostConfigurationResolver) {
       return this;
     }
   }

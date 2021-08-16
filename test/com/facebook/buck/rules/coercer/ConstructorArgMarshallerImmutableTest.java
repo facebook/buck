@@ -35,8 +35,8 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -745,7 +745,7 @@ public class ConstructorArgMarshallerImmutableTest {
     RuleBasedTargetConfiguration execConfiguration =
         RuleBasedTargetConfiguration.of(
             ConfigurationBuildTargetFactoryForTests.newInstance("//:p"));
-    HostTargetConfigurationResolver hostTargetConfigurationResolver =
+    TargetConfigurationResolver hostTargetConfigurationResolver =
         target -> target.equals(compiler) ? execConfiguration : null;
     DtoWithExecTarget d =
         marshaller.populate(

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model;
 
-public class ConstantHostTargetConfigurationResolver implements HostTargetConfigurationResolver {
+public class ConstantHostTargetConfigurationResolver implements TargetConfigurationResolver {
 
   private final TargetConfiguration targetConfiguration;
 

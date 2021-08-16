@@ -25,8 +25,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
@@ -69,7 +69,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
   private final TargetPlatformResolver targetPlatformResolver;
   private final TargetConfigurationTransformer targetConfigurationTransformer;
   private final boolean hostConfigurationSwitchEnabled;
-  private final HostTargetConfigurationResolver hostTargetConfigurationResolver;
+  private final TargetConfigurationResolver hostTargetConfigurationResolver;
   private final BuckConfig buckConfig;
   private final Optional<ConfigurationRuleRegistry> configurationRuleRegistry;
 
@@ -85,7 +85,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
       SelectorListResolver selectorListResolver,
       TargetPlatformResolver targetPlatformResolver,
       TargetConfigurationTransformer targetConfigurationTransformer,
-      HostTargetConfigurationResolver hostTargetConfigurationResolver,
+      TargetConfigurationResolver hostTargetConfigurationResolver,
       BuckConfig buckConfig,
       Optional<ConfigurationRuleRegistry> configurationRuleRegistry) {
     this.cells = cells;

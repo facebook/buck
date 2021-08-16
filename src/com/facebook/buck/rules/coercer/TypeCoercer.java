@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.base.Preconditions;
@@ -69,7 +69,7 @@ public interface TypeCoercer<U, T> extends Concatable<T> {
 
   /**
    * {@link #coerce(CellNameResolver, ProjectFilesystem, ForwardRelPath, TargetConfiguration,
-   * HostTargetConfigurationResolver, Object)} must be no-op when this returns {@code true}.
+   * TargetConfigurationResolver, Object)} must be no-op when this returns {@code true}.
    */
   default boolean unconfiguredToConfiguredCoercionIsIdentity() {
     return false;
@@ -111,21 +111,21 @@ public interface TypeCoercer<U, T> extends Concatable<T> {
       ProjectFilesystem filesystem,
       ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       U object)
       throws CoerceFailedException;
 
   /**
    * Apply {@link #coerceToUnconfigured(CellNameResolver, ProjectFilesystem, ForwardRelPath,
    * Object)} followed by {@link #coerce(CellNameResolver, ProjectFilesystem, ForwardRelPath,
-   * TargetConfiguration, HostTargetConfigurationResolver, Object)}.
+   * TargetConfiguration, TargetConfigurationResolver, Object)}.
    */
   default T coerceBoth(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelPath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
-      HostTargetConfigurationResolver hostConfigurationResolver,
+      TargetConfigurationResolver hostConfigurationResolver,
       Object object)
       throws CoerceFailedException {
     U unconfigured = coerceToUnconfigured(cellRoots, filesystem, pathRelativeToProjectRoot, object);

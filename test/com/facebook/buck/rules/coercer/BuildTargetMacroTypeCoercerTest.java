@@ -22,10 +22,10 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConstantHostTargetConfigurationResolver;
-import com.facebook.buck.core.model.HostTargetConfigurationResolver;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationResolver;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -83,7 +83,7 @@ public class BuildTargetMacroTypeCoercerTest {
     @Override
     public MyBuildTargetMacro configure(
         TargetConfiguration targetConfiguration,
-        HostTargetConfigurationResolver hostConfigurationResolver) {
+        TargetConfigurationResolver hostConfigurationResolver) {
       return new MyBuildTargetMacro(getTargetWithOutputs().configure(targetConfiguration));
     }
   }
