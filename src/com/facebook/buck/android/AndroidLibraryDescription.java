@@ -155,8 +155,9 @@ public class AndroidLibraryDescription
 
     Optional<Flavor> inferFlavor = InferJava.findSupportedFlavor(flavors);
     if (inferFlavor.isPresent()) {
+      Flavor flavor = inferFlavor.get();
       return InferJava.create(
-          inferFlavor.get(),
+          flavor,
           buildTarget,
           projectFilesystem,
           context.getActionGraphBuilder(),
@@ -168,7 +169,7 @@ public class AndroidLibraryDescription
               .orElseThrow(
                   () ->
                       new HumanReadableException(
-                          "Cannot use #nullsafe flavor: infer platform not configured")),
+                          "Cannot use %s flavor: infer platform not configured", flavor.getName())),
           InferConfig.of(javaBuckConfig.getDelegate()),
           downwardApiConfig);
     }
