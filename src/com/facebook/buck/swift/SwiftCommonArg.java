@@ -29,11 +29,6 @@ public interface SwiftCommonArg extends BuildRuleArg {
   Optional<String> getSwiftVersion();
 
   @Value.Default
-  default boolean getUseSwiftDriver() {
-    return false;
-  }
-
-  @Value.Default
   default boolean getSerializeDebuggingOptions() {
     return true;
   }

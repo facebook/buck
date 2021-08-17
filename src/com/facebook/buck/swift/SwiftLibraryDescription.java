@@ -647,8 +647,6 @@ public class SwiftLibraryDescription
     @Value.NaturalOrder
     ImmutableSortedSet<FrameworkPath> getLibraries();
 
-    Optional<Boolean> getEnableObjcInterop();
-
     Optional<Pattern> getSupportedPlatformsRegex();
 
     Optional<String> getSoname();
@@ -662,11 +660,6 @@ public class SwiftLibraryDescription
      * config-level option.
      */
     Optional<String> getTargetSdkVersion();
-
-    @Value.Default
-    default boolean getUseSwiftDriver() {
-      return false;
-    }
 
     @Value.Default
     default boolean getSerializeDebuggingOptions() {

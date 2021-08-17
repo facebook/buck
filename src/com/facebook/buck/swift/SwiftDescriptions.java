@@ -75,7 +75,6 @@ public class SwiftDescriptions {
       }
       output.setCompilerFlags(swiftArgs.getSwiftCompilerFlags());
       output.setVersion(swiftVersion);
-      output.setUseSwiftDriver(swiftArgs.getUseSwiftDriver());
       output.setSerializeDebuggingOptions(swiftArgs.getSerializeDebuggingOptions());
       output.setEnableCxxInterop(swiftArgs.getEnableCxxInterop());
     } else {
@@ -87,7 +86,6 @@ public class SwiftDescriptions {
     output.setSupportedPlatformsRegex(args.getSupportedPlatformsRegex());
     output.setModuleName(
         args.getModuleName().map(Optional::of).orElse(Optional.of(buildTarget.getShortName())));
-    output.setEnableObjcInterop(true);
     output.setBridgingHeader(args.getBridgingHeader());
 
     boolean isCompanionTarget = buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR);
