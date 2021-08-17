@@ -41,9 +41,11 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.types.Unit;
+import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
@@ -56,9 +58,12 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /** JavaCD main class */
 public class JavaCDWorkerToolMain {
@@ -79,11 +84,16 @@ public class JavaCDWorkerToolMain {
           new SynchronousQueue<>(),
           new MostExecutors.NamedThreadFactory("JavaCD"));
 
+  private static final ScheduledExecutorService MONITORING_THREAD_POOL =
+      Executors.newSingleThreadScheduledExecutor();
+
   /** Main entrypoint of JavaCD worker tool. */
   public static void main(String[] args) {
     WorkerToolParsedEnvs workerToolParsedEnvs =
         WorkerToolParsedEnvs.parse(EnvVariablesProvider.getSystemEnv());
     Console console = createConsole(workerToolParsedEnvs);
+    MONITORING_THREAD_POOL.scheduleAtFixedRate(
+        JavaCDWorkerToolMain::logCurrentJavacdState, 1, 10, TimeUnit.SECONDS);
 
     try (NamedPipeWriter eventNamedPipe =
             NAMED_PIPE_FACTORY.connectAsWriter(workerToolParsedEnvs.getEventPipe());
@@ -264,5 +274,42 @@ public class JavaCDWorkerToolMain {
         }
       }
     }
+  }
+
+  private static void logCurrentJavacdState() {
+    int activeCount = THREAD_POOL.getActiveCount();
+    long completedTaskCount = THREAD_POOL.getCompletedTaskCount();
+    int largestPoolSize = THREAD_POOL.getLargestPoolSize();
+    long taskCount = THREAD_POOL.getTaskCount();
+
+    int availableProcessors = Runtime.getRuntime().availableProcessors();
+
+    PerfStatsTracking.MemoryPerfStatsEvent memory = PerfStatsTracking.getMemoryPerfStatsEvent();
+    long totalMemoryBytes = memory.getTotalMemoryBytes();
+    long freeMemoryBytes = memory.getFreeMemoryBytes();
+    long usedMemory = SizeUnit.BYTES.toMegabytes(totalMemoryBytes - freeMemoryBytes);
+    long freeMemory = SizeUnit.BYTES.toMegabytes(freeMemoryBytes);
+    long totalMemory = SizeUnit.BYTES.toMegabytes(totalMemoryBytes);
+    long maxMemory = SizeUnit.BYTES.toMegabytes(memory.getMaxMemoryBytes());
+    long timeSpendInGc = TimeUnit.MILLISECONDS.toSeconds(memory.getTimeSpentInGcMs());
+    String pools =
+        memory.getCurrentMemoryBytesUsageByPool().entrySet().stream()
+            .map(e -> e.getKey() + "=" + SizeUnit.BYTES.toMegabytes(e.getValue()))
+            .collect(Collectors.joining(", "));
+
+    LOG.info(
+        "Javacd state: executing tasks: %s, completed tasks: %s, largest pool size: %s, task count: %s. Available processors: %s, Time spend in GC: %s seconds, "
+            + "Used Memory: %s, Free Memory: %s, Total Memory: %s, Max Memory: %s, Pools: %s",
+        activeCount,
+        completedTaskCount,
+        largestPoolSize,
+        taskCount,
+        availableProcessors,
+        timeSpendInGc,
+        usedMemory,
+        freeMemory,
+        totalMemory,
+        maxMemory,
+        pools);
   }
 }

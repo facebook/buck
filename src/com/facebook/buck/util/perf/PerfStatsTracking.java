@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 
 /** Periodically probes for process-wide perf-related metrics. */
 public class PerfStatsTracking extends AbstractScheduledService implements AutoCloseable {
+
   private final BuckEventBus eventBus;
   private final ServiceManager serviceManager;
   private final InvocationInfo invocationInfo;
@@ -47,6 +48,15 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
   }
 
   public void probeMemory() {
+    MemoryPerfStatsEvent memoryPerfStatsEvent = getMemoryPerfStatsEvent();
+    eventBus.post(memoryPerfStatsEvent);
+  }
+
+  /**
+   * Creates {@link MemoryPerfStatsEvent} using the current env state (used/free memory values, GC
+   * time spend so far and so on )
+   */
+  public static MemoryPerfStatsEvent getMemoryPerfStatsEvent() {
     long freeMemoryBytes = Runtime.getRuntime().freeMemory();
     long totalMemoryBytes = Runtime.getRuntime().totalMemory();
     long maxMemoryBytes = Runtime.getRuntime().maxMemory();
@@ -70,13 +80,12 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
       currentMemoryBytesUsageByPool.put(name + "(" + type + ")", currentlyUsedBytes);
     }
 
-    eventBus.post(
-        new MemoryPerfStatsEvent(
-            freeMemoryBytes,
-            totalMemoryBytes,
-            maxMemoryBytes,
-            totalGcTimeMs,
-            currentMemoryBytesUsageByPool.build()));
+    return new MemoryPerfStatsEvent(
+        freeMemoryBytes,
+        totalMemoryBytes,
+        maxMemoryBytes,
+        totalGcTimeMs,
+        currentMemoryBytesUsageByPool.build());
   }
 
   @Override
@@ -121,6 +130,7 @@ public class PerfStatsTracking extends AbstractScheduledService implements AutoC
 
   /** Performance event that tracks current memory usage of Buck */
   public static class MemoryPerfStatsEvent extends PerfStatsEvent {
+
     private final long freeMemoryBytes;
     private final long totalMemoryBytes;
     private final long maxMemoryBytes;
