@@ -70,4 +70,24 @@ public class BuildCommandOptionsTest {
             .build();
     assertThat(buckConfig.getView(BuildBuckConfig.class).getNumThreads(), Matchers.equalTo(42));
   }
+
+  @Test
+  public void testCommandLineOptionsForOncalls() throws CmdLineException {
+    BuildCommand command = new BuildCommand();
+
+    AdditionalOptionsCmdLineParser parser = CmdLineParserFactory.create(command);
+    parser.parseArgument(
+        "--oncall",
+        "build_infra",
+        "--oncall",
+        "test_infra",
+        "--oncall",
+        "android_infra",
+        "--oncall",
+        "ios_infra");
+
+    ImmutableSet<String> oncalls = command.getOncalls();
+    assertThat(
+        oncalls, Matchers.contains("build_infra", "test_infra", "android_infra", "ios_infra"));
+  }
 }
