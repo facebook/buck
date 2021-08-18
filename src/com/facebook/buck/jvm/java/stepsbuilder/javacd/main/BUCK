@@ -27,6 +27,7 @@ java_immutables_library(
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/step/isolatedsteps/java:java",
         "//src/com/facebook/buck/util/environment:environment",
+        "//src/com/facebook/buck/util/monitoring:monitoring",
         "//src/com/facebook/buck/util/perf:perf",
         "//src/com/facebook/buck/util/unit:unit",
         "//src/com/facebook/buck/workertool/utils:utils",

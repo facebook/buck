@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.util.monitoring;
 
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.google.common.base.Joiner;
@@ -28,7 +28,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+/** Hand monitor service. */
 public class HangMonitor extends AbstractScheduledService {
+
   private final Consumer<String> hangReportConsumer;
   private final AtomicInteger eventsSeenSinceLastCheck;
   private final Duration hangCheckTimeout;
@@ -44,6 +46,14 @@ public class HangMonitor extends AbstractScheduledService {
   @Subscribe
   @SuppressWarnings("unused")
   public void onWorkAdvance(WorkAdvanceEvent event) {
+    workAdvance();
+  }
+
+  /**
+   * Tell hang monitor that there was some work done towards completing the current task. Absence of
+   * those calls can be used to detect a possible deadlock.
+   */
+  public void workAdvance() {
     eventsSeenSinceLastCheck.incrementAndGet();
   }
 
@@ -83,13 +93,14 @@ public class HangMonitor extends AbstractScheduledService {
         hangCheckTimeout.toMillis(), hangCheckTimeout.toMillis(), TimeUnit.MILLISECONDS);
   }
 
+  /** Auto start wrapper around hang monitor service */
   public static class AutoStartInstance {
+
     private final HangMonitor hangMonitor;
-    private final ServiceManager serviceManager;
 
     public AutoStartInstance(Consumer<String> hangReportConsumer, Duration hangCheckTimeout) {
       hangMonitor = new HangMonitor(hangReportConsumer, hangCheckTimeout);
-      serviceManager = new ServiceManager(ImmutableList.of(hangMonitor));
+      ServiceManager serviceManager = new ServiceManager(ImmutableList.of(hangMonitor));
       serviceManager.startAsync();
     }
 

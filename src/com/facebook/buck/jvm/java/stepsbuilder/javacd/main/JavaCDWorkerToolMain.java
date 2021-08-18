@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.model.BuildId;
@@ -41,6 +42,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.monitoring.HangMonitor;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -52,9 +54,15 @@ import com.facebook.buck.workertool.model.ShutdownCommand;
 import com.facebook.buck.workertool.model.StartNextPipeliningCommand;
 import com.facebook.buck.workertool.model.StartPipelineCommand;
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -84,8 +92,21 @@ public class JavaCDWorkerToolMain {
           new SynchronousQueue<>(),
           new MostExecutors.NamedThreadFactory("JavaCD"));
 
+  private static final ListeningExecutorService LISTENING_EXECUTOR_SERVICE =
+      MoreExecutors.listeningDecorator(THREAD_POOL);
+
   private static final ScheduledExecutorService MONITORING_THREAD_POOL =
       Executors.newSingleThreadScheduledExecutor();
+  private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
+
+  private static final Duration HANG_DETECTOR_TIMEOUT = Duration.ofMinutes(5);
+  private static final HangMonitor.AutoStartInstance HANG_MONITOR =
+      new HangMonitor.AutoStartInstance(
+          (threadDump) ->
+              LOG.info(
+                  "No recent javacd activity, dumping javacd thread stacks (`tr , '\\n'` to decode):%n %s",
+                  threadDump),
+          HANG_DETECTOR_TIMEOUT);
 
   /** Main entrypoint of JavaCD worker tool. */
   public static void main(String[] args) {
@@ -179,22 +200,24 @@ public class JavaCDWorkerToolMain {
                   BuildJavaCommand.parseDelimitedFrom(commandsInputStream);
               LOG.debug("Start executing command with action id: %s", executeCommandActionId);
 
-              THREAD_POOL.submit(
-                  () -> {
-                    BuildJavaCommandExecutor.executeBuildJavaCommand(
-                        classLoaderCache,
-                        executeCommandActionId,
-                        buildJavaCommand,
-                        eventsOutputStream,
-                        DOWNWARD_PROTOCOL,
-                        eventBus,
-                        platform,
-                        processExecutor,
-                        console,
-                        clock);
+              ListenableFuture<Unit> executeCommandFuture =
+                  LISTENING_EXECUTOR_SERVICE.submit(
+                      () -> {
+                        BuildJavaCommandExecutor.executeBuildJavaCommand(
+                            classLoaderCache,
+                            executeCommandActionId,
+                            buildJavaCommand,
+                            eventsOutputStream,
+                            DOWNWARD_PROTOCOL,
+                            eventBus,
+                            platform,
+                            processExecutor,
+                            console,
+                            clock);
 
-                    return Unit.UNIT;
-                  });
+                        return Unit.UNIT;
+                      });
+              addWorkAdvanceCallback(executeCommandFuture);
               break;
 
             case SHUTDOWN_COMMAND:
@@ -226,28 +249,33 @@ public class JavaCDWorkerToolMain {
 
               Optional<SettableFuture<ActionId>> finalStartNextCommandOptional =
                   startNextCommandOptional;
-              THREAD_POOL.submit(
-                  () -> {
-                    LOG.debug(
-                        "Starting execution of pipelining command with action ids: %s", actionIds);
+              ListenableFuture<Unit> startPipeliningCommandFuture =
+                  LISTENING_EXECUTOR_SERVICE.submit(
+                      () -> {
+                        LOG.debug(
+                            "Starting execution of pipelining command with action ids: %s",
+                            actionIds);
 
-                    PipeliningJavaCommandExecutor.executePipeliningJavaCommand(
-                        actionIds,
-                        pipeliningCommand,
-                        eventsOutputStream,
-                        DOWNWARD_PROTOCOL,
-                        eventBus,
-                        platform,
-                        processExecutor,
-                        console,
-                        clock,
-                        classLoaderCache,
-                        finalStartNextCommandOptional);
+                        PipeliningJavaCommandExecutor.executePipeliningJavaCommand(
+                            actionIds,
+                            pipeliningCommand,
+                            eventsOutputStream,
+                            DOWNWARD_PROTOCOL,
+                            eventBus,
+                            platform,
+                            processExecutor,
+                            console,
+                            clock,
+                            classLoaderCache,
+                            finalStartNextCommandOptional);
 
-                    LOG.debug("Pipelining command has been executed. Action ids: %s", actionIds);
+                        LOG.debug(
+                            "Pipelining command has been executed. Action ids: %s", actionIds);
 
-                    return Unit.UNIT;
-                  });
+                        return Unit.UNIT;
+                      });
+              addWorkAdvanceCallback(startPipeliningCommandFuture);
+
               break;
 
             case START_NEXT_PIPELINING_COMMAND:
@@ -276,13 +304,28 @@ public class JavaCDWorkerToolMain {
     }
   }
 
+  private static void addWorkAdvanceCallback(ListenableFuture<Unit> future) {
+    Futures.addCallback(
+        future,
+        new FutureCallback<Unit>() {
+          @Override
+          public void onSuccess(Unit explosion) {
+            HANG_MONITOR.getHangMonitor().workAdvance();
+          }
+
+          @Override
+          public void onFailure(Throwable thrown) {
+            // no-op
+          }
+        },
+        directExecutor());
+  }
+
   private static void logCurrentJavacdState() {
     int activeCount = THREAD_POOL.getActiveCount();
     long completedTaskCount = THREAD_POOL.getCompletedTaskCount();
     int largestPoolSize = THREAD_POOL.getLargestPoolSize();
     long taskCount = THREAD_POOL.getTaskCount();
-
-    int availableProcessors = Runtime.getRuntime().availableProcessors();
 
     PerfStatsTracking.MemoryPerfStatsEvent memory = PerfStatsTracking.getMemoryPerfStatsEvent();
     long totalMemoryBytes = memory.getTotalMemoryBytes();
@@ -304,7 +347,7 @@ public class JavaCDWorkerToolMain {
         completedTaskCount,
         largestPoolSize,
         taskCount,
-        availableProcessors,
+        AVAILABLE_PROCESSORS,
         timeSpendInGc,
         usedMemory,
         freeMemory,

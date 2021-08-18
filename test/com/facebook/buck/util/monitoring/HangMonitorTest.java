@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.util.monitoring;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
