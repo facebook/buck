@@ -26,8 +26,8 @@ import com.google.common.eventbus.Subscribe;
 import java.util.concurrent.TimeUnit;
 
 /**
- * {@link BuckEventListener} that is intended to build Critical path of the build (The longest by
- * time path )
+ * {@link BuckEventListener} that is intended to collect the top slowest targets that were executed
+ * as part of the build.
  */
 public class TopSlowTargetsEventListener implements BuckEventListener {
 
