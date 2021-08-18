@@ -253,9 +253,10 @@ public class AndroidLibraryDescription
           .apply(buildTarget.getTargetConfiguration())
           .ifPresent(
               p -> p.addParseTimeDepsToInferFlavored(targetGraphOnlyDepsBuilder, buildTarget));
-      Nullsafe.addParseTimeDeps(
-          targetGraphOnlyDepsBuilder, buildTarget, NullsafeConfig.of(javaBuckConfig.getDelegate()));
     }
+
+    Nullsafe.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, buildTarget, NullsafeConfig.of(javaBuckConfig.getDelegate()));
   }
 
   public interface CoreArg
