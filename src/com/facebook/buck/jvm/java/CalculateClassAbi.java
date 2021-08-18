@@ -111,9 +111,8 @@ public class CalculateClassAbi extends ModernBuildRule<CalculateClassAbi.Impl>
         BuildCellRelativePathFactory buildCellPathFactory) {
       return ImmutableList.of(
           new CalculateClassAbiStep(
-              filesystem,
-              buildContext.getSourcePathResolver().getAbsolutePath(binaryJar).getPath(),
-              outputPathResolver.resolvePath(output).getPath(),
+              buildContext.getSourcePathResolver().getRelativePath(filesystem, binaryJar),
+              outputPathResolver.resolvePath(output),
               compatibilityMode));
     }
   }

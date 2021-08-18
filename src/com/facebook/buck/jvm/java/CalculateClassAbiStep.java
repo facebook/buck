@@ -16,39 +16,43 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.StubJar;
-import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class CalculateClassAbiStep implements Step {
+/** Calculates class abi from the library.jar */
+public class CalculateClassAbiStep extends IsolatedStep {
 
-  private final ProjectFilesystem filesystem;
-  private final Path binaryJar;
-  private final Path abiJar;
+  private final RelPath binaryJar;
+  private final RelPath abiJar;
   private final AbiGenerationMode compatibilityMode;
 
   public CalculateClassAbiStep(
-      ProjectFilesystem filesystem,
-      Path binaryJar,
-      Path abiJar,
-      AbiGenerationMode compatibilityMode) {
-    this.filesystem = filesystem;
+      RelPath binaryJar, RelPath abiJar, AbiGenerationMode compatibilityMode) {
     this.binaryJar = binaryJar;
     this.abiJar = abiJar;
     this.compatibilityMode = compatibilityMode;
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context) throws IOException {
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
+      throws IOException {
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
+    AbsPath output = toAbsOutputPath(ruleCellRoot, abiJar);
+
     try {
-      Path binJar = filesystem.resolve(binaryJar);
-      new StubJar(binJar).setCompatibilityMode(compatibilityMode).writeTo(filesystem, abiJar);
+      new StubJar(ruleCellRoot.resolve(binaryJar))
+          .setCompatibilityMode(compatibilityMode)
+          .writeTo(output);
     } catch (IllegalArgumentException e) {
       context.logError(e, "Failed to calculate ABI for %s.", binaryJar);
       return StepExecutionResults.ERROR;
@@ -57,13 +61,27 @@ public class CalculateClassAbiStep implements Step {
     return StepExecutionResults.SUCCESS;
   }
 
+  private AbsPath toAbsOutputPath(AbsPath root, RelPath relativeOutputPath) throws IOException {
+    Path outputPath = ProjectFilesystemUtils.getPathForRelativePath(root, relativeOutputPath);
+    Preconditions.checkState(
+        !ProjectFilesystemUtils.exists(root, outputPath),
+        "Output file already exists: %s",
+        relativeOutputPath);
+
+    if (outputPath.getParent() != null
+        && !ProjectFilesystemUtils.exists(root, outputPath.getParent())) {
+      ProjectFilesystemUtils.createParentDirs(root, outputPath);
+    }
+    return root.resolve(relativeOutputPath);
+  }
+
   @Override
   public String getShortName() {
     return "class_abi";
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     return String.format("%s %s", getShortName(), binaryJar);
   }
 }

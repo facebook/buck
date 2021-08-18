@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -29,7 +30,6 @@ import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -44,67 +44,73 @@ public class StubJarIntegrationTest {
   @Rule public TemporaryFolder temp = new TemporaryFolder();
   private Path testDataDir;
   private ProjectFilesystem filesystem;
+  private AbsPath root;
 
   @Before
   public void createWorkspace() throws IOException {
-    Path dir = TestDataHelper.getTestDataDirectory(this);
-    testDataDir = dir.resolve("sample").toAbsolutePath();
-
+    testDataDir = TestDataHelper.getTestDataDirectory(this).resolve("sample").toAbsolutePath();
     filesystem = TestProjectFilesystems.createProjectFilesystem(temp.newFolder().toPath());
+    root = filesystem.getRootPath();
   }
 
   @Test
   public void shouldBuildAbiJar() throws IOException {
-    Path out = Paths.get("junit-abi.jar");
-    Path regularJar = testDataDir.resolve("junit.jar");
-    new StubJar(regularJar).writeTo(filesystem, out);
+    AbsPath out = root.resolve("junit-abi.jar");
+    AbsPath regularJar = AbsPath.of(testDataDir.resolve("junit.jar"));
+    new StubJar(regularJar).writeTo(out);
 
     // We assume that the lack of an exception indicates that the abi jar is correct. See MirrorTest
     // for why this is so.
-    assertTrue(filesystem.getFileSize(out) > 0);
-    assertTrue(filesystem.getFileSize(out) < filesystem.getFileSize(regularJar));
+    Path outputPath = out.getPath();
+    assertTrue(filesystem.getFileSize(outputPath) > 0);
+    assertTrue(filesystem.getFileSize(outputPath) < filesystem.getFileSize(regularJar.getPath()));
   }
 
   @Test
   public void shouldBuildAbiJarFromAbiJarWeCreated() throws IOException {
-    Path mid = Paths.get("junit-mid.jar");
-    Path source = testDataDir.resolve("junit.jar");
-    new StubJar(source).writeTo(filesystem, mid);
+    AbsPath mid = root.resolve("junit-mid.jar");
 
-    Path out = Paths.get("junit-abi.jar");
-    new StubJar(filesystem.resolve(mid)).writeTo(filesystem, out);
+    AbsPath source = AbsPath.of(testDataDir.resolve("junit.jar"));
+    new StubJar(source).writeTo(mid);
 
-    assertTrue(filesystem.getFileSize(out) > 0);
-    assertEquals(filesystem.getFileSize(mid), filesystem.getFileSize(out));
+    AbsPath out = root.resolve("junit-abi.jar");
+    new StubJar(mid).writeTo(out);
+
+    Path outputPath = out.getPath();
+    assertTrue(filesystem.getFileSize(outputPath) > 0);
+    assertEquals(filesystem.getFileSize(mid.getPath()), filesystem.getFileSize(outputPath));
   }
 
   @Test
   public void shouldBuildAbiJarFromAThirdPartyStubbedJar() throws IOException {
-    Path out = Paths.get("android-abi.jar");
-    Path source = testDataDir.resolve("android.jar");
-    new StubJar(source).writeTo(filesystem, out);
+    AbsPath out = root.resolve("android-abi.jar");
+    AbsPath source = AbsPath.of(testDataDir.resolve("android.jar"));
+    new StubJar(source).writeTo(out);
 
-    assertTrue(filesystem.getFileSize(out) > 0);
-    assertTrue(filesystem.getFileSize(out) < filesystem.getFileSize(source));
+    Path outputPath = out.getPath();
+    assertTrue(filesystem.getFileSize(outputPath) > 0);
+    assertTrue(filesystem.getFileSize(outputPath) < filesystem.getFileSize(source.getPath()));
   }
 
   @Test
   public void shouldBuildAbiJarEvenIfAsmWouldChokeOnAFrame() throws IOException {
-    Path out = Paths.get("unity-abi.jar");
-    Path source = testDataDir.resolve("unity.jar");
-    new StubJar(source).writeTo(filesystem, out);
+    AbsPath out = root.resolve("unity-abi.jar");
 
-    assertTrue(filesystem.getFileSize(out) > 0);
-    assertTrue(filesystem.getFileSize(out) < filesystem.getFileSize(source));
+    AbsPath source = AbsPath.of(testDataDir.resolve("unity.jar"));
+    new StubJar(source).writeTo(out);
+
+    Path outputPath = out.getPath();
+    assertTrue(filesystem.getFileSize(outputPath) > 0);
+    assertTrue(filesystem.getFileSize(outputPath) < filesystem.getFileSize(source.getPath()));
   }
 
   @Test
   public void abiJarManifestShouldContainHashesOfItsFiles() throws IOException {
-    Path out = Paths.get("junit-abi.jar");
-    Path regularJar = testDataDir.resolve("junit.jar");
-    new StubJar(regularJar).writeTo(filesystem, out);
+    AbsPath out = root.resolve("junit-abi.jar");
+    AbsPath regularJar = AbsPath.of(testDataDir.resolve("junit.jar"));
+    new StubJar(regularJar).writeTo(out);
 
-    try (JarFile stubJar = new JarFile(filesystem.resolve(out).toFile())) {
+    try (JarFile stubJar = new JarFile(out.toFile())) {
       Manifest manifest = stubJar.getManifest();
 
       Enumeration<JarEntry> entries = stubJar.entries();

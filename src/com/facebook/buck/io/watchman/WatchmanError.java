@@ -24,7 +24,6 @@ package com.facebook.buck.io.watchman;
 public enum WatchmanError {
   NO_ERROR,
 
-  API_STUBBER,
   CANNOT_EXTRACT_CAPABILITIES,
   DECODE,
   DEFAULT_FILE_HASH_CACHE,

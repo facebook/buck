@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
 import com.facebook.buck.util.zip.JarBuilder;
@@ -38,16 +38,13 @@ public class StubJar {
   private final Supplier<LibraryReader> libraryReaderSupplier;
   @Nullable private AbiGenerationMode compatibilityMode = null;
 
-  public StubJar(Path toMirror) {
-    libraryReaderSupplier = () -> LibraryReader.of(toMirror);
+  public StubJar(AbsPath jarPath) {
+    libraryReaderSupplier = () -> LibraryReader.of(jarPath.getPath());
   }
 
   /**
    * @param targetVersion the class file version to output, expressed as the corresponding Java
    *     source version
-   * @param types
-   * @param messager
-   * @param includeParameterMetadata
    */
   public StubJar(
       SourceVersion targetVersion,
@@ -69,20 +66,19 @@ public class StubJar {
 
   /**
    * Filters the stub jar through {@link SourceAbiCompatibleVisitor}. See that class for details.
-   *
-   * @param compatibilityMode
    */
   public StubJar setCompatibilityMode(AbiGenerationMode compatibilityMode) {
     this.compatibilityMode = compatibilityMode;
     return this;
   }
 
-  public void writeTo(ProjectFilesystem filesystem, Path path) throws IOException {
+  /** Writes output into the passed absolute path. */
+  public void writeTo(AbsPath outputAbsPath) throws IOException {
     // The order of these declarations is important -- FilesystemStubJarWriter actually uses
     // the LibraryReader in its close method, and try-with-resources closes the items in the
     // opposite order of their creation.
     try (LibraryReader input = libraryReaderSupplier.get();
-        StubJarWriter writer = new FilesystemStubJarWriter(filesystem, path)) {
+        StubJarWriter writer = new FilesystemStubJarWriter(outputAbsPath)) {
       writeTo(input, writer);
     }
   }

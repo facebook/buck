@@ -16,33 +16,26 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.JarBuilder;
 import com.facebook.buck.util.zip.JarEntrySupplier;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 
-/** A {@link StubJarWriter} that writes to a file through {@link ProjectFilesystem}. */
+/** A {@link StubJarWriter} that writes to a file. */
 class FilesystemStubJarWriter implements StubJarWriter {
-  private final Path outputPath;
+
+  private final AbsPath outputPath;
   private final JarBuilder jarBuilder;
   private boolean closed = false;
 
-  public FilesystemStubJarWriter(ProjectFilesystem filesystem, Path outputPath) throws IOException {
-    Preconditions.checkState(
-        !filesystem.exists(outputPath), "Output file already exists: %s)", outputPath);
-
-    if (outputPath.getParent() != null && !filesystem.exists(outputPath.getParent())) {
-      filesystem.createParentDirs(outputPath);
-    }
-
-    this.outputPath = filesystem.resolve(outputPath);
-    jarBuilder = new JarBuilder().setShouldHashEntries(true).setShouldMergeManifests(true);
+  public FilesystemStubJarWriter(AbsPath outputPath) {
+    this.outputPath = outputPath;
+    this.jarBuilder = new JarBuilder().setShouldHashEntries(true).setShouldMergeManifests(true);
   }
 
   @Override
@@ -58,7 +51,7 @@ class FilesystemStubJarWriter implements StubJarWriter {
   @Override
   public void close() throws IOException {
     if (!closed) {
-      jarBuilder.createJarFile(outputPath);
+      jarBuilder.createJarFile(outputPath.getPath());
     }
     closed = true;
   }

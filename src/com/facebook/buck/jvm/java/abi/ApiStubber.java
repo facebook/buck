@@ -16,11 +16,7 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
-import com.facebook.buck.io.watchman.WatchmanError;
-import com.facebook.buck.io.watchman.WatchmanFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,14 +31,13 @@ public class ApiStubber {
     Path source = Paths.get(args[0]);
     Path destination = Paths.get(args[1]);
 
-    new StubJar(source)
-        .writeTo(
-            new DefaultProjectFilesystemFactory()
-                .createProjectFilesystem(
-                    CanonicalCellName.unsafeNotACell(),
-                    AbsPath.of(Paths.get("").toAbsolutePath()),
-                    false,
-                    new WatchmanFactory.NullWatchman("ApiStubber", WatchmanError.API_STUBBER)),
-            destination);
+    AbsPath workingDirectory = AbsPath.of(Paths.get(".").toAbsolutePath().normalize());
+    AbsPath sourceJar = toAbsPath(source, workingDirectory);
+    AbsPath outputPath = toAbsPath(destination, workingDirectory);
+    new StubJar(sourceJar).writeTo(outputPath);
+  }
+
+  private static AbsPath toAbsPath(Path path, AbsPath root) {
+    return path.isAbsolute() ? AbsPath.of(path) : root.resolve(path);
   }
 }

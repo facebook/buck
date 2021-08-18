@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
@@ -32,7 +33,6 @@ import com.facebook.buck.util.zip.CustomJarOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import org.junit.Rule;
@@ -48,17 +48,17 @@ public class CalculateClassAbiStepTest {
 
     Path directory = TestDataHelper.getTestDataDirectory(this);
     Path source = directory.resolve("prebuilt/junit.jar");
-    Path binJar = Paths.get("source.jar");
+    RelPath binJar = RelPath.get("source.jar");
     Files.copy(source, outDir.resolve(binJar).getPath());
+    RelPath abiJar = RelPath.get("abi.jar");
 
-    AbsPath abiJar = outDir.resolve("abi.jar");
+    AbsPath rootPath = filesystem.getRootPath();
+    StepExecutionContext executionContext = TestExecutionContext.newInstance(rootPath);
+    new CalculateClassAbiStep(binJar, abiJar, AbiGenerationMode.CLASS)
+        .executeIsolatedStep(executionContext);
 
-    StepExecutionContext executionContext = TestExecutionContext.newInstance();
-
-    new CalculateClassAbiStep(filesystem, binJar, abiJar.getPath(), AbiGenerationMode.CLASS)
-        .execute(executionContext);
-
-    String seenHash = filesystem.computeSha1(Paths.get("abi.jar")).getHash();
+    Path abiJarPath = outDir.resolve(abiJar).getPath();
+    String seenHash = filesystem.computeSha1(abiJarPath).getHash();
 
     // Hi there! This is hardcoded here because we want to make sure buck always produces the same
     // jar files across timezones and versions. If the test is failing because of an intentional
@@ -69,10 +69,10 @@ public class CalculateClassAbiStepTest {
     assertEquals("51b28115808a8684550a7b026154a94075358b68", seenHash);
 
     // Assert that the abiJar contains non-class resources (like txt files).
-    ZipInspector inspector = new ZipInspector(abiJar.getPath());
+    ZipInspector inspector = new ZipInspector(abiJarPath);
     inspector.assertFileExists("LICENSE.txt");
 
-    try (JarFile jarFile = new JarFile(abiJar.toFile())) {
+    try (JarFile jarFile = new JarFile(abiJarPath.toFile())) {
       Manifest manifest = jarFile.getManifest();
       assertNotNull(
           manifest
