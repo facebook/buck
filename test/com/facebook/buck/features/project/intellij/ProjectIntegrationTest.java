@@ -406,6 +406,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testDepsQuery() throws IOException {
+    runBuckProjectAndVerify("deps_query");
+  }
+
+  @Test
   public void testOutputDir() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

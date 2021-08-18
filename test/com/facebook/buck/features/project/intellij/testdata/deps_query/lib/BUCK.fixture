@@ -1,0 +1,9 @@
+android_library(
+    name = "lib",
+    deps_query = "deps(//dep1:dep1, 1)",
+    srcs = glob(["src/**/*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = ["//dep1:dep1"],
+)

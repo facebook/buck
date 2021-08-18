@@ -23,6 +23,7 @@ import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxTestDescription;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidBinaryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidLibraryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidResourceModuleRule;
@@ -100,36 +101,68 @@ public class SupportedTargetTypeRegistry {
   public SupportedTargetTypeRegistry(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
+      IjDepsQueryResolver depsQueryResolver,
       IjProjectConfig projectConfig,
       JavaPackageFinder packageFinder) {
     addToIndex(
-        new AndroidBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+        new AndroidBinaryModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
     addToIndex(
-        new AndroidLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+        new AndroidLibraryModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
     addToIndex(
-        new AndroidResourceModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new CxxLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new CxxTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new JavaBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+        new AndroidResourceModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
+    addToIndex(
+        new CxxLibraryModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
+    addToIndex(
+        new CxxTestModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
+    addToIndex(
+        new JavaBinaryModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
     addToIndex(
         new JavaLibraryModuleRule(
-            projectFilesystem, moduleFactoryResolver, projectConfig, packageFinder));
+            projectFilesystem,
+            moduleFactoryResolver,
+            depsQueryResolver,
+            projectConfig,
+            packageFinder));
     addToIndex(
         new JavaTestModuleRule(
-            projectFilesystem, moduleFactoryResolver, projectConfig, packageFinder));
+            projectFilesystem,
+            moduleFactoryResolver,
+            depsQueryResolver,
+            projectConfig,
+            packageFinder));
     addToIndex(
-        new RobolectricTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+        new RobolectricTestModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
     addToIndex(
-        new GroovyLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new GroovyTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+        new GroovyLibraryModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
     addToIndex(
-        new KotlinLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new KotlinTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+        new GroovyTestModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
     addToIndex(
-        new PythonLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new PythonTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new ScalaLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
-    addToIndex(new ScalaTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+        new KotlinLibraryModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
+    addToIndex(
+        new KotlinTestModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
+    addToIndex(
+        new PythonLibraryModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
+    addToIndex(
+        new PythonTestModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
+    addToIndex(
+        new ScalaLibraryModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
+    addToIndex(
+        new ScalaTestModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
     Preconditions.checkState(areTargetTypesEqual(moduleRuleIndex.keySet()));
   }
 

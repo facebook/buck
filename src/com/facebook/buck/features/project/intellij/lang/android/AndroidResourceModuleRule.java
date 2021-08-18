@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
 import com.facebook.buck.features.project.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
@@ -41,8 +42,14 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
   public AndroidResourceModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
+      IjDepsQueryResolver depsQueryResolver,
       IjProjectConfig projectConfig) {
-    super(projectFilesystem, moduleFactoryResolver, projectConfig, AndroidProjectType.LIBRARY);
+    super(
+        projectFilesystem,
+        moduleFactoryResolver,
+        depsQueryResolver,
+        projectConfig,
+        AndroidProjectType.LIBRARY);
     androidManifestParser = new AndroidManifestParser(projectFilesystem);
   }
 

@@ -20,6 +20,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.BaseIjModuleRule;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -32,9 +33,10 @@ public abstract class AndroidModuleRule<T extends BuildRuleArg> extends BaseIjMo
   protected AndroidModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
+      IjDepsQueryResolver depsQueryResolver,
       IjProjectConfig projectConfig,
       AndroidProjectType androidProjectType) {
-    super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    super(projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig);
     this.androidProjectType = androidProjectType;
   }
 

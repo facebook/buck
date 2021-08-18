@@ -41,6 +41,8 @@ import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetVi
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
+import com.facebook.buck.features.project.intellij.depsquery.DefaultIjDepsQueryResolver;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -247,7 +249,12 @@ public class IjProjectCommandHelper {
       TargetGraphCreationResult targetGraphCreationResult) throws IOException {
     JavacLanguageLevelOptions languageLevelOptions =
         buckConfig.getView(JavaBuckConfig.class).getJavacLanguageLevelOptions();
-
+    IjDepsQueryResolver depsQueryResolver =
+        new DefaultIjDepsQueryResolver(
+            targetGraphCreationResult.getTargetGraph(),
+            typeCoercerFactory,
+            cells.getRootCell().getCellNameResolver(),
+            unconfiguredBuildTargetFactory);
     IjProject project =
         new IjProject(
             targetGraphCreationResult.getTargetGraph(),
@@ -255,7 +262,8 @@ public class IjProjectCommandHelper {
             JavaFileParser.createJavaFileParser(languageLevelOptions),
             cells.getRootCell().getFilesystem(),
             projectConfig,
-            getProjectOutputFilesystem());
+            getProjectOutputFilesystem(),
+            depsQueryResolver);
 
     final ImmutableSet<BuildTarget> buildTargets;
     if (updateOnly) {

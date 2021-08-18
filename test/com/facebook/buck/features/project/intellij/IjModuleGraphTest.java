@@ -31,6 +31,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -40,6 +41,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.aggregation.DefaultAggregationModuleFactory;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
@@ -64,6 +66,7 @@ import com.google.common.base.Functions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -769,6 +772,18 @@ public class IjModuleGraphTest {
               public Optional<Path> getCompilerOutputPath(
                   TargetNode<? extends JvmLibraryArg> targetNode) {
                 return Optional.empty();
+              }
+            },
+            new IjDepsQueryResolver() {
+              @Override
+              public ImmutableSortedSet<BuildTarget> getResolvedDeps(TargetNode<?> targetNode) {
+                return ImmutableSortedSet.of();
+              }
+
+              @Override
+              public ImmutableSortedSet<BuildTarget> getResolvedProvidedDeps(
+                  TargetNode<?> targetNode) {
+                return ImmutableSortedSet.of();
               }
             },
             projectConfig,

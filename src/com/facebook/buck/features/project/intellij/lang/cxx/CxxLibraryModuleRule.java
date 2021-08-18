@@ -22,6 +22,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.features.project.intellij.BaseIjModuleRule;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
@@ -32,8 +33,9 @@ public class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription
   public CxxLibraryModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
+      IjDepsQueryResolver depsQueryResolver,
       IjProjectConfig projectConfig) {
-    super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    super(projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig);
   }
 
   @Override

@@ -19,6 +19,7 @@ package com.facebook.buck.features.project.intellij;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.features.project.intellij.aggregation.DefaultAggregationModuleFactory;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.features.project.intellij.lang.java.ParsingJavaPackageFinder;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
@@ -43,6 +44,7 @@ public class IjProject {
   private final IjProjectConfig projectConfig;
   private final ProjectFilesystem outFilesystem;
   private final IJProjectCleaner cleaner;
+  private final IjDepsQueryResolver depsQueryResolver;
 
   public IjProject(
       TargetGraph targetGraph,
@@ -50,13 +52,15 @@ public class IjProject {
       JavaFileParser javaFileParser,
       ProjectFilesystem projectFilesystem,
       IjProjectConfig projectConfig,
-      ProjectFilesystem outFilesystem) {
+      ProjectFilesystem outFilesystem,
+      IjDepsQueryResolver depsQueryResolver) {
     this.targetGraph = targetGraph;
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
     this.outFilesystem = outFilesystem;
+    this.depsQueryResolver = depsQueryResolver;
     cleaner = new IJProjectCleaner(outFilesystem);
   }
 
@@ -110,7 +114,11 @@ public class IjProject {
             sourcePathResolver, projectFilesystem, requiredBuildTargets, targetGraph);
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
-            projectFilesystem, moduleFactoryResolver, projectConfig, javaPackageFinder);
+            projectFilesystem,
+            moduleFactoryResolver,
+            depsQueryResolver,
+            projectConfig,
+            javaPackageFinder);
     AndroidManifestParser androidManifestParser = new AndroidManifestParser(projectFilesystem);
     IjModuleGraph moduleGraph =
         IjModuleGraphFactory.from(

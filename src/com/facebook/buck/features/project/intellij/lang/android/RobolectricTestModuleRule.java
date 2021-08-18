@@ -24,6 +24,7 @@ import com.facebook.buck.features.project.intellij.IjKotlinHelper;
 import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.lang.java.JavaLibraryRuleHelper;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
@@ -35,8 +36,14 @@ public class RobolectricTestModuleRule extends AndroidModuleRule<RobolectricTest
   public RobolectricTestModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
+      IjDepsQueryResolver depsQueryResolver,
       IjProjectConfig projectConfig) {
-    super(projectFilesystem, moduleFactoryResolver, projectConfig, AndroidProjectType.LIBRARY);
+    super(
+        projectFilesystem,
+        moduleFactoryResolver,
+        depsQueryResolver,
+        projectConfig,
+        AndroidProjectType.LIBRARY);
   }
 
   @Override

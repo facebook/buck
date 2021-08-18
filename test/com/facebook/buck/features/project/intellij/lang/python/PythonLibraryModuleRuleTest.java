@@ -21,14 +21,17 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.AndroidBinaryDescriptionArg;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.IjTestProjectConfig;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.python.PythonLibraryBuilder;
 import com.facebook.buck.features.python.PythonLibraryDescriptionArg;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -97,6 +100,18 @@ public class PythonLibraryModuleRuleTest {
             public Optional<Path> getCompilerOutputPath(
                 TargetNode<? extends JvmLibraryArg> targetNode) {
               return Optional.empty();
+            }
+          },
+          new IjDepsQueryResolver() {
+            @Override
+            public ImmutableSortedSet<BuildTarget> getResolvedDeps(TargetNode<?> targetNode) {
+              return ImmutableSortedSet.of();
+            }
+
+            @Override
+            public ImmutableSortedSet<BuildTarget> getResolvedProvidedDeps(
+                TargetNode<?> targetNode) {
+              return ImmutableSortedSet.of();
             }
           },
           IjTestProjectConfig.create());

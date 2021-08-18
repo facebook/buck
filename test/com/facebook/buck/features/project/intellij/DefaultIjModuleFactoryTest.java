@@ -43,6 +43,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactoryResolver;
@@ -753,6 +754,18 @@ public class DefaultIjModuleFactoryTest {
               public Optional<Path> getCompilerOutputPath(
                   TargetNode<? extends JvmLibraryArg> targetNode) {
                 return Optional.empty();
+              }
+            },
+            new IjDepsQueryResolver() {
+              @Override
+              public ImmutableSortedSet<BuildTarget> getResolvedDeps(TargetNode<?> targetNode) {
+                return ImmutableSortedSet.of();
+              }
+
+              @Override
+              public ImmutableSortedSet<BuildTarget> getResolvedProvidedDeps(
+                  TargetNode<?> targetNode) {
+                return ImmutableSortedSet.of();
               }
             },
             projectConfig,

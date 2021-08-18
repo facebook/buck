@@ -23,6 +23,7 @@ import com.facebook.buck.features.project.intellij.IjKotlinHelper;
 import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.lang.java.JavaLibraryRuleHelper;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
@@ -41,8 +42,14 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
   public AndroidLibraryModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
+      IjDepsQueryResolver depsQueryResolver,
       IjProjectConfig projectConfig) {
-    super(projectFilesystem, moduleFactoryResolver, projectConfig, AndroidProjectType.LIBRARY);
+    super(
+        projectFilesystem,
+        moduleFactoryResolver,
+        depsQueryResolver,
+        projectConfig,
+        AndroidProjectType.LIBRARY);
     androidManifestParser = new AndroidManifestParser(projectFilesystem);
   }
 

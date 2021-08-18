@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
@@ -59,14 +60,17 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
 
   protected final ProjectFilesystem projectFilesystem;
   protected final IjModuleFactoryResolver moduleFactoryResolver;
+  private final IjDepsQueryResolver depsQueryResolver;
   protected final IjProjectConfig projectConfig;
 
   protected BaseIjModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
+      IjDepsQueryResolver depsQueryResolver,
       IjProjectConfig projectConfig) {
     this.projectFilesystem = projectFilesystem;
     this.moduleFactoryResolver = moduleFactoryResolver;
+    this.depsQueryResolver = depsQueryResolver;
     this.projectConfig = projectConfig;
   }
 
@@ -265,7 +269,11 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
       TargetNode<T> targetNode,
       DependencyType dependencyType,
       ModuleBuildContext context) {
-    context.addDeps(foldersToInputsIndex.keySet(), targetNode.getBuildDeps(), dependencyType);
+    ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
+    builder.addAll(targetNode.getBuildDeps());
+    builder.addAll(depsQueryResolver.getResolvedDeps(targetNode));
+    builder.addAll(depsQueryResolver.getResolvedProvidedDeps(targetNode));
+    context.addDeps(foldersToInputsIndex.keySet(), builder.build(), dependencyType);
   }
 
   @SuppressWarnings("unchecked")

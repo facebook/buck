@@ -169,6 +169,30 @@ public final class QueryUtils {
     return arg;
   }
 
+  /** Utility method for resolving dep query */
+  public static ImmutableSortedSet<BuildTarget> resolveDepQuery(
+      BuildTarget target,
+      Query query,
+      QueryCache cache,
+      TargetGraph targetGraph,
+      GraphEnhancementQueryEnvironment environment) {
+    try {
+      QueryExpression<ConfiguredQueryTarget> parsedExp =
+          QueryExpression.parse(query.getQuery(), environment.getQueryParserEnv());
+      Set<ConfiguredQueryTarget> configuredQueryTargets =
+          cache.getQueryEvaluator(targetGraph).eval(parsedExp, environment);
+      return configuredQueryTargets.stream()
+          .filter(queryTarget -> queryTarget instanceof ConfiguredQueryBuildTarget)
+          .map(queryTarget -> ((ConfiguredQueryBuildTarget) queryTarget).getBuildTarget())
+          .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    } catch (QueryException e) {
+      if (e.getCause() instanceof InterruptedException) {
+        Threads.interruptCurrentThread();
+      }
+      throw new RuntimeException("Error parsing/executing query from deps for " + target, e);
+    }
+  }
+
   private static ImmutableSortedSet<BuildTarget> resolveDepQuery(
       BuildTarget target,
       Query query,
@@ -188,21 +212,7 @@ public final class QueryUtils {
             target.getBaseName(),
             declaredDeps,
             target.getTargetConfiguration());
-    try {
-      QueryExpression<ConfiguredQueryTarget> parsedExp =
-          QueryExpression.parse(query.getQuery(), env.getQueryParserEnv());
-      Set<ConfiguredQueryTarget> configuredQueryTargets =
-          cache.getQueryEvaluator(targetGraph).eval(parsedExp, env);
-      return configuredQueryTargets.stream()
-          .filter(queryTarget -> queryTarget instanceof ConfiguredQueryBuildTarget)
-          .map(queryTarget -> ((ConfiguredQueryBuildTarget) queryTarget).getBuildTarget())
-          .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-    } catch (QueryException e) {
-      if (e.getCause() instanceof InterruptedException) {
-        Threads.interruptCurrentThread();
-      }
-      throw new RuntimeException("Error parsing/executing query from deps for " + target, e);
-    }
+    return resolveDepQuery(target, query, cache, targetGraph, env);
   }
 
   public static Stream<UnconfiguredBuildTarget> extractUnconfiguredBuildTargets(

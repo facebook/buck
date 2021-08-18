@@ -23,6 +23,7 @@ import com.facebook.buck.features.project.intellij.BaseIjModuleRule;
 import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
+import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
 import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
@@ -44,9 +45,10 @@ public class JavaTestModuleRule extends BaseIjModuleRule<JavaTestDescription.Cor
   public JavaTestModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
+      IjDepsQueryResolver depsQueryResolver,
       IjProjectConfig projectConfig,
       JavaPackageFinder packageFinder) {
-    super(projectFilesystem, moduleFactoryResolver, projectConfig);
+    super(projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig);
     this.packageFinder = packageFinder;
   }
 
