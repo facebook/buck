@@ -162,7 +162,7 @@
     <include name="aosp/apksig.jar" />
     <include name="asm/asm*-9.2.jar" />
     <include name="bazel/bazel_deploy.jar" />
-    <include name="bundletool/bundletool-1.5.0.jar" />
+    <include name="bundletool/bundletool-1.8.0.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.18.jar" />
     <include name="commons-logging/commons-logging-1.2.jar" />

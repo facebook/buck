@@ -2,4 +2,4 @@ Bundletool is a command-line tool to manipulate and build Android App Bundles - 
 We use it to build the final android bundle, after building each bundle module
 
 This version was directly obtained from Maven:
-https://mvnrepository.com/artifact/com.android.tools.build/bundletool/1.5.0
+https://mvnrepository.com/artifact/com.android.tools.build/bundletool/1.8.0

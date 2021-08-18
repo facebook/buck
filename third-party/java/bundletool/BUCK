@@ -1,6 +1,6 @@
 prebuilt_jar(
     name = "prebuilt",
-    binary_jar = "bundletool-1.5.0.jar",
+    binary_jar = "bundletool-1.8.0.jar",
 )
 
 java_library(
