@@ -959,8 +959,10 @@ docsearch({
   Some example queries:
   {literal}<pre>
   "filter({name_regex}, $declared_deps)".format(name_regex='//.*')
-  "attrfilter(annotation_processors, com.foo.Processor, $declared_deps)"</pre>
+  "attrfilter(annotation_processors, com.foo.Processor, $declared_deps)"
+  "deps('//foo:foo', 1)"</pre>
   {/literal}
+  Note: any targets included in this query must also be present in <code>deps</code>.
   {/param}
 {/call}
 {/template}
