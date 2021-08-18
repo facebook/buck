@@ -135,6 +135,7 @@ public class ElfSymbolTable {
         STB_LOCAL(0),
         STB_GLOBAL(1),
         STB_WEAK(2),
+        STB_GNU_UNIQUE(10),
         ;
 
         private int value;
@@ -161,6 +162,7 @@ public class ElfSymbolTable {
         STT_FILE(4),
         STT_COMMON(5),
         STT_TLS(6),
+        STT_GNU_IFUNC(10),
         ;
 
         private int value;
