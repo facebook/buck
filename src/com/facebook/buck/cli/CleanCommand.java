@@ -21,6 +21,7 @@ import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
@@ -70,17 +71,20 @@ public class CleanCommand extends AbstractCommand {
     JavaUtilsLoggingBuildListener.closeLogFile();
 
     Set<Path> pathsToDelete = new HashSet<>();
-    pathsToDelete.add(projectFilesystem.getBuckPaths().getScratchDir().getPath());
-    pathsToDelete.add(projectFilesystem.getBuckPaths().getGenDir().getPath());
-    pathsToDelete.add(projectFilesystem.getBuckPaths().getTrashDir());
-    pathsToDelete.add(projectFilesystem.getBuckPaths().getJournalDir());
+    BuckPaths buckPaths = projectFilesystem.getBuckPaths();
+    pathsToDelete.add(buckPaths.getScratchDir().getPath());
+    pathsToDelete.add(buckPaths.getGenDir().getPath());
+    pathsToDelete.add(buckPaths.getTrashDir());
+    pathsToDelete.add(buckPaths.getJournalDir());
+    pathsToDelete.add(buckPaths.getTraceDir());
+    pathsToDelete.add(buckPaths.getAnnotationDir().getPath());
 
     CleanCommandBuckConfig buckConfig = cell.getBuckConfig().getView(CleanCommandBuckConfig.class);
 
     // Remove dir cache.
     if (!keepCache) {
       ImmutableList<String> excludedCaches = buckConfig.getCleanExcludedCaches();
-      pathsToDelete.add(projectFilesystem.getBuckPaths().getCacheDir());
+      pathsToDelete.add(buckPaths.getCacheDir());
       for (DirCacheEntry dirCacheEntry :
           ArtifactCacheBuckConfig.of(cell.getBuckConfig()).getCacheEntries().getDirCacheEntries()) {
         if (dirCacheEntry.getName().isPresent()
