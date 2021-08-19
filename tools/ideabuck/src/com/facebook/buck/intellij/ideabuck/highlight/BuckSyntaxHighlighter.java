@@ -18,7 +18,7 @@ package com.facebook.buck.intellij.ideabuck.highlight;
 
 import static com.intellij.openapi.editor.colors.TextAttributesKey.createTextAttributesKey;
 
-import com.facebook.buck.intellij.ideabuck.lang.BuckLexerAdapter;
+import com.facebook.buck.intellij.ideabuck.lang.BuckHighlightingLexerAdapter;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
@@ -101,7 +101,7 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
 
   @Override
   public Lexer getHighlightingLexer() {
-    return new BuckLexerAdapter();
+    return new BuckHighlightingLexerAdapter();
   }
 
   @Override
