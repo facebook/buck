@@ -25,9 +25,11 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
 import org.kohsuke.args4j.Option;
@@ -78,6 +80,7 @@ public class CleanCommand extends AbstractCommand {
     pathsToDelete.add(buckPaths.getJournalDir());
     pathsToDelete.add(buckPaths.getTraceDir());
     pathsToDelete.add(buckPaths.getAnnotationDir().getPath());
+    processTmpDir(buckPaths.getTmpDir(), pathsToDelete);
 
     CleanCommandBuckConfig buckConfig = cell.getBuckConfig().getView(CleanCommandBuckConfig.class);
 
@@ -125,6 +128,53 @@ public class CleanCommand extends AbstractCommand {
           LOG.warn(e, "Failed to remove path %s due to permissions issue", path);
         } catch (IOException e) {
           LOG.warn(e, "Failed to remove path %s", path);
+        }
+      }
+    }
+  }
+
+  /**
+   * Add every file under tmp dir except directories that belongs to the current buck process
+   * (current tmp, resources, buck_run, ...).
+   */
+  private void processTmpDir(Path tmpDir, Set<Path> pathsToDelete) {
+    Path javaTmpDirectory = Paths.get(System.getProperty("java.io.tmpdir"));
+    String resourceLockDirectory = System.getProperty("buck.resource_lock_path");
+    boolean hasResourceDirectory = resourceLockDirectory != null;
+    Path currentResourceDirectory =
+        hasResourceDirectory ? Paths.get(resourceLockDirectory).getParent() : null;
+
+    Path tmpAbsPath = tmpDir.toAbsolutePath();
+    Path currentTmpDir = tmpDir.resolve(tmpAbsPath.relativize(javaTmpDirectory));
+    Path resourcesDir =
+        hasResourceDirectory
+            ? tmpDir.resolve(tmpAbsPath.relativize(currentResourceDirectory.getParent()))
+            : null;
+    Path currentResourcesDir =
+        hasResourceDirectory
+            ? tmpDir.resolve(tmpAbsPath.relativize(currentResourceDirectory))
+            : null;
+
+    File[] tmpFiles = tmpDir.toFile().listFiles();
+    if (tmpFiles != null) {
+      for (File f : tmpFiles) {
+        Path path = f.toPath();
+        if (path.equals(currentTmpDir) || path.getFileName().toString().startsWith("buck_run.")) {
+          continue;
+        }
+        if (hasResourceDirectory && path.equals(resourcesDir)) {
+          File[] resourcesSubDirs = path.toFile().listFiles();
+          if (resourcesSubDirs != null) {
+            for (File resourceDir : resourcesSubDirs) {
+              Path resourcePath = resourceDir.toPath();
+              if (resourcePath.equals(currentResourcesDir)) {
+                continue;
+              }
+              pathsToDelete.add(resourcePath);
+            }
+          }
+        } else {
+          pathsToDelete.add(path);
         }
       }
     }
