@@ -49,9 +49,9 @@ class DependencyTrackerExtension(private val outputPath: String) : AnalysisHandl
 
     // Slices in [BindingContext] contain information about everything that was used in compilation.
     // We need to inspect a few slices to extract this information.
-    bindingTrace.bindingContext.getSliceContents(BindingContext.EXPRESSION_TYPE_INFO).values.forEach {
-      classUsageRecorder.recordClass(it.type)
-    }
+    bindingTrace.bindingContext.getSliceContents(BindingContext.EXPRESSION_TYPE_INFO)
+        .values
+        .forEach { classUsageRecorder.recordClass(it.type) }
 
     bindingTrace.bindingContext.getSliceContents(BindingContext.ANNOTATION).values.forEach {
       it.fqName?.let(classUsageRecorder::recordClass)
@@ -73,9 +73,9 @@ class DependencyTrackerExtension(private val outputPath: String) : AnalysisHandl
       classUsageRecorder.recordClass(it)
     }
 
-    bindingTrace.bindingContext.getSliceContents(BindingContext.EXPECTED_EXPRESSION_TYPE).values.forEach {
-      classUsageRecorder.recordClass(it)
-    }
+    bindingTrace.bindingContext.getSliceContents(BindingContext.EXPECTED_EXPRESSION_TYPE)
+        .values
+        .forEach { classUsageRecorder.recordClass(it) }
 
     ObjectMapper().writeValue(File(outputPath), classUsageRecorder.getUsage())
     return null

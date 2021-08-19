@@ -31,7 +31,9 @@ class ClassKotlinBuckTestAction(testClass: KtClass, debug: Boolean) :
 
 /** Implementation of {@link KotlinBuckTestAction} for function test action. */
 class FunctionKotlinBuckTestAction(
-    private val testFunction: KtNamedFunction, testClass: KtClass, debug: Boolean
+    private val testFunction: KtNamedFunction,
+    testClass: KtClass,
+    debug: Boolean
 ) : KotlinBuckTestAction(testClass, debug) {
 
   override fun getTestSelector(): String = testClass.fqName?.asString() + "#" + testFunction.name
@@ -57,11 +59,11 @@ abstract class KotlinBuckTestAction(val testClass: KtClass, private val debug: B
   override fun update(e: AnActionEvent) {
     val verb =
         if (debug) {
-            e.presentation.icon = BuckIcons.BUCK_DEBUG
-            "Debug"
+          e.presentation.icon = BuckIcons.BUCK_DEBUG
+          "Debug"
         } else {
-            e.presentation.icon = BuckIcons.BUCK_RUN
-            "Run"
+          e.presentation.icon = BuckIcons.BUCK_RUN
+          "Run"
         }
     e.presentation.text = "$verb '${getDisplayTestName()}' with Buck"
     e.presentation.isEnabledAndVisible = true

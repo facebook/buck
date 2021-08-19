@@ -36,8 +36,7 @@ class KotlinRunLineMarkerContributor : RunLineMarkerContributor() {
   override fun getInfo(psiElement: PsiElement): Info? {
 
     if (psiElement is LeafPsiElement && psiElement.elementType === KtTokens.IDENTIFIER) {
-      when (val parent = psiElement.parent
-      ) {
+      when (val parent = psiElement.parent) {
         is KtClass -> {
 
           val isTestClass = BuckKotlinTestDetector.isTestClass(KotlinPotentialTestClass(parent))

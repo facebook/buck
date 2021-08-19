@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.kotlin.plugin
 
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.GlobalSearchScope
+import kotlin.reflect.jvm.internal.impl.load.java.sources.JavaSourceElement
 import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
@@ -37,7 +38,6 @@ import org.jetbrains.kotlin.resolve.descriptorUtil.classId
 import org.jetbrains.kotlin.resolve.jvm.KotlinJavaPsiFacade
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DescriptorWithContainerSource
 import org.jetbrains.kotlin.types.KotlinType
-import kotlin.reflect.jvm.internal.impl.load.java.sources.JavaSourceElement
 
 private const val JAR_FILE_SEPARATOR = "!/"
 
@@ -60,9 +60,9 @@ class ClassUsageRecorder(project: Project, module: ModuleDescriptor) {
   fun recordClass(type: KotlinType?) {
     type?.run {
       /**
-       * This is done not only for optimisation. The main reason is to avoid endless recursion
-       * when a class depends on itself (e.g. `class Foo : Comparable<Foo>` or an annotation
-       * is used on itself like [java.lang.annotation.Target])
+       * This is done not only for optimisation. The main reason is to avoid endless recursion when
+       * a class depends on itself (e.g. `class Foo : Comparable<Foo>` or an annotation is used on
+       * itself like [java.lang.annotation.Target])
        */
       if (!seen.add(this)) return
 
@@ -88,14 +88,14 @@ class ClassUsageRecorder(project: Project, module: ModuleDescriptor) {
       source is JavaSourceElement && source.javaElement is VirtualFileBoundJavaClass -> {
         (source.javaElement as VirtualFileBoundJavaClass).virtualFile?.path?.let(::addFile)
       }
-      descriptor is DescriptorWithContainerSource && descriptor.containerSource is JvmPackagePartSource -> {
-        (descriptor.containerSource as JvmPackagePartSource).knownJvmBinaryClass?.location?.let(::addFile)
+      descriptor is DescriptorWithContainerSource &&
+          descriptor.containerSource is JvmPackagePartSource -> {
+        (descriptor.containerSource as JvmPackagePartSource).knownJvmBinaryClass?.location?.let(
+            ::addFile)
       }
     }
 
-    descriptor.annotations.forEach {
-      recordClass(it.type)
-    }
+    descriptor.annotations.forEach { recordClass(it.type) }
 
     when (descriptor) {
       is ClassDescriptor -> {
@@ -105,12 +105,8 @@ class ClassUsageRecorder(project: Project, module: ModuleDescriptor) {
         recordClass(descriptor.type)
       }
       is CallableDescriptor -> {
-        descriptor.valueParameters.forEach {
-          recordClass(it)
-        }
-        descriptor.typeParameters.forEach {
-          recordClass(it)
-        }
+        descriptor.valueParameters.forEach { recordClass(it) }
+        descriptor.typeParameters.forEach { recordClass(it) }
         descriptor.returnType?.let(::recordClass)
       }
     }
@@ -122,9 +118,7 @@ class ClassUsageRecorder(project: Project, module: ModuleDescriptor) {
   }
 
   private fun recordSupertypes(javaClass: JavaClass) {
-    javaClass.supertypes.forEach {
-      (it.classifier as? JavaClass)?.classId?.let(::recordClass)
-    }
+    javaClass.supertypes.forEach { (it.classifier as? JavaClass)?.classId?.let(::recordClass) }
   }
 
   private fun addFile(path: String) {

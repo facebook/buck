@@ -147,6 +147,7 @@ class BuckKotlinTestFunctionDetectorTest {
     assertFalse(BuckKotlinTestDetector.isTestFunction(testFunction))
   }
 }
+
 class MockPotentialTestFunction(
     private val functionAnnotations: List<String> = emptyList(),
     private val functionName: String = "testJunit3Function",
