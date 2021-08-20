@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.junit.rules.ExternalResource;
 
 /** Test rule to include when you'd like your test class to simulate using buckd. */
@@ -59,7 +60,9 @@ public class TestWithBuckd extends ExternalResource {
             new TestEventConsole(),
             FakeClock.doNotCare(),
             Optional.empty(),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
 
     globalState = new BuckGlobalStateLifecycleManager();
 

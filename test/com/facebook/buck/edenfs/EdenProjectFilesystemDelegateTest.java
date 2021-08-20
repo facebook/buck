@@ -57,6 +57,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -90,7 +91,9 @@ public class EdenProjectFilesystemDelegateTest {
             new TestEventConsole(),
             FakeClock.doNotCare(),
             Optional.empty(),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
     assumeTrue(watchman.getTransportPath().isPresent());
   }
 

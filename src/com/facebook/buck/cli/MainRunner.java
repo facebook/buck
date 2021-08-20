@@ -2148,7 +2148,9 @@ public final class MainRunner {
               console,
               clock,
               parserConfig.getWatchmanQueryTimeoutMs(),
-              parserConfig.getWatchmanSyncTimeoutMs());
+              parserConfig.getWatchmanSyncTimeoutMs(),
+              parserConfig.getWatchmanQueryPollTimeoutNanos(),
+              parserConfig.getWatchmanQueryWarnTimeoutNanos());
 
       LOG.debug(
           "Watchman capabilities: %s Project watches: %s Glob handler config: %s "

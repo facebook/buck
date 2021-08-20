@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -66,7 +67,9 @@ public class WatchmanGlobberPackageBoundaryCheckerTest {
             new TestEventConsole(),
             FakeClock.doNotCare(),
             Optional.empty(),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
     assumeTrue(watchman.getTransportPath().isPresent());
   }
 

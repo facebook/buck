@@ -32,14 +32,20 @@ import java.io.IOException;
 public class HybridGlobberFactory implements GlobberFactory {
 
   private final WatchmanClient watchmanClient;
+  private final long queryPollTimeoutNanos;
+  private final long queryWarnTimeoutNanos;
   private final AbsPath projectRoot;
   private final ProjectWatch projectWatch;
 
   private HybridGlobberFactory(
       WatchmanClient watchmanClient,
+      long queryPollTimeoutNanos,
+      long queryWarnTimeoutNanos,
       AbsPath projectRoot,
       ImmutableMap<AbsPath, ProjectWatch> projectWatches) {
     this.watchmanClient = watchmanClient;
+    this.queryPollTimeoutNanos = queryPollTimeoutNanos;
+    this.queryWarnTimeoutNanos = queryWarnTimeoutNanos;
     this.projectRoot = projectRoot;
     this.projectWatch = projectWatches.get(projectRoot);
     Preconditions.checkArgument(
@@ -61,7 +67,11 @@ public class HybridGlobberFactory implements GlobberFactory {
     return new HybridGlobber(
         NativeGlobber.create(basePath),
         WatchmanGlobber.create(
-            watchmanClient, projectWatch.getProjectPrefix().resolve(basePathRel), watchRoot));
+            watchmanClient,
+            queryPollTimeoutNanos,
+            queryWarnTimeoutNanos,
+            projectWatch.getProjectPrefix().resolve(basePathRel),
+            watchRoot));
   }
 
   @Override
@@ -69,6 +79,10 @@ public class HybridGlobberFactory implements GlobberFactory {
 
   public static HybridGlobberFactory using(Watchman watchman, AbsPath projectRoot) {
     return new HybridGlobberFactory(
-        watchman.getPooledClient(), projectRoot, watchman.getProjectWatches());
+        watchman.getPooledClient(),
+        watchman.getQueryPollTimeoutNanos(),
+        watchman.getQueryWarnTimeoutNanos(),
+        projectRoot,
+        watchman.getProjectWatches());
   }
 }

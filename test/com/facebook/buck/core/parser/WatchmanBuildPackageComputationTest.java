@@ -229,7 +229,9 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
         new TestEventConsole(),
         clock,
         endTimeNanos,
-        syncTimeoutMillis);
+        syncTimeoutMillis,
+        TimeUnit.SECONDS.toNanos(10),
+        TimeUnit.SECONDS.toNanos(1));
   }
 
   private WatchmanClient createWatchmanClient() throws IOException {
@@ -271,7 +273,9 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
           ImmutableSet.of(),
           ImmutableMap.of(),
           Optional.of(Paths.get("(MockWatchmanFactory socket)")),
-          "");
+          "",
+          TimeUnit.SECONDS.toNanos(10),
+          TimeUnit.SECONDS.toNanos(1));
     }
   }
 

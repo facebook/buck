@@ -45,7 +45,6 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Similar to {@link ThrowingPackageBoundaryChecker}, a {@link PackageBoundaryChecker}
@@ -57,8 +56,6 @@ import java.util.concurrent.TimeUnit;
 public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChecker {
 
   private static final Logger LOG = Logger.get(WatchmanGlobberPackageBoundaryChecker.class);
-  private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(3);
-  private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(30);
 
   private final Watchman watchman;
   private final Optional<PackageBoundaryChecker> fallbackPackageBoundaryChecker;
@@ -284,9 +281,17 @@ public class WatchmanGlobberPackageBoundaryChecker implements PackageBoundaryChe
       throw new FileSystemNotWatchedException(msg);
     }
 
+    long queryPollTimeoutNanos = watchman.getQueryPollTimeoutNanos();
+    long queryWarnTimeoutNanos = watchman.getQueryWarnTimeoutNanos();
     WatchmanGlobber globber =
-        WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, watch.getWatchRoot());
-    return globber.run(patterns, ImmutableList.of(), options, TIMEOUT_NANOS, WARN_TIMEOUT_NANOS);
+        WatchmanGlobber.create(
+            watchmanClient,
+            queryPollTimeoutNanos,
+            queryWarnTimeoutNanos,
+            ForwardRelPath.EMPTY,
+            watch.getWatchRoot());
+    return globber.run(
+        patterns, ImmutableList.of(), options, queryPollTimeoutNanos, queryWarnTimeoutNanos);
   }
 
   private static void warnOrError(

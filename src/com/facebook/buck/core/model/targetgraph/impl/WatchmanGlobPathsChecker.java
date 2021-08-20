@@ -42,7 +42,6 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Checks that paths exist and throw an exception if at least one path doesn't exist. This path
@@ -52,8 +51,6 @@ import java.util.concurrent.TimeUnit;
 class WatchmanPathsChecker implements PathsChecker {
 
   private static final Logger LOG = Logger.get(WatchmanPathsChecker.class);
-  private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(3);
-  private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(20);
 
   // Caches by filesystem root
   private final LoadingCache<AbsPath, Set<ForwardRelPath>> pathsCache = initCache();
@@ -227,8 +224,16 @@ class WatchmanPathsChecker implements PathsChecker {
     }
 
     WatchmanClient watchmanClient = watchman.getPooledClient();
+    long queryPollTimeoutNanos = watchman.getQueryPollTimeoutNanos();
+    long queryWarnTimeoutNanos = watchman.getQueryWarnTimeoutNanos();
     WatchmanGlobber globber =
-        WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, watch.getWatchRoot());
-    return globber.run(patterns, ImmutableList.of(), options, TIMEOUT_NANOS, WARN_TIMEOUT_NANOS);
+        WatchmanGlobber.create(
+            watchmanClient,
+            queryPollTimeoutNanos,
+            queryWarnTimeoutNanos,
+            ForwardRelPath.EMPTY,
+            watch.getWatchRoot());
+    return globber.run(
+        patterns, ImmutableList.of(), options, queryPollTimeoutNanos, queryWarnTimeoutNanos);
   }
 }

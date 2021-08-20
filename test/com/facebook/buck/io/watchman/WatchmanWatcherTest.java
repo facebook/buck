@@ -47,6 +47,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -588,7 +589,8 @@ public class WatchmanWatcherTest {
         new WatchmanWatcher(
             eventBus,
             client,
-            10000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1),
             ImmutableMap.of(
                 FAKE_ROOT, FAKE_QUERY,
                 FAKE_SECONDARY_ROOT, FAKE_SECONDARY_QUERY),
@@ -638,6 +640,7 @@ public class WatchmanWatcherTest {
         eventBus,
         watchmanClient,
         timeoutMillis,
+        0,
         ImmutableMap.of(FAKE_ROOT, FAKE_QUERY),
         ImmutableMap.of(FAKE_ROOT, new WatchmanCursor(sinceCursor)),
         /* numThreads */ 1);

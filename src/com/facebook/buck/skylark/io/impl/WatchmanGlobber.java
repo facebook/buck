@@ -35,7 +35,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -133,18 +132,24 @@ public class WatchmanGlobber {
     }
   }
 
-  private static final long DEFAULT_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
-  private static final long DEFAULT_WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
   private static final ImmutableList<String> NAME_ONLY_FIELD = ImmutableList.of("name");
   private final WatchmanClient watchmanClient;
+  private final long queryWarnTimeoutNanos;
+  private final long queryPollTimeoutNanos;
   /** Path used as a root when resolving patterns. */
   private final ForwardRelPath basePath;
 
   private final WatchRoot watchmanWatchRoot;
 
   private WatchmanGlobber(
-      WatchmanClient watchmanClient, ForwardRelPath basePath, WatchRoot watchmanWatchRoot) {
+      WatchmanClient watchmanClient,
+      long queryPollTimeoutNanos,
+      long queryWarnTimeoutNanos,
+      ForwardRelPath basePath,
+      WatchRoot watchmanWatchRoot) {
     this.watchmanClient = watchmanClient;
+    this.queryWarnTimeoutNanos = queryWarnTimeoutNanos;
+    this.queryPollTimeoutNanos = queryPollTimeoutNanos;
     this.basePath = basePath;
     this.watchmanWatchRoot = watchmanWatchRoot;
   }
@@ -164,21 +169,20 @@ public class WatchmanGlobber {
         include,
         exclude,
         excludeDirectories ? EnumSet.of(Option.EXCLUDE_DIRECTORIES) : EnumSet.noneOf(Option.class),
-        DEFAULT_TIMEOUT_NANOS,
-        DEFAULT_WARN_TIMEOUT_NANOS);
+        queryPollTimeoutNanos,
+        queryWarnTimeoutNanos);
   }
 
   public Optional<ImmutableSet<String>> run(
       Collection<String> include, Collection<String> exclude, Option option)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
-    return run(
-        include, exclude, EnumSet.of(option), DEFAULT_TIMEOUT_NANOS, DEFAULT_WARN_TIMEOUT_NANOS);
+    return run(include, exclude, EnumSet.of(option), queryPollTimeoutNanos, queryWarnTimeoutNanos);
   }
 
   public Optional<ImmutableSet<String>> run(
       Collection<String> include, Collection<String> exclude, EnumSet<Option> options)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
-    return run(include, exclude, options, DEFAULT_TIMEOUT_NANOS, DEFAULT_WARN_TIMEOUT_NANOS);
+    return run(include, exclude, options, queryPollTimeoutNanos, queryWarnTimeoutNanos);
   }
 
   /**
@@ -354,7 +358,12 @@ public class WatchmanGlobber {
    * @param basePath The base path relative to which paths matching glob patterns will be resolved.
    */
   public static WatchmanGlobber create(
-      WatchmanClient watchmanClient, ForwardRelPath basePath, WatchRoot watchmanWatchRoot) {
-    return new WatchmanGlobber(watchmanClient, basePath, watchmanWatchRoot);
+      WatchmanClient watchmanClient,
+      long queryPollTimeoutNanos,
+      long queryWarnTimeoutNanos,
+      ForwardRelPath basePath,
+      WatchRoot watchmanWatchRoot) {
+    return new WatchmanGlobber(
+        watchmanClient, queryPollTimeoutNanos, queryWarnTimeoutNanos, basePath, watchmanWatchRoot);
   }
 }

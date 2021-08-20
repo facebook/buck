@@ -46,7 +46,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Discover paths for packages which contain targets that match specification (build target pattern)
@@ -68,8 +67,6 @@ public class WatchmanBuildPackageComputation
   private final Duration timeOut;
 
   private static final Logger LOG = Logger.get(WatchmanBuildPackageComputation.class);
-
-  private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(3);
 
   /**
    * @param buildFileName Name of the build file to search for, for example 'BUCK'
@@ -144,9 +141,14 @@ public class WatchmanBuildPackageComputation
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     Optional<ImmutableSet<String>> paths;
     WatchmanClient watchmanClient = watchman.getPooledClient();
+    long queryWarnTimeoutNanos = watchman.getQueryWarnTimeoutNanos();
     WatchmanGlobber globber =
         WatchmanGlobber.create(
-            watchmanClient, getWatchRelativePath(basePath), watch.getWatchRoot());
+            watchmanClient,
+            watchman.getQueryPollTimeoutNanos(),
+            queryWarnTimeoutNanos,
+            getWatchRelativePath(basePath),
+            watch.getWatchRoot());
     LOG.info("Globber with basepath %s, pattern: %s", basePath, pattern);
 
     paths =
@@ -160,7 +162,7 @@ public class WatchmanBuildPackageComputation
                 WatchmanGlobber.Option.EXCLUDE_DIRECTORIES,
                 WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
             timeOut.toNanos(),
-            WARN_TIMEOUT_NANOS);
+            queryWarnTimeoutNanos);
     LOG.info("Globber with basepath %s, pattern: %s result: %s", basePath, pattern, paths);
     if (!paths.isPresent()) {
       // TODO: If globber.run returns null, it will first write an error to the console claiming

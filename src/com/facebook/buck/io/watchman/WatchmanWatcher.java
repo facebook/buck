@@ -58,8 +58,7 @@ public class WatchmanWatcher {
   // for any reason).
   public enum FreshInstanceAction {
     NONE,
-    POST_OVERFLOW_EVENT,
-    ;
+    POST_OVERFLOW_EVENT
   }
 
   private static final Logger LOG = Logger.get(WatchmanWatcher.class);
@@ -70,19 +69,17 @@ public class WatchmanWatcher {
    * switch which will end up invalidating the entire cache anyway. If overflow is negative calls to
    * postEvents will just generate a single overflow event.
    */
-  private static final int OVERFLOW_THRESHOLD = 10000;
+  private static final int OVERFLOW_THRESHOLD = 10_000;
 
   /** Attach changed files to the perf trace, if there aren't too many. */
   private static final int TRACE_CHANGES_THRESHOLD = 10;
-
-  private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
-  private static final long DEFAULT_WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
 
   private final EventBus fileChangeEventBus;
   private final WatchmanClient watchmanClient;
   private final int numThreads;
 
-  private final long timeoutMillis;
+  private final long timeoutNanos;
+  private final long queryWarnTimeoutNanos;
 
   private static class CellQueryState {
     private final WatchmanWatcherQuery query;
@@ -112,7 +109,8 @@ public class WatchmanWatcher {
     this(
         fileChangeEventBus,
         watchman.getPooledClient(),
-        DEFAULT_TIMEOUT_MILLIS,
+        watchman.getQueryPollTimeoutNanos(),
+        watchman.getQueryWarnTimeoutNanos(),
         createQueries(watchman.getProjectWatches(), ignorePaths, watchman.getCapabilities()),
         cursors,
         numThreads);
@@ -122,7 +120,8 @@ public class WatchmanWatcher {
   WatchmanWatcher(
       EventBus fileChangeEventBus,
       WatchmanClient watchmanClient,
-      long timeoutMillis,
+      long timeoutNanos,
+      long queryWarnTimeoutNanos,
       ImmutableMap<AbsPath, WatchmanWatcherQuery> queries,
       Map<AbsPath, WatchmanCursor> cursors,
       int numThreads) {
@@ -134,7 +133,8 @@ public class WatchmanWatcher {
 
     this.fileChangeEventBus = fileChangeEventBus;
     this.watchmanClient = watchmanClient;
-    this.timeoutMillis = timeoutMillis;
+    this.timeoutNanos = timeoutNanos;
+    this.queryWarnTimeoutNanos = queryWarnTimeoutNanos;
     this.numThreads = numThreads;
 
     this.queriesByCell =
@@ -300,9 +300,7 @@ public class WatchmanWatcher {
           SimplePerfEvent.scope(buckEventBus.isolated(), "query")) {
         queryResponse =
             client.queryWithTimeout(
-                TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
-                DEFAULT_WARN_TIMEOUT_NANOS,
-                query.toQuery(cursor.get()));
+                timeoutNanos, queryWarnTimeoutNanos, query.toQuery(cursor.get()));
       } catch (WatchmanQueryFailedException e1) {
         // This message is not de-duplicated via WatchmanDiagnostic.
         WatchmanWatcherException e = new WatchmanWatcherException(e1);
@@ -320,12 +318,12 @@ public class WatchmanWatcher {
         if (!queryResponse.isLeft()) {
           LOG.warn(
               "Could not get response from Watchman for query %s within %d ms",
-              query, timeoutMillis);
+              query, TimeUnit.NANOSECONDS.toMillis(timeoutNanos));
           WatchmanOverflowEvent overflow =
               ImmutableWatchmanOverflowEvent.ofImpl(
                   cellPath,
                   "Timed out after "
-                      + TimeUnit.MILLISECONDS.toSeconds(timeoutMillis)
+                      + TimeUnit.NANOSECONDS.toSeconds(timeoutNanos)
                       + " sec waiting for watchman query.");
           postWatchEvent(buckEventBus, overflow);
           bigEvents.add(WatchmanWatcherOneBigEvent.overflow(overflow));

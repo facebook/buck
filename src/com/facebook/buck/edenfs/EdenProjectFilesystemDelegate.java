@@ -51,7 +51,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDelegate {
@@ -74,15 +73,9 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   private static final String BUCKCONFIG_DISABLE_SHA1_FAST_PATH = "disable_sha1_fast_path";
 
   private static final String BUCKCONFIG_USE_XATTR_FOR_SHA1 = "use_xattr";
-
   private static final String BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1 = "use_watchman_content_sha1";
-
   private static final String BUCKCONFIG_SHA1_HASHER = "sha1_hasher";
-
   private static final String WATCHMAN_CONTENT_SHA1_FIELD = "content.sha1hex";
-  private static final long DEFAULT_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
-  private static final long DEFAULT_WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
-
   private static final int SHA1_HEX_LENGTH = 40;
 
   private final EdenMount mount;
@@ -298,24 +291,32 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   @SuppressWarnings("unchecked")
   private Optional<Sha1HashCode> glob(AbsPath path)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
-    WatchmanClient watchmanClient = realWatchman().getPooledClient();
+    Watchman watchman = realWatchman();
+    WatchmanClient watchmanClient = watchman.getPooledClient();
     // TODO: `watchRoot` should be actually watch root, not cell root
     WatchRoot watchRoot = new WatchRoot(rootPath);
+    long queryWarnTimeoutNanos = watchman.getQueryWarnTimeoutNanos();
+    long queryPollTimeoutNanos = watchman.getQueryPollTimeoutNanos();
     WatchmanGlobber globber =
-        WatchmanGlobber.create(watchmanClient, ForwardRelPath.EMPTY, watchRoot);
+        WatchmanGlobber.create(
+            watchmanClient,
+            queryPollTimeoutNanos,
+            queryWarnTimeoutNanos,
+            ForwardRelPath.EMPTY,
+            watchRoot);
     String pathString = rootPath.relativize(path.getPath()).toString();
     Optional<ImmutableMap<String, WatchmanGlobber.WatchmanFileAttributes>> ret =
         globber.runWithExtraFields(
             Collections.singleton(pathString),
             ImmutableSet.of(),
             EnumSet.of(WatchmanGlobber.Option.FORCE_CASE_SENSITIVE),
-            DEFAULT_TIMEOUT_NANOS,
-            DEFAULT_WARN_TIMEOUT_NANOS,
+            queryPollTimeoutNanos,
+            queryWarnTimeoutNanos,
             ImmutableList.of("name", WATCHMAN_CONTENT_SHA1_FIELD));
     if (ret.isPresent() && ret.get().containsKey(pathString)) {
       @Nullable
       Object sha1Ret = ret.get().get(pathString).getAttributeMap().get(WATCHMAN_CONTENT_SHA1_FIELD);
-      if (sha1Ret != null && sha1Ret instanceof String) {
+      if (sha1Ret instanceof String) {
         String sha1 = (String) sha1Ret;
         return Optional.of(Sha1HashCode.of(sha1));
       } else {

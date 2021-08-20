@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -66,7 +67,9 @@ public class HybridGlobberTest {
             new TestEventConsole(),
             FakeClock.doNotCare(),
             Optional.empty(),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
     assumeTrue(watchman.getTransportPath().isPresent());
     nativeGlobber = NativeGlobber.create(root);
   }
@@ -86,7 +89,11 @@ public class HybridGlobberTest {
 
   private WatchmanGlobber newGlobber(Either<WatchmanQueryResp, WatchmanClient.Timeout> result) {
     return WatchmanGlobber.create(
-        new StubWatchmanClient(result), ForwardRelPath.EMPTY, new WatchRoot(root));
+        new StubWatchmanClient(result),
+        TimeUnit.SECONDS.toNanos(10),
+        TimeUnit.SECONDS.toNanos(1),
+        ForwardRelPath.EMPTY,
+        new WatchRoot(root));
   }
 
   @Test

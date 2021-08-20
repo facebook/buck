@@ -75,7 +75,7 @@ class PooledWatchmanClient implements WatchmanClient {
   /** @deprecated */
   @Deprecated
   @Override
-  public void close() throws IOException {
+  public void close() {
     // Client is shared by multiple users, prevent accidental closing
     throw new IllegalStateException("PooledWatchmanClient is not meant to be closed by close()");
   }

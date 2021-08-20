@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /** Factory class to create Watchman instance for tests */
 public class FakeWatchmanFactory {
@@ -46,7 +47,9 @@ public class FakeWatchmanFactory {
             Capability.SUPPORTS_PROJECT_WATCH, Capability.DIRNAME, Capability.WILDMATCH_GLOB),
         ImmutableMap.of(new WatchRoot(rootPath), "123"),
         Optional.of(Paths.get(".watchman-sock")),
-        /* version */ "") {
+        /* version */ "",
+        TimeUnit.SECONDS.toNanos(10),
+        TimeUnit.SECONDS.toNanos(1)) {
       @Override
       public WatchmanError getInitError() {
         return WatchmanError.TEST;

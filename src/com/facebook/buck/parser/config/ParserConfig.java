@@ -46,6 +46,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.concurrent.TimeUnit;
 import org.immutables.value.Value;
 
 @BuckStyleValue
@@ -58,51 +59,53 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   public static final String PACKAGE_INCLUDES_PROPERTY_NAME = "package_includes";
 
   private static final long NUM_PARSING_THREADS_DEFAULT = 1L;
-  private static final int TARGET_PARSER_THRESHOLD = 100000;
+  private static final int TARGET_PARSER_THRESHOLD = 100_000;
+
+  private static final int DEFAULT_WATCHMAN_CLOCK_SYNC_TIMEOUT_MS =
+      (int) TimeUnit.SECONDS.toMillis(60);
+
+  private static final long DEFAULT_WATCHMAN_WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(3);
+  private static final long DEFAULT_WATCHMAN_QUERY_POLL_TIMEOUT_NANOS =
+      TimeUnit.SECONDS.toNanos(20);
 
   public enum GlobHandler {
     PYTHON,
-    WATCHMAN,
-    ;
+    WATCHMAN
   }
 
   /** Glob handler supported by Skylark parser. */
   public enum SkylarkGlobHandler {
     JAVA,
-    WATCHMAN,
-    ;
+    WATCHMAN
   }
 
   public enum WatchmanGlobSanityCheck {
     NONE,
-    STAT,
-    ;
+    STAT
   }
 
   public enum AllowSymlinks {
     ALLOW,
     WARN,
-    FORBID,
-    ;
+    FORBID
   }
 
   public enum BuildFileSearchMethod {
     FILESYSTEM_CRAWL,
-    WATCHMAN,
-    ;
+    WATCHMAN
   }
 
   /** Control how to check the existence of paths */
   public enum PathsCheckMethod {
     FILESYSTEM,
     WATCHMAN,
-    NONE,
+    NONE
   }
 
   /** Control how to check the package boundary */
   public enum PackageBoundaryCheckMethod {
     FILESYSTEM,
-    WATCHMAN,
+    WATCHMAN
   }
 
   /** Controls whether default flavors should be applied to unflavored targets. */
@@ -229,9 +232,31 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
-  public Optional<Integer> getWatchmanSyncTimeoutMs() {
+  public int getWatchmanSyncTimeoutMs() {
     OptionalInt syncTimeout = getDelegate().getInteger("project", "watchman_sync_timeout_ms");
-    return syncTimeout.isPresent() ? Optional.of(syncTimeout.getAsInt()) : Optional.empty();
+    return syncTimeout.isPresent()
+        ? syncTimeout.getAsInt()
+        : DEFAULT_WATCHMAN_CLOCK_SYNC_TIMEOUT_MS;
+  }
+
+  /** Watchman query poll timeout in nanos. */
+  @Value.Lazy
+  public long getWatchmanQueryPollTimeoutNanos() {
+    Optional<Long> queryPollTimeout =
+        getDelegate().getLong("project", "watchman_query_poll_timeout_ms");
+    return queryPollTimeout
+        .map(TimeUnit.MILLISECONDS::toNanos)
+        .orElse(DEFAULT_WATCHMAN_QUERY_POLL_TIMEOUT_NANOS);
+  }
+
+  /** Watchman query warn timeout in nanos. */
+  @Value.Lazy
+  public long getWatchmanQueryWarnTimeoutNanos() {
+    Optional<Long> warnTimeoutMs =
+        getDelegate().getLong("project", "watchman_query_warn_timeout_ms");
+    return warnTimeoutMs
+        .map(TimeUnit.MILLISECONDS::toNanos)
+        .orElse(DEFAULT_WATCHMAN_WARN_TIMEOUT_NANOS);
   }
 
   @Value.Lazy

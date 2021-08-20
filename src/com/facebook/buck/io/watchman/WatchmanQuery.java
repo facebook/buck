@@ -182,7 +182,7 @@ public abstract class WatchmanQuery<R extends WatchmanQueryResp> {
 
     @Override
     public ImmutableList<Object> toProtocolArgs() {
-      return ImmutableList.of("watch", getPath().toString());
+      return ImmutableList.of("watch", getPath());
     }
   }
 

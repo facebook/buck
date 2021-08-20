@@ -28,6 +28,7 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,7 +52,9 @@ public class WatchmanTransportClientTest {
                 new TestEventConsole(),
                 FakeClock.doNotCare(),
                 Optional.empty(),
-                Optional.empty())
+                1_000,
+                TimeUnit.SECONDS.toNanos(10),
+                TimeUnit.SECONDS.toNanos(1))
             .createClient();
   }
 

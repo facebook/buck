@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -71,7 +72,9 @@ public class WatchmanWatcherIntegrationTest {
             new TestEventConsole(),
             new DefaultClock(),
             Optional.empty(),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
     assertTrue(watchman.getTransportPath().isPresent());
 
     eventBus = new EventBus();

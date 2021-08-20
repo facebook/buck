@@ -20,11 +20,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 
 /** Interface for all Watchman events, requires them to have a base path */
 public interface WatchmanEvent {
-  /**
-   * Absolute cell path root being watched.
-   *
-   * @return
-   */
+  /** Absolute cell path root being watched. */
   AbsPath getCellPath();
 
   /** The kind of event that occurred in watched file system, like creation of a new file */

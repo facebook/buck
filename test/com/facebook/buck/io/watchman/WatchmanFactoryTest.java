@@ -98,7 +98,9 @@ public class WatchmanFactoryTest {
             new TestEventConsole(),
             clock,
             Optional.empty(),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
 
     assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
@@ -125,7 +127,9 @@ public class WatchmanFactoryTest {
             new TestEventConsole(),
             clock,
             Optional.empty(),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
 
     assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
@@ -166,7 +170,9 @@ public class WatchmanFactoryTest {
             new TestEventConsole(),
             clock,
             Optional.empty(),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
 
     assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
@@ -216,7 +222,9 @@ public class WatchmanFactoryTest {
             new TestEventConsole(),
             clock,
             Optional.empty(),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
 
     assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
@@ -266,7 +274,9 @@ public class WatchmanFactoryTest {
             new TestEventConsole(),
             clock,
             Optional.of(TimeUnit.SECONDS.toMillis(5)),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
 
     assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
@@ -316,7 +326,9 @@ public class WatchmanFactoryTest {
             new TestEventConsole(),
             clock,
             Optional.of(TimeUnit.SECONDS.toMillis(5)),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
 
     assertTrue(watchman instanceof WatchmanFactory.NullWatchman);
   }
@@ -337,6 +349,7 @@ public class WatchmanFactoryTest {
                     FakeListeningProcessState.ofExit(0))
                 .build(),
             clock);
+    int syncTimeout = 60 * 1_000;
     WatchmanFactory watchmanFactory =
         createFakeWatchmanFactory(
             Paths.get("/path/to/sock"),
@@ -357,7 +370,7 @@ public class WatchmanFactoryTest {
                         .build()),
                 WatchmanQuery.watchProject(root),
                 ImmutableMap.of("version", "4.7.0", "watch", root),
-                WatchmanQuery.clock(new WatchRoot(root), Optional.of(60 * 1000)),
+                WatchmanQuery.clock(new WatchRoot(root), Optional.of(syncTimeout)),
                 ImmutableMap.of("version", "4.7.0", "clock", "c:0:0:1")));
     Watchman watchman =
         watchmanFactory.build(
@@ -368,7 +381,9 @@ public class WatchmanFactoryTest {
             new TestEventConsole(),
             clock,
             Optional.empty(),
-            Optional.empty());
+            syncTimeout,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
 
     assertEquals(
         ImmutableSet.of(
@@ -401,6 +416,7 @@ public class WatchmanFactoryTest {
                     FakeListeningProcessState.ofExit(0))
                 .build(),
             clock);
+    int syncTimeout = 60 * 1000;
     WatchmanFactory watchmanFactory =
         createFakeWatchmanFactory(
             Paths.get("/path/to/sock"),
@@ -421,7 +437,7 @@ public class WatchmanFactoryTest {
                         .build()),
                 WatchmanQuery.watchProject(root),
                 ImmutableMap.of("version", "4.7.0", "watch", root),
-                WatchmanQuery.clock(new WatchRoot(root), Optional.of(60 * 1000)),
+                WatchmanQuery.clock(new WatchRoot(root), Optional.of(syncTimeout)),
                 ImmutableMap.of("clock", "123")));
     Watchman watchman =
         watchmanFactory.build(
@@ -432,7 +448,9 @@ public class WatchmanFactoryTest {
             new TestEventConsole(),
             clock,
             Optional.empty(),
-            Optional.empty());
+            syncTimeout,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
 
     assertEquals(ImmutableMap.of(new WatchRoot(root), "123"), watchman.getClockIdsByWatchRoot());
     assertEquals("4.7.0", watchman.getVersion());

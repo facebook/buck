@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import org.junit.AssumptionViolatedException;
 
 public class WatchmanTestUtils {
@@ -67,7 +68,9 @@ public class WatchmanTestUtils {
         new TestEventConsole(),
         FakeClock.doNotCare(),
         Optional.empty(),
-        Optional.empty());
+        1_000,
+        TimeUnit.SECONDS.toNanos(10),
+        TimeUnit.SECONDS.toNanos(1));
   }
 
   public static Watchman buildWatchmanAssumeNotNull(AbsPath root) throws InterruptedException {

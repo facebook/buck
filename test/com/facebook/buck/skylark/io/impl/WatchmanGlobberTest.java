@@ -80,12 +80,18 @@ public class WatchmanGlobberTest {
             new TestEventConsole(),
             FakeClock.doNotCare(),
             Optional.empty(),
-            Optional.empty());
+            1_000,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1));
     assumeTrue(watchman.getTransportPath().isPresent());
     WatchmanClient watchmanClient = watchman.createClient();
     globber =
         WatchmanGlobber.create(
-            watchmanClient, ForwardRelPath.EMPTY, new WatchRoot(root.toString()));
+            watchmanClient,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1),
+            ForwardRelPath.EMPTY,
+            new WatchRoot(root.toString()));
   }
 
   private void sync() throws Exception {
@@ -204,6 +210,8 @@ public class WatchmanGlobberTest {
     globber =
         WatchmanGlobber.create(
             new StubWatchmanClient(Either.ofRight(WatchmanClient.Timeout.INSTANCE)),
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1),
             ForwardRelPath.EMPTY,
             new WatchRoot(root.toString()));
     assertFalse(globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false).isPresent());
@@ -214,7 +222,11 @@ public class WatchmanGlobberTest {
     CapturingWatchmanClient watchmanClient = new CapturingWatchmanClient();
     globber =
         WatchmanGlobber.create(
-            watchmanClient, ForwardRelPath.EMPTY, new WatchRoot(root.toString()));
+            watchmanClient,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1),
+            ForwardRelPath.EMPTY,
+            new WatchRoot(root.toString()));
     globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
     assertTrue(watchmanClient.syncDisabled());
     globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false);
@@ -248,7 +260,13 @@ public class WatchmanGlobberTest {
         };
 
     String queryRoot = root.toString();
-    globber = WatchmanGlobber.create(client, ForwardRelPath.EMPTY, new WatchRoot(queryRoot));
+    globber =
+        WatchmanGlobber.create(
+            client,
+            TimeUnit.SECONDS.toNanos(10),
+            TimeUnit.SECONDS.toNanos(1),
+            ForwardRelPath.EMPTY,
+            new WatchRoot(queryRoot));
 
     thrown.expect(WatchmanQueryFailedException.class);
     thrown.expect(

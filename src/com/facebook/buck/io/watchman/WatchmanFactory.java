@@ -58,6 +58,7 @@ public class WatchmanFactory {
    * <p>Used when watchman cannot be initialized, and in tests.
    */
   public static class NullWatchman extends Watchman {
+
     public final String reason;
     private final WatchmanError initError;
 
@@ -67,7 +68,9 @@ public class WatchmanFactory {
           /* capabilities */ ImmutableSet.of(),
           /* clockIds */ ImmutableMap.of(),
           /* transportPath */ Optional.empty(),
-          /* version */ "");
+          /* version */ "",
+          10_000,
+          1_000);
       this.reason = reason;
       this.initError = initError;
     }
@@ -94,17 +97,16 @@ public class WatchmanFactory {
           .put("clock-sync-timeout", Capability.CLOCK_SYNC_TIMEOUT)
           .build();
   static final Path WATCHMAN = Paths.get("watchman");
-  private static final int DEFAULT_WATCHMAN_CLOCK_SYNC_TIMEOUT_MS =
-      (int) TimeUnit.SECONDS.toMillis(60);
+
   private static final Logger LOG = Logger.get(WatchmanFactory.class);
   private static final long POLL_TIME_NANOS = TimeUnit.SECONDS.toNanos(1);
-  private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
   // Crawling a large repo in `watch-project` might take a long time on a slow disk.
   private static final long DEFAULT_COMMAND_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(60);
   private final InitialWatchmanClientFactory initialWatchmanClientFactory;
 
   /** Exists to allow us to inject behavior in unit tests. */
   interface InitialWatchmanClientFactory {
+
     /**
      * This is used to create a {@link WatchmanClient} after the socket path to Watchman has been
      * found. This client will be passed to {@link NullWatchman} to create a {@link Watchman} object
@@ -130,7 +132,9 @@ public class WatchmanFactory {
       EventConsole console,
       Clock clock,
       Optional<Long> commandTimeoutMillis,
-      Optional<Integer> syncTimeoutMillis)
+      int syncTimeoutMillis,
+      long queryPollTimeoutNanos,
+      long queryWarnTimeoutNanos)
       throws InterruptedException {
     return build(
         new ListeningProcessExecutor(),
@@ -140,11 +144,14 @@ public class WatchmanFactory {
         console,
         clock,
         commandTimeoutMillis,
-        syncTimeoutMillis);
+        syncTimeoutMillis,
+        queryPollTimeoutNanos,
+        queryWarnTimeoutNanos);
   }
 
   @VisibleForTesting
-  @SuppressWarnings("PMD.PrematureDeclaration") // endTimeNanos
+  @SuppressWarnings("PMD.PrematureDeclaration")
+  // endTimeNanos
   Watchman build(
       ListeningProcessExecutor executor,
       ImmutableSet<AbsPath> projectWatchList,
@@ -153,7 +160,9 @@ public class WatchmanFactory {
       EventConsole console,
       Clock clock,
       Optional<Long> commandTimeoutMillis,
-      Optional<Integer> syncTimeoutMillis)
+      int syncTimeoutMillis,
+      long queryPollTimeoutNanos,
+      long queryWarnTimeoutNanos)
       throws InterruptedException {
     LOG.info("Creating for: " + projectWatchList);
     Path pathToTransport;
@@ -176,8 +185,6 @@ public class WatchmanFactory {
     try (WatchmanClient client =
         initialWatchmanClientFactory.tryCreateClientToFetchInitialWatchmanData(
             pathToTransport, console, clock)) {
-      int effectiveSyncTimeoutMillis =
-          syncTimeoutMillis.orElse(DEFAULT_WATCHMAN_CLOCK_SYNC_TIMEOUT_MS);
       Watchman watchman =
           getWatchman(
               client,
@@ -186,7 +193,9 @@ public class WatchmanFactory {
               console,
               clock,
               endTimeNanos,
-              effectiveSyncTimeoutMillis);
+              syncTimeoutMillis,
+              queryPollTimeoutNanos,
+              queryWarnTimeoutNanos);
       LOG.debug("Connected to Watchman");
       return watchman;
     } catch (ClassCastException | IOException e) {
@@ -255,7 +264,9 @@ public class WatchmanFactory {
       EventConsole console,
       Clock clock,
       long endTimeNanos,
-      int clockSyncTimeoutMillis)
+      int clockSyncTimeoutMillis,
+      long queryPollTimeoutNanos,
+      long queryWarnTimeoutNanos)
       throws IOException, InterruptedException {
     // Must be nonzero, otherwise no sync happens
     Preconditions.checkArgument(clockSyncTimeoutMillis > 0, "Clock sync timeout must be positive");
@@ -266,7 +277,7 @@ public class WatchmanFactory {
       result =
           client.queryWithTimeout(
               endTimeNanos - versionQueryStartTimeNanos,
-              WARN_TIMEOUT_NANOS,
+              queryWarnTimeoutNanos,
               WatchmanQuery.version(
                   REQUIRED_CAPABILITIES.asList(), ALL_CAPABILITIES.keySet().asList()));
     } catch (WatchmanQueryFailedException e) {
@@ -307,7 +318,8 @@ public class WatchmanFactory {
     ImmutableMap.Builder<AbsPath, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
     for (AbsPath projectRoot : projectWatchList) {
       Either<ProjectWatch, NullWatchman> projectWatch =
-          queryWatchProject(client, projectRoot, clock, endTimeNanos - clock.nanoTime());
+          queryWatchProject(
+              client, projectRoot, clock, endTimeNanos - clock.nanoTime(), queryWarnTimeoutNanos);
       if (projectWatch.isRight()) {
         return returnNullWatchman(
             console, "watch-project failed", projectWatch.getRight().getInitError(), null);
@@ -332,7 +344,8 @@ public class WatchmanFactory {
                 capabilities,
                 clock,
                 endTimeNanos - clock.nanoTime(),
-                clockSyncTimeoutMillis);
+                clockSyncTimeoutMillis,
+                queryWarnTimeoutNanos);
       } catch (WatchmanQueryFailedException e) {
         return returnNullWatchman(console, "watchman clock query failed", e.getWatchmanError(), e);
       }
@@ -349,7 +362,9 @@ public class WatchmanFactory {
         capabilities,
         clockIdsBuilder.build(),
         Optional.of(transportPath),
-        version) {
+        version,
+        queryPollTimeoutNanos,
+        queryWarnTimeoutNanos) {
       @Override
       public WatchmanClient createClient() throws IOException {
         return createWatchmanClient(transportPath, console, clock);
@@ -422,11 +437,16 @@ public class WatchmanFactory {
    * @param rootPath path to the root of the watch-project
    * @param clock used to compute timeouts and statistics
    * @param timeoutNanos for the watchman query
+   * @param queryWarnTimeoutNanos warning timeout for watchman queries
    * @return If successful, a {@link ProjectWatch} instance containing the root of the watchman
    *     watch, and relative path from the root to {@code rootPath}
    */
   private static Either<ProjectWatch, NullWatchman> queryWatchProject(
-      WatchmanClient watchmanClient, AbsPath rootPath, Clock clock, long timeoutNanos)
+      WatchmanClient watchmanClient,
+      AbsPath rootPath,
+      Clock clock,
+      long timeoutNanos,
+      long queryWarnTimeoutNanos)
       throws IOException, InterruptedException {
     LOG.info("Adding watchman root: %s", rootPath);
 
@@ -435,7 +455,7 @@ public class WatchmanFactory {
     try {
       result =
           watchmanClient.queryWithTimeout(
-              timeoutNanos, WARN_TIMEOUT_NANOS, WatchmanQuery.watchProject(rootPath.toString()));
+              timeoutNanos, queryWarnTimeoutNanos, WatchmanQuery.watchProject(rootPath.toString()));
     } catch (WatchmanQueryFailedException e) {
       LOG.warn(e, "Error in watchman output");
       return Either.ofRight(new NullWatchman(e.getWatchmanErrorMessage(), e.getWatchmanError()));
@@ -474,21 +494,22 @@ public class WatchmanFactory {
       ImmutableSet<Capability> capabilities,
       Clock clock,
       long timeoutNanos,
-      int syncTimeoutMilis)
+      int syncTimeoutMillis,
+      long queryWarnTimeoutNanos)
       throws IOException, InterruptedException, WatchmanQueryFailedException {
     Preconditions.checkState(
         capabilities.contains(Capability.CLOCK_SYNC_TIMEOUT),
         "watchman capabilities must include %s, which is available in watchman since 3.9",
         Capability.CLOCK_SYNC_TIMEOUT);
 
-    Optional<String> clockId = Optional.empty();
+    Optional<String> clockId;
     long clockStartTimeNanos = clock.nanoTime();
 
     Either<WatchmanQueryResp.Generic, WatchmanClient.Timeout> result =
         watchmanClient.queryWithTimeout(
             timeoutNanos,
-            WARN_TIMEOUT_NANOS,
-            WatchmanQuery.clock(watchRoot, Optional.of(syncTimeoutMilis)));
+            queryWarnTimeoutNanos,
+            WatchmanQuery.clock(watchRoot, Optional.of(syncTimeoutMillis)));
     if (result.isRight()) {
       return Either.ofRight(new NullWatchman("clock query timeout", WatchmanError.TIMEOUT_CLOCK));
     }
@@ -500,12 +521,13 @@ public class WatchmanFactory {
       LOG.info(
           "Took %d ms to query for initial clock id %s",
           TimeUnit.NANOSECONDS.toMillis(clock.nanoTime() - clockStartTimeNanos), clockId);
-      if (clockId.isPresent()) {
-        return Either.ofLeft(clockId.get());
-      } else {
-        return Either.ofRight(
-            new NullWatchman("no clock field in response", WatchmanError.NO_CLOCK_FIELD));
-      }
+      return clockId
+          .<Either<String, NullWatchman>>map(Either::ofLeft)
+          .orElseGet(
+              () ->
+                  Either.ofRight(
+                      new NullWatchman(
+                          "no clock field in response", WatchmanError.NO_CLOCK_FIELD)));
     } else {
       LOG.warn(
           "Took %d ms but could not get an initial clock id. Falling back to a named cursor",

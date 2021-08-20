@@ -34,6 +34,8 @@ public abstract class Watchman implements Closeable {
   private final ImmutableMap<WatchRoot, String> clockIdsByWatchRoot;
   private final Optional<Path> transportPath;
   private final String version;
+  private final long queryPollTimeoutNanos;
+  private final long queryWarnTimeoutNanos;
   private final PooledWatchmanClient pooledClient;
 
   public Watchman(
@@ -41,12 +43,16 @@ public abstract class Watchman implements Closeable {
       ImmutableSet<Capability> capabilities,
       ImmutableMap<WatchRoot, String> clockIdsByWatchRoot,
       Optional<Path> transportPath,
-      String version) {
+      String version,
+      long queryPollTimeoutNanos,
+      long queryWarnTimeoutNanos) {
     this.projectWatches = projectWatches;
     this.capabilities = capabilities;
     this.clockIdsByWatchRoot = clockIdsByWatchRoot;
     this.transportPath = transportPath;
     this.version = version;
+    this.queryPollTimeoutNanos = queryPollTimeoutNanos;
+    this.queryWarnTimeoutNanos = queryWarnTimeoutNanos;
     this.pooledClient = new PooledWatchmanClient(this::createReconnectingClient);
   }
 
@@ -104,7 +110,7 @@ public abstract class Watchman implements Closeable {
    * Create a watchman client which will drop the underlying connect on timeout or any error and
    * reconnect on next query.
    */
-  public WatchmanClient createReconnectingClient() throws IOException {
+  public WatchmanClient createReconnectingClient() {
     return new ReconnectingWatchmanClient(this::createClient);
   }
 
@@ -116,5 +122,13 @@ public abstract class Watchman implements Closeable {
   @Override
   public void close() throws IOException {
     pooledClient.closePool();
+  }
+
+  public long getQueryWarnTimeoutNanos() {
+    return queryWarnTimeoutNanos;
+  }
+
+  public long getQueryPollTimeoutNanos() {
+    return queryPollTimeoutNanos;
   }
 }
