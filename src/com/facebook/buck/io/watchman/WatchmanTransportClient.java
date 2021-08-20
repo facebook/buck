@@ -177,10 +177,6 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
           LOG.debug(
               "Watchman query [%s] finished in %dms",
               query, TimeUnit.NANOSECONDS.toMillis(queryDurationNanos));
-          console.warn(
-              String.format(
-                  "Watchman query '%s' finished in %ds...",
-                  query.queryDesc(), TimeUnit.NANOSECONDS.toSeconds(queryDurationNanos)));
           return Either.ofLeft(result);
         } catch (TimeoutException te) {
           LOG.debug("Timed out");
