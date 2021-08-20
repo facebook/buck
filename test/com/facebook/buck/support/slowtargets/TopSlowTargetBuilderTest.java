@@ -99,4 +99,18 @@ public class TopSlowTargetBuilderTest {
     assertEquals(a, slowTargets.get(2).getTarget());
     assertEquals(40, slowTargets.get(2).getDurationMilliseconds());
   }
+
+  @Test
+  public void testOutputSize() {
+    TopSlowTargetsBuilder builder = new TopSlowTargetsBuilder(3);
+    BuildTarget a = BuildTargetFactory.newInstance("//foo/bar:a");
+    builder.onTargetCompleted(a, 40, 10);
+    builder.onTargetOutputSize(a, 5000);
+    ImmutableList<SlowTarget> slowTargets = builder.getSlowRules();
+    assertEquals(1, slowTargets.size());
+    assertEquals(a, slowTargets.get(0).getTarget());
+    assertEquals(40, slowTargets.get(0).getDurationMilliseconds());
+    assertEquals(10, slowTargets.get(0).getStartTimeMilliseconds());
+    assertEquals(5000, slowTargets.get(0).getOutputSize());
+  }
 }

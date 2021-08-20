@@ -16,6 +16,7 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.remoteexecution.event.RemoteBuildRuleExecutionEvent;
@@ -39,6 +40,15 @@ public class TopSlowTargetsEventListener implements BuckEventListener {
     long elapsedTimeMillis = TimeUnit.NANOSECONDS.toMillis(event.getElapsedTimeNano());
     long startTimeMillis = event.getTimestampMillis() - elapsedTimeMillis;
     slowTargetsBuilder.onTargetCompleted(event.getTarget(), elapsedTimeMillis, startTimeMillis);
+  }
+
+  /** Subscribes to {@link BuildRuleEvent.Finished} events */
+  @Subscribe
+  public void subscribe(BuildRuleEvent.Finished event) {
+    if (event.getOutputSize().isPresent()) {
+      slowTargetsBuilder.onTargetOutputSize(
+          event.getBuildRule().getBuildTarget(), event.getOutputSize().get());
+    }
   }
 
   /** Subscribes to {@link RemoteBuildRuleExecutionEvent} events */

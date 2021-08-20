@@ -20,6 +20,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.TreeSet;
 import javax.annotation.concurrent.GuardedBy;
@@ -34,6 +36,10 @@ public final class TopSlowTargetsBuilder {
   /** Slow target NavigableSet. */
   @GuardedBy("this")
   private final NavigableSet<SlowTarget> slowTargets;
+
+  /** Map of targets currently tracked as the top slow targets of the build. */
+  @GuardedBy("this")
+  private final Map<BuildTarget, SlowTarget> targetSlowTargetMap;
 
   /** The number of top slow rules to track (a.k.a N), a parameter to the constructor. */
   private final int targetCount;
@@ -62,6 +68,7 @@ public final class TopSlowTargetsBuilder {
                     target1.getDurationMilliseconds(), target2.getDurationMilliseconds());
               }
             });
+    this.targetSlowTargetMap = new HashMap<>();
   }
 
   /**
@@ -76,8 +83,29 @@ public final class TopSlowTargetsBuilder {
       final BuildTarget target,
       final long durationMilliseconds,
       final long targetStartTimeMilliseconds) {
-    slowTargets.add(new SlowTarget(target, durationMilliseconds, targetStartTimeMilliseconds));
+    SlowTarget slowTarget =
+        new SlowTarget(target, durationMilliseconds, targetStartTimeMilliseconds);
+    targetSlowTargetMap.put(target, slowTarget);
+    slowTargets.add(slowTarget);
     trimToRequestedLength();
+  }
+
+  /**
+   * Records an output size associated with the given target. In cases where the output size is
+   * known after the immediate execution of a target, this method is called with the output size for
+   * the given target.
+   *
+   * @param target The target that has just finished executing
+   * @param outputSize The size of the target's output, or zero if not applicable
+   */
+  public synchronized void onTargetOutputSize(final BuildTarget target, final long outputSize) {
+    if (outputSize == 0) {
+      return;
+    }
+
+    if (targetSlowTargetMap.containsKey(target)) {
+      targetSlowTargetMap.get(target).setOutputSize(outputSize);
+    }
   }
 
   /**
@@ -87,7 +115,8 @@ public final class TopSlowTargetsBuilder {
   private void trimToRequestedLength() {
     if (slowTargets.size() > targetCount) {
       Preconditions.checkState(slowTargets.size() == targetCount + 1);
-      slowTargets.pollFirst();
+      SlowTarget condemnedTarget = slowTargets.pollFirst();
+      targetSlowTargetMap.remove(condemnedTarget.getTarget());
     }
   }
 

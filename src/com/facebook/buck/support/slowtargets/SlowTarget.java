@@ -32,10 +32,14 @@ public final class SlowTarget {
   /** The time when the target began executing, as a timestamp in milliseconds. */
   private final long startTimeMilliseconds;
 
+  /** The size of the target's output size, or zero if not applicable. */
+  private long outputSize;
+
   public SlowTarget(BuildTarget target, long durationMilliseconds, long startTimeMilliseconds) {
     this.target = target;
     this.durationMilliseconds = durationMilliseconds;
     this.startTimeMilliseconds = startTimeMilliseconds;
+    this.outputSize = 0;
   }
 
   public BuildTarget getTarget() {
@@ -48,5 +52,13 @@ public final class SlowTarget {
 
   public long getStartTimeMilliseconds() {
     return startTimeMilliseconds;
+  }
+
+  public long getOutputSize() {
+    return outputSize;
+  }
+
+  void setOutputSize(long outputSize) {
+    this.outputSize = outputSize;
   }
 }
