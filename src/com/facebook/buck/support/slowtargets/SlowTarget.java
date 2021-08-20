@@ -17,17 +17,36 @@
 package com.facebook.buck.support.slowtargets;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * A slow target, as identified by {@link TopSlowTargetsBuilder}. Otherwise is just a tuple of a
  * {@link BuildTarget} and the total duration of that build target's execution.
  */
-@BuckStyleValue
-public interface SlowTarget {
-  BuildTarget getTarget();
+public final class SlowTarget {
+  /** The target in question. */
+  private final BuildTarget target;
 
-  long getDurationMilliseconds();
+  /** The duration that the target spent executing, in milliseconds. */
+  private final long durationMilliseconds;
 
-  long getStartTimeMilliseconds();
+  /** The time when the target began executing, as a timestamp in milliseconds. */
+  private final long startTimeMilliseconds;
+
+  public SlowTarget(BuildTarget target, long durationMilliseconds, long startTimeMilliseconds) {
+    this.target = target;
+    this.durationMilliseconds = durationMilliseconds;
+    this.startTimeMilliseconds = startTimeMilliseconds;
+  }
+
+  public BuildTarget getTarget() {
+    return target;
+  }
+
+  public long getDurationMilliseconds() {
+    return durationMilliseconds;
+  }
+
+  public long getStartTimeMilliseconds() {
+    return startTimeMilliseconds;
+  }
 }

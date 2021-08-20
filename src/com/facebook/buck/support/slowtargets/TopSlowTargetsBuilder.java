@@ -76,8 +76,7 @@ public final class TopSlowTargetsBuilder {
       final BuildTarget target,
       final long durationMilliseconds,
       final long targetStartTimeMilliseconds) {
-    slowTargets.add(
-        ImmutableSlowTarget.ofImpl(target, durationMilliseconds, targetStartTimeMilliseconds));
+    slowTargets.add(new SlowTarget(target, durationMilliseconds, targetStartTimeMilliseconds));
     trimToRequestedLength();
   }
 
