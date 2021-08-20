@@ -1,0 +1,11 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "slowtargets",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/support/slowtargets:slowtargets",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

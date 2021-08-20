@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.support;
+package com.facebook.buck.support.slowtargets;
 
 import static org.junit.Assert.assertEquals;
 

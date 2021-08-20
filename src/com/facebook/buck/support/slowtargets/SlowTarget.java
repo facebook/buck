@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.support;
+package com.facebook.buck.support.slowtargets;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
