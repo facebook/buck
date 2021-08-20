@@ -161,16 +161,19 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
       WatchmanQuery<?> query)
       throws InterruptedException, ExecutionException {
     long queryStartNanos = clock.nanoTime();
+    long timeout = Math.min(timeoutNanos, warnTimeNanos);
     try {
-      return Either.ofLeft(future.get(Math.min(timeoutNanos, warnTimeNanos), TimeUnit.NANOSECONDS));
+      return Either.ofLeft(future.get(timeout, TimeUnit.NANOSECONDS));
     } catch (TimeoutException e) {
       long remainingNanos = timeoutNanos - (clock.nanoTime() - queryStartNanos);
       if (remainingNanos > 0) {
         LOG.debug("Waiting for Watchman query [%s]...", query);
         console.warn(
             String.format(
-                "Waiting for watchman query '%s' for %ds...",
-                query.queryDesc(), TimeUnit.NANOSECONDS.toSeconds(timeoutNanos)));
+                "Waiting for watchman query '%s'. %ds passed, timeout: %ds...",
+                query.queryDesc(),
+                TimeUnit.NANOSECONDS.toSeconds(timeout),
+                TimeUnit.NANOSECONDS.toSeconds(timeoutNanos)));
         try {
           ImmutableMap<String, Object> result = future.get(remainingNanos, TimeUnit.NANOSECONDS);
           long queryDurationNanos = clock.nanoTime() - queryStartNanos;
