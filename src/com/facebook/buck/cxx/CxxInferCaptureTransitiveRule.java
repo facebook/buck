@@ -60,6 +60,11 @@ public class CxxInferCaptureTransitiveRule
     return getSourcePath(getBuildable().output);
   }
 
+  @Override
+  public boolean isCacheable() {
+    return false;
+  }
+
   /** Internal buildable implementation */
   static class Impl
       implements Buildable,

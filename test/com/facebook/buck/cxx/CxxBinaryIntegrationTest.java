@@ -131,7 +131,9 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
-      buildLog.assertTargetWasFetchedFromCache(buildTarget);
+      if (!buildTarget.getFlavorPostfix().equals("#infer-capture-all")) {
+        buildLog.assertTargetWasFetchedFromCache(buildTarget);
+      }
     }
 
     /*
@@ -679,9 +681,10 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", buildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allInvolvedTargets = buildLog.getAllTargets();
-    assertThat(allInvolvedTargets, hasSize(1)); // Only main target should be fetched from cache
     for (BuildTarget bt : allInvolvedTargets) {
-      buildLog.assertTargetWasFetchedFromCache(bt);
+      if (!bt.getFlavorPostfix().equals("#infer-capture-all")) {
+        buildLog.assertTargetWasFetchedFromCache(bt);
+      }
     }
 
     assertTrue(
@@ -749,7 +752,9 @@ public class CxxBinaryIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allInvolvedTargets = buildLog.getAllTargets();
     for (BuildTarget bt : allInvolvedTargets) {
-      buildLog.assertTargetWasFetchedFromCache(bt);
+      if (!bt.getFlavorPostfix().equals("#infer-capture-all")) {
+        buildLog.assertTargetWasFetchedFromCache(bt);
+      }
     }
 
     assertTrue(
@@ -1058,7 +1063,9 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
-      buildLog.assertTargetWasFetchedFromCache(buildTarget);
+      if (!buildTarget.getFlavorPostfix().equals("#infer-capture-all")) {
+        buildLog.assertTargetWasFetchedFromCache(buildTarget);
+      }
     }
 
     /*
