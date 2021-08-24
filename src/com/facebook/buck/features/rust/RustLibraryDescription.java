@@ -178,8 +178,9 @@ public class RustLibraryDescription
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, RustDescriptionEnhancer.Type>> type =
         LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-
     if (type.isPresent()) {
+      BuildTarget baseTarget = buildTarget.withoutFlavors(type.get().getKey());
+
       // Uncommon case - someone explicitly invoked buck to build a specific flavor as the
       // direct target.
       CrateType requestedType = type.get().getValue().getCrateType();
@@ -189,6 +190,7 @@ public class RustLibraryDescription
       RustPlatform rustPlatform =
           RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
               .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+      baseTarget = baseTarget.withoutFlavors(rustPlatform.getFlavor());
 
       if (args.getProcMacro()) {
         // XXX Do we care about overriding platform with proc-macro one?
@@ -211,7 +213,7 @@ public class RustLibraryDescription
           getRustcArgsEnv.apply(rustPlatform);
 
       return requireLibraryBuild(
-          buildTarget,
+          baseTarget,
           projectFilesystem,
           graphBuilder,
           rustPlatform,

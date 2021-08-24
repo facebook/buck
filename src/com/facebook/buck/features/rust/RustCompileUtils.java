@@ -150,7 +150,7 @@ public class RustCompileUtils {
 
   protected static BuildTarget getCompileBuildTarget(
       BuildTarget target, CxxPlatform cxxPlatform, CrateType crateType) {
-    return target.withFlavors(cxxPlatform.getFlavor(), crateType.getFlavor());
+    return target.withAppendedFlavors(cxxPlatform.getFlavor(), crateType.getFlavor());
   }
 
   /** Return true if the rule is for something that's RustLinkable, but not a proc macro */
