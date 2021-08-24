@@ -203,7 +203,8 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     zipInspector.assertFileExists(
         "small_with_no_resource_deps/assets/small_with_no_resource_deps/libs.xzs");
     zipInspector.assertFileExists("small_with_no_resource_deps/dex/classes.dex");
-    zipInspector.assertFileExists("base/assets/small_with_no_resource_deps/metadata.txt");
+    zipInspector.assertFileExists(
+        "small_with_no_resource_deps/assets/small_with_no_resource_deps/metadata.txt");
     zipInspector.assertFileExists("base/assets/secondary-program-dex-jars/metadata.txt");
     zipInspector.assertFileExists("base/dex/classes.dex");
     zipInspector.assertFileExists("base/dex/classes2.dex");

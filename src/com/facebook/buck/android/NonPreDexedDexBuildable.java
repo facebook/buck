@@ -694,6 +694,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
 
       Path secondaryJarMetaDirParent = getSecondaryDexRoot().resolve("secondary_meta");
       Path secondaryJarMetaDir = secondaryJarMetaDirParent.resolve(AndroidApk.SECONDARY_DEX_SUBDIR);
+      Path moduleJarMetaDir = additionalDexParentDir.resolve("assets");
 
       steps.addAll(
           MakeCleanDirectoryStep.of(
@@ -701,6 +702,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
                   buildContext.getBuildCellRootPath(),
                   getProjectFilesystem(),
                   secondaryJarMetaDir)));
+
       Path secondaryJarMeta = secondaryJarMetaDir.resolve("metadata.txt");
 
       // Intermediate directory holding _ONLY_ the secondary split-zip jar files.  This is
@@ -739,6 +741,12 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
                     buildContext.getBuildCellRootPath(),
                     getProjectFilesystem(),
                     secondaryJarMetaDirParent.resolve("assets").resolve(dexStore.getName()))));
+
+        Path dexStorePath = additionalDexAssetsDir.resolve(dexStore.getName());
+        steps.addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(), getProjectFilesystem(), dexStorePath)));
       }
 
       // Run the split-zip command which is responsible for dividing the large set of input
@@ -758,7 +766,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
               primaryJarPath,
               secondaryZipDir,
               "secondary-%d.jar",
-              secondaryJarMetaDirParent,
+              moduleJarMetaDir,
               additionalDexStoresZipDir,
               proguardFullConfigFile,
               proguardMappingFile,
@@ -821,11 +829,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
         for (APKModule dexStore : additionalDexStoreToJarPathMap.keySet()) {
           Path dexStorePath = additionalDexAssetsDir.resolve(dexStore.getName());
           builder.add(dexStorePath);
-
-          steps.addAll(
-              MakeCleanDirectoryStep.of(
-                  BuildCellRelativePath.fromCellRelativePath(
-                      buildContext.getBuildCellRootPath(), getProjectFilesystem(), dexStorePath)));
         }
         additionalDexDirs = Optional.of(builder.build());
       }

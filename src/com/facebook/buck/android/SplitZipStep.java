@@ -230,7 +230,6 @@ public class SplitZipStep implements Step {
         File metadataFile =
             filesystem
                 .resolve(addtionalDexStoreJarMetaPath)
-                .resolve("assets")
                 .resolve(dexStore.getName())
                 .resolve("metadata.txt")
                 .toFile();
