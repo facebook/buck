@@ -20,7 +20,6 @@ import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.filesystems.RelPath;
@@ -384,50 +383,12 @@ public class ParserIntegrationTest {
   }
 
   @Test
-  public void testPythonDSLParsingHasNoWarningsForLoadsWithoutCell() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "python_dsl_warnings", temporaryFolder);
-    workspace.setUp();
-    ProcessResult result =
-        workspace.runBuckBuild(
-            "cell//:ext.bzl",
-            "-c",
-            "parser.polyglot_parsing_enabled_deprecated=true",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl");
-    System.out.println(result.getStderr());
-    assertThat(result.getStderr(), not(containsString("Warning raised by BUCK file parser")));
-    result.assertSuccess();
-  }
-
-  @Test
   public void absoluteTargetPathInCellResolvesRelativeToCellRootInSkylark() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "cross_cell_load", temporaryFolder);
     workspace.setUp();
     workspace
-        .runBuckBuild(
-            "b//:lib2.bzl",
-            "-c",
-            "parser.polyglot_parsing_enabled_deprecated=true",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=skylark")
-        .assertSuccess();
-  }
-
-  @Test
-  public void absoluteTargetPathInCellResolvesRelativeToCellRootInPythonDSL() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "cross_cell_load", temporaryFolder);
-    workspace.setUp();
-    workspace
-        .runBuckBuild(
-            "b//:lib2.bzl",
-            "-c",
-            "parser.polyglot_parsing_enabled_deprecated=true",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl")
+        .runBuckBuild("b//:lib2.bzl", "-c", "parser.polyglot_parsing_enabled_deprecated=true")
         .assertSuccess();
   }
 
@@ -437,95 +398,6 @@ public class ParserIntegrationTest {
     for (String substring : substrings) {
       assertThat(result.getStderr(), containsString(substring));
     }
-  }
-
-  @Test
-  public void testDisablingImplicitNativeRulesPythonDsl() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "disable_implicit_native_rules", temporaryFolder);
-    workspace.setUp();
-
-    assertParseFailedWithSubstrings(
-        workspace.runBuckBuild(
-            "//python/implicit_in_build_file:main",
-            "-c",
-            "parser.disable_implicit_native_rules=true",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl"),
-        "NameError: name 'java_library' is not defined",
-        "BUCK\", line 1");
-    assertParseFailedWithSubstrings(
-        workspace.runBuckBuild(
-            "//python/implicit_in_extension_bzl:main",
-            "-c",
-            "parser.disable_implicit_native_rules=true",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl"),
-        "NameError: global name 'java_library' is not defined",
-        "extension.bzl\", line 5",
-        "BUCK\", line 5");
-    assertParseFailedWithSubstrings(
-        workspace.runBuckBuild(
-            "//python/native_in_build_file:main",
-            "-c",
-            "parser.disable_implicit_native_rules=true",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl"),
-        "AttributeError: 'native' object has no attribute 'java_library'",
-        "BUCK\", line 1");
-    workspace
-        .runBuckBuild(
-            "//python/native_in_extension_bzl:main",
-            "-c",
-            "parser.disable_implicit_native_rules=true",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl")
-        .assertSuccess();
-
-    workspace
-        .runBuckBuild(
-            "//python/implicit_in_build_file:main",
-            "-c",
-            "parser.disable_implicit_native_rules=false",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl")
-        .assertSuccess();
-    workspace
-        .runBuckBuild(
-            "//python/implicit_in_extension_bzl:main",
-            "-c",
-            "parser.disable_implicit_native_rules=false",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl")
-        .assertSuccess();
-    workspace
-        .runBuckBuild(
-            "//python/native_in_extension_bzl:main",
-            "-c",
-            "parser.disable_implicit_native_rules=false",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl")
-        .assertSuccess();
-
-    workspace
-        .runBuckBuild(
-            "//python/implicit_in_build_file:main",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl")
-        .assertSuccess();
-    workspace
-        .runBuckBuild(
-            "//python/implicit_in_extension_bzl:main",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl")
-        .assertSuccess();
-    workspace
-        .runBuckBuild(
-            "//python/native_in_extension_bzl:main",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=python_dsl")
-        .assertSuccess();
   }
 
   @Test
@@ -628,55 +500,6 @@ public class ParserIntegrationTest {
             "-c",
             "parser.default_build_file_syntax_deprecated=SKYLARK")
         .assertSuccess();
-  }
-
-  @Test
-  public void deprecatedSyntaxWarningIsDisplayedWhenReferencingACellWithoutAt() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "deprecated_cell_syntax", temporaryFolder);
-    workspace.setUp();
-    ProcessResult result =
-        workspace
-            .runBuckBuild(
-                "cell//:lib.bzl",
-                "-c",
-                "parser.polyglot_parsing_enabled_deprecated=true",
-                "-c",
-                "parser.default_build_file_syntax_deprecated=python_dsl",
-                "-c",
-                "parser.warn_about_deprecated_syntax=true")
-            .assertSuccess();
-    assertThat(
-        result.getStderr(),
-        containsString(
-            "BUCK has a load label \"cell//:lib.bzl\" that uses a deprecated cell format."
-                + " \"cell\" should instead be \"@cell\"."));
-    assertThat(
-        result.getStderr(),
-        containsString(
-            "lib.bzl has a load label \"cell//:lib2.bzl\" that uses a deprecated cell format. "
-                + "\"cell\" should instead be \"@cell\"."));
-  }
-
-  @Test
-  public void deprecatedSyntaxWarningIsNotDisplayedIfDisabled() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "deprecated_cell_syntax", temporaryFolder);
-    workspace.setUp();
-    ProcessResult result =
-        workspace
-            .runBuckBuild(
-                "cell//:lib.bzl",
-                "-c",
-                "parser.polyglot_parsing_enabled_deprecated=true",
-                "-c",
-                "parser.default_build_file_syntax_deprecated=python_dsl",
-                "-c",
-                "parser.warn_about_deprecated_syntax=false")
-            .assertSuccess();
-    assertThat(result.getStderr(), not(containsString("Warning raised by BUCK file parser")));
   }
 
   @Test
@@ -882,29 +705,13 @@ public class ParserIntegrationTest {
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void recursiveLoad(Syntax syntax) throws Exception {
+  public void recursiveLoad() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "recursive_load", temporaryFolder);
     workspace.setUp();
-    ProcessResult processResult =
-        workspace.runBuckBuild(
-            "//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax);
+    ProcessResult processResult = workspace.runBuckBuild("//...");
     assertEquals(ExitCode.PARSE_ERROR, processResult.getExitCode());
-    switch (syntax) {
-      case PYTHON_DSL:
-        {
-          assertThat(processResult.getStderr(), containsString("maximum recursion depth exceeded"));
-          break;
-        }
-      case SKYLARK:
-        {
-          assertThat(processResult.getStderr(), containsString("Load cycle while loading"));
-          break;
-        }
-      default:
-        throw new AssertionError("unreachable");
-    }
+    assertThat(processResult.getStderr(), containsString("Load cycle while loading"));
   }
 
   @Test
