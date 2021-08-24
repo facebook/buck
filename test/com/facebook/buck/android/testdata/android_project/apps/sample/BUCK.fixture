@@ -33,7 +33,7 @@ android_bundle(
     },
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
-    module_manifest_skeleton = "ModuleManifest.xml",
+    module_manifest_skeleton = "NativeModuleManifest.xml",
     package_type = "debug",
     primary_dex_patterns = [
         "/MyApplication^",

@@ -179,7 +179,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
         "small_with_no_resource_deps/assets/small_with_no_resource_deps/metadata.txt");
     zipInspector.assertFileExists(
         "small_with_no_resource_deps/assets/small_with_no_resource_deps/libs.xzs");
-    zipInspector.assertFileExists("small_with_no_resource_deps/dex/classes.dex");
+    zipInspector.assertFileExists("small_with_no_resource_deps/assets/small_with_no_resource_deps/small_with_no_resource_deps2.dex");
     zipInspector.assertFileExists("base/dex/classes.dex");
     zipInspector.assertFileExists("base/dex/classes2.dex");
     zipInspector.assertFileExists("small_with_no_resource_deps/manifest/AndroidManifest.xml");
@@ -202,7 +202,8 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     ZipInspector zipInspector = new ZipInspector(aab);
     zipInspector.assertFileExists(
         "small_with_no_resource_deps/assets/small_with_no_resource_deps/libs.xzs");
-    zipInspector.assertFileExists("small_with_no_resource_deps/dex/classes.dex");
+    zipInspector.assertFileExists(
+        "small_with_no_resource_deps/assets/small_with_no_resource_deps/small_with_no_resource_deps2.dex");
     zipInspector.assertFileExists(
         "small_with_no_resource_deps/assets/small_with_no_resource_deps/metadata.txt");
     zipInspector.assertFileExists("base/assets/secondary-program-dex-jars/metadata.txt");

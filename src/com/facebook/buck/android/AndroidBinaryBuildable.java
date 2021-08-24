@@ -268,14 +268,12 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
     Map<Path, String> assetDirectoriesForThisModule = new HashMap<>();
     Set<Path> nativeLibraryDirectoriesForThisModule = new HashSet<>();
     Path resourcesDirectoryForThisModule = null;
-    ImmutableSet.Builder<Path> dexFileDirectoriesBuilderForThisModule = ImmutableSet.builder();
 
     if (mapOfModuleToSecondaryDexSourcePaths.containsKey(module.getName())) {
       addDexFileDirectories(
           pathResolver,
           module,
           mapOfModuleToSecondaryDexSourcePaths,
-          dexFileDirectoriesBuilderForThisModule,
           assetDirectoriesForThisModule);
     }
 
@@ -322,15 +320,14 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
       baseModuleInfo
           .putAllAssetDirectories(ImmutableMap.copyOf(assetDirectoriesForThisModule))
           .addAllNativeLibraryDirectories(
-              ImmutableSet.copyOf(nativeLibraryDirectoriesForThisModule))
-          .addAllDexFile(dexFileDirectoriesBuilderForThisModule.build());
+              ImmutableSet.copyOf(nativeLibraryDirectoriesForThisModule));
     } else {
       String moduleName = module.getName();
       modulesInfo.add(
           ImmutableModuleInfo.ofImpl(
               moduleName,
               resourcesDirectoryForThisModule,
-              dexFileDirectoriesBuilderForThisModule.build(),
+              ImmutableSet.<Path>of(),
               ImmutableMap.copyOf(assetDirectoriesForThisModule),
               ImmutableSet.copyOf(nativeLibraryDirectoriesForThisModule),
               ImmutableSet.<Path>of(),
@@ -342,7 +339,6 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
       SourcePathResolverAdapter pathResolver,
       APKModule module,
       ImmutableMap<String, SourcePath> mapOfModuleToSecondaryDexSourcePaths,
-      ImmutableSet.Builder<Path> dexFileDirectoriesBuilderForThisModule,
       Map<Path, String> assetDirectoriesForThisModule) {
     File[] dexFiles =
         filesystem
@@ -354,18 +350,12 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
     if (dexFiles == null) {
       return;
     }
-    for (File dexFile : dexFiles) {
-      if (dexFile.getName().endsWith(".dex")) {
-        dexFileDirectoriesBuilderForThisModule.add(
-            filesystem.getPathForRelativePath(dexFile.toPath()));
-      } else {
-        RelPath current =
-            pathResolver.getCellUnsafeRelPath(
-                mapOfModuleToSecondaryDexSourcePaths.get(module.getName()));
-        String prefix = current.getParent().getParent().relativize(current).toString();
-        assetDirectoriesForThisModule.put(current.getPath(), prefix);
-      }
-    }
+
+    RelPath current =
+        pathResolver.getCellUnsafeRelPath(
+            mapOfModuleToSecondaryDexSourcePaths.get(module.getName()));
+    String prefix = current.getParent().getParent().relativize(current).toString();
+    assetDirectoriesForThisModule.put(current.getPath(), prefix);
   }
 
   private void addNativeDirectory(

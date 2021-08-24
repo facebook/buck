@@ -220,7 +220,9 @@ public class AabBuilderStep implements Step {
         addFile(
             moduleBuilder,
             filesystem.getPathForRelativePath(dexFile),
-            getDexFileName(addedFiles),
+            Paths.get(BundleModule.DEX_DIRECTORY.toString())
+                .resolve(dexFile.getFileName())
+                .toString(),
             addedFiles,
             addedSourceFiles,
             context);
@@ -339,11 +341,11 @@ public class AabBuilderStep implements Step {
         processFileForResource(builder, contentFile, path, addedFiles, addedSourceFiles, context);
       }
     } else if (!file.isDirectory() && ApkBuilder.checkFileForPackaging(file.getName())) {
-      if (file.getName().endsWith(".dex")) {
+      if (file.getName().startsWith("classes") && file.getName().endsWith(".dex")) {
         addFile(
             builder,
             file.toPath(),
-            getDexFileName(addedFiles),
+            Paths.get(BundleModule.DEX_DIRECTORY.toString()).resolve(file.getName()).toString(),
             addedFiles,
             addedSourceFiles,
             context);
@@ -370,16 +372,6 @@ public class AabBuilderStep implements Step {
         addFile(builder, file.toPath(), path, addedFiles, addedSourceFiles, context);
       }
     }
-  }
-
-  private String getDexFileName(Set<String> addedFiles) {
-    int ind = 1;
-    String possibleName = Paths.get("dex").resolve("classes.dex").toString();
-    while (addedFiles.contains(possibleName)) {
-      ind++;
-      possibleName = Paths.get("dex").resolve("classes" + ind + ".dex").toString();
-    }
-    return possibleName;
   }
 
   private void addNativeLibraries(
