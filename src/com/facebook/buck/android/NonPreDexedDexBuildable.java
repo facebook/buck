@@ -831,6 +831,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
       }
 
       if (dexSplitMode.getDexStore() == DexStore.RAW) {
+        secondaryDexDirectoriesConsumer.accept(secondaryJarMetaDirParent);
         secondaryDexDirectoriesConsumer.accept(secondaryDexDir.get());
       } else {
         secondaryDexDirectoriesConsumer.accept(secondaryJarMetaDirParent);

@@ -187,6 +187,50 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testAppBundleWithModulesRaw() throws IOException {
+    String target = "//apps/sample:app_bundle_modular_raw";
+    ProcessResult result = workspace.runBuckCommand("build", target);
+    result.assertSuccess();
+
+    Path aab =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem.getBuckPaths(),
+                BuildTargetFactory.newInstance(target),
+                "%s.signed.aab"));
+
+    ZipInspector zipInspector = new ZipInspector(aab);
+    zipInspector.assertFileExists(
+        "small_with_no_resource_deps/assets/small_with_no_resource_deps/libs.xzs");
+    zipInspector.assertFileExists("small_with_no_resource_deps/dex/classes.dex");
+    zipInspector.assertFileExists("base/assets/small_with_no_resource_deps/metadata.txt");
+    zipInspector.assertFileExists("base/assets/secondary-program-dex-jars/metadata.txt");
+    zipInspector.assertFileExists("base/dex/classes.dex");
+    zipInspector.assertFileExists("base/dex/classes2.dex");
+  }
+
+  @Test
+  public void testAppBinaryWithModulesRaw() throws IOException {
+    String target = "//apps/sample:app_binary_modular_raw";
+    ProcessResult result = workspace.runBuckCommand("build", target);
+    result.assertSuccess();
+
+    Path apk =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
+
+    ZipInspector zipInspector = new ZipInspector(apk);
+    zipInspector.assertFileExists("assets/small_with_no_resource_deps/libs.xzs");
+    zipInspector.assertFileExists(
+        "assets/small_with_no_resource_deps/small_with_no_resource_deps2.dex");
+    zipInspector.assertFileExists("assets/small_with_no_resource_deps/metadata.txt");
+    zipInspector.assertFileExists("assets/secondary-program-dex-jars/metadata.txt");
+    zipInspector.assertFileExists("classes.dex");
+    zipInspector.assertFileExists("classes2.dex");
+  }
+
+  @Test
   public void testAppBundleWithMultipleNativeModules() throws IOException {
     String target = "//apps/sample:app_modular_debug_multiple_native";
     ProcessResult result = workspace.runBuckCommand("build", target);

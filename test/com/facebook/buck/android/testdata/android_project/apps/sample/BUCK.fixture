@@ -48,6 +48,52 @@ android_bundle(
 )
 
 android_binary(
+    name = "app_binary_modular_raw",
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "NativeModuleManifest.xml",
+    package_type = "release",
+    minimize_primary_dex_size = True,
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    proguard_config = "dontobfuscate.pro",
+    dex_compression = "raw",
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+    ],
+)
+
+android_bundle(
+    name = "app_bundle_modular_raw",
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    module_manifest_skeleton = "NativeModuleManifest.xml",
+    package_type = "release",
+    minimize_primary_dex_size = True,
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    proguard_config = "dontobfuscate.pro",
+    dex_compression = "raw",
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+        "//java/com/sample/small:small_with_no_resource_deps",
+    ],
+)
+
+android_binary(
     name = "app_binary_debug_multiple_native",
     application_module_configs = {
         "native1": ["//native/cxx:foo1"],
