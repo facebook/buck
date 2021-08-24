@@ -54,6 +54,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableCollection;
@@ -624,7 +625,7 @@ public class RustLibraryDescription
   }
 
   @RuleArg
-  interface AbstractRustLibraryDescriptionArg extends RustCommonArgs, HasTests {
+  interface AbstractRustLibraryDescriptionArg extends RustCommonArgs, HasTests, HasVersionUniverse {
     @Value.Default
     default NativeLinkableGroup.Linkage getPreferredLinkage() {
       return NativeLinkableGroup.Linkage.ANY;
