@@ -86,9 +86,14 @@ public class DarwinLinker extends DelegatingTool
       inputs = DefaultFieldInputs.class)
   private final boolean shouldUploadToCache;
 
-  @AddToRuleKey private final boolean scrubConcurrently;
+  @ExcludeFromRuleKey(
+      reason =
+          "We want to get cache hits on binaries with no focused targets regardless whether we're using focused debugging",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class)
+  private final boolean useFocusedDebugging;
 
-  @AddToRuleKey private final boolean useFocusedDebugging;
+  @AddToRuleKey private final boolean scrubConcurrently;
 
   @AddToRuleKey private final boolean usePathNormalizationArgs;
 
