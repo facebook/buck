@@ -132,7 +132,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     assertThat(
         runRuleKeyDiffer(workspace),
         Matchers.stringContainsInOrder(
-            "Change details for " + "[//:java_lib_2->",
+            "Change details for " + "[//:java_lib_2 builtin//platform:unconfigured->",
             "->languageLevelOptions]",
             "  (sourceLevel):",
             "    -[string(\"6\")]",
@@ -199,19 +199,19 @@ public class DiffRuleKeysScriptIntegrationTest {
     assertThat(
         runRuleKeyDiffer(workspace),
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_2]",
+            "Change details for [//:java_lib_2 builtin//platform:unconfigured]",
             "  (buck.deps): order of deps was name-aligned.",
             "  (buck.deps):",
             "    -[<missing>]",
             "    -[container(LIST,len=2)]",
-            "    +[\"//:java_lib_3\"@ruleKey(sha1=", /* some rulekey */
+            "    +[\"//:java_lib_3 builtin//platform:unconfigured\"@ruleKey(sha1=", /* some rulekey */
             ")]",
-            "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
-            "Change details for [//:java_lib_2",
+            "    +[\"//:java_lib_3#class-abi builtin//platform:unconfigured\"@ruleKey(sha1=", /* some rulekey */
+            "Change details for [//:java_lib_2 builtin//platform:unconfigured",
             "->abiClasspath]",
             "  (zipFiles):",
             "    -[<missing>]",
-            "    +[\"//:java_lib_3#class-abi\"@ruleKey(sha1=", /* some rulekey */
+            "    +[\"//:java_lib_3#class-abi builtin//platform:unconfigured\"@ruleKey(sha1=", /* some rulekey */
             "    +[string(\"Pair(//:java_lib_3#class-abi,",
             ")]"));
   }
@@ -235,7 +235,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     assertThat(
         output,
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_2->buildableForRuleKey->jarBuildStepsFactory]",
+            "Change details for [//:java_lib_2 builtin//platform:unconfigured->buildableForRuleKey->jarBuildStepsFactory]",
             "  (srcs):",
             "    -[<missing>]",
             "    -[container(LIST,len=1)]",
@@ -245,7 +245,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     assertThat(
         output,
         Matchers.stringContainsInOrder(
-            "Change details for [//:java_lib_1->buildableForRuleKey->jarBuildStepsFactory]",
+            "Change details for [//:java_lib_1 builtin//platform:unconfigured->buildableForRuleKey->jarBuildStepsFactory]",
             "  (srcs):",
             String.format("    -[path(JavaLib1.java:%s)]", oldHash1),
             String.format("    +[path(JavaLib1.java:%s)]", newHash1)));
@@ -255,7 +255,7 @@ public class DiffRuleKeysScriptIntegrationTest {
         Matchers.stringContainsInOrder(
             // TODO: The fact that it shows only the rule key difference for jarBuildStepsFactory
             // rather than the change in the srcs property of that class is a bug in the differ.
-            "Change details for [//:java_lib_all->buildableForRuleKey]",
+            "Change details for [//:java_lib_all builtin//platform:unconfigured->buildableForRuleKey]",
             "  (jarBuildStepsFactory):",
             "    -[ruleKey(sha1=" /* some rulekey */,
             "    +[ruleKey(sha1=" /* some other rulekey */));

@@ -29,6 +29,7 @@ import sys
 PATH_VALUE_REGEX = re.compile(r"path\(([^:]+):\w+\)")
 LOGGER_NAME = "com.facebook.buck.rules.keys.RuleKeyBuilder"
 NAME_FINDER = '"):key(.target_name)'
+CONF_FINDER = '"):key(.target_conf)'
 
 if sys.version_info[0] == 2:
     zip_longest = itertools.izip_longest
@@ -46,6 +47,12 @@ class LazyStructureMap(object):
         if name_end != -1 and ".build_rule_type" in data:
             name_start = data.rfind('("', 0, name_end) + 2
             self._name = data[name_start:name_end]
+
+        conf_end = data.find(CONF_FINDER)
+        if conf_end != -1 and self._name is not None:
+            conf_start = data.rfind('("', 0, conf_end) + 2
+            target_conf = data[conf_start:conf_end]
+            self._name = self._name + " " + target_conf
 
     def get(self, key, default=None):
         return self._get().get(key, default)
@@ -123,6 +130,11 @@ slower due to the extra logging.
     parser.add_argument("right_log", help="buck.log file to look at second.")
     parser.add_argument(
         "build_target", help="Name of the RuleKey that you want to analyze", nargs="?"
+    )
+    parser.add_argument(
+        "target_conf",
+        help="Target configuration for the build target to analyze",
+        nargs="?",
     )
     parser.add_argument(
         "--verbose", help="Verbose mode", action="store_true", default=False
@@ -671,6 +683,15 @@ def swap_entries_in_list(l, i, j):
     (l[i], l[j]) = (l[j], l[i])
 
 
+def readTargetConfs(build_target, log):
+    confs = set()
+    for name in log.getAllNames():
+        if name.split(" ")[0] == build_target:
+            confs.add(name.split(" ")[1])
+
+    return confs
+
+
 def main():
     args = parseArgs()
     if not os.path.exists(args.left_log):
@@ -691,7 +712,22 @@ def main():
 
     print("Comparing rules...")
     name = args.build_target
+    conf = args.target_conf
+
     if name:
+        if not conf:
+            confs = readTargetConfs(name, left).union(readTargetConfs(name, right))
+            if len(confs) == 1:
+                name = name + " " + confs.pop()
+            else:
+                raise KeyError(
+                    (
+                        "Found multiple configured targets for {}, specify one of {} as --target-conf"
+                    ).format(name, confs)
+                )
+        else:
+            name = name + " " + conf
+
         left_key = left.getKeyForName(name)
         right_key = right.getKeyForName(name)
         if left_key is None:

@@ -440,9 +440,35 @@ class TestRuleKeyDiff(unittest.TestCase):
             expected = ["//:top left:aabb != right:cabb"]
             self.assertEqual(result, expected)
 
+    def test_multiple_configuration(self):
+        result = compute_rulekey_mismatches(
+            RuleKeyStructureInfo(
+                MockFile(
+                    [
+                        makeRuleKeyLine(name="//:lib", key="aa", target_conf="//:mac"),
+                        makeRuleKeyLine(name="//:lib", key="ab", target_conf="//:win"),
+                    ]
+                )
+            ),
+            RuleKeyStructureInfo(
+                MockFile(
+                    [
+                        makeRuleKeyLine(name="//:lib", key="ab", target_conf="//:win"),
+                        makeRuleKeyLine(name="//:lib", key="aa", target_conf="//:mac"),
+                    ]
+                )
+            ),
+        )
+        self.assertEqual(result, [])
+
 
 def makeRuleKeyLine(
-    key="aabb", name="//:name", srcs=None, ruleType="java_library", deps=None
+    key="aabb",
+    name="//:name",
+    srcs=None,
+    ruleType="java_library",
+    deps=None,
+    target_conf=None,
 ):
     srcs = srcs or {"JavaLib1.java": "aabb"}
     deps = deps or []
@@ -450,9 +476,10 @@ def makeRuleKeyLine(
         ["path({p}:{h}):key(srcs)".format(p=p, h=h) for p, h in srcs.items()]
     )
     deps_t = ":".join(["ruleKey(sha1={h}):key(deps)".format(h=h) for h in deps])
+    conf_t = f'string("{target_conf}"):key(.target_conf)' if target_conf else ""
     template = (
         '[v] RuleKey {key}=string("{name}"):key(.target_name):' + "{srcs_t}:"
-        'string("{ruleType}"):key(.build_rule_type):' + "{deps_t}:"
+        'string("{ruleType}"):key(.build_rule_type):' + "{deps_t}:" + conf_t
     )
     return template.format(
         key=key, name=name, srcs_t=srcs_t, ruleType=ruleType, deps_t=deps_t
