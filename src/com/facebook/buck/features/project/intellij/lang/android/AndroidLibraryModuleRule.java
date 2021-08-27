@@ -87,6 +87,7 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
       androidManifestParser
           .parseMinSdkVersion(projectManifestPath)
           .ifPresent(builder::addMinSdkVersions);
+      builder.addAllPermissions(androidManifestParser.parsePermissions(projectManifestPath));
     }
 
     target.getConstructorArg().getResourceUnionPackage().ifPresent(builder::setPackageName);

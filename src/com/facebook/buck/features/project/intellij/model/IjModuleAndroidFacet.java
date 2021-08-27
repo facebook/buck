@@ -114,6 +114,8 @@ public abstract class IjModuleAndroidFacet {
 
   public abstract Path getGeneratedSourcePath();
 
+  public abstract ImmutableSet<String> getPermissions();
+
   /**
    * AndroidManifest.xml can be generated when package name is known. Also, it's not generated when
    * there is exactly one manifest from targets (this manifest will be used in IntelliJ project).

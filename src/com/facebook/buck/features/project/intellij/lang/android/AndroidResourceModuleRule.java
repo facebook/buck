@@ -99,6 +99,8 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
               androidManifestParser
                   .parseMinSdkVersion(manifestPath)
                   .ifPresent(androidFacetBuilder::addMinSdkVersions);
+              androidFacetBuilder.addAllPermissions(
+                  androidManifestParser.parsePermissions(manifestPath));
             });
 
     context.addDeps(resourceFolders, target.getBuildDeps(), DependencyType.PROD);

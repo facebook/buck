@@ -21,8 +21,10 @@ import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestP
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,6 +32,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class AndroidManifestParserTest {
+
   @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   private AndroidManifestParser androidManifestParser;
@@ -135,5 +138,37 @@ public class AndroidManifestParserTest {
     Optional<String> packageName = androidManifestParser.parsePackage(manifestPath.getPath());
 
     Assert.assertFalse(packageName.isPresent());
+  }
+
+  @Test
+  public void testPermissionsWhenPresent() {
+    Path directory = TestDataHelper.getTestDataDirectory(this);
+    Path androidManifestPath =
+        directory.resolve("manifests/manifest_with_permissions/AndroidManifest.xml");
+    ImmutableSet<String> permissions = androidManifestParser.parsePermissions(androidManifestPath);
+
+    Assert.assertEquals(2, permissions.size());
+    Assert.assertTrue(
+        permissions.containsAll(Arrays.asList("TEST_PERMISSION_1", "TEST_PERMISSION_2")));
+  }
+
+  @Test
+  public void testEmptyPermissionWhenNotPresent() {
+    Path directory = TestDataHelper.getTestDataDirectory(this);
+    Path androidManifestPath =
+        directory.resolve("manifests/manifest_without_permissions/AndroidManifest.xml");
+    ImmutableSet<String> permissions = androidManifestParser.parsePermissions(androidManifestPath);
+
+    Assert.assertEquals(0, permissions.size());
+  }
+
+  @Test
+  public void testInvalidPermissionWhenPresent() {
+    Path directory = TestDataHelper.getTestDataDirectory(this);
+    Path androidManifestPath =
+        directory.resolve("manifests/manifest_with_invalid_permissions/AndroidManifest.xml");
+    ImmutableSet<String> permissions = androidManifestParser.parsePermissions(androidManifestPath);
+
+    Assert.assertEquals(0, permissions.size());
   }
 }

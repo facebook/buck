@@ -18,6 +18,8 @@ package com.facebook.buck.features.project.intellij.lang.android;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -45,6 +47,12 @@ public class AndroidManifestParser {
     this.projectFilesystem = projectFilesystem;
   }
 
+  /**
+   * Parse the minSdkVersion from a <uses-sdk> node from the Android manifest file, if any.
+   *
+   * @param androidManifestPath The path of the Android manifest file.
+   * @return An optional containing the minSdkVersion.
+   */
   public Optional<String> parseMinSdkVersion(Path androidManifestPath) {
     Optional<Document> manifestDocument =
         readAndroidManifestDocument(projectFilesystem.getPathForRelativePath(androidManifestPath));
@@ -75,6 +83,12 @@ public class AndroidManifestParser {
     return Optional.ofNullable(minSdkVersion);
   }
 
+  /**
+   * Parse the package name defined in the Android manifest file, if any.
+   *
+   * @param androidManifestPath The path of the Android manifest file.
+   * @return An optional containing the package name.
+   */
   public Optional<String> parsePackage(Path androidManifestPath) {
     Optional<Document> manifestDocument =
         readAndroidManifestDocument(projectFilesystem.getPathForRelativePath(androidManifestPath));
@@ -101,6 +115,45 @@ public class AndroidManifestParser {
     }
 
     return Optional.ofNullable(packageName);
+  }
+
+  /**
+   * Parse any <uses-permission> node from the Android manifest file.
+   *
+   * @param androidManifestPath The path of the Android manifest file.
+   * @return A set containing permission names. If there is no permission defined in manifest, an
+   *     empty set is returned.
+   */
+  public ImmutableSet<String> parsePermissions(Path androidManifestPath) {
+    final Optional<Document> manifestDocument =
+        readAndroidManifestDocument(projectFilesystem.getPathForRelativePath(androidManifestPath));
+    if (!manifestDocument.isPresent()) {
+      return ImmutableSet.of();
+    }
+
+    final ImmutableSet.Builder<String> permissionSetBuilder = new ImmutableSet.Builder<>();
+    try {
+      final XPath xPath = XPathFactory.newInstance().newXPath();
+      final NodeList usesPermissionNodes =
+          (NodeList)
+              xPath.evaluate("//uses-permission", manifestDocument.get(), XPathConstants.NODESET);
+      for (int i = 0; i < usesPermissionNodes.getLength(); i++) {
+        final Node node = usesPermissionNodes.item(i);
+        final NamedNodeMap attrs = node.getAttributes();
+        if (attrs.getLength() > 0) {
+          final Node permissionAttribute = node.getAttributes().getNamedItem("android:name");
+          if (permissionAttribute != null) {
+            final String permissionName = permissionAttribute.getNodeValue();
+            if (!Strings.isNullOrEmpty(permissionName)) {
+              permissionSetBuilder.add(permissionName);
+            }
+          }
+        }
+      }
+    } catch (XPathExpressionException e) {
+      LOG.debug(e, "Cannot find permission in the manifest %s", androidManifestPath);
+    }
+    return permissionSetBuilder.build();
   }
 
   private Optional<Document> readAndroidManifestDocument(Path androidManifestPath) {

@@ -21,6 +21,7 @@ import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -115,7 +116,8 @@ public class PregeneratedCodeWriter {
       minSdkVersion = defaultProjectMinSdkVersion;
     }
 
-    writeAndroidManifestToFile(androidFacet.get(), packageName.get(), minSdkVersion);
+    writeAndroidManifestToFile(
+        androidFacet.get(), packageName.get(), minSdkVersion, androidFacet.get().getPermissions());
   }
 
   private void writeGeneratedByIdeaClassToFile(
@@ -141,13 +143,16 @@ public class PregeneratedCodeWriter {
   }
 
   private void writeAndroidManifestToFile(
-      IjModuleAndroidFacet androidFacet, String packageName, Optional<String> minSdkVersion)
+      IjModuleAndroidFacet androidFacet,
+      String packageName,
+      Optional<String> minSdkVersion,
+      ImmutableSet<String> permissions)
       throws IOException {
 
     ST contents = StringTemplateFile.ANDROID_MANIFEST.getST().add("package", packageName);
 
     contents.add("minSdkVersion", minSdkVersion.orElse(null));
-
+    contents.add("permissions", permissions);
     writeTemplateToFile(IjAndroidHelper.getGeneratedAndroidManifestPath(androidFacet), contents);
   }
 

@@ -64,17 +64,20 @@ public class AndroidBinaryModuleRule extends AndroidModuleRule<AndroidBinaryDesc
 
     Path manifestPath = moduleFactoryResolver.getAndroidManifestPath(target);
     androidFacetBuilder.addManifestPaths(manifestPath);
+    Path projectManifestPath = projectFilesystem.getPathForRelativePath(manifestPath);
 
     Optional<Integer> targetMinSdkVersion =
         target.getConstructorArg().getManifestEntries().getMinSdkVersion();
     if (targetMinSdkVersion.isPresent()) {
       androidFacetBuilder.addMinSdkVersions(targetMinSdkVersion.get().toString());
     } else {
-      Path projectManifestPath = projectFilesystem.getPathForRelativePath(manifestPath);
       androidManifestParser
           .parseMinSdkVersion(projectManifestPath)
           .ifPresent(androidFacetBuilder::addMinSdkVersions);
     }
+
+    androidFacetBuilder.addAllPermissions(
+        androidManifestParser.parsePermissions(projectManifestPath));
   }
 
   @Override
