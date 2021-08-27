@@ -86,7 +86,7 @@ public class SwiftPlatformFactoryIntegrationTest {
   @Test
   public void testBuildSwiftPlatformWithEmptyToolchainPaths() throws IOException {
     Path developerDir = tmp.newFolder("Developer");
-    SwiftTargetTriple triple = SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3");
+    SwiftTargetTriple triple = SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3", false);
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
             createAppleSdk(),
@@ -113,7 +113,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3"));
+            SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3", false));
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), empty());
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), empty());
   }
@@ -136,7 +136,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
-            SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3"));
+            SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3", false));
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), hasSize(1));
     assertThat(swiftPlatform.getSwiftStaticRuntimePaths(), hasSize(2));
   }

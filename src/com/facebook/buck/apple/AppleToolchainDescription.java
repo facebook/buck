@@ -130,7 +130,8 @@ public class AppleToolchainDescription
             args.getArchitecture(),
             "apple",
             applePlatform.getSwiftName().orElse(applePlatform.getName()),
-            args.getMinVersion());
+            args.getMinVersion(),
+            applePlatform.getIsSimulator());
     Optional<SwiftPlatform> swiftPlatform =
         swiftToolchainRule
             .map(SwiftToolchainBuildRule.class::cast)
