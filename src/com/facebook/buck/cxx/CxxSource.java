@@ -68,7 +68,7 @@ public abstract class CxxSource { // NOPMD
     ASSEMBLER("assembler", "assembler", "s"),
 
     // Assembly files built with nasm/yasm.
-    ASM_WITH_CPP("asm-with-cpp", "asm", "asmpp"),
+    ASM_WITH_CPP("asm-with-cpp", "asm", "asm", "asmpp"),
     ASM("asm", "asm", "asm"),
 
     // Precompiled modules (https://clang.llvm.org/docs/Modules.html).
