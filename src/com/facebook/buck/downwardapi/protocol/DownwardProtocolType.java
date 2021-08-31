@@ -18,6 +18,7 @@ package com.facebook.buck.downwardapi.protocol;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -40,19 +41,29 @@ public enum DownwardProtocolType {
   }
 
   /** Reads {@code DownwardProtocol} from {@code inputStream}. */
-  public static DownwardProtocol readProtocol(InputStream inputStream) throws IOException {
-    return DownwardProtocolUtils.readFromStream(
-            inputStream,
-            protocolId ->
-                Arrays.stream(values())
-                    .filter(p -> p.protocolId.equals(protocolId))
-                    .findFirst()
-                    // Do not remove this cast as it caused an exception on JDK versions under 8u60
-                    .<IllegalStateException>orElseThrow(
-                        () ->
-                            new InvalidDownwardProtocolException(
-                                "Invalid protocol type: " + protocolId)))
-        .getDownwardProtocol();
+  public static DownwardProtocol readProtocol(InputStream inputStream)
+      throws InvalidDownwardProtocolException, PipeNotConnectedException {
+    try {
+      DownwardProtocolType downwardProtocolType =
+          DownwardProtocolUtils.readFromStream(
+              inputStream,
+              protocolId ->
+                  Arrays.stream(values())
+                      .filter(p -> p.protocolId.equals(protocolId))
+                      .findFirst()
+                      // Do not remove this cast as it caused an exception on JDK versions under
+                      // 8u60
+                      .<IllegalStateException>orElseThrow(
+                          () ->
+                              new InvalidDownwardProtocolException(
+                                  "Invalid protocol type: " + protocolId)));
+      return downwardProtocolType.getDownwardProtocol();
+    } catch (PipeNotConnectedException e) {
+      throw e;
+    } catch (IOException e) {
+      throw new InvalidDownwardProtocolException(
+          "Unexpected exception during reading a protocol type", e);
+    }
   }
 
   /** Returns {@code DownwardProtocol}. */

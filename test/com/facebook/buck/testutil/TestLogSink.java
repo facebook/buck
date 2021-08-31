@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil;
 
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
@@ -64,8 +65,8 @@ public final class TestLogSink extends Handler implements TestRule {
   }
 
   /** Retrieve the log records that were published. */
-  public List<LogRecord> getRecords() {
-    return records;
+  public ImmutableList<LogRecord> getRecords() {
+    return ImmutableList.copyOf(records);
   }
 
   /**

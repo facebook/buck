@@ -10,6 +10,7 @@ java_library(
     name = "interfaces",
     srcs = glob(INTERFACES),
     visibility = ["PUBLIC"],
+    deps = ["//src/com/facebook/buck/util/types:types"],
 )
 
 java_library(
@@ -25,6 +26,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util/types:types",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",

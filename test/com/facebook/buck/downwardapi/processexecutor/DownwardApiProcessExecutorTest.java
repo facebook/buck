@@ -24,12 +24,10 @@ import static com.facebook.buck.downward.model.EventTypeMessage.EventType.STEP_E
 import static com.facebook.buck.downward.model.StepEvent.StepStatus.FINISHED;
 import static com.facebook.buck.downward.model.StepEvent.StepStatus.STARTED;
 import static com.facebook.buck.testutil.TestLogSink.logRecordWithMessage;
-import static com.facebook.buck.testutil.TestLogSink.logRecordWithMessageAndLevel;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -77,6 +75,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.SettableFakeClock;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -95,6 +94,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -106,8 +106,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.stream.Collectors;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -347,20 +350,16 @@ public class DownwardApiProcessExecutorTest {
     // verify error event
     verifyExternalEvent(events.get(5));
 
-    assertThat(
+    checkRecords(
         "Did not find debug log message about processing on a handler thread pool",
-        executorLogSink.getRecords(),
-        hasItem(
-            new LogRecordMatcher(Level.FINER) {
-
-              @Override
-              protected boolean marchesLogRecord(LogRecord logRecord) {
-                String message = logRecord.getMessage();
-                return message.contains("Processing event of type")
-                    && message.contains(
-                        "in the thread: " + DownwardApiProcessExecutor.HANDLER_THREAD_POOL_NAME);
-              }
-            }));
+        executorLogSink,
+        Level.FINER,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          return message.contains("Processing event of type")
+              && message.contains(
+                  "in the thread: " + DownwardApiProcessExecutor.HANDLER_THREAD_POOL_NAME);
+        });
 
     buckEventBus.unregister(listener);
   }
@@ -384,7 +383,10 @@ public class DownwardApiProcessExecutorTest {
                     // "u" is not a valid protocol
                     outputStream.write("u".getBytes(StandardCharsets.UTF_8));
                     outputStream.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
-                  } catch (Exception e) {
+                    outputStream.write("blah".getBytes(StandardCharsets.UTF_8));
+                    outputStream.write("blah-blah".getBytes(StandardCharsets.UTF_8));
+                    outputStream.write("blah-blah-blah".getBytes(StandardCharsets.UTF_8));
+                  } catch (IOException e) {
                     throw new RuntimeException(e);
                   }
                   return Optional.empty();
@@ -401,21 +403,108 @@ public class DownwardApiProcessExecutorTest {
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
 
-    assertThat(
+    checkRecords(
         "Did not find log message about unexpected protocol",
-        executorLogSink.getRecords(),
-        hasItem(
-            new LogRecordMatcher(Level.SEVERE) {
+        executorLogSink,
+        Level.SEVERE,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          if (!message.contains("Received invalid downward protocol message")) {
+            return false;
+          }
+          return logRecord.getThrown().getMessage().contains("Invalid protocol type: u");
+        });
 
+    checkRecords(
+        "Did not find log message about read and drop data from the input stream",
+        executorLogSink,
+        Level.FINE,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          return message.startsWith("Read and drop")
+              && message.endsWith("bytes from named pipe: " + namedPipeReader.getName());
+        });
+  }
+
+  private void checkRecords(
+      String errorMessage,
+      TestLogSink testLogSink,
+      Level level,
+      Function<LogRecord, Boolean> predicate)
+      throws InterruptedException {
+    waitTillEventsProcessed();
+    // give log events some time to arrive
+    TimeUnit.MILLISECONDS.sleep(100);
+    Predicate<LogRecord> nonNullPredicate = ((Predicate<LogRecord>) Objects::isNull).negate();
+    assertThat(
+        errorMessage,
+        testLogSink.getRecords().stream()
+            .filter(nonNullPredicate)
+            .filter(logRecord -> logRecord.getLevel().equals(level))
+            .collect(Collectors.toList()),
+        hasItem(
+            new LogRecordMatcher(level) {
               @Override
               public boolean marchesLogRecord(LogRecord logRecord) {
-                String message = logRecord.getMessage();
-                if (message.contains("Received invalid downward protocol")) {
-                  return logRecord.getThrown().getMessage().contains("Invalid protocol type: u");
-                }
-                return false;
+                return predicate.apply(logRecord);
               }
             }));
+  }
+
+  @Test
+  public void coupleOfValidEventsAndThenMalformedData() throws IOException, InterruptedException {
+    int fakeBytesToWrite = 100_000;
+    FakeProcess fakeProcess =
+        new FakeProcess(
+            1,
+            Optional.of(
+                () -> {
+                  try (NamedPipeWriter writer =
+                          NamedPipeFactory.getFactory()
+                              .connectAsWriter(Paths.get(namedPipeReader.getName()));
+                      OutputStream outputStream = writer.getOutputStream()) {
+                    for (String message : getMessages()) {
+                      outputStream.write(message.getBytes(StandardCharsets.UTF_8));
+                    }
+
+                    // invalid symbol
+                    outputStream.write(
+                        String.format("_%s", System.lineSeparator())
+                            .getBytes(StandardCharsets.UTF_8));
+                    // fake bytes
+                    for (int i = 0; i < fakeBytesToWrite; i++) {
+                      outputStream.write(i % 42);
+                    }
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                  return Optional.empty();
+                }));
+
+    DownwardApiProcessExecutor processExecutor =
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
+
+    DownwardApiExecutionResult result = launchAndExecute(processExecutor);
+    assertEquals("Process should exit with an exception", 1, result.getExitCode());
+    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
+    assertFalse(
+        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
+    assertNotNull("Named pipe has not been created!", namedPipeReader);
+    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+
+    checkRecords(
+        "Did not find log message about read and drop " + fakeBytesToWrite + " fake bytes",
+        executorLogSink,
+        Level.INFO,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          return message.equals(
+                  "Read and drop "
+                      + fakeBytesToWrite
+                      + " total bytes from named pipe: "
+                      + namedPipeReader.getName())
+              && message.endsWith("bytes from named pipe: " + namedPipeReader.getName());
+        });
   }
 
   @Test
@@ -444,16 +533,23 @@ public class DownwardApiProcessExecutorTest {
     assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
 
-    List<LogRecord> records = executorLogSink.getRecords();
-    assertThat(
-        records,
-        hasItems(
-            logRecordWithMessageAndLevel(
-                equalTo("Cannot connect to a named pipe: " + namedPipeReader.getName()),
-                Level.INFO),
-            logRecordWithMessageAndLevel(
-                equalTo("Named pipe " + namedPipeReader.getName() + " is already closed."),
-                Level.INFO)));
+    checkRecords(
+        "Did not find log message about cannot connect to named pipe",
+        executorLogSink,
+        Level.INFO,
+        logRecord ->
+            logRecord
+                .getMessage()
+                .equals("Cannot connect to a named pipe: " + namedPipeReader.getName()));
+
+    checkRecords(
+        "Did not find log message about pipe is already closed",
+        executorLogSink,
+        Level.INFO,
+        logRecord ->
+            logRecord
+                .getMessage()
+                .equals("Named pipe " + namedPipeReader.getName() + " is already closed."));
   }
 
   @Test
@@ -872,9 +968,9 @@ public class DownwardApiProcessExecutorTest {
     }
 
     @Override
-    public void prepareToClose(Future<Void> readyToClose)
+    public void prepareToClose(Future<Unit> readerFinished)
         throws IOException, ExecutionException, TimeoutException, InterruptedException {
-      ((NamedPipeServer) delegate).prepareToClose(readyToClose);
+      ((NamedPipeServer) delegate).prepareToClose(readerFinished);
     }
 
     @Override

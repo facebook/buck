@@ -16,6 +16,7 @@
 
 package com.facebook.buck.downwardapi.namedpipes;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EndEvent;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
@@ -24,6 +25,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.posix.POSIXServerNamedPipeReader;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -40,6 +42,8 @@ import javax.annotation.Nullable;
 /** {@link POSIXServerNamedPipeReader} specific to Downward API. */
 public class DownwardPOSIXServerNamedPipeReader extends POSIXServerNamedPipeReader
     implements NamedPipeServer, SupportsDownwardProtocol {
+
+  private static final Logger LOG = Logger.get(DownwardPOSIXServerNamedPipeReader.class);
 
   private static final long SHUTDOWN_TIMEOUT = 2;
   private static final TimeUnit SHUTDOWN_TIMEOUT_UNIT = TimeUnit.SECONDS;
@@ -80,8 +84,15 @@ public class DownwardPOSIXServerNamedPipeReader extends POSIXServerNamedPipeRead
    * waits until the handler signals that it has terminated.
    */
   @Override
-  public void prepareToClose(Future<Void> readyToClose)
+  public void prepareToClose(Future<Unit> readerFinished)
       throws IOException, ExecutionException, TimeoutException, InterruptedException {
+
+    if (readerFinished.isDone()) {
+      LOG.debug(
+          "Named pipe reader for %s is already finished. No need to send an end event.", getName());
+      return;
+    }
+
     try (NamedPipeWriter writer =
             NamedPipeFactory.getFactory().connectAsWriter(Paths.get(getName()));
         OutputStream outputStream = writer.getOutputStream()) {
@@ -100,7 +111,7 @@ public class DownwardPOSIXServerNamedPipeReader extends POSIXServerNamedPipeRead
           EventTypeMessage.newBuilder().setEventType(EventTypeMessage.EventType.END_EVENT).build(),
           EndEvent.getDefaultInstance(),
           outputStream);
-      readyToClose.get(SHUTDOWN_TIMEOUT, SHUTDOWN_TIMEOUT_UNIT);
+      readerFinished.get(SHUTDOWN_TIMEOUT, SHUTDOWN_TIMEOUT_UNIT);
     }
   }
 }

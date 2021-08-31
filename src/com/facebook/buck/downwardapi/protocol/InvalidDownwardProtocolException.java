@@ -25,4 +25,8 @@ public class InvalidDownwardProtocolException extends IllegalStateException {
   public InvalidDownwardProtocolException(String message) {
     super(message);
   }
+
+  public InvalidDownwardProtocolException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

@@ -8,6 +8,7 @@ java_library(
     deps = [
         "//src-gen:downward-model",
         "//src/com/facebook/buck/io/namedpipes:interfaces",
+        "//src/com/facebook/buck/core/util/log:log",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/protobuf:protobuf-util",

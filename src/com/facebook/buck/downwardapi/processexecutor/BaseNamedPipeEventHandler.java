@@ -31,7 +31,9 @@ import com.facebook.buck.downwardapi.protocol.InvalidDownwardProtocolException;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
+import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.NamedPipeEventHandler;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.protobuf.AbstractMessage;
@@ -45,6 +47,7 @@ import java.util.concurrent.Phaser;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 /**
@@ -98,7 +101,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   private final NamedPipeReader namedPipe;
   private final DownwardApiExecutionContext context;
   private final Phaser eventProcessingPhaser = new Phaser();
-  private final SettableFuture<Void> done = SettableFuture.create();
+  private final SettableFuture<Unit> readerFinished = SettableFuture.create();
 
   @Nullable private volatile DownwardProtocol downwardProtocol = null;
 
@@ -119,33 +122,89 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
 
   private void run() {
     String namedPipeName = namedPipe.getName();
-    try (InputStream inputStream = namedPipe.getInputStream()) {
-      LOGGER.debug("Trying to establish downward protocol for pipe %s", namedPipeName);
-      if (downwardProtocol == null) {
-        downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
-        LOGGER.debug(
-            "Starting to read events from named pipe %s with protocol %s",
-            namedPipeName, downwardProtocol.getProtocolName());
-      }
+    AtomicBoolean readerFinishedSuccessfully = new AtomicBoolean(false);
 
-      processEvents(namedPipeName, inputStream);
+    try (CloseableWrapper<InputStream> streamWrapper =
+        CloseableWrapper.of(
+            namedPipe.getInputStream(), is -> closeInputStream(is, readerFinishedSuccessfully))) {
+      InputStream inputStream = streamWrapper.get();
+      LOGGER.debug("Trying to establish downward protocol for pipe %s", namedPipeName);
+      maybeReadProtocol(inputStream);
+      LOGGER.debug(
+          "Starting to read events from named pipe %s with protocol %s",
+          namedPipeName, downwardProtocol.getProtocolName());
+      processEvents(inputStream);
       LOGGER.debug(
           "Finishing reader thread for pipe: %s; interrupted = %s",
           namedPipeName, Thread.currentThread().isInterrupted());
+      readerFinishedSuccessfully.set(true);
     } catch (PipeNotConnectedException e) {
       LOGGER.info(e, "Cannot connect to a named pipe: %s", namedPipeName);
     } catch (IOException e) {
-      LOGGER.error(e, "Cannot read from named pipe: %s", namedPipeName);
+      LOGGER.error(e, "Cannot open stream from named pipe: %s", namedPipeName);
     } catch (InvalidDownwardProtocolException e) {
-      LOGGER.error(e, "Received invalid downward protocol");
+      LOGGER.error(e, "Received invalid downward protocol message");
     } catch (Exception e) {
       LOGGER.warn(e, "Unhandled exception while reading from named pipe: %s", namedPipeName);
     } finally {
-      done.set(null);
+      readerFinished.set(Unit.UNIT);
     }
   }
 
-  private void processEvents(String namedPipeName, InputStream inputStream) {
+  private void closeInputStream(InputStream inputStream, AtomicBoolean readerFinishedSuccessfully) {
+    readerFinished.set(Unit.UNIT);
+    if (!readerFinishedSuccessfully.get()) {
+      readAndDropFromInputStream(inputStream);
+    }
+    try {
+      inputStream.close();
+    } catch (IOException e) {
+      LOGGER.info(e, "Cannot close input stream from named pipe: %s", namedPipe.getName());
+    }
+  }
+
+  /**
+   * Read and drop the data from the passed input stream.
+   *
+   * <p>In case we have malformed data this event handler (the reader) can't parse, we still need to
+   * flush everything from pipe to bypass a potential writing deadlock from the writer tool side, as
+   * pipe's buffer is limited and we do need to have a reader to flush the buffer and unblock the
+   * writer.
+   *
+   * <p>See: https://man7.org/linux/man-pages/man7/pipe.7.html
+   *
+   * <p>A pipe has a limited capacity. If the pipe is full, then a write(2) will block or fail.
+   * Applications should not rely on a particular capacity: an application should be designed so
+   * that a reading process consumes data as soon as it is available, so that a writing process does
+   * not remain blocked.
+   */
+  private void readAndDropFromInputStream(InputStream inputStream) {
+    String namedPipeName = namedPipe.getName();
+    long totalBytesRead = 0;
+    try {
+      byte[] buffer = new byte[1024];
+      int count;
+      while ((count = inputStream.read(buffer)) != -1) {
+        LOGGER.debug("Read and drop %s bytes from named pipe: %s", count, namedPipeName);
+        totalBytesRead += count;
+      }
+    } catch (PipeNotConnectedException e) {
+      LOGGER.info(e, "Named pipe `%s` is closed", namedPipeName);
+    } catch (IOException e) {
+      LOGGER.warn(e, "Cannot read and drop from named pipe: %s", namedPipeName);
+    }
+    LOGGER.info("Read and drop %s total bytes from named pipe: %s", totalBytesRead, namedPipeName);
+  }
+
+  private void maybeReadProtocol(InputStream inputStream)
+      throws PipeNotConnectedException, InvalidDownwardProtocolException {
+    if (downwardProtocol == null) {
+      downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
+    }
+  }
+
+  private void processEvents(InputStream inputStream) {
+    String namedPipeName = namedPipe.getName();
     while (true) {
       try {
         EventType eventType =
@@ -225,7 +284,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
     NamedPipeServer namedPipeServer = (NamedPipeServer) namedPipe;
     maybeSetProtocol(namedPipeServer);
     try {
-      namedPipeServer.prepareToClose(done);
+      namedPipeServer.prepareToClose(readerFinished);
     } catch (IOException e) {
       LOGGER.warn(e, "Failed to prepare to close named pipe.");
     }

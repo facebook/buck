@@ -27,6 +27,7 @@ import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.facebook.buck.util.CloseableWrapper;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.sun.jna.platform.win32.Kernel32;
@@ -206,7 +207,7 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
    * even upon reconnection.
    */
   @Override
-  public void prepareToClose(Future<Void> readyToClose)
+  public void prepareToClose(Future<Unit> readerFinished)
       throws InterruptedException, ExecutionException, TimeoutException {
 
     boolean connectedHandlesEmpty;
@@ -231,7 +232,7 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
         try {
           // After flushing, we need to wait until the handler thread finishes reading everything
           // before disconnecting.
-          readyToClose.get(WAIT_FOR_HANDLER_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+          readerFinished.get(WAIT_FOR_HANDLER_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
         } finally {
           closeConnectedPipe(connectedHandle, true);
         }

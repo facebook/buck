@@ -16,9 +16,6 @@
 
 package com.facebook.buck.downwardapi.testutil;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-
 import com.facebook.buck.io.namedpipes.windows.handle.DefaultWindowsHandleFactory;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
 import com.google.common.base.Preconditions;
@@ -42,12 +39,11 @@ public class TestWindowsHandleFactory extends DefaultWindowsHandleFactory {
 
   /** Verifies that all created windows handles are closed. */
   public void verifyAllCreatedHandlesClosed() {
-    assertThat(createdWindowsHandles.isEmpty(), equalTo(false));
     Predicate<WindowsHandle> isClosed = WindowsHandle::isClosed;
     boolean allClosed = createdWindowsHandles.stream().allMatch(isClosed);
     Preconditions.checkState(
         allClosed,
-        "Some of the created WindowsHandle has not been closed. Not closed handles:"
+        "Some of the created WindowsHandle has not been closed. Not closed handles: "
             + createdWindowsHandles.stream()
                 .filter(isClosed.negate())
                 .map(Objects::toString)
@@ -55,6 +51,6 @@ public class TestWindowsHandleFactory extends DefaultWindowsHandleFactory {
     int numberOfOpenedHandles = WindowsHandle.getNumberOfOpenedHandles();
     Preconditions.checkState(
         numberOfOpenedHandles == 0,
-        "Number of opened handles: " + numberOfOpenedHandles + " is different from 0");
+        "Number of opened handles: " + numberOfOpenedHandles + " is not 0");
   }
 }

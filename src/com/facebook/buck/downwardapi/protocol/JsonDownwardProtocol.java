@@ -18,6 +18,7 @@ package com.facebook.buck.downwardapi.protocol;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.ConsoleEvent;
 import com.facebook.buck.downward.model.EndEvent;
@@ -38,6 +39,8 @@ import java.io.OutputStream;
 /** Json implementation of Downward API Protocol. */
 enum JsonDownwardProtocol implements DownwardProtocol {
   INSTANCE;
+
+  private static final Logger LOG = Logger.get(JsonDownwardProtocol.class);
 
   private static final String PROTOCOL_NAME = "json";
 
@@ -78,7 +81,8 @@ enum JsonDownwardProtocol implements DownwardProtocol {
   }
 
   private String readJsonObjectAsString(InputStream inputStream) throws IOException {
-    int length = DownwardProtocolUtils.readFromStream(inputStream, Integer::parseInt);
+    int length = DownwardProtocolUtils.readFromStream(inputStream, s -> toLength(s));
+
     byte[] buffer = new byte[length];
     int bytesRead = inputStream.read(buffer);
     if (bytesRead != length) {
@@ -90,6 +94,16 @@ enum JsonDownwardProtocol implements DownwardProtocol {
               + " bytes instead.");
     }
     return new String(buffer, UTF_8);
+  }
+
+  private int toLength(String s) throws InvalidDownwardProtocolException {
+    try {
+      return Integer.parseInt(s);
+    } catch (NumberFormatException e) {
+      LOG.warn("Expected to read a number that represents a json message length, but read: %s", s);
+      // expected integer number, but got something else.
+      throw new InvalidDownwardProtocolException("Expected to read an integer number", e);
+    }
   }
 
   private Message.Builder getMessageBuilder(EventTypeMessage.EventType eventType) {
