@@ -103,7 +103,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   private final Phaser eventProcessingPhaser = new Phaser();
   private final SettableFuture<Unit> readerFinished = SettableFuture.create();
 
-  @Nullable private volatile DownwardProtocol downwardProtocol = null;
+  @Nullable private DownwardProtocol downwardProtocol = null;
 
   public BaseNamedPipeEventHandler(NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
     this.namedPipe = namedPipe;
@@ -129,7 +129,8 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
             namedPipe.getInputStream(), is -> closeInputStream(is, readerFinishedSuccessfully))) {
       InputStream inputStream = streamWrapper.get();
       LOGGER.debug("Trying to establish downward protocol for pipe %s", namedPipeName);
-      maybeReadProtocol(inputStream);
+      checkState(downwardProtocol == null);
+      downwardProtocol = readProtocol(inputStream);
       LOGGER.debug(
           "Starting to read events from named pipe %s with protocol %s",
           namedPipeName, downwardProtocol.getProtocolName());
@@ -196,11 +197,9 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
     LOGGER.info("Read and drop %s total bytes from named pipe: %s", totalBytesRead, namedPipeName);
   }
 
-  private void maybeReadProtocol(InputStream inputStream)
+  private DownwardProtocol readProtocol(InputStream inputStream)
       throws PipeNotConnectedException, InvalidDownwardProtocolException {
-    if (downwardProtocol == null) {
-      downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
-    }
+    return DownwardProtocolType.readProtocol(inputStream);
   }
 
   private void processEvents(InputStream inputStream) {
@@ -294,7 +293,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
     if (namedPipeServer instanceof SupportsDownwardProtocol) {
       SupportsDownwardProtocol supportsDownwardProtocol =
           (SupportsDownwardProtocol) namedPipeServer;
-      if (supportsDownwardProtocol.getProtocol() == null) {
+      if (supportsDownwardProtocol.getProtocol() == null && downwardProtocol != null) {
         supportsDownwardProtocol.setProtocol(downwardProtocol);
       }
     }
