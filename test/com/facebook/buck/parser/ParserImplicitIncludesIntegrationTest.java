@@ -16,36 +16,20 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.collect.ImmutableList;
-import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class ParserImplicitIncludesIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
-
-  @Parameterized.Parameters(name = "{0}")
-  public static Collection<Object[]> getParsers() {
-    return ImmutableList.of(new Object[] {Syntax.PYTHON_DSL}, new Object[] {Syntax.SKYLARK});
-  }
-
-  @Parameterized.Parameter(value = 0)
-  public Syntax syntax;
 
   @Test
   public void smoke() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "parser_implicit_includes", temporaryFolder);
-    workspace.addBuckConfigLocalOption(
-        "parser", "default_build_file_syntax_deprecated", syntax.name());
     workspace.setUp();
 
     workspace.runBuckBuild("//:foo").assertSuccess();

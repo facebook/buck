@@ -65,7 +65,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
 /** Can be used to create {@link PerBuildState}. */
 public class PerBuildStateFactory {
@@ -128,10 +127,9 @@ public class PerBuildStateFactory {
     }
   }
 
-  private PerBuildState create(
-      ParsingContext parsingContext,
-      DaemonicParserState daemonicParserState,
-      Optional<AtomicLong> parseProcessedBytes) {
+  /** Constructor. */
+  public PerBuildState create(
+      ParsingContext parsingContext, DaemonicParserState daemonicParserState) {
 
     // Here we acquired validation token.
     // At this moment we already handled watchman event, so
@@ -159,7 +157,6 @@ public class PerBuildStateFactory {
             typeCoercerFactory,
             parserPythonInterpreterProvider,
             parsingContext.isProfilingEnabled(),
-            parseProcessedBytes,
             knownRuleTypesProvider);
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
@@ -385,17 +382,5 @@ public class PerBuildStateFactory {
                     GlobalStateManager.singleton().getThreadToCommandRegister()))
             .build(),
         concurrencyLimit.managedThreadCount);
-  }
-
-  public PerBuildState create(
-      ParsingContext parsingContext, DaemonicParserState daemonicParserState) {
-    return create(parsingContext, daemonicParserState, Optional.empty());
-  }
-
-  public PerBuildState create(
-      ParsingContext parsingContext,
-      DaemonicParserState daemonicParserState,
-      AtomicLong processedBytes) {
-    return create(parsingContext, daemonicParserState, Optional.of(processedBytes));
   }
 }

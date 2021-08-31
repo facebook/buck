@@ -1,3 +1,0 @@
-load("//errors/udr_call_in_bzl:example_rule_reexport.bzl", "example_rule")
-
-example_rule(name = "example")

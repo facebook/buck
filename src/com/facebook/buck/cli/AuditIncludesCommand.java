@@ -65,7 +65,6 @@ public class AuditIncludesCommand extends AbstractCommand {
     try (ProjectBuildFileParser parser =
         new DefaultProjectBuildFileParserFactory(
                 new DefaultTypeCoercerFactory(),
-                params.getConsole(),
                 new ParserPythonInterpreterProvider(
                     params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getKnownRuleTypesProvider())

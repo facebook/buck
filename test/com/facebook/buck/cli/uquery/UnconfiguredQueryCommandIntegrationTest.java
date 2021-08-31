@@ -27,37 +27,22 @@ import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.ThriftOutputUtils;
-import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
 import com.facebook.buck.testutil.OutputHelper;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class UnconfiguredQueryCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private final Syntax syntax;
-
-  public UnconfiguredQueryCommandIntegrationTest(Syntax syntax) {
-    this.syntax = syntax;
-  }
-
-  @Parameterized.Parameters(name = "{0}")
-  public static Collection<Syntax> syntaxes() {
-    return ImmutableList.copyOf(Syntax.values());
-  }
+  public UnconfiguredQueryCommandIntegrationTest() {}
 
   /**
    * =============================================================================================
@@ -76,8 +61,6 @@ public class UnconfiguredQueryCommandIntegrationTest {
   private ProjectWorkspace createProjectWorkspaceForScenario(String scenario) throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
-    workspace.addBuckConfigLocalOption(
-        "parser", "default_build_file_syntax_deprecated", syntax.name());
     return workspace;
   }
 

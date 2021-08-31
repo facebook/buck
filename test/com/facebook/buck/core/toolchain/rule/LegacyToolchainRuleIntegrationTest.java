@@ -59,7 +59,6 @@ public class LegacyToolchainRuleIntegrationTest {
     cscTarget = Platform.detect().getType().isWindows() ? "//:dummy_csc.bat" : "//:dummy_csc.sh";
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "legacy_toolchain", tmp);
     workspace.addBuckConfigLocalOption("dotnet", "csc", cscTarget);
-    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax_deprecated", "skylark");
     workspace.addBuckConfigLocalOption("parser", "user_defined_rules", "enabled");
     workspace.addBuckConfigLocalOption("rule_analysis", "mode", "PROVIDER_COMPATIBLE");
     workspace.addBuckConfigLocalOption("download", "in_build", "true");

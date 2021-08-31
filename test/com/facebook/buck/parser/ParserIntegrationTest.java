@@ -27,26 +27,19 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(JUnitParamsRunner.class)
 public class ParserIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
@@ -478,17 +471,13 @@ public class ParserIntegrationTest {
         .runBuckBuild(
             "//skylark/implicit_in_build_file:main",
             "-c",
-            "parser.polyglot_parsing_enabled_deprecated=true",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=SKYLARK")
+            "parser.polyglot_parsing_enabled_deprecated=true")
         .assertSuccess();
     assertParseFailedWithSubstrings(
         workspace.runBuckBuild(
             "//skylark/implicit_in_extension_bzl:main",
             "-c",
-            "parser.polyglot_parsing_enabled_deprecated=true",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=SKYLARK"),
+            "parser.polyglot_parsing_enabled_deprecated=true"),
         "name 'java_library' is not defined",
         "extension.bzl:5",
         "BUCK:2");
@@ -496,33 +485,8 @@ public class ParserIntegrationTest {
         .runBuckBuild(
             "//skylark/native_in_extension_bzl:main",
             "-c",
-            "parser.polyglot_parsing_enabled_deprecated=true",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=SKYLARK")
+            "parser.polyglot_parsing_enabled_deprecated=true")
         .assertSuccess();
-  }
-
-  @Test
-  public void defaultSyntaxByDefault() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "parser_default_syntax_by_prefix", temporaryFolder);
-    workspace.setUp();
-
-    ImmutableList<Pair<String, String>> expected =
-        ImmutableList.of(
-            new Pair<>("//:g", "python"),
-            new Pair<>("//s:g", "starlark"),
-            new Pair<>("//p:g", "python"),
-            new Pair<>("//s/p:g", "python"));
-
-    for (Pair<String, String> targetExpectedPair : expected) {
-      String target = targetExpectedPair.getFirst();
-      Path output = workspace.buildAndReturnOutput(target);
-      List<String> outputLines = Files.readAllLines(output);
-      assertEquals(
-          "for target " + target, ImmutableList.of(targetExpectedPair.getSecond()), outputLines);
-    }
   }
 
   @Test
@@ -543,8 +507,7 @@ public class ParserIntegrationTest {
             this, "top_level_recursive_glob", temporaryFolder);
     workspace.setUp();
     assertParseFailedWithSubstrings(
-        workspace.runBuckCommand(
-            "build", "//:glob", "-c", "parser.default_build_file_syntax_deprecated=skylark"),
+        workspace.runBuckCommand("build", "//:glob"),
         "Recursive globs are prohibited at top-level directory");
   }
 
@@ -556,65 +519,46 @@ public class ParserIntegrationTest {
     workspace.runBuckBuild("//...").assertSuccess();
   }
 
-  private Syntax[] syntaxes() {
-    return Syntax.values();
-  }
-
   @Test
-  @Parameters(method = "syntaxes")
-  public void sha256(Syntax syntax) throws Exception {
+  public void sha256() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sha256", temporaryFolder);
     workspace.setUp();
-    workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
-        .assertSuccess();
+    workspace.runBuckBuild("//...").assertSuccess();
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void notJustList(Syntax syntax) throws Exception {
+  public void notJustList() throws Exception {
     // Check that parsers accept any sequence, not just list when parameter is list.
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "not_just_list", temporaryFolder);
     workspace.setUp();
-    workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
-        .assertSuccess();
+    workspace.runBuckBuild("//...").assertSuccess();
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void loadSymbols(Syntax syntax) throws Exception {
+  public void loadSymbols() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "load_symbols", temporaryFolder);
     workspace.setUp();
-    workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
-        .assertSuccess();
+    workspace.runBuckBuild("//...").assertSuccess();
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void partial(Syntax syntax) throws Exception {
+  public void partial() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "partial", temporaryFolder);
     workspace.setUp();
-    workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
-        .assertSuccess();
+    workspace.runBuckBuild("//...").assertSuccess();
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void select_introspection(Syntax syntax) throws Exception {
+  public void select_introspection() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "select_introspection", temporaryFolder);
     workspace.setUp();
-    workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
-        .assertSuccess();
+    workspace.runBuckBuild("//...").assertSuccess();
   }
 
   @Ignore // There's no `get_base_path` function in Starlark
@@ -631,76 +575,50 @@ public class ParserIntegrationTest {
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void readConfigTopLevel(Syntax syntax) throws Exception {
+  public void readConfigTopLevel() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "read_config", temporaryFolder);
     workspace.setUp();
     ProcessResult result =
-        workspace
-            .runBuckBuild(
-                "//:",
-                "-c",
-                "parser.default_build_file_syntax_deprecated=" + syntax,
-                "-c",
-                "foo.bar=br",
-                "-c",
-                "foo.baz=bz")
-            .assertSuccess();
+        workspace.runBuckBuild("//:", "-c", "foo.bar=br", "-c", "foo.baz=bz").assertSuccess();
     assertThat(result.getStderr(), containsString("bar = br, baz = bz"));
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void recursion(Syntax syntax) throws Exception {
+  public void recursion() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "recursion", temporaryFolder);
     workspace.setUp();
-    ProcessResult result =
-        workspace
-            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
-            .assertSuccess();
+    ProcessResult result = workspace.runBuckBuild("//:").assertSuccess();
     assertThat(result.getStderr(), containsString("factorial of 5 is 120"));
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void loadTwiceFromBuck(Syntax syntax) throws Exception {
+  public void loadTwiceFromBuck() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "load_twice_from_buck", temporaryFolder);
     workspace.setUp();
-    ProcessResult result =
-        workspace
-            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
-            .assertSuccess();
+    ProcessResult result = workspace.runBuckBuild("//:").assertSuccess();
     assertThat(result.getStderr(), containsString("x=1 y=2 z=3 w=4"));
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void loadTwiceFromBzl(Syntax syntax) throws Exception {
+  public void loadTwiceFromBzl() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "load_twice_from_bzl", temporaryFolder);
     workspace.setUp();
-    ProcessResult result =
-        workspace
-            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
-            .assertSuccess();
+    ProcessResult result = workspace.runBuckBuild("//:").assertSuccess();
     assertThat(result.getStderr(), containsString("x=1 y=2 z=3 w=4"));
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void reexport(Syntax syntax) throws Exception {
+  public void reexport() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "reexport", temporaryFolder);
     workspace.setUp();
-    ProcessResult result =
-        workspace
-            .runBuckBuild("//:", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
-            .assertSuccess();
+    ProcessResult result = workspace.runBuckBuild("//:").assertSuccess();
     assertThat(result.getStderr(), containsString("x = 17"));
   }
 
@@ -715,25 +633,19 @@ public class ParserIntegrationTest {
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void selectEqual(Syntax syntax) throws Exception {
+  public void selectEqual() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "select_equal", temporaryFolder);
     workspace.setUp();
-    workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
-        .assertSuccess();
+    workspace.runBuckBuild("//...").assertSuccess();
   }
 
   @Test
-  @Parameters(method = "syntaxes")
-  public void selectAdd(Syntax syntax) throws Exception {
+  public void selectAdd() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "select_add", temporaryFolder);
     workspace.setUp();
-    workspace
-        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax_deprecated=" + syntax)
-        .assertSuccess();
+    workspace.runBuckBuild("//...").assertSuccess();
   }
 
   @Test

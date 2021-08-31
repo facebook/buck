@@ -836,7 +836,6 @@ public class HttpArchiveIntegrationTest {
     workspace.setUp();
     rewriteBuckFileTemplate(workspace);
 
-    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax_deprecated", "skylark");
     workspace.addBuckConfigLocalOption("parser", "user_defined_rules", "enabled");
     workspace.addBuckConfigLocalOption("rule_analysis", "mode", "PROVIDER_COMPATIBLE");
     workspace.addBuckConfigLocalOption("download", "in_build", "true");

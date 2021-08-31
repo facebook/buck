@@ -26,7 +26,6 @@ import com.facebook.buck.testutil.endtoend.EndToEndTestDescriptor;
 import com.facebook.buck.testutil.endtoend.EndToEndWorkspace;
 import com.facebook.buck.testutil.endtoend.Environment;
 import com.facebook.buck.testutil.endtoend.EnvironmentFor;
-import com.google.common.collect.ImmutableMap;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,14 +38,7 @@ public class BaseDirEndToEndTest {
 
   @Environment
   public static EndToEndEnvironment getBaseDirSetEnvironment() {
-    return new EndToEndEnvironment()
-        .withCommand("build")
-        .addLocalConfigSet(
-            ImmutableMap.of(
-                "parser", ImmutableMap.of("default_build_file_syntax_deprecated", "SKYLARK")))
-        .addLocalConfigSet(
-            ImmutableMap.of(
-                "parser", ImmutableMap.of("default_build_file_syntax_deprecated", "PYTHON_DSL")));
+    return new EndToEndEnvironment().withCommand("build");
   }
 
   @EnvironmentFor(testNames = {"usingBaseDirShouldNotTouchBuckOutDir"})

@@ -1,4 +1,0 @@
-[parser]
-    polyglot_parsing_enabled_deprecated = true
-    default_build_file_syntax_by_prefix_deprecated = s/p => PYTHON_DSL, s => SKYLARK
-    default_build_file_syntax_deprecated = PYTHON_DSL

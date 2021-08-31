@@ -34,14 +34,10 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.json.TargetCountVerificationParserDecorator;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
-import com.facebook.buck.parser.api.Syntax;
-import com.facebook.buck.parser.api.UserDefinedRuleLoader;
-import com.facebook.buck.parser.config.DefaultBuildFileSyntaxMapping;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.config.ParserConfig.SkylarkGlobHandler;
 import com.facebook.buck.parser.decorators.EventReportingProjectBuildFileParser;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.function.SkylarkBuildModule;
 import com.facebook.buck.skylark.io.GlobberFactory;
@@ -50,68 +46,43 @@ import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.parser.BuckGlobals;
 import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
 
 public class DefaultProjectBuildFileParserFactory implements ProjectBuildFileParserFactory {
   private final TypeCoercerFactory typeCoercerFactory;
-  private final Console console;
   private final ParserPythonInterpreterProvider pythonInterpreterProvider;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final boolean enableProfiling;
-  private final Optional<AtomicLong> processedBytes;
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
-      Console console,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      boolean enableProfiling,
-      Optional<AtomicLong> processedBytes) {
+      boolean enableProfiling) {
     this.typeCoercerFactory = typeCoercerFactory;
-    this.console = console;
     this.pythonInterpreterProvider = pythonInterpreterProvider;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.enableProfiling = enableProfiling;
-    this.processedBytes = processedBytes;
   }
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       boolean enableProfiling,
-      Optional<AtomicLong> processedBytes,
       KnownRuleTypesProvider knownRuleTypesProvider) {
-    this(
-        typeCoercerFactory,
-        Console.createNullConsole(),
-        pythonInterpreterProvider,
-        knownRuleTypesProvider,
-        enableProfiling,
-        processedBytes);
+    this(typeCoercerFactory, pythonInterpreterProvider, knownRuleTypesProvider, enableProfiling);
   }
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
-      Console console,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
       KnownRuleTypesProvider knownRuleTypesProvider) {
-    this(
-        typeCoercerFactory,
-        console,
-        pythonInterpreterProvider,
-        knownRuleTypesProvider,
-        false,
-        Optional.empty());
+    this(typeCoercerFactory, pythonInterpreterProvider, knownRuleTypesProvider, false);
   }
 
   /**
@@ -162,13 +133,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .build();
     return EventReportingProjectBuildFileParser.of(
         createProjectBuildFileParser(
-            cell,
-            typeCoercerFactory,
-            console,
-            eventBus,
-            parserConfig,
-            buildFileParserOptions,
-            threadSafe),
+            cell, typeCoercerFactory, eventBus, parserConfig, buildFileParserOptions),
         eventBus);
   }
 
@@ -186,11 +151,9 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private ProjectBuildFileParser createProjectBuildFileParser(
       Cell cell,
       TypeCoercerFactory typeCoercerFactory,
-      Console console,
       BuckEventBus eventBus,
       ParserConfig parserConfig,
-      ProjectBuildFileParserOptions buildFileParserOptions,
-      boolean threadSafe) {
+      ProjectBuildFileParserOptions buildFileParserOptions) {
     Preconditions.checkArgument(
         cell.getRoot().equals(buildFileParserOptions.getProjectRoot()),
         "cell '%s' root %s should be equal to parser options root %s",
@@ -198,77 +161,17 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         cell.getRoot(),
         buildFileParserOptions.getProjectRoot());
 
-    ProjectBuildFileParser parser;
-    DefaultBuildFileSyntaxMapping defaultBuildFileSyntax = parserConfig.getDefaultBuildFileSyntax();
-
     // Skylark parser is thread-safe, but Python parser is not, so whenever we instantiate
     // Python parser we wrap it with ConcurrentParser to get thread safety
 
-    if (parserConfig.isPolyglotParsingEnabled()) {
-      SkylarkProjectBuildFileParser skylark =
-          newSkylarkParser(
-              cell,
-              typeCoercerFactory,
-              knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
-              eventBus,
-              buildFileParserOptions,
-              parserConfig.getSkylarkGlobHandler());
-      Optional<UserDefinedRuleLoader> udrLoader = Optional.empty();
-      if (parserConfig.getUserDefinedRulesState() == UserDefinedRulesState.ENABLED) {
-        udrLoader = Optional.of(skylark);
-      }
-      parser =
-          HybridProjectBuildFileParser.using(
-              ImmutableMap.of(
-                  Syntax.PYTHON_DSL,
-                  newPythonParser(
-                      cell,
-                      typeCoercerFactory,
-                      console,
-                      eventBus,
-                      buildFileParserOptions,
-                      threadSafe,
-                      udrLoader),
-                  Syntax.SKYLARK,
-                  skylark),
-              defaultBuildFileSyntax,
-              cell.getRoot());
-    } else {
-      Optional<Syntax> onlySyntax = defaultBuildFileSyntax.getOnlySyntax();
-      if (!onlySyntax.isPresent()) {
-        throw new HumanReadableException(
-            "non-trivial default build file syntax can be only enabled when polyglot parsing enabled");
-      }
-      switch (onlySyntax.get()) {
-        case SKYLARK:
-          parser =
-              newSkylarkParser(
-                  cell,
-                  typeCoercerFactory,
-                  knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
-                  eventBus,
-                  buildFileParserOptions,
-                  parserConfig.getSkylarkGlobHandler());
-          break;
-        case PYTHON_DSL:
-          parser =
-              newPythonParser(
-                  cell,
-                  typeCoercerFactory,
-                  console,
-                  eventBus,
-                  buildFileParserOptions,
-                  threadSafe,
-                  Optional.empty());
-          break;
-        default:
-          throw new HumanReadableException(
-              defaultBuildFileSyntax
-                  + " is not supported by this version of Buck. Please update your Buck version or "
-                  + "change parser.default_build_file_syntax_deprecated configuration to one of "
-                  + Arrays.toString(Syntax.values()));
-      }
-    }
+    ProjectBuildFileParser parser =
+        newSkylarkParser(
+            cell,
+            typeCoercerFactory,
+            knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+            eventBus,
+            buildFileParserOptions,
+            parserConfig.getSkylarkGlobHandler());
 
     parser =
         createTargetCountingWrapper(
@@ -278,30 +181,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             buildFileParserOptions.getProjectRoot());
 
     return parser;
-  }
-
-  private ProjectBuildFileParser newPythonParser(
-      Cell cell,
-      TypeCoercerFactory typeCoercerFactory,
-      Console console,
-      BuckEventBus eventBus,
-      ProjectBuildFileParserOptions buildFileParserOptions,
-      boolean threadSafe,
-      Optional<UserDefinedRuleLoader> udrLoader) {
-    Supplier<ProjectBuildFileParser> parserSupplier =
-        () ->
-            new PythonDslProjectBuildFileParser(
-                buildFileParserOptions,
-                typeCoercerFactory,
-                cell.getBuckConfig().getEnvironment(),
-                eventBus,
-                new DefaultProcessExecutor(console),
-                processedBytes,
-                udrLoader);
-    if (!threadSafe) {
-      return parserSupplier.get();
-    }
-    return new ConcurrentProjectBuildFileParser(parserSupplier);
   }
 
   private static class StarlarkParserMapValue {

@@ -152,8 +152,7 @@ abstract class AbstractParser implements Parser {
       ParsingContext parsingContext, ImmutableSet<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException {
     AtomicLong processedBytes = new AtomicLong();
-    try (PerBuildState state =
-        perBuildStateFactory.create(parsingContext, permState, processedBytes)) {
+    try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
       return buildTargetGraph(state, toExplore, processedBytes);
     }
   }
@@ -282,8 +281,7 @@ abstract class AbstractParser implements Parser {
       throws BuildFileParseException, IOException, InterruptedException {
 
     AtomicLong processedBytes = new AtomicLong();
-    try (PerBuildState state =
-        perBuildStateFactory.create(parsingContext, permState, processedBytes)) {
+    try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
 
       ImmutableSet<BuildTarget> buildTargets =
           collectBuildTargetsFromTargetNodeSpecs(

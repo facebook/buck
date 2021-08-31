@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -45,7 +44,6 @@ import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,28 +57,20 @@ public class SkylarkUserDefinedRuleIntegrationTest {
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
     return ImmutableList.of(
-        new Object[] {"SKYLARK_WITHOUT_VERSIONS", Syntax.SKYLARK, false},
-        new Object[] {"SKYLARK_WITH_VERSIONS", Syntax.SKYLARK, true},
-        new Object[] {"PYTHON_DSL_WITHOUT_VERSIONS", Syntax.PYTHON_DSL, false},
-        new Object[] {"PYTHON_DSL_WITH_VERSIONS", Syntax.PYTHON_DSL, true});
+        new Object[] {"SKYLARK_WITHOUT_VERSIONS", false},
+        new Object[] {"SKYLARK_WITH_VERSIONS", true});
   }
 
   @Parameterized.Parameter(value = 0)
   public String testName;
 
   @Parameterized.Parameter(value = 1)
-  public Syntax buildFileSyntax;
-
-  @Parameterized.Parameter(value = 2)
   public boolean useVersions;
 
   ProjectWorkspace setupWorkspace(String scenario) throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOption(
-        "parser", "default_build_file_syntax_deprecated", buildFileSyntax.name());
-    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled_deprecated", "true");
     if (useVersions) {
       workspace.addBuckConfigLocalOption("build", "versions", "true");
     }
@@ -433,100 +423,6 @@ public class SkylarkUserDefinedRuleIntegrationTest {
             BuildPaths.getGenDir(
                     filesystem.getBuckPaths(), BuildTargetFactory.newInstance("//:with_deps"))
                 .resolve("out2.txt")));
-  }
-
-  @Test
-  public void failsWhenInvalidArgTypesGiven() throws IOException {
-    // Broken in Python DSL because RunInfo is not available in Python DSL,
-    // but TODO(nga) here is to remove Python DSL from Buck.
-    Assume.assumeTrue(buildFileSyntax == Syntax.SKYLARK);
-
-    ProjectWorkspace workspace = setupWorkspace("args");
-
-    assertEquals(
-        ImmutableList.of("1", "--foo", "bar", "1", "2", "3", "4", "5", "6", "7", "8", "9"),
-        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:add")));
-    assertEquals(
-        ImmutableList.of("1", "2", "--foo", "bar", "1", "2", "3", "4", "5", "6", "7", "8", "9"),
-        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:add_all")));
-    assertEquals(
-        ImmutableList.of("2", "--foo"),
-        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:init")));
-    assertEquals(
-        ImmutableList.of("1", "2", "3"),
-        workspace
-            .getProjectFileSystem()
-            .readLines(workspace.buildAndReturnOutput("//:init_cliargs")));
-    assertEquals(
-        ImmutableList.of("1", "2", "3", "2", "--foo", "bar"),
-        workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:init_list")));
-    assertEquals(
-        ImmutableList.of("1", "--prefix=--foo", "--prefix=bar"),
-        workspace
-            .getProjectFileSystem()
-            .readLines(workspace.buildAndReturnOutput("//:add_format")));
-    assertEquals(
-        ImmutableList.of("1", "--prefix=2", "--prefix=--foo", "--prefix=bar"),
-        workspace
-            .getProjectFileSystem()
-            .readLines(workspace.buildAndReturnOutput("//:add_all_format")));
-    assertEquals(
-        ImmutableList.of("--prefix=2", "--prefix=--foo", "--prefix=bar"),
-        workspace
-            .getProjectFileSystem()
-            .readLines(workspace.buildAndReturnOutput("//:init_list_format")));
-    assertEquals(
-        ImmutableList.of("--prefix=2", "--other=--foo"),
-        workspace
-            .getProjectFileSystem()
-            .readLines(workspace.buildAndReturnOutput("//:init_format")));
-
-    assertThat(
-        workspace.runBuckBuild("//:add_failure").assertFailure().getStderr(),
-        Matchers.containsString("got value of type 'list', want"));
-    assertThat(
-        workspace.runBuckBuild("//:add_all_failure").assertFailure().getStderr(),
-        Matchers.containsString("Invalid command line argument type"));
-    assertThat(
-        workspace.runBuckBuild("//:add_args_failure").assertFailure().getStderr(),
-        Matchers.containsString("got value of type 'args', want"));
-    assertThat(
-        workspace.runBuckBuild("//:add_all_args_failure").assertFailure().getStderr(),
-        Matchers.containsString("Invalid command line argument type"));
-    assertThat(
-        workspace.runBuckBuild("//:init_failure").assertFailure().getStderr(),
-        Matchers.containsString("Invalid command line argument type"));
-    assertThat(
-        workspace.runBuckBuild("//:init_list_failure").assertFailure().getStderr(),
-        Matchers.containsString("Invalid command line argument type"));
-    assertThat(
-        workspace.runBuckBuild("//:unbound_add_failure").assertFailure().getStderr(),
-        Matchers.containsString("was not used as the output to an action"));
-    assertThat(
-        workspace.runBuckBuild("//:unbound_add_all_failure").assertFailure().getStderr(),
-        Matchers.containsString("was not used as the output to an action"));
-    assertThat(
-        workspace.runBuckBuild("//:unbound_init_failure").assertFailure().getStderr(),
-        Matchers.containsString("was not used as the output to an action"));
-    assertThat(
-        workspace.runBuckBuild("//:unbound_init_list_failure").assertFailure().getStderr(),
-        Matchers.containsString("was not used as the output to an action"));
-
-    assertThat(
-        workspace.runBuckBuild("//:add_empty_format").assertFailure().getStderr(),
-        Matchers.containsString("must be a format string with one or more occurrences"));
-
-    assertThat(
-        workspace.runBuckBuild("//:add_all_empty_format").assertFailure().getStderr(),
-        Matchers.containsString("must be a format string with one or more occurrences"));
-
-    assertThat(
-        workspace.runBuckBuild("//:init_empty_format").assertFailure().getStderr(),
-        Matchers.containsString("must be a format string with one or more occurrences"));
-
-    assertThat(
-        workspace.runBuckBuild("//:init_list_empty_format").assertFailure().getStderr(),
-        Matchers.containsString("must be a format string with one or more occurrences"));
   }
 
   private static ImmutableList<String> splitStderr(ProcessResult result) {

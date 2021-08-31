@@ -1,3 +1,0 @@
-load("//simple:simple_rule.bzl", "simple_rule")
-
-simple_rule(name = "missing_mandatory", mandatory = 3, extra_parameter = "something")

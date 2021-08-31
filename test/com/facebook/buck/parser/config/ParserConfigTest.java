@@ -22,16 +22,13 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
-import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +39,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -232,107 +228,6 @@ public class ParserConfigTest {
             ImplicitInclude.fromConfigurationString("//foo/bar:includes.bzl::get_name::get_value"));
 
     assertEquals(expected, actual);
-  }
-
-  @Test
-  public void userDefinedRulesState() throws IOException {
-    assertEquals(UserDefinedRulesState.DISABLED, getDefaultConfig().getUserDefinedRulesState());
-
-    ImmutableList<ImmutableList<Object>> permutations =
-        ImmutableList.of(
-            ImmutableList.of(
-                "false", "python_dsl", "DISABLED", "DISABLED", UserDefinedRulesState.DISABLED),
-            ImmutableList.of(
-                "false", "skylark", "DISABLED", "DISABLED", UserDefinedRulesState.DISABLED),
-            ImmutableList.of(
-                "true", "python_dsl", "DISABLED", "DISABLED", UserDefinedRulesState.DISABLED),
-            ImmutableList.of(
-                "true", "skylark", "DISABLED", "DISABLED", UserDefinedRulesState.DISABLED),
-            ImmutableList.of(
-                "false",
-                "python_dsl",
-                "PROVIDER_COMPATIBLE",
-                "DISABLED",
-                UserDefinedRulesState.DISABLED),
-            ImmutableList.of(
-                "false",
-                "skylark",
-                "PROVIDER_COMPATIBLE",
-                "DISABLED",
-                UserDefinedRulesState.DISABLED),
-            ImmutableList.of(
-                "true",
-                "python_dsl",
-                "PROVIDER_COMPATIBLE",
-                "DISABLED",
-                UserDefinedRulesState.DISABLED),
-            ImmutableList.of(
-                "true",
-                "skylark",
-                "PROVIDER_COMPATIBLE",
-                "DISABLED",
-                UserDefinedRulesState.DISABLED),
-            ImmutableList.of(
-                "false", "python_dsl", "DISABLED", "ENABLED", "rule analysis is disabled"),
-            ImmutableList.of(
-                "false", "skylark", "DISABLED", "ENABLED", "rule analysis is disabled"),
-            ImmutableList.of(
-                "true", "python_dsl", "DISABLED", "ENABLED", "rule analysis is disabled"),
-            ImmutableList.of("true", "skylark", "DISABLED", "ENABLED", "rule analysis is disabled"),
-            ImmutableList.of(
-                "false",
-                "python_dsl",
-                "PROVIDER_COMPATIBLE",
-                "ENABLED",
-                "parser is not either polyglot"),
-            ImmutableList.of(
-                "false",
-                "skylark",
-                "PROVIDER_COMPATIBLE",
-                "ENABLED",
-                UserDefinedRulesState.ENABLED),
-            ImmutableList.of(
-                "true",
-                "python_dsl",
-                "PROVIDER_COMPATIBLE",
-                "ENABLED",
-                UserDefinedRulesState.ENABLED),
-            ImmutableList.of(
-                "true",
-                "skylark",
-                "PROVIDER_COMPATIBLE",
-                "ENABLED",
-                UserDefinedRulesState.ENABLED));
-
-    for (ImmutableList<Object> permutation : permutations) {
-      ParserConfig config =
-          parseConfig(
-              "[parser]",
-              String.format("polyglot_parsing_enabled_deprecated = %s", permutation.get(0)),
-              String.format("default_build_file_syntax_deprecated = %s", permutation.get(1)),
-              "[rule_analysis]",
-              String.format("mode = %s", permutation.get(2)),
-              "[parser]",
-              String.format("user_defined_rules = %s", permutation.get(3)));
-
-      Object expected = permutation.get(4);
-      String assertionMessage =
-          String.format("config %s", config.getDelegate().getConfig().getRawConfig().getValues());
-
-      if (expected instanceof String) {
-        try {
-          config.getUserDefinedRulesState();
-          fail("Expected exception for " + assertionMessage);
-        } catch (HumanReadableException e) {
-          assertThat(
-              assertionMessage,
-              e.getHumanReadableErrorMessage(),
-              Matchers.containsString((String) expected));
-        }
-      } else {
-        assertEquals(assertionMessage, expected, config.getUserDefinedRulesState());
-      }
-    }
   }
 
   private ParserConfig getDefaultConfig() {

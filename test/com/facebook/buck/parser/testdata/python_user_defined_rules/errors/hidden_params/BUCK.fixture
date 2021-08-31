@@ -1,3 +1,0 @@
-load("//simple:simple_rule.bzl", "simple_rule")
-
-simple_rule(name = "passing_implicit", _hidden = "should not be able to pass", mandatory = 5)

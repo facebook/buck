@@ -1,3 +1,0 @@
-load("//errors/shadowing_name:shadow.bzl", "shadow")
-
-shadow(name = "shadowed")

@@ -589,7 +589,6 @@ public class ParsePipelineTest {
                     new CloseRecordingProjectBuildFileParserDecorator(
                         new DefaultProjectBuildFileParserFactory(
                                 coercerFactory,
-                                console,
                                 new ParserPythonInterpreterProvider(
                                     input.getBuckConfig(), new ExecutableFinder()),
                                 TestKnownRuleTypesProvider.create(

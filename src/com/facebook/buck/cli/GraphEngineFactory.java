@@ -107,7 +107,6 @@ public class GraphEngineFactory {
     ProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
             new DefaultTypeCoercerFactory(),
-            params.getConsole(),
             new ParserPythonInterpreterProvider(cell.getBuckConfig(), params.getExecutableFinder()),
             params.getKnownRuleTypesProvider());
 

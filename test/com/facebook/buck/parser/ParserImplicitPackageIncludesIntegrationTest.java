@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -29,25 +28,13 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collection;
 import java.util.stream.StreamSupport;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class ParserImplicitPackageIncludesIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
-
-  @Parameterized.Parameters(name = "{0}")
-  public static Collection<Object[]> getParsers() {
-    return ImmutableList.of(new Object[] {Syntax.PYTHON_DSL}, new Object[] {Syntax.SKYLARK});
-  }
-
-  @Parameterized.Parameter(value = 0)
-  public Syntax parser;
 
   @Test
   public void implicitPackageSymbolsAreVisible() throws IOException {
@@ -65,9 +52,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "//root/foo/bar:subdir__subdir",
             "//root/foo/bar/baz:subdir__subdir",
             "-c",
-            "buildfile.package_includes=root=>//root:name.bzl::NAME,root/foo/bar=>//root/foo/bar:name.bzl::NAME=SOME_OTHER_NAME",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=" + parser);
+            "buildfile.package_includes=root=>//root:name.bzl::NAME,root/foo/bar=>//root/foo/bar:name.bzl::NAME=SOME_OTHER_NAME");
 
     result.assertSuccess();
   }
@@ -82,11 +67,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
     // or the wrong functions are called, the targets just won't exist, and the query will fail.
     ProcessResult result =
         workspace.runBuckBuild(
-            "//root:cell__cell",
-            "-c",
-            "buildfile.package_includes=root=>@cell//:name.bzl::NAME",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=" + parser);
+            "//root:cell__cell", "-c", "buildfile.package_includes=root=>@cell//:name.bzl::NAME");
 
     result.assertSuccess();
   }
@@ -106,9 +87,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "//default/no_symbol:root__root", // Invalid/missing symbol
             "//default/has_symbol:some_name__some_name", // symbol is present
             "-c",
-            "buildfile.package_includes=default/no_symbol=>//default/no_symbol:name.bzl::NAME,default/has_symbol=>//default/has_symbol:name.bzl::NAME",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=" + parser);
+            "buildfile.package_includes=default/no_symbol=>//default/no_symbol:name.bzl::NAME,default/has_symbol=>//default/has_symbol:name.bzl::NAME");
 
     result.assertSuccess();
   }
@@ -124,9 +103,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
         workspace.runBuckBuild(
             "//default:root__root",
             "-c",
-            "buildfile.package_includes=default=>//:get_suffix.bzl::MISSING",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=" + parser);
+            "buildfile.package_includes=default=>//:get_suffix.bzl::MISSING");
 
     result.assertExitCode(ExitCode.PARSE_ERROR);
   }
@@ -142,9 +119,7 @@ public class ParserImplicitPackageIncludesIntegrationTest {
         workspace.runBuckBuild(
             "//default:root__root",
             "-c",
-            "buildfile.package_includes=default=>//:missing.bzl::NAME",
-            "-c",
-            "parser.default_build_file_syntax_deprecated=" + parser);
+            "buildfile.package_includes=default=>//:missing.bzl::NAME");
 
     result.assertExitCode(ExitCode.PARSE_ERROR);
   }
@@ -184,33 +159,17 @@ public class ParserImplicitPackageIncludesIntegrationTest {
             "--json",
             "-c",
             implicits,
-            "-c",
-            "parser.default_build_file_syntax_deprecated=" + parser,
             "default/BUCK",
             "default/has_symbol/BUCK",
             "default/no_symbol/BUCK");
 
     ProcessResult noSymbolResult =
         workspace.runBuckCommand(
-            "audit",
-            "includes",
-            "--json",
-            "-c",
-            implicits,
-            "-c",
-            "parser.default_build_file_syntax_deprecated=" + parser,
-            "default/no_symbol/BUCK");
+            "audit", "includes", "--json", "-c", implicits, "default/no_symbol/BUCK");
 
     ProcessResult hasSymbolResult =
         workspace.runBuckCommand(
-            "audit",
-            "includes",
-            "--json",
-            "-c",
-            implicits,
-            "-c",
-            "parser.default_build_file_syntax_deprecated=" + parser,
-            "default/has_symbol/BUCK");
+            "audit", "includes", "--json", "-c", implicits, "default/has_symbol/BUCK");
 
     rootResult.assertSuccess();
     noSymbolResult.assertSuccess();

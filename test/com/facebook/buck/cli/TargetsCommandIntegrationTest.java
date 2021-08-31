@@ -1368,9 +1368,6 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "skylark", tmp);
     workspace.setUp();
 
-    workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled_deprecated", "true");
-    workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax_deprecated", "skylark");
-
     ProcessResult result =
         workspace.runBuckCommand(
             "targets", "--json", "--show-output", "...", "--output-attributes", "srcs");

@@ -29,23 +29,12 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
-@RunWith(Parameterized.class)
 public class ConfigSettingIntegrationTest {
-
-  @Parameterized.Parameters(name = "enable_skylark={0}")
-  public static Collection<Object[]> data() {
-    return ImmutableList.of(new Object[] {true}, new Object[] {false});
-  }
-
-  @Parameterized.Parameter public boolean enableSkylarkParsing;
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -54,15 +43,6 @@ public class ConfigSettingIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple_project", temporaryFolder);
     workspace.setUp();
-    if (enableSkylarkParsing) {
-      workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled_deprecated", "true");
-      workspace.addBuckConfigLocalOption(
-          "parser", "default_build_file_syntax_deprecated", "SKYLARK");
-    } else {
-      workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled_deprecated", "false");
-      workspace.addBuckConfigLocalOption(
-          "parser", "default_build_file_syntax_deprecated", "PYTHON_DSL");
-    }
     return workspace;
   }
 

@@ -1,3 +1,0 @@
-load("@cell//:simple_rule.bzl", "simple_rule")
-
-simple_rule(name = "root_cell", content = "some string")

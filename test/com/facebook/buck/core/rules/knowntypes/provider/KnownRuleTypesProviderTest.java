@@ -59,10 +59,7 @@ public class KnownRuleTypesProviderTest {
                     ImmutableMap.of("mode", "PROVIDER_COMPATIBLE"),
                     "parser",
                     ImmutableMap.of(
-                        "default_build_file_syntax_deprecated",
-                        "SKYLARK",
-                        "user_defined_rules",
-                        enableUserDefinedRules ? "enabled" : "disabled")))
+                        "user_defined_rules", enableUserDefinedRules ? "enabled" : "disabled")))
             .build();
     return new TestCellBuilder().setBuckConfig(config).build().getRootCell();
   }

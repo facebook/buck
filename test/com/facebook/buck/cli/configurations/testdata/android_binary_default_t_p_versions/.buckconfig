@@ -1,5 +1,2 @@
-[parser]
-    polyglot_parsing_enabled_deprecated = true
-    default_build_file_syntax = SKYLARK
 [build]
     versions = true

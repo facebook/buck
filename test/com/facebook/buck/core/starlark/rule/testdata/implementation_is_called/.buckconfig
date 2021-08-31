@@ -3,4 +3,3 @@ mode = compatible
 
 [parser]
 user_defined_rules = enabled
-default_build_file_syntax_deprecated = SKYLARK

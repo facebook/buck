@@ -23,7 +23,6 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.instanceOf;
@@ -75,7 +74,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.event.BuckEventBus;
@@ -93,7 +91,6 @@ import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.io.watchman.WatchmanWatcherOneBigEvent;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.config.ParserConfig.ApplyDefaultFlavorsMode;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
@@ -139,7 +136,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -175,9 +171,6 @@ public class ParserWithConfigurableAttributesTest {
   @Parameterized.Parameter(1)
   public boolean parallelParsing;
 
-  @Parameterized.Parameter(2)
-  public Syntax syntax;
-
   private BuildTarget buildTarget;
   private AbsPath defaultIncludeFile;
   private AbsPath includedByIncludeFile;
@@ -195,24 +188,11 @@ public class ParserWithConfigurableAttributesTest {
   private ExecutableFinder executableFinder;
   private ParsingContext parsingContext;
 
-  @Parameterized.Parameters(
-      name =
-          "project.parsing_threads={0}, project.parallel_parsing={1}, parser.default_build_file_syntax_deprecated={2}")
+  @Parameterized.Parameters(name = "project.parsing_threads={0}, project.parallel_parsing={1}")
   public static Collection<Object[]> generateData() {
     return Arrays.asList(
         new Object[][] {
-          {
-            2, true, Syntax.SKYLARK,
-          },
-          {
-            1, false, Syntax.PYTHON_DSL,
-          },
-          {
-            1, true, Syntax.PYTHON_DSL,
-          },
-          {
-            2, true, Syntax.PYTHON_DSL,
-          },
+          {2, true},
         });
   }
 
@@ -295,8 +275,6 @@ public class ParserWithConfigurableAttributesTest {
     configSectionsBuilder.put(
         "buildfile", ImmutableMap.of("includes", "//java/com/facebook/defaultIncludeFile"));
     configSectionsBuilder.put("project", projectSectionBuilder.build());
-    configSectionsBuilder.put(
-        "parser", ImmutableMap.of("default_build_file_syntax_deprecated", syntax.name()));
 
     BuckConfig config =
         FakeBuckConfig.builder()
@@ -1916,123 +1894,6 @@ public class ParserWithConfigurableAttributesTest {
         equalTo(targetNode.getBuildTarget().getShortName()));
   }
 
-  private void assumePythonDslBecauseOfSymlinks() {
-    // Glob in Starlark does not follow symlinks (with either native or watchman).
-    // I guess Python glob with watchman does not follow symlinks too,
-    // but checking this is not trivial, and not important at the moment.
-    assumeTrue(syntax == Syntax.PYTHON_DSL);
-  }
-
-  @Test
-  public void whenBuildFileContainsSourcesUnderSymLinkNewSourcesNotAddedUntilCacheCleaned()
-      throws Exception {
-    // This test depends on creating symbolic links which we cannot do on Windows.
-    assumeThat(Platform.detect(), not(Platform.WINDOWS));
-
-    assumePythonDslBecauseOfSymlinks();
-
-    tempDir.newFolder("bar");
-    tempDir.newFile("bar/Bar.java");
-    tempDir.newFolder("foo");
-    AbsPath rootPath = tempDir.getRoot().toRealPath();
-    CreateSymlinksForTests.createSymLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
-
-    AbsPath testBuckFile = rootPath.resolve("foo").resolve("BUCK");
-    Files.write(
-        testBuckFile.getPath(),
-        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
-
-    // Fetch //:lib to put it in cache.
-    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
-    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
-
-    {
-      TargetGraph targetGraph =
-          parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cells);
-
-      JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
-      assertEquals(
-          ImmutableSortedSet.of(PathSourcePath.of(filesystem, Paths.get("foo/bar/Bar.java"))),
-          libRule.getJavaSrcs());
-    }
-
-    tempDir.newFile("bar/Baz.java");
-    WatchmanPathEvent createEvent =
-        WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.CREATE, ForwardRelPath.of("bar/Baz.java"));
-    parser.getPermState().invalidateBasedOn(WatchmanWatcherOneBigEvent.pathEvent(createEvent));
-
-    {
-      TargetGraph targetGraph =
-          parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cells);
-
-      JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
-      assertEquals(
-          ImmutableSet.of(
-              PathSourcePath.of(filesystem, Paths.get("foo/bar/Bar.java")),
-              PathSourcePath.of(filesystem, Paths.get("foo/bar/Baz.java"))),
-          libRule.getJavaSrcs());
-    }
-  }
-
-  @Test
-  public void whenBuildFileContainsSourcesUnderSymLinkDeletedSourcesNotRemovedUntilCacheCleaned()
-      throws Exception {
-    // This test depends on creating symbolic links which we cannot do on Windows.
-    assumeThat(Platform.detect(), not(Platform.WINDOWS));
-
-    assumePythonDslBecauseOfSymlinks();
-
-    tempDir.newFolder("bar");
-    tempDir.newFile("bar/Bar.java");
-    tempDir.newFolder("foo");
-    AbsPath bazSourceFile = tempDir.newFile("bar/Baz.java");
-    AbsPath rootPath = tempDir.getRoot().toRealPath();
-    CreateSymlinksForTests.createSymLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
-
-    AbsPath testBuckFile = rootPath.resolve("foo").resolve("BUCK");
-    Files.write(
-        testBuckFile.getPath(),
-        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
-
-    // Fetch //:lib to put it in cache.
-    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
-    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
-
-    {
-      TargetGraph targetGraph =
-          parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cells);
-
-      JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
-
-      assertEquals(
-          ImmutableSortedSet.of(
-              PathSourcePath.of(filesystem, Paths.get("foo/bar/Bar.java")),
-              PathSourcePath.of(filesystem, Paths.get("foo/bar/Baz.java"))),
-          libRule.getJavaSrcs());
-    }
-
-    Files.delete(bazSourceFile.getPath());
-    WatchmanPathEvent deleteEvent =
-        WatchmanPathEvent.of(
-            filesystem.getRootPath(), Kind.DELETE, ForwardRelPath.of("bar/Baz.java"));
-    parser.getPermState().invalidateBasedOn(WatchmanWatcherOneBigEvent.pathEvent(deleteEvent));
-
-    {
-      TargetGraph targetGraph =
-          parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cells);
-
-      JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
-      assertEquals(
-          ImmutableSortedSet.of(PathSourcePath.of(filesystem, Paths.get("foo/bar/Bar.java"))),
-          libRule.getJavaSrcs());
-    }
-  }
-
   @Test
   public void whenSymlinksForbiddenThenParseFailsOnSymlinkInSources() throws Exception {
     // This test depends on creating symbolic links which we cannot do on Windows.
@@ -2315,60 +2176,6 @@ public class ParserWithConfigurableAttributesTest {
   }
 
   @Test
-  public void countsParsedBytes() throws Exception {
-    // Byte counter is not implemented for Starlark
-    assumeTrue(syntax == Syntax.PYTHON_DSL);
-
-    AbsPath buckFile = cellRoot.resolve("lib/BUCK");
-    Files.createDirectories(buckFile.getParent().getPath());
-    byte[] bytes =
-        ("genrule(" + "name='gen'," + "out='generated', " + "cmd='touch ${OUT}')").getBytes(UTF_8);
-    Files.write(buckFile.getPath(), bytes);
-
-    cells =
-        new TestCellBuilder()
-            .setFilesystem(filesystem)
-            .setBuckConfig(cells.getBuckConfig())
-            .build();
-
-    List<ParseEvent.Finished> events = new ArrayList<>();
-    class EventListener {
-      @Subscribe
-      public void onParseFinished(ParseEvent.Finished event) {
-        events.add(event);
-      }
-    }
-    EventListener eventListener = new EventListener();
-    eventBus.register(eventListener);
-
-    ParsingContext parsingContext = ParsingContext.builder(cells, executorService).build();
-
-    parser.buildTargetGraphWithTopLevelConfigurationTargets(
-        parsingContext,
-        ImmutableList.of(
-            BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "gen"))),
-        Optional.empty());
-
-    // The read bytes are dependent on the serialization format of the parser, and the absolute path
-    // of the temporary BUCK file we wrote, so let's just assert that there are a reasonable
-    // minimum.
-    assertThat(
-        Iterables.getOnlyElement(events).getProcessedBytes(),
-        greaterThanOrEqualTo((long) bytes.length));
-
-    // The value should be cached, so no bytes are read when re-computing.
-    events.clear();
-    parser.buildTargetGraphWithTopLevelConfigurationTargets(
-        parsingContext,
-        ImmutableList.of(
-            BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance("//lib", "gen"))),
-        Optional.empty());
-    assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
-  }
-
-  @Test
   public void testGetCacheReturnsSame() {
     assertEquals(
         parser.getPermState().getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE),
@@ -2438,11 +2245,7 @@ public class ParserWithConfigurableAttributesTest {
                 ImmutableList.of("genrule(name = type(''), out = 'file.txt', cmd = 'touch $OUT')"))
             .getBytes(UTF_8));
 
-    BuckConfig config =
-        FakeBuckConfig.builder()
-            .setFilesystem(filesystem)
-            .setSections("[parser]", "default_build_file_syntax_deprecated=skylark")
-            .build();
+    BuckConfig config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
 
     Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 

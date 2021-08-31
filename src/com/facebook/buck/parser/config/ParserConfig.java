@@ -30,7 +30,6 @@ import com.facebook.buck.core.rules.analysis.config.RuleAnalysisComputationMode;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.implicit.ImplicitIncludePath;
@@ -308,31 +307,6 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * @return boolean flag indicating whether support for parsing build files using non default
-   *     syntax (currently Python DSL).
-   *     <p>For a list of supported syntax see {@link Syntax}.
-   */
-  @Value.Lazy
-  public boolean isPolyglotParsingEnabled() {
-    return getDelegate().getBooleanValue("parser", "polyglot_parsing_enabled_deprecated", false);
-  }
-
-  /**
-   * @return a syntax to assume for build files without explicit build file syntax marker. *
-   *     <p>For a list of supported syntax see {@link Syntax}.
-   */
-  @Value.Lazy
-  public DefaultBuildFileSyntaxMapping getDefaultBuildFileSyntax() {
-    Syntax defaultValue =
-        getDelegate()
-            .getEnum("parser", "default_build_file_syntax_deprecated", Syntax.class)
-            .orElse(Syntax.SKYLARK);
-    Optional<String> byPath =
-        getDelegate().getValue("parser", "default_build_file_syntax_by_prefix_deprecated");
-    return DefaultBuildFileSyntaxMapping.parse(byPath.orElse(""), defaultValue);
-  }
-
-  /**
    * @return whether native build rules are available for users in build files. If not, they are
    *     only accessible in extension files under the 'native' object
    */
@@ -541,26 +515,17 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
     boolean ragEnabled =
         getDelegate().getView(RuleAnalysisConfig.class).getComputationMode()
             != RuleAnalysisComputationMode.DISABLED;
-    boolean canParseUdr =
-        isPolyglotParsingEnabled() || getDefaultBuildFileSyntax().canHaveSyntax(Syntax.SKYLARK);
     UserDefinedRulesState configuredValue =
         getDelegate()
             .getEnum("parser", "user_defined_rules", UserDefinedRulesState.class)
             .orElse(UserDefinedRulesState.DISABLED);
-    if (ragEnabled && canParseUdr) {
+    if (ragEnabled) {
       return configuredValue;
     } else {
       if (configuredValue == UserDefinedRulesState.ENABLED) {
-        if (!ragEnabled) {
-          throw new HumanReadableException(
-              "User defined rules are configured as enabled, but rule analysis is disabled. "
-                  + "Disable UDR with -c parser.user_defined_rules=DISABLED");
-        }
-        if (!canParseUdr) {
-          throw new HumanReadableException(
-              "User defined rules are configured as enabled, but parser is not either polyglot, "
-                  + "or only skylark. Disable UDR with -c parser.user_defined_rules=DISABLED");
-        }
+        throw new HumanReadableException(
+            "User defined rules are configured as enabled, but rule analysis is disabled. "
+                + "Disable UDR with -c parser.user_defined_rules=DISABLED");
       }
       return UserDefinedRulesState.DISABLED;
     }
