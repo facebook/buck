@@ -7,6 +7,7 @@ java_library(
         "//src-gen:downward-model",
         "//src/com/facebook/buck/downwardapi/protocol:protocol",
         "//src/com/facebook/buck/util/types:types",
+        "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io/namedpipes:namedpipes",
         "//third-party/java/guava:guava",
         "//src/com/facebook/buck/core/util/log:log",

@@ -16,39 +16,31 @@
 
 package com.facebook.buck.downwardapi.processexecutor;
 
-import static com.facebook.buck.downward.model.EventTypeMessage.EventType.CHROME_TRACE_EVENT;
-import static com.facebook.buck.downward.model.EventTypeMessage.EventType.CONSOLE_EVENT;
-import static com.facebook.buck.downward.model.EventTypeMessage.EventType.EXTERNAL_EVENT;
-import static com.facebook.buck.downward.model.EventTypeMessage.EventType.LOG_EVENT;
-import static com.facebook.buck.downward.model.EventTypeMessage.EventType.STEP_EVENT;
 import static com.facebook.buck.downward.model.StepEvent.StepStatus.FINISHED;
 import static com.facebook.buck.downward.model.StepEvent.StepStatus.STARTED;
-import static com.facebook.buck.testutil.TestLogSink.logRecordWithMessage;
+import static com.facebook.buck.downwardapi.processexecutor.TestUtils.TEST_LOGGER_NAME;
+import static com.facebook.buck.downwardapi.processexecutor.TestUtils.chromeTraceEvent;
+import static com.facebook.buck.downwardapi.processexecutor.TestUtils.consoleEvent;
+import static com.facebook.buck.downwardapi.processexecutor.TestUtils.externalEvent;
+import static com.facebook.buck.downwardapi.processexecutor.TestUtils.getDownwardApiProcessExecutor;
+import static com.facebook.buck.downwardapi.processexecutor.TestUtils.getProcessExecutorParams;
+import static com.facebook.buck.downwardapi.processexecutor.TestUtils.launchAndExecute;
+import static com.facebook.buck.downwardapi.processexecutor.TestUtils.logEvent;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downward.model.ChromeTraceEvent;
 import com.facebook.buck.downward.model.ChromeTraceEvent.ChromeTraceEventStatus;
-import com.facebook.buck.downward.model.ConsoleEvent;
-import com.facebook.buck.downward.model.EventTypeMessage;
-import com.facebook.buck.downward.model.ExternalEvent;
-import com.facebook.buck.downward.model.LogEvent;
-import com.facebook.buck.downward.model.LogLevel;
-import com.facebook.buck.downward.model.StepEvent;
 import com.facebook.buck.downwardapi.namedpipes.DownwardPOSIXNamedPipeFactory;
-import com.facebook.buck.downwardapi.processexecutor.context.DownwardApiExecutionContext;
-import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.downwardapi.protocol.JsonDownwardProtocol;
 import com.facebook.buck.downwardapi.testutil.LogRecordMatcher;
 import com.facebook.buck.downwardapi.testutil.TestWindowsHandleFactory;
 import com.facebook.buck.event.BuckEvent;
@@ -56,53 +48,37 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
-import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
-import com.facebook.buck.io.namedpipes.NamedPipeServer;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TestLogSink;
-import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.FakeProcess;
-import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.NamedPipeEventHandlerFactory;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.SettableFakeClock;
-import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.eventbus.Subscribe;
-import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.Duration;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -126,12 +102,6 @@ public class DownwardApiProcessExecutorTest {
 
   private static final Logger EVENT_HANDLER_LOGGER = BaseNamedPipeEventHandler.LOGGER;
   private static Level eventHandlerLoggerInitialLevel;
-
-  private static final String TEST_LOGGER_NAME = "crazy.tool.name";
-  private static final ConsoleParams CONSOLE_PARAMS =
-      ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION);
-  private static final String TEST_COMMAND = "test_command";
-  private static final ActionId TEST_ACTION_ID = ActionId.of("test_action_id");
 
   private static WindowsHandleFactory initialWindowsHandleFactory;
   private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
@@ -164,7 +134,6 @@ public class DownwardApiProcessExecutorTest {
   }
 
   @Rule public Timeout globalTestTimeout = Timeout.seconds(10);
-
   @Rule public TestName testName = new TestName();
 
   @Rule public TestLogSink testToolLogSink = new TestLogSink(TEST_LOGGER_NAME);
@@ -172,40 +141,13 @@ public class DownwardApiProcessExecutorTest {
   @Rule
   public TestLogSink executorLogSink = new TestLogSink(BaseNamedPipeEventHandler.class.getName());
 
+  @Rule
+  public TestLogSink jsonProtocolLogSing = new TestLogSink(JsonDownwardProtocol.class.getName());
+
   private NamedPipeReader namedPipeReader;
   private BuckEventBus buckEventBus;
   private ProcessExecutorParams params;
   private Clock clock;
-
-  private static class TestListener {
-
-    private final AtomicInteger counter = new AtomicInteger(-1);
-    private final Map<Integer, BuckEvent> events = new HashMap<>();
-
-    @Subscribe
-    public void console(com.facebook.buck.event.ConsoleEvent event) {
-      handleEvent(event);
-    }
-
-    @Subscribe
-    public void chromeTrace(SimplePerfEvent event) {
-      handleEvent(event);
-    }
-
-    @Subscribe
-    public void step(com.facebook.buck.event.StepEvent event) {
-      handleEvent(event);
-    }
-
-    @Subscribe
-    public void external(com.facebook.buck.event.ExternalEvent event) {
-      handleEvent(event);
-    }
-
-    private void handleEvent(BuckEvent event) {
-      events.put(counter.incrementAndGet(), event);
-    }
-  }
 
   @Before
   public void setUp() throws Exception {
@@ -225,15 +167,10 @@ public class DownwardApiProcessExecutorTest {
     FakeProcess fakeProcess = new FakeProcess(Optional.of(Optional::empty));
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
 
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
-    assertEquals("Process should exit with EXIT_SUCCESS", 0, result.getExitCode());
-    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
-    assertFalse(
-        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
-    assertNotNull("Named pipe has not been created!", namedPipeReader);
-    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+    verifyExecutionResult(result);
   }
 
   @Test
@@ -258,7 +195,7 @@ public class DownwardApiProcessExecutorTest {
                 }));
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
 
     AtomicReference<DownwardApiExecutionResult> resultReference = new AtomicReference<>();
     AtomicLong threadIdReference = new AtomicLong();
@@ -280,15 +217,10 @@ public class DownwardApiProcessExecutorTest {
     }
 
     DownwardApiExecutionResult executionResult = resultReference.get();
-    assertEquals("Process should exit with EXIT_SUCCESS", 0, executionResult.getExitCode());
-    assertTrue("Reader thread is not terminated!", executionResult.isReaderThreadTerminated());
-    assertFalse(
-        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
-    assertNotNull("Named pipe has not been created!", namedPipeReader);
-    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+    verifyExecutionResult(executionResult);
 
     waitTillEventsProcessed();
-    Map<Integer, BuckEvent> events = listener.events;
+    Map<Integer, BuckEvent> events = listener.getEvents();
     assertEquals(6, events.size());
 
     for (BuckEvent buckEvent : events.values()) {
@@ -373,7 +305,6 @@ public class DownwardApiProcessExecutorTest {
   public void invalidProtocol() throws IOException, InterruptedException {
     FakeProcess fakeProcess =
         new FakeProcess(
-            1,
             Optional.of(
                 () -> {
                   try (NamedPipeWriter writer =
@@ -393,15 +324,10 @@ public class DownwardApiProcessExecutorTest {
                 }));
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
 
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
-    assertEquals("Process should exit with an exception", 1, result.getExitCode());
-    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
-    assertFalse(
-        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
-    assertNotNull("Named pipe has not been created!", namedPipeReader);
-    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+    verifyExecutionResult(result);
 
     checkRecords(
         "Did not find log message about unexpected protocol",
@@ -456,7 +382,6 @@ public class DownwardApiProcessExecutorTest {
     int fakeBytesToWrite = 100_000;
     FakeProcess fakeProcess =
         new FakeProcess(
-            1,
             Optional.of(
                 () -> {
                   try (NamedPipeWriter writer =
@@ -482,15 +407,10 @@ public class DownwardApiProcessExecutorTest {
                 }));
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
 
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
-    assertEquals("Process should exit with an exception", 1, result.getExitCode());
-    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
-    assertFalse(
-        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
-    assertNotNull("Named pipe has not been created!", namedPipeReader);
-    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+    verifyExecutionResult(result);
 
     checkRecords(
         "Did not find log message about read and drop " + fakeBytesToWrite + " fake bytes",
@@ -508,10 +428,305 @@ public class DownwardApiProcessExecutorTest {
   }
 
   @Test
+  public void jsonProtocolWithInvalidLengthOfMessage() throws IOException, InterruptedException {
+    FakeProcess fakeProcess =
+        new FakeProcess(
+            Optional.of(
+                () -> {
+                  try (NamedPipeWriter writer =
+                          NamedPipeFactory.getFactory()
+                              .connectAsWriter(Paths.get(namedPipeReader.getName()));
+                      OutputStream outputStream = writer.getOutputStream()) {
+
+                    // json protocol
+                    outputStream.write(
+                        String.format(
+                                "%s%s",
+                                DownwardProtocolType.JSON.getProtocolId(), System.lineSeparator())
+                            .getBytes(StandardCharsets.UTF_8));
+
+                    // invalid length
+                    outputStream.write(
+                        String.format("%s%s", "12X89", System.lineSeparator())
+                            .getBytes(StandardCharsets.UTF_8));
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                  return Optional.empty();
+                }));
+
+    DownwardApiProcessExecutor processExecutor =
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
+
+    DownwardApiExecutionResult result = launchAndExecute(processExecutor);
+    verifyExecutionResult(result);
+
+    checkRecords(
+        "Did not find log message about wrong json message length",
+        executorLogSink,
+        Level.SEVERE,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          if (!message.contains("Received invalid downward protocol message")) {
+            return false;
+          }
+          return logRecord
+              .getThrown()
+              .getMessage()
+              .equals(
+                  "Exception parsing integer number representing json message length: For input string: \"12X89\"");
+        });
+  }
+
+  @Test
+  public void multipleJsonProtocolClients() throws IOException, InterruptedException {
+    TestListener listener = new TestListener();
+    buckEventBus.register(listener);
+
+    ImmutableList<String> messages = getMessages();
+    int messageSize = messages.size();
+    assertThat(messageSize, equalTo(9));
+
+    FakeProcess fakeProcess =
+        new FakeProcess(
+            Optional.of(
+                () -> {
+                  try (NamedPipeWriter writer =
+                          NamedPipeFactory.getFactory()
+                              .connectAsWriter(Paths.get(namedPipeReader.getName()));
+                      OutputStream outputStream = writer.getOutputStream()) {
+                    String protocolMessage = null;
+
+                    for (int i = 0; i < messageSize; i++) {
+                      String message = messages.get(i);
+                      if (i == 0) {
+                        protocolMessage = message;
+                        // write protocol message twice
+                        outputStream.write(protocolMessage.getBytes(StandardCharsets.UTF_8));
+                      }
+                      outputStream.write(message.getBytes(StandardCharsets.UTF_8));
+
+                      if (i % 2 == 0) {
+                        outputStream.write(protocolMessage.getBytes(StandardCharsets.UTF_8));
+                      }
+                    }
+
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                  return Optional.empty();
+                }));
+
+    DownwardApiProcessExecutor processExecutor =
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
+    DownwardApiExecutionResult executionResult = launchAndExecute(processExecutor);
+    verifyExecutionResult(executionResult);
+
+    waitTillEventsProcessed();
+    Map<Integer, BuckEvent> events = listener.getEvents();
+    assertEquals(6, events.size());
+
+    checkRecords(
+        "Did not find log message about another tool",
+        jsonProtocolLogSing,
+        Level.INFO,
+        logRecord ->
+            logRecord.getMessage().equals("Another tool wants to establish protocol over json"));
+  }
+
+  @Test
+  public void multipleNestedToolsWithJsonProtocol() throws IOException, InterruptedException {
+    FakeProcess fakeProcess =
+        new FakeProcess(
+            Optional.of(
+                () -> {
+                  try (NamedPipeWriter writer =
+                          NamedPipeFactory.getFactory()
+                              .connectAsWriter(Paths.get(namedPipeReader.getName()));
+                      OutputStream outputStream = writer.getOutputStream()) {
+                    for (int i = 0; i < 100; i++) {
+                      outputStream.write(
+                          String.format(
+                                  "%s%s",
+                                  DownwardProtocolType.JSON.getProtocolId(), System.lineSeparator())
+                              .getBytes(StandardCharsets.UTF_8));
+                    }
+
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                  return Optional.empty();
+                }));
+
+    DownwardApiProcessExecutor processExecutor =
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
+    DownwardApiExecutionResult executionResult = launchAndExecute(processExecutor);
+    verifyExecutionResult(executionResult);
+
+    checkRecords(
+        "Did not find log message about another tool",
+        jsonProtocolLogSing,
+        Level.INFO,
+        logRecord ->
+            logRecord.getMessage().equals("Another tool wants to establish protocol over json"));
+
+    checkRecords(
+        "Did not find log message about another tool",
+        executorLogSink,
+        Level.SEVERE,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          if (!message.contains("Received invalid downward protocol message")) {
+            return false;
+          }
+          return logRecord
+              .getThrown()
+              .getMessage()
+              .equals(
+                  "Reached max number(10) of allowed downward api nested tools without any events sent");
+        });
+  }
+
+  @Test
+  public void multipleJsonProtocolClientsAndThenMalformedData()
+      throws IOException, InterruptedException {
+    int fakeBytesToWrite = 100_000;
+
+    FakeProcess fakeProcess =
+        new FakeProcess(
+            Optional.of(
+                () -> {
+                  try (NamedPipeWriter writer =
+                          NamedPipeFactory.getFactory()
+                              .connectAsWriter(Paths.get(namedPipeReader.getName()));
+                      OutputStream outputStream = writer.getOutputStream()) {
+                    String protocolMessage = null;
+
+                    ImmutableList<String> messages = getMessages();
+                    for (int i = 0; i < messages.size(); i++) {
+                      String message = messages.get(i);
+                      if (i == 0) {
+                        protocolMessage = message;
+                      }
+                      outputStream.write(message.getBytes(StandardCharsets.UTF_8));
+
+                      if (i % 2 == 0) {
+                        outputStream.write(protocolMessage.getBytes(StandardCharsets.UTF_8));
+                      }
+
+                      if (i == messages.size() - 1) {
+                        // invalid symbol
+                        outputStream.write(
+                            String.format("_%s", System.lineSeparator())
+                                .getBytes(StandardCharsets.UTF_8));
+                        // fake bytes
+                        for (int j = 0; j < fakeBytesToWrite; j++) {
+                          outputStream.write(i % 42);
+                        }
+                      }
+                    }
+
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                  return Optional.empty();
+                }));
+
+    DownwardApiProcessExecutor processExecutor =
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
+    DownwardApiExecutionResult executionResult = launchAndExecute(processExecutor);
+    verifyExecutionResult(executionResult);
+
+    checkRecords(
+        "Did not find log message about read and drop " + fakeBytesToWrite + " fake bytes",
+        executorLogSink,
+        Level.INFO,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          return message.equals(
+                  "Read and drop "
+                      + fakeBytesToWrite
+                      + " total bytes from named pipe: "
+                      + namedPipeReader.getName())
+              && message.endsWith("bytes from named pipe: " + namedPipeReader.getName());
+        });
+
+    checkRecords(
+        "Did not find log message about another tool",
+        jsonProtocolLogSing,
+        Level.INFO,
+        logRecord ->
+            logRecord.getMessage().equals("Another tool wants to establish protocol over json"));
+  }
+
+  @Test
+  public void multipleJsonProtocolClientsAndBinaryClient()
+      throws IOException, InterruptedException {
+
+    FakeProcess fakeProcess =
+        new FakeProcess(
+            Optional.of(
+                () -> {
+                  try (NamedPipeWriter writer =
+                          NamedPipeFactory.getFactory()
+                              .connectAsWriter(Paths.get(namedPipeReader.getName()));
+                      OutputStream outputStream = writer.getOutputStream()) {
+                    String protocolMessage = null;
+
+                    ImmutableList<String> messages = getMessages();
+                    for (int i = 0; i < messages.size(); i++) {
+                      String message = messages.get(i);
+                      if (i == 0) {
+                        protocolMessage = message;
+                      }
+                      if (i % 2 == 0) {
+                        outputStream.write(protocolMessage.getBytes(StandardCharsets.UTF_8));
+                      }
+                      outputStream.write(message.getBytes(StandardCharsets.UTF_8));
+
+                      if (i == messages.size() - 1) {
+                        // switch to binary protocol
+                        outputStream.write(
+                            String.format(
+                                    "%s%s",
+                                    DownwardProtocolType.BINARY.getProtocolId(),
+                                    System.lineSeparator())
+                                .getBytes(StandardCharsets.UTF_8));
+                      }
+                    }
+
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                  return Optional.empty();
+                }));
+
+    DownwardApiProcessExecutor processExecutor =
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
+    DownwardApiExecutionResult executionResult = launchAndExecute(processExecutor);
+    verifyExecutionResult(executionResult);
+
+    checkRecords(
+        "Did not find log message about change to binary protocol",
+        executorLogSink,
+        Level.SEVERE,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          if (!message.contains("Received invalid downward protocol message")) {
+            return false;
+          }
+          return logRecord
+              .getThrown()
+              .getMessage()
+              .equals(
+                  "Invoked tool wants to change downward protocol from json to binary one. It is not supported!");
+        });
+  }
+
+  @Test
   public void namedPipeClosedTooEarly() throws IOException, InterruptedException {
     FakeProcess fakeProcess =
         new FakeProcess(
-            1,
             Optional.of(
                 () -> {
                   try {
@@ -523,15 +738,10 @@ public class DownwardApiProcessExecutorTest {
                 }));
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
 
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
-    assertEquals("Process should exit with an exception", 1, result.getExitCode());
-    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
-    assertFalse(
-        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
-    assertNotNull("Named pipe has not been created!", namedPipeReader);
-    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+    verifyExecutionResult(result);
 
     checkRecords(
         "Did not find log message about cannot connect to named pipe",
@@ -561,7 +771,7 @@ public class DownwardApiProcessExecutorTest {
     FakeProcess fakeProcess = new FakeProcess(0);
 
     DownwardApiProcessExecutor processExecutor =
-        getDownwardApiProcessExecutor(namedPipe, buckEventBus, params, fakeProcess);
+        getDownwardApiProcessExecutor(namedPipe, buckEventBus, clock, params, fakeProcess);
 
     DownwardApiExecutionResult result;
     try {
@@ -569,18 +779,17 @@ public class DownwardApiProcessExecutorTest {
     } finally {
       namedPipeReader.close();
     }
-    assertEquals("Process should exit with EXIT_SUCCESS", 0, result.getExitCode());
-    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
-    assertFalse("Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeName)));
-    assertNotNull("Named pipe has not been created!", namedPipe);
-    assertTrue("Named pipe has to be closed.", namedPipe.isClosed());
+    verifyExecutionResult(result);
 
-    assertThat(
-        executorLogSink.getRecords(),
-        hasItem(
-            logRecordWithMessage(
-                stringContainsInOrder(
-                    "Unhandled exception while reading from named pipe: ", namedPipeName))));
+    checkRecords(
+        "Did not find debug log message about unhandled exception",
+        executorLogSink,
+        Level.WARNING,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          return message.startsWith("Unhandled exception while reading from named pipe: ")
+              && message.endsWith(namedPipeName);
+        });
   }
 
   @Test
@@ -605,6 +814,7 @@ public class DownwardApiProcessExecutorTest {
         getDownwardApiProcessExecutor(
             namedPipeReader,
             buckEventBus,
+            clock,
             params,
             fakeProcess,
             (namedPipe, context) ->
@@ -612,141 +822,19 @@ public class DownwardApiProcessExecutorTest {
                     namedPipe, context, eventsReceivedByClientsHandlers));
 
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
-    assertEquals("Process should exit with EXIT_SUCCESS", 0, result.getExitCode());
-    assertTrue("Reader thread is not terminated!", result.isReaderThreadTerminated());
-    assertFalse(
-        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
-    assertNotNull("Named pipe has not been created!", namedPipeReader);
-    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+    verifyExecutionResult(result);
 
     waitTillEventsProcessed();
     assertThat(eventsReceivedByClientsHandlers.get(), equalTo(1 + 2 + 10 * 2 + 100 * 3 + 500));
-  }
-
-  private static class CustomNamedEventPipeHandler extends BaseNamedPipeEventHandler {
-
-    private final ImmutableMap<EventTypeMessage.EventType, EventHandler<AbstractMessage>>
-        eventHandlers;
-
-    CustomNamedEventPipeHandler(
-        NamedPipeReader namedPipe,
-        DownwardApiExecutionContext downwardApiExecutionContext,
-        AtomicInteger eventsReceivedByClientsHandlers) {
-      super(namedPipe, downwardApiExecutionContext);
-      this.eventHandlers =
-          ImmutableMap.<EventTypeMessage.EventType, EventHandler<AbstractMessage>>builder()
-              .put(LOG_EVENT, (context, event) -> eventsReceivedByClientsHandlers.getAndAdd(1))
-              .put(CONSOLE_EVENT, (context, event) -> eventsReceivedByClientsHandlers.getAndAdd(2))
-              .put(
-                  CHROME_TRACE_EVENT,
-                  (context, event) -> eventsReceivedByClientsHandlers.getAndAdd(10))
-              .put(STEP_EVENT, (context, event) -> eventsReceivedByClientsHandlers.getAndAdd(100))
-              .put(
-                  EXTERNAL_EVENT,
-                  (context, event) -> eventsReceivedByClientsHandlers.getAndAdd(500))
-              .build();
-    }
-
-    @Override
-    protected void processEvent(EventTypeMessage.EventType eventType, AbstractMessage event) {
-      EventHandler<AbstractMessage> handler = eventHandlers.get(eventType);
-      handler.handleEvent(getContext(), event);
-    }
-  }
-
-  private DownwardApiExecutionResult launchAndExecute(DownwardApiProcessExecutor processExecutor)
-      throws InterruptedException, IOException {
-    ProcessExecutor.Result result = processExecutor.launchAndExecute(getProcessExecutorParams());
-    return (DownwardApiExecutionResult) result;
-  }
-
-  private DownwardApiProcessExecutor getDownwardApiProcessExecutor(
-      NamedPipeReader namedPipe,
-      BuckEventBus buckEventBus,
-      ProcessExecutorParams params,
-      FakeProcess fakeProcess) {
-    return getDownwardApiProcessExecutor(
-        namedPipe, buckEventBus, params, fakeProcess, DefaultNamedPipeEventHandler.FACTORY);
-  }
-
-  private DownwardApiProcessExecutor getDownwardApiProcessExecutor(
-      NamedPipeReader namedPipe,
-      BuckEventBus buckEventBus,
-      ProcessExecutorParams params,
-      FakeProcess fakeProcess,
-      NamedPipeEventHandlerFactory namedPipeEventHandlerFactory) {
-    ImmutableMap.Builder<ProcessExecutorParams, FakeProcess> fakeProcessesBuilder =
-        ImmutableMap.<ProcessExecutorParams, FakeProcess>builder().put(params, fakeProcess);
-
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
-
-    return new DownwardApiProcessExecutor(
-        fakeProcessExecutor,
-        CONSOLE_PARAMS,
-        buckEventBus.isolated(),
-        TEST_ACTION_ID,
-        new NamedPipeFactory() {
-          @Override
-          public NamedPipeWriter createAsWriter() {
-            throw new UnsupportedOperationException();
-          }
-
-          @Override
-          public NamedPipeReader createAsReader() {
-            return namedPipe;
-          }
-
-          @Override
-          public NamedPipeWriter connectAsWriter(Path namedPipePath) {
-            throw new UnsupportedOperationException();
-          }
-
-          @Override
-          public NamedPipeReader connectAsReader(Path namedPipePath) {
-            throw new UnsupportedOperationException();
-          }
-        },
-        clock,
-        namedPipeEventHandlerFactory);
-  }
-
-  private ProcessExecutorParams getProcessExecutorParams() {
-    return ProcessExecutorParams.ofCommand(TEST_COMMAND)
-        .withEnvironment(
-            ImmutableMap.of(
-                "SOME_ENV1",
-                "VALUE1",
-                "BUCK_BUILD_UUID",
-                "TO_BE_REPLACED",
-                "BUCK_ACTION_ID",
-                "TO_BE_REPLACED",
-                "SOME_ENV2",
-                "VALUE2"));
-  }
-
-  private ProcessExecutorParams getProcessExecutorParams(
-      String namedPipeName, BuckEventBus buckEventBus) {
-    ImmutableMap.Builder<String, String> envsBuilder = ImmutableMap.builder();
-    envsBuilder.put("SOME_ENV1", "VALUE1");
-    envsBuilder.put("SOME_ENV2", "VALUE2");
-    envsBuilder.put("BUCK_VERBOSITY", CONSOLE_PARAMS.getVerbosity());
-    envsBuilder.put("BUCK_ANSI_ENABLED", CONSOLE_PARAMS.isAnsiEscapeSequencesEnabled());
-    envsBuilder.put("BUCK_BUILD_UUID", buckEventBus.getBuildId().toString());
-    envsBuilder.put("BUCK_ACTION_ID", TEST_ACTION_ID.getValue());
-    envsBuilder.put("BUCK_EVENT_PIPE", namedPipeName);
-    ImmutableMap<String, String> envs = envsBuilder.build();
-
-    return ProcessExecutorParams.builder()
-        .setCommand(ImmutableList.of(TEST_COMMAND))
-        .setEnvironment(envs)
-        .build();
   }
 
   private void verifyLogEvent() {
     List<LogRecord> records = testToolLogSink.getRecords();
     LogRecord logRecord = Iterables.getOnlyElement(records);
     assertThat(logRecord.getLevel(), equalTo(Level.WARNING));
-    assertThat(logRecord, logRecordWithMessage(containsString("log message! show me to user!!!!")));
+    assertThat(
+        logRecord,
+        TestLogSink.logRecordWithMessage(containsString("log message! show me to user!!!!")));
   }
 
   private void verifyConsoleEvent(BuckEvent consoleEvent) {
@@ -833,9 +921,11 @@ public class DownwardApiProcessExecutorTest {
     builder.add(outputStream.toString(StandardCharsets.UTF_8.name()));
 
     // finished without start event
-    builder.add(stepEvent(downwardProtocol, FINISHED, "launched_process_orphan step started", 1));
+    builder.add(
+        TestUtils.stepEvent(downwardProtocol, FINISHED, "launched_process_orphan step started", 1));
 
-    builder.add(stepEvent(downwardProtocol, STARTED, "launched_process step started", 50));
+    builder.add(
+        TestUtils.stepEvent(downwardProtocol, STARTED, "launched_process step started", 50));
     builder.add(consoleEvent(downwardProtocol));
     builder.add(logEvent(downwardProtocol));
     builder.add(
@@ -845,7 +935,8 @@ public class DownwardApiProcessExecutorTest {
             "category_1",
             100,
             ImmutableMap.of("key1", "value1", "key2", "value2")));
-    builder.add(stepEvent(downwardProtocol, FINISHED, "launched_process step finished", 55));
+    builder.add(
+        TestUtils.stepEvent(downwardProtocol, FINISHED, "launched_process step finished", 55));
     builder.add(
         chromeTraceEvent(
             downwardProtocol,
@@ -858,124 +949,12 @@ public class DownwardApiProcessExecutorTest {
     return builder.build();
   }
 
-  private String stepEvent(
-      DownwardProtocol downwardProtocol,
-      StepEvent.StepStatus started,
-      String description,
-      long durationSeconds)
-      throws IOException {
-    StepEvent stepEvent =
-        StepEvent.newBuilder()
-            .setEventId(123)
-            .setStepStatus(started)
-            .setStepType("crazy_stuff")
-            .setDescription(description)
-            .setDuration(Duration.newBuilder().setSeconds(-durationSeconds).setNanos(-10).build())
-            .setActionId(TEST_ACTION_ID.getValue())
-            .build();
-
-    return write(downwardProtocol, STEP_EVENT, stepEvent);
-  }
-
-  private String externalEvent(DownwardProtocol downwardProtocol) throws IOException {
-    ExternalEvent externalEvent =
-        ExternalEvent.newBuilder()
-            .putAllData(
-                ImmutableMap.of(
-                    "errorMessageKey",
-                    "error message! show me to user!!!!",
-                    "buildTarget",
-                    "//test/foo:bar"))
-            .build();
-
-    return write(downwardProtocol, EXTERNAL_EVENT, externalEvent);
-  }
-
-  private String consoleEvent(DownwardProtocol downwardProtocol) throws IOException {
-    ConsoleEvent consoleEvent =
-        ConsoleEvent.newBuilder()
-            .setLogLevel(LogLevel.INFO)
-            .setMessage("console message! show me to user!!!!")
-            .build();
-
-    return write(downwardProtocol, CONSOLE_EVENT, consoleEvent);
-  }
-
-  private String logEvent(DownwardProtocol downwardProtocol) throws IOException {
-    LogEvent logEvent =
-        LogEvent.newBuilder()
-            .setLogLevel(LogLevel.WARN)
-            .setLoggerName("crazy.tool.name")
-            .setMessage("log message! show me to user!!!!")
-            .build();
-
-    return write(downwardProtocol, LOG_EVENT, logEvent);
-  }
-
-  private String chromeTraceEvent(
-      DownwardProtocol downwardProtocol,
-      ChromeTraceEventStatus status,
-      String category,
-      int durationInSeconds,
-      ImmutableMap<String, String> attributes)
-      throws IOException {
-    ChromeTraceEvent chromeTraceEvent =
-        ChromeTraceEvent.newBuilder()
-            .setEventId(789)
-            .setTitle("my_trace_event")
-            .setCategory(category)
-            .setStatus(status)
-            .setDuration(Duration.newBuilder().setSeconds(-durationInSeconds).setNanos(-10).build())
-            .putAllData(attributes)
-            .setActionId(TEST_ACTION_ID.getValue())
-            .build();
-
-    return write(downwardProtocol, CHROME_TRACE_EVENT, chromeTraceEvent);
-  }
-
-  private String write(
-      DownwardProtocol downwardProtocol,
-      EventTypeMessage.EventType eventType,
-      AbstractMessage message)
-      throws IOException {
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    downwardProtocol.write(
-        EventTypeMessage.newBuilder().setEventType(eventType).build(), message, outputStream);
-    return outputStream.toString(StandardCharsets.UTF_8.name());
-  }
-
-  private static class TestNamedPipeWithException implements NamedPipeReader, NamedPipeServer {
-
-    private final NamedPipe delegate;
-
-    private TestNamedPipeWithException(NamedPipe delegate) {
-      this.delegate = delegate;
-    }
-
-    @Override
-    public InputStream getInputStream() {
-      throw new RuntimeException("hello");
-    }
-
-    @Override
-    public String getName() {
-      return delegate.getName();
-    }
-
-    @Override
-    public boolean isClosed() {
-      return delegate.isClosed();
-    }
-
-    @Override
-    public void prepareToClose(Future<Unit> readerFinished)
-        throws IOException, ExecutionException, TimeoutException, InterruptedException {
-      ((NamedPipeServer) delegate).prepareToClose(readerFinished);
-    }
-
-    @Override
-    public void close() throws IOException {
-      delegate.close();
-    }
+  private void verifyExecutionResult(DownwardApiExecutionResult executionResult) {
+    assertEquals("Process should exit with EXIT_SUCCESS", 0, executionResult.getExitCode());
+    assertTrue("Reader thread is not terminated!", executionResult.isReaderThreadTerminated());
+    assertFalse(
+        "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
+    assertNotNull("Named pipe has not been created!", namedPipeReader);
+    assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
   }
 }

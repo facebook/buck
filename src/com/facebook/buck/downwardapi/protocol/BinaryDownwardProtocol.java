@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 enum BinaryDownwardProtocol implements DownwardProtocol {
   INSTANCE;
 
-  private static final String PROTOCOL_NAME = "binary";
+  private static final DownwardProtocolType PROTOCOL_TYPE = DownwardProtocolType.BINARY;
 
   @Override
   public void write(EventTypeMessage eventType, AbstractMessage message, OutputStream outputStream)
@@ -70,8 +70,8 @@ enum BinaryDownwardProtocol implements DownwardProtocol {
   }
 
   @Override
-  public String getProtocolName() {
-    return PROTOCOL_NAME;
+  public DownwardProtocolType getProtocolType() {
+    return PROTOCOL_TYPE;
   }
 
   private AbstractMessage parseMessage(

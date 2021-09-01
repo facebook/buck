@@ -37,12 +37,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /** Json implementation of Downward API Protocol. */
-enum JsonDownwardProtocol implements DownwardProtocol {
+public enum JsonDownwardProtocol implements DownwardProtocol {
   INSTANCE;
 
   private static final Logger LOG = Logger.get(JsonDownwardProtocol.class);
 
-  private static final String PROTOCOL_NAME = "json";
+  private static final DownwardProtocolType PROTOCOL_TYPE = DownwardProtocolType.JSON;
+  private static final String PROTOCOL_ID = PROTOCOL_TYPE.getProtocolId();
+  private static final int MAX_NESTED_TOOLS_WITHOUT_EVENTS = 10;
 
   private final JsonFormat.Parser parser = JsonFormat.parser();
   private final JsonFormat.Printer printer = JsonFormat.printer();
@@ -76,12 +78,13 @@ enum JsonDownwardProtocol implements DownwardProtocol {
   }
 
   @Override
-  public String getProtocolName() {
-    return PROTOCOL_NAME;
+  public DownwardProtocolType getProtocolType() {
+    return PROTOCOL_TYPE;
   }
 
   private String readJsonObjectAsString(InputStream inputStream) throws IOException {
-    int length = DownwardProtocolUtils.readFromStream(inputStream, s -> toLength(s));
+    int length =
+        DownwardProtocolUtils.readFromStream(inputStream, s -> toLength(inputStream, s, 1));
 
     byte[] buffer = new byte[length];
     int bytesRead = inputStream.read(buffer);
@@ -96,13 +99,46 @@ enum JsonDownwardProtocol implements DownwardProtocol {
     return new String(buffer, UTF_8);
   }
 
-  private int toLength(String s) throws InvalidDownwardProtocolException {
+  private int toLength(InputStream inputStream, String s, int depth)
+      throws InvalidDownwardProtocolException {
     try {
       return Integer.parseInt(s);
+    } catch (NumberFormatException numberFormatException) {
+      if (depth >= MAX_NESTED_TOOLS_WITHOUT_EVENTS) {
+        throw new InvalidDownwardProtocolException(
+            String.format(
+                "Reached max number(%s) of allowed downward api nested tools without any events sent",
+                MAX_NESTED_TOOLS_WITHOUT_EVENTS));
+      }
+
+      // maybe we just read a protocol id
+      if (PROTOCOL_ID.equals(s)) {
+        LOG.info("Another tool wants to establish protocol over json");
+        return readLengthFromTheNestedTool(inputStream, depth);
+      } else if (s.equals(DownwardProtocolType.BINARY.getProtocolId())) {
+        throw new InvalidDownwardProtocolException(
+            "Invoked tool wants to change downward protocol from json to binary one. It is not supported!");
+      }
+
+      throw new InvalidDownwardProtocolException(
+          String.format(
+              "Exception parsing integer number representing json message length: %s",
+              numberFormatException.getMessage()));
+    }
+  }
+
+  private int readLengthFromTheNestedTool(InputStream inputStream, int depth) {
+    try {
+      return DownwardProtocolUtils.readFromStream(
+          inputStream, s -> toLength(inputStream, s, depth + 1));
     } catch (NumberFormatException e) {
-      LOG.warn("Expected to read a number that represents a json message length, but read: %s", s);
       // expected integer number, but got something else.
-      throw new InvalidDownwardProtocolException("Expected to read an integer number", e);
+      throw new InvalidDownwardProtocolException(
+          String.format(
+              "Exception parsing integer number representing json message length: %s",
+              e.getMessage()));
+    } catch (IOException e) {
+      throw new InvalidDownwardProtocolException("Exception during reading an integer number", e);
     }
   }
 

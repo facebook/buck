@@ -39,6 +39,11 @@ public interface DownwardProtocol {
   <T extends AbstractMessage> T readEvent(
       InputStream inputStream, EventTypeMessage.EventType eventType) throws IOException;
 
+  /** Returns the type of this protocol. */
+  DownwardProtocolType getProtocolType();
+
   /** Returns the name of this protocol. */
-  String getProtocolName();
+  default String getProtocolName() {
+    return getProtocolType().name().toLowerCase();
+  }
 }

@@ -1,7 +1,11 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_test",
+)
 
-standard_java_test(
+java_test(
     name = "processexecutor",
+    srcs = glob(["*.java"]),
     deps = [
         "//src-gen:downward-model",
         "//src/com/facebook/buck/core/util/log:log",

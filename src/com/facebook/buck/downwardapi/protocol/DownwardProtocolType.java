@@ -35,6 +35,10 @@ public enum DownwardProtocolType {
     this.protocolId = protocolId;
   }
 
+  public String getProtocolId() {
+    return protocolId;
+  }
+
   public void writeDelimitedTo(OutputStream outputStream) throws IOException {
     outputStream.write(protocolId.getBytes(UTF_8));
     DownwardProtocolUtils.writeDelimiter(outputStream);

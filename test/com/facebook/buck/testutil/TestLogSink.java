@@ -126,7 +126,9 @@ public final class TestLogSink extends Handler implements TestRule {
 
   @Override
   public void publish(LogRecord record) {
-    records.add(record);
+    if (record != null) {
+      records.add(record);
+    }
   }
 
   @Override

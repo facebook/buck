@@ -18,6 +18,7 @@ package com.facebook.buck.io.namedpipes.windows;
 
 import static com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary.createEvent;
 
+import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandle;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.sun.jna.platform.win32.Kernel32;
@@ -68,6 +69,16 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
       if (isEndOfThePipe(error)) {
         return;
       }
+
+      if (error == WinError.ERROR_PIPE_NOT_CONNECTED || error == WinError.ERROR_INVALID_HANDLE) {
+        throw new PipeNotConnectedException(
+            String.format(
+                "WriteFile() failed. Named pipe: %s, error: %s. Opened handles: %s",
+                namedPipeName,
+                Kernel32Util.formatMessageFromLastErrorCode(error),
+                WindowsHandle.getNumberOfOpenedHandles()));
+      }
+
       if (error != WinError.ERROR_IO_PENDING) {
         throw new WindowsNamedPipeException(
             "Cannot write into named pipe %s output steam. Error: %s",
@@ -91,7 +102,7 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
   }
 
   private boolean isEndOfThePipe(int error) {
-    return error == WinError.ERROR_BROKEN_PIPE;
+    return error == WinError.ERROR_BROKEN_PIPE || error == WinError.ERROR_HANDLE_EOF;
   }
 
   @Override
