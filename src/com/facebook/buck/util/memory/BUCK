@@ -1,0 +1,13 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
+
+java_immutables_library(
+    name = "memory",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+    ],
+    visibility = [ "PUBLIC" ],
+)
