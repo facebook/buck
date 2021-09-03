@@ -193,8 +193,10 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
       LOGGER.info(e, "Named pipe `%s` is closed", namedPipeName);
     } catch (IOException e) {
       LOGGER.warn(e, "Cannot read and drop from named pipe: %s", namedPipeName);
+    } finally {
+      LOGGER.info(
+          "Read and drop %s total bytes from named pipe: %s", totalBytesRead, namedPipeName);
     }
-    LOGGER.info("Read and drop %s total bytes from named pipe: %s", totalBytesRead, namedPipeName);
   }
 
   private DownwardProtocol readProtocol(InputStream inputStream)
