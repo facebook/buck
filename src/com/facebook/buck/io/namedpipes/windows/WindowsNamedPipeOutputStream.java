@@ -73,7 +73,7 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
       if (error == WinError.ERROR_PIPE_NOT_CONNECTED || error == WinError.ERROR_INVALID_HANDLE) {
         throw new PipeNotConnectedException(
             String.format(
-                "WriteFile() failed. Named pipe: %s, error: %s. Opened handles: %s",
+                "WriteFile() failed. Named pipe: %s, error: %s Opened handles: %s",
                 namedPipeName,
                 Kernel32Util.formatMessageFromLastErrorCode(error),
                 WindowsHandle.getNumberOfOpenedHandles()));

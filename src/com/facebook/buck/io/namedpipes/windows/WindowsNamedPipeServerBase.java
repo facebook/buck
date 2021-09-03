@@ -153,7 +153,7 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
           closeOpenPipe(handle);
           throw new PipeNotConnectedException(
               String.format(
-                  "GetOverlappedResult() failed for connect operation. Named pipe: %s, error: %s, previous error: %s. Opened handles: %s",
+                  "GetOverlappedResult() failed for connect operation. Named pipe: %s, error: %s previous error: %s Opened handles: %s",
                   namedPipe,
                   Kernel32Util.getLastErrorMessage(),
                   Kernel32Util.formatMessageFromLastErrorCode(connectError),

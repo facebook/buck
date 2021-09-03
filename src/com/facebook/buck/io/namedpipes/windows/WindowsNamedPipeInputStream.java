@@ -81,7 +81,7 @@ class WindowsNamedPipeInputStream extends InputStream {
       if (error == WinError.ERROR_PIPE_NOT_CONNECTED || error == WinError.ERROR_INVALID_HANDLE) {
         throw new PipeNotConnectedException(
             String.format(
-                "ReadFile() failed. Named pipe: %s, error: %s. Opened handles: %s",
+                "ReadFile() failed. Named pipe: %s, error: %s Opened handles: %s",
                 namedPipeName,
                 Kernel32Util.formatMessageFromLastErrorCode(error),
                 WindowsHandle.getNumberOfOpenedHandles()));
