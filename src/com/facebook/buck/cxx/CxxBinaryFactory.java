@@ -314,6 +314,6 @@ public class CxxBinaryFactory {
         CxxDescriptionEnhancer.parseHeaders(
             buildTarget, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args),
         HeaderVisibility.PRIVATE,
-        true);
+        cxxPlatform.getPrivateHeadersSymlinksEnabled());
   }
 }

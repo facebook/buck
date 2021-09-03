@@ -149,22 +149,28 @@ public class CxxDescriptionEnhancer {
       TargetConfiguration targetConfiguration,
       CxxPlatform cxxPlatform,
       boolean shouldCreateHeadersSymlinks) {
-    return cxxPlatform
-        .getHeaderMode()
-        .orElseGet(
-            () -> {
-              boolean useHeaderMap =
-                  (cxxPlatform.getCpp().resolve(resolver, targetConfiguration).supportsHeaderMaps()
-                      && cxxPlatform
-                          .getCxxpp()
-                          .resolve(resolver, targetConfiguration)
-                          .supportsHeaderMaps());
-              return !useHeaderMap
-                  ? HeaderMode.SYMLINK_TREE_ONLY
-                  : (shouldCreateHeadersSymlinks
-                      ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
-                      : HeaderMode.HEADER_MAP_ONLY);
-            });
+    if (cxxPlatform.getHeaderMode().isPresent()) {
+      HeaderMode headerMode = cxxPlatform.getHeaderMode().get();
+      if (headerMode == HeaderMode.HEADER_MAP_ONLY && shouldCreateHeadersSymlinks) {
+        // System includes require symlinks as they will not include the
+        // headermap path, so we need to force a symlink mode here if requested.
+        return HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP;
+      } else {
+        return headerMode;
+      }
+    } else {
+      boolean useHeaderMap =
+          (cxxPlatform.getCpp().resolve(resolver, targetConfiguration).supportsHeaderMaps()
+              && cxxPlatform
+                  .getCxxpp()
+                  .resolve(resolver, targetConfiguration)
+                  .supportsHeaderMaps());
+      return !useHeaderMap
+          ? HeaderMode.SYMLINK_TREE_ONLY
+          : (shouldCreateHeadersSymlinks
+              ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
+              : HeaderMode.HEADER_MAP_ONLY);
+    }
   }
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
