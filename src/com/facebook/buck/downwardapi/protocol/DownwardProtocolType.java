@@ -51,6 +51,7 @@ public enum DownwardProtocolType {
       DownwardProtocolType downwardProtocolType =
           DownwardProtocolUtils.readFromStream(
               inputStream,
+              1 + DownwardProtocolUtils.DELIMITER.length(),
               protocolId ->
                   Arrays.stream(values())
                       .filter(p -> p.protocolId.equals(protocolId))

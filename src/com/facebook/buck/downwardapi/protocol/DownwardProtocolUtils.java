@@ -27,7 +27,6 @@ import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.PipelineFinishedEvent;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downward.model.StepEvent;
-import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
@@ -38,7 +37,7 @@ import java.util.function.Function;
 /** Utility class for Downward Protocol API. */
 class DownwardProtocolUtils {
 
-  private static final String DELIMITER = System.lineSeparator();
+  static final String DELIMITER = System.lineSeparator();
 
   private DownwardProtocolUtils() {}
 
@@ -89,18 +88,23 @@ class DownwardProtocolUtils {
     }
   }
 
-  static <T> T readFromStream(InputStream inputStream, Function<String, T> converter)
-      throws IOException {
-    int read;
+  static <T> T readFromStream(
+      InputStream inputStream, int maxReadChars, Function<String, T> converter) throws IOException {
     StringBuilder buffer = new StringBuilder();
+    int read;
     while ((read = inputStream.read()) != -1) {
       buffer.append((char) read);
       if (isDelimiter(buffer)) {
         buffer.setLength(buffer.length() - DELIMITER.length());
         return converter.apply(buffer.toString());
       }
+      if (buffer.length() >= maxReadChars) {
+        throw new InvalidDownwardProtocolException(
+            String.format(
+                "Cannot find an expected EOL delimiter. Read over than %s chars", maxReadChars));
+      }
     }
-    throw new PipeNotConnectedException("Can't read expected object!");
+    throw new InvalidDownwardProtocolException("Cannot read expected object!");
   }
 
   private static boolean isDelimiter(StringBuilder sb) {

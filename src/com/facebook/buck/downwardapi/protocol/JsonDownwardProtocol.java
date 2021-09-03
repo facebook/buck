@@ -44,7 +44,11 @@ public enum JsonDownwardProtocol implements DownwardProtocol {
 
   private static final DownwardProtocolType PROTOCOL_TYPE = DownwardProtocolType.JSON;
   private static final String PROTOCOL_ID = PROTOCOL_TYPE.getProtocolId();
+
   private static final int MAX_NESTED_TOOLS_WITHOUT_EVENTS = 10;
+  // up to 5 digit size = 99_999 -> less than 100K
+  private static final int MAX_MESSAGE_SIZE_LENGTH_IN_CHARS =
+      5 + DownwardProtocolUtils.DELIMITER.length();
 
   private final JsonFormat.Parser parser = JsonFormat.parser();
   private final JsonFormat.Printer printer = JsonFormat.printer();
@@ -84,7 +88,8 @@ public enum JsonDownwardProtocol implements DownwardProtocol {
 
   private String readJsonObjectAsString(InputStream inputStream) throws IOException {
     int length =
-        DownwardProtocolUtils.readFromStream(inputStream, s -> toLength(inputStream, s, 1));
+        DownwardProtocolUtils.readFromStream(
+            inputStream, MAX_MESSAGE_SIZE_LENGTH_IN_CHARS, s -> toLength(inputStream, s, 1));
 
     byte[] buffer = new byte[length];
     int bytesRead = inputStream.read(buffer);
@@ -130,7 +135,7 @@ public enum JsonDownwardProtocol implements DownwardProtocol {
   private int readLengthFromTheNestedTool(InputStream inputStream, int depth) {
     try {
       return DownwardProtocolUtils.readFromStream(
-          inputStream, s -> toLength(inputStream, s, depth + 1));
+          inputStream, MAX_MESSAGE_SIZE_LENGTH_IN_CHARS, s -> toLength(inputStream, s, depth + 1));
     } catch (NumberFormatException e) {
       // expected integer number, but got something else.
       throw new InvalidDownwardProtocolException(

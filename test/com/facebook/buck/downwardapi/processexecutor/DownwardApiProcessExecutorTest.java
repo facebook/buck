@@ -724,6 +724,130 @@ public class DownwardApiProcessExecutorTest {
   }
 
   @Test
+  public void hugeMalformedDataInsteadOfProtocolType() throws IOException, InterruptedException {
+    int maxCharsRead = 1 + System.lineSeparator().length();
+    int fakeBytesToWrite = 100_000;
+    FakeProcess fakeProcess =
+        new FakeProcess(
+            Optional.of(
+                () -> {
+                  try (NamedPipeWriter writer =
+                          NamedPipeFactory.getFactory()
+                              .connectAsWriter(Paths.get(namedPipeReader.getName()));
+                      OutputStream outputStream = writer.getOutputStream()) {
+                    // fake bytes
+                    for (int i = 0; i < fakeBytesToWrite + maxCharsRead; i++) {
+                      outputStream.write(42);
+                    }
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                  return Optional.empty();
+                }));
+
+    DownwardApiProcessExecutor processExecutor =
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
+
+    DownwardApiExecutionResult result = launchAndExecute(processExecutor);
+    verifyExecutionResult(result);
+
+    checkRecords(
+        "Did not find log message about no finding of expected EOL delimiter",
+        executorLogSink,
+        Level.SEVERE,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          if (message.startsWith("Received invalid downward protocol")) {
+
+            String causeMessage = logRecord.getThrown().getMessage();
+            return causeMessage.equals(
+                "Cannot find an expected EOL delimiter. Read over than " + maxCharsRead + " chars");
+          }
+          return false;
+        });
+
+    checkRecords(
+        "Did not find log message about read and drop " + fakeBytesToWrite + " fake bytes",
+        executorLogSink,
+        Level.INFO,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          return message.equals(
+                  "Read and drop "
+                      + fakeBytesToWrite
+                      + " total bytes from named pipe: "
+                      + namedPipeReader.getName())
+              && message.endsWith("bytes from named pipe: " + namedPipeReader.getName());
+        });
+  }
+
+  @Test
+  public void hugeMalformedDataInsteadOfMessageLength() throws IOException, InterruptedException {
+    int maxCharsRead = 5 + System.lineSeparator().length();
+    int fakeBytesToWrite = 100_000;
+    FakeProcess fakeProcess =
+        new FakeProcess(
+            Optional.of(
+                () -> {
+                  try (NamedPipeWriter writer =
+                          NamedPipeFactory.getFactory()
+                              .connectAsWriter(Paths.get(namedPipeReader.getName()));
+                      OutputStream outputStream = writer.getOutputStream()) {
+                    // write a valid protocol type
+                    for (int i = 0; i < 3; i++) {
+                      outputStream.write(
+                          String.format(
+                                  "%s%s",
+                                  DownwardProtocolType.JSON.getProtocolId(), System.lineSeparator())
+                              .getBytes(StandardCharsets.UTF_8));
+                    }
+
+                    // fake bytes
+                    for (int i = 0; i < fakeBytesToWrite + maxCharsRead; i++) {
+                      outputStream.write(42);
+                    }
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                  return Optional.empty();
+                }));
+
+    DownwardApiProcessExecutor processExecutor =
+        getDownwardApiProcessExecutor(namedPipeReader, buckEventBus, clock, params, fakeProcess);
+
+    DownwardApiExecutionResult result = launchAndExecute(processExecutor);
+    verifyExecutionResult(result);
+
+    checkRecords(
+        "Did not find log message about no finding of expected EOL delimiter",
+        executorLogSink,
+        Level.SEVERE,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          if (message.equals("Received invalid downward protocol message")) {
+            String errorMessage = logRecord.getThrown().getMessage();
+            return errorMessage.equals(
+                "Cannot find an expected EOL delimiter. Read over than " + maxCharsRead + " chars");
+          }
+          return false;
+        });
+
+    checkRecords(
+        "Did not find log message about read and drop " + fakeBytesToWrite + " fake bytes",
+        executorLogSink,
+        Level.INFO,
+        logRecord -> {
+          String message = logRecord.getMessage();
+          return message.equals(
+                  "Read and drop "
+                      + fakeBytesToWrite
+                      + " total bytes from named pipe: "
+                      + namedPipeReader.getName())
+              && message.endsWith("bytes from named pipe: " + namedPipeReader.getName());
+        });
+  }
+
+  @Test
   public void namedPipeClosedTooEarly() throws IOException, InterruptedException {
     FakeProcess fakeProcess =
         new FakeProcess(
