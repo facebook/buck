@@ -344,10 +344,10 @@ public class DownwardApiProcessExecutorTest {
     checkRecords(
         "Did not find log message about read and drop data from the input stream",
         executorLogSink,
-        Level.FINE,
+        Level.INFO,
         logRecord -> {
           String message = logRecord.getMessage();
-          return message.startsWith("Read and drop")
+          return message.startsWith("Read and drop ")
               && message.endsWith("bytes from named pipe: " + namedPipeReader.getName());
         });
   }

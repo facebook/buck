@@ -17,10 +17,7 @@
 package com.facebook.buck.testutil;
 
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Handler;
-import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
@@ -43,7 +40,7 @@ import org.junit.runners.model.Statement;
  */
 public final class TestLogSink extends Handler implements TestRule {
 
-  private final List<LogRecord> records = new ArrayList<>();
+  private final ImmutableList.Builder<LogRecord> records = ImmutableList.builder();
   private final String loggerNameUnderTest;
 
   /**
@@ -66,7 +63,7 @@ public final class TestLogSink extends Handler implements TestRule {
 
   /** Retrieve the log records that were published. */
   public ImmutableList<LogRecord> getRecords() {
-    return ImmutableList.copyOf(records);
+    return records.build();
   }
 
   /**
@@ -79,30 +76,6 @@ public final class TestLogSink extends Handler implements TestRule {
         messageMatcher, "a LogRecord with message", "message") {
       @Override
       protected String featureValueOf(LogRecord logRecord) {
-        return logRecord.getMessage();
-      }
-    };
-  }
-
-  /**
-   * Construct a hamcrest matcher that matches on the {@link LogRecord}'s message field and {@link
-   * LogRecord}'s level.
-   *
-   * @param messageMatcher Matcher for the message.
-   * @param expectedLevel Expected log record level.
-   */
-  public static Matcher<LogRecord> logRecordWithMessageAndLevel(
-      Matcher<String> messageMatcher, Level expectedLevel) {
-    return new FeatureMatcher<LogRecord, String>(
-        messageMatcher,
-        "a LogRecord with message and level=" + expectedLevel,
-        "message_and_expected_level_" + expectedLevel) {
-      @Override
-      protected String featureValueOf(LogRecord logRecord) {
-        if (!logRecord.getLevel().equals(expectedLevel)) {
-          return "";
-        }
-
         return logRecord.getMessage();
       }
     };
