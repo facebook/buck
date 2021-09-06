@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Optional;
@@ -174,6 +175,11 @@ public class CgoLibraryDescription
               .map(BuildRule::getBuildTarget)
               .collect(ImmutableList.toImmutableList());
 
+      Path packageName =
+          args.getPackageName()
+              .map(Paths::get)
+              .orElse(goBuckConfig.getDefaultPackageName(buildTarget));
+
       BuildTarget cgoLibTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("cgo"));
       CGoLibrary lib =
           (CGoLibrary)
@@ -183,6 +189,7 @@ public class CgoLibraryDescription
                   projectFilesystem,
                   graphBuilder,
                   context.getCellPathResolver(),
+                  packageName,
                   cxxBuckConfig,
                   downwardApiConfig,
                   platform.get(),

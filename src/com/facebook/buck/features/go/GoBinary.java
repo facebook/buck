@@ -49,7 +49,10 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
@@ -59,6 +62,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final Linker cxxLinker;
   @AddToRuleKey private final ImmutableList<Arg> linkerArgs;
   @AddToRuleKey private final ImmutableList<Arg> cxxLinkerArgs;
+  @AddToRuleKey private final GoLinkStep.BuildMode buildMode;
   @AddToRuleKey private final GoLinkStep.LinkMode linkMode;
   @AddToRuleKey private final GoPlatform platform;
 
@@ -67,16 +71,19 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final SymlinkTree linkTree;
   private final ImmutableSortedSet<SourcePath> resources;
   @AddToRuleKey private final boolean withDownwardApi;
+  private final ImmutableMap<Path, SourcePath> cgoExportedHeaders;
 
   public GoBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ImmutableSortedSet<SourcePath> resources,
+      ImmutableMap<Path, SourcePath> cgoExportedHeaders,
       SymlinkTree linkTree,
       GoCompile mainObject,
       Tool linker,
       Linker cxxLinker,
+      GoLinkStep.BuildMode buildMode,
       GoLinkStep.LinkMode linkMode,
       ImmutableList<Arg> linkerArgs,
       ImmutableList<Arg> cxxLinkerArgs,
@@ -87,21 +94,20 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.cxxLinker = cxxLinker;
     this.cxxLinkerArgs = cxxLinkerArgs;
     this.resources = resources;
+    this.cgoExportedHeaders = cgoExportedHeaders;
     this.linker = linker;
     this.linkTree = linkTree;
     this.mainObject = mainObject;
     this.platform = platform;
     this.withDownwardApi = withDownwardApi;
 
-    String outputFormat = "%s/" + buildTarget.getShortName();
-    if (platform.getGoOs() == GoOs.WINDOWS) {
-      outputFormat = outputFormat + ".exe";
-    }
+    String outputFormat = getOutputFormat(buildTarget, platform, buildMode);
     this.output =
         BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, outputFormat);
 
     this.linkerArgs = linkerArgs;
     this.linkMode = linkMode;
+    this.buildMode = buildMode;
   }
 
   @Override
@@ -124,12 +130,37 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return output.getParent();
   }
 
+  private String getOutputFormat(
+      BuildTarget buildTarget, GoPlatform platform, GoLinkStep.BuildMode buildMode) {
+    String outputFormat = "%s/" + buildTarget.getShortName();
+
+    switch (buildMode) {
+      case C_SHARED:
+        if (platform.getGoOs() == GoOs.DARWIN) {
+          return outputFormat + ".dylib";
+        }
+        if (platform.getGoOs() == GoOs.WINDOWS) {
+          return outputFormat + ".dll";
+        }
+        return outputFormat + ".so";
+      case C_ARCHIVE:
+        return outputFormat + ".a";
+      case EXECUTABLE:
+        if (platform.getGoOs() == GoOs.WINDOWS) {
+          return outputFormat + ".exe";
+        }
+    }
+
+    return outputFormat;
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
     buildableContext.recordArtifact(output.getPath());
 
+    ProjectFilesystem filesystem = getProjectFilesystem();
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -151,9 +182,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         steps.add(
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    outputResourcePath.getParent())));
+                    context.getBuildCellRootPath(), filesystem, outputResourcePath.getParent())));
         steps.add(
             CopyStep.forDirectory(
                 resolver.getCellUnsafeRelPath(resource),
@@ -163,10 +192,30 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         steps.add(
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    outputResourcePath.getParent())));
+                    context.getBuildCellRootPath(), filesystem, outputResourcePath.getParent())));
         steps.add(CopyStep.forFile(resolver.getCellUnsafeRelPath(resource), outputResourcePath));
+      }
+    }
+
+    if (buildMode == GoLinkStep.BuildMode.C_SHARED || buildMode == GoLinkStep.BuildMode.C_ARCHIVE) {
+      Path includesDir = output.getParent().resolve("includes");
+
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), includesDir)));
+
+      // copy cgo exported headers to <output_dir>/includes
+      for (Map.Entry<Path, SourcePath> entry : cgoExportedHeaders.entrySet()) {
+        String dstName =
+            entry.getKey().toString().replaceAll(File.separator, "_") + "_cgo_export.h";
+        Path outputResourcePath = includesDir.resolve(dstName);
+
+        buildableContext.recordArtifact(outputResourcePath);
+        steps.add(
+            CopyStep.forFile(
+                resolver.getRelativePath(filesystem, entry.getValue()).getPath(),
+                outputResourcePath));
       }
     }
 
@@ -212,7 +261,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             ImmutableList.of(linkTree.getRoot()),
             platform,
             resolver.getCellUnsafeRelPath(mainObject.getSourcePathToOutput()).getPath(),
-            GoLinkStep.BuildMode.EXECUTABLE,
+            buildMode,
             linkMode,
             output.getPath(),
             ProjectFilesystemUtils.relativize(

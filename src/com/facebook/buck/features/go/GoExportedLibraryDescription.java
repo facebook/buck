@@ -43,16 +43,17 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import org.immutables.value.Value;
 
-public class GoBinaryDescription
-    implements DescriptionWithTargetGraph<GoBinaryDescriptionArg>,
-        ImplicitDepsInferringDescription<GoBinaryDescription.AbstractGoBinaryDescriptionArg>,
-        VersionRoot<GoBinaryDescriptionArg>,
+public class GoExportedLibraryDescription
+    implements DescriptionWithTargetGraph<GoExportedLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<
+            GoExportedLibraryDescription.AbstractGoExportedLibraryDescriptionArg>,
+        VersionRoot<GoExportedLibraryDescriptionArg>,
         Flavored {
 
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
@@ -62,7 +63,7 @@ public class GoBinaryDescription
   private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
 
-  public GoBinaryDescription(
+  public GoExportedLibraryDescription(
       GoBuckConfig goBuckConfig,
       DownwardApiConfig downwardApiConfig,
       ToolchainProvider toolchainProvider) {
@@ -72,8 +73,8 @@ public class GoBinaryDescription
   }
 
   @Override
-  public Class<GoBinaryDescriptionArg> getConstructorArgType() {
-    return GoBinaryDescriptionArg.class;
+  public Class<GoExportedLibraryDescriptionArg> getConstructorArgType() {
+    return GoExportedLibraryDescriptionArg.class;
   }
 
   @Override
@@ -89,7 +90,7 @@ public class GoBinaryDescription
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
-      GoBinaryDescriptionArg args) {
+      GoExportedLibraryDescriptionArg args) {
     GoPlatform platform =
         GoDescriptors.getPlatformForRule(
                 getGoToolchain(buildTarget.getTargetConfiguration()),
@@ -116,7 +117,7 @@ public class GoBinaryDescription
         goBuckConfig,
         downwardApiConfig,
         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
-        GoLinkStep.BuildMode.EXECUTABLE,
+        args.getBuildMode(),
         args.getLinkMode(),
         args.getSrcs(),
         args.getResources(),
@@ -139,9 +140,9 @@ public class GoBinaryDescription
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellNameResolver cellRoots,
-      AbstractGoBinaryDescriptionArg constructorArg,
-      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
-      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+      GoExportedLibraryDescription.AbstractGoExportedLibraryDescriptionArg constructorArg,
+      Builder<BuildTarget> extraDepsBuilder,
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ linker parse time deps.
     UnresolvedGoPlatform platform =
         GoDescriptors.getPlatformForRule(
@@ -159,8 +160,11 @@ public class GoBinaryDescription
   }
 
   @RuleArg
-  interface AbstractGoBinaryDescriptionArg
+  interface AbstractGoExportedLibraryDescriptionArg
       extends BuildRuleArg, HasDeclaredDeps, HasSrcs, HasGoLinkable {
+
+    GoLinkStep.BuildMode getBuildMode();
+
     @Value.Default
     default PatternMatchedCollection<ImmutableList<StringWithMacros>>
         getPlatformExternalLinkerFlags() {

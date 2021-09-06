@@ -39,6 +39,9 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
+import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -250,6 +253,27 @@ abstract class GoDescriptors {
     return toolchain.getDefaultPlatform();
   }
 
+  static Iterable<BuildRule> findCgoLibrary(Iterable<BuildRule> deps) {
+    ImmutableSet.Builder<BuildRule> linkables = ImmutableSet.builder();
+
+    GraphTraversable<BuildRule> graphTraversable =
+        rule -> {
+          if (rule instanceof CGoLibrary) {
+            linkables.add(rule);
+            return Collections.emptyIterator();
+          }
+          return rule.getBuildDeps().iterator();
+        };
+
+    try {
+      new AcyclicDepthFirstPostOrderTraversal<BuildRule>(graphTraversable).traverse(deps);
+    } catch (CycleException e) {
+      throw new HumanReadableException(e.getMessage());
+    }
+
+    return linkables.build();
+  }
+
   static Iterable<BuildRule> getCgoLinkableDeps(Iterable<BuildRule> deps) {
     ImmutableSet.Builder<BuildRule> linkables = ImmutableSet.builder();
     new AbstractBreadthFirstTraversal<BuildRule>(deps) {
@@ -321,6 +345,7 @@ abstract class GoDescriptors {
       GoBuckConfig goBuckConfig,
       DownwardApiConfig downwardApiConfig,
       Linker.LinkableDepType linkStyle,
+      GoLinkStep.BuildMode buildMode,
       Optional<GoLinkStep.LinkMode> linkMode,
       ImmutableSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
@@ -376,6 +401,13 @@ abstract class GoDescriptors {
     // declared deps
     Iterable<BuildRule> cgoLinkables = getCgoLinkableDeps(library.getBuildDeps());
     ImmutableSet.Builder<String> extraFlags = ImmutableSet.builder();
+    ImmutableMap.Builder<Path, SourcePath> cgoExportedHeaders =
+        ImmutableMap.<Path, SourcePath>builder();
+
+    for (BuildRule rule : findCgoLibrary(library.getBuildDeps())) {
+      CGoLibrary lib = (CGoLibrary) rule;
+      cgoExportedHeaders.put(lib.getPackageName(), lib.getExportHeader());
+    }
 
     if (linkStyle == Linker.LinkableDepType.SHARED) {
       // Create a symlink tree with for all shared libraries needed by this binary.
@@ -429,7 +461,9 @@ abstract class GoDescriptors {
     if (!linkMode.isPresent()) {
       linkMode =
           Optional.of(
-              (cxxLinkerArgs.size() > 0)
+              (cxxLinkerArgs.size() > 0
+                      || buildMode == GoLinkStep.BuildMode.C_SHARED
+                      || buildMode == GoLinkStep.BuildMode.C_ARCHIVE)
                   ? GoLinkStep.LinkMode.EXTERNAL
                   : GoLinkStep.LinkMode.INTERNAL);
     }
@@ -451,10 +485,12 @@ abstract class GoDescriptors {
                     .build())
             .withoutExtraDeps(),
         resources,
+        cgoExportedHeaders.build(),
         symlinkTree,
         library,
         platform.getLinker(),
         cxxLinker,
+        buildMode,
         linkMode.get(),
         ImmutableList.copyOf(linkerArgs),
         cxxLinkerArgs,
@@ -508,6 +544,7 @@ abstract class GoDescriptors {
                   goBuckConfig,
                   downwardApiConfig,
                   Linker.LinkableDepType.STATIC_PIC,
+                  GoLinkStep.BuildMode.EXECUTABLE,
                   Optional.empty(),
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),
                   ImmutableSortedSet.of(),

@@ -50,6 +50,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -111,6 +112,18 @@ public class GoBinaryIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("run", "//src/asm_test:bin");
     result.assertSuccess();
     assertThat(result.getStdout(), Matchers.containsString("Sum is 6"));
+  }
+
+  @Test
+  @Ignore("c-shared / c-archive mode needs go.root version to be compiled with '-shared' flag")
+  public void binaryWithCsharedMode() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.10.0");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("run", "//src/c_shared:main");
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.containsString("GoFunction: 3"));
   }
 
   @Test
