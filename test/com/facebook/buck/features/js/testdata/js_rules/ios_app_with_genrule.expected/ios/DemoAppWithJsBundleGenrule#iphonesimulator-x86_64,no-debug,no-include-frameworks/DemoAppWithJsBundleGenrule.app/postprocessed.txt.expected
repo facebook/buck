@@ -28,6 +28,10 @@
   "outputPath" : "@/buck-out/gen/js/extras#ios,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
   "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,ios,transform-profile-default.jslib",
+  "extraData" : {
+    "arbitrary" : "extra",
+    "json" : 1
+  },
   "flavors" : [
     "ios"
   ]

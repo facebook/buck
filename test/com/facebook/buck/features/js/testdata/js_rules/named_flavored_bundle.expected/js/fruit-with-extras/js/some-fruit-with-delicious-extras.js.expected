@@ -24,6 +24,10 @@
   "outputPath" : "@/buck-out/gen/js/extras#transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
   "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,transform-profile-default.jslib",
+  "extraData" : {
+    "arbitrary" : "extra",
+    "json" : 1
+  },
   "flavors" : [ ]
 }
 {

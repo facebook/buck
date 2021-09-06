@@ -42,6 +42,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.shell.ProvidesWorkerTool;
@@ -176,7 +177,11 @@ public class JsLibraryDescription
         Stream<BuildTarget> declaredDeps = args.getDeps().stream();
         Stream<BuildTarget> deps = Stream.concat(declaredDeps, queryDeps);
         return new LibraryBuilder(
-                context.getTargetGraph(), graphBuilder, buildTarget, withDownwardApi)
+                context.getTargetGraph(),
+                graphBuilder,
+                buildTarget,
+                withDownwardApi,
+                JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots))
             .setLibraryDependencies(deps)
             .build(projectFilesystem, worker);
       }
@@ -315,6 +320,7 @@ public class JsLibraryDescription
     private final ActionGraphBuilder graphBuilder;
     private final BuildTarget baseTarget;
     private final boolean withDownwardApi;
+    private final Optional<Arg> extraJson;
 
     @Nullable private ImmutableList<JsLibrary> libraryDependencies;
 
@@ -322,11 +328,13 @@ public class JsLibraryDescription
         TargetGraph targetGraph,
         ActionGraphBuilder graphBuilder,
         BuildTarget baseTarget,
-        boolean withDownwardApi) {
+        boolean withDownwardApi,
+        Optional<Arg> extraJson) {
       this.targetGraph = targetGraph;
       this.baseTarget = baseTarget;
       this.graphBuilder = graphBuilder;
       this.withDownwardApi = withDownwardApi;
+      this.extraJson = extraJson;
     }
 
     private LibraryBuilder setLibraryDependencies(Stream<BuildTarget> deps) {
@@ -353,7 +361,8 @@ public class JsLibraryDescription
               .map(JsLibrary::getSourcePathToOutput)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
           worker,
-          withDownwardApi);
+          withDownwardApi,
+          extraJson);
     }
 
     private boolean hasFlavors() {

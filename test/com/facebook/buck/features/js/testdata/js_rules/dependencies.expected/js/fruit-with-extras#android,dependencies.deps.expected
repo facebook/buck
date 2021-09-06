@@ -26,6 +26,10 @@
   "outputPath" : "@/buck-out/gen/js/extras#android,transform-profile-default.jslib",
   "dependencyLibraryFilePaths" : [ ],
   "aggregatedSourceFilesFilePath" : "@/buck-out/gen/js/extras#_files_,android,transform-profile-default.jslib",
+  "extraData" : {
+    "arbitrary" : "extra",
+    "json" : 1
+  },
   "flavors" : [
     "android"
   ]

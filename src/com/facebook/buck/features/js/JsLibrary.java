@@ -29,6 +29,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -55,7 +56,8 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
       BuildTargetSourcePath filesDependency,
       ImmutableSortedSet<SourcePath> libraryDependencies,
       WorkerTool worker,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Optional<Arg> extraJson) {
     super(
         buildTarget,
         projectFilesystem,
@@ -66,7 +68,8 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
             worker,
             buildTarget,
             projectFilesystem,
-            withDownwardApi));
+            withDownwardApi,
+            extraJson));
   }
 
   /** Abstract buildable implementation that is used by JsLibrary and JsLibrary.Files rules */
@@ -117,6 +120,7 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
 
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraryDependencies;
     @AddToRuleKey private final BuildTargetSourcePath filesDependency;
+    @AddToRuleKey private final Optional<Arg> extraJson;
 
     JsLibraryImpl(
         ImmutableSortedSet<SourcePath> libraryDependencies,
@@ -124,10 +128,12 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
         WorkerTool worker,
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
-        boolean withDownwardApi) {
+        boolean withDownwardApi,
+        Optional<Arg> extraJson) {
       super(worker, buildTarget, projectFilesystem, withDownwardApi);
       this.libraryDependencies = libraryDependencies;
       this.filesDependency = filesDependency;
+      this.extraJson = extraJson;
     }
 
     @Override
@@ -148,8 +154,12 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
                   .map(AbsPath::toString)
                   .collect(JsonBuilder.toArrayOfStrings()))
           .addString(
-              "aggregatedSourceFilesFilePath",
-              resolver.getAbsolutePath(filesDependency).toString());
+              "aggregatedSourceFilesFilePath", resolver.getAbsolutePath(filesDependency).toString())
+          .addRaw("extraData", getExtraJson(resolver));
+    }
+
+    private Optional<String> getExtraJson(SourcePathResolverAdapter sourcePathResolverAdapter) {
+      return extraJson.map(a -> Arg.stringify(a, sourcePathResolverAdapter));
     }
   }
 
