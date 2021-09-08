@@ -1,4 +1,0 @@
-# List of buck cell relative paths to turn into eden redirections if running
-# on eden
-ant-out
-intellij-out
