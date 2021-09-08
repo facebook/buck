@@ -44,6 +44,7 @@ import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -214,5 +215,13 @@ public class KotlinTestDescription
 
   @RuleArg
   interface AbstractKotlinTestDescriptionArg
-      extends KotlinLibraryDescription.CoreArg, JavaTestDescription.CoreArg {}
+      extends KotlinLibraryDescription.CoreArg, JavaTestDescription.CoreArg {
+    @Override
+    default KotlinTestDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (KotlinTestDescriptionArg) this;
+      }
+      return KotlinTestDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
+  }
 }

@@ -48,6 +48,7 @@ import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -227,5 +228,13 @@ public class ScalaTestDescription
 
   @RuleArg
   interface AbstractScalaTestDescriptionArg
-      extends ScalaLibraryDescription.CoreArg, JavaTestDescription.CoreArg {}
+      extends ScalaLibraryDescription.CoreArg, JavaTestDescription.CoreArg {
+    @Override
+    default ScalaTestDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (ScalaTestDescriptionArg) this;
+      }
+      return ScalaTestDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
+  }
 }

@@ -19,6 +19,9 @@ package com.facebook.buck.core.description.arg;
 import com.facebook.buck.rules.query.Query;
 import java.util.Optional;
 
+/**
+ * `deps_query` allows you to add additional dependencies to a target via executing a buck query.
+ */
 public interface HasDepsQuery extends HasDeclaredDeps {
 
   // TODO: Remove this and fix descriptions to work with implicit deps.

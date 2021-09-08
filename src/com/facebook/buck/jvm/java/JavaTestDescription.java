@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -55,6 +56,7 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionRoot;
@@ -312,7 +314,7 @@ public class JavaTestDescription
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
   }
 
-  public interface CoreArg extends HasTestTimeout, JavaLibraryDescription.CoreArg {
+  public interface CoreArg extends HasTestTimeout, HasDepsQuery, JavaLibraryDescription.CoreArg {
     ImmutableList<StringWithMacros> getVmArgs();
 
     Optional<TestType> getTestType();
@@ -345,7 +347,15 @@ public class JavaTestDescription
   }
 
   @RuleArg
-  interface AbstractJavaTestDescriptionArg extends CoreArg, HasTestRunner {}
+  interface AbstractJavaTestDescriptionArg extends CoreArg, HasTestRunner {
+    @Override
+    default JavaTestDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (JavaTestDescriptionArg) this;
+      }
+      return JavaTestDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
+  }
 
   public static class CxxLibraryEnhancement {
     public final BuildRuleParams updatedParams;

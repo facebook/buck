@@ -1,0 +1,28 @@
+java_test(
+    name = "java_test_deps_query",
+    srcs = [
+        "SimpleTest.java",
+    ],
+    deps_query = "deps(':class_a', 1)",
+    deps = [
+        ":class_a",
+        "buck//third-party/java/junit:junit",
+    ],
+)
+
+java_library(
+    name = "class_a",
+    srcs = [
+        "ClassA.java",
+    ],
+    deps = [
+        ":class_b",
+    ],
+)
+
+java_library(
+    name = "class_b",
+    srcs = [
+        "ClassB.java",
+    ],
+)

@@ -637,6 +637,14 @@ public class JavaTestIntegrationTest {
   }
 
   @Test
+  public void testSimpleWorkingJunitTestWithDepsQuery() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "java_test_deps_query", temp);
+    workspace.setUp();
+    workspace.runBuckCommand("test", "//:java_test_deps_query").assertSuccess();
+  }
+
+  @Test
   public void testSimpleWorkingJunitTestWithDependencyOrderClasspath() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "java_test_working", temp);

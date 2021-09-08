@@ -45,6 +45,7 @@ import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -200,5 +201,13 @@ public class GroovyTestDescription
 
   @RuleArg
   interface AbstractGroovyTestDescriptionArg
-      extends GroovyLibraryDescription.CoreArg, JavaTestDescription.CoreArg {}
+      extends GroovyLibraryDescription.CoreArg, JavaTestDescription.CoreArg {
+    @Override
+    default GroovyTestDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (GroovyTestDescriptionArg) this;
+      }
+      return GroovyTestDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
+  }
 }

@@ -63,6 +63,7 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -527,6 +528,14 @@ public class RobolectricTestDescription
         return (RobolectricTestDescriptionArg) this;
       }
       return RobolectricTestDescriptionArg.builder().from(this).setSrcs(srcs).build();
+    }
+
+    @Override
+    default RobolectricTestDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (RobolectricTestDescriptionArg) this;
+      }
+      return RobolectricTestDescriptionArg.builder().from(this).setDepsQuery(query).build();
     }
   }
 }
