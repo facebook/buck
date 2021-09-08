@@ -30,21 +30,24 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
+import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import javax.annotation.Nullable;
 
 /**
@@ -127,37 +130,46 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
       throw new HumanReadableException(
           e, "Unknown digest format for second-level content key (%s)", contentKey.toString());
     }
-
-    return Futures.transform(
-        casClient.get().fetch(new GrpcProtocol.GrpcDigest(digest)),
-        (ByteBuffer buf) -> {
-          try {
-            projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
-            Path tmp =
-                projectFilesystem.createTempFile(
-                    projectFilesystem.getBuckPaths().getScratchDir(),
-                    "buckcache_artifact",
-                    ".hybrid-cas.tmp");
-            OutputStream tmpFile = projectFilesystem.newFileOutputStream(tmp);
-
-            WritableByteChannel channel = Channels.newChannel(tmpFile);
-            channel.write(buf);
-
-            channel.close();
-            tmpFile.close();
-
-            projectFilesystem.move(tmp, output.get(), StandardCopyOption.REPLACE_EXISTING);
-          } catch (Exception e) {
-            return CacheResult.error("cas", ArtifactCacheMode.hybrid_thrift_grpc, e.getMessage());
-          }
-
-          return CacheResult.hit(
-              "cas",
-              ArtifactCacheMode.hybrid_thrift_grpc,
-              ImmutableMap.<String, String>builder().build(),
-              digest.getSizeBytes());
-        },
-        MoreExecutors.directExecutor());
+    ImmutableMultimap.Builder<Protocol.Digest, Callable<WritableByteChannel>> digestMap =
+        ImmutableMultimap.builder();
+    ImmutableMultimap.Builder<Protocol.Digest, SettableFuture<Unit>> futureMap =
+        ImmutableMultimap.builder();
+    SettableFuture<Unit> digestFetchFuture = SettableFuture.create();
+    Optional<Path> optionalTempPath = createTempFileForDownload();
+    if (!optionalTempPath.isPresent()) {
+      return Futures.immediateCancelledFuture();
+    }
+    Path tmp = optionalTempPath.get();
+    try (OutputStream tmpFile = projectFilesystem.newFileOutputStream(tmp);
+        WritableByteChannel channel = Channels.newChannel(tmpFile)) {
+      GrpcProtocol.GrpcDigest grpcDigest = new GrpcProtocol.GrpcDigest(digest);
+      digestMap.put(grpcDigest, () -> channel);
+      futureMap.put(grpcDigest, digestFetchFuture);
+      try {
+        // wait for the batchFetchBlobs to complete
+        casClient.get().batchFetchBlobs(digestMap.build(), futureMap.build()).get();
+        // check for individual digest fetch result
+        digestFetchFuture.get();
+        projectFilesystem.move(tmp, output.get(), StandardCopyOption.REPLACE_EXISTING);
+        return Futures.immediateFuture(
+            CacheResult.hit(
+                "cas",
+                ArtifactCacheMode.hybrid_thrift_grpc,
+                ImmutableMap.<String, String>builder().build(),
+                digest.getSizeBytes()));
+      } catch (Exception e) {
+        LOG.warn(
+            e,
+            "Failed fetching digest [%s] with content key [%s] through CAS",
+            grpcDigest,
+            contentKey);
+        return Futures.immediateFuture(
+            CacheResult.error("cas", ArtifactCacheMode.hybrid_thrift_grpc, e.getMessage()));
+      }
+    } catch (IOException e) {
+      LOG.error(e, "Failed writing to the temp file while fetching through CAS", e);
+      return Futures.immediateCancelledFuture();
+    }
   }
 
   @Override
@@ -272,6 +284,20 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
     secondLevelHashComputationTimeMs.addSample(hashComputationEnd - hashComputationStart);
 
     return Digest.newBuilder().setHash(hashCode).setSizeBytes(fileSize).build();
+  }
+
+  private Optional<Path> createTempFileForDownload() {
+    try {
+      projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
+      return Optional.of(
+          projectFilesystem.createTempFile(
+              projectFilesystem.getBuckPaths().getScratchDir(),
+              "buckcache_artifact",
+              ".hybrid-cas.tmp"));
+    } catch (IOException e) {
+      LOG.error(e, "Failed creating temp file for downloading through CAS", e);
+      return Optional.empty();
+    }
   }
 
   @Override

@@ -30,11 +30,15 @@ import com.facebook.buck.remoteexecution.util.OutputsMaterializer;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.types.Unit;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /** Implementation of a CAS client using GRPC. */
 public class GrpcContentAddressableStorageClient implements ContentAddressedStorageClient {
@@ -105,5 +109,12 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
   @Override
   public ListenableFuture<ByteBuffer> fetch(Digest digest) {
     return fetcher.fetch(digest);
+  }
+
+  @Override
+  public ListenableFuture<Unit> batchFetchBlobs(
+      ImmutableMultimap<Digest, Callable<WritableByteChannel>> requests,
+      ImmutableMultimap<Protocol.Digest, SettableFuture<Unit>> futures) {
+    return fetcher.batchFetchBlobs(requests, futures);
   }
 }

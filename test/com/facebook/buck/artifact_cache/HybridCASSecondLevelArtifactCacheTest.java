@@ -216,7 +216,7 @@ public class HybridCASSecondLevelArtifactCacheTest {
     Futures.getUnchecked(cache.fetchAsync(null, "cas/Hello!", LazyPath.ofInstance(tmp.newFile())));
   }
 
-  @Test(expected = Exception.class)
+  @Test
   public void missingDigestFetch() throws IOException {
     ContentAddressedStorageClient casClient =
         new LocalContentAddressedStorage(
@@ -232,11 +232,13 @@ public class HybridCASSecondLevelArtifactCacheTest {
             100,
             0);
 
-    Futures.getUnchecked(
-        cache.fetchAsync(
-            null,
-            "cas/7884234c0748f0e1bfd8de1393defa38965bc13e:396",
-            LazyPath.ofInstance(tmp.newFile())));
+    CacheResult result =
+        Futures.getUnchecked(
+            cache.fetchAsync(
+                null,
+                "cas/7884234c0748f0e1bfd8de1393defa38965bc13e:396",
+                LazyPath.ofInstance(tmp.newFile())));
+    assertEquals(CacheResultType.ERROR, result.getType());
   }
 
   @Test(expected = RuntimeException.class)

@@ -243,6 +243,13 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
     return fetcher.fetch(digest);
   }
 
+  @Override
+  public ListenableFuture<Unit> batchFetchBlobs(
+      ImmutableMultimap<Protocol.Digest, Callable<WritableByteChannel>> requests,
+      ImmutableMultimap<Protocol.Digest, SettableFuture<Unit>> futures)
+      throws IOException {
+    return fetcher.batchFetchBlobs(requests, futures);
+  }
   /**
    * Materializes the outputs into the build root. All required data must be present (or inlined).
    */

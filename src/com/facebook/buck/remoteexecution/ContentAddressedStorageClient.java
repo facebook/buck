@@ -21,13 +21,16 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.util.types.Unit;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /** This is a simple ContentAddressedStorageClient interface used for remote execution. */
 public interface ContentAddressedStorageClient {
@@ -43,6 +46,11 @@ public interface ContentAddressedStorageClient {
   boolean containsDigest(Digest digest);
 
   ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest);
+
+  ListenableFuture<Unit> batchFetchBlobs(
+      ImmutableMultimap<Digest, Callable<WritableByteChannel>> requests,
+      ImmutableMultimap<Protocol.Digest, SettableFuture<Unit>> futures)
+      throws IOException;
 
   /** Interface for filesystem operations required for materialization. */
   interface FileMaterializer {

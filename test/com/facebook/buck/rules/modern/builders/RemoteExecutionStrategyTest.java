@@ -57,6 +57,7 @@ import com.facebook.buck.rules.modern.NoOpModernBuildRule;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Futures;
@@ -66,6 +67,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,6 +75,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -537,6 +540,13 @@ public class RemoteExecutionStrategyTest {
 
         @Override
         public ListenableFuture<ByteBuffer> fetch(Digest digest) {
+          return Futures.immediateFuture(null);
+        }
+
+        @Override
+        public ListenableFuture<Unit> batchFetchBlobs(
+            ImmutableMultimap<Digest, Callable<WritableByteChannel>> requests,
+            ImmutableMultimap<Protocol.Digest, SettableFuture<Unit>> futures) {
           return Futures.immediateFuture(null);
         }
       };
