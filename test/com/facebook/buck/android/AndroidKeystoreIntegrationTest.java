@@ -41,16 +41,34 @@ public class AndroidKeystoreIntegrationTest {
   }
 
   @Test
-  public void testKeystoreOutput() throws IOException {
-    Path output = workspace.buildAndReturnOutput("//keystores:copy_keystore");
+  public void testKeystoreOutputUsingFlavor() throws IOException {
+    Path output = workspace.buildAndReturnOutput("//keystores:copy_keystore_using_flavor");
     String copyOutput = workspace.getFileContents(output);
     String source = workspace.getFileContents("keystores/debug.keystore");
     assertEquals(source, copyOutput);
   }
 
   @Test
-  public void testKeystorePropertiesOutput() throws IOException {
-    Path output = workspace.buildAndReturnOutput("//keystores:copy_keystore_properties");
+  public void testKeystorePropertiesOutputUsingFlavor() throws IOException {
+    Path output =
+        workspace.buildAndReturnOutput("//keystores:copy_keystore_properties_using_flavor");
+    String copyOutput = workspace.getFileContents(output);
+    String source = workspace.getFileContents("keystores/debug.keystore.properties");
+    assertEquals(source, copyOutput);
+  }
+
+  @Test
+  public void testKeystoreOutputUsingNamedOutput() throws IOException {
+    Path output = workspace.buildAndReturnOutput("//keystores:copy_keystore_using_named_output");
+    String copyOutput = workspace.getFileContents(output);
+    String source = workspace.getFileContents("keystores/debug.keystore");
+    assertEquals(source, copyOutput);
+  }
+
+  @Test
+  public void testKeystorePropertiesOutputUsingNamedOutput() throws IOException {
+    Path output =
+        workspace.buildAndReturnOutput("//keystores:copy_keystore_properties_using_named_output");
     String copyOutput = workspace.getFileContents(output);
     String source = workspace.getFileContents("keystores/debug.keystore.properties");
     assertEquals(source, copyOutput);

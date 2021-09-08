@@ -6,12 +6,23 @@ keystore(
 )
 
 genrule(
-    name = "copy_keystore",
+    name = "copy_keystore_using_flavor",
     out = "copy.keystore",
     cmd = "cp $(location :debug#keystore) $OUT",
 )
 genrule(
-    name = "copy_keystore_properties",
+    name = "copy_keystore_properties_using_flavor",
     out = "copy.properties",
     cmd = "cp $(location :debug#properties) $OUT",
+)
+
+genrule(
+    name = "copy_keystore_using_named_output",
+    out = "copy.keystore",
+    cmd = "cp $(location :debug[keystore]) $OUT",
+)
+genrule(
+    name = "copy_keystore_properties_using_named_output",
+    out = "copy.properties",
+    cmd = "cp $(location :debug[properties]) $OUT",
 )
