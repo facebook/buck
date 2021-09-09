@@ -182,43 +182,7 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
           continue;
         }
 
-        // Match against other keys of the entitlements.  Otherwise, we could potentially select
-        // a profile that doesn't have all the needed entitlements, causing a error when
-        // installing to device.
-        //
-        // For example: get-task-allow, aps-environment, etc.
-        boolean match = true;
-        if (entitlements.isPresent()) {
-          ImmutableMap<String, NSObject> entitlementsDict = entitlements.get();
-          ImmutableMap<String, NSObject> profileEntitlements = profile.getEntitlements();
-          for (Entry<String, NSObject> entry : entitlementsDict.entrySet()) {
-            NSObject profileEntitlement = profileEntitlements.get(entry.getKey());
-            if (!(FORCE_INCLUDE_ENTITLEMENTS.contains(entry.getKey())
-                || matchesOrArrayIsSubsetOf(
-                    entry.getKey(), entry.getValue(), profileEntitlement, platform))) {
-              match = false;
-              String profileEntitlementString = getStringFromNSObject(profileEntitlement);
-              String entryValueString = getStringFromNSObject(entry.getValue());
-              String message =
-                  "Profile "
-                      + profile.getProfilePath().getFileName()
-                      + " ("
-                      + profile.getUUID()
-                      + ") with bundleID "
-                      + profile.getAppID().getSecond()
-                      + " correctly matches. However there is a mismatched entitlement "
-                      + entry.getKey()
-                      + ";"
-                      + System.lineSeparator()
-                      + "value in provisioning profile is: "
-                      + profileEntitlementString
-                      + "but expected value from entitlements file: "
-                      + entryValueString;
-              LOG.debug(message);
-              lines.add(message);
-            }
-          }
-        }
+        boolean match = checkEntitlementsMatch(entitlements, profile, platform, lines);
 
         // Reject any certificate which we know we can't sign with the supplied identities.
         ImmutableSet<HashCode> validFingerprints = profile.getDeveloperCertificateFingerprints();
@@ -272,6 +236,55 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
       return bundleIdPattern.length();
     }
     return -1;
+  }
+
+  // Match against other keys of the entitlements.  Otherwise, we could potentially select
+  // a profile that doesn't have all the needed entitlements, causing a error when
+  // installing to device.
+  //
+  // For example: get-task-allow, aps-environment, etc.
+  private boolean checkEntitlementsMatch(
+      Optional<ImmutableMap<String, NSObject>> expectedEntitlements,
+      ProvisioningProfileMetadata profile,
+      ApplePlatform platform,
+      ImmutableList.Builder<String> diagnosticsBuilder) {
+
+    if (!expectedEntitlements.isPresent()) {
+      return true;
+    }
+
+    boolean result = true;
+
+    ImmutableMap<String, NSObject> entitlementsDict = expectedEntitlements.get();
+    ImmutableMap<String, NSObject> profileEntitlements = profile.getEntitlements();
+    for (Entry<String, NSObject> entry : entitlementsDict.entrySet()) {
+      NSObject profileEntitlement = profileEntitlements.get(entry.getKey());
+      if (!FORCE_INCLUDE_ENTITLEMENTS.contains(entry.getKey())
+          && !matchesOrArrayIsSubsetOf(
+              entry.getKey(), entry.getValue(), profileEntitlement, platform)) {
+        result = false;
+        String profileEntitlementString = getStringFromNSObject(profileEntitlement);
+        String entryValueString = getStringFromNSObject(entry.getValue());
+        String message =
+            "Profile "
+                + profile.getProfilePath().getFileName()
+                + " ("
+                + profile.getUUID()
+                + ") with bundleID "
+                + profile.getAppID().getSecond()
+                + " correctly matches. However there is a mismatched entitlement "
+                + entry.getKey()
+                + ";"
+                + System.lineSeparator()
+                + "value in provisioning profile is: "
+                + profileEntitlementString
+                + "but expected value from entitlements file: "
+                + entryValueString;
+        LOG.debug(message);
+        diagnosticsBuilder.add(message);
+      }
+    }
+    return result;
   }
 
   public static ProvisioningProfileStore empty() {
