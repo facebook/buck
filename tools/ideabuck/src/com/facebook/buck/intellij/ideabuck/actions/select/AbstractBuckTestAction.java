@@ -123,7 +123,7 @@ public abstract class AbstractBuckTestAction extends AnAction {
                       .showWarningBalloon(
                           "No test targets found that are owners of " + containingFilePath);
                 } else {
-                  BuckTestConfigurationType type = new BuckTestConfigurationType();
+                  BuckTestConfigurationType type = BuckTestConfigurationType.getInstance();
                   if (type.getConfigurationFactories().length > 0) {
                     RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
                     RunnerAndConfigurationSettings runnerAndConfigurationSettings =

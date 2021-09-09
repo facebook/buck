@@ -19,6 +19,7 @@ package com.facebook.buck.intellij.ideabuck.configurations;
 import com.facebook.buck.intellij.ideabuck.build.BuckBuildManager;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.LocatableConfigurationBase;
+import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.notification.Notification;
@@ -37,7 +38,7 @@ import org.jetbrains.annotations.NotNull;
 public abstract class AbstractConfiguration<T extends AbstractConfiguration.Data>
     extends LocatableConfigurationBase implements RunConfigurationWithSuppressedDefaultRunAction {
 
-  public final T data = createData();
+  public T data = createData();
 
   protected AbstractConfiguration(
       Project project, @NotNull ConfigurationFactory factory, String name) {
@@ -82,9 +83,33 @@ public abstract class AbstractConfiguration<T extends AbstractConfiguration.Data
 
   public abstract boolean canRun(ProgramRunner<?> programRunner, String executorId);
 
-  public static class Data {
-    public String targets = "";
-    public String additionalParams = "";
-    public String buckExecutablePath = "";
+  @Override
+  public RunConfiguration clone() {
+    AbstractConfiguration<T> newConfiguration = (AbstractConfiguration<T>) super.clone();
+    newConfiguration.data = (T) newConfiguration.data.clone();
+    return newConfiguration;
+  }
+
+  public static class Data implements Cloneable {
+    public String targets;
+    public String additionalParams;
+    public String buckExecutablePath;
+
+    public Data() {
+      this.targets = "";
+      this.additionalParams = "";
+      this.buckExecutablePath = "";
+    }
+
+    protected Data(Data other) {
+      this.targets = other.targets;
+      this.additionalParams = other.additionalParams;
+      this.buckExecutablePath = other.buckExecutablePath;
+    }
+
+    @Override
+    public Object clone() {
+      return new Data(this);
+    }
   }
 }

@@ -52,7 +52,7 @@ public class BuckRunnerAndConfigurationSettingsFactory {
       String testSelectors) {
     RunnerAndConfigurationSettings settings =
         createAndSetBaseConfiguration(
-            new BuckTestConfigurationType(), name, runManager, targets, additionalParams);
+            BuckTestConfigurationType.getInstance(), name, runManager, targets, additionalParams);
     ((BuckTestConfiguration) settings.getConfiguration()).data.testSelectors = testSelectors;
     return settings;
   }

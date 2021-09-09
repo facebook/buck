@@ -28,8 +28,7 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class BuckBuildConfiguration
-    extends AbstractConfiguration<BuckBuildConfiguration.BuildData> {
+public class BuckBuildConfiguration extends AbstractConfiguration<AbstractConfiguration.Data> {
 
   protected BuckBuildConfiguration(
       Project project, @NotNull ConfigurationFactory factory, String name) {
@@ -55,8 +54,8 @@ public class BuckBuildConfiguration
   }
 
   @Override
-  protected BuildData createData() {
-    return new BuildData();
+  protected Data createData() {
+    return new Data();
   }
 
   @Override
@@ -64,6 +63,4 @@ public class BuckBuildConfiguration
     return programRunner instanceof BuckProgramRunner
         && executorId.equals(DefaultRunExecutor.EXECUTOR_ID);
   }
-
-  public static class BuildData extends AbstractConfiguration.Data {}
 }

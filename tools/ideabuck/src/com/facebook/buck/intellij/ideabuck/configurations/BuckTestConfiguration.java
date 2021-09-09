@@ -63,6 +63,21 @@ public class BuckTestConfiguration extends AbstractConfiguration<BuckTestConfigu
   }
 
   public static class TestData extends AbstractConfiguration.Data {
-    public String testSelectors = "";
+    public String testSelectors;
+
+    public TestData() {
+      super();
+      testSelectors = "";
+    }
+
+    private TestData(Data base, String testSelectors) {
+      super(base);
+      this.testSelectors = testSelectors;
+    }
+
+    @Override
+    public Object clone() {
+      return new TestData((Data) super.clone(), testSelectors);
+    }
   }
 }
