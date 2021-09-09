@@ -41,7 +41,6 @@ public class GoDescriptionsProvider implements DescriptionProvider {
 
     return Arrays.asList(
         new GoBinaryDescription(goBuckConfig, downwardApiConfig, toolchainProvider),
-        new GoExportedLibraryDescription(goBuckConfig, downwardApiConfig, toolchainProvider),
         new GoLibraryDescription(goBuckConfig, downwardApiConfig, toolchainProvider),
         new CgoLibraryDescription(
             goBuckConfig, cxxBuckConfig, downwardApiConfig, toolchainProvider),

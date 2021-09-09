@@ -116,7 +116,6 @@ public class GoBinaryDescription
         goBuckConfig,
         downwardApiConfig,
         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
-        GoLinkStep.BuildMode.EXECUTABLE,
         args.getLinkMode(),
         args.getSrcs(),
         args.getResources(),
