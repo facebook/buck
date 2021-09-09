@@ -182,12 +182,14 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
           continue;
         }
 
-        boolean match = checkEntitlementsMatch(entitlements, profile, platform, lines);
+        if (!checkEntitlementsMatch(entitlements, profile, platform, lines)) {
+          continue;
+        }
 
         // Reject any certificate which we know we can't sign with the supplied identities.
         ImmutableSet<HashCode> validFingerprints = profile.getDeveloperCertificateFingerprints();
-        if (match && identities.isPresent() && !validFingerprints.isEmpty()) {
-          match = false;
+        if (identities.isPresent() && !validFingerprints.isEmpty()) {
+          boolean match = false;
           for (CodeSignIdentity identity : identities.get()) {
             Optional<HashCode> fingerprint = identity.getFingerprint();
             if (fingerprint.isPresent() && validFingerprints.contains(fingerprint.get())) {
@@ -207,7 +209,7 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
           }
         }
 
-        if (match && currentMatchLength > bestMatchLength) {
+        if (currentMatchLength > bestMatchLength) {
           bestMatchLength = currentMatchLength;
           bestMatch = Optional.of(profile);
         }
