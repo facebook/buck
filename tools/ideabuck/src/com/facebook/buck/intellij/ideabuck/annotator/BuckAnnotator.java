@@ -222,7 +222,7 @@ public class BuckAnnotator implements Annotator {
     PsiElement target = BuckPsiUtils.findTargetInPsiTree(psiFile, buckTarget.getRuleName());
     if (target == null) {
       String ruleName = buckTarget.getRuleName();
-      String message = "Cannot resolve rule named " + ruleName;
+      String message = "Rule named " + ruleName + " cannot be found or is a generated target";
       Annotation annotation =
           BuckPsiUtils.findTextInElement(expression, ":" + ruleName)
               .map(textRange -> annotationHolder.createWarningAnnotation(textRange, message))
