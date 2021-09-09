@@ -128,7 +128,11 @@ public abstract class AbstractBuckTestAction extends AnAction {
                     RunManagerImpl runManager = (RunManagerImpl) RunManager.getInstance(project);
                     RunnerAndConfigurationSettings runnerAndConfigurationSettings =
                         BuckRunnerAndConfigurationSettingsFactory.getBuckTestConfigSettings(
-                            runManager, name, Joiner.on(" ").join(ownersList), "", testSelectors);
+                            runManager,
+                            name,
+                            Joiner.on(" ").join(ownersList),
+                            null /* use the one from the template */,
+                            testSelectors);
                     settingsReference.set(runnerAndConfigurationSettings);
                     runManager.addConfiguration(runnerAndConfigurationSettings, false);
                   }

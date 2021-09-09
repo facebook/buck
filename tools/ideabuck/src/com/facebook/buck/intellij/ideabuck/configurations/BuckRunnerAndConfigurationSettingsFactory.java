@@ -20,6 +20,7 @@ import com.facebook.buck.intellij.ideabuck.build.BuckCommand;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configurations.ConfigurationType;
+import org.jetbrains.annotations.Nullable;
 
 /** Factory class for creating configuration settings for Buck commands */
 public class BuckRunnerAndConfigurationSettingsFactory {
@@ -31,7 +32,8 @@ public class BuckRunnerAndConfigurationSettingsFactory {
         "Buck " + BuckCommand.BUILD.name() + " " + targets,
         runManager,
         targets,
-        additionalParams);
+        additionalParams,
+        null);
   }
 
   public static RunnerAndConfigurationSettings getBuckRunConfigSettings(
@@ -41,19 +43,27 @@ public class BuckRunnerAndConfigurationSettingsFactory {
         "Buck " + BuckCommand.RUN.name() + " " + targets,
         runManager,
         targets,
-        additionalParams);
+        additionalParams,
+        null);
   }
 
   public static RunnerAndConfigurationSettings getBuckTestConfigSettings(
       RunManager runManager,
       String name,
-      String targets,
-      String additionalParams,
-      String testSelectors) {
+      @Nullable String targets,
+      @Nullable String additionalParams,
+      @Nullable String testSelectors) {
     RunnerAndConfigurationSettings settings =
         createAndSetBaseConfiguration(
-            BuckTestConfigurationType.getInstance(), name, runManager, targets, additionalParams);
-    ((BuckTestConfiguration) settings.getConfiguration()).data.testSelectors = testSelectors;
+            BuckTestConfigurationType.getInstance(),
+            name,
+            runManager,
+            targets,
+            additionalParams,
+            null);
+    if (testSelectors != null) {
+      ((BuckTestConfiguration) settings.getConfiguration()).data.testSelectors = testSelectors;
+    }
     return settings;
   }
 
@@ -71,16 +81,23 @@ public class BuckRunnerAndConfigurationSettingsFactory {
       ConfigurationType type,
       String name,
       RunManager runManager,
-      String targets,
-      String additionalParams) {
+      @Nullable String targets,
+      @Nullable String additionalParams,
+      @Nullable String buckExecutablePath) {
     RunnerAndConfigurationSettings runnerAndConfigurationSettings =
         runManager.createConfiguration(name, type.getConfigurationFactories()[0]);
     // The configuration should always extend AbstractConfiguration
     AbstractConfiguration configuration =
         (AbstractConfiguration) runnerAndConfigurationSettings.getConfiguration();
-    configuration.data.targets = targets;
-    configuration.data.additionalParams = additionalParams;
-    configuration.data.buckExecutablePath = "";
+    if (targets != null) {
+      configuration.data.targets = targets;
+    }
+    if (additionalParams != null) {
+      configuration.data.additionalParams = additionalParams;
+    }
+    if (buckExecutablePath != null) {
+      configuration.data.buckExecutablePath = buckExecutablePath;
+    }
     return runnerAndConfigurationSettings;
   }
 }
