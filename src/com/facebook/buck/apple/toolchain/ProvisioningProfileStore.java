@@ -186,27 +186,8 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
           continue;
         }
 
-        // Reject any certificate which we know we can't sign with the supplied identities.
-        ImmutableSet<HashCode> validFingerprints = profile.getDeveloperCertificateFingerprints();
-        if (identities.isPresent() && !validFingerprints.isEmpty()) {
-          boolean match = false;
-          for (CodeSignIdentity identity : identities.get()) {
-            Optional<HashCode> fingerprint = identity.getFingerprint();
-            if (fingerprint.isPresent() && validFingerprints.contains(fingerprint.get())) {
-              match = true;
-              break;
-            }
-          }
-
-          if (!match) {
-            String message =
-                "Ignoring profile "
-                    + profile.getUUID()
-                    + " because it can't be signed with any valid identity in the current keychain.";
-            LOG.debug(message);
-            lines.add(message);
-            continue;
-          }
+        if (!checkDeveloperCertificatesMatch(profile, identities, lines)) {
+          continue;
         }
 
         if (currentMatchLength > bestMatchLength) {
@@ -287,6 +268,32 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
       }
     }
     return result;
+  }
+
+  private boolean checkDeveloperCertificatesMatch(
+      ProvisioningProfileMetadata profile,
+      Optional<? extends Iterable<CodeSignIdentity>> identities,
+      ImmutableList.Builder<String> diagnosticsBuilder) {
+    // Reject any certificate which we know we can't sign with the supplied identities.
+    ImmutableSet<HashCode> validFingerprints = profile.getDeveloperCertificateFingerprints();
+    if (!identities.isPresent() || validFingerprints.isEmpty()) {
+      return true;
+    }
+
+    for (CodeSignIdentity identity : identities.get()) {
+      Optional<HashCode> fingerprint = identity.getFingerprint();
+      if (fingerprint.isPresent() && validFingerprints.contains(fingerprint.get())) {
+        return true;
+      }
+    }
+
+    String message =
+        "Ignoring profile "
+            + profile.getUUID()
+            + " because it can't be signed with any valid identity in the current keychain.";
+    LOG.debug(message);
+    diagnosticsBuilder.add(message);
+    return false;
   }
 
   public static ProvisioningProfileStore empty() {
