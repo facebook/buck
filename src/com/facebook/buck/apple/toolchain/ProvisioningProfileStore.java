@@ -149,18 +149,8 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
 
       if (!prefix.isPresent() || prefix.get().equals(appID.getFirst())) {
         final String profileBundleID = appID.getSecond();
-        boolean match;
-        int currentMatchLength;
-        if (profileBundleID.endsWith("*")) {
-          // Chop the ending * if wildcard.
-          String profileBundleIDAsteriskPrefix =
-              profileBundleID.substring(0, profileBundleID.length() - 1);
-          match = bundleID.startsWith(profileBundleIDAsteriskPrefix);
-          currentMatchLength = profileBundleIDAsteriskPrefix.length();
-        } else {
-          match = (bundleID.equals(profileBundleID));
-          currentMatchLength = profileBundleID.length();
-        }
+        int currentMatchLength = bundleMatchLength(bundleID, profileBundleID);
+        boolean match = currentMatchLength != -1;
 
         if (!match) {
           LOG.debug(
@@ -270,6 +260,19 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
     ImmutableList<String> diagnostics = lines.build();
     diagnosticsBuffer.append(Joiner.on("\n").join(diagnostics));
     return bestMatch;
+  }
+
+  private static Integer bundleMatchLength(String expectedBundleId, String bundleIdPattern) {
+    if (bundleIdPattern.endsWith("*")) {
+      // Chop the ending * if wildcard.
+      String patternAsteriskPrefix = bundleIdPattern.substring(0, bundleIdPattern.length() - 1);
+      if (expectedBundleId.startsWith(patternAsteriskPrefix)) {
+        return patternAsteriskPrefix.length();
+      }
+    } else if (expectedBundleId.equals(bundleIdPattern)) {
+      return bundleIdPattern.length();
+    }
+    return -1;
   }
 
   public static ProvisioningProfileStore empty() {
