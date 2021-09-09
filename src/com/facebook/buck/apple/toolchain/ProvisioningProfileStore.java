@@ -141,7 +141,7 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
 
     lines.add(String.format("Looking for a provisioning profile for bundle ID %s", bundleID));
 
-    boolean atLeastOneMatch = false;
+    boolean atLeastOneBundleIdMatch = false;
     for (ProvisioningProfileMetadata profile : getProvisioningProfiles()) {
       Pair<String, String> appID = profile.getAppID();
 
@@ -161,7 +161,7 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
           continue;
         }
 
-        atLeastOneMatch = true;
+        atLeastOneBundleIdMatch = true;
         if (!profile.getExpirationDate().after(new Date())) {
           String message =
               "Ignoring expired profile " + profile.getUUID() + ": " + profile.getExpirationDate();
@@ -250,7 +250,7 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
       }
     }
 
-    if (!atLeastOneMatch) {
+    if (!atLeastOneBundleIdMatch) {
       lines.add(
           String.format("No provisioning profile matching the bundle ID %s was found", bundleID));
     }
