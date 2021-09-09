@@ -148,14 +148,18 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
       LOG.debug("Looking at provisioning profile " + profile.getUUID() + "," + appID);
 
       if (!prefix.isPresent() || prefix.get().equals(appID.getFirst())) {
-        String profileBundleID = appID.getSecond();
+        final String profileBundleID = appID.getSecond();
         boolean match;
+        int currentMatchLength;
         if (profileBundleID.endsWith("*")) {
           // Chop the ending * if wildcard.
-          profileBundleID = profileBundleID.substring(0, profileBundleID.length() - 1);
-          match = bundleID.startsWith(profileBundleID);
+          String profileBundleIDAsteriskPrefix =
+              profileBundleID.substring(0, profileBundleID.length() - 1);
+          match = bundleID.startsWith(profileBundleIDAsteriskPrefix);
+          currentMatchLength = profileBundleIDAsteriskPrefix.length();
         } else {
           match = (bundleID.equals(profileBundleID));
+          currentMatchLength = profileBundleID.length();
         }
 
         if (!match) {
@@ -250,8 +254,8 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
           }
         }
 
-        if (match && profileBundleID.length() > bestMatchLength) {
-          bestMatchLength = profileBundleID.length();
+        if (match && currentMatchLength > bestMatchLength) {
+          bestMatchLength = currentMatchLength;
           bestMatch = Optional.of(profile);
         }
       }
