@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.Before;
@@ -72,5 +73,25 @@ public class AndroidKeystoreIntegrationTest {
     String copyOutput = workspace.getFileContents(output);
     String source = workspace.getFileContents("keystores/debug.keystore.properties");
     assertEquals(source, copyOutput);
+  }
+
+  @Test
+  public void testKeystoreOutputUsingFlavorDisallowed() {
+    workspace
+        .runBuckBuild(
+            "//keystores:copy_keystore_using_flavor", "-c", "java.use_flavors_for_keystore=false")
+        .assertExitCode(
+            "Flavors are not permitted for keystore, try named outputs!", ExitCode.FATAL_GENERIC);
+  }
+
+  @Test
+  public void testKeystorePropertiesOutputUsingFlavorDisallowed() {
+    workspace
+        .runBuckBuild(
+            "//keystores:copy_keystore_properties_using_flavor",
+            "-c",
+            "java.use_flavors_for_keystore=false")
+        .assertExitCode(
+            "Flavors are not permitted for keystore, try named outputs!", ExitCode.FATAL_GENERIC);
   }
 }

@@ -42,6 +42,11 @@ public class KeystoreDescription
   static final Flavor KEYSTORE = InternalFlavor.of("keystore");
 
   private static final ImmutableSet<Flavor> FLAVORS = ImmutableSet.of(PROPERTIES, KEYSTORE);
+  private final JavaBuckConfig javaBuckConfig;
+
+  public KeystoreDescription(JavaBuckConfig javaBuckConfig) {
+    this.javaBuckConfig = javaBuckConfig;
+  }
 
   @Override
   public Class<KeystoreDescriptionArg> getConstructorArgType() {
@@ -51,6 +56,10 @@ public class KeystoreDescription
   @Override
   public boolean hasFlavors(
       ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    if (!javaBuckConfig.useFlavorsForKeystore() && !flavors.isEmpty()) {
+      throw new IllegalStateException("Flavors are not permitted for keystore, try named outputs!");
+    }
+
     for (Flavor flavor : flavors) {
       if (!FLAVORS.contains(flavor)) {
         return false;
@@ -67,6 +76,10 @@ public class KeystoreDescription
       KeystoreDescriptionArg args) {
 
     FlavorSet flavors = buildTarget.getFlavors();
+    if (!javaBuckConfig.useFlavorsForKeystore() && !flavors.isEmpty()) {
+      throw new IllegalStateException("Flavors are not permitted for keystore, try named outputs!");
+    }
+
     if (flavors.contains(PROPERTIES)) {
       return createExportFile(context, buildTarget, "keystore.properties", args.getProperties());
     } else if (flavors.contains(KEYSTORE)) {
