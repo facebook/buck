@@ -150,9 +150,7 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
       if (!prefix.isPresent() || prefix.get().equals(appID.getFirst())) {
         final String profileBundleID = appID.getSecond();
         int currentMatchLength = bundleMatchLength(bundleID, profileBundleID);
-        boolean match = currentMatchLength != -1;
-
-        if (!match) {
+        if (currentMatchLength == -1) {
           LOG.debug(
               "Ignoring non-matching ID for profile "
                   + profile.getUUID()
@@ -189,6 +187,7 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
         // installing to device.
         //
         // For example: get-task-allow, aps-environment, etc.
+        boolean match = true;
         if (entitlements.isPresent()) {
           ImmutableMap<String, NSObject> entitlementsDict = entitlements.get();
           ImmutableMap<String, NSObject> profileEntitlements = profile.getEntitlements();
