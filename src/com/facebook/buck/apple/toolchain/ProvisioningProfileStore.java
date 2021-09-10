@@ -147,53 +147,54 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
 
       LOG.debug("Looking at provisioning profile " + profile.getUUID() + "," + appID);
 
-      if (!prefix.isPresent() || prefix.get().equals(appID.getFirst())) {
-        final String profileBundleID = appID.getSecond();
-        int currentMatchLength = bundleMatchLength(bundleID, profileBundleID);
-        if (currentMatchLength == -1) {
-          LOG.debug(
-              "Ignoring non-matching ID for profile "
-                  + profile.getUUID()
-                  + ".  Expected: "
-                  + profileBundleID
-                  + ", actual: "
-                  + bundleID);
-          continue;
-        }
+      if (prefix.isPresent() && !prefix.get().equals(appID.getFirst())) {
+        continue;
+      }
+      final String profileBundleID = appID.getSecond();
+      int currentMatchLength = bundleMatchLength(bundleID, profileBundleID);
+      if (currentMatchLength == -1) {
+        LOG.debug(
+            "Ignoring non-matching ID for profile "
+                + profile.getUUID()
+                + ".  Expected: "
+                + profileBundleID
+                + ", actual: "
+                + bundleID);
+        continue;
+      }
 
-        atLeastOneBundleIdMatch = true;
-        if (!profile.getExpirationDate().after(new Date())) {
-          String message =
-              "Ignoring expired profile " + profile.getUUID() + ": " + profile.getExpirationDate();
-          LOG.debug(message);
-          lines.add(message);
-          continue;
-        }
+      atLeastOneBundleIdMatch = true;
+      if (!profile.getExpirationDate().after(new Date())) {
+        String message =
+            "Ignoring expired profile " + profile.getUUID() + ": " + profile.getExpirationDate();
+        LOG.debug(message);
+        lines.add(message);
+        continue;
+      }
 
-        Optional<String> platformName = platform.getProvisioningProfileName();
-        if (platformName.isPresent() && !profile.getPlatforms().contains(platformName.get())) {
-          String message =
-              "Ignoring incompatible platform "
-                  + platformName.get()
-                  + " for profile "
-                  + profile.getUUID();
-          LOG.debug(message);
-          lines.add(message);
-          continue;
-        }
+      Optional<String> platformName = platform.getProvisioningProfileName();
+      if (platformName.isPresent() && !profile.getPlatforms().contains(platformName.get())) {
+        String message =
+            "Ignoring incompatible platform "
+                + platformName.get()
+                + " for profile "
+                + profile.getUUID();
+        LOG.debug(message);
+        lines.add(message);
+        continue;
+      }
 
-        if (!checkEntitlementsMatch(entitlements, profile, platform, lines)) {
-          continue;
-        }
+      if (!checkEntitlementsMatch(entitlements, profile, platform, lines)) {
+        continue;
+      }
 
-        if (!checkDeveloperCertificatesMatch(profile, identities, lines)) {
-          continue;
-        }
+      if (!checkDeveloperCertificatesMatch(profile, identities, lines)) {
+        continue;
+      }
 
-        if (currentMatchLength > bestMatchLength) {
-          bestMatchLength = currentMatchLength;
-          bestMatch = Optional.of(profile);
-        }
+      if (currentMatchLength > bestMatchLength) {
+        bestMatchLength = currentMatchLength;
+        bestMatch = Optional.of(profile);
       }
     }
 
