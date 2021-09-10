@@ -39,38 +39,38 @@ public final class EdenClientPool {
    * Instances of {@link EdenClient} are not guaranteed to be thread-safe, so we create them via a
    * {@link ThreadLocal} rather than create a new client for each Thrift call.
    */
-  private final ThreadLocal<EdenClient> clientFactory;
+  private final ThreadLocal<EdenClientResource> clientFactory;
 
   private static final Logger LOG = Logger.get(EdenClientPool.class);
 
   private EdenClientPool(Path socketFile) {
     this(
-        new ThreadLocal<EdenClient>() {
+        new ThreadLocal<EdenClientResource>() {
           @Override
-          protected EdenClient initialValue() {
+          protected EdenClientResource initialValue() {
             return new ReconnectingEdenClient(socketFile, clock);
           }
         });
   }
 
   @VisibleForTesting
-  EdenClientPool(EdenClient edenClient) {
+  EdenClientPool(EdenClientResource edenClient) {
     this(
-        new ThreadLocal<EdenClient>() {
+        new ThreadLocal<EdenClientResource>() {
           @Override
-          protected EdenClient initialValue() {
+          protected EdenClientResource initialValue() {
             return edenClient;
           }
         });
   }
 
-  private EdenClientPool(ThreadLocal<EdenClient> clientFactory) {
+  private EdenClientPool(ThreadLocal<EdenClientResource> clientFactory) {
     this.clientFactory = clientFactory;
   }
 
   /** @return an {@link EdenClient} that must be used on the same thread that requested it. */
   public EdenClient getClient() {
-    return clientFactory.get();
+    return clientFactory.get().getEdenClient();
   }
 
   public static Optional<EdenClientPool> tryToCreateEdenClientPool(Path directoryInEdenFsMount) {
@@ -87,9 +87,8 @@ public final class EdenClientPool {
     // We forcibly try to create an EdenClient as a way of verifying that `socketFile` is a
     // valid UNIX domain socket for talking to Eden. If this is not the case, then we should not
     // return a new EdenClientPool.
-    ReconnectingEdenClient edenClient = new ReconnectingEdenClient(socketFile, clock);
-    try {
-      edenClient.listMounts();
+    try (ReconnectingEdenClient edenClient = new ReconnectingEdenClient(socketFile, clock)) {
+      edenClient.getEdenClient().listMounts();
     } catch (EdenError | IOException | TException e) {
       LOG.debug("Could not connect Eden client via socket: " + socketFile);
       return Optional.empty();

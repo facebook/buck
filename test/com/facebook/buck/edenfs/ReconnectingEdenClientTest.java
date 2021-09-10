@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.facebook.eden.thrift.EdenError;
-import com.facebook.eden.thrift.EdenService;
 import com.facebook.eden.thrift.SHA1Result;
 import com.facebook.thrift.TException;
 import com.google.common.collect.ImmutableList;
@@ -47,21 +46,27 @@ public class ReconnectingEdenClientTest extends EasyMockSupport {
     SettableFakeClock clock = new SettableFakeClock(currentTime, 0);
 
     // Stale client that throws a TException that has a LastErrorException as a cause.
-    EdenService.Client staleClient = createMock(EdenService.Client.class);
+    TestEdenClientResource staleClient = new TestEdenClientResource(createMock(EdenClient.class));
     TException exceptionBackedByLastErrorException =
         new TException(new LastErrorException("Broken pipe"));
-    expect(staleClient.getSHA1(mountPoint.getBytes(StandardCharsets.UTF_8), pathsBytes))
+    expect(staleClient.edenClient.getSHA1(mountPoint.getBytes(StandardCharsets.UTF_8), pathsBytes))
         .andThrow(exceptionBackedByLastErrorException);
 
     // A connected client that should succeed.
-    EdenService.Client connectedClient = createMock(EdenService.Client.class);
-    expect(connectedClient.getSHA1(mountPoint.getBytes(StandardCharsets.UTF_8), pathsBytes))
+    TestEdenClientResource connectedClient =
+        new TestEdenClientResource(createMock(EdenClient.class));
+    expect(
+            connectedClient.edenClient.getSHA1(
+                mountPoint.getBytes(StandardCharsets.UTF_8), pathsBytes))
         .andReturn(ImmutableList.of(sha1Result))
         .times(2);
 
     // A connected client that should succeed.
-    EdenService.Client secondConnectedClient = createMock(EdenService.Client.class);
-    expect(secondConnectedClient.getSHA1(mountPoint.getBytes(StandardCharsets.UTF_8), pathsBytes))
+    TestEdenClientResource secondConnectedClient =
+        new TestEdenClientResource(createMock(EdenClient.class));
+    expect(
+            secondConnectedClient.edenClient.getSHA1(
+                mountPoint.getBytes(StandardCharsets.UTF_8), pathsBytes))
         .andReturn(ImmutableList.of(sha1Result));
 
     // The calls to client.getSHA1() should trigger the following behavior:
@@ -80,19 +85,19 @@ public class ReconnectingEdenClientTest extends EasyMockSupport {
     replayAll();
 
     ReconnectingEdenClient client = new ReconnectingEdenClient(thriftClientFactory, clock);
-    List<SHA1Result> sha1s_1 = client.getSHA1(mountPointBytes, pathsBytes);
+    List<SHA1Result> sha1s_1 = client.getEdenClient().getSHA1(mountPointBytes, pathsBytes);
     assertEquals(ImmutableList.of(sha1Result), sha1s_1);
 
     // Use the client 1 millisecond before the idle time threshold kicks in.
     currentTime += ReconnectingEdenClient.IDLE_TIME_THRESHOLD_IN_MILLIS - 1;
     clock.setCurrentTimeMillis(currentTime);
-    List<SHA1Result> sha1s_2 = client.getSHA1(mountPointBytes, pathsBytes);
+    List<SHA1Result> sha1s_2 = client.getEdenClient().getSHA1(mountPointBytes, pathsBytes);
     assertEquals(ImmutableList.of(sha1Result), sha1s_2);
 
     // Use the client when the idle time threshold kicks in.
     currentTime += ReconnectingEdenClient.IDLE_TIME_THRESHOLD_IN_MILLIS;
     clock.setCurrentTimeMillis(currentTime);
-    List<SHA1Result> sha1s_3 = client.getSHA1(mountPointBytes, pathsBytes);
+    List<SHA1Result> sha1s_3 = client.getEdenClient().getSHA1(mountPointBytes, pathsBytes);
     assertEquals(ImmutableList.of(sha1Result), sha1s_3);
 
     verifyAll();

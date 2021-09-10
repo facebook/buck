@@ -55,7 +55,7 @@ public class EdenClientTest {
   public void setUp() {
     thriftClient = createMock(EdenClient.class);
     fs = Jimfs.newFileSystem(Configuration.unix());
-    pool = new EdenClientPool(thriftClient);
+    pool = new EdenClientPool(new TestEdenClientResource(thriftClient));
   }
 
   @Test

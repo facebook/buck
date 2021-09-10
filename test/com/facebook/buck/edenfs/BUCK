@@ -1,8 +1,24 @@
 load("//tools/build_rules:java_rules.bzl", "standard_java_test")
 
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Benchmark.java",
+            "*Test.java",
+        ],
+    ),
+    visibility = ["//test/..."],
+    exported_deps = [
+        "//src/com/facebook/buck/edenfs:edenfs",
+    ],
+)
+
 standard_java_test(
     name = "edenfs",
     deps = [
+        ":testutil",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/edenfs:edenfs",

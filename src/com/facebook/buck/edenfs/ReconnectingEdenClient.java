@@ -17,17 +17,11 @@
 package com.facebook.buck.edenfs;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.unixsocket.UnixDomainSocket;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.eden.thrift.EdenError;
-import com.facebook.eden.thrift.EdenService;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.SHA1Result;
 import com.facebook.thrift.TException;
-import com.facebook.thrift.protocol.TBinaryProtocol;
-import com.facebook.thrift.protocol.TProtocol;
-import com.facebook.thrift.transport.TSocket;
-import com.facebook.thrift.transport.TTransport;
 import com.facebook.thrift.transport.TTransportException;
 import com.google.common.annotations.VisibleForTesting;
 import com.sun.jna.LastErrorException;
@@ -43,11 +37,11 @@ import javax.annotation.Nullable;
  *
  * <p>This class is not thread-safe. It is designed to be used with a {@link ThreadLocal}.
  */
-final class ReconnectingEdenClient implements EdenClient {
+final class ReconnectingEdenClient implements EdenClientResource {
 
   @FunctionalInterface
   interface ThriftClientFactory {
-    EdenService.Client createNewThriftClient() throws IOException, TTransportException;
+    EdenClientResource createNewThriftClient() throws IOException, TTransportException;
   }
 
   private static final Logger LOG = Logger.get(ReconnectingEdenClient.class);
@@ -61,21 +55,13 @@ final class ReconnectingEdenClient implements EdenClient {
 
   private final ThriftClientFactory thriftClientFactory;
   private final Clock clock;
-  @Nullable private EdenService.Client thriftClient;
+  private volatile boolean closed = false;
+  @Nullable private volatile EdenClientResource thriftClient;
   private long lastSuccessfulRequest = 0;
 
   /** @param socketFile to connect to when creating a Thrift client. */
   ReconnectingEdenClient(Path socketFile, Clock clock) {
-    this(
-        () -> {
-          // Creates a new EdenService.Client by creating a new connection via the socketFile.
-          UnixDomainSocket socket = UnixDomainSocket.createSocketWithPath(socketFile);
-          TTransport transport = new TSocket(socket);
-          // No need to invoke transport.open() because the UnixDomainSocket is already connected.
-          TProtocol protocol = new TBinaryProtocol(transport);
-          return new EdenService.Client(protocol);
-        },
-        clock);
+    this(() -> EdenClientResourceImpl.connect(socketFile), clock);
   }
 
   @VisibleForTesting
@@ -84,40 +70,43 @@ final class ReconnectingEdenClient implements EdenClient {
     this.clock = clock;
   }
 
-  @Override
-  public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths)
-      throws IOException, TException, EdenError {
-    try {
+  private class ClientImpl implements EdenClient {
+
+    @Override
+    public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths)
+        throws IOException, TException, EdenError {
+      try {
+        return attemptGetSHA1(mountPoint, paths);
+      } catch (TException e) {
+        investigateAndPossiblyRethrowException(e);
+      }
+
       return attemptGetSHA1(mountPoint, paths);
-    } catch (TException e) {
-      investigateAndPossiblyRethrowException(e);
     }
 
-    return attemptGetSHA1(mountPoint, paths);
-  }
+    private List<SHA1Result> attemptGetSHA1(byte[] mountPoint, List<byte[]> paths)
+        throws IOException, TException, EdenError {
+      List<SHA1Result> sha1s = getConnectedClient().getSHA1(mountPoint, paths);
+      lastSuccessfulRequest = clock.currentTimeMillis();
+      return sha1s;
+    }
 
-  private List<SHA1Result> attemptGetSHA1(byte[] mountPoint, List<byte[]> paths)
-      throws IOException, TException, EdenError {
-    List<SHA1Result> sha1s = getConnectedClient().getSHA1(mountPoint, paths);
-    lastSuccessfulRequest = clock.currentTimeMillis();
-    return sha1s;
-  }
+    @Override
+    public List<MountInfo> listMounts() throws EdenError, IOException, TException {
+      try {
+        return attemptListMounts();
+      } catch (TException e) {
+        investigateAndPossiblyRethrowException(e);
+      }
 
-  @Override
-  public List<MountInfo> listMounts() throws EdenError, IOException, TException {
-    try {
       return attemptListMounts();
-    } catch (TException e) {
-      investigateAndPossiblyRethrowException(e);
     }
 
-    return attemptListMounts();
-  }
-
-  private List<MountInfo> attemptListMounts() throws EdenError, IOException, TException {
-    List<MountInfo> mountInfos = getConnectedClient().listMounts();
-    lastSuccessfulRequest = clock.currentTimeMillis();
-    return mountInfos;
+    private List<MountInfo> attemptListMounts() throws EdenError, IOException, TException {
+      List<MountInfo> mountInfos = getConnectedClient().listMounts();
+      lastSuccessfulRequest = clock.currentTimeMillis();
+      return mountInfos;
+    }
   }
 
   /**
@@ -125,18 +114,40 @@ final class ReconnectingEdenClient implements EdenClient {
    *     make an RPC, {@link #lastSuccessfulRequest} should be updated to {@link
    *     System#currentTimeMillis()}.
    */
-  private EdenService.Client getConnectedClient() throws IOException, TTransportException {
+  private EdenClient getConnectedClient() throws IOException, TTransportException {
+    if (closed) {
+      throw new IOException("client closed");
+    }
+
     boolean exceededTimeoutThreshold = false;
+    EdenClientResource thriftClient = this.thriftClient;
     if (thriftClient == null
         || (exceededTimeoutThreshold =
             clock.currentTimeMillis() - lastSuccessfulRequest >= IDLE_TIME_THRESHOLD_IN_MILLIS)) {
       if (exceededTimeoutThreshold) {
         LOG.info("Creating a new Thrift client because current client was idle for too long.");
       }
-      thriftClient = thriftClientFactory.createNewThriftClient();
+
+      if (thriftClient != null) {
+        try {
+          thriftClient.close();
+        } catch (Exception e) {
+          LOG.warn(e, "Failed to close thrift client");
+        }
+      }
+      this.thriftClient = null;
+
+      thriftClient = this.thriftClient = thriftClientFactory.createNewThriftClient();
       lastSuccessfulRequest = 0;
     }
-    return thriftClient;
+
+    // Make sure it stays closed if another thread closed it while we initialized new client.
+    if (closed) {
+      close();
+      throw new IOException("client closed");
+    }
+
+    return thriftClient.getEdenClient();
   }
 
   /**
@@ -163,5 +174,22 @@ final class ReconnectingEdenClient implements EdenClient {
     } else {
       throw originalException;
     }
+  }
+
+  private final ClientImpl client = new ClientImpl();
+
+  @Override
+  public EdenClient getEdenClient() {
+    return client;
+  }
+
+  @Override
+  public void close() throws IOException {
+    closed = true;
+    EdenClientResource thriftClient = this.thriftClient;
+    if (thriftClient != null) {
+      thriftClient.close();
+    }
+    this.thriftClient = null;
   }
 }
