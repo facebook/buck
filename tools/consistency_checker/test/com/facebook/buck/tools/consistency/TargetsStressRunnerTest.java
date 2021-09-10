@@ -70,7 +70,7 @@ public class TargetsStressRunnerTest {
     TargetsStressRunner runner =
         new TargetsStressRunner(
             differFactory,
-            Optional.of("python"),
+            Optional.of("python3"),
             tempBinPath.toString(),
             ImmutableList.of("-c", "config=value"),
             ImmutableList.of("//:target1", "//:target2"));
@@ -156,7 +156,7 @@ public class TargetsStressRunnerTest {
     TargetsStressRunner runner =
         new TargetsStressRunner(
             differFactory,
-            Optional.of("python"),
+            Optional.of("python3"),
             tempBinPath.toString(),
             ImmutableList.of("-c", "config=value"),
             ImmutableList.of("//:target1", "//:target2"));
@@ -192,7 +192,7 @@ public class TargetsStressRunnerTest {
     TargetsStressRunner runner =
         new TargetsStressRunner(
             differFactory,
-            Optional.of("python"),
+            Optional.of("python3"),
             tempBinPath.toString(),
             ImmutableList.of("-c", "config=value"),
             ImmutableList.of("//:target1", "//:target2"));

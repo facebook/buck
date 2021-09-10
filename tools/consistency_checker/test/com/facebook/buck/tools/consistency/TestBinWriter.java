@@ -45,7 +45,7 @@ public class TestBinWriter {
    */
   public void writeArgEchoer(int returnCode) throws IOException {
     try (FileWriter output = new FileWriter(binPath.toAbsolutePath().toString())) {
-      output.write("#!/usr/bin/env python");
+      output.write("#!/usr/bin/env python3");
       output.write(System.lineSeparator());
       output.write("from __future__ import print_function");
       output.write(System.lineSeparator());
@@ -103,7 +103,7 @@ public class TestBinWriter {
    */
   public void writeLineEchoer(String[] lines, int returnCode) throws IOException {
     try (FileWriter output = new FileWriter(binPath.toAbsolutePath().toString())) {
-      output.write("#!/usr/bin/env python");
+      output.write("#!/usr/bin/env python3");
       output.write(System.lineSeparator());
       output.write("from __future__ import print_function");
       output.write(System.lineSeparator());

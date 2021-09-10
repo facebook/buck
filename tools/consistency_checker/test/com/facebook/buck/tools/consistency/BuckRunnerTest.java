@@ -45,7 +45,7 @@ public class BuckRunnerTest {
 
     BuckRunner runner =
         new BuckRunner(
-            Optional.of("python"),
+            Optional.of("python3"),
             binPath.toString(),
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
@@ -74,7 +74,7 @@ public class BuckRunnerTest {
 
     BuckRunner runner =
         new BuckRunner(
-            Optional.of("python"),
+            Optional.of("python3"),
             binPath.toString(),
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
@@ -103,7 +103,7 @@ public class BuckRunnerTest {
 
     BuckRunner runner =
         new BuckRunner(
-            Optional.of("python"),
+            Optional.of("python3"),
             binPath.toString(),
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
@@ -132,7 +132,7 @@ public class BuckRunnerTest {
 
     BuckRunner runner =
         new BuckRunner(
-            Optional.of("python"),
+            Optional.of("python3"),
             binPath.toString(),
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),
@@ -163,7 +163,7 @@ public class BuckRunnerTest {
 
     BuckRunner runner =
         new BuckRunner(
-            Optional.of("python"),
+            Optional.of("python3"),
             binPath.toString(),
             "build",
             ImmutableList.of("-c", "cxx.cxx=/bin/false"),

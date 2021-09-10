@@ -104,7 +104,7 @@ public class RuleKeyStressRunnerTest {
     RuleKeyStressRunner runner =
         new RuleKeyStressRunner(
             differFactory,
-            Optional.of("python"),
+            Optional.of("python3"),
             tempBinPath.toString(),
             ImmutableList.of(),
             ImmutableList.of("//:test1", "//:test2"));
@@ -190,7 +190,7 @@ public class RuleKeyStressRunnerTest {
     RuleKeyStressRunner runner =
         new RuleKeyStressRunner(
             differFactory,
-            Optional.of("python"),
+            Optional.of("python3"),
             tempBinPath.toString(),
             ImmutableList.of(),
             ImmutableList.of("//:target1"));
@@ -213,7 +213,7 @@ public class RuleKeyStressRunnerTest {
     RuleKeyStressRunner runner =
         new RuleKeyStressRunner(
             differFactory,
-            Optional.of("python"),
+            Optional.of("python3"),
             tempBinPath.toString(),
             ImmutableList.of(),
             ImmutableList.of("//:not_target1"));
@@ -256,7 +256,7 @@ public class RuleKeyStressRunnerTest {
     RuleKeyStressRunner runner =
         new RuleKeyStressRunner(
             differFactory,
-            Optional.of("python"),
+            Optional.of("python3"),
             tempBinPath.toString(),
             ImmutableList.of(),
             ImmutableList.of("//:target1"));

@@ -32,7 +32,7 @@ public class TestBinWriterTest {
   @Test
   public void writesCorrectArgEchoer() throws IOException {
     ImmutableList.Builder<String> expectedOutputBuilder = ImmutableList.builder();
-    expectedOutputBuilder.add("#!/usr/bin/env python");
+    expectedOutputBuilder.add("#!/usr/bin/env python3");
     expectedOutputBuilder.add("from __future__ import print_function");
     expectedOutputBuilder.add("import sys");
     expectedOutputBuilder.add("print('''line1");
@@ -55,7 +55,7 @@ public class TestBinWriterTest {
   @Test
   public void writesCorrectLineEchoer() throws IOException {
     ImmutableList.Builder<String> expectedOutputBuilder = ImmutableList.builder();
-    expectedOutputBuilder.add("#!/usr/bin/env python");
+    expectedOutputBuilder.add("#!/usr/bin/env python3");
     expectedOutputBuilder.add("from __future__ import print_function");
     expectedOutputBuilder.add("import os");
     expectedOutputBuilder.add("import sys");

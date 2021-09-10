@@ -69,7 +69,7 @@ public class BuckStressRunnerTest {
             .mapToObj(
                 i ->
                     new BuckRunner(
-                        Optional.of("python"),
+                        Optional.of("python3"),
                         binPath.toString(),
                         "targets",
                         ImmutableList.of(),
@@ -107,7 +107,7 @@ public class BuckStressRunnerTest {
             .mapToObj(
                 i ->
                     new BuckRunner(
-                        Optional.of("python"),
+                        Optional.of("python3"),
                         binPath.toString(),
                         "targets",
                         ImmutableList.of(),
@@ -158,7 +158,7 @@ public class BuckStressRunnerTest {
                 throw new RuntimeException(e);
               }
               return new BuckRunner(
-                  Optional.of("python"),
+                  Optional.of("python3"),
                   tempPath.toString(),
                   "targets",
                   ImmutableList.of(),
