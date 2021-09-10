@@ -16,8 +16,12 @@
 
 package com.facebook.buck.edenfs;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.config.Inis;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.eden.thrift.EdenError;
+import com.facebook.thrift.TException;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -26,6 +30,7 @@ import java.util.Optional;
 
 /** Utility methods for Eden */
 public class EdenUtil {
+  private static final Logger LOG = Logger.get(EdenUtil.class);
 
   /**
    * Find a Eden path, like socket or root. On Linux or Mac it's a symlink file like.eden/socket to
@@ -87,6 +92,18 @@ public class EdenUtil {
       return Optional.of(dotEdenConfig);
     } else {
       return findDotEdenConfig(directoryInEdenFsMount.getParent());
+    }
+  }
+
+  /** Is eden alive on given socket path? */
+  static boolean pingSocket(Path unixSocket) {
+    try (ReconnectingEdenClient edenClient =
+        new ReconnectingEdenClient(unixSocket, new DefaultClock())) {
+      edenClient.getEdenClient().listMounts();
+      return true;
+    } catch (EdenError | IOException | TException e) {
+      LOG.debug("Could not connect Eden client via socket: " + unixSocket);
+      return false;
     }
   }
 }

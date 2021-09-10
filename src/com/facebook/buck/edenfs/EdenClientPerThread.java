@@ -19,10 +19,7 @@ package com.facebook.buck.edenfs;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
-import com.facebook.eden.thrift.EdenError;
-import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -93,12 +90,10 @@ public final class EdenClientPerThread {
     // We forcibly try to create an EdenClient as a way of verifying that `socketFile` is a
     // valid UNIX domain socket for talking to Eden. If this is not the case, then we should not
     // return a new EdenClientPool.
-    try (ReconnectingEdenClient edenClient = new ReconnectingEdenClient(socketFile, clock)) {
-      edenClient.getEdenClient().listMounts();
-    } catch (EdenError | IOException | TException e) {
-      LOG.debug("Could not connect Eden client via socket: " + socketFile);
+    if (EdenUtil.pingSocket(socketFile)) {
+      return Optional.of(new EdenClientPerThread(socketFile));
+    } else {
       return Optional.empty();
     }
-    return Optional.of(new EdenClientPerThread(socketFile));
   }
 }
