@@ -673,13 +673,14 @@ public class AppleLibraryIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_library_builds_something", tmp);
+    workspace.addBuckConfigLocalOption("cxx", "link_path_normalization_args_enabled", "true");
     workspace.setUp();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
-                "//Libraries/TestLibrary:TestLibrary#macosx-x86_64,macosx-i386")
+                "//Libraries/TestLibrary:TestLibrary#macosx-x86_64,macosx-arm64")
             .withAppendedFlavors(
                 AppleDescriptions.FRAMEWORK_FLAVOR, AppleDebugFormat.NONE.getFlavor());
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
@@ -695,7 +696,7 @@ public class AppleLibraryIntegrationTest {
     Path libraryPath = frameworkPath.resolve("TestLibrary");
     assertThat(Files.exists(libraryPath), is(true));
     ProcessExecutor.Result lipoVerifyResult =
-        workspace.runCommand("lipo", libraryPath.toString(), "-verify_arch", "i386", "x86_64");
+        workspace.runCommand("lipo", libraryPath.toString(), "-verify_arch", "arm64", "x86_64");
     assertEquals(lipoVerifyResult.getStderr().orElse(""), 0, lipoVerifyResult.getExitCode());
     assertThat(
         workspace.runCommand("file", libraryPath.toString()).getStdout().get(),
