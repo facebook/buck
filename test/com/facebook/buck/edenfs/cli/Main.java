@@ -16,7 +16,7 @@
 
 package com.facebook.buck.edenfs.cli;
 
-import com.facebook.buck.edenfs.EdenClientPool;
+import com.facebook.buck.edenfs.EdenClientPerThread;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import java.io.IOException;
@@ -50,7 +50,7 @@ public final class Main {
     // The default path for the Eden socket is ~/local/.eden/socket. Ultimately, it will be
     // possible to query for this via `eden config --get`.
     Path socketFile = Paths.get(System.getProperty("user.home"), "local/.eden/socket");
-    Optional<EdenClientPool> pool = EdenClientPool.newInstanceFromSocket(socketFile);
+    Optional<EdenClientPerThread> pool = EdenClientPerThread.newInstanceFromSocket(socketFile);
     if (!pool.isPresent()) {
       System.err.println("Could not connect to Eden.");
       return 1;

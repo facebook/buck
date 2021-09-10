@@ -27,7 +27,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /** A pool of {@link EdenClient} objects. */
-public final class EdenClientPool {
+public final class EdenClientPerThread {
   /**
    * We share one {@link Clock} instance across all {@link ReconnectingEdenClient}s created by this
    * pool. Ideally, we would use the one created by {@link com.facebook.buck.cli.MainRunner}, but it
@@ -41,9 +41,9 @@ public final class EdenClientPool {
    */
   private final ThreadLocal<EdenClientResource> clientFactory;
 
-  private static final Logger LOG = Logger.get(EdenClientPool.class);
+  private static final Logger LOG = Logger.get(EdenClientPerThread.class);
 
-  private EdenClientPool(Path socketFile) {
+  private EdenClientPerThread(Path socketFile) {
     this(
         new ThreadLocal<EdenClientResource>() {
           @Override
@@ -54,7 +54,7 @@ public final class EdenClientPool {
   }
 
   @VisibleForTesting
-  EdenClientPool(EdenClientResource edenClient) {
+  EdenClientPerThread(EdenClientResource edenClient) {
     this(
         new ThreadLocal<EdenClientResource>() {
           @Override
@@ -64,7 +64,7 @@ public final class EdenClientPool {
         });
   }
 
-  private EdenClientPool(ThreadLocal<EdenClientResource> clientFactory) {
+  private EdenClientPerThread(ThreadLocal<EdenClientResource> clientFactory) {
     this.clientFactory = clientFactory;
   }
 
@@ -73,7 +73,12 @@ public final class EdenClientPool {
     return clientFactory.get().getEdenClient();
   }
 
-  public static Optional<EdenClientPool> tryToCreateEdenClientPool(Path directoryInEdenFsMount) {
+  /**
+   * Create a client connecting to a pool or return {@link Optional#empty()} if eden is not
+   * available.
+   */
+  public static Optional<EdenClientPerThread> tryToCreateEdenClientPool(
+      Path directoryInEdenFsMount) {
     Optional<Path> socket = EdenUtil.getPathFromEdenConfig(directoryInEdenFsMount, "socket");
     if (!socket.isPresent()) {
       LOG.debug("could not find the Eden socket file from the directory:" + directoryInEdenFsMount);
@@ -83,7 +88,8 @@ public final class EdenClientPool {
     }
   }
 
-  public static Optional<EdenClientPool> newInstanceFromSocket(Path socketFile) {
+  /** Create clients connecting to given socket path. */
+  public static Optional<EdenClientPerThread> newInstanceFromSocket(Path socketFile) {
     // We forcibly try to create an EdenClient as a way of verifying that `socketFile` is a
     // valid UNIX domain socket for talking to Eden. If this is not the case, then we should not
     // return a new EdenClientPool.
@@ -93,6 +99,6 @@ public final class EdenClientPool {
       LOG.debug("Could not connect Eden client via socket: " + socketFile);
       return Optional.empty();
     }
-    return Optional.of(new EdenClientPool(socketFile));
+    return Optional.of(new EdenClientPerThread(socketFile));
   }
 }

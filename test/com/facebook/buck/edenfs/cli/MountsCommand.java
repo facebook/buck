@@ -17,7 +17,7 @@
 package com.facebook.buck.edenfs.cli;
 
 import com.facebook.buck.edenfs.EdenClient;
-import com.facebook.buck.edenfs.EdenClientPool;
+import com.facebook.buck.edenfs.EdenClientPerThread;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.thrift.TException;
@@ -27,7 +27,7 @@ import java.util.List;
 
 public class MountsCommand implements Command {
   @Override
-  public int run(EdenClientPool pool) throws EdenError, IOException, TException {
+  public int run(EdenClientPerThread pool) throws EdenError, IOException, TException {
     EdenClient client = pool.getClient();
     List<MountInfo> mountInfos = client.listMounts();
     System.out.printf("Number of mounts: %d\n", mountInfos.size());

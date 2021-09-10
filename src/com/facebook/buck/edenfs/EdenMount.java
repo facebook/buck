@@ -35,7 +35,7 @@ import java.util.Optional;
  * pair. The Buck project root must be contained by the Eden mount point.
  */
 public class EdenMount {
-  private final EdenClientPool pool;
+  private final EdenClientPerThread pool;
 
   /** Value of the mountPoint argument to use when communicating with Eden via the Thrift API. */
   private final Path mountPoint;
@@ -54,7 +54,7 @@ public class EdenMount {
    * point, Buck project root) pair. It must be the case that {@code
    * projectRoot.startsWith(mountPoint)}.
    */
-  EdenMount(EdenClientPool pool, Path mountPoint, Path projectRoot) {
+  EdenMount(EdenClientPerThread pool, Path mountPoint, Path projectRoot) {
     Preconditions.checkArgument(
         projectRoot.startsWith(mountPoint),
         "Eden mount point %s must contain the Buck project at %s.",
@@ -68,7 +68,7 @@ public class EdenMount {
 
   /** @return an Eden mount point if {@code projectRoot} is backed by Eden or {@code null}. */
   public static Optional<EdenMount> createEdenMountForProjectRoot(
-      Path projectRoot, EdenClientPool pool) {
+      Path projectRoot, EdenClientPerThread pool) {
     Optional<Path> rootPath = EdenUtil.getPathFromEdenConfig(projectRoot, "root");
     if (!rootPath.isPresent()) {
       return Optional.empty();

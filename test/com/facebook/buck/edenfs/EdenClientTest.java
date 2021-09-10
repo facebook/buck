@@ -49,13 +49,13 @@ public class EdenClientTest {
 
   private EdenClient thriftClient;
   private FileSystem fs;
-  private EdenClientPool pool;
+  private EdenClientPerThread pool;
 
   @Before
   public void setUp() {
     thriftClient = createMock(EdenClient.class);
     fs = Jimfs.newFileSystem(Configuration.unix());
-    pool = new EdenClientPool(new TestEdenClientResource(thriftClient));
+    pool = new EdenClientPerThread(new TestEdenClientResource(thriftClient));
   }
 
   @Test

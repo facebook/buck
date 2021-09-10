@@ -16,7 +16,7 @@
 
 package com.facebook.buck.edenfs.cli;
 
-import com.facebook.buck.edenfs.EdenClientPool;
+import com.facebook.buck.edenfs.EdenClientPerThread;
 import com.facebook.buck.edenfs.EdenMount;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
@@ -39,7 +39,7 @@ public class Sha1Command implements Command {
   @Argument private final List<String> paths = new ArrayList<>();
 
   @Override
-  public int run(EdenClientPool pool) throws EdenError, IOException, TException {
+  public int run(EdenClientPerThread pool) throws EdenError, IOException, TException {
     Path mountPoint = Paths.get(this.mountPoint);
     EdenMount mount = EdenMount.createEdenMountForProjectRoot(mountPoint, pool).get();
 

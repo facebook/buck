@@ -16,7 +16,7 @@
 
 package com.facebook.buck.edenfs.cli;
 
-import com.facebook.buck.edenfs.EdenClientPool;
+import com.facebook.buck.edenfs.EdenClientPerThread;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.facebook.thrift.TException;
@@ -36,7 +36,7 @@ public class Args {
   @SuppressFieldNotInitialized
   Command command;
 
-  public int run(EdenClientPool pool) throws EdenError, IOException, TException {
+  public int run(EdenClientPerThread pool) throws EdenError, IOException, TException {
     Objects.requireNonNull(command, "command must be set by args4j");
     return command.run(pool);
   }
