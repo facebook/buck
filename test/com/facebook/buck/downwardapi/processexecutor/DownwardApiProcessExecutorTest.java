@@ -317,6 +317,7 @@ public class DownwardApiProcessExecutorTest {
                     outputStream.write("blah".getBytes(StandardCharsets.UTF_8));
                     outputStream.write("blah-blah".getBytes(StandardCharsets.UTF_8));
                     outputStream.write("blah-blah-blah".getBytes(StandardCharsets.UTF_8));
+                    outputStream.flush();
                   } catch (IOException e) {
                     throw new RuntimeException(e);
                   }
@@ -400,6 +401,7 @@ public class DownwardApiProcessExecutorTest {
                     for (int i = 0; i < fakeBytesToWrite; i++) {
                       outputStream.write(i % 42);
                     }
+                    outputStream.flush();
                   } catch (IOException e) {
                     throw new RuntimeException(e);
                   }
@@ -449,6 +451,7 @@ public class DownwardApiProcessExecutorTest {
                     outputStream.write(
                         String.format("%s%s", "12X89", System.lineSeparator())
                             .getBytes(StandardCharsets.UTF_8));
+                    outputStream.flush();
                   } catch (IOException e) {
                     throw new RuntimeException(e);
                   }
@@ -510,6 +513,7 @@ public class DownwardApiProcessExecutorTest {
                         outputStream.write(protocolMessage.getBytes(StandardCharsets.UTF_8));
                       }
                     }
+                    outputStream.flush();
 
                   } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -551,6 +555,7 @@ public class DownwardApiProcessExecutorTest {
                                   DownwardProtocolType.JSON.getProtocolId(), System.lineSeparator())
                               .getBytes(StandardCharsets.UTF_8));
                     }
+                    outputStream.flush();
 
                   } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -625,6 +630,7 @@ public class DownwardApiProcessExecutorTest {
                         }
                       }
                     }
+                    outputStream.flush();
 
                   } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -694,6 +700,7 @@ public class DownwardApiProcessExecutorTest {
                                 .getBytes(StandardCharsets.UTF_8));
                       }
                     }
+                    outputStream.flush();
 
                   } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -739,6 +746,7 @@ public class DownwardApiProcessExecutorTest {
                     for (int i = 0; i < fakeBytesToWrite + maxCharsRead; i++) {
                       outputStream.write(42);
                     }
+                    outputStream.flush();
                   } catch (IOException e) {
                     throw new RuntimeException(e);
                   }
@@ -806,6 +814,7 @@ public class DownwardApiProcessExecutorTest {
                     for (int i = 0; i < fakeBytesToWrite + maxCharsRead; i++) {
                       outputStream.write(42);
                     }
+                    outputStream.flush();
                   } catch (IOException e) {
                     throw new RuntimeException(e);
                   }
@@ -1031,6 +1040,7 @@ public class DownwardApiProcessExecutorTest {
         LOG.info("Writing into named pipe: %s%s", System.lineSeparator(), message);
         outputStream.write(message.getBytes(StandardCharsets.UTF_8));
       }
+      outputStream.flush();
     }
   }
 
