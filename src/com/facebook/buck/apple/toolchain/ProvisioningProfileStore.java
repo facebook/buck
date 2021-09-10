@@ -128,13 +128,9 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
       Optional<ImmutableMap<String, NSObject>> entitlements,
       Optional<? extends Iterable<CodeSignIdentity>> identities,
       StringBuffer diagnosticsBuffer) {
-    Optional<String> prefix;
+    Optional<String> prefix =
+        entitlements.flatMap(ProvisioningProfileMetadata::prefixFromEntitlements);
     ImmutableList.Builder<String> lines = ImmutableList.builder();
-    if (entitlements.isPresent()) {
-      prefix = ProvisioningProfileMetadata.prefixFromEntitlements(entitlements.get());
-    } else {
-      prefix = Optional.empty();
-    }
 
     int bestMatchLength = -1;
     Optional<ProvisioningProfileMetadata> bestMatch = Optional.empty();
