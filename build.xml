@@ -325,6 +325,11 @@
 
   <pathconvert refid="bazel.processorpath" property="bazel.processorpath"/>
 
+  <target name="print-java-version">
+    <echo>Ant Java/JVM version: ${ant.java.version}</echo>
+    <echo>Java/JVM version: ${java.version}</echo>
+  </target>
+
   <target name="clean" description="remove all generated files" depends="clear-successful-build,antout.check" if="dir.exists">
     <delete includeEmptyDirs="true" >
       <fileset dir="${build.dir}" includes="**/*" excludes=".Spotlight-V100,.Trashes" defaultexcludes="no"/>
@@ -353,7 +358,7 @@
                                   dx, javac-plugin, kotlinc-plugin, report-generator-jar, create-classpath,
                                   create-resources-signature, gen-package-info, mark-successful-build" />
 
-  <target name="checkversion">
+  <target name="checkversion" depends="print-java-version">
     <!-- The function Function class was only introduced in Java 8. -->
     <available property="jdk8" classname="java.util.function.Function"/>
     <fail message="Require JDK 8 or higher" unless="jdk8"/>
