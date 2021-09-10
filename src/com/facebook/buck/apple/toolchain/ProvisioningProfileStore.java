@@ -51,7 +51,9 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
 
   private static final Logger LOG = Logger.get(ProvisioningProfileStore.class);
 
-  private static final ImmutableSet<String> FORCE_INCLUDE_ENTITLEMENTS =
+  // For those keys let the tooling decide if code signing should fail or succeed (every other key
+  // mismatch results in provisioning profile being skipped).
+  private static final ImmutableSet<String> IGNORE_MISMATCH_ENTITLEMENTS_KEYS =
       ImmutableSet.of(
           "keychain-access-groups",
           "application-identifier",
@@ -239,7 +241,7 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
     ImmutableMap<String, NSObject> profileEntitlements = profile.getEntitlements();
     for (Entry<String, NSObject> entry : entitlementsDict.entrySet()) {
       NSObject profileEntitlement = profileEntitlements.get(entry.getKey());
-      if (!FORCE_INCLUDE_ENTITLEMENTS.contains(entry.getKey())
+      if (!IGNORE_MISMATCH_ENTITLEMENTS_KEYS.contains(entry.getKey())
           && !matchesOrArrayIsSubsetOf(
               entry.getKey(), entry.getValue(), profileEntitlement, platform)) {
         result = false;
