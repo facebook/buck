@@ -213,57 +213,6 @@ tags_only_filter: &tags_only_filter
       ignore: /.*/
 
 jobs:
-  linux_build_openjdk8:
-    environment:
-      <<: *linux_environment
-    working_directory: "/home/circleci/buck"
-    machine:
-      # linux VM
-      image: ubuntu-1604:201903-01
-    steps:
-      # Steps run sequentially in separate shells
-      - checkout
-      - run:
-          <<: *install_openjdk8
-      - restore_cache:
-          # Change this key when upgrading sdk.
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
-      - run:
-          <<: *install_android_sdk
-      - save_cache:
-          paths:
-            - ~/android-sdk
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-andoid-sdk-{{ .Branch }}
-      - run:
-          <<: *install_golang
-      - restore_cache:
-          # Change this key when upgrading python.
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
-      - run:
-          <<: *install_python
-      - save_cache:
-          paths:
-            - /opt/circleci/.pyenv
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-python3.6.2-{{ .Branch }}
-      - run:
-          <<: *run_ant_build
-      - restore_cache:
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
-      - run:
-          <<: *run_buck_build
-      - save_cache:
-          paths:
-            - ~/buck/buck-out
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
-      - run:
-          name: Run Build Tests
-          command: |
-            cd "${BUCKROOT}"
-            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
-            export PATH="$(pyenv root)/shims:${PATH}"
-            set -eux
-            ${BUCK_PEX_LOCATION} build --num-threads=${BUCK_NUM_THREADS} src/... test/...
-
   linux_unit_groovy:
     environment:
       <<: *linux_environment
@@ -804,56 +753,6 @@ jobs:
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
-
-  mac_build_openjdk8:
-    environment:
-      <<: *macos_environment
-    working_directory: "/Users/distiller/buck"
-    macos:
-      xcode: "11.3.1"
-    steps:
-      # Steps run sequentially in separate shells
-      - checkout
-      - run:
-          <<: *install_openjdk8
-      - restore_cache:
-          # Change this key when upgrading sdk.
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
-      - run:
-          <<: *install_android_sdk
-      - save_cache:
-          paths:
-            - ~/android-sdk
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-android-sdk-{{ .Branch }}
-      - run:
-          <<: *install_golang
-      - restore_cache:
-          # Change this key when upgrading python.
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
-      - run:
-          <<: *install_python
-      - save_cache:
-          paths:
-            - ~/.pyenv
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-python3.6.2-{{ .Branch }}
-      - run:
-          <<: *run_ant_build
-      - restore_cache:
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
-      - run:
-          <<: *run_buck_build
-      - save_cache:
-          paths:
-            - ~/buck/buck-out
-          key: v-{{ .Environment.CACHE_VERSION }}-buck-macos-build-{{ .Branch }}
-      - run:
-          name: Run Build Tests
-          command: |
-            cd "${BUCKROOT}"
-            export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
-            export PATH="$(pyenv root)/shims:${PATH}"
-            set -eux
-            ${BUCK_PEX_LOCATION} build --num-threads=${BUCK_NUM_THREADS} src/... test/...
 
   macos_unit_groovy:
     environment:
@@ -1417,35 +1316,6 @@ jobs:
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 
-  windows_build_test:
-    environment:
-      <<: *windows_environment
-    working_directory: "C:\\Users\\circleci\\buck"
-    executor: win/default
-    steps:
-      - checkout
-      - run:
-          name: Install ant
-          command: choco install ant --version=1.9.7
-          shell: cmd.exe
-      - run:
-          name: Install OpenJDK8
-          command: choco install adoptopenjdk8
-          shell: cmd.exe
-      - run:
-          # on Windows, python3 is installed as python but buck expect the name python3
-          name: Create symlink to python
-          command: $pythonpath=(Split-Path((Get-Command python).Path)); cmd /c mklink ${pythonpath}\python3.exe ${pythonpath}\python.exe
-          shell: powershell.exe
-      - run:
-          name: Ant build
-          command: cd %BUCKROOT% && refreshenv && ant
-          shell: cmd.exe
-      - run:
-          name: Buck build
-          command: cd %BUCKROOT% && refreshenv && bin\buck build buck -c python.interpreter=python
-          shell: cmd.exe
-
   windows_tests:
     environment:
       <<: *windows_environment
@@ -1607,7 +1477,6 @@ workflows:
   linux_jobs:
     # jobs run in parallel
     jobs:
-      - linux_build_openjdk8
       - linux_unit_groovy
       - linux_build_ant
       - linux_test_integration
@@ -1622,7 +1491,6 @@ workflows:
 
   macos_jobs:
     jobs:
-      - mac_build_openjdk8
       - macos_unit_groovy
       - macos_build_ant
       - macos_test_integration
@@ -1637,7 +1505,6 @@ workflows:
 
   windows_jobs:
     jobs:
-      - windows_build_test
       - windows_tests
 
   publish_jobs:
