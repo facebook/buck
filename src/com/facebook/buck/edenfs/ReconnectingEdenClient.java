@@ -70,42 +70,34 @@ final class ReconnectingEdenClient implements EdenClientResource {
     this.clock = clock;
   }
 
+  private interface RetriableOperation<R> {
+    R invoke() throws IOException, TException, EdenError;
+  }
+
   private class ClientImpl implements EdenClient {
+    private <R> R withRetry(RetriableOperation<R> op) throws IOException, TException, EdenError {
+      try {
+        R r = op.invoke();
+        lastSuccessfulRequest = clock.currentTimeMillis();
+        return r;
+      } catch (TException e) {
+        investigateAndPossiblyRethrowException(e);
+      }
+
+      R r = op.invoke();
+      lastSuccessfulRequest = clock.currentTimeMillis();
+      return r;
+    }
 
     @Override
     public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths)
         throws IOException, TException, EdenError {
-      try {
-        return attemptGetSHA1(mountPoint, paths);
-      } catch (TException e) {
-        investigateAndPossiblyRethrowException(e);
-      }
-
-      return attemptGetSHA1(mountPoint, paths);
-    }
-
-    private List<SHA1Result> attemptGetSHA1(byte[] mountPoint, List<byte[]> paths)
-        throws IOException, TException, EdenError {
-      List<SHA1Result> sha1s = getConnectedClient().getSHA1(mountPoint, paths);
-      lastSuccessfulRequest = clock.currentTimeMillis();
-      return sha1s;
+      return withRetry(() -> getConnectedClient().getSHA1(mountPoint, paths));
     }
 
     @Override
     public List<MountInfo> listMounts() throws EdenError, IOException, TException {
-      try {
-        return attemptListMounts();
-      } catch (TException e) {
-        investigateAndPossiblyRethrowException(e);
-      }
-
-      return attemptListMounts();
-    }
-
-    private List<MountInfo> attemptListMounts() throws EdenError, IOException, TException {
-      List<MountInfo> mountInfos = getConnectedClient().listMounts();
-      lastSuccessfulRequest = clock.currentTimeMillis();
-      return mountInfos;
+      return withRetry(() -> getConnectedClient().listMounts());
     }
   }
 
