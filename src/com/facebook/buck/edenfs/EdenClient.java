@@ -35,4 +35,6 @@ public interface EdenClient {
       throws IOException, TException, EdenError;
 
   List<MountInfo> listMounts() throws EdenError, IOException, TException;
+
+  long getPid() throws EdenError, IOException, TException;
 }

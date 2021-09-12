@@ -99,6 +99,11 @@ final class ReconnectingEdenClient implements EdenClientResource {
     public List<MountInfo> listMounts() throws EdenError, IOException, TException {
       return withRetry(() -> getConnectedClient().listMounts());
     }
+
+    @Override
+    public long getPid() throws EdenError, IOException, TException {
+      return withRetry(() -> getConnectedClient().getPid());
+    }
   }
 
   /**

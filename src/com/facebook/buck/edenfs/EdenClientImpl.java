@@ -42,4 +42,9 @@ public class EdenClientImpl implements EdenClient {
   public List<MountInfo> listMounts() throws EdenError, IOException, TException {
     return client.listMounts();
   }
+
+  @Override
+  public long getPid() throws EdenError, IOException, TException {
+    return client.getPid();
+  }
 }
