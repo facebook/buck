@@ -44,6 +44,7 @@ import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.JavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
@@ -370,7 +371,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       return Optional.of(getBuildTarget());
     }
 
-    return JavaLibrary.super.getAbiJar();
+    return Optional.of(
+        getAbiInfo().getBuildTarget().withAppendedFlavors(JavaAbis.CLASS_ABI_FLAVOR));
   }
 
   @Override

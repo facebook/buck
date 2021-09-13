@@ -23,11 +23,8 @@ import java.util.Optional;
 public interface HasJavaAbi {
   JavaAbiInfo getAbiInfo();
 
-  /** @return the {@link SourcePath} representing the ABI Jar for this rule. */
-  default Optional<BuildTarget> getAbiJar() {
-    return Optional.of(
-        getAbiInfo().getBuildTarget().withAppendedFlavors(JavaAbis.CLASS_ABI_FLAVOR));
-  }
+  /** @return the optional {@link SourcePath} representing the ABI Jar for this rule. */
+  Optional<BuildTarget> getAbiJar();
 
   default Optional<BuildTarget> getSourceOnlyAbiJar() {
     return Optional.empty();
