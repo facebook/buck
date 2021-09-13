@@ -65,8 +65,6 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
   // pool, but large enough to accommodate typical requests.
   private static final int BUFFER_SIZE = 2 * KB_IN_BYTES;
 
-  private static final int WAIT_FOR_HANDLER_TIMEOUT_MILLIS = 5_000;
-
   private final BlockingQueue<WindowsHandle> openHandles = new LinkedBlockingQueue<>();
   private final BlockingQueue<WindowsHandle> connectedHandles = new LinkedBlockingQueue<>();
   private final Consumer<WindowsHandle> closeCallback;
@@ -232,7 +230,8 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
         try {
           // After flushing, we need to wait until the handler thread finishes reading everything
           // before disconnecting.
-          readerFinished.get(WAIT_FOR_HANDLER_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+          readerFinished.get(
+              WindowsNamedPipeLibrary.WAIT_FOR_HANDLER_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
         } finally {
           closeConnectedPipe(connectedHandle, true);
         }
@@ -255,7 +254,7 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
   }
 
   @Override
-  public void close() {
+  public void close() throws IOException {
     List<WindowsHandle> handlesToClose = new ArrayList<>();
     openHandles.drainTo(handlesToClose);
     for (WindowsHandle windowsHandle : handlesToClose) {

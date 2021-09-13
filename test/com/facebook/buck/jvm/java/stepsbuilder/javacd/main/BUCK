@@ -27,6 +27,7 @@ java_test(
         "//src/com/facebook/buck/util/env:env",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/java:java",
+        "//src/com/facebook/buck/jvm/java/stepsbuilder/javacd/main:main_lib",
         "//src/com/facebook/buck/workertool/impl:impl",
         "//test/com/facebook/buck/downwardapi/testutil:testutil",
         "//test/com/facebook/buck/event:testutil",

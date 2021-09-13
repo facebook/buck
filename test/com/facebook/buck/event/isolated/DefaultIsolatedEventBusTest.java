@@ -86,7 +86,7 @@ public class DefaultIsolatedEventBusTest {
   private InputStream inputStream;
   private DefaultIsolatedEventBus testEventBus;
 
-  @Rule public TestLogSink logSink = new TestLogSink(DefaultIsolatedEventBus.class.getName());
+  @Rule public TestLogSink logSink = new TestLogSink(DefaultIsolatedEventBus.class);
 
   @Before
   public void setUp() throws Exception {

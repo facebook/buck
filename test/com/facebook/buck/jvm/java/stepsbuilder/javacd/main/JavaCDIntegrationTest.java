@@ -129,17 +129,11 @@ public class JavaCDIntegrationTest {
 
   @Rule public Timeout globalTestTimeout = Timeout.seconds(180);
 
-  @Rule
-  public TestLogSink javacdLogSink =
-      new TestLogSink(JavaCDIntegrationTest.class.getPackage().getName() + ".StepExecutionUtils");
+  @Rule public TestLogSink javacdLogSink = new TestLogSink(StepExecutionUtils.class);
 
-  @Rule
-  public TestLogSink workerToolLogSink =
-      new TestLogSink(DefaultWorkerToolExecutor.class.getCanonicalName());
+  @Rule public TestLogSink workerToolLogSink = new TestLogSink(DefaultWorkerToolExecutor.class);
 
-  @Rule
-  public TestLogSink eventHandlerLogSink =
-      new TestLogSink(BaseNamedPipeEventHandler.class.getCanonicalName());
+  @Rule public TestLogSink eventHandlerLogSink = new TestLogSink(BaseNamedPipeEventHandler.class);
 
   @BeforeClass
   public static void beforeClass() throws Exception {

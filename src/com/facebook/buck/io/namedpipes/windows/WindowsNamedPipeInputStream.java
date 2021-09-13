@@ -45,7 +45,7 @@ class WindowsNamedPipeInputStream extends InputStream {
       WindowsHandleFactory windowsHandleFactory)
       throws IOException {
     this.namedPipeHandle = namedPipeHandle;
-    this.readerWaitable = createEvent(namedPipeName, windowsHandleFactory);
+    this.readerWaitable = createEvent("Input stream from: " + namedPipeName, windowsHandleFactory);
     this.namedPipeName = namedPipeName;
   }
 

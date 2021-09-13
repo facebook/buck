@@ -52,6 +52,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
+import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TestLogSink;
@@ -106,6 +107,7 @@ public class DownwardApiProcessExecutorTest {
   private static WindowsHandleFactory initialWindowsHandleFactory;
   private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =
       new TestWindowsHandleFactory();
+  private static final boolean IS_WINDOWS = Platform.detect() == Platform.WINDOWS;
 
   @BeforeClass
   public static void beforeClass() {
@@ -128,7 +130,7 @@ public class DownwardApiProcessExecutorTest {
 
   @After
   public void afterTest() {
-    if (Platform.detect() == Platform.WINDOWS) {
+    if (IS_WINDOWS) {
       TEST_WINDOWS_HANDLE_FACTORY.verifyAllCreatedHandlesClosed();
     }
   }
@@ -138,11 +140,9 @@ public class DownwardApiProcessExecutorTest {
 
   @Rule public TestLogSink testToolLogSink = new TestLogSink(TEST_LOGGER_NAME);
 
-  @Rule
-  public TestLogSink executorLogSink = new TestLogSink(BaseNamedPipeEventHandler.class.getName());
+  @Rule public TestLogSink executorLogSink = new TestLogSink(BaseNamedPipeEventHandler.class);
 
-  @Rule
-  public TestLogSink jsonProtocolLogSing = new TestLogSink(JsonDownwardProtocol.class.getName());
+  @Rule public TestLogSink jsonProtocolLogSing = new TestLogSink(JsonDownwardProtocol.class);
 
   private NamedPipeReader namedPipeReader;
   private BuckEventBus buckEventBus;
@@ -219,7 +219,6 @@ public class DownwardApiProcessExecutorTest {
     DownwardApiExecutionResult executionResult = resultReference.get();
     verifyExecutionResult(executionResult);
 
-    waitTillEventsProcessed();
     Map<Integer, BuckEvent> events = listener.getEvents();
     assertEquals(6, events.size());
 
@@ -296,11 +295,6 @@ public class DownwardApiProcessExecutorTest {
     buckEventBus.unregister(listener);
   }
 
-  private void waitTillEventsProcessed() throws InterruptedException {
-    ExecutorServiceUtils.waitTillAllTasksCompleted(
-        (ThreadPoolExecutor) DownwardApiProcessExecutor.HANDLER_THREAD_POOL);
-  }
-
   @Test
   public void invalidProtocol() throws IOException, InterruptedException {
     FakeProcess fakeProcess =
@@ -357,11 +351,7 @@ public class DownwardApiProcessExecutorTest {
       String errorMessage,
       TestLogSink testLogSink,
       Level level,
-      Function<LogRecord, Boolean> predicate)
-      throws InterruptedException {
-    waitTillEventsProcessed();
-    // give log events some time to arrive
-    TimeUnit.MILLISECONDS.sleep(100);
+      Function<LogRecord, Boolean> predicate) {
     Predicate<LogRecord> nonNullPredicate = ((Predicate<LogRecord>) Objects::isNull).negate();
     assertThat(
         errorMessage,
@@ -526,7 +516,6 @@ public class DownwardApiProcessExecutorTest {
     DownwardApiExecutionResult executionResult = launchAndExecute(processExecutor);
     verifyExecutionResult(executionResult);
 
-    waitTillEventsProcessed();
     Map<Integer, BuckEvent> events = listener.getEvents();
     assertEquals(6, events.size());
 
@@ -957,7 +946,6 @@ public class DownwardApiProcessExecutorTest {
     DownwardApiExecutionResult result = launchAndExecute(processExecutor);
     verifyExecutionResult(result);
 
-    waitTillEventsProcessed();
     assertThat(eventsReceivedByClientsHandlers.get(), equalTo(1 + 2 + 10 * 2 + 100 * 3 + 500));
   }
 
@@ -1083,12 +1071,22 @@ public class DownwardApiProcessExecutorTest {
     return builder.build();
   }
 
-  private void verifyExecutionResult(DownwardApiExecutionResult executionResult) {
+  private void verifyExecutionResult(DownwardApiExecutionResult executionResult)
+      throws InterruptedException {
     assertEquals("Process should exit with EXIT_SUCCESS", 0, executionResult.getExitCode());
     assertTrue("Reader thread is not terminated!", executionResult.isReaderThreadTerminated());
+    assertNotNull("Named pipe has not been created!", namedPipeReader);
+
+    waitTillEventsProcessed();
     assertFalse(
         "Named pipe file has to be deleted!", Files.exists(Paths.get(namedPipeReader.getName())));
-    assertNotNull("Named pipe has not been created!", namedPipeReader);
     assertTrue("Named pipe has to be closed.", namedPipeReader.isClosed());
+  }
+
+  private void waitTillEventsProcessed() throws InterruptedException {
+    ExecutorServiceUtils.waitTillAllTasksCompleted(
+        (ThreadPoolExecutor) DownwardApiProcessExecutor.HANDLER_THREAD_POOL);
+    TimeUnit.MILLISECONDS.sleep(
+        IS_WINDOWS ? WindowsNamedPipeLibrary.WAIT_FOR_HANDLER_TIMEOUT_MILLIS : 100L);
   }
 }

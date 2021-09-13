@@ -104,11 +104,11 @@ public class ExternalActionsIntegrationTest {
 
   @Rule
   public TestLogSink consoleEventLogSink =
-      new TestLogSink(FakeBuckEventWritingAction.ConsoleEventStep.class.getName());
+      new TestLogSink(FakeBuckEventWritingAction.ConsoleEventStep.class);
 
   @Rule
   public TestLogSink logEventLogSink =
-      new TestLogSink(FakeBuckEventWritingAction.LogEventStep.class.getName());
+      new TestLogSink(FakeBuckEventWritingAction.LogEventStep.class);
 
   private static WindowsHandleFactory initialWindowsHandleFactory;
   private static final TestWindowsHandleFactory TEST_WINDOWS_HANDLE_FACTORY =

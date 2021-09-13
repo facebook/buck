@@ -31,8 +31,8 @@ public class DefaultNamedPipeEventHandler extends BaseNamedPipeEventHandler {
   public static final NamedPipeEventHandlerFactory FACTORY = DefaultNamedPipeEventHandler::new;
 
   public DefaultNamedPipeEventHandler(
-      NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
-    super(namedPipe, context);
+      NamedPipeReader namedPipeReader, DownwardApiExecutionContext context) {
+    super(namedPipeReader, context);
   }
 
   @Override

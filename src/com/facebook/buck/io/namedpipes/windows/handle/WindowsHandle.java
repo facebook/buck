@@ -66,6 +66,7 @@ public class WindowsHandle implements Closeable {
   @Override
   public synchronized void close() {
     if (isClosed()) {
+      LOG.debug("Handle: %s is already closed", toString());
       return;
     }
 

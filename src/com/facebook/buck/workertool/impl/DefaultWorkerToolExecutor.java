@@ -252,8 +252,8 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private class WorkerToolExecutorNamedPipeEventHandler extends DefaultNamedPipeEventHandler {
 
     WorkerToolExecutorNamedPipeEventHandler(
-        NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
-      super(namedPipe, context);
+        NamedPipeReader namedPipeReader, DownwardApiExecutionContext context) {
+      super(namedPipeReader, context);
     }
 
     @Override

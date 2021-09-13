@@ -98,15 +98,16 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   private static final long WAIT_FOR_EVENTS_TIMEOUT = 500;
   private static final TimeUnit WAIT_FOR_EVENTS_TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
 
-  private final NamedPipeReader namedPipe;
+  private final NamedPipeReader namedPipeReader;
   private final DownwardApiExecutionContext context;
   private final Phaser eventProcessingPhaser = new Phaser();
   private final SettableFuture<Unit> readerFinished = SettableFuture.create();
 
   @Nullable private DownwardProtocol downwardProtocol = null;
 
-  public BaseNamedPipeEventHandler(NamedPipeReader namedPipe, DownwardApiExecutionContext context) {
-    this.namedPipe = namedPipe;
+  public BaseNamedPipeEventHandler(
+      NamedPipeReader namedPipeReader, DownwardApiExecutionContext context) {
+    this.namedPipeReader = namedPipeReader;
     this.context = context;
   }
 
@@ -121,12 +122,13 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   }
 
   private void run() {
-    String namedPipeName = namedPipe.getName();
+    String namedPipeName = namedPipeReader.getName();
     AtomicBoolean readerFinishedSuccessfully = new AtomicBoolean(false);
 
     try (CloseableWrapper<InputStream> streamWrapper =
         CloseableWrapper.of(
-            namedPipe.getInputStream(), is -> closeInputStream(is, readerFinishedSuccessfully))) {
+            namedPipeReader.getInputStream(),
+            is -> closeInputStream(is, readerFinishedSuccessfully))) {
       InputStream inputStream = streamWrapper.get();
       LOGGER.debug("Trying to establish downward protocol for pipe %s", namedPipeName);
       checkState(downwardProtocol == null);
@@ -154,13 +156,20 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
 
   private void closeInputStream(InputStream inputStream, AtomicBoolean readerFinishedSuccessfully) {
     readerFinished.set(Unit.UNIT);
-    if (!readerFinishedSuccessfully.get()) {
-      readAndDropFromInputStream(inputStream);
+    try {
+      if (!readerFinishedSuccessfully.get()) {
+        readAndDropFromInputStream(inputStream);
+      }
+    } finally {
+      closeInputStream(inputStream);
     }
+  }
+
+  private void closeInputStream(InputStream inputStream) {
     try {
       inputStream.close();
     } catch (IOException e) {
-      LOGGER.info(e, "Cannot close input stream from named pipe: %s", namedPipe.getName());
+      LOGGER.info(e, "Cannot close input stream from named pipe: %s", namedPipeReader.getName());
     }
   }
 
@@ -180,7 +189,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
    * not remain blocked.
    */
   private void readAndDropFromInputStream(InputStream inputStream) {
-    String namedPipeName = namedPipe.getName();
+    String namedPipeName = namedPipeReader.getName();
     long totalBytesRead = 0;
     try {
       byte[] buffer = new byte[1024];
@@ -190,7 +199,8 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
         totalBytesRead += count;
       }
     } catch (PipeNotConnectedException e) {
-      LOGGER.info(e, "Named pipe `%s` is closed", namedPipeName);
+      LOGGER.info(
+          e, "Cannot read and drop from named pipe: %s. Named pipe is closed", namedPipeName);
     } catch (IOException e) {
       LOGGER.warn(e, "Cannot read and drop from named pipe: %s", namedPipeName);
     } finally {
@@ -205,7 +215,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   }
 
   private void processEvents(InputStream inputStream) {
-    String namedPipeName = namedPipe.getName();
+    String namedPipeName = namedPipeReader.getName();
     while (true) {
       try {
         EventType eventType =
@@ -274,15 +284,15 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   }
 
   private void closeNamedPipe() throws ExecutionException, TimeoutException, InterruptedException {
-    if (namedPipe.isClosed()) {
-      LOGGER.info("Named pipe %s is already closed.", namedPipe.getName());
+    if (namedPipeReader.isClosed()) {
+      LOGGER.info("Named pipe %s is already closed.", namedPipeReader.getName());
       return;
     }
 
     checkState(
-        namedPipe instanceof NamedPipeServer,
+        namedPipeReader instanceof NamedPipeServer,
         "DownwardApiProcessExecutor's named pipe must be a server!");
-    NamedPipeServer namedPipeServer = (NamedPipeServer) namedPipe;
+    NamedPipeServer namedPipeServer = (NamedPipeServer) namedPipeReader;
     maybeSetProtocol(namedPipeServer);
     try {
       namedPipeServer.prepareToClose(readerFinished);
@@ -310,7 +320,8 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
     } catch (TimeoutException e) {
       LOGGER.warn(
           "Timeout while waiting for event handler to process events from named pipe: %s. %s ms elapsed!",
-          namedPipe.getName(), WAIT_FOR_EVENTS_TIMEOUT_UNIT.toMillis(WAIT_FOR_EVENTS_TIMEOUT));
+          namedPipeReader.getName(),
+          WAIT_FOR_EVENTS_TIMEOUT_UNIT.toMillis(WAIT_FOR_EVENTS_TIMEOUT));
     } finally {
       context.close();
     }

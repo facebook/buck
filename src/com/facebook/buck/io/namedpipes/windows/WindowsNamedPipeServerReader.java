@@ -18,6 +18,7 @@ package com.facebook.buck.io.namedpipes.windows;
 
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
+import com.google.common.io.Closer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -25,12 +26,20 @@ import java.nio.file.Path;
 /** Server implementation of Windows name pipe reader. */
 class WindowsNamedPipeServerReader extends WindowsNamedPipeServerBase implements NamedPipeReader {
 
+  private final Closer closer = Closer.create();
+
   public WindowsNamedPipeServerReader(Path path, WindowsHandleFactory windowsHandleFactory) {
     super(path, windowsHandleFactory);
+    closer.register(super::close);
   }
 
   @Override
   public InputStream getInputStream() throws IOException {
-    return connect(WindowsNamedPipeClientReader.class).getInputStream();
+    return closer.register(connect(WindowsNamedPipeClientReader.class)).getInputStream();
+  }
+
+  @Override
+  public void close() throws IOException {
+    closer.close();
   }
 }

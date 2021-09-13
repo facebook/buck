@@ -31,7 +31,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 /** {@link OutputStream} for writing to windows named pipes. */
-public class WindowsNamedPipeOutputStream extends OutputStream {
+class WindowsNamedPipeOutputStream extends OutputStream {
 
   private static final WindowsNamedPipeLibrary API = WindowsNamedPipeLibrary.INSTANCE;
 
@@ -45,7 +45,7 @@ public class WindowsNamedPipeOutputStream extends OutputStream {
       WindowsHandleFactory windowsHandleFactory)
       throws IOException {
     this.namedPipeHandle = namedPipeHandle;
-    this.writerWaitable = createEvent(namedPipeName, windowsHandleFactory);
+    this.writerWaitable = createEvent("Output stream from: " + namedPipeName, windowsHandleFactory);
     this.namedPipeName = namedPipeName;
   }
 

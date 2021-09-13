@@ -37,6 +37,7 @@ import java.nio.ByteBuffer;
 public interface WindowsNamedPipeLibrary extends WinNT, Library {
 
   int CLOSE_WAIT_IN_MILLIS = 500;
+  int WAIT_FOR_HANDLER_TIMEOUT_MILLIS = 5_000;
 
   WindowsNamedPipeLibrary INSTANCE =
       Native.load("kernel32", WindowsNamedPipeLibrary.class, W32APIOptions.UNICODE_OPTIONS);
@@ -109,7 +110,7 @@ public interface WindowsNamedPipeLibrary extends WinNT, Library {
   }
 
   /** Creates {@link WindowsHandle} that wraps the result of {@link #CreateEvent} result. */
-  static WindowsHandle createEvent(String namedPipeName, WindowsHandleFactory windowsHandleFactory)
+  static WindowsHandle createEvent(String description, WindowsHandleFactory windowsHandleFactory)
       throws IOException {
     HANDLE handle = INSTANCE.CreateEvent(null, true, false, null);
     if (handle == null) {
@@ -117,6 +118,6 @@ public interface WindowsNamedPipeLibrary extends WinNT, Library {
           "CreateEvent() failed, error: %s", Kernel32Util.getLastErrorMessage());
     }
 
-    return windowsHandleFactory.create(handle, "CreateEvent() for " + namedPipeName);
+    return windowsHandleFactory.create(handle, "CreateEvent() for " + description);
   }
 }
