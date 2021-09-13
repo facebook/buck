@@ -28,6 +28,6 @@ import org.pf4j.Extension;
 public class JavaDescriptionProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
-    return Collections.singleton(new PrebuiltJarDescription());
+    return Collections.singleton(new PrebuiltJarDescription(context.getBuckConfig()));
   }
 }

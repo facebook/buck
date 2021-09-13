@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -51,6 +52,12 @@ public class PrebuiltJarDescription
     implements DescriptionWithTargetGraph<PrebuiltJarDescriptionArg>,
         VersionPropagator<PrebuiltJarDescriptionArg> {
 
+  private final JavaBuckConfig javaBuckConfig;
+
+  public PrebuiltJarDescription(BuckConfig buckConfig) {
+    this.javaBuckConfig = buckConfig.getView(JavaBuckConfig.class);
+  }
+
   @Override
   public Class<PrebuiltJarDescriptionArg> getConstructorArgType() {
     return PrebuiltJarDescriptionArg.class;
@@ -81,7 +88,8 @@ public class PrebuiltJarDescription
             args.getProvided(),
             args.getRequiredForSourceOnlyAbi(),
             args.getGenerateAbi(),
-            args.getNeverMarkAsUnusedDependency());
+            args.getNeverMarkAsUnusedDependency(),
+            javaBuckConfig.shouldDesugarInterfaceMethodsInPrebuiltJars());
 
     BuildTarget gwtTarget = buildTarget.withAppendedFlavors(JavaLibrary.GWT_MODULE_FLAVOR);
     BuildRuleParams gwtParams =

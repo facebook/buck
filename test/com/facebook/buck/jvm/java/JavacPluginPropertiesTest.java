@@ -62,7 +62,8 @@ public class JavacPluginPropertiesTest {
             /* provided */ false,
             /* requiredForSourceOnlyAbi */ false,
             /* generateAbi */ true,
-            /* neverMarkAsUnusedDependency */ true);
+            /* neverMarkAsUnusedDependency */ true,
+            /* shouldDesugarInterfaceMethodsInPrebuiltJars */ false);
     BuildRule transitivePrebuiltJarDep =
         graphBuilder.computeIfAbsent(
             rawTransitivePrebuiltJarDep.getBuildTarget(),
@@ -82,7 +83,8 @@ public class JavacPluginPropertiesTest {
             /* provided */ false,
             /* requiredForSourceOnlyAbi */ false,
             /* generateAbi */ true,
-            /* neverMarkAsUnusedDependency */ true);
+            /* neverMarkAsUnusedDependency */ true,
+            /* shouldDesugarInterfaceMethodsInPrebuiltJars */ false);
     BuildRule firstLevelPrebuiltJarDep =
         graphBuilder.computeIfAbsent(
             rawFirstLevelPrebuiltJarDep.getBuildTarget(),

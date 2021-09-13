@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -31,7 +32,7 @@ public class PrebuiltJarBuilder
         PrebuiltJar> {
 
   private PrebuiltJarBuilder(BuildTarget target) {
-    super(new PrebuiltJarDescription(), target);
+    super(new PrebuiltJarDescription(FakeBuckConfig.empty()), target);
   }
 
   public static PrebuiltJarBuilder createBuilder(BuildTarget target) {

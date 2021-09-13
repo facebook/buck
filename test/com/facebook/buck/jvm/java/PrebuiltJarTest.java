@@ -68,7 +68,8 @@ public class PrebuiltJarTest {
             /* provided */ false,
             /* requiredForSourceOnlyAbi */ false,
             /* generateAbi */ true,
-            /* neverMarkAsUnusedDependency */ false);
+            /* neverMarkAsUnusedDependency */ false,
+            /* shouldDesugarInterfaceMethodsInPrebuiltJars */ false);
   }
 
   @Test

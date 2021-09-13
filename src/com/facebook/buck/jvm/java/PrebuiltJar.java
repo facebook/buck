@@ -59,9 +59,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -91,6 +93,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final BuildOutputInitializer<JavaLibrary.Data> buildOutputInitializer;
   private final JavaClassHashesProvider javaClassHashesProvider;
+  private final boolean shouldDesugarInterfaceMethodsInPrebuiltJars;
 
   public PrebuiltJar(
       BuildTarget buildTarget,
@@ -102,7 +105,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean provided,
       boolean requiredForSourceOnlyAbi,
       boolean generateAbi,
-      boolean neverMarkAsUnusedDependency) {
+      boolean neverMarkAsUnusedDependency,
+      boolean shouldDesugarInterfaceMethodsInPrebuiltJars) {
     super(buildTarget, projectFilesystem, params);
     this.binaryJar = binaryJar;
     this.mavenCoords = mavenCoords;
@@ -147,6 +151,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.javaClassHashesProvider =
         new DefaultJavaClassHashesProvider(
             ExplicitBuildTargetSourcePath.of(buildTarget, getPathToClassHashes().getPath()));
+
+    this.shouldDesugarInterfaceMethodsInPrebuiltJars = shouldDesugarInterfaceMethodsInPrebuiltJars;
   }
 
   @Override
@@ -161,12 +167,22 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public boolean isInterfaceMethodsDesugarEnabled() {
-    return false;
+    return shouldDesugarInterfaceMethodsInPrebuiltJars;
   }
 
   @Override
   public ImmutableSortedSet<SourcePath> getDesugarDeps() {
-    // We only need deps for desugaring interface methods, which we don't support in prebuilts
+    // We only need deps for desugaring interface methods
+    if (isDesugarEnabled() && isInterfaceMethodsDesugarEnabled()) {
+      // We provide all declared dependencies to support Java 8 interface desugaring in D8.
+      // If this JAR is built with Java 8 and depends on anther Java 8 library using default or
+      // static interface methods, we need to desugar them together so that implementers of that
+      // interface in this JAR get correctly desugared as well.
+      return getDeclaredDeps().stream()
+          .map(BuildRule::getSourcePathToOutput)
+          .filter(Objects::nonNull)
+          .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    }
     return ImmutableSortedSet.of();
   }
 

@@ -183,7 +183,8 @@ public class AndroidPrebuiltAarDescription
           /* provided */ false,
           args.getRequiredForSourceOnlyAbi(),
           /* generate_abi */ true,
-          /* neverMarkAsUnusedDependency */ false);
+          /* neverMarkAsUnusedDependency */ false,
+          javaBuckConfig.shouldDesugarInterfaceMethodsInPrebuiltJars());
     }
 
     Preconditions.checkState(

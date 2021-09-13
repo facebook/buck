@@ -674,6 +674,7 @@ public class AndroidBinaryGraphEnhancer {
               false,
               false,
               true,
+              false,
               false);
       graphBuilder.addToIndex(prebuiltJar);
 
