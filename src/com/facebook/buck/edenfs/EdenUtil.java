@@ -99,7 +99,7 @@ public class EdenUtil {
   static boolean pingSocket(Path unixSocket) {
     try (ReconnectingEdenClient edenClient =
         new ReconnectingEdenClient(unixSocket, new DefaultClock())) {
-      edenClient.getEdenClient().listMounts();
+      edenClient.getEdenClient().getPid();
       return true;
     } catch (EdenError | IOException | TException e) {
       LOG.debug("Could not connect Eden client via socket: " + unixSocket);
