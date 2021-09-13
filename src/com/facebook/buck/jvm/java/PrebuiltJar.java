@@ -165,6 +165,12 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
+  public ImmutableSortedSet<SourcePath> getDesugarDeps() {
+    // We only need deps for desugaring interface methods, which we don't support in prebuilts
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
   public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
     return buildOutputInitializer.getBuildOutput().getClassNamesToHashes();
   }

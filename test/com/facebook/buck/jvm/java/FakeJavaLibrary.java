@@ -77,6 +77,11 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
+  public ImmutableSortedSet<SourcePath> getDesugarDeps() {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
   public ImmutableSet<SourcePath> getOutputClasspaths() {
     return ImmutableSet.of();
   }

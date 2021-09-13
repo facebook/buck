@@ -287,6 +287,14 @@ public class DefaultJavaLibrary
   }
 
   @Override
+  public ImmutableSortedSet<SourcePath> getDesugarDeps() {
+    if (isDesugarEnabled()) {
+      return getCompileTimeClasspathSourcePaths();
+    }
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
   public boolean getRequiredForSourceOnlyAbi() {
     return requiredForSourceOnlyAbi;
   }

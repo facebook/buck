@@ -1027,7 +1027,7 @@ public class AndroidBinaryGraphEnhancer {
   private ImmutableSortedSet<SourcePath> getDesugarDeps(
       JavaLibrary javaLibrary, Function<BuildTarget, BuildRule> targetToRule) {
     if (javaBuckConfig.useCompileTimeClasspathForD8Desugaring()) {
-      return ImmutableSortedSet.copyOf(javaLibrary.getCompileTimeClasspathSourcePaths());
+      return ImmutableSortedSet.copyOf(javaLibrary.getDesugarDeps());
     } else {
       ImmutableSortedSet.Builder<SourcePath> resultBuilder = ImmutableSortedSet.naturalOrder();
       for (JavaLibrary library :

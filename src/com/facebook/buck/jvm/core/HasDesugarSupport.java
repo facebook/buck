@@ -16,6 +16,9 @@
 
 package com.facebook.buck.jvm.core;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.google.common.collect.ImmutableSortedSet;
+
 /**
  * Implemented by build rules that support desugar process to the lower java versions, for example
  * java 8 to java 7 desugar for Android builds.
@@ -35,4 +38,12 @@ public interface HasDesugarSupport {
   default boolean isInterfaceMethodsDesugarEnabled() {
     return false;
   }
+
+  /**
+   * Returns the list of sources this rule depends on for desugaring.
+   *
+   * <p>These are the deps that are required for full desugaring of default and static interface
+   * methods. They will be included as classpath dependencies to a desugaring tool like D8.
+   */
+  ImmutableSortedSet<SourcePath> getDesugarDeps();
 }
