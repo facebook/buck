@@ -18,6 +18,7 @@ package com.facebook.buck.io.namedpipes.posix;
 
 import com.facebook.buck.io.namedpipes.BaseNamedPipe;
 import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
+import com.google.common.io.Closer;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,8 +27,6 @@ import java.io.RandomAccessFile;
 import java.nio.channels.Channels;
 import java.nio.channels.ClosedChannelException;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.concurrent.NotThreadSafe;
 
 /** Named pipe implementation based on {@code RandomAccessFile}. */
@@ -49,10 +48,6 @@ abstract class POSIXClientNamedPipeBase extends BaseNamedPipe {
     return isClosed;
   }
 
-  protected void closeFileWrapper(RandomAccessFileWrapper fileWrapper) throws IOException {
-    fileWrapper.close();
-  }
-
   /**
    * Wrapper class around an instance of {@link RandomAccessFile}. Multiple input and output streams
    * may be open to the underlying {@link RandomAccessFile} concurrently.
@@ -68,33 +63,25 @@ abstract class POSIXClientNamedPipeBase extends BaseNamedPipe {
   @NotThreadSafe
   protected static class RandomAccessFileWrapper implements Closeable {
 
-    final RandomAccessFile randomAccessFile;
-    private final Collection<Closeable> closeables;
+    private final RandomAccessFile randomAccessFile;
+    private final Closer closer = Closer.create();
 
     RandomAccessFileWrapper(String path, String mode) throws IOException {
-      this.randomAccessFile = new RandomAccessFile(path, mode);
-      closeables = ConcurrentHashMap.newKeySet();
+      this.randomAccessFile = closer.register(new RandomAccessFile(path, mode));
     }
 
     InputStream getInputStream() {
-      InputStream inputStream =
-          new POSIXNamedPipeInputStream(Channels.newInputStream(randomAccessFile.getChannel()));
-      closeables.add(inputStream);
-      return inputStream;
+      return closer.register(
+          new POSIXNamedPipeInputStream(Channels.newInputStream(randomAccessFile.getChannel())));
     }
 
     OutputStream getOutputStream() {
-      OutputStream outputStream = Channels.newOutputStream(randomAccessFile.getChannel());
-      closeables.add(outputStream);
-      return outputStream;
+      return closer.register(Channels.newOutputStream(randomAccessFile.getChannel()));
     }
 
     @Override
     public void close() throws IOException {
-      for (Closeable closeable : closeables) {
-        closeable.close();
-      }
-      randomAccessFile.close();
+      closer.close();
     }
   }
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.io.namedpipes.posix;
 
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
+import com.google.common.io.Closer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -26,10 +27,12 @@ public class POSIXClientNamedPipeReader extends POSIXClientNamedPipeBase
     implements NamedPipeReader {
 
   private final RandomAccessFileWrapper readFile;
+  private final Closer closer = Closer.create();
 
   protected POSIXClientNamedPipeReader(Path path) throws IOException {
     super(path);
-    readFile = new POSIXClientNamedPipeBase.RandomAccessFileWrapper(getName(), "rw");
+    closer.register(super::close);
+    this.readFile = closer.register(new RandomAccessFileWrapper(getName(), "rw"));
   }
 
   @Override
@@ -39,7 +42,6 @@ public class POSIXClientNamedPipeReader extends POSIXClientNamedPipeBase
 
   @Override
   public void close() throws IOException {
-    super.close();
-    closeFileWrapper(readFile);
+    closer.close();
   }
 }
