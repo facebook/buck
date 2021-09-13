@@ -76,20 +76,15 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final SourcePath binaryJar;
-  private final JavaAbiInfo javaAbiInfo;
-  private final RelPath copiedBinaryJar;
-  @AddToRuleKey private final Optional<SourcePath> sourceJar;
-
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  @AddToRuleKey
-  private final Optional<SourcePath> gwtJar;
-
-  @AddToRuleKey private final Optional<String> javadocUrl;
   @AddToRuleKey private final Optional<String> mavenCoords;
   @AddToRuleKey private final boolean provided;
   @AddToRuleKey private final boolean requiredForSourceOnlyAbi;
   @AddToRuleKey private final boolean generateAbi;
   @AddToRuleKey private final boolean neverMarkAsUnusedDependency;
+
+  private final JavaAbiInfo javaAbiInfo;
+  private final RelPath copiedBinaryJar;
+
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
@@ -102,9 +97,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams params,
       SourcePathResolverAdapter resolver,
       SourcePath binaryJar,
-      Optional<SourcePath> sourceJar,
-      Optional<SourcePath> gwtJar,
-      Optional<String> javadocUrl,
       Optional<String> mavenCoords,
       boolean provided,
       boolean requiredForSourceOnlyAbi,
@@ -112,9 +104,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean neverMarkAsUnusedDependency) {
     super(buildTarget, projectFilesystem, params);
     this.binaryJar = binaryJar;
-    this.sourceJar = sourceJar;
-    this.gwtJar = gwtJar;
-    this.javadocUrl = javadocUrl;
     this.mavenCoords = mavenCoords;
     this.provided = provided;
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
@@ -162,14 +151,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public boolean getRequiredForSourceOnlyAbi() {
     return requiredForSourceOnlyAbi;
-  }
-
-  public Optional<SourcePath> getSourceJar() {
-    return sourceJar;
-  }
-
-  public Optional<String> getJavadocUrl() {
-    return javadocUrl;
   }
 
   @Override

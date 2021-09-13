@@ -178,9 +178,7 @@ public class AndroidPrebuiltAarDescription
           /* params */ buildRuleParams,
           graphBuilder.getSourcePathResolver(),
           /* binaryJar */ prebuiltJarSourcePath,
-          /* sourceJar */ Optional.empty(),
-          /* gwtJar */ Optional.empty(),
-          /* javadocUrl */ Optional.empty(),
+          /* sourceJar */
           /* mavenCoords */ Optional.empty(),
           /* provided */ false,
           args.getRequiredForSourceOnlyAbi(),
