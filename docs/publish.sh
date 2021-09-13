@@ -106,7 +106,7 @@ fi
 cd "$STATIC_FILES_DIR"
 
 # May need to do this if you are creating gh-pages for the first time.
-git checkout master
+git checkout main
 
 git checkout --orphan gh-pages
 git rm -rf .

@@ -68,9 +68,9 @@ Both automatic and manual processes described above follow the same steps from t
 #. Cherry-pick the CHANGELOG / announce files to the ``master`` branch::
 
        git fetch --all --prune
-       git checkout origin/master -b cherry-pick-release
+       git checkout origin/main -b cherry-pick-release
        git cherry-pick --no-commit -m1 origin/MAJOR.MINOR.x
-       git checkout origin/master -- changelog
+       git checkout origin/main -- changelog
        git commit  # no arguments
 
 #. Send an email announcement with the contents from::
