@@ -781,6 +781,8 @@ public final class MainRunner {
                 watchman);
         buckConfigProjectFilesystem.initFilesystem(filesystem);
       } else {
+        // TODO(nga): when we are "reusing" previous buckconfig,
+        //   we reuse filesystem object with watchman closed.
         filesystem = buckConfig.getFilesystem();
       }
 
