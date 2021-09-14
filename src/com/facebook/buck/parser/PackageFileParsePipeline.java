@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.PackageFileManifest;
@@ -29,6 +30,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.util.Optional;
 
 /** A pipeline that provides a {@link PackageFileManifest} for a given package file. */
 public class PackageFileParsePipeline extends GenericFileParsePipeline<PackageFileManifest> {
@@ -38,8 +40,9 @@ public class PackageFileParsePipeline extends GenericFileParsePipeline<PackageFi
       PackageFileParserPool packageFileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
-      Watchman watchman) {
-    super(cache, packageFileParserPool, executorService, eventBus, watchman);
+      Watchman watchman,
+      Optional<EdenClientResourcePool> edenClient) {
+    super(cache, packageFileParserPool, executorService, eventBus, watchman, edenClient);
   }
 
   /**

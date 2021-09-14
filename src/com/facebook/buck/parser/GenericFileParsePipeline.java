@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.FileManifest;
@@ -27,6 +28,7 @@ import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** A pipeline that provides cached parsed results for a given file. */
@@ -37,6 +39,7 @@ public abstract class GenericFileParsePipeline<T extends FileManifest>
   private final ListeningExecutorService executorService;
   private final FileParserPool<T> fileParserPool;
   private final Watchman watchman;
+  private final Optional<EdenClientResourcePool> edenClient;
   protected final AtomicBoolean shuttingDown;
 
   public GenericFileParsePipeline(
@@ -44,12 +47,14 @@ public abstract class GenericFileParsePipeline<T extends FileManifest>
       FileParserPool<T> fileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
-      Watchman watchman) {
+      Watchman watchman,
+      Optional<EdenClientResourcePool> edenClient) {
     this.eventBus = eventBus;
     this.executorService = executorService;
     this.cache = cache;
     this.fileParserPool = fileParserPool;
     this.watchman = watchman;
+    this.edenClient = edenClient;
     shuttingDown = new AtomicBoolean(false);
   }
 
@@ -77,7 +82,7 @@ public abstract class GenericFileParsePipeline<T extends FileManifest>
           }
 
           return fileParserPool.getManifest(
-              eventBus, cell, watchman, manifestFile, executorService);
+              eventBus, cell, watchman, edenClient, manifestFile, executorService);
         });
   }
 

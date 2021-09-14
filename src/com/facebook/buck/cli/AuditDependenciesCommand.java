@@ -117,6 +117,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
                         params.getCells().getRootCell().getBuckConfig(),
                         params.getExecutableFinder()),
                     params.getWatchman(),
+                    params.getEdenClient(),
                     params.getBuckEventBus(),
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))

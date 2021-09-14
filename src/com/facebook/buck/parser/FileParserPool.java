@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.FileManifest;
@@ -30,6 +31,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.concurrent.GuardedBy;
 
@@ -74,20 +76,24 @@ abstract class FileParserPool<T extends FileManifest> implements AutoCloseable {
       BuckEventBus buckEventBus,
       Cell cell,
       Watchman watchman,
+      Optional<EdenClientResourcePool> edenClient,
       ForwardRelPath parseFile,
       ListeningExecutorService executorService) {
     Preconditions.checkState(!closing.get());
 
     if (shouldUsePoolForCell(cell)) {
-      return getResourcePoolForCell(buckEventBus, cell, watchman)
+      return getResourcePoolForCell(buckEventBus, cell, watchman, edenClient)
           .scheduleOperationWithResource(parser -> parser.getManifest(parseFile), executorService);
     }
-    FileParser<T> parser = getParserForCell(buckEventBus, cell, watchman);
+    FileParser<T> parser = getParserForCell(buckEventBus, cell, watchman, edenClient);
     return executorService.submit(() -> parser.getManifest(parseFile));
   }
 
   private synchronized ResourcePool<FileParser<T>> getResourcePoolForCell(
-      BuckEventBus buckEventBus, Cell cell, Watchman watchman) {
+      BuckEventBus buckEventBus,
+      Cell cell,
+      Watchman watchman,
+      Optional<EdenClientResourcePool> edenClient) {
     return parserResourcePools.computeIfAbsent(
         cell,
         c ->
@@ -97,13 +103,16 @@ abstract class FileParserPool<T extends FileManifest> implements AutoCloseable {
                 // always
                 // recover and subsequent attempts at invoking the parser will fail.
                 ResourcePool.ResourceUsageErrorPolicy.RETIRE,
-                () -> fileParserFactory.createFileParser(buckEventBus, c, watchman)));
+                () -> fileParserFactory.createFileParser(buckEventBus, c, watchman, edenClient)));
   }
 
   private synchronized FileParser<T> getParserForCell(
-      BuckEventBus buckEventBus, Cell cell, Watchman watchman) {
+      BuckEventBus buckEventBus,
+      Cell cell,
+      Watchman watchman,
+      Optional<EdenClientResourcePool> edenClient) {
     return nonPooledCells.computeIfAbsent(
-        cell, c -> fileParserFactory.createFileParser(buckEventBus, c, watchman));
+        cell, c -> fileParserFactory.createFileParser(buckEventBus, c, watchman, edenClient));
   }
 
   abstract void reportProfile();

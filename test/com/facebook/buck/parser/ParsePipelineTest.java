@@ -584,7 +584,7 @@ public class ParsePipelineTest {
       projectBuildFileParserPool =
           new ProjectBuildFileParserPool(
               NUM_THREADS,
-              (buckEventBus, input, watchman) -> {
+              (buckEventBus, input, watchman, edenClient) -> {
                 CloseRecordingProjectBuildFileParserDecorator buildFileParser =
                     new CloseRecordingProjectBuildFileParserDecorator(
                         new DefaultProjectBuildFileParserFactory(
@@ -593,7 +593,7 @@ public class ParsePipelineTest {
                                     input.getBuckConfig(), new ExecutableFinder()),
                                 TestKnownRuleTypesProvider.create(
                                     BuckPluginManagerFactory.createPluginManager()))
-                            .createFileParser(eventBus, input, watchman));
+                            .createFileParser(eventBus, input, watchman, edenClient));
                 synchronized (projectBuildFileParsers) {
                   projectBuildFileParsers.add(buildFileParser);
                 }
@@ -621,7 +621,8 @@ public class ParsePipelineTest {
               projectBuildFileParserPool,
               executorService,
               eventBus,
-              new WatchmanFactory.NullWatchman("test", WatchmanError.TEST));
+              new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
+              Optional.empty());
 
       BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline =
           new BuildTargetRawNodeParsePipeline(executorService, buildFileRawNodeParsePipeline);
@@ -649,7 +650,8 @@ public class ParsePipelineTest {
               packageFileParserPool,
               executorService,
               eventBus,
-              new WatchmanFactory.NullWatchman("test", WatchmanError.TEST));
+              new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
+              Optional.empty());
 
       PackagePipeline packagePipeline =
           new PackagePipeline(executorService, eventBus, packageFileParsePipeline);

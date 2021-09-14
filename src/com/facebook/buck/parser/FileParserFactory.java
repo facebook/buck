@@ -17,13 +17,19 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.FileManifest;
 import com.facebook.buck.parser.api.FileParser;
+import java.util.Optional;
 
 /** Factory for creating instances of {@link FileParser}. */
 public interface FileParserFactory<T extends FileManifest> {
   /** Creates an instance of {link ProjectBuildFileParser} based on passed in options. */
-  FileParser<T> createFileParser(BuckEventBus eventBus, Cell cell, Watchman watchman);
+  FileParser<T> createFileParser(
+      BuckEventBus eventBus,
+      Cell cell,
+      Watchman watchman,
+      Optional<EdenClientResourcePool> edenClient);
 }

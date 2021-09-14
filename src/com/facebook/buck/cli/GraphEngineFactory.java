@@ -112,7 +112,10 @@ public class GraphEngineFactory {
 
     ProjectBuildFileParser buildFileParser =
         projectBuildFileParserFactory.createFileParser(
-            params.getBuckEventBus(), params.getCells().getRootCell(), params.getWatchman());
+            params.getBuckEventBus(),
+            params.getCells().getRootCell(),
+            params.getWatchman(),
+            params.getEdenClient());
 
     // Once computation is over, we want to close ProjectBuildFileParser to potentially release
     // resources

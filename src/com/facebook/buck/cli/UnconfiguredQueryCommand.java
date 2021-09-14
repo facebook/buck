@@ -462,6 +462,7 @@ public class UnconfiguredQueryCommand
             new ParserPythonInterpreterProvider(
                 params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
             params.getWatchman(),
+            params.getEdenClient(),
             params.getBuckEventBus(),
             params.getUnconfiguredBuildTargetFactory(),
             params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));

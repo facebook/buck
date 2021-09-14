@@ -17,10 +17,12 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import java.util.Optional;
 
 /** A pipeline that provides a {@link BuildFileManifest} for a given build file. */
 public class BuildFileRawNodeParsePipeline extends GenericFileParsePipeline<BuildFileManifest> {
@@ -30,7 +32,8 @@ public class BuildFileRawNodeParsePipeline extends GenericFileParsePipeline<Buil
       ProjectBuildFileParserPool projectBuildFileParserPool,
       ListeningExecutorService executorService,
       BuckEventBus eventBus,
-      Watchman watchman) {
-    super(cache, projectBuildFileParserPool, executorService, eventBus, watchman);
+      Watchman watchman,
+      Optional<EdenClientResourcePool> edenClient) {
+    super(cache, projectBuildFileParserPool, executorService, eventBus, watchman, edenClient);
   }
 }

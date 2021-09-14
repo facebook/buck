@@ -124,6 +124,7 @@ public class QueryCommandTest {
                 new ParserPythonInterpreterProvider(
                     cell.getRootCell().getBuckConfig(), new ExecutableFinder()),
                 new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
+                Optional.empty(),
                 eventBus,
                 buildTargetViewFactory,
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))

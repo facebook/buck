@@ -130,6 +130,7 @@ public class ConfiguredQueryEnvironmentTest {
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
             new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
+            Optional.empty(),
             eventBus,
             buildTargetViewFactory,
             UnconfiguredTargetConfiguration.INSTANCE);

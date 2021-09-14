@@ -19,10 +19,12 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import java.util.Optional;
 
 /** Responsible for creating an instance of {@link Parser}. */
 public class ParserFactory {
@@ -36,6 +38,7 @@ public class ParserFactory {
       DaemonicParserState daemonicParserState,
       TargetSpecResolver targetSpecResolver,
       Watchman watchman,
+      Optional<EdenClientResourcePool> edenClient,
       BuckEventBus eventBus,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration hostConfiguration) {
@@ -47,6 +50,7 @@ public class ParserFactory {
             knownRuleTypesProvider,
             parserPythonInterpreterProvider,
             watchman,
+            edenClient,
             eventBus,
             unconfiguredBuildTargetFactory,
             hostConfiguration),

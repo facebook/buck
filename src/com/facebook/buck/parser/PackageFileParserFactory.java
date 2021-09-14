@@ -25,6 +25,7 @@ import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.facebook.buck.core.starlark.eventhandler.EventKind;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.watchman.Watchman;
@@ -61,7 +62,11 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
    * Callers are responsible for managing the life-cycle of the created {@link PackageFileParser}.
    */
   @Override
-  public PackageFileParser createFileParser(BuckEventBus eventBus, Cell cell, Watchman watchman) {
+  public PackageFileParser createFileParser(
+      BuckEventBus eventBus,
+      Cell cell,
+      Watchman watchman,
+      Optional<EdenClientResourcePool> edenClient) {
 
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();

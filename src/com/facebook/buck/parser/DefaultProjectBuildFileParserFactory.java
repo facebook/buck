@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.facebook.buck.core.starlark.eventhandler.EventKind;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.watchman.Watchman;
@@ -72,7 +73,10 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
    */
   @Override
   public ProjectBuildFileParser createFileParser(
-      BuckEventBus eventBus, Cell cell, Watchman watchman) {
+      BuckEventBus eventBus,
+      Cell cell,
+      Watchman watchman,
+      Optional<EdenClientResourcePool> edenClient) {
 
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
 

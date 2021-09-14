@@ -108,7 +108,10 @@ public class AuditRulesCommand extends AbstractCommand {
                     params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getKnownRuleTypesProvider())
             .createFileParser(
-                params.getBuckEventBus(), params.getCells().getRootCell(), params.getWatchman())) {
+                params.getBuckEventBus(),
+                params.getCells().getRootCell(),
+                params.getWatchman(),
+                params.getEdenClient())) {
       /*
        * The super console does a bunch of rewriting over the top of the console such that
        * simultaneously writing to stdout and stderr in an interactive session is problematic.

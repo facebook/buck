@@ -69,7 +69,10 @@ public class AuditIncludesCommand extends AbstractCommand {
                     params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getKnownRuleTypesProvider())
             .createFileParser(
-                params.getBuckEventBus(), params.getCells().getRootCell(), params.getWatchman())) {
+                params.getBuckEventBus(),
+                params.getCells().getRootCell(),
+                params.getWatchman(),
+                params.getEdenClient())) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {

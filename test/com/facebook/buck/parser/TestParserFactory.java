@@ -33,6 +33,7 @@ import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import java.util.Optional;
 import org.pf4j.PluginManager;
 
 public class TestParserFactory {
@@ -59,6 +60,7 @@ public class TestParserFactory {
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
             new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
+            Optional.empty(),
             eventBus,
             new ParsingUnconfiguredBuildTargetViewFactory(),
             UnconfiguredTargetConfiguration.INSTANCE),

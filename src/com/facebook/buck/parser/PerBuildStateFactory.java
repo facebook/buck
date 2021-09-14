@@ -45,6 +45,7 @@ import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.log.GlobalStateManager;
@@ -74,6 +75,7 @@ public class PerBuildStateFactory {
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
   private final Watchman watchman;
+  private final Optional<EdenClientResourcePool> edenClient;
   private final BuckEventBus eventBus;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
   private final TargetConfiguration hostConfiguration;
@@ -84,6 +86,7 @@ public class PerBuildStateFactory {
       KnownRuleTypesProvider knownRuleTypesProvider,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
       Watchman watchman,
+      Optional<EdenClientResourcePool> edenClient,
       BuckEventBus eventBus,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfiguration hostConfiguration) {
@@ -92,6 +95,7 @@ public class PerBuildStateFactory {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
     this.watchman = watchman;
+    this.edenClient = edenClient;
     this.eventBus = eventBus;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.hostConfiguration = hostConfiguration;
@@ -177,7 +181,8 @@ public class PerBuildStateFactory {
             projectBuildFileParserPool,
             executorService,
             eventBus,
-            watchman);
+            watchman,
+            edenClient);
 
     BuildTargetRawNodeParsePipeline buildTargetRawNodeParsePipeline =
         new BuildTargetRawNodeParsePipeline(executorService, buildFileRawNodeParsePipeline);
@@ -198,7 +203,8 @@ public class PerBuildStateFactory {
             packageFileParserPool,
             executorService,
             eventBus,
-            watchman);
+            watchman,
+            edenClient);
 
     PackagePipeline packagePipeline =
         new PackagePipeline(executorService, eventBus, packageFileParsePipeline);

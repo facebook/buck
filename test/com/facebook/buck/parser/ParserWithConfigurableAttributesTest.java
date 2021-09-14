@@ -215,6 +215,7 @@ public class ParserWithConfigurableAttributesTest {
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cells.getBuckConfig(), executableFinder),
                 new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
+                Optional.empty(),
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)
@@ -2363,6 +2364,7 @@ public class ParserWithConfigurableAttributesTest {
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cells.getBuckConfig(), executableFinder),
                 new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
+                Optional.empty(),
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)

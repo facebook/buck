@@ -161,6 +161,7 @@ public class QueryCommand
                         params.getCells().getRootCell().getBuckConfig(),
                         params.getExecutableFinder()),
                     params.getWatchman(),
+                    params.getEdenClient(),
                     params.getBuckEventBus(),
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))

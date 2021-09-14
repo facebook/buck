@@ -44,6 +44,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -84,7 +85,7 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             maxParsers,
-            (eventBus, input, watchman) -> {
+            (eventBus, input, watchman, edenClient) -> {
               createCount.incrementAndGet();
               return createMockParser(
                   () -> {
@@ -141,7 +142,7 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             parsersCount,
-            (eventBus, input, watchman) -> {
+            (eventBus, input, watchman, edenClient) -> {
               parserCount.incrementAndGet();
 
               ProjectBuildFileParser parser = EasyMock.createMock(ProjectBuildFileParser.class);
@@ -199,7 +200,7 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             parsersCount,
-            (eventBus, input, watchman) -> {
+            (eventBus, input, watchman, edenClient) -> {
               AtomicInteger sleepCallCount = new AtomicInteger(0);
               return createMockParser(
                   () -> {
@@ -356,6 +357,7 @@ public class ProjectBuildFileParserPoolTest {
               BuckEventBusForTests.newInstance(),
               cell,
               new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
+              Optional.empty(),
               ForwardRelPath.of("BUCK"),
               executorService));
     }
@@ -380,7 +382,7 @@ public class ProjectBuildFileParserPoolTest {
 
   private ProjectBuildFileParserFactory createMockParserFactory(
       IAnswer<BuildFileManifest> parseFn) {
-    return (eventBus, input, watchman) -> {
+    return (eventBus, input, watchman, edenClient) -> {
       AssertScopeExclusiveAccess exclusiveAccess = new AssertScopeExclusiveAccess();
       return createMockParser(
           () -> {

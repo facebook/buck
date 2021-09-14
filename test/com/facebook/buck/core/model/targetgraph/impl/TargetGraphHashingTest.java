@@ -75,6 +75,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Rule;
@@ -117,6 +118,7 @@ public class TargetGraphHashingTest {
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cells.getBuckConfig(), new ExecutableFinder()),
                 new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
+                Optional.empty(),
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)
