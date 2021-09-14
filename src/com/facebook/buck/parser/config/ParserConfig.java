@@ -75,7 +75,13 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   /** Glob handler supported by Skylark parser. */
   public enum SkylarkGlobHandler {
     JAVA,
-    WATCHMAN
+    WATCHMAN,
+    EDEN_THRIFT,
+    /**
+     * Like {@link #EDEN_THRIFT}, but crash if eden is not available. Can be used to test that eden
+     * is actually picked.
+     */
+    EDEN_THRIFT_NO_FALLBACK,
   }
 
   public enum WatchmanGlobSanityCheck {

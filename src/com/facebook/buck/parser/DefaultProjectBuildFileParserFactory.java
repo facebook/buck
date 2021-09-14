@@ -299,10 +299,35 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
 
   private static GlobberFactory getSkylarkGlobberFactory(
       ProjectBuildFileParserOptions buildFileParserOptions, SkylarkGlobHandler skylarkGlobHandler) {
-    return skylarkGlobHandler == SkylarkGlobHandler.JAVA
-            || buildFileParserOptions.getWatchman() instanceof WatchmanFactory.NullWatchman
-        ? new NativeGlobber.Factory(buildFileParserOptions.getProjectRoot())
-        : HybridGlobberFactory.using(
-            buildFileParserOptions.getWatchman(), buildFileParserOptions.getProjectRoot());
+    switch (skylarkGlobHandler) {
+      case JAVA:
+        return nativeGlobberFactory(buildFileParserOptions);
+      case WATCHMAN:
+        return watchmanGlobberFactory(buildFileParserOptions);
+      case EDEN_THRIFT:
+      case EDEN_THRIFT_NO_FALLBACK:
+        return edenThriftGlobberFactory(skylarkGlobHandler);
+      default:
+        throw new IllegalStateException("unreachable");
+    }
+  }
+
+  private static GlobberFactory edenThriftGlobberFactory(SkylarkGlobHandler skylarkGlobHandler) {
+    throw new RuntimeException(skylarkGlobHandler + " globber is not implemented");
+  }
+
+  private static GlobberFactory watchmanGlobberFactory(
+      ProjectBuildFileParserOptions buildFileParserOptions) {
+    if (buildFileParserOptions.getWatchman() instanceof WatchmanFactory.NullWatchman) {
+      return nativeGlobberFactory(buildFileParserOptions);
+    } else {
+      return HybridGlobberFactory.using(
+          buildFileParserOptions.getWatchman(), buildFileParserOptions.getProjectRoot());
+    }
+  }
+
+  private static GlobberFactory nativeGlobberFactory(
+      ProjectBuildFileParserOptions buildFileParserOptions) {
+    return new NativeGlobber.Factory(buildFileParserOptions.getProjectRoot());
   }
 }
