@@ -17,13 +17,13 @@ java_library(
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/timing:timing",
-        "//third-party/java/eden:eden-thrift-bindings",
         "//third-party/java/guava:guava",
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
     ],
     exported_deps = [
         # EdenProjectFilesystemDelegate constructor takes this as a param.
+        "//third-party/java/eden:eden-thrift-bindings",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/io/filesystem:filesystem",
     ],
