@@ -16,13 +16,15 @@
 
 package com.facebook.buck.edenfs.cli;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.edenfs.EdenMount;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,12 +42,12 @@ public class Sha1Command implements Command {
 
   @Override
   public int run(EdenClientResourcePool pool) throws EdenError, IOException, TException {
-    Path mountPoint = Paths.get(this.mountPoint);
+    AbsPath mountPoint = AbsPath.of(Paths.get(this.mountPoint));
     EdenMount mount = EdenMount.createEdenMountForProjectRoot(mountPoint, pool).get();
 
     for (String path : paths) {
-      Path entry = mountPoint.relativize(Paths.get(path));
-      Sha1HashCode sha1 = mount.getSha1(entry);
+      RelPath entry = mountPoint.relativize(Paths.get(path));
+      Sha1HashCode sha1 = mount.getSha1(ForwardRelPath.ofRelPath(entry));
       System.out.printf("%s %s\n", entry, sha1);
     }
 

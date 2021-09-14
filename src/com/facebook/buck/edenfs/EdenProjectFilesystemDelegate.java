@@ -232,7 +232,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
 
   private Optional<Sha1HashCode> computeSha1ViaThrift(
       AbsPath path, boolean retryWithRealPathIfEdenError) throws IOException {
-    Optional<Path> entry = mount.getPathRelativeToProjectRoot(path.getPath());
+    Optional<ForwardRelPath> entry = mount.getPathRelativeToProjectRoot(path.getPath());
     if (entry.isPresent()) {
       try {
         return Optional.of(mount.getSha1(entry.get()));

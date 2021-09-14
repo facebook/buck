@@ -16,6 +16,8 @@
 
 package com.facebook.buck.edenfs;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.SHA1Result;
@@ -38,23 +40,23 @@ public class EdenMount {
   private final EdenClientResourcePool pool;
 
   /** Value of the mountPoint argument to use when communicating with Eden via the Thrift API. */
-  private final Path mountPoint;
+  private final AbsPath mountPoint;
 
   /** Root of the Buck project of interest that is contained by this {@link EdenMount}. */
-  private final Path projectRoot;
+  private final AbsPath projectRoot;
 
   /**
    * Relative path used to resolve paths under the {@link #projectRoot} in the context of the {@link
    * #mountPoint}.
    */
-  private final Path prefix;
+  private final ForwardRelPath prefix;
 
   /**
    * Creates a new object for communicating with Eden that is bound to the specified (Eden mount
    * point, Buck project root) pair. It must be the case that {@code
    * projectRoot.startsWith(mountPoint)}.
    */
-  EdenMount(EdenClientResourcePool pool, Path mountPoint, Path projectRoot) {
+  EdenMount(EdenClientResourcePool pool, AbsPath mountPoint, AbsPath projectRoot) {
     Preconditions.checkArgument(
         projectRoot.startsWith(mountPoint),
         "Eden mount point %s must contain the Buck project at %s.",
@@ -63,32 +65,32 @@ public class EdenMount {
     this.pool = pool;
     this.mountPoint = mountPoint;
     this.projectRoot = projectRoot;
-    this.prefix = mountPoint.relativize(projectRoot);
+    this.prefix = ForwardRelPath.ofRelPath(mountPoint.relativize(projectRoot));
   }
 
   /** @return an Eden mount point if {@code projectRoot} is backed by Eden or {@code null}. */
   public static Optional<EdenMount> createEdenMountForProjectRoot(
-      Path projectRoot, EdenClientResourcePool pool) {
-    Optional<Path> rootPath = EdenUtil.getPathFromEdenConfig(projectRoot, "root");
+      AbsPath projectRoot, EdenClientResourcePool pool) {
+    Optional<Path> rootPath = EdenUtil.getPathFromEdenConfig(projectRoot.getPath(), "root");
     if (!rootPath.isPresent()) {
       return Optional.empty();
     }
 
-    return Optional.of(new EdenMount(pool, rootPath.get(), projectRoot));
+    return Optional.of(new EdenMount(pool, AbsPath.of(rootPath.get()), projectRoot));
   }
 
   /** @return The root to the Buck project that this {@link EdenMount} represents. */
-  public Path getProjectRoot() {
+  public AbsPath getProjectRoot() {
     return projectRoot;
   }
 
   @VisibleForTesting
-  Path getPrefix() {
+  ForwardRelPath getPrefix() {
     return prefix;
   }
 
   /** @param entry is a path that is relative to {@link #getProjectRoot()}. */
-  public Sha1HashCode getSha1(Path entry) throws EdenError, IOException, TException {
+  public Sha1HashCode getSha1(ForwardRelPath entry) throws EdenError, IOException, TException {
     try (EdenClientResource client = pool.openClient()) {
       List<SHA1Result> results =
           client
@@ -109,15 +111,15 @@ public class EdenMount {
    * Returns the path relative to {@link #getProjectRoot()} if {@code path} is contained by {@link
    * #getProjectRoot()}; otherwise, returns {@link Optional#empty()}.
    */
-  Optional<Path> getPathRelativeToProjectRoot(Path path) {
+  Optional<ForwardRelPath> getPathRelativeToProjectRoot(Path path) {
     if (path.isAbsolute()) {
-      if (path.startsWith(projectRoot)) {
-        return Optional.of(projectRoot.relativize(path));
+      if (AbsPath.of(path).startsWith(projectRoot)) {
+        return Optional.of(ForwardRelPath.ofRelPath(projectRoot.relativize(path)));
       } else {
         return Optional.empty();
       }
     } else {
-      return Optional.of(path);
+      return Optional.of(ForwardRelPath.ofPath(path));
     }
   }
 
@@ -125,8 +127,12 @@ public class EdenMount {
    * @param entry is a path that is relative to {@link #getProjectRoot()}.
    * @return a path that is relative to {@link #mountPoint}.
    */
-  private byte[] normalizePathArg(Path entry) {
-    return prefix.resolve(entry).toString().getBytes(StandardCharsets.UTF_8);
+  private byte[] normalizePathArg(ForwardRelPath entry) {
+    return prefix
+        .toRelPath(projectRoot.getFileSystem())
+        .resolve(entry)
+        .toString()
+        .getBytes(StandardCharsets.UTF_8);
   }
 
   @Override

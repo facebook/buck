@@ -23,6 +23,8 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.testutil.DeepMatcher;
 import com.facebook.buck.testutil.PathNormalizer;
 import com.facebook.buck.util.environment.Platform;
@@ -52,7 +54,7 @@ public class EdenMountTest {
     EdenClient thriftClient = createMock(EdenClient.class);
 
     FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
-    Path entry = fs.getPath("LICENSE");
+    ForwardRelPath entry = ForwardRelPath.of("LICENSE");
     HashCode hash = HashCode.fromString("2b8b815229aa8a61e483fb4ba0588b8b6c491890");
     SHA1Result sha1Result = new SHA1Result();
     sha1Result.setSha1(hash.asBytes());
@@ -67,17 +69,21 @@ public class EdenMountTest {
 
     EdenClientResourcePool pool =
         new EdenClientResourcePool(() -> new TestEdenClientResource(thriftClient));
-    Path pathToBuck = PathNormalizer.toWindowsPathIfNeeded(fs.getPath("/home/mbolin/src/buck"));
+    AbsPath pathToBuck =
+        AbsPath.of(PathNormalizer.toWindowsPathIfNeeded(fs.getPath("/home/mbolin/src/buck")));
     if (Platform.detect() == Platform.WINDOWS) {
-      List<String> config = Arrays.asList("[Config]", "root=" + pathToBuck.toString());
-      Files.createDirectories(PathNormalizer.toWindowsPathIfNeeded(pathToBuck.resolve(".eden")));
+      List<String> config = Arrays.asList("[Config]", "root=" + pathToBuck);
+      Files.createDirectories(
+          PathNormalizer.toWindowsPathIfNeeded(pathToBuck.resolve(".eden").getPath()));
       Path configFile =
           Files.createFile(
-              PathNormalizer.toWindowsPathIfNeeded(pathToBuck.resolve(".eden").resolve("config")));
+              PathNormalizer.toWindowsPathIfNeeded(
+                  pathToBuck.resolve(".eden").resolve("config").getPath()));
       Files.write(configFile, config);
     } else {
-      Files.createDirectories(pathToBuck.resolve(".eden"));
-      Files.createSymbolicLink(pathToBuck.resolve(".eden").resolve("root"), pathToBuck);
+      Files.createDirectories(pathToBuck.resolve(".eden").getPath());
+      Files.createSymbolicLink(
+          pathToBuck.resolve(".eden").resolve("root").getPath(), pathToBuck.getPath());
     }
 
     Optional<EdenMount> mount = EdenMount.createEdenMountForProjectRoot(pathToBuck, pool);
@@ -91,7 +97,7 @@ public class EdenMountTest {
     EdenClient thriftClient = createMock(EdenClient.class);
     EdenClientResourcePool pool =
         new EdenClientResourcePool(() -> new TestEdenClientResource(thriftClient));
-    Path mountPoint = Paths.get("/home/mbolin/src/buck");
+    AbsPath mountPoint = AbsPath.of(Paths.get("/home/mbolin/src/buck").toAbsolutePath());
     replay(thriftClient);
 
     EdenMount mount = new EdenMount(pool, mountPoint, mountPoint);
@@ -105,7 +111,7 @@ public class EdenMountTest {
     EdenClient thriftClient = createMock(EdenClient.class);
     EdenClientResourcePool pool =
         new EdenClientResourcePool(() -> new TestEdenClientResource(thriftClient));
-    Path mountPoint = Paths.get("/home/mbolin/src/buck");
+    AbsPath mountPoint = AbsPath.of(Paths.get("/home/mbolin/src/buck").toAbsolutePath());
     replay(thriftClient);
 
     EdenMount mount = new EdenMount(pool, mountPoint, mountPoint);

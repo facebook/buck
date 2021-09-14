@@ -67,7 +67,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
             embeddedCellBuckOutInfo,
             buckOutIncludeTargetConfigHash);
     ProjectFilesystemDelegatePair delegatePair =
-        ProjectFilesystemDelegateFactory.newInstance(root.getPath(), config, watchman);
+        ProjectFilesystemDelegateFactory.newInstance(root, config, watchman);
     return new DefaultProjectFilesystem(
         root,
         extractIgnorePaths(root.getPath(), config, buckPaths, embeddedCellBuckOutInfo),

@@ -26,7 +26,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.util.config.Config;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -46,15 +45,16 @@ public final class ProjectFilesystemDelegateFactory {
 
   /** Must always create a new delegate for the specified {@code root}. */
   public static ProjectFilesystemDelegatePair newInstance(
-      Path root, Config config, Watchman watchman) {
+      AbsPath root, Config config, Watchman watchman) {
     return new ProjectFilesystemDelegatePair(
         getGeneralDelegate(root, config, watchman),
         new DefaultProjectFilesystemDelegate(root, getSHA1LoggingThresholdMicroseconds(config)));
   }
 
   private static ProjectFilesystemDelegate getGeneralDelegate(
-      Path root, Config config, Watchman watchman) {
-    Optional<EdenClientResourcePool> pool = EdenClientResourcePool.tryToCreateEdenClientPool(root);
+      AbsPath root, Config config, Watchman watchman) {
+    Optional<EdenClientResourcePool> pool =
+        EdenClientResourcePool.tryToCreateEdenClientPool(root.getPath());
 
     if (pool.isPresent()) {
       Optional<EdenMount> mount = EdenMount.createEdenMountForProjectRoot(root, pool.get());
@@ -66,7 +66,7 @@ public final class ProjectFilesystemDelegateFactory {
                 mount.get().getProjectRoot(), getSHA1LoggingThresholdMicroseconds(config)),
             config,
             watchman,
-            AbsPath.of(root));
+            root);
       } else {
         LOG.error("Failed to find Eden client for %s.", root);
       }
