@@ -18,6 +18,8 @@ package com.facebook.buck.edenfs;
 
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.EdenService;
+import com.facebook.eden.thrift.Glob;
+import com.facebook.eden.thrift.GlobParams;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.SHA1Result;
 import com.facebook.thrift.TException;
@@ -36,6 +38,11 @@ public class EdenClientImpl implements EdenClient {
   public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths)
       throws IOException, TException, EdenError {
     return client.getSHA1(mountPoint, paths);
+  }
+
+  @Override
+  public Glob globFiles(GlobParams params) throws EdenError, IOException, TException {
+    return client.globFiles(params);
   }
 
   @Override

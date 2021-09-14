@@ -16,6 +16,8 @@
 
 package com.facebook.buck.edenfs;
 
+import com.facebook.eden.thrift.Glob;
+import com.facebook.eden.thrift.GlobParams;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.SHA1Result;
 import java.util.List;
@@ -24,6 +26,11 @@ public class TestEdenClient implements EdenClient {
 
   @Override
   public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths) {
+    throw new RuntimeException("not implemented");
+  }
+
+  @Override
+  public Glob globFiles(GlobParams params) {
     throw new RuntimeException("not implemented");
   }
 
