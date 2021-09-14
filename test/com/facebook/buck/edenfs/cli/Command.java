@@ -16,7 +16,7 @@
 
 package com.facebook.buck.edenfs.cli;
 
-import com.facebook.buck.edenfs.EdenClientPerThread;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import java.io.IOException;
@@ -24,5 +24,5 @@ import java.io.IOException;
 /** Command in the Eden CLI. */
 public interface Command {
   /** Runs the command and returns the exit code that reflects the termination status. */
-  int run(EdenClientPerThread pool) throws EdenError, IOException, TException;
+  int run(EdenClientResourcePool pool) throws EdenError, IOException, TException;
 }

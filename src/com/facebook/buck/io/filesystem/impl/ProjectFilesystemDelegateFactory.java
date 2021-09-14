@@ -18,7 +18,7 @@ package com.facebook.buck.io.filesystem.impl;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.edenfs.EdenClientPerThread;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.edenfs.EdenMount;
 import com.facebook.buck.edenfs.EdenProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -54,7 +54,7 @@ public final class ProjectFilesystemDelegateFactory {
 
   private static ProjectFilesystemDelegate getGeneralDelegate(
       Path root, Config config, Watchman watchman) {
-    Optional<EdenClientPerThread> pool = EdenClientPerThread.tryToCreateEdenClientPool(root);
+    Optional<EdenClientResourcePool> pool = EdenClientResourcePool.tryToCreateEdenClientPool(root);
 
     if (pool.isPresent()) {
       Optional<EdenMount> mount = EdenMount.createEdenMountForProjectRoot(root, pool.get());

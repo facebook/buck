@@ -65,7 +65,8 @@ public class EdenMountTest {
         .andReturn(ImmutableList.of(sha1Result));
     replay(thriftClient);
 
-    EdenClientPerThread pool = new EdenClientPerThread(new TestEdenClientResource(thriftClient));
+    EdenClientResourcePool pool =
+        new EdenClientResourcePool(() -> new TestEdenClientResource(thriftClient));
     Path pathToBuck = PathNormalizer.toWindowsPathIfNeeded(fs.getPath("/home/mbolin/src/buck"));
     if (Platform.detect() == Platform.WINDOWS) {
       List<String> config = Arrays.asList("[Config]", "root=" + pathToBuck.toString());
@@ -88,7 +89,8 @@ public class EdenMountTest {
   @Test
   public void getMountPointReturnsValuePassedToConstructor() {
     EdenClient thriftClient = createMock(EdenClient.class);
-    EdenClientPerThread pool = new EdenClientPerThread(new TestEdenClientResource(thriftClient));
+    EdenClientResourcePool pool =
+        new EdenClientResourcePool(() -> new TestEdenClientResource(thriftClient));
     Path mountPoint = Paths.get("/home/mbolin/src/buck");
     replay(thriftClient);
 
@@ -101,7 +103,8 @@ public class EdenMountTest {
   @Test
   public void toStringHasExpectedFormatting() {
     EdenClient thriftClient = createMock(EdenClient.class);
-    EdenClientPerThread pool = new EdenClientPerThread(new TestEdenClientResource(thriftClient));
+    EdenClientResourcePool pool =
+        new EdenClientResourcePool(() -> new TestEdenClientResource(thriftClient));
     Path mountPoint = Paths.get("/home/mbolin/src/buck");
     replay(thriftClient);
 

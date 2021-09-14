@@ -35,7 +35,7 @@ import java.util.Optional;
  * pair. The Buck project root must be contained by the Eden mount point.
  */
 public class EdenMount {
-  private final EdenClientPerThread pool;
+  private final EdenClientResourcePool pool;
 
   /** Value of the mountPoint argument to use when communicating with Eden via the Thrift API. */
   private final Path mountPoint;
@@ -54,7 +54,7 @@ public class EdenMount {
    * point, Buck project root) pair. It must be the case that {@code
    * projectRoot.startsWith(mountPoint)}.
    */
-  EdenMount(EdenClientPerThread pool, Path mountPoint, Path projectRoot) {
+  EdenMount(EdenClientResourcePool pool, Path mountPoint, Path projectRoot) {
     Preconditions.checkArgument(
         projectRoot.startsWith(mountPoint),
         "Eden mount point %s must contain the Buck project at %s.",
@@ -68,7 +68,7 @@ public class EdenMount {
 
   /** @return an Eden mount point if {@code projectRoot} is backed by Eden or {@code null}. */
   public static Optional<EdenMount> createEdenMountForProjectRoot(
-      Path projectRoot, EdenClientPerThread pool) {
+      Path projectRoot, EdenClientResourcePool pool) {
     Optional<Path> rootPath = EdenUtil.getPathFromEdenConfig(projectRoot, "root");
     if (!rootPath.isPresent()) {
       return Optional.empty();
@@ -89,16 +89,19 @@ public class EdenMount {
 
   /** @param entry is a path that is relative to {@link #getProjectRoot()}. */
   public Sha1HashCode getSha1(Path entry) throws EdenError, IOException, TException {
-    List<SHA1Result> results =
-        pool.getClient()
-            .getSHA1(
-                mountPoint.toString().getBytes(StandardCharsets.UTF_8),
-                ImmutableList.of(normalizePathArg(entry)));
-    SHA1Result result = Iterables.getOnlyElement(results);
-    if (result.getSetField() == SHA1Result.SHA1) {
-      return Sha1HashCode.fromBytes(result.getSha1());
-    } else {
-      throw result.getError();
+    try (EdenClientResource client = pool.openClient()) {
+      List<SHA1Result> results =
+          client
+              .getEdenClient()
+              .getSHA1(
+                  mountPoint.toString().getBytes(StandardCharsets.UTF_8),
+                  ImmutableList.of(normalizePathArg(entry)));
+      SHA1Result result = Iterables.getOnlyElement(results);
+      if (result.getSetField() == SHA1Result.SHA1) {
+        return Sha1HashCode.fromBytes(result.getSha1());
+      } else {
+        throw result.getError();
+      }
     }
   }
 

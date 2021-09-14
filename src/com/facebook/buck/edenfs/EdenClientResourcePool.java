@@ -21,6 +21,7 @@ import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -110,5 +111,32 @@ public class EdenClientResourcePool implements AutoCloseable {
   public static EdenClientResourcePool newPool(Path unixSocket) {
     return new EdenClientResourcePool(
         () -> new ReconnectingEdenClient(unixSocket, new DefaultClock()));
+  }
+
+  /**
+   * Create a client connecting to a pool or return {@link Optional#empty()} if eden is not
+   * available.
+   */
+  public static Optional<EdenClientResourcePool> tryToCreateEdenClientPool(
+      Path directoryInEdenFsMount) {
+    Optional<Path> socket = EdenUtil.getPathFromEdenConfig(directoryInEdenFsMount, "socket");
+    if (!socket.isPresent()) {
+      LOG.debug("could not find the Eden socket file from the directory:" + directoryInEdenFsMount);
+      return Optional.empty();
+    } else {
+      return newInstanceFromSocket(socket.get());
+    }
+  }
+
+  /** Create clients connecting to given socket path. */
+  public static Optional<EdenClientResourcePool> newInstanceFromSocket(Path socketFile) {
+    // We forcibly try to create an EdenClient as a way of verifying that `socketFile` is a
+    // valid UNIX domain socket for talking to Eden. If this is not the case, then we should not
+    // return a new EdenClientPool.
+    if (EdenUtil.pingSocket(socketFile)) {
+      return Optional.of(EdenClientResourcePool.newPool(socketFile));
+    } else {
+      return Optional.empty();
+    }
   }
 }

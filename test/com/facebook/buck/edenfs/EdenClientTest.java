@@ -49,13 +49,13 @@ public class EdenClientTest {
 
   private EdenClient thriftClient;
   private FileSystem fs;
-  private EdenClientPerThread pool;
+  private EdenClientResourcePool pool;
 
   @Before
   public void setUp() {
     thriftClient = createMock(EdenClient.class);
     fs = Jimfs.newFileSystem(Configuration.unix());
-    pool = new EdenClientPerThread(new TestEdenClientResource(thriftClient));
+    pool = new EdenClientResourcePool(() -> new TestEdenClientResource(thriftClient));
   }
 
   @Test
@@ -72,7 +72,9 @@ public class EdenClientTest {
                 MountState.RUNNING));
     expect(thriftClient.listMounts()).andReturn(mountInfos);
     replay(thriftClient);
-    assertEquals(mountInfos, pool.getClient().listMounts());
+    try (EdenClientResource client = pool.openClient()) {
+      assertEquals(mountInfos, client.getEdenClient().listMounts());
+    }
     verify(thriftClient);
   }
 
