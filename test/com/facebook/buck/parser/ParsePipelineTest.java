@@ -584,7 +584,7 @@ public class ParsePipelineTest {
       projectBuildFileParserPool =
           new ProjectBuildFileParserPool(
               NUM_THREADS,
-              (buckEventBus, input, watchman, threadSafe) -> {
+              (buckEventBus, input, watchman) -> {
                 CloseRecordingProjectBuildFileParserDecorator buildFileParser =
                     new CloseRecordingProjectBuildFileParserDecorator(
                         new DefaultProjectBuildFileParserFactory(
@@ -593,7 +593,7 @@ public class ParsePipelineTest {
                                     input.getBuckConfig(), new ExecutableFinder()),
                                 TestKnownRuleTypesProvider.create(
                                     BuckPluginManagerFactory.createPluginManager()))
-                            .createFileParser(eventBus, input, watchman, threadSafe));
+                            .createFileParser(eventBus, input, watchman));
                 synchronized (projectBuildFileParsers) {
                   projectBuildFileParsers.add(buildFileParser);
                 }

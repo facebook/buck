@@ -64,8 +64,7 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
    * Callers are responsible for managing the life-cycle of the created {@link PackageFileParser}.
    */
   @Override
-  public PackageFileParser createFileParser(
-      BuckEventBus eventBus, Cell cell, Watchman watchman, boolean threadSafe) {
+  public PackageFileParser createFileParser(BuckEventBus eventBus, Cell cell, Watchman watchman) {
 
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();

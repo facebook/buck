@@ -25,6 +25,5 @@ import com.facebook.buck.parser.api.FileParser;
 /** Factory for creating instances of {@link FileParser}. */
 public interface FileParserFactory<T extends FileManifest> {
   /** Creates an instance of {link ProjectBuildFileParser} based on passed in options. */
-  FileParser<T> createFileParser(
-      BuckEventBus eventBus, Cell cell, Watchman watchman, boolean threadSafe);
+  FileParser<T> createFileParser(BuckEventBus eventBus, Cell cell, Watchman watchman);
 }

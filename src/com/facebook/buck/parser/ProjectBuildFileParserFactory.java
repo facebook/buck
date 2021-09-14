@@ -26,6 +26,5 @@ import com.facebook.buck.parser.api.ProjectBuildFileParser;
 public interface ProjectBuildFileParserFactory extends FileParserFactory<BuildFileManifest> {
   /** Creates an instance of {@link ProjectBuildFileParser} based on passed in options. */
   @Override
-  ProjectBuildFileParser createFileParser(
-      BuckEventBus eventBus, Cell cell, Watchman watchman, boolean threadSafe);
+  ProjectBuildFileParser createFileParser(BuckEventBus eventBus, Cell cell, Watchman watchman);
 }

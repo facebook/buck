@@ -84,7 +84,7 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             maxParsers,
-            (eventBus, input, watchman, threadSafe) -> {
+            (eventBus, input, watchman) -> {
               createCount.incrementAndGet();
               return createMockParser(
                   () -> {
@@ -141,7 +141,7 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             parsersCount,
-            (eventBus, input, watchman, threadSafe) -> {
+            (eventBus, input, watchman) -> {
               parserCount.incrementAndGet();
 
               ProjectBuildFileParser parser = EasyMock.createMock(ProjectBuildFileParser.class);
@@ -199,7 +199,7 @@ public class ProjectBuildFileParserPoolTest {
     try (ProjectBuildFileParserPool parserPool =
         createParserPool(
             parsersCount,
-            (eventBus, input, watchman, threadSafe) -> {
+            (eventBus, input, watchman) -> {
               AtomicInteger sleepCallCount = new AtomicInteger(0);
               return createMockParser(
                   () -> {
@@ -380,7 +380,7 @@ public class ProjectBuildFileParserPoolTest {
 
   private ProjectBuildFileParserFactory createMockParserFactory(
       IAnswer<BuildFileManifest> parseFn) {
-    return (eventBus, input, watchman, threadSafe) -> {
+    return (eventBus, input, watchman) -> {
       AssertScopeExclusiveAccess exclusiveAccess = new AssertScopeExclusiveAccess();
       return createMockParser(
           () -> {

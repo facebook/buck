@@ -97,13 +97,13 @@ abstract class FileParserPool<T extends FileManifest> implements AutoCloseable {
                 // always
                 // recover and subsequent attempts at invoking the parser will fail.
                 ResourcePool.ResourceUsageErrorPolicy.RETIRE,
-                () -> fileParserFactory.createFileParser(buckEventBus, c, watchman, false)));
+                () -> fileParserFactory.createFileParser(buckEventBus, c, watchman)));
   }
 
   private synchronized FileParser<T> getParserForCell(
       BuckEventBus buckEventBus, Cell cell, Watchman watchman) {
     return nonPooledCells.computeIfAbsent(
-        cell, c -> fileParserFactory.createFileParser(buckEventBus, c, watchman, false));
+        cell, c -> fileParserFactory.createFileParser(buckEventBus, c, watchman));
   }
 
   abstract void reportProfile();
