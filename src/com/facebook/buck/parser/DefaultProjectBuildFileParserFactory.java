@@ -57,32 +57,14 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private final TypeCoercerFactory typeCoercerFactory;
   private final ParserPythonInterpreterProvider pythonInterpreterProvider;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
-  private final boolean enableProfiling;
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
-      KnownRuleTypesProvider knownRuleTypesProvider,
-      boolean enableProfiling) {
+      KnownRuleTypesProvider knownRuleTypesProvider) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.pythonInterpreterProvider = pythonInterpreterProvider;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
-    this.enableProfiling = enableProfiling;
-  }
-
-  public DefaultProjectBuildFileParserFactory(
-      TypeCoercerFactory typeCoercerFactory,
-      ParserPythonInterpreterProvider pythonInterpreterProvider,
-      boolean enableProfiling,
-      KnownRuleTypesProvider knownRuleTypesProvider) {
-    this(typeCoercerFactory, pythonInterpreterProvider, knownRuleTypesProvider, enableProfiling);
-  }
-
-  public DefaultProjectBuildFileParserFactory(
-      TypeCoercerFactory typeCoercerFactory,
-      ParserPythonInterpreterProvider pythonInterpreterProvider,
-      KnownRuleTypesProvider knownRuleTypesProvider) {
-    this(typeCoercerFactory, pythonInterpreterProvider, knownRuleTypesProvider, false);
   }
 
   /**
@@ -106,7 +88,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
 
     ProjectBuildFileParserOptions buildFileParserOptions =
         ProjectBuildFileParserOptions.builder()
-            .setEnableProfiling(enableProfiling)
             .setProjectRoot(cell.getFilesystem().getRootPath())
             .setCellRoots(cell.getCellPathResolver().getCellPathsByRootCellExternalName())
             .setCellName(cell.getCanonicalName())

@@ -154,10 +154,7 @@ public class PerBuildStateFactory {
     int numParsingThreads = parserConfig.getNumParsingThreads();
     DefaultProjectBuildFileParserFactory projectBuildFileParserFactory =
         new DefaultProjectBuildFileParserFactory(
-            typeCoercerFactory,
-            parserPythonInterpreterProvider,
-            parsingContext.isProfilingEnabled(),
-            knownRuleTypesProvider);
+            typeCoercerFactory, parserPythonInterpreterProvider, knownRuleTypesProvider);
     ProjectBuildFileParserPool projectBuildFileParserPool =
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
@@ -187,10 +184,7 @@ public class PerBuildStateFactory {
 
     PackageFileParserFactory packageFileParserFactory =
         new PackageFileParserFactory(
-            typeCoercerFactory,
-            parserPythonInterpreterProvider,
-            knownRuleTypesProvider,
-            parsingContext.isProfilingEnabled());
+            typeCoercerFactory, parserPythonInterpreterProvider, knownRuleTypesProvider);
 
     PackageFileParserPool packageFileParserPool =
         new PackageFileParserPool(

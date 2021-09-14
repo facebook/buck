@@ -85,11 +85,6 @@ public abstract class ProjectBuildFileParserOptions {
         WatchmanError.PROJECT_BUILD_FILE_PARSER_OPTIONS);
   }
 
-  @Value.Default
-  public boolean getEnableProfiling() {
-    return false;
-  }
-
   public abstract Optional<Long> getWatchmanQueryTimeoutMs();
 
   public abstract ImmutableSet<BuiltInProvider<?>> getPerFeatureProviders();

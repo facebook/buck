@@ -635,7 +635,7 @@ public class ParsePipelineTest {
 
       PackageFileParserFactory packageFileParserFactory =
           new PackageFileParserFactory(
-              coercerFactory, pythonInterpreterProvider, knownRuleTypesProvider, false);
+              coercerFactory, pythonInterpreterProvider, knownRuleTypesProvider);
 
       PackageFileParserPool packageFileParserPool =
           new PackageFileParserPool(NUM_THREADS, packageFileParserFactory);

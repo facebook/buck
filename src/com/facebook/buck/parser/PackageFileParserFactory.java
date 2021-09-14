@@ -47,17 +47,14 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
   private final TypeCoercerFactory typeCoercerFactory;
   private final ParserPythonInterpreterProvider pythonInterpreterProvider;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
-  private final boolean enableProfiling;
 
   public PackageFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
       ParserPythonInterpreterProvider pythonInterpreterProvider,
-      KnownRuleTypesProvider knownRuleTypesProvider,
-      boolean enableProfiling) {
+      KnownRuleTypesProvider knownRuleTypesProvider) {
     this.typeCoercerFactory = typeCoercerFactory;
     this.pythonInterpreterProvider = pythonInterpreterProvider;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
-    this.enableProfiling = enableProfiling;
   }
 
   /**
@@ -71,7 +68,6 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
 
     ProjectBuildFileParserOptions buildFileParserOptions =
         ProjectBuildFileParserOptions.builder()
-            .setEnableProfiling(enableProfiling)
             .setProjectRoot(cell.getFilesystem().getRootPath())
             .setCellRoots(cell.getCellPathResolver().getCellPathsByRootCellExternalName())
             .setCellName(cell.getCanonicalName())
