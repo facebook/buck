@@ -70,6 +70,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.counters.CounterBuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.BuckInitializationDurationEvent;
@@ -1401,6 +1402,16 @@ public final class MainRunner {
                   buildEventBus,
                   depsAwareExecutorSupplier);
 
+          Optional<EdenClientResourcePool> edenClientResourcePool = Optional.empty();
+          if (parserConfig.getSkylarkGlobHandler().hasEden()) {
+            edenClientResourcePool =
+                EdenClientResourcePool.tryToCreateEdenClientPool(
+                    cells.getSuperRootPath().getPath());
+            if (edenClientResourcePool.isPresent()) {
+              closeAtFinally.add(edenClientResourcePool.get());
+            }
+          }
+
           // This also queries watchman, posts events to global and local event buses and
           // invalidates all related caches
           // TODO (buck_team): extract invalidation from getParserAndCaches()
@@ -1467,6 +1478,7 @@ public final class MainRunner {
                         stdIn,
                         cells,
                         watchman,
+                        edenClientResourcePool,
                         parserAndCaches.getVersionedTargetGraphCache(),
                         artifactCacheFactory,
                         parserAndCaches.getTypeCoercerFactory(),

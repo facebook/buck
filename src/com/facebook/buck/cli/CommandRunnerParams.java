@@ -32,6 +32,7 @@ import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetVi
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
@@ -77,6 +78,8 @@ public abstract class CommandRunnerParams {
   public abstract Cells getCells();
 
   public abstract Watchman getWatchman();
+
+  public abstract Optional<EdenClientResourcePool> getEdenClient();
 
   public abstract InstrumentedVersionedTargetGraphCache getVersionedTargetGraphCache();
 
@@ -194,6 +197,7 @@ public abstract class CommandRunnerParams {
         getStdIn(),
         getCells(),
         getWatchman(),
+        getEdenClient(),
         getVersionedTargetGraphCache(),
         artifactCacheFactory,
         getTypeCoercerFactory(),
@@ -243,6 +247,7 @@ public abstract class CommandRunnerParams {
         getStdIn(),
         getCells(),
         getWatchman(),
+        getEdenClient(),
         getVersionedTargetGraphCache(),
         getArtifactCacheFactory(),
         getTypeCoercerFactory(),

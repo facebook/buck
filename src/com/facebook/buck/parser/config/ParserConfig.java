@@ -82,6 +82,19 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
      * is actually picked.
      */
     EDEN_THRIFT_NO_FALLBACK,
+    ;
+
+    /** This option has eden. */
+    public boolean hasEden() {
+      switch (this) {
+        case EDEN_THRIFT:
+        case EDEN_THRIFT_NO_FALLBACK:
+          return true;
+          // $CASES-OMITTED$
+        default:
+          return false;
+      }
+    }
   }
 
   public enum WatchmanGlobSanityCheck {

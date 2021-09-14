@@ -169,6 +169,7 @@ public class CommandRunnerParamsForTesting {
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         cells,
         new WatchmanFactory.NullWatchman("test", WatchmanError.TEST),
+        Optional.empty(),
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
         new SingletonArtifactCacheFactory(artifactCache),
