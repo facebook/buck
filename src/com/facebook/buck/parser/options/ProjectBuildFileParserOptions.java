@@ -64,21 +64,6 @@ public abstract class ProjectBuildFileParserOptions {
   }
 
   @Value.Default
-  public boolean getUseWatchmanGlob() {
-    return false;
-  }
-
-  @Value.Default
-  public boolean getWatchmanGlobStatResults() {
-    return false;
-  }
-
-  @Value.Default
-  public boolean getWatchmanUseGlobGenerator() {
-    return false;
-  }
-
-  @Value.Default
   public Watchman getWatchman() {
     return new WatchmanFactory.NullWatchman(
         "default watchman for ProjectBuildFileParserOptions",

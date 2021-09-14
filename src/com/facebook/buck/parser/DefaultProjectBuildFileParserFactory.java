@@ -29,7 +29,6 @@ import com.facebook.buck.core.starlark.eventhandler.EventKind;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.json.TargetCountVerificationParserDecorator;
@@ -77,13 +76,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
 
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
 
-    boolean useWatchmanGlob =
-        parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN
-            && watchman.hasWildmatchGlob();
-    boolean watchmanGlobStatResults =
-        parserConfig.getWatchmanGlobSanityCheck() == ParserConfig.WatchmanGlobSanityCheck.STAT;
-    boolean watchmanUseGlobGenerator =
-        watchman.getCapabilities().contains(Capability.GLOB_GENERATOR);
     Optional<String> pythonModuleSearchPath = parserConfig.getPythonModuleSearchPath();
 
     ProjectBuildFileParserOptions buildFileParserOptions =
@@ -100,9 +92,6 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
             .setPerFeatureProviders(
                 knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders())
-            .setUseWatchmanGlob(useWatchmanGlob)
-            .setWatchmanGlobStatResults(watchmanGlobStatResults)
-            .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)
             .setWatchman(watchman)
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
             .setRawConfig(

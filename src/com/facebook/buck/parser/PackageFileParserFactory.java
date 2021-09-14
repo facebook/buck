@@ -78,9 +78,6 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
             .setBuildFileName(FileName.of("PACKAGE"))
             .setDefaultIncludes(parserConfig.getDefaultIncludes())
             .setDescriptions(ImmutableList.of())
-            .setUseWatchmanGlob(false)
-            .setWatchmanGlobStatResults(false)
-            .setWatchmanUseGlobGenerator(false)
             .setWatchman(watchman)
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
             .setRawConfig(
