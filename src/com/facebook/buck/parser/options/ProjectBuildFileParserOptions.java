@@ -22,6 +22,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.FileName;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanError;
@@ -35,6 +36,7 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 @BuckStyleValueWithBuilder
+@SuppressWarnings("immutables:untype")
 public abstract class ProjectBuildFileParserOptions {
   public abstract AbsPath getProjectRoot();
 
@@ -71,6 +73,11 @@ public abstract class ProjectBuildFileParserOptions {
   }
 
   public abstract Optional<Long> getWatchmanQueryTimeoutMs();
+
+  @Value.Default
+  public Optional<EdenClientResourcePool> getEdenClient() {
+    return Optional.empty();
+  }
 
   public abstract ImmutableSet<BuiltInProvider<?>> getPerFeatureProviders();
 

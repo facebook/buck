@@ -98,6 +98,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
                 knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders())
             .setWatchman(watchman)
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
+            .setEdenClient(edenClient)
             .setRawConfig(
                 cell.getBuckConfig().getView(ConfigIgnoredByDaemon.class).getRawConfigForParser())
             .setImplicitNativeRulesState(parserConfig.getImplicitNativeRulesState())
