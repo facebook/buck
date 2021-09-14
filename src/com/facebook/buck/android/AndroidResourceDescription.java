@@ -186,7 +186,6 @@ public class AndroidResourceDescription
         assetsInputs.getFirst().map(MappedSymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
         args.getManifest().orElse(null),
         args.getHasWhitelistedStrings(),
-        androidBuckConfig.isVerifyingXmlAttrsEnabled(),
         buildBuckConfig.areExternalActionsEnabled());
   }
 

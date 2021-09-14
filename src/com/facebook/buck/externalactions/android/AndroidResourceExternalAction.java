@@ -95,8 +95,7 @@ public class AndroidResourceExternalAction implements ExternalAction {
         new MiniAapt(
             RelPath.get(args.getResPath()),
             RelPath.get(args.getPathToTextSymbolsFile()),
-            pathsToSymbolsOfDeps,
-            args.isVerifyingXmlAttrsEnabled()));
+            pathsToSymbolsOfDeps));
     return steps.build();
   }
 }

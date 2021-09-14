@@ -102,7 +102,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), RESOURCES, Paths.get("resource.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of(), true);
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
 
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
     aapt.processXmlFile(filesystem.getRootPath(), Paths.get("resource.xml"), references);
@@ -122,8 +122,7 @@ public class MiniAaptTest {
             FakeEntry.create(IdType.INT, RType.STRING, "text"),
             FakeEntry.create(IdType.INT, RType.STYLE, "Buck_Theme"),
             FakeEntry.create(IdType.INT, RType.ID, "button2"),
-            FakeEntry.create(IdType.INT, RType.ATTR, "some_attr"),
-            FakeEntry.create(IdType.INT, RType.ATTR, "attribute")));
+            FakeEntry.create(IdType.INT, RType.ATTR, "some_attr")));
   }
 
   @Test
@@ -349,12 +348,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get(normalFilename));
 
-    MiniAapt aapt =
-        new MiniAapt(
-            RelPath.get("res"),
-            RelPath.get("R.txt"),
-            ImmutableSet.of(),
-            /* isVerifyingXmlAttrsEnabled */ false);
+    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
     aapt.processDrawables(filesystem.getRootPath(), Paths.get(grayscaleFilename));
 
     Set<RDotTxtEntry> definitions = aapt.getResourceCollector().getResources();
@@ -501,7 +495,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), rDotTxt, depRTxt.getPath());
 
     MiniAapt aapt =
-        new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of(depRTxt), true);
+        new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of(depRTxt));
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
     aapt.processXmlFile(filesystem.getRootPath(), Paths.get("resource.xml"), references);
 
@@ -511,47 +505,6 @@ public class MiniAaptTest {
         ImmutableSet.<RDotTxtEntry>of(
             FakeEntry.create(IdType.INT, RType.DRAWABLE, "some_image"),
             FakeEntry.create(IdType.INT, RType.ATTR, "some_attr")),
-        createTestingFakes(missing));
-  }
-
-  @Test
-  public void testVerifyStyleFiles()
-      throws IOException, XPathExpressionException, ResourceParseException {
-    ImmutableList<String> styles =
-        ImmutableList.<String>builder()
-            .add(
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
-                "<resources>",
-                "  <style name=\"Style\">    ",
-                "    <item name=\"item_name1\">?attr/some_attr1</item>",
-                "    <item name=\"item_name2\">?attr/some_attr2</item>",
-                "    <item name=\"android:some_name1\">4dp</item>",
-                "    <item name=\"app:some_name2\">4dp</item>",
-                "  </style>",
-                "</resources>")
-            .build();
-    ProjectFilesystemUtils.writeLinesToPath(
-        filesystem.getRootPath(), styles, Paths.get("styles.xml"));
-
-    ImmutableList<String> rDotTxt =
-        ImmutableList.of("int attr item_name1 0x07020001", "int attr some_attr2 0x07030001");
-
-    RelPath depRTxt = RelPath.get("dep/R.txt");
-    ProjectFilesystemUtils.createParentDirs(filesystem.getRootPath(), depRTxt.getPath());
-    ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), rDotTxt, depRTxt.getPath());
-
-    MiniAapt aapt =
-        new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of(depRTxt), true);
-    ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
-    aapt.processStyleFile(filesystem.getRootPath(), Paths.get("styles.xml"), references);
-
-    Set<RDotTxtEntry> missing = aapt.verifyReferences(filesystem.getRootPath(), references.build());
-
-    assertEquals(
-        ImmutableSet.<RDotTxtEntry>of(
-            FakeEntry.create(IdType.INT, RType.ATTR, "some_attr1"),
-            FakeEntry.create(IdType.INT, RType.ATTR, "item_name2"),
-            FakeEntry.create(IdType.INT, RType.ATTR, "some_name2")),
         createTestingFakes(missing));
   }
 

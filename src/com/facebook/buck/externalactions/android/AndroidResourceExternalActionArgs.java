@@ -48,9 +48,6 @@ public abstract class AndroidResourceExternalActionArgs implements JsonArgs {
   @JsonProperty("pathsToSymbolsOfDeps")
   abstract Collection<String> getPathsToSymbolsOfDeps();
 
-  @JsonProperty("isVerifyingXmlAttrsEnabled")
-  abstract boolean isVerifyingXmlAttrsEnabled();
-
   @JsonProperty("rDotJavaPackageArgument")
   @Nullable
   abstract String getRDotJavaPackageArgument();
@@ -63,7 +60,6 @@ public abstract class AndroidResourceExternalActionArgs implements JsonArgs {
       String pathToRDotJavaPackageFile,
       @Nullable String manifestFilePath,
       Collection<String> pathsToSymbolsOfDeps,
-      boolean isVerifyingXmlAttrsEnabled,
       @Nullable String rDotJavaPackageArgument) {
     return ImmutableAndroidResourceExternalActionArgs.ofImpl(
         resPath,
@@ -72,7 +68,6 @@ public abstract class AndroidResourceExternalActionArgs implements JsonArgs {
         pathToRDotJavaPackageFile,
         manifestFilePath,
         pathsToSymbolsOfDeps,
-        isVerifyingXmlAttrsEnabled,
         rDotJavaPackageArgument);
   }
 }

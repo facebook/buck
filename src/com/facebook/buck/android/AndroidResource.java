@@ -111,7 +111,6 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
       @Nullable SourcePath manifestFile,
       Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
       boolean hasWhitelistedStrings,
-      boolean isVerifyingXmlAttrsEnabled,
       boolean shouldExecuteInSeparateProcess) {
     super(
         buildTarget,
@@ -126,7 +125,6 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
             manifestFile,
             symbolFilesFromDeps,
             hasWhitelistedStrings,
-            isVerifyingXmlAttrsEnabled,
             rDotJavaPackageArgument,
             shouldExecuteInSeparateProcess));
 
@@ -177,43 +175,12 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
         assets,
         assetsSrcs,
         manifestFile,
-        hasWhitelistedStrings,
-        /* isVerifyingXmlAttrsEnabled */ false,
-        shouldExecuteInSeparateProcess);
-  }
-
-  public AndroidResource(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
-      ImmutableSortedSet<BuildRule> deps,
-      @Nullable SourcePath res,
-      ImmutableSortedMap<Path, SourcePath> resSrcs,
-      @Nullable String rDotJavaPackageArgument,
-      @Nullable SourcePath assets,
-      ImmutableSortedMap<Path, SourcePath> assetsSrcs,
-      @Nullable SourcePath manifestFile,
-      boolean hasWhitelistedStrings,
-      boolean isVerifyingXmlAttrsEnabled,
-      boolean shouldExecuteInSeparateProcess) {
-    this(
-        buildTarget,
-        projectFilesystem,
-        ruleFinder,
-        deps,
-        res,
-        resSrcs,
-        rDotJavaPackageArgument,
-        assets,
-        assetsSrcs,
-        manifestFile,
         () ->
             RichStream.from(getAndroidResourceDeps(deps))
                 .filter(input -> input.getRes() != null)
                 .map(HasAndroidResourceDeps::getPathToTextSymbolsFile)
                 .toImmutableSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
-        isVerifyingXmlAttrsEnabled,
         shouldExecuteInSeparateProcess);
   }
 
@@ -260,8 +227,6 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
 
     @AddToRuleKey private final boolean hasWhitelistedStrings;
 
-    @AddToRuleKey private final boolean isVerifyingXmlAttrsEnabled;
-
     /** This is the original {@code package} argument passed to this rule. */
     @AddToRuleKey @Nullable private final String rDotJavaPackageArgument;
 
@@ -274,7 +239,6 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
         @Nullable SourcePath manifestFile,
         Supplier<ImmutableSortedSet<? extends SourcePath>> symbolsOfDeps,
         boolean hasWhitelistedStrings,
-        boolean isVerifyingXmlAttrsEnabled,
         @Nullable String rDotJavaPackageArgument,
         boolean shouldExecuteInSeparateProcess) {
       super(shouldExecuteInSeparateProcess);
@@ -285,7 +249,6 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
       this.manifestFile = manifestFile;
       this.symbolsOfDeps = symbolsOfDeps;
       this.hasWhitelistedStrings = hasWhitelistedStrings;
-      this.isVerifyingXmlAttrsEnabled = isVerifyingXmlAttrsEnabled;
 
       this.pathToTextSymbolsDir =
           new OutputPath(String.format("__%s_text_symbols__", buildTarget.getShortName()));
@@ -320,7 +283,6 @@ public class AndroidResource extends ModernBuildRule<AndroidResource.Impl>
                               .getRelativePath(filesystem, sourcePath)
                               .toString())
                   .collect(ImmutableSet.toImmutableSet()),
-              isVerifyingXmlAttrsEnabled,
               rDotJavaPackageArgument);
       ExternalActionsUtils.writeJsonArgs(jsonFilePath, jsonArgs);
 

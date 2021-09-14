@@ -101,8 +101,6 @@ public class MiniAapt extends IsolatedStep {
   private static final XPathExpression ANDROID_ID_DEFINITION =
       createExpression("//@*[starts-with(., '@+') and " + "not(starts-with(., '@+android:id'))]");
 
-  private static final XPathExpression ALL_ATTRS = createExpression("//@*");
-
   private static final ImmutableMap<String, RType> RESOURCE_TYPES = getResourceTypes();
 
   /**
@@ -120,28 +118,12 @@ public class MiniAapt extends IsolatedStep {
   private final RelPath pathToOutputFile;
   private final ImmutableSet<RelPath> pathsToSymbolsOfDeps;
   private final RDotTxtResourceCollector resourceCollector;
-  private final boolean isVerifyingXmlAttrsEnabled;
 
   public MiniAapt(
-      RelPath resDirectory,
-      RelPath pathToTextSymbolsFile,
-      ImmutableSet<RelPath> pathsToSymbolsOfDeps) {
-    this(
-        resDirectory,
-        pathToTextSymbolsFile,
-        pathsToSymbolsOfDeps,
-        /* isVerifyingXmlAttrsEnabled */ false);
-  }
-
-  public MiniAapt(
-      RelPath resDirectory,
-      RelPath pathToOutputFile,
-      ImmutableSet<RelPath> pathsToSymbolsOfDeps,
-      boolean isVerifyingXmlAttrsEnabled) {
+      RelPath resDirectory, RelPath pathToOutputFile, ImmutableSet<RelPath> pathsToSymbolsOfDeps) {
     this.resDirectory = resDirectory;
     this.pathToOutputFile = pathToOutputFile;
     this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
-    this.isVerifyingXmlAttrsEnabled = isVerifyingXmlAttrsEnabled;
     this.resourceCollector = new RDotTxtResourceCollector();
   }
 
@@ -562,27 +544,6 @@ public class MiniAapt extends IsolatedStep {
         RType rType = Objects.requireNonNull(RESOURCE_TYPES.get(rawRType));
 
         references.add(new FakeRDotTxtEntry(IdType.INT, rType, sanitizeName(name)));
-      }
-
-      if (isVerifyingXmlAttrsEnabled) {
-        NodeList allNodes = (NodeList) ALL_ATTRS.evaluate(dom, XPathConstants.NODESET);
-        for (int i = 0; i < allNodes.getLength(); i++) {
-          String nodeName = allNodes.item(i).getNodeName();
-          int colonPosition = nodeName.indexOf(':');
-          if (colonPosition == -1) {
-            continue;
-          }
-
-          String namespace = nodeName.substring(0, colonPosition);
-          if (namespace.equals("xmlns")
-              || namespace.equals("android")
-              || namespace.equals("tools")) {
-            continue;
-          }
-
-          String attrName = nodeName.substring(colonPosition + 1);
-          references.add(new FakeRDotTxtEntry(IdType.INT, RType.ATTR, sanitizeName(attrName)));
-        }
       }
     }
   }

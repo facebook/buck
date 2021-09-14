@@ -54,7 +54,6 @@ public class AndroidResourceExternalActionTest {
             "path_to_dir/r_dot_java_package_file",
             "path_to_manifest_file",
             ImmutableSet.of(),
-            true,
             "r_dot_java_package_argument");
 
     try {
