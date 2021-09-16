@@ -87,7 +87,9 @@ public class OcamlBuildStep implements Step {
         ImmutableList.<String>builder()
             .addAll(
                 this.ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true))
-            .addAll(this.ocamlContext.getOcamlDepFlags())
+            .addAll(
+                Arg.stringify(
+                    this.ocamlContext.getOcamlDepFlags(), buildContext.getSourcePathResolver()))
             .build();
 
     this.depToolStep =

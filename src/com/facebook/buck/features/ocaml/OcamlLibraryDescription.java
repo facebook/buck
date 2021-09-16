@@ -113,6 +113,13 @@ public class OcamlLibraryDescription
                               .getMatchingValues(ocamlPlatform.get().getFlavor().toString())))),
               args.getWarningsFlags());
 
+      ImmutableList<Arg> ocamldepFlags =
+          OcamlDescriptionEnhancer.toStringWithMacrosArgs(
+              buildTarget,
+              context.getCellPathResolver(),
+              context.getActionGraphBuilder(),
+              args.getOcamldepFlags());
+
       BuildTarget compileBuildTarget = OcamlRuleBuilder.createStaticLibraryBuildTarget(buildTarget);
 
       if (OcamlRuleBuilder.shouldUseFineGrainedRules(context.getActionGraphBuilder(), srcs)) {
@@ -129,7 +136,7 @@ public class OcamlLibraryDescription
                 /* isLibrary */ true,
                 args.getBytecodeOnly(),
                 flags,
-                args.getOcamldepFlags(),
+                ocamldepFlags,
                 !args.getBytecodeOnly() && args.getNativePlugin(),
                 downwardApiConfig.isEnabledForOCaml());
         return new OcamlStaticLibrary(
@@ -169,7 +176,7 @@ public class OcamlLibraryDescription
                 /* isLibrary */ true,
                 args.getBytecodeOnly(),
                 flags,
-                args.getOcamldepFlags(),
+                ocamldepFlags,
                 downwardApiConfig.isEnabledForOCaml());
         return new OcamlStaticLibrary(
             buildTarget,
@@ -299,7 +306,7 @@ public class OcamlLibraryDescription
       return PatternMatchedCollection.of();
     }
 
-    ImmutableList<String> getOcamldepFlags();
+    ImmutableList<StringWithMacros> getOcamldepFlags();
 
     ImmutableList<StringWithMacros> getLinkerFlags();
 

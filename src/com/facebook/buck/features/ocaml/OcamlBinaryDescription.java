@@ -101,6 +101,13 @@ public class OcamlBinaryDescription
             args.getCompilerFlags(),
             args.getWarningsFlags());
 
+    ImmutableList<Arg> ocamldepFlags =
+        OcamlDescriptionEnhancer.toStringWithMacrosArgs(
+            buildTarget,
+            context.getCellPathResolver(),
+            context.getActionGraphBuilder(),
+            args.getOcamldepFlags());
+
     BuildTarget compileBuildTarget = OcamlRuleBuilder.createOcamlLinkTarget(buildTarget);
 
     ImmutableList<BuildRule> rules;
@@ -119,7 +126,7 @@ public class OcamlBinaryDescription
               /* isLibrary */ false,
               args.getBytecodeOnly().orElse(false),
               flags,
-              args.getOcamldepFlags(),
+              ocamldepFlags,
               /* buildNativePlugin */ false,
               withDownwardApi);
       rules = result.getRules();
@@ -138,7 +145,7 @@ public class OcamlBinaryDescription
               /* isLibrary */ false,
               args.getBytecodeOnly().orElse(false),
               flags,
-              args.getOcamldepFlags(),
+              ocamldepFlags,
               withDownwardApi);
       rules = ImmutableList.of(ocamlLibraryBuild);
     }
@@ -180,7 +187,7 @@ public class OcamlBinaryDescription
       return PatternMatchedCollection.of();
     }
 
-    ImmutableList<String> getOcamldepFlags();
+    ImmutableList<StringWithMacros> getOcamldepFlags();
 
     Optional<String> getWarningsFlags();
 

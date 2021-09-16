@@ -205,7 +205,7 @@ public class OcamlRuleBuilder {
       boolean isLibrary,
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
-      ImmutableList<String> ocamlDepFlags,
+      ImmutableList<Arg> ocamlDepFlags,
       boolean withDownwardApi) {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessorInput.concat(
@@ -338,7 +338,7 @@ public class OcamlRuleBuilder {
       boolean isLibrary,
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
-      ImmutableList<String> ocamlDepFlags,
+      ImmutableList<Arg> ocamlDepFlags,
       boolean buildNativePlugin,
       boolean withDownwardApi) {
 
@@ -442,7 +442,8 @@ public class OcamlRuleBuilder {
 
     AbsPath baseDir = projectFilesystem.getRootPath();
     ImmutableMap<Path, ImmutableList<Path>> mlInput =
-        getMLInputWithDeps(baseDir, ocamlContext, withDownwardApi);
+        getMLInputWithDeps(
+            baseDir, ocamlContext, graphBuilder.getSourcePathResolver(), withDownwardApi);
 
     ImmutableList<SourcePath> cInput = getCInput(graphBuilder.getSourcePathResolver(), srcs);
 
@@ -477,12 +478,15 @@ public class OcamlRuleBuilder {
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> getMLInputWithDeps(
-      AbsPath baseDir, OcamlBuildContext ocamlContext, boolean withDownwardApi) {
+      AbsPath baseDir,
+      OcamlBuildContext ocamlContext,
+      SourcePathResolverAdapter resolverAdapter,
+      boolean withDownwardApi) {
 
     ImmutableList<String> ocamlDepFlags =
         ImmutableList.<String>builder()
             .addAll(ocamlContext.getIncludeFlags(/* isBytecode */ false, /* excludeDeps */ true))
-            .addAll(ocamlContext.getOcamlDepFlags())
+            .addAll(Arg.stringify(ocamlContext.getOcamlDepFlags(), resolverAdapter))
             .build();
 
     OcamlDepToolStep depToolStep =
