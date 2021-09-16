@@ -174,11 +174,12 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableSortedSet<SourcePath> getDesugarDeps() {
     // We only need deps for desugaring interface methods
     if (isDesugarEnabled() && isInterfaceMethodsDesugarEnabled()) {
-      // We provide all declared dependencies to support Java 8 interface desugaring in D8.
+      // We provide all declared Java dependencies to support Java 8 interface desugaring in D8.
       // If this JAR is built with Java 8 and depends on anther Java 8 library using default or
       // static interface methods, we need to desugar them together so that implementers of that
       // interface in this JAR get correctly desugared as well.
       return getDeclaredDeps().stream()
+          .filter(JavaLibrary.class::isInstance)
           .map(BuildRule::getSourcePathToOutput)
           .filter(Objects::nonNull)
           .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
