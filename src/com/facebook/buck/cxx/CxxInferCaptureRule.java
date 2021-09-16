@@ -209,6 +209,7 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
                   //    that gets shipped as input to a RE job
                   .addAll(inferPlatform.getInferBin().getCommandPrefix(sourcePathResolver))
                   .add("capture")
+                  .add("--buck")
                   .add(
                       "--results-dir",
                       toAbsNormalizedPath(
