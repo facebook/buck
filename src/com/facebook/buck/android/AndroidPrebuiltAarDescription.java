@@ -92,19 +92,16 @@ public class AndroidPrebuiltAarDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavacFactory javacFactory;
-  private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final JavaBuckConfig javaBuckConfig;
   private final JavaCDBuckConfig javaCDBuckConfig;
 
   public AndroidPrebuiltAarDescription(
       ToolchainProvider toolchainProvider,
-      AndroidBuckConfig androidBuckConfig,
       DownwardApiConfig downwardApiConfig,
       JavaBuckConfig javaBuckConfig,
       JavaCDBuckConfig javaCDBuckConfig) {
     this.toolchainProvider = toolchainProvider;
-    this.androidBuckConfig = androidBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.downwardApiConfig = downwardApiConfig;
     this.javaBuckConfig = javaBuckConfig;
@@ -204,7 +201,6 @@ public class AndroidPrebuiltAarDescription
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           unzipAar.getResDirectory(),
           /* skipCrunchPngs */ false,
-          androidBuckConfig.getFailOnLegacyAaptErrors(),
           downwardApiConfig.isEnabledForAndroid());
     }
 

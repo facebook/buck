@@ -30,7 +30,6 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
-import com.facebook.buck.util.environment.Platform;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -50,7 +49,6 @@ public class AndroidPrebuiltAarBuilder
     DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
     return new AndroidPrebuiltAarDescription(
         createToolchainProviderForAndroidPrebuiltAar(),
-        new AndroidBuckConfig(buckConfig, Platform.detect()),
         downwardApiConfig,
         JavaBuckConfig.of(buckConfig),
         JavaCDBuckConfig.of(buckConfig));

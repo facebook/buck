@@ -170,7 +170,6 @@ public class AndroidResourceDescription
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           resDir.get(),
           androidBuckConfig.getSkipCrunchPngsDefault().orElse(false),
-          androidBuckConfig.getFailOnLegacyAaptErrors(),
           downwardApiConfig.isEnabledForAndroid());
     }
 

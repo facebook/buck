@@ -94,11 +94,6 @@ public class AndroidBuckConfig {
     return delegate.getBoolean("android", "aapt_compile_skip_crunch_pngs_default");
   }
 
-  /** Whether to fail (vs warn) on legacy aapt2 compile errors. */
-  public boolean getFailOnLegacyAaptErrors() {
-    return delegate.getBoolean("android", "aapt_fail_on_legacy_errors").orElse(false);
-  }
-
   /** Whether to disable resource removal in aapt2. */
   public boolean getAaptNoResourceRemoval() {
     return delegate.getBoolean("android", "aapt_no_resource_removal").orElse(false);

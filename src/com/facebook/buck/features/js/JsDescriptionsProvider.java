@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.js;
 
-import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
@@ -27,7 +26,6 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.support.cli.config.CliConfig;
-import com.facebook.buck.util.environment.Platform;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -40,7 +38,6 @@ public class JsDescriptionsProvider implements DescriptionProvider {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
 
     BuckConfig buckConfig = context.getBuckConfig();
-    AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
     CliConfig cliConfig = buckConfig.getView(CliConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
@@ -57,7 +54,6 @@ public class JsDescriptionsProvider implements DescriptionProvider {
             downwardApiConfig,
             cliConfig,
             context.getSandboxExecutionStrategy()),
-        new JsBundleDescription(
-            toolchainProvider, androidBuckConfig, downwardApiConfig, buildBuckConfig));
+        new JsBundleDescription(toolchainProvider, downwardApiConfig, buildBuckConfig));
   }
 }

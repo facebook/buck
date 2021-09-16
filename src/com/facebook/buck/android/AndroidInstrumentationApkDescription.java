@@ -277,7 +277,6 @@ public class AndroidInstrumentationApkDescription
                 apkUnderTest.getRulesToExcludeFromDex(), apkUnderTestTransitiveClasspathDeps),
             false,
             new NoopAndroidNativeTargetConfigurationMatcher(),
-            androidBuckConfig.getFailOnLegacyAaptErrors(),
             /* useAapt2LocaleFiltering= */ false,
             /* shouldAapt2KeepRawValues= */ false,
             /* extraFilteredResources= */ ImmutableSet.of(),

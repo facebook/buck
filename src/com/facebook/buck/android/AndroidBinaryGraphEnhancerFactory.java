@@ -224,7 +224,6 @@ public class AndroidBinaryGraphEnhancerFactory {
         useProtoFormat,
         AndroidNativeTargetConfigurationMatcherFactory.create(
             configurationRuleRegistry, buildTarget, dependencyStack, args.getCpuFilters()),
-        androidBuckConfig.getFailOnLegacyAaptErrors(),
         args.isAapt2LocaleFiltering(),
         args.isAapt2KeepRawValues(),
         args.getExtraFilteredResources(),

@@ -17,7 +17,6 @@
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.android.Aapt2Compile;
-import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.AndroidResourceDescription;
@@ -92,17 +91,14 @@ public class JsBundleDescription
           JsFlavors.TRANSFORM_PROFILE_DOMAIN);
 
   private final ToolchainProvider toolchainProvider;
-  private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final BuildBuckConfig buildBuckConfig;
 
   public JsBundleDescription(
       ToolchainProvider toolchainProvider,
-      AndroidBuckConfig androidBuckConfig,
       DownwardApiConfig downwardApiConfig,
       BuildBuckConfig buildBuckConfig) {
     this.toolchainProvider = toolchainProvider;
-    this.androidBuckConfig = androidBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.buildBuckConfig = buildBuckConfig;
   }
@@ -316,7 +312,6 @@ public class JsBundleDescription
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           jsBundle.getSourcePathToResources(),
           /* skipCrunchPngs */ false,
-          androidBuckConfig.getFailOnLegacyAaptErrors(),
           downwardApiConfig.isEnabledForJs());
     }
 

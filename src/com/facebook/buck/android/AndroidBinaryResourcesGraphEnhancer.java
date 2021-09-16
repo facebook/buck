@@ -99,7 +99,6 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final boolean noResourceRemoval;
   private final APKModuleGraph apkModuleGraph;
   private final boolean useProtoFormat;
-  private final boolean failOnLegacyAapt2Errors;
   private final boolean useAapt2LocaleFiltering;
   private final boolean shouldAapt2KeepRawValues;
   private final ImmutableSet<String> extraFilteredResources;
@@ -137,7 +136,6 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean noResourceRemoval,
       APKModuleGraph apkModuleGraph,
       boolean useProtoFormat,
-      boolean failOnLegacyAapt2Errors,
       boolean useAapt2LocaleFiltering,
       boolean shouldAapt2KeepRawValues,
       ImmutableSet<String> extraFilteredResources,
@@ -172,7 +170,6 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.noAutoAddOverlayResources = noAutoAddOverlayResources;
     this.apkModuleGraph = apkModuleGraph;
     this.useProtoFormat = useProtoFormat;
-    this.failOnLegacyAapt2Errors = failOnLegacyAapt2Errors;
     this.noResourceRemoval = noResourceRemoval;
     this.useAapt2LocaleFiltering = useAapt2LocaleFiltering;
     this.shouldAapt2KeepRawValues = shouldAapt2KeepRawValues;
@@ -577,7 +574,6 @@ class AndroidBinaryResourcesGraphEnhancer {
               filteredResourcesProvider.get(),
               buildTarget,
               skipCrunchPngs,
-              failOnLegacyAapt2Errors,
               withDownwardApi));
     } else {
       for (BuildTarget resTarget : resourceDetails.getResourcesWithNonEmptyResDir()) {
@@ -628,7 +624,6 @@ class AndroidBinaryResourcesGraphEnhancer {
       FilteredResourcesProvider provider,
       BuildTarget buildTarget,
       boolean skipCrunchPngs,
-      boolean failOnLegacyErrors,
       boolean withDownwardApi) {
     int index = 0;
     ImmutableList.Builder<Aapt2Compile> builder = ImmutableList.builder();
@@ -648,7 +643,6 @@ class AndroidBinaryResourcesGraphEnhancer {
                             actionGraphBuilder, aaptTarget.getTargetConfiguration()),
                         resDir,
                         skipCrunchPngs,
-                        failOnLegacyErrors,
                         withDownwardApi);
                   });
       builder.add(rule);

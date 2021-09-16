@@ -300,26 +300,6 @@ public class AndroidApkRDotJavaIntegrationTest {
     return new ZipInspector(buildApk(target)).getSize(zipEntry);
   }
 
-  @Test
-  public void testFailOnLegacyErrors() throws IOException {
-    AssumeAndroidPlatform.get(workspace).assumeBuildToolsVersionIsAtLeast("26");
-    // As of 2019-11-14, aapt2 has only two error cases that --legacy suppresses:
-    //    1) Multiple positional arguments in a resource string are not allowed.
-    //    2) Multiple periods are not allowed in resource filenames.
-    // The latter check was added in aapt2 in 28.0.2, the former was in at least 26.0.0
-    // (possibly earlier).
-
-    // Since we can't guarantee which version of aapt2 buck runs tests with, we'll test for
-    // catching the first case, since it's been there for longer.
-
-    // With --legacy (the default), the string resource 'positional_args' produces a warning
-    workspace.runBuckBuild("//apps/sample:app_with_aapt2").assertSuccess();
-
-    // Without --legacy, 'positional_args' causes a aapt2 compile to fail.
-    workspace.addBuckConfigLocalOption("android", "aapt_fail_on_legacy_errors", "true");
-    workspace.runBuckBuild("//apps/sample:app_with_aapt2").assertFailure();
-  }
-
   private Path buildApk(String target) {
     ImmutableMap<String, Path> outputs = workspace.buildMultipleAndReturnOutputs(target);
     return outputs.get(target);

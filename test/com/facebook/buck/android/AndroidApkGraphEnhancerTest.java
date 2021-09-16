@@ -1098,7 +1098,6 @@ public class AndroidApkGraphEnhancerTest {
         ImmutableSortedSet::of,
         /* useProtoFormat */ false,
         new NoopAndroidNativeTargetConfigurationMatcher(),
-        /* failOnLegacyAapt2Errors */ false,
         /* useAapt2LocaleFiltering */ false,
         /* shouldAapt2KeepRawValues */ false,
         /* extraFilteredResources */ ImmutableSet.of(),

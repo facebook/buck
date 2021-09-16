@@ -19,7 +19,6 @@ package com.facebook.buck.features.js;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -29,7 +28,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
@@ -56,10 +54,7 @@ public class JsFlavorValidationCommonTest {
         JsLibraryDescription.class, new JsLibraryDescription(downwardApiConfig, jsConfig),
         JsBundleDescription.class,
             new JsBundleDescription(
-                new ToolchainProviderBuilder().build(),
-                new AndroidBuckConfig(buckConfig, Platform.detect()),
-                downwardApiConfig,
-                buildBuckConfig));
+                new ToolchainProviderBuilder().build(), downwardApiConfig, buildBuckConfig));
   }
 
   @Parameterized.Parameter public Class<?> description;
