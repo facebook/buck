@@ -59,6 +59,6 @@ public class JavaDescriptionsProvider implements DescriptionProvider {
         new JavaTestRunnerDescription(
             toolchainProvider, javaConfig, javaCDBuckConfig, downwardApiConfig),
         new JavaTestDescription(toolchainProvider, javaConfig, javaCDBuckConfig, downwardApiConfig),
-        new KeystoreDescription(javaConfig));
+        new KeystoreDescription());
   }
 }

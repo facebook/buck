@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -26,7 +25,7 @@ public class KeystoreBuilder
         KeystoreDescriptionArg.Builder, KeystoreDescriptionArg, KeystoreDescription, Keystore> {
 
   private KeystoreBuilder(BuildTarget target) {
-    super(new KeystoreDescription(JavaBuckConfig.of(FakeBuckConfig.empty())), target);
+    super(new KeystoreDescription(), target);
   }
 
   public static KeystoreBuilder createBuilder(BuildTarget target) {
