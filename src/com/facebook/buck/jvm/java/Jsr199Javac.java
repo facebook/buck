@@ -47,10 +47,7 @@ public abstract class Jsr199Javac implements Javac {
     protected abstract JavaCompiler createCompiler(JavacExecutionContext context);
 
     @Override
-    public String getDescription(
-        ImmutableList<String> options,
-        ImmutableSortedSet<RelPath> javaSourceFilePaths,
-        RelPath pathToSrcsList) {
+    public String getDescription(ImmutableList<String> options, RelPath pathToSrcsList) {
       StringBuilder builder = new StringBuilder("javac ");
       Joiner.on(" ").appendTo(builder, options);
       builder.append(" ");

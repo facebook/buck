@@ -44,21 +44,18 @@ public class Jsr199JavacTest extends EasyMockSupport {
         String.format(
             "javac -source %s -target %s -g -d . -classpath foo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, PATH_TO_SRCS_LIST),
-        firstOrder.getDescription(
-            getArgs().add("foo.jar").build(), SOURCE_FILES, PATH_TO_SRCS_LIST));
+        firstOrder.getDescription(getArgs().add("foo.jar").build(), PATH_TO_SRCS_LIST));
     assertEquals(
         String.format(
             "javac -source %s -target %s -g -d . -classpath foo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, PATH_TO_SRCS_LIST),
-        warn.getDescription(getArgs().add("foo.jar").build(), SOURCE_FILES, PATH_TO_SRCS_LIST));
+        warn.getDescription(getArgs().add("foo.jar").build(), PATH_TO_SRCS_LIST));
     assertEquals(
         String.format(
             "javac -source %s -target %s -g -d . -classpath bar.jar%sfoo.jar @%s",
             TARGETED_JAVA_VERSION, TARGETED_JAVA_VERSION, File.pathSeparator, PATH_TO_SRCS_LIST),
         transitive.getDescription(
-            getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build(),
-            SOURCE_FILES,
-            PATH_TO_SRCS_LIST));
+            getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build(), PATH_TO_SRCS_LIST));
   }
 
   private Jsr199Javac.ResolvedJsr199Javac createTestStep() {

@@ -74,10 +74,7 @@ public class ExternalJavac implements Javac {
     }
 
     @Override
-    public String getDescription(
-        ImmutableList<String> options,
-        ImmutableSortedSet<RelPath> javaSourceFilePaths,
-        RelPath pathToSrcsList) {
+    public String getDescription(ImmutableList<String> options, RelPath pathToSrcsList) {
       StringBuilder builder = new StringBuilder(getShortName());
       appendToBuilder(builder, commonJavacOptions);
       appendToBuilder(builder, options);

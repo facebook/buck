@@ -52,10 +52,7 @@ public interface ResolvedJavac {
       AbiGenerationMode abiCompatibilityMode,
       @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory);
 
-  String getDescription(
-      ImmutableList<String> options,
-      ImmutableSortedSet<RelPath> javaSourceFilePaths,
-      RelPath pathToSrcsList);
+  String getDescription(ImmutableList<String> options, RelPath pathToSrcsList);
 
   /** Returns a short name of the tool */
   String getShortName();

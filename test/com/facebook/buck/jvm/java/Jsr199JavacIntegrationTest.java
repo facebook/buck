@@ -116,7 +116,6 @@ public class Jsr199JavacIntegrationTest {
                 pathToOutputDir,
                 "-classpath",
                 "''"),
-            SOURCE_PATHS,
             pathToSrcsList));
   }
 

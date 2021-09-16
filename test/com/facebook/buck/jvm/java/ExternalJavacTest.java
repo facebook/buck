@@ -92,13 +92,12 @@ public class ExternalJavacTest extends EasyMockSupport {
         filesystem.resolve("fakeJavac")
             + " -encoding utf-8 -source 6 -target 6 -g -d . -classpath foo.jar @"
             + PATH_TO_SRCS_LIST,
-        firstOrder.getDescription(
-            getArgs().add("foo.jar").build(), SOURCE_PATHS, PATH_TO_SRCS_LIST));
+        firstOrder.getDescription(getArgs().add("foo.jar").build(), PATH_TO_SRCS_LIST));
     assertEquals(
         filesystem.resolve("fakeJavac")
             + " -encoding utf-8 -source 6 -target 6 -g -d . -classpath foo.jar @"
             + PATH_TO_SRCS_LIST,
-        warn.getDescription(getArgs().add("foo.jar").build(), SOURCE_PATHS, PATH_TO_SRCS_LIST));
+        warn.getDescription(getArgs().add("foo.jar").build(), PATH_TO_SRCS_LIST));
     assertEquals(
         filesystem.resolve("fakeJavac")
             + " -encoding utf-8 -source 6 -target 6 -g -d . -classpath bar.jar"
@@ -106,9 +105,7 @@ public class ExternalJavacTest extends EasyMockSupport {
             + "foo.jar @"
             + PATH_TO_SRCS_LIST,
         transitive.getDescription(
-            getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build(),
-            SOURCE_PATHS,
-            PATH_TO_SRCS_LIST));
+            getArgs().add("bar.jar" + File.pathSeparator + "foo.jar").build(), PATH_TO_SRCS_LIST));
   }
 
   @Test

@@ -79,11 +79,8 @@ public class FakeJavac implements ResolvedJavac {
   }
 
   @Override
-  public String getDescription(
-      ImmutableList<String> options,
-      ImmutableSortedSet<RelPath> javaSourceFilePaths,
-      RelPath pathToSrcsList) {
-    return String.format("%sDelimiter%sDelimiter%s", options, javaSourceFilePaths, pathToSrcsList);
+  public String getDescription(ImmutableList<String> options, RelPath pathToSrcsList) {
+    return String.format("fakeJavac %s %s", options, pathToSrcsList);
   }
 
   @Override

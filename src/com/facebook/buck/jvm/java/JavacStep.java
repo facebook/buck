@@ -208,7 +208,6 @@ public class JavacStep extends IsolatedStep {
         getResolvedJavac()
             .getDescription(
                 getOptions(context, getClasspathEntries()),
-                state.getCompilerParameters().getSourceFilePaths(),
                 state.getCompilerParameters().getOutputPaths().getPathToSourcesList());
 
     if (invokingRule.isLibraryJar() && state.getLibraryJarParameters().isPresent()) {
