@@ -20,15 +20,19 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableSet;
 
 /** Base class for a Description that point at other {@code BuildTarget}s */
 public abstract class AbstractAliasDescription<T extends BuildRuleArg>
-    implements DescriptionWithTargetGraph<T>, ImplicitDepsInferringDescription<T> {
+    implements DescriptionWithTargetGraph<T>, ImplicitDepsInferringDescription<T>, Flavored {
 
   public abstract BuildTarget resolveActualBuildTarget(T arg);
 
@@ -60,5 +64,21 @@ public abstract class AbstractAliasDescription<T extends BuildRuleArg>
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.add(resolveActualBuildTarget(constructorArg));
+  }
+
+  /**
+   * @param flavors The set of {@link Flavor}s to consider. All must match.
+   * @param toolchainTargetConfiguration
+   * @return Whether a {@link com.facebook.buck.core.rules.BuildRule} of the given {@link Flavor}
+   *     can be created.
+   */
+  @Override
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    // Flavor verification is done when creating unconfigured nodes, so
+    // we can't reliably determine the actual node the alias references.
+    // This means we can't determine whether flavors are truly valid,
+    // so just accept all flavors for now.
+    return true;
   }
 }
