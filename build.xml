@@ -1016,6 +1016,7 @@
         <include name="com/facebook/buck/maven/build-file.st"/>
         <include name="com/facebook/buck/python/*.py"/>
         <include name="com/facebook/buck/python/run_inplace.py.in"/>
+        <include name="com/facebook/buck/python/run_inplace_interpreter_wrapper.py.in"/>
         <include name="com/facebook/buck/python/run_inplace_lite.py.in"/>
         <include name="com/facebook/buck/parser/function/BuckPyFunction.stg"/>
         <include name="com/facebook/buck/shell/sh_binary_template"/>
