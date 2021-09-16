@@ -660,7 +660,7 @@ public class AndroidApkInstallIntegrationTest {
             .getProcessExecutor()
             .launchAndExecute(
                 ProcessExecutorParams.builder()
-                    .setCommand(ImmutableList.of("python", "generate.py"))
+                    .setCommand(ImmutableList.of("python3", "generate.py"))
                     .setDirectory(filesystem.getRootPath().getPath())
                     .build());
     assertEquals(result.getMessageForUnexpectedResult("File generation"), result.getExitCode(), 0);
