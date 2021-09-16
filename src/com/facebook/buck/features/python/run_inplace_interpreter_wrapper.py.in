@@ -1,0 +1,166 @@
+#!<PYTHON> <PYTHON_INTERPRETER_FLAGS>
+
+import os
+import platform
+import signal
+import subprocess
+import sys
+
+modules_dir = <MODULES_DIR>
+native_libs_env_var = <NATIVE_LIBS_ENV_VAR>
+native_libs_dir = <NATIVE_LIBS_DIR>
+native_libs_preload_env_var = <NATIVE_LIBS_PRELOAD_ENV_VAR>
+native_libs_preload = <NATIVE_LIBS_PRELOAD>
+
+def prepare_startup_command(main_module, arg0, dirpath, env_vals_to_restore = None):
+    """
+    Take the main module (passed to the interpreter through "-m") and produce
+    an equivalent startup command (passed to the interpreter through "-c") that
+    injects prologues required by certain features.
+    """
+    # Allow users to decorate the main module. In normal Python invocations this
+    # can be done by prefixing the arguments with `-m decoratingmodule`. It's not
+    # that easy for par files. The startup script below sets up `sys.path` from
+    # within the Python interpreter. Enable decorating the main module after
+    # `sys.path` has been setup by setting the PAR_MAIN_OVERRIDE environment
+    # variable.
+    decorate_main_module = os.environ.pop("PAR_MAIN_OVERRIDE", None)
+    if decorate_main_module:
+        # Pass the original main module as environment variable for the process.
+        # Allowing the decorating module to pick it up.
+        os.environ["PAR_MAIN_ORIGINAL"] = main_module
+        main_module = decorate_main_module
+
+    module_call = "runpy._run_module_as_main({main_module!r}, False)".format(
+        main_module=main_module
+    )
+
+    # Allow users to run the main module under pdb. Encode the call into the
+    # startup script, because pdb does not support the -c argument we use to invoke
+    # our startup wrapper.
+    #
+    # Note: use pop to avoid leaking the environment variable to the child process.
+    if os.environ.pop("PYTHONDEBUGWITHPDB", None):
+        # Support passing initial commands to pdb. We cannot pass the -c argument
+        # to pdb. Instead, allow users to pass initial commands through the
+        # PYTHONPDBINITIALCOMMANDS env var, separated by the | character.
+        initial_commands = []
+        if "PYTHONPDBINITIALCOMMANDS" in os.environ:
+            # Note: use pop to avoid leaking the environment variable to the child
+            # process.
+            initial_commands_string = os.environ.pop("PYTHONPDBINITIALCOMMANDS", None)
+            initial_commands = initial_commands_string.split("|")
+
+        # Note: indentation of this block of code is important as it gets included
+        # in the bigger block below.
+        module_call = """
+        from pdb import Pdb
+        pdb = Pdb()
+        pdb.rcLines.extend({initial_commands!r})
+        pdb.runcall(runpy._run_module_as_main, {main_module!r}, False)
+    """.format(
+            main_module=main_module,
+            initial_commands=initial_commands,
+        )
+
+    # Note: this full block of code will be included as the argument to Python,
+    # and will be the first thing that shows up in the process arguments as displayed
+    # by programs like ps and top.
+    #
+    # We include arg0 at the start of this comment just to make it more visible what program
+    # is being run in the ps and top output.
+    return """\
+# {arg0!r}
+# Wrap everything in a private function to prevent globals being captured by
+# the `runpy._run_module_as_main` below.
+def __run():
+    import platform
+    import sys
+
+    # We set the paths beforehand to have a minimal amount of imports before
+    # nuking PWD from sys.path. Otherwise, there can be problems if someone runs
+    # from a directory with a similarly named file, even if their code is properly
+    # namespaced. e.g. if one has foo/bar/contextlib.py and while in foo/bar runs
+    # `buck run foo/bar:bin`, runpy will fail as it tries to import
+    # foo/bar/contextlib.py. You're just out of luck if you have sys.py or os.py
+
+    # Set `argv[0]` to the executing script.
+    assert sys.argv[0] == '-c'
+    sys.argv[0] = {arg0!r}
+
+    # Use the interpreter wrapper as the mp executable so native libraries can
+    # be loaded correctly for spawned processes.
+    if sys.version_info >= (3, 0) and platform.system() != "Windows":
+        import multiprocessing
+        multiprocessing.set_executable({mp_executable!r})
+
+    # Replace the working directory with location of the modules directory.
+    assert sys.path[0] == ''
+    sys.path[0] = {pythonpath!r}
+
+    import os
+    import runpy
+
+    def setenv(var, val):
+        if val is None:
+            os.environ.pop(var, None)
+        else:
+            os.environ[var] = val
+
+    def restoreenv(d):
+        for k, v in d.items():
+            setenv(k, v)
+
+    restoreenv({env_vals_to_restore!r})
+    {module_call}
+
+__run()
+    """.format(
+        arg0=arg0,
+        mp_executable=__file__,
+        pythonpath=os.path.join(dirpath, modules_dir),
+        env_vals_to_restore=env_vals_to_restore or {},
+        module_call=module_call,
+    )
+
+if __name__ == "__main__":
+    """
+    The interpreter wrapper exposes the same cli interface as the Python
+    interpreter. The wrapper ensures that system native dependencies are loaded
+    properly. It also injects prologues required by certain features.
+    """
+    dirpath = os.path.dirname(os.path.realpath(__file__))
+
+    env_vals_to_restore = {}
+    # Update the environment variable for the dynamic loader to the native
+    # libraries location.
+    if native_libs_dir is not None:
+        old_native_libs_dir = os.environ.get(native_libs_env_var)
+        os.environ[native_libs_env_var] = os.path.join(dirpath, native_libs_dir)
+        env_vals_to_restore[native_libs_env_var] = old_native_libs_dir
+
+    # Update the environment variable for the dynamic loader to find libraries
+    # to preload.
+    if native_libs_preload is not None:
+        old_native_libs_preload = os.environ.get(native_libs_preload_env_var)
+        env_vals_to_restore[native_libs_preload_env_var] = old_native_libs_preload
+
+        # On macos, preloaded libs are found via paths.
+        os.environ[native_libs_preload_env_var] = ":".join(
+            os.path.join(dirpath, native_libs_dir, l)
+            for l in native_libs_preload.split(":")
+        )
+
+    # If the interpreter is invoked with "-m", replace it with "-c
+    # [STARTUP_COMMAND]" which includes the neccessary prologue.
+    for idx, val in enumerate(sys.argv):
+        if val == "-m":
+            sys.argv[idx] = "-c"
+            sys.argv[idx + 1] = prepare_startup_command(
+                main_module=sys.argv[idx + 1],
+                arg0 = os.environ.pop("__ARG0_OVERRIDE", sys.argv[0]),
+                dirpath=dirpath,
+                env_vals_to_restore=env_vals_to_restore
+            )
+
+    os.execv(sys.executable, [sys.executable] + sys.argv[1:])

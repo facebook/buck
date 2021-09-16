@@ -18,15 +18,18 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -39,6 +42,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
+import com.facebook.buck.test.selectors.Nullable;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
@@ -57,6 +61,8 @@ import org.stringtemplate.v4.STGroup;
 public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps {
 
   private static final String RUN_INPLACE_RESOURCE = "run_inplace.py.in";
+  private static final String RUN_INPLACE_INTERPRETER_WRAPPER_RESOURCE =
+      "run_inplace_interpreter_wrapper.py.in";
   private static final String RUN_INPLACE_LITE_RESOURCE = "run_inplace_lite.py.in";
 
   // TODO(agallagher): Task #8098647: This rule has no steps, so it
@@ -68,8 +74,10 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   //
   // We should upate the Python test rule to account for this.
   private final SymlinkTree linkTree;
+  private final RelPath interpreterWrapperGenPath;
   @AddToRuleKey private final Tool python;
-  @AddToRuleKey private final Supplier<String> script;
+  @AddToRuleKey private final Supplier<String> binScript;
+  @AddToRuleKey private final Supplier<String> interpreterWrapperScript;
 
   PythonInPlaceBinary(
       BuildTarget buildTarget,
@@ -98,18 +106,28 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
         legacyOutputPath);
     this.linkTree = linkTree;
     this.python = python;
-    this.script =
-        getScript(
+    this.interpreterWrapperGenPath =
+        getInterpreterWrapperGenPath(
+            buildTarget, projectFilesystem, pexExtension, legacyOutputPath);
+    AbsPath targetRoot =
+        projectFilesystem
+            .resolve(getBinPath(buildTarget, projectFilesystem, pexExtension, legacyOutputPath))
+            .getParent();
+    this.binScript =
+        getBinScript(
+            pythonPlatform,
+            mainModule,
+            targetRoot.relativize(linkTree.getRoot()),
+            targetRoot.relativize(projectFilesystem.resolve(interpreterWrapperGenPath)),
+            packageStyle);
+    this.interpreterWrapperScript =
+        getInterpreterWrapperScript(
             ruleResolver,
             buildTarget.getTargetConfiguration(),
             pythonPlatform,
             cxxPlatform,
-            mainModule,
             components,
-            projectFilesystem
-                .resolve(getBinPath(buildTarget, projectFilesystem, pexExtension, legacyOutputPath))
-                .getParent()
-                .relativize(linkTree.getRoot()),
+            targetRoot.relativize(linkTree.getRoot()),
             preloadLibraries,
             packageStyle);
   }
@@ -121,6 +139,10 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
 
   private static String getRunInplaceResource() {
     return getNamedResource(RUN_INPLACE_RESOURCE);
+  }
+
+  private static String getRunInplaceInterpreterWrapperResource() {
+    return getNamedResource(RUN_INPLACE_INTERPRETER_WRAPPER_RESOURCE);
   }
 
   private static String getRunInplaceLiteResource() {
@@ -136,29 +158,64 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     }
   }
 
-  private static Supplier<String> getScript(
+  private static RelPath getInterpreterWrapperGenPath(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      String extension,
+      boolean legacyOutputPath) {
+    if (!legacyOutputPath) {
+      target = target.withFlavors();
+    }
+    return BuildTargetPaths.getGenPath(
+        filesystem.getBuckPaths(), target, "%s#interpreter_wrapper" + extension);
+  }
+
+  private static Supplier<String> getBinScript(
+      PythonPlatform pythonPlatform,
+      String mainModule,
+      RelPath linkTreeRoot,
+      RelPath interpreterWrapperPath,
+      PackageStyle packageStyle) {
+    return () -> {
+      String linkTreeRootStr = Escaper.escapeAsPythonString(linkTreeRoot.toString());
+      String interpreterWrapperPathStr =
+          Escaper.escapeAsPythonString(interpreterWrapperPath.toString());
+      return new ST(
+              new STGroup(),
+              packageStyle == PackageStyle.INPLACE
+                  ? getRunInplaceResource()
+                  : getRunInplaceLiteResource())
+          .add("PYTHON", pythonPlatform.getEnvironment().getPythonPath())
+          .add("PYTHON_INTERPRETER_FLAGS", pythonPlatform.getInplaceBinaryInterpreterFlags())
+          .add("MODULES_DIR", linkTreeRootStr)
+          .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
+          .add("INTERPRETER_WRAPPER_REL_PATH", interpreterWrapperPathStr)
+          .render();
+    };
+  }
+
+  @Nullable
+  private static Supplier<String> getInterpreterWrapperScript(
       BuildRuleResolver resolver,
       TargetConfiguration targetConfiguration,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
-      String mainModule,
       PythonPackageComponents components,
       RelPath relativeLinkTreeRoot,
       ImmutableSet<String> preloadLibraries,
       PackageStyle packageStyle) {
     String relativeLinkTreeRootStr = Escaper.escapeAsPythonString(relativeLinkTreeRoot.toString());
     Linker ld = cxxPlatform.getLd().resolve(resolver, targetConfiguration);
+    // Lite mode doesn't need an interpreter wrapper as there's no LD_PRELOADs involved.
+    if (packageStyle != PackageStyle.INPLACE) {
+      return null;
+    }
     return () -> {
       ST st =
-          new ST(
-                  new STGroup(),
-                  packageStyle == PackageStyle.INPLACE
-                      ? getRunInplaceResource()
-                      : getRunInplaceLiteResource())
+          new ST(new STGroup(), getRunInplaceInterpreterWrapperResource())
               .add("PYTHON", pythonPlatform.getEnvironment().getPythonPath())
-              .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
-              .add("MODULES_DIR", relativeLinkTreeRootStr)
-              .add("PYTHON_INTERPRETER_FLAGS", pythonPlatform.getInplaceBinaryInterpreterFlags());
+              .add("PYTHON_INTERPRETER_FLAGS", pythonPlatform.getInplaceBinaryInterpreterFlags())
+              .add("MODULES_DIR", relativeLinkTreeRootStr);
 
       // Only add platform-specific values when the binary includes native libraries.
       if (components.getNativeLibraries().getComponents().isEmpty()) {
@@ -187,11 +244,26 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       BuildContext context, BuildableContext buildableContext) {
     RelPath binPath = context.getSourcePathResolver().getCellUnsafeRelPath(getSourcePathToOutput());
     buildableContext.recordArtifact(binPath.getPath());
-    return ImmutableList.of(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), binPath.getParent())),
-        WriteFileIsolatedStep.of(script, binPath, /* executable */ true));
+    ImmutableList.Builder<Step> stepsBuilder = new ImmutableList.Builder<Step>();
+    stepsBuilder
+        .add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), binPath.getParent())))
+        .add(WriteFileIsolatedStep.of(binScript, binPath, /* executable */ true));
+
+    if (interpreterWrapperScript != null) {
+      RelPath interpreterWrapperPath =
+          context
+              .getSourcePathResolver()
+              .getCellUnsafeRelPath(
+                  ExplicitBuildTargetSourcePath.of(getBuildTarget(), interpreterWrapperGenPath));
+      buildableContext.recordArtifact(interpreterWrapperPath.getPath());
+      stepsBuilder.add(
+          WriteFileIsolatedStep.of(
+              interpreterWrapperScript, interpreterWrapperPath, /* executable */ true));
+    }
+    return stepsBuilder.build();
   }
 
   @Override
