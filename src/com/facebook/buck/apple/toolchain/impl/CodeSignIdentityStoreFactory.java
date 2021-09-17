@@ -44,8 +44,7 @@ public class CodeSignIdentityStoreFactory implements ToolchainFactory<CodeSignId
 
   // Parse the fingerprint and name, but don't match invalid certificates (revoked, expired, etc).
   private static final Pattern CODE_SIGN_IDENTITY_PATTERN =
-      Pattern.compile(
-          "([A-F0-9]{40}) \"((iPhone.*|Apple (Development|Distribution)|Developer ID Application:).*)\"(?!.*\\(CSSMERR_.*\\))");
+      Pattern.compile("([A-F0-9]{40}) \"(.+)\"(?!.*\\(CSSMERR_.*\\))");
 
   /**
    * Construct a store by asking the system keychain for all stored code sign identities.
