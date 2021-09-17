@@ -24,6 +24,7 @@ import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -147,5 +148,20 @@ public abstract class ResourcesConfig implements ConfigView<BuckConfig> {
         getManagedThreadCount(),
         getDefaultResourceAmounts(),
         getMaximumResourceAmounts());
+  }
+
+  /**
+   * Whether this Buck invocation should try to record the resource utilization of processes it
+   * spawns.
+   */
+  @Value.Lazy
+  public boolean shouldRecordProcessResourceUsage() {
+    // TODO(swgillespie) Implementing process resource recording on non-Linux platforms
+    if (Platform.detect() != Platform.LINUX) {
+      return false;
+    }
+
+    return getDelegate()
+        .getBooleanValue(RESOURCES_SECTION_HEADER, "record_process_resource_usage", false);
   }
 }
