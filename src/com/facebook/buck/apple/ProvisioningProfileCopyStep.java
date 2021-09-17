@@ -106,7 +106,7 @@ class ProvisioningProfileCopyStep implements Step {
                 PlistProcessStep.OutputFormat.BINARY))
             .execute(context);
     if (updateInfoPlistResult != StepExecutionResults.SUCCESS) {
-      String message = "An error ocurred when tried to add additional keys to Info.plist";
+      String message = "An error occurred when tried to add additional keys to Info.plist";
       if (isDryRun) {
         LOG.warn(message);
       } else {
@@ -161,10 +161,10 @@ class ProvisioningProfileCopyStep implements Step {
             .get();
     if ("APPL".equalsIgnoreCase(bundleType)) {
       // Skip additional keys for watchOS bundles (property keys whitelist)
-      Optional<Boolean> isWatchOSApp =
+      boolean isWatchOSApp =
           AppleInfoPlistParsing.isWatchOSAppFromPlistStream(
               infoPlist, filesystem.getInputStreamForRelativePath(infoPlist));
-      if (!isWatchOSApp.isPresent() || !isWatchOSApp.get()) {
+      if (!isWatchOSApp) {
         // Construct AppID using the Provisioning Profile info (app prefix)
         String appID = bestProfile.getAppID().getFirst() + "." + bundleID;
         keys.put("ApplicationIdentifier", new NSString(appID));

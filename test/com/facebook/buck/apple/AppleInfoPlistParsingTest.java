@@ -82,7 +82,7 @@ public class AppleInfoPlistParsingTest {
 
   @Test
   public void infoPlistParsingReturnsIsNotWatchOSApp() throws IOException {
-    Optional<Boolean> isWatchOSApp;
+    boolean isWatchOSApp;
 
     try (InputStream in =
         getClass().getResourceAsStream("testdata/simple_application_bundle_no_debug/Info.plist")) {
@@ -90,12 +90,12 @@ public class AppleInfoPlistParsingTest {
       isWatchOSApp = AppleInfoPlistParsing.isWatchOSAppFromPlistStream(Paths.get("Test"), in);
     }
 
-    assertThat(isWatchOSApp, is(equalTo(Optional.of(Boolean.FALSE))));
+    assertThat(isWatchOSApp, is(false));
   }
 
   @Test
   public void infoPlistParsingReturnsIsWatchOSApp() throws IOException {
-    Optional<Boolean> isWatchOSApp;
+    boolean isWatchOSApp;
 
     try (InputStream in =
         getClass()
@@ -104,7 +104,7 @@ public class AppleInfoPlistParsingTest {
       isWatchOSApp = AppleInfoPlistParsing.isWatchOSAppFromPlistStream(Paths.get("Test"), in);
     }
 
-    assertThat(isWatchOSApp, is(equalTo(Optional.of(Boolean.TRUE))));
+    assertThat(isWatchOSApp, is(true));
   }
 
   @Test

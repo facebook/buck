@@ -62,14 +62,14 @@ public class AppleInfoPlistParsing {
   }
 
   /** Extracts the watchOS app flag (WKWatchKitApp) from an Info.plist, returning it if present. */
-  public static Optional<Boolean> isWatchOSAppFromPlistStream(
-      Path plistPath, InputStream inputStream) throws IOException {
+  public static boolean isWatchOSAppFromPlistStream(Path plistPath, InputStream inputStream)
+      throws IOException {
     NSNumber isWatchOSApp =
         (NSNumber) getPropertyValueFromPlistStream(plistPath, inputStream, "WKWatchKitApp");
     if (isWatchOSApp == null) {
-      return Optional.of(Boolean.FALSE);
+      return false;
     } else {
-      return Optional.of(isWatchOSApp.boolValue());
+      return isWatchOSApp.boolValue();
     }
   }
 
