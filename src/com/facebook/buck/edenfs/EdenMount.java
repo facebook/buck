@@ -18,17 +18,24 @@ package com.facebook.buck.edenfs;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.skylark.io.impl.UnixGlobPattern;
 import com.facebook.buck.util.sha1.Sha1HashCode;
+import com.facebook.eden.thrift.Dtype;
 import com.facebook.eden.thrift.EdenError;
+import com.facebook.eden.thrift.Glob;
+import com.facebook.eden.thrift.GlobParams;
 import com.facebook.eden.thrift.SHA1Result;
 import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -105,6 +112,139 @@ public class EdenMount {
         throw result.getError();
       }
     }
+  }
+
+  private String normalizePattern(String pattern) {
+    // Validate
+    UnixGlobPattern.parse(pattern);
+
+    return pattern;
+  }
+
+  private enum FileType {
+    REGULAR_OR_LINK,
+    DIRECTORY,
+    OTHER,
+  }
+
+  private static FileType fileTypeFromDtype(short dtype) {
+    if (dtype == Dtype.REGULAR.getValue() || dtype == Dtype.LINK.getValue()) {
+      return FileType.REGULAR_OR_LINK;
+    } else if (dtype == Dtype.DIR.getValue()) {
+      return FileType.DIRECTORY;
+    } else {
+      return FileType.OTHER;
+    }
+  }
+
+  private static class ByteString {
+    private final byte[] bytes;
+
+    private ByteString(byte[] bytes) {
+      this.bytes = bytes;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      ByteString that = (ByteString) o;
+      return Arrays.equals(bytes, that.bytes);
+    }
+
+    @Override
+    public int hashCode() {
+      return Arrays.hashCode(bytes);
+    }
+  }
+
+  /** Run the glob. */
+  public ImmutableSet<String> globFiles(
+      ForwardRelPath basePath,
+      Collection<String> include,
+      Collection<String> exclude,
+      boolean excludeDirectories)
+      throws EdenError, IOException {
+
+    ForwardRelPath mountPointRelativePath = prefix.resolve(basePath);
+
+    // FYI: glob implementation in watchman/eden: https://fburl.com/code/51ek6dyp
+    try (EdenClientResource edenClient = pool.openClient()) {
+      List<String> normalizedInclude =
+          include.stream().map(this::normalizePattern).collect(ImmutableList.toImmutableList());
+      GlobParams globParams =
+          GlobParams.builder()
+              .setMountPoint(mountPoint.toString().getBytes(StandardCharsets.UTF_8))
+              .setSearchRoot(mountPointRelativePath.toString().getBytes(StandardCharsets.UTF_8))
+              .setGlobs(normalizedInclude)
+              .setPrefetchFiles(false)
+              .setWantDtype(true)
+              .build();
+
+      // TODO(nga): print a warning if this is slow
+      Glob glob = edenClient.getEdenClient().globFiles(globParams);
+
+      ImmutableSet<ByteString> excludeFiles =
+          runGlobExclude(mountPointRelativePath, exclude, edenClient);
+
+      ImmutableSet.Builder<String> builder = ImmutableSet.builder();
+      Preconditions.checkState(glob.getMatchingFiles().size() == glob.getDtypes().size());
+      for (int i = 0; i < glob.getMatchingFiles().size(); i++) {
+        byte[] matchingFile = glob.getMatchingFiles().get(i);
+        short dtype = glob.getDtypes().get(i);
+
+        FileType fileType = fileTypeFromDtype(dtype);
+        switch (fileType) {
+          case DIRECTORY:
+            if (excludeDirectories) {
+              continue;
+            }
+            break;
+          case REGULAR_OR_LINK:
+            break;
+          case OTHER:
+            continue;
+          default:
+            throw new IllegalStateException("unreachable");
+        }
+
+        if (excludeFiles.contains(new ByteString(matchingFile))) {
+          continue;
+        }
+        builder.add(new String(matchingFile, StandardCharsets.UTF_8));
+      }
+
+      return builder.build();
+    }
+  }
+
+  private ImmutableSet<ByteString> runGlobExclude(
+      ForwardRelPath mountPointRelativePath,
+      Collection<String> exclude,
+      EdenClientResource edenClient)
+      throws EdenError, IOException {
+    if (exclude.isEmpty()) {
+      return ImmutableSet.of();
+    }
+
+    List<String> normalizedExclude =
+        exclude.stream().map(this::normalizePattern).collect(ImmutableList.toImmutableList());
+    GlobParams excludeGlobParams =
+        GlobParams.builder()
+            .setMountPoint(mountPoint.toString().getBytes(StandardCharsets.UTF_8))
+            .setSearchRoot(mountPointRelativePath.toString().getBytes(StandardCharsets.UTF_8))
+            .setGlobs(normalizedExclude)
+            .setPrefetchFiles(false)
+            .setPrefetchMetadata(false)
+            .build();
+    Glob excludeGlob = edenClient.getEdenClient().globFiles(excludeGlobParams);
+    return excludeGlob.getMatchingFiles().stream()
+        .map(ByteString::new)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   /**

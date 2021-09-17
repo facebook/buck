@@ -12,6 +12,7 @@ java_library(
         "//src/com/facebook/buck/io/unixsocket:unixsocket",
         "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/io/watchman:watchman",
+        "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/skylark/io/impl:impl",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",

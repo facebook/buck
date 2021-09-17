@@ -28,6 +28,8 @@ import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.facebook.buck.core.starlark.eventhandler.EventKind;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.edenfs.EdenClientResourcePool;
+import com.facebook.buck.edenfs.EdenMount;
+import com.facebook.buck.edenfs.EdenThriftGlobber;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.watchman.Watchman;
@@ -233,9 +235,9 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
       KnownUserDefinedRuleTypes knownUserDefinedRuleTypes,
       BuckEventBus eventBus,
       ProjectBuildFileParserOptions buildFileParserOptions,
-      SkylarkGlobHandler skylarkGlobHandler) {
-    GlobberFactory globberFactory =
-        getSkylarkGlobberFactory(buildFileParserOptions, skylarkGlobHandler);
+      ParserConfig.SkylarkGlobHandler skylarkGlobHandler) {
+    GlobberFactory globberFactory;
+    globberFactory = getSkylarkGlobberFactory(buildFileParserOptions, skylarkGlobHandler);
 
     BuckGlobals buckGlobals =
         BuckGlobals.of(
@@ -281,14 +283,35 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         return watchmanGlobberFactory(buildFileParserOptions);
       case EDEN_THRIFT:
       case EDEN_THRIFT_NO_FALLBACK:
-        return edenThriftGlobberFactory(skylarkGlobHandler);
+        return edenThriftGlobberFactory(skylarkGlobHandler, buildFileParserOptions);
       default:
         throw new IllegalStateException("unreachable");
     }
   }
 
-  private static GlobberFactory edenThriftGlobberFactory(SkylarkGlobHandler skylarkGlobHandler) {
-    throw new RuntimeException(skylarkGlobHandler + " globber is not implemented");
+  private static void throwIfEdenNoFallback(SkylarkGlobHandler skylarkGlobHandler, String reason) {
+    if (skylarkGlobHandler == SkylarkGlobHandler.EDEN_THRIFT_NO_FALLBACK) {
+      throw new RuntimeException("eden is not available: " + reason + ", and fallback is disabled");
+    }
+  }
+
+  private static GlobberFactory edenThriftGlobberFactory(
+      SkylarkGlobHandler skylarkGlobHandler, ProjectBuildFileParserOptions buildFileParserOptions) {
+    Optional<EdenClientResourcePool> edenClient = buildFileParserOptions.getEdenClient();
+    if (!edenClient.isPresent()) {
+      throwIfEdenNoFallback(skylarkGlobHandler, "no eden");
+      return watchmanGlobberFactory(buildFileParserOptions);
+    }
+
+    Optional<EdenMount> mountPoint =
+        EdenMount.createEdenMountForProjectRoot(
+            buildFileParserOptions.getProjectRoot(), edenClient.get());
+    if (!mountPoint.isPresent()) {
+      throwIfEdenNoFallback(skylarkGlobHandler, "no mount point");
+      return watchmanGlobberFactory(buildFileParserOptions);
+    }
+
+    return new EdenThriftGlobber.Factory(mountPoint.get());
   }
 
   private static GlobberFactory watchmanGlobberFactory(
