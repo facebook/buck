@@ -4,6 +4,10 @@ standard_java_test(
     name = "memory",
     deps = [
         "//src/com/facebook/buck/util/memory:memory",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/hamcrest:hamcrest",
         "//third-party/java/junit:junit",
     ],
 )
