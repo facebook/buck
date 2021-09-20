@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.util.memory;
+package com.facebook.buck.util;
 
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.ResourceMonitoringProcessExecutor.ResourceMonitoringLaunchedProcess;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.memory.ResourceMonitoringProcessExecutor.ResourceMonitoringLaunchedProcess;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import org.hamcrest.Matchers;

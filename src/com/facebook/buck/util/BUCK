@@ -70,6 +70,7 @@ PROCESS_EXECUTOR_SRCS = [
     "ProcessHelper.java",
     "ProcessManager.java",
     "ProcessRegistry.java",
+    "ResourceMonitoringProcessExecutor.java",
     "Threads.java",
     "Verbosity.java",
 ]

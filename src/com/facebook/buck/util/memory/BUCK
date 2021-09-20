@@ -6,14 +6,5 @@ load(
 java_immutables_library(
     name = "memory",
     srcs = glob(["*.java"]),
-    deps = [
-        "//src/com/facebook/buck/core/build/execution/context/actionid:actionid",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/timing:timing",
-        "//src/com/facebook/buck/event:event",
-        "//src/com/facebook/buck/util:process_executor",
-        "//src/com/facebook/buck/core/util/immutables:immutables",
-        "//third-party/java/guava:guava",
-    ],
     visibility = [ "PUBLIC" ],
 )
