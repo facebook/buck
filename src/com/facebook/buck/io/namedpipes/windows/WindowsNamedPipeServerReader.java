@@ -40,6 +40,8 @@ class WindowsNamedPipeServerReader extends WindowsNamedPipeServerBase implements
 
   @Override
   public void close() throws IOException {
-    closer.close();
+    synchronized (closer) {
+      closer.close();
+    }
   }
 }

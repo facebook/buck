@@ -42,6 +42,8 @@ public class POSIXClientNamedPipeWriter extends POSIXClientNamedPipeBase
 
   @Override
   public void close() throws IOException {
-    closer.close();
+    synchronized (closer) {
+      closer.close();
+    }
   }
 }

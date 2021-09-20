@@ -81,7 +81,9 @@ abstract class POSIXClientNamedPipeBase extends BaseNamedPipe {
 
     @Override
     public void close() throws IOException {
-      closer.close();
+      synchronized (closer) {
+        closer.close();
+      }
     }
   }
 

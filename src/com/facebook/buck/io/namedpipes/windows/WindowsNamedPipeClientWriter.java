@@ -48,6 +48,8 @@ class WindowsNamedPipeClientWriter extends WindowsNamedPipeClientBase implements
 
   @Override
   public void close() throws IOException {
-    closer.close();
+    synchronized (closer) {
+      closer.close();
+    }
   }
 }
