@@ -13,8 +13,8 @@ java_immutables_library(
     srcs = UTILS_SRCS,
     visibility = ["PUBLIC"],
     deps = [
+        "//src/com/facebook/buck/android:utils_api",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/agent/util:util",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/io:io",
@@ -57,7 +57,6 @@ java_test(
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
-        "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/android/redex:options",

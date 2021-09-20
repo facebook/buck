@@ -24,7 +24,6 @@ java_binary(
     main_class = "com.facebook.buck.android.dalvik.DalvikStatsTool",
     deps = [
         ":dalvik",
-        "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rulekey:rulekey",

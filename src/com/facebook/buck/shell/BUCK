@@ -38,7 +38,6 @@ java_library_with_plugins(
         ":steps",
         ":worker",
         "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/core/description/attr:attr",

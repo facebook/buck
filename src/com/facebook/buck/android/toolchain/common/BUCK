@@ -4,6 +4,8 @@ java_library(
     visibility = [
         "//src/com/facebook/buck/android:",
         "//src/com/facebook/buck/android/toolchain/...",
+        "//test/com/facebook/buck/android:",
+        "//test/com/facebook/buck/android/toolchain/...",
     ],
     exported_deps = [
         "//src/com/facebook/buck/util/types:types",

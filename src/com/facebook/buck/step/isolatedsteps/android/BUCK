@@ -13,8 +13,8 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/android:logger",
+        "//src/com/facebook/buck/android:manifest_utils",
         "//src/com/facebook/buck/android:steps",
-        "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/android/resources:resources",
