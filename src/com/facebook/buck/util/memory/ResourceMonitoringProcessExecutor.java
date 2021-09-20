@@ -132,7 +132,7 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
    * /usr/bin/time).
    */
   public static class ResourceMonitoringLaunchedProcess extends DelegateLaunchedProcess {
-    private final NamedTemporaryFile timeFile;
+    private NamedTemporaryFile timeFile;
     private final ImmutableList<String> originalCommand;
 
     public ResourceMonitoringLaunchedProcess(
@@ -151,9 +151,11 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
 
     @Override
     public void close() {
-      super.close();
       try {
-        timeFile.close();
+        if (timeFile != null) {
+          timeFile.close();
+          timeFile = null;
+        }
       } catch (IOException exception) {
         // TODO(swgillespie) do something reasonable here?
         throw new RuntimeException(exception);

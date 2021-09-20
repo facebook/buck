@@ -25,9 +25,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.memory.ResourceMonitoringProcessExecutor.ResourceMonitoringLaunchedProcess;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
@@ -43,9 +41,7 @@ public class ResourceMonitoringProcessExecutorTest {
     Assert.assertTrue(process instanceof ResourceMonitoringLaunchedProcess);
     ResourceMonitoringLaunchedProcess refined = (ResourceMonitoringLaunchedProcess) process;
     Assert.assertEquals(refined.getCommand(), ImmutableList.of("true"));
-    ProcessExecutor.Result result =
-        executor.execute(
-            refined, ImmutableSet.of(), Optional.empty(), Optional.empty(), Optional.empty());
+    ProcessExecutor.Result result = executor.waitForLaunchedProcess(process);
     Assert.assertEquals(0, result.getExitCode());
   }
 }

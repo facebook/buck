@@ -53,10 +53,12 @@ import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.util.memory.ResourceMonitoringProcessExecutor;
 import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Splitter;
@@ -374,9 +376,14 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
     BuckConfig buckConfig = params.getBuckConfig();
     CliConfig cliConfig = buckConfig.getView(CliConfig.class);
+    ResourcesConfig resourcesConfig = buckConfig.getView(ResourcesConfig.class);
 
     Cell rootCell = params.getCells().getRootCell();
     Console console = params.getConsole();
+    ProcessExecutor executor = new DefaultProcessExecutor(console);
+    if (resourcesConfig.shouldRecordProcessResourceUsage()) {
+      executor = new ResourceMonitoringProcessExecutor(executor);
+    }
     ExecutionContext.Builder builder =
         ExecutionContext.builder()
             .setConsole(console)
@@ -385,7 +392,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setEnvironment(params.getEnvironment())
             .setCellPathResolver(rootCell.getCellPathResolver())
             .setBuildCellRootPath(rootCell.getRoot().getPath())
-            .setProcessExecutor(new DefaultProcessExecutor(console))
+            .setProcessExecutor(executor)
             .setRuleKeyDiagnosticsMode(
                 buckConfig.getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
             .setPersistentWorkerPools(params.getPersistentWorkerPools())
