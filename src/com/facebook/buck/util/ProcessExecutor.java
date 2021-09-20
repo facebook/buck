@@ -187,7 +187,7 @@ public interface ProcessExecutor {
     private final boolean timedOut;
     private final Optional<String> stdout;
     private final Optional<String> stderr;
-    public final ImmutableList<String> command;
+    private final ImmutableList<String> command;
 
     public Result(
         int exitCode,
