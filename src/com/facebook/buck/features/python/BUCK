@@ -69,7 +69,6 @@ java_library_with_plugins(
         "__test_main__.py",
         "compile.py",
         "run_inplace.py.in",
-        "run_inplace_interpreter_wrapper.py.in",
         "run_inplace_lite.py.in",
     ],
     tests = [
