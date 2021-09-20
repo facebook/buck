@@ -283,6 +283,10 @@ public class AndroidApkRDotJavaIntegrationTest {
   public void testSkipCrunchPngs() throws IOException {
     // By default, images are crunched. This test also makes sure that the image we're using is
     // genuinely an unoptimized image so that the next test is actually testing something real.
+    workspace.replaceFileContents(
+        "apps/sample/BUCK",
+        "# ARGS_FOR_APP_WITH_AAPT2",
+        "resource_filter = [\"mdpi\"],\n    # ARGS_FOR_APP_WITH_AAPT2");
     long originalSize =
         Files.size(workspace.getPath("res/com/sample/top/res/drawable/uncrunched.png"));
     long crunchedSize =
@@ -290,7 +294,8 @@ public class AndroidApkRDotJavaIntegrationTest {
     assertNotEquals(originalSize, crunchedSize);
 
     // If we pass in the option to skip crunching, the image size should stay the same.
-    workspace.addBuckConfigLocalOption("android", "aapt_compile_skip_crunch_pngs_default", "true");
+    workspace.replaceFileContents(
+        "apps/sample/BUCK", "# ARGS_FOR_APP_WITH_AAPT2", "skip_crunch_pngs = True,");
     long uncrunchedSize =
         buildAndGetOutputEntryLength("//apps/sample:app_with_aapt2", "res/drawable/uncrunched.png");
     assertEquals(originalSize, uncrunchedSize);

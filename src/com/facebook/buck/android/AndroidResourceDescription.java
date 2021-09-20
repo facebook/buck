@@ -77,7 +77,6 @@ public class AndroidResourceDescription
       ImmutableSet.of(
           ".gitkeep", ".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");
 
-  private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final BuildBuckConfig buildBuckConfig;
 
@@ -93,11 +92,9 @@ public class AndroidResourceDescription
 
   public AndroidResourceDescription(
       ToolchainProvider toolchainProvider,
-      AndroidBuckConfig androidBuckConfig,
       DownwardApiConfig downwardApiConfig,
       BuildBuckConfig buildBuckConfig) {
     this.toolchainProvider = toolchainProvider;
-    this.androidBuckConfig = androidBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.buildBuckConfig = buildBuckConfig;
   }
@@ -169,7 +166,7 @@ public class AndroidResourceDescription
           graphBuilder,
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           resDir.get(),
-          androidBuckConfig.getSkipCrunchPngsDefault().orElse(false),
+          false,
           downwardApiConfig.isEnabledForAndroid());
     }
 

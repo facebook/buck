@@ -105,10 +105,7 @@ public class AndroidBinaryGraphEnhancerFactory {
             && !shouldProguard
             && !args.getPreprocessJavaClassesBash().isPresent();
 
-    boolean shouldSkipCrunchPngs =
-        args.isSkipCrunchPngs().isPresent()
-            ? args.isSkipCrunchPngs().get()
-            : androidBuckConfig.getSkipCrunchPngsDefault().orElse(false);
+    boolean shouldSkipCrunchPngs = args.isSkipCrunchPngs().orElse(false);
 
     int secondaryDexWeightLimit =
         args.getSecondaryDexWeightLimit().orElse(androidBuckConfig.getSecondaryDexWeightLimit());

@@ -89,11 +89,6 @@ public class AndroidBuckConfig {
     this.platform = platform;
   }
 
-  /** Whether to skip crunching pngs by default in aapt2 compile. */
-  public Optional<Boolean> getSkipCrunchPngsDefault() {
-    return delegate.getBoolean("android", "aapt_compile_skip_crunch_pngs_default");
-  }
-
   /** Whether to disable resource removal in aapt2. */
   public boolean getAaptNoResourceRemoval() {
     return delegate.getBoolean("android", "aapt_no_resource_removal").orElse(false);

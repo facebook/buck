@@ -126,8 +126,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             toolchainProvider),
         new AndroidPrebuiltAarDescription(
             toolchainProvider, downwardApiConfig, javaConfig, javaCDBuckConfig),
-        new AndroidResourceDescription(
-            toolchainProvider, androidBuckConfig, downwardApiConfig, buildBuckConfig),
+        new AndroidResourceDescription(toolchainProvider, downwardApiConfig, buildBuckConfig),
         new RobolectricTestDescription(
             toolchainProvider,
             javaConfig,
