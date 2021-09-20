@@ -68,8 +68,6 @@ import org.junit.Test;
 public class ExternalJavacTest extends EasyMockSupport {
 
   private static final RelPath PATH_TO_SRCS_LIST = RelPath.get("srcs_list");
-  public static final ImmutableSortedSet<RelPath> SOURCE_PATHS =
-      ImmutableSortedSet.orderedBy(RelPath.comparator()).add(RelPath.get("foobar.java")).build();
 
   @Rule public TemporaryPaths root = new TemporaryPaths();
 

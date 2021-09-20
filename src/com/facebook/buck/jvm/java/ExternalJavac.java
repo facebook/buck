@@ -22,6 +22,9 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
@@ -52,6 +55,11 @@ public class ExternalJavac implements Javac {
   private static final int ERROR_EXIT_CODE = 1;
 
   @AddToRuleKey private final Supplier<Tool> javac;
+
+  @ExcludeFromRuleKey(
+      reason = "short name is not a part of a rule key",
+      serialization = DefaultFieldSerialization.class,
+      inputs = IgnoredFieldInputs.class)
   private final String shortName;
 
   public ExternalJavac(Supplier<Tool> javac, String shortName) {
