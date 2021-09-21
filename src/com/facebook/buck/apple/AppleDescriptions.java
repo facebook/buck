@@ -1073,43 +1073,14 @@ public class AppleDescriptions {
                         infoPlistSubstitutions,
                         minimumOSVersion));
 
-    Optional<HasEntitlementsFile> maybeHasEntitlementsFile =
-        graphBuilder.requireMetadata(unwrappedBinary.getBuildTarget(), HasEntitlementsFile.class);
-    Optional<SourcePath> maybeEntitlementsFromBinaryParameter =
-        maybeHasEntitlementsFile.flatMap(HasEntitlementsFile::getEntitlementsFile);
-    Optional<SourcePath> maybeEntitlements;
-    // If entitlements are provided via binary's `entitlements_file` parameter use it directly
-    if (!maybeEntitlementsFromBinaryParameter.isPresent()) {
-      // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions
-      Optional<AbsPath> maybeEntitlementsPathInSubstitutions =
-          AppleEntitlementsFromSubstitutions.entitlementsPathInSubstitutions(
-              projectFilesystem,
-              buildTarget,
-              appleCxxPlatform.getAppleSdk().getApplePlatform(),
-              infoPlistSubstitutions);
-      if (maybeEntitlementsPathInSubstitutions.isPresent()) {
-        BuildTarget entitlementFromSubstitutionBuildTarget =
-            stripBundleSpecificFlavors(buildTarget)
-                .withAppendedFlavors(AppleEntitlementsFromSubstitutions.FLAVOR);
-        AppleEntitlementsFromSubstitutions entitlementsFromSubstitutions =
-            (AppleEntitlementsFromSubstitutions)
-                graphBuilder.computeIfAbsent(
-                    entitlementFromSubstitutionBuildTarget,
-                    target ->
-                        new AppleEntitlementsFromSubstitutions(
-                            target,
-                            projectFilesystem,
-                            graphBuilder,
-                            infoPlistSubstitutions,
-                            maybeEntitlementsPathInSubstitutions.get()));
-        maybeEntitlements =
-            Optional.ofNullable(entitlementsFromSubstitutions.getSourcePathToOutput());
-      } else {
-        maybeEntitlements = maybeEntitlementsFromBinaryParameter;
-      }
-    } else {
-      maybeEntitlements = maybeEntitlementsFromBinaryParameter;
-    }
+    Optional<SourcePath> maybeEntitlements =
+        entitlementsSourcePath(
+            buildTarget,
+            projectFilesystem,
+            graphBuilder,
+            unwrappedBinary,
+            infoPlistSubstitutions,
+            appleCxxPlatform);
 
     AppleCodeSignType codeSignType =
         AppleCodeSignType.signTypeForBundle(
@@ -1429,6 +1400,49 @@ public class AppleDescriptions {
         processResources.getSourcePathToContentHashes(),
         incrementalBundlingEnabled,
         bundleInputBasedRulekeyEnabled);
+  }
+
+  private static Optional<SourcePath> entitlementsSourcePath(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      BuildRule unwrappedBinary,
+      ImmutableMap<String, String> infoPlistSubstitutions,
+      AppleCxxPlatform appleCxxPlatform) {
+    Optional<HasEntitlementsFile> maybeHasEntitlementsFile =
+        graphBuilder.requireMetadata(unwrappedBinary.getBuildTarget(), HasEntitlementsFile.class);
+    Optional<SourcePath> maybeEntitlementsFromBinaryParameter =
+        maybeHasEntitlementsFile.flatMap(HasEntitlementsFile::getEntitlementsFile);
+
+    // If entitlements are provided via binary's `entitlements_file` parameter use it directly
+    if (maybeEntitlementsFromBinaryParameter.isPresent()) {
+      return maybeEntitlementsFromBinaryParameter;
+    }
+    // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions
+    Optional<AbsPath> maybeEntitlementsPathInSubstitutions =
+        AppleEntitlementsFromSubstitutions.entitlementsPathInSubstitutions(
+            projectFilesystem,
+            buildTarget,
+            appleCxxPlatform.getAppleSdk().getApplePlatform(),
+            infoPlistSubstitutions);
+    if (!maybeEntitlementsPathInSubstitutions.isPresent()) {
+      return Optional.empty();
+    }
+    BuildTarget entitlementFromSubstitutionBuildTarget =
+        stripBundleSpecificFlavors(buildTarget)
+            .withAppendedFlavors(AppleEntitlementsFromSubstitutions.FLAVOR);
+    AppleEntitlementsFromSubstitutions entitlementsFromSubstitutions =
+        (AppleEntitlementsFromSubstitutions)
+            graphBuilder.computeIfAbsent(
+                entitlementFromSubstitutionBuildTarget,
+                target ->
+                    new AppleEntitlementsFromSubstitutions(
+                        target,
+                        projectFilesystem,
+                        graphBuilder,
+                        infoPlistSubstitutions,
+                        maybeEntitlementsPathInSubstitutions.get()));
+    return Optional.ofNullable(entitlementsFromSubstitutions.getSourcePathToOutput());
   }
 
   private static Optional<SourcePath> frameworkIncrementalInfo(
