@@ -415,8 +415,17 @@ java_immutables_library(
 
 MANIFEST_UTILS_SRCS = [
     "AndroidManifestReader.java",
+    "AndroidManifestReaderExecutableMain.java",
     "DefaultAndroidManifestReader.java",
 ]
+
+java_binary(
+    name = "manifest_utils_binary",
+    main_class = "com.facebook.buck.android.AndroidManifestReaderExecutableMain",
+    deps = [
+        ":manifest_utils",
+    ],
+)
 
 java_immutables_library(
     name = "manifest_utils",
