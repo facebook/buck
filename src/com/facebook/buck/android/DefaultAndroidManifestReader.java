@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.util.xml.XmlDomParser;
-import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -175,14 +174,12 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
   /**
    * Parses an XML given via its path and returns an {@link AndroidManifestReader} for it.
    *
-   * @param absolutePath absolute path to an AndroidManifest.xml file
+   * @param path path to an AndroidManifest.xml file
    * @return an {@code AndroidManifestReader} for {@code path}
    * @throws IOException
    */
-  public static AndroidManifestReader forPath(Path absolutePath) throws IOException {
-    Preconditions.checkArgument(
-        absolutePath.isAbsolute(), "Must be passed absolute path, got %s", absolutePath);
-    try (Reader reader = Files.newBufferedReader(absolutePath)) {
+  public static AndroidManifestReader forPath(Path path) throws IOException {
+    try (Reader reader = Files.newBufferedReader(path)) {
       return forReader(reader);
     }
   }
