@@ -54,6 +54,10 @@ public class WindowsHandle implements Closeable {
     return getHandle().equals(WinBase.INVALID_HANDLE_VALUE);
   }
 
+  public synchronized Optional<WinNT.HANDLE> getOptionalHandle() {
+    return isClosed() ? Optional.empty() : Optional.of(getHandle());
+  }
+
   public WinNT.HANDLE getHandle() {
     return handle.orElseThrow(
         () -> new IllegalStateException("Handle is not available as it has been closed."));

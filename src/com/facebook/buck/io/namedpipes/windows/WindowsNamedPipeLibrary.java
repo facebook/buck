@@ -90,14 +90,15 @@ public interface WindowsNamedPipeLibrary extends WinNT, Library {
    * #WaitForSingleObject} and only then dispatches to {@link #disconnectAndCloseHandle}.
    */
   static void closeConnectedPipe(WindowsHandle windowsHandle, boolean shutdown) {
-    if (windowsHandle.isClosed()) {
-      return;
-    }
-
-    if (!shutdown) {
-      INSTANCE.WaitForSingleObject(windowsHandle.getHandle(), CLOSE_WAIT_IN_MILLIS);
-    }
-    disconnectAndCloseHandle(windowsHandle);
+    windowsHandle
+        .getOptionalHandle()
+        .ifPresent(
+            handle -> {
+              if (!shutdown) {
+                INSTANCE.WaitForSingleObject(handle, CLOSE_WAIT_IN_MILLIS);
+              }
+              disconnectAndCloseHandle(windowsHandle);
+            });
   }
 
   /** Invokes {@link #DisconnectNamedPipe} and then {@link WindowsHandle#close()}. */

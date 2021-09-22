@@ -254,7 +254,7 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
   }
 
   @Override
-  public void close() throws IOException {
+  public synchronized void close() throws IOException {
     List<WindowsHandle> handlesToClose = new ArrayList<>();
     openHandles.drainTo(handlesToClose);
     for (WindowsHandle windowsHandle : handlesToClose) {
@@ -271,10 +271,12 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
   }
 
   private void closeOpenPipe(WindowsHandle windowsHandle) {
-    if (windowsHandle.isClosed()) {
-      return;
-    }
-    API.CancelIoEx(windowsHandle.getHandle(), null);
-    windowsHandle.close();
+    windowsHandle
+        .getOptionalHandle()
+        .ifPresent(
+            handle -> {
+              API.CancelIoEx(handle, null);
+              windowsHandle.close();
+            });
   }
 }

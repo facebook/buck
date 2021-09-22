@@ -56,6 +56,7 @@ public class DownwardPOSIXServerNamedPipeReader extends POSIXServerNamedPipeRead
 
   @Override
   public void setProtocol(DownwardProtocol protocol) {
+    LOG.info("Set protocol to %s", protocol.getProtocolName());
     boolean updated = protocolReference.compareAndSet(null, protocol);
     if (!updated) {
       DownwardProtocol existingProtocol = Objects.requireNonNull(getProtocol());
@@ -104,6 +105,7 @@ public class DownwardPOSIXServerNamedPipeReader extends POSIXServerNamedPipeRead
         // Client has not written anything into named pipe. Arbitrarily pick binary protocol to
         // communicate with handler
         DownwardProtocolType protocolType = DownwardProtocolType.BINARY;
+        LOG.info("End event with a binary protocol");
         protocolType.writeDelimitedTo(outputStream);
         protocol = protocolType.getDownwardProtocol();
       }

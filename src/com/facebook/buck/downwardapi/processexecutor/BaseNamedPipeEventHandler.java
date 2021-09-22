@@ -199,7 +199,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
         totalBytesRead += count;
       }
     } catch (PipeNotConnectedException e) {
-      LOGGER.info(
+      LOGGER.debug(
           e, "Cannot read and drop from named pipe: %s. Named pipe is closed", namedPipeName);
     } catch (IOException e) {
       LOGGER.warn(e, "Cannot read and drop from named pipe: %s", namedPipeName);
@@ -277,9 +277,18 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
   public void terminateAndWait()
       throws CancellationException, InterruptedException, ExecutionException, TimeoutException {
     try {
+      awaitTillEventsProcessed();
+    } finally {
+      closePipeAndContext();
+    }
+  }
+
+  private void closePipeAndContext()
+      throws ExecutionException, TimeoutException, InterruptedException {
+    try {
       closeNamedPipe();
     } finally {
-      closeContext();
+      context.close();
     }
   }
 
@@ -311,9 +320,15 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
     }
   }
 
-  private void closeContext() {
+  private void awaitTillEventsProcessed() {
+    int registeredParties = eventProcessingPhaser.getRegisteredParties();
+    if (registeredParties > 0) {
+      LOGGER.info("Starting waiting for %s events to process", registeredParties);
+    }
+    int phase = eventProcessingPhaser.getPhase();
     try {
-      awaitTillEventsProcessed();
+      eventProcessingPhaser.awaitAdvanceInterruptibly(
+          phase, WAIT_FOR_EVENTS_TIMEOUT, WAIT_FOR_EVENTS_TIMEOUT_UNIT);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       LOGGER.warn(e, "Interrupted while waiting for events to process");
@@ -322,23 +337,7 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
           "Timeout while waiting for event handler to process events from named pipe: %s. %s ms elapsed!",
           namedPipeReader.getName(),
           WAIT_FOR_EVENTS_TIMEOUT_UNIT.toMillis(WAIT_FOR_EVENTS_TIMEOUT));
-    } finally {
-      context.close();
     }
-  }
-
-  private void awaitTillEventsProcessed() throws InterruptedException, TimeoutException {
-    int registeredParties = eventProcessingPhaser.getRegisteredParties();
-    if (registeredParties == 0) {
-      LOGGER.info("No registered events to wait.");
-      // no events to wait
-      return;
-    }
-
-    LOGGER.info("Starting waiting for %s events to process", registeredParties);
-    int phase = eventProcessingPhaser.getPhase();
-    eventProcessingPhaser.awaitAdvanceInterruptibly(
-        phase, WAIT_FOR_EVENTS_TIMEOUT, WAIT_FOR_EVENTS_TIMEOUT_UNIT);
   }
 
   protected DownwardApiExecutionContext getContext() {

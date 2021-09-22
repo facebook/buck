@@ -27,6 +27,7 @@ import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.PipelineFinishedEvent;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downward.model.StepEvent;
+import com.facebook.buck.io.namedpipes.PipeNotConnectedException;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
@@ -104,7 +105,7 @@ class DownwardProtocolUtils {
                 "Cannot find an expected EOL delimiter. Read over than %s chars", maxReadChars));
       }
     }
-    throw new InvalidDownwardProtocolException("Cannot read expected object!");
+    throw new PipeNotConnectedException("Cannot read expected object!");
   }
 
   private static boolean isDelimiter(StringBuilder sb) {

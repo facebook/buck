@@ -1,0 +1,23 @@
+export_file(
+    name = "file",
+    src = "test.py",
+    out = "test_exported.py",
+)
+
+genrule(
+    name = "genrule",
+    cmd = "python3 $(location :file) > $OUT",
+    out = "out.txt",
+)
+
+export_file(
+    name = "invalid_file",
+    src = "test_invalid_messages.py",
+    out = "test_exported.py",
+)
+
+genrule(
+    name = "genrule_invalid_messages",
+    cmd = "python3 $(location :invalid_file) > $OUT",
+    out = "out.txt",
+)

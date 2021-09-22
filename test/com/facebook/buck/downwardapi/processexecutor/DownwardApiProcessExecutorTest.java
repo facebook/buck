@@ -55,7 +55,11 @@ import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeLibrary;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestLogSink;
+import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
@@ -140,9 +144,11 @@ public class DownwardApiProcessExecutorTest {
 
   @Rule public TestLogSink testToolLogSink = new TestLogSink(TEST_LOGGER_NAME);
 
-  @Rule public TestLogSink executorLogSink = new TestLogSink(BaseNamedPipeEventHandler.class);
+  @Rule public TestLogSink handlerLogSink = new TestLogSink(BaseNamedPipeEventHandler.class);
 
   @Rule public TestLogSink jsonProtocolLogSing = new TestLogSink(JsonDownwardProtocol.class);
+
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private NamedPipeReader namedPipeReader;
   private BuckEventBus buckEventBus;
@@ -283,7 +289,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find debug log message about processing on a handler thread pool",
-        executorLogSink,
+        handlerLogSink,
         Level.FINER,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -326,7 +332,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about unexpected protocol",
-        executorLogSink,
+        handlerLogSink,
         Level.SEVERE,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -338,7 +344,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about read and drop data from the input stream",
-        executorLogSink,
+        handlerLogSink,
         Level.INFO,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -406,7 +412,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about read and drop " + fakeBytesToWrite + " fake bytes",
-        executorLogSink,
+        handlerLogSink,
         Level.INFO,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -456,7 +462,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about wrong json message length",
-        executorLogSink,
+        handlerLogSink,
         Level.SEVERE,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -566,7 +572,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about another tool",
-        executorLogSink,
+        handlerLogSink,
         Level.SEVERE,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -634,7 +640,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about read and drop " + fakeBytesToWrite + " fake bytes",
-        executorLogSink,
+        handlerLogSink,
         Level.INFO,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -704,7 +710,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about change to binary protocol",
-        executorLogSink,
+        handlerLogSink,
         Level.SEVERE,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -750,7 +756,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about no finding of expected EOL delimiter",
-        executorLogSink,
+        handlerLogSink,
         Level.SEVERE,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -765,7 +771,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about read and drop " + fakeBytesToWrite + " fake bytes",
-        executorLogSink,
+        handlerLogSink,
         Level.INFO,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -818,7 +824,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about no finding of expected EOL delimiter",
-        executorLogSink,
+        handlerLogSink,
         Level.SEVERE,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -832,7 +838,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about read and drop " + fakeBytesToWrite + " fake bytes",
-        executorLogSink,
+        handlerLogSink,
         Level.INFO,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -867,7 +873,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about cannot connect to named pipe",
-        executorLogSink,
+        handlerLogSink,
         Level.INFO,
         logRecord ->
             logRecord
@@ -876,7 +882,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find log message about pipe is already closed",
-        executorLogSink,
+        handlerLogSink,
         Level.INFO,
         logRecord ->
             logRecord
@@ -905,7 +911,7 @@ public class DownwardApiProcessExecutorTest {
 
     checkRecords(
         "Did not find debug log message about unhandled exception",
-        executorLogSink,
+        handlerLogSink,
         Level.WARNING,
         logRecord -> {
           String message = logRecord.getMessage();
@@ -947,6 +953,26 @@ public class DownwardApiProcessExecutorTest {
     verifyExecutionResult(result);
 
     assertThat(eventsReceivedByClientsHandlers.get(), equalTo(1 + 2 + 10 * 2 + 100 * 3 + 500));
+  }
+
+  @Test
+  public void genruleToDApiIntegration() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "gen_rule_d_api", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:genrule");
+    processResult.assertSuccess();
+  }
+
+  @Test
+  public void genruleToDApiWithInvalidMessagesIntegration() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "gen_rule_d_api", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult processResult = workspace.runBuckCommand("build", "//:genrule_invalid_messages");
+    processResult.assertSuccess();
   }
 
   private void verifyLogEvent() {
