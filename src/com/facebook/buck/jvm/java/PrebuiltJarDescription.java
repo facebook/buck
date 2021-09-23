@@ -85,7 +85,6 @@ public class PrebuiltJarDescription
             graphBuilder.getSourcePathResolver(),
             args.getBinaryJar(),
             args.getMavenCoords(),
-            args.getProvided(),
             args.getRequiredForSourceOnlyAbi(),
             args.getGenerateAbi(),
             args.getNeverMarkAsUnusedDependency(),
@@ -185,11 +184,6 @@ public class PrebuiltJarDescription
     Optional<String> getJavadocUrl();
 
     Optional<String> getMavenCoords();
-
-    @Value.Default
-    default boolean getProvided() {
-      return false;
-    }
 
     @Override
     @Value.Default

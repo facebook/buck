@@ -1,7 +1,7 @@
 java_library(
     name = "lib",
     visibility = ["PUBLIC"],
-    deps = [
+    provided_deps = [
         "//lib:openapi",
     ],
 )
@@ -14,7 +14,6 @@ java_binary(
     meta_inf_directory = "resources/META-INF",
     deps = [
         ":lib",
-        "//lib:openapi",
     ],
 )
 

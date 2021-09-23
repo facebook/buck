@@ -65,7 +65,6 @@ public class PrebuiltJarTest {
             new TestActionGraphBuilder().getSourcePathResolver(),
             FakeSourcePath.of("abi.jar"),
             /* mavenCoords */ Optional.empty(),
-            /* provided */ false,
             /* requiredForSourceOnlyAbi */ false,
             /* generateAbi */ true,
             /* neverMarkAsUnusedDependency */ false,

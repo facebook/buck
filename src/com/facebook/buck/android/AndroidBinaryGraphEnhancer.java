@@ -670,7 +670,6 @@ public class AndroidBinaryGraphEnhancer {
               jarPath,
               Optional.empty(),
               false,
-              false,
               true,
               false,
               false);

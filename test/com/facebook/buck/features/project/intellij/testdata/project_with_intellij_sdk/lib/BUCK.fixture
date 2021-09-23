@@ -9,7 +9,6 @@ java_library(
 prebuilt_jar(
     name = "openapi",
     binary_jar = "openapi.jar",
-    provided = True,
     visibility = [
         "PUBLIC",
     ],

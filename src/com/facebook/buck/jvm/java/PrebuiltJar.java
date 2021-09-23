@@ -80,7 +80,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final SourcePath binaryJar;
   @AddToRuleKey private final Optional<String> mavenCoords;
-  @AddToRuleKey private final boolean provided;
   @AddToRuleKey private final boolean requiredForSourceOnlyAbi;
   @AddToRuleKey private final boolean generateAbi;
   @AddToRuleKey private final boolean neverMarkAsUnusedDependency;
@@ -102,7 +101,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePathResolverAdapter resolver,
       SourcePath binaryJar,
       Optional<String> mavenCoords,
-      boolean provided,
       boolean requiredForSourceOnlyAbi,
       boolean generateAbi,
       boolean neverMarkAsUnusedDependency,
@@ -110,7 +108,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     super(buildTarget, projectFilesystem, params);
     this.binaryJar = binaryJar;
     this.mavenCoords = mavenCoords;
-    this.provided = provided;
     this.requiredForSourceOnlyAbi = requiredForSourceOnlyAbi;
     this.generateAbi = generateAbi;
     this.neverMarkAsUnusedDependency = neverMarkAsUnusedDependency;
@@ -124,10 +121,6 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.transitiveClasspathDepsSupplier =
         MoreSuppliers.memoize(
             () -> {
-              if (provided) {
-                return JavaLibraryClasspathProvider.getClasspathDeps(
-                    PrebuiltJar.this.getDeclaredDeps());
-              }
               return ImmutableSet.<JavaLibrary>builder()
                   .add(PrebuiltJar.this)
                   .addAll(
@@ -228,11 +221,7 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public ImmutableSet<SourcePath> getImmediateClasspaths() {
-    if (!provided) {
-      return ImmutableSet.of(getSourcePathToOutput());
-    } else {
-      return ImmutableSet.of();
-    }
+    return ImmutableSet.of(getSourcePathToOutput());
   }
 
   @Override
@@ -372,10 +361,8 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public void addToCollector(
       ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
-    if (!provided) {
-      collector.addClasspathEntry(this, getSourcePathToOutput());
-      collector.addPathToThirdPartyJar(getBuildTarget(), getSourcePathToOutput());
-    }
+    collector.addClasspathEntry(this, getSourcePathToOutput());
+    collector.addPathToThirdPartyJar(getBuildTarget(), getSourcePathToOutput());
   }
 
   @Override

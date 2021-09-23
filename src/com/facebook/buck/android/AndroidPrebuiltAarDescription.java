@@ -177,7 +177,6 @@ public class AndroidPrebuiltAarDescription
           /* binaryJar */ prebuiltJarSourcePath,
           /* sourceJar */
           /* mavenCoords */ Optional.empty(),
-          /* provided */ false,
           args.getRequiredForSourceOnlyAbi(),
           /* generate_abi */ true,
           /* neverMarkAsUnusedDependency */ false,

@@ -27,6 +27,8 @@ java_library(
     srcs = ["Example.java"],
     deps = [
         ":guava",
+    ],
+    provided_deps = [
         ":junit_provided",
     ],
 )
@@ -41,5 +43,4 @@ java_binary(
 prebuilt_jar(
     name = "junit_provided",
     binary_jar = "junit.jar",
-    provided = True,
 )
