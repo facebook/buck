@@ -124,9 +124,6 @@ public abstract class BaseRunner {
       // Include failure details, if appropriate.
       Throwable failure = result.failure;
       if (failure != null) {
-        String message = failure.getMessage();
-        test.setAttribute("message", attributeEscaper.escape(message));
-
         String stacktrace = stackTraceToString(failure);
         test.setAttribute("stacktrace", attributeEscaper.escape(stacktrace));
       }

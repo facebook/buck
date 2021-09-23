@@ -63,8 +63,11 @@ public class TimeoutIntegrationTest {
     assertThat(
         exceedsAnnotationTimeoutTestResult.getStderr(),
         containsString(
-            "FAILURE com.example.ExceedsAnnotationTimeoutTest testShouldFailDueToExpiredTimeout: "
-                + "test timed out after 1000 milliseconds"));
+            "FAILURE com.example.ExceedsAnnotationTimeoutTest testShouldFailDueToExpiredTimeout:"));
+    assertThat(
+        exceedsAnnotationTimeoutTestResult.getStderr(),
+        containsString(
+            "org.junit.runners.model.TestTimedOutException: test timed out after 1000 milliseconds"));
 
     // TimeoutChangesBehaviorTest should pass.
     ProcessResult timeoutTestWithoutTimeout =
@@ -80,9 +83,10 @@ public class TimeoutIntegrationTest {
     assertThat(
         timeoutTestWithTimeoutOnAnnotation.getStderr(),
         containsString(
-            "FAILURE com.example.TimeoutChangesBehaviorTest "
-                + "testTimeoutDictatesTheSuccessOfThisTest: Database should have an open transaction "
-                + "due to setUp()."));
+            "FAILURE com.example.TimeoutChangesBehaviorTest testTimeoutDictatesTheSuccessOfThisTest:"));
+    assertThat(
+        timeoutTestWithTimeoutOnAnnotation.getStderr(),
+        containsString("Database should have an open transaction due to setUp()"));
 
     // TimeoutChangesBehaviorTest with @Rule(Timeout) should pass.
     modifyTimeoutInTestAnnotation(PATH_TO_TIMEOUT_BEHAVIOR_TEST, /* addTimeout */ false);
