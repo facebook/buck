@@ -72,8 +72,8 @@ public class GCNotificationEventEmitterTest {
 
     @Subscribe
     public void onGcEvent(GCCollectionEvent gc) {
-      countDownLatch.countDown();
       gcEvents.add(gc);
+      countDownLatch.countDown();
     }
   }
 }
