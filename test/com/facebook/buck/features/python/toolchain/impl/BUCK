@@ -30,6 +30,7 @@ java_test(
         "//src/com/facebook/buck/features/python/toolchain/impl:impl",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/memory:memory",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",

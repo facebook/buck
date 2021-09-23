@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.util.memory.ResourceUsage;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
@@ -188,26 +189,41 @@ public interface ProcessExecutor {
     private final Optional<String> stdout;
     private final Optional<String> stderr;
     private final ImmutableList<String> command;
+    private final Optional<ResourceUsage> resourceUsage;
 
     public Result(
         int exitCode,
         boolean timedOut,
         Optional<String> stdout,
         Optional<String> stderr,
-        ImmutableList<String> command) {
+        ImmutableList<String> command,
+        Optional<ResourceUsage> resourceUsage) {
       this.exitCode = exitCode;
       this.timedOut = timedOut;
       this.stdout = stdout;
       this.stderr = stderr;
       this.command = command;
+      this.resourceUsage = resourceUsage;
     }
 
     public Result(int exitCode, String stdout, String stderr, ImmutableList<String> command) {
-      this(exitCode, /* timedOut */ false, Optional.of(stdout), Optional.of(stderr), command);
+      this(
+          exitCode, /* timedOut */
+          false,
+          Optional.of(stdout),
+          Optional.of(stderr),
+          command,
+          Optional.empty());
     }
 
     public Result(int exitCode, ImmutableList<String> command) {
-      this(exitCode, /* timedOut */ false, Optional.empty(), Optional.empty(), command);
+      this(
+          exitCode, /* timedOut */
+          false,
+          Optional.empty(),
+          Optional.empty(),
+          command,
+          Optional.empty());
     }
 
     public int getExitCode() {
@@ -228,6 +244,10 @@ public interface ProcessExecutor {
 
     public ImmutableList<String> getCommand() {
       return command;
+    }
+
+    public Optional<ResourceUsage> getResourceUsage() {
+      return resourceUsage;
     }
 
     public String getMessageForUnexpectedResult(String subject) {

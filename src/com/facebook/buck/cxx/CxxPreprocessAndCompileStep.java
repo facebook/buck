@@ -243,7 +243,8 @@ class CxxPreprocessAndCompileStep implements Step {
             result.isTimedOut(),
             result.getStdout(),
             Optional.of(err),
-            result.getCommand());
+            result.getCommand(),
+            Optional.empty());
     processResult(result, context);
     return result;
   }

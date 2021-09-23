@@ -164,7 +164,12 @@ public class DefaultProcessExecutor implements ProcessExecutor {
     checkState(!waitForInternal(launchedProcessImpl.process, Optional.empty(), Optional.empty()));
     int exitCode = launchedProcessImpl.process.exitValue();
     return new Result(
-        exitCode, false, Optional.empty(), Optional.empty(), launchedProcess.getCommand());
+        exitCode,
+        false,
+        Optional.empty(),
+        Optional.empty(),
+        launchedProcess.getCommand(),
+        Optional.empty());
   }
 
   @Override
@@ -175,7 +180,12 @@ public class DefaultProcessExecutor implements ProcessExecutor {
     boolean timedOut = waitForInternal(process, Optional.of(millis), timeOutHandler);
     int exitCode = !timedOut ? process.exitValue() : 1;
     return new Result(
-        exitCode, timedOut, Optional.empty(), Optional.empty(), launchedProcess.getCommand());
+        exitCode,
+        timedOut,
+        Optional.empty(),
+        Optional.empty(),
+        launchedProcess.getCommand(),
+        Optional.empty());
   }
 
   /**
@@ -329,7 +339,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       }
     }
 
-    return new Result(exitCode, timedOut, stdoutText, stderrText, launchedProcess.getCommand());
+    return new Result(
+        exitCode, timedOut, stdoutText, stderrText, launchedProcess.getCommand(), Optional.empty());
   }
 
   private static Optional<String> getDataIfNotPrinted(

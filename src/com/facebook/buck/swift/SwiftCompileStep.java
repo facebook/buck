@@ -172,7 +172,8 @@ class SwiftCompileStep extends SwiftCompileStepBase {
           result.isTimedOut(),
           result.getStdout(),
           Optional.of(transformedStderr),
-          result.getCommand());
+          result.getCommand(),
+          Optional.empty());
     } else {
       return result;
     }

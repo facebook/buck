@@ -55,7 +55,7 @@ public class PythonVersionFactoryTest {
     PythonVersionFactory.extractPythonVersion(
         Paths.get("broken"),
         new ProcessExecutor.Result(
-            1, false, Optional.empty(), Optional.of("foo"), ImmutableList.of()));
+            1, false, Optional.empty(), Optional.of("foo"), ImmutableList.of(), Optional.empty()));
   }
 
   @Test

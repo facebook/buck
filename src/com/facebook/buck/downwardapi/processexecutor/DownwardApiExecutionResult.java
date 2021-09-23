@@ -36,7 +36,7 @@ class DownwardApiExecutionResult extends ProcessExecutor.Result {
       Optional<String> stderr,
       ImmutableList<String> command,
       boolean isReaderThreadTerminated) {
-    super(exitCode, timedOut, stdout, stderr, command);
+    super(exitCode, timedOut, stdout, stderr, command, Optional.empty());
     this.isReaderThreadTerminated = isReaderThreadTerminated;
   }
 

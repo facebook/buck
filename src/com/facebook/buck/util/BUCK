@@ -90,6 +90,7 @@ java_immutables_library(
         "//src/com/facebook/buck/io/namedpipes:interfaces",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/memory:memory",
         "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/util/timing:timing",
         "//third-party/java/jna:jna-platform",

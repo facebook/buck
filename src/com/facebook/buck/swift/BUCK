@@ -43,6 +43,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/memory:memory",
         "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/guava:guava",
