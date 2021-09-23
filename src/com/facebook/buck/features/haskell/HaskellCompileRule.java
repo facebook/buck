@@ -260,6 +260,10 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add("-i")
         .addAll(flags.getPackageFlags(platform, resolver));
 
+    // .hie files are only available since GHC 8.8
+    if (platform.getHaskellVersion().getMajorVersion() >= 8) {
+      builder.add("-hiedir", getProjectFilesystem().resolve(getInterfaceDir()).toString());
+    }
     if (platform.shouldUseArgsfile()) {
       builder.add("@" + getArgsfile());
     } else {
