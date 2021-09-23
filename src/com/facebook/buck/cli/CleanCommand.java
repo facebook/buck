@@ -80,6 +80,7 @@ public class CleanCommand extends AbstractCommand {
     pathsToDelete.add(buckPaths.getJournalDir());
     pathsToDelete.add(buckPaths.getTraceDir());
     pathsToDelete.add(buckPaths.getAnnotationDir().getPath());
+    pathsToDelete.add(buckPaths.getEmbeddedCellsBuckOutBaseDir());
     processTmpDir(buckPaths.getTmpDir(), pathsToDelete);
 
     CleanCommandBuckConfig buckConfig = cell.getBuckConfig().getView(CleanCommandBuckConfig.class);
