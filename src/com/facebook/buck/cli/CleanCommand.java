@@ -106,7 +106,9 @@ public class CleanCommand extends AbstractCommand {
       params
           .getConsole()
           .getStdOut()
-          .println("The following directories and files would be removed:");
+          .printf(
+              "The following directories and files would be removed for cell %s %n",
+              cell.getCanonicalName().getName());
       for (Path path : pathsToDelete) {
         if (projectFilesystem.exists(path)) {
           params.getConsole().getStdOut().println(path.toAbsolutePath());
