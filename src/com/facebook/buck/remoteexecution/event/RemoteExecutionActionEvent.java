@@ -139,7 +139,8 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   public static boolean isTerminalState(State state) {
     return state == State.ACTION_FAILED
         || state == State.ACTION_SUCCEEDED
-        || state == State.ACTION_CANCELLED;
+        || state == State.ACTION_CANCELLED
+        || state == State.LOADED_FROM_CACHE;
   }
 
   /** Describes the event which occurs right after inputs were uploaded to the CAS. */

@@ -56,7 +56,9 @@ public class RemoteExecutionConsoleLineProviderTest {
   public void testNoDebug() {
     statsProvider.casDownladedBytes = 42;
     statsProvider.casDownloads = 21;
-    statsProvider.actionsPerState.put(State.ACTION_SUCCEEDED, 84);
+    final int succeeded = 84, loadedFromCache = 20;
+    statsProvider.actionsPerState.put(State.ACTION_SUCCEEDED, succeeded);
+    statsProvider.actionsPerState.put(State.LOADED_FROM_CACHE, loadedFromCache);
     statsProvider.localFallbackStats =
         LocalFallbackStats.builder()
             .from(statsProvider.localFallbackStats)
@@ -70,7 +72,9 @@ public class RemoteExecutionConsoleLineProviderTest {
         "[RE] Metadata: Session ID=[super cool info about the session]", lines.get(0));
     Assert.assertEquals(
         lines.get(1),
-        "[RE] Waiting on 0 remote actions. Completed 84 actions remotely, action cache hit rate: 0.00%.");
+        String.format(
+            "[RE] Waiting on 0 remote actions. Completed %d actions remotely, action cache hit rate: %.2f%%.",
+            succeeded + loadedFromCache, loadedFromCache / 1. / succeeded * 100));
 
     for (String line : lines) {
       Assert.assertFalse(line.contains("LocalFallback"));
