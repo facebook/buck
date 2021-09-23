@@ -601,7 +601,8 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
-            totalLine));
+            totalLine,
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -616,7 +617,8 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
-            totalLine),
+            totalLine,
+            "BUILD SUCCEEDED"),
         ImmutableList.of(SEVERE_MESSAGE));
 
     InstallEvent.Started installEventStarted = InstallEvent.started(fakeTarget);
@@ -634,7 +636,8 @@ public class SuperConsoleEventBusListenerTest {
             formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine,
-            "Installing... 0.5 sec"));
+            "Installing... 0.5 sec",
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -655,7 +658,8 @@ public class SuperConsoleEventBusListenerTest {
             formatCacheStatsLine(false, 1, 1, 23f, 0f),
             buildingLine,
             totalLine,
-            installingFinished));
+            installingFinished,
+            "BUILD SUCCEEDED"));
 
     HttpArtifactCacheEvent.Scheduled storeScheduledOne =
         ArtifactCacheTestUtils.postStoreScheduled(
@@ -680,7 +684,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             installingFinished,
-            "HTTP CACHE UPLOAD... 0.00 bytes (0 COMPLETE/0 FAILED/0 UPLOADING/3 PENDING)"));
+            "HTTP CACHE UPLOAD... 0.00 bytes (0 COMPLETE/0 FAILED/0 UPLOADING/3 PENDING)",
+            "BUILD SUCCEEDED"));
 
     HttpArtifactCacheEvent.Started storeStartedOne =
         ArtifactCacheTestUtils.postStoreStarted(eventBus, 0, 6025L, storeScheduledOne);
@@ -696,7 +701,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             installingFinished,
-            "HTTP CACHE UPLOAD... 0.00 bytes (0 COMPLETE/0 FAILED/1 UPLOADING/2 PENDING)"));
+            "HTTP CACHE UPLOAD... 0.00 bytes (0 COMPLETE/0 FAILED/1 UPLOADING/2 PENDING)",
+            "BUILD SUCCEEDED"));
 
     long artifactSizeOne = SizeUnit.KILOBYTES.toBytes(1.5);
     ArtifactCacheTestUtils.postStoreFinished(
@@ -713,7 +719,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             installingFinished,
-            "HTTP CACHE UPLOAD... 1.50 Kbytes (1 COMPLETE/0 FAILED/0 UPLOADING/2 PENDING)"));
+            "HTTP CACHE UPLOAD... 1.50 Kbytes (1 COMPLETE/0 FAILED/0 UPLOADING/2 PENDING)",
+            "BUILD SUCCEEDED"));
 
     HttpArtifactCacheEvent.Started storeStartedTwo =
         ArtifactCacheTestUtils.postStoreStarted(eventBus, 0, 7030L, storeScheduledTwo);
@@ -732,7 +739,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             installingFinished,
-            "HTTP CACHE UPLOAD... 1.50 Kbytes (1 COMPLETE/1 FAILED/0 UPLOADING/1 PENDING)"));
+            "HTTP CACHE UPLOAD... 1.50 Kbytes (1 COMPLETE/1 FAILED/0 UPLOADING/1 PENDING)",
+            "BUILD SUCCEEDED"));
 
     HttpArtifactCacheEvent.Started storeStartedThree =
         ArtifactCacheTestUtils.postStoreStarted(eventBus, 0, 7040L, storeScheduledThree);
@@ -751,7 +759,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             installingFinished,
-            "HTTP CACHE UPLOAD... 2.10 Kbytes (2 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)"));
+            "HTTP CACHE UPLOAD... 2.10 Kbytes (2 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)",
+            "BUILD SUCCEEDED"));
 
     eventBus.post(new GCTimeSpentListener.GCTimeSpentWarningEvent(1000));
     validateBuildIdConsole(
@@ -766,7 +775,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             installingFinished,
-            "HTTP CACHE UPLOAD... 2.10 Kbytes (2 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)"));
+            "HTTP CACHE UPLOAD... 2.10 Kbytes (2 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)",
+            "BUILD SUCCEEDED"));
 
     CommandEvent.Started commandStarted =
         CommandEvent.started(
@@ -786,7 +796,8 @@ public class SuperConsoleEventBusListenerTest {
               totalLine,
               installingFinished,
               "HTTP CACHE UPLOAD... 2.10 Kbytes (2 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)",
-              "View details at https://example.com/build/1234-5678"));
+              "View details at https://example.com/build/1234-5678",
+              "BUILD SUCCEEDED"));
     }
   }
 
@@ -1014,7 +1025,8 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
-            totalTime));
+            totalTime,
+            "BUILD SUCCEEDED"));
   }
 
   @Test
@@ -1189,7 +1201,8 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
-            totalLine));
+            totalLine,
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1212,7 +1225,8 @@ public class SuperConsoleEventBusListenerTest {
             formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
-            "Testing... 0.5 sec"));
+            "Testing... 0.5 sec",
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1229,7 +1243,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.7 sec",
-            "     - //:test... 0.1 sec"));
+            "     - //:test... 0.1 sec",
+            "BUILD SUCCEEDED"));
 
     StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc");
     eventBus.postWithoutConfiguring(
@@ -1247,7 +1262,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.9 sec",
-            "     - //:test... 0.3 sec (running step_name[0.1 sec])"));
+            "     - //:test... 0.3 sec (running step_name[0.1 sec])",
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1267,7 +1283,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.1 sec",
-            "     - //:test... 0.5 sec"));
+            "     - //:test... 0.5 sec",
+            "BUILD SUCCEEDED"));
 
     UUID testUUID = new UUID(2, 3);
 
@@ -1289,7 +1306,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.3 sec",
-            "     - //:test... 0.7 sec (running Foo[0.1 sec])"));
+            "     - //:test... 0.7 sec (running Foo[0.1 sec])",
+            "BUILD SUCCEEDED"));
 
     TestResultSummary testResultSummary =
         new TestResultSummary(
@@ -1319,7 +1337,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.5 sec (1 PASS/0 FAIL)",
-            "     - //:test... 0.9 sec"));
+            "     - //:test... 0.9 sec",
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1348,7 +1367,8 @@ public class SuperConsoleEventBusListenerTest {
             formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
-            testingLine),
+            testingLine,
+            "BUILD SUCCEEDED"),
         ImmutableList.of(),
         Optional.of(
             Joiner.on(System.lineSeparator())
@@ -1495,7 +1515,8 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
-            totalLine));
+            totalLine,
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1518,7 +1539,8 @@ public class SuperConsoleEventBusListenerTest {
             formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
-            "Testing... 0.5 sec"));
+            "Testing... 0.5 sec",
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1535,7 +1557,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.7 sec",
-            "     - //:test... 0.1 sec"));
+            "     - //:test... 0.1 sec",
+            "BUILD SUCCEEDED"));
 
     StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc");
     eventBus.postWithoutConfiguring(
@@ -1553,7 +1576,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.9 sec",
-            "     - //:test... 0.3 sec (running step_name[0.1 sec])"));
+            "     - //:test... 0.3 sec (running step_name[0.1 sec])",
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1573,7 +1597,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.1 sec",
-            "     - //:test... 0.5 sec"));
+            "     - //:test... 0.5 sec",
+            "BUILD SUCCEEDED"));
 
     UUID testUUID = new UUID(2, 3);
 
@@ -1595,7 +1620,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.3 sec",
-            "     - //:test... 0.7 sec (running Foo[0.1 sec])"));
+            "     - //:test... 0.7 sec (running Foo[0.1 sec])",
+            "BUILD SUCCEEDED"));
 
     TestResultSummary testResultSummary =
         new TestResultSummary(
@@ -1626,7 +1652,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.5 sec (0 PASS/1 SKIP/0 FAIL)",
-            "     - //:test... 0.9 sec"));
+            "     - //:test... 0.9 sec",
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1655,7 +1682,8 @@ public class SuperConsoleEventBusListenerTest {
             formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
-            testingLine),
+            testingLine,
+            "BUILD SUCCEEDED"),
         ImmutableList.of(),
         Optional.of(
             Joiner.on(System.lineSeparator())
@@ -1822,7 +1850,8 @@ public class SuperConsoleEventBusListenerTest {
             actionGraphLine,
             formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
-            totalLine));
+            totalLine,
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1845,7 +1874,8 @@ public class SuperConsoleEventBusListenerTest {
             formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
-            "Testing... 0.5 sec"));
+            "Testing... 0.5 sec",
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1862,7 +1892,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.7 sec",
-            "     - //:test... 0.1 sec"));
+            "     - //:test... 0.1 sec",
+            "BUILD SUCCEEDED"));
 
     StepEvent.Started stepEventStarted = StepEvent.started("step_name", "step_desc");
     eventBus.postWithoutConfiguring(
@@ -1880,7 +1911,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 0.9 sec",
-            "     - //:test... 0.3 sec (running step_name[0.1 sec])"));
+            "     - //:test... 0.3 sec (running step_name[0.1 sec])",
+            "BUILD SUCCEEDED"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -1900,7 +1932,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.1 sec",
-            "     - //:test... 0.5 sec"));
+            "     - //:test... 0.5 sec",
+            "BUILD SUCCEEDED"));
 
     UUID testUUID = new UUID(2, 3);
 
@@ -1922,7 +1955,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.3 sec",
-            "     - //:test... 0.7 sec (running Foo[0.1 sec])"));
+            "     - //:test... 0.7 sec (running Foo[0.1 sec])",
+            "BUILD SUCCEEDED"));
 
     TestResultSummary testResultSummary =
         new TestResultSummary(
@@ -1952,7 +1986,8 @@ public class SuperConsoleEventBusListenerTest {
             buildingLine,
             totalLine,
             "Testing... 1.5 sec (0 PASS/1 FAIL)",
-            "     - //:test... 0.9 sec"),
+            "     - //:test... 0.9 sec",
+            "BUILD SUCCEEDED"),
         ImmutableList.of("FAILURE TestClass Foo: Foo.java:47: Assertion failure: 'foo' != 'bar'"));
 
     eventBus.postWithoutConfiguring(
@@ -1982,7 +2017,8 @@ public class SuperConsoleEventBusListenerTest {
             formatCacheStatsLine(false, 0, 0, 0f, 100f),
             buildingLine,
             totalLine,
-            testingLine),
+            testingLine,
+            "BUILD SUCCEEDED"),
         ImmutableList.of(),
         Optional.of(
             Joiner.on(System.lineSeparator())
@@ -2383,7 +2419,8 @@ public class SuperConsoleEventBusListenerTest {
             "Creating action graph: finished in 0.1 sec",
             "Generating project... 1.0 sec (20%)",
             formatCacheStatsLine(false, 0, 0, 0, 0),
-            "Building: finished in 0.2 sec"));
+            "Building: finished in 0.2 sec",
+            "BUILD SUCCEEDED"));
 
     progressEstimatorSynchronization.expectCalculation();
 
@@ -2403,7 +2440,8 @@ public class SuperConsoleEventBusListenerTest {
             "Generating project: finished in 1.2 sec (100%)",
             formatCacheStatsLine(false, 0, 0, 0, 0),
             "Building: finished in 0.2 sec",
-            "  Total time: 1.2 sec"));
+            "  Total time: 1.2 sec",
+            "BUILD SUCCEEDED"));
   }
 
   @Test

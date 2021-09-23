@@ -44,6 +44,7 @@ import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
 import com.facebook.buck.test.result.type.ResultType;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
@@ -453,6 +454,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private ImmutableList<String> buildLinesToRender(Builder<String> lines) {
     maybePrintBuildDetails(lines);
+    if (buildFinished != null) {
+      lines.add(
+          buildFinished.getExitCode() == ExitCode.SUCCESS
+              ? renderingConsole.getAnsi().asSuccessText("BUILD SUCCEEDED")
+              : renderingConsole.getAnsi().asErrorText("BUILD FAILED"));
+    }
     return lines.build();
   }
 
