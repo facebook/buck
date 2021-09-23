@@ -25,7 +25,6 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
@@ -148,32 +147,31 @@ public class CleanCommand extends AbstractCommand {
         hasResourceDirectory ? Paths.get(resourceLockDirectory).getParent() : null;
 
     Path tmpAbsPath = tmpDir.toAbsolutePath();
-    Path currentTmpDir = tmpDir.resolve(tmpAbsPath.relativize(javaTmpDirectory));
-    Path resourcesDir =
+    String currentTmpDir = tmpAbsPath.relativize(javaTmpDirectory).toString();
+    String resourcesDir =
         hasResourceDirectory
-            ? tmpDir.resolve(tmpAbsPath.relativize(currentResourceDirectory.getParent()))
+            ? tmpAbsPath.relativize(currentResourceDirectory.getParent()).toString()
             : null;
-    Path currentResourcesDir =
+    String currentResourcesDir =
         hasResourceDirectory
-            ? tmpDir.resolve(tmpAbsPath.relativize(currentResourceDirectory))
+            ? tmpAbsPath.relativize(currentResourceDirectory).getFileName().toString()
             : null;
 
-    File[] tmpFiles = tmpDir.toFile().listFiles();
+    String[] tmpFiles = tmpDir.toFile().list();
     if (tmpFiles != null) {
-      for (File f : tmpFiles) {
-        Path path = f.toPath();
-        if (path.equals(currentTmpDir) || path.getFileName().toString().startsWith("buck_run.")) {
+      for (String tmpFile : tmpFiles) {
+        if (tmpFile.equals(currentTmpDir) || tmpFile.startsWith("buck_run.")) {
           continue;
         }
-        if (hasResourceDirectory && path.equals(resourcesDir)) {
-          File[] resourcesSubDirs = path.toFile().listFiles();
+        Path path = tmpDir.resolve(tmpFile);
+        if (hasResourceDirectory && tmpFile.equals(resourcesDir)) {
+          String[] resourcesSubDirs = path.toFile().list();
           if (resourcesSubDirs != null) {
-            for (File resourceDir : resourcesSubDirs) {
-              Path resourcePath = resourceDir.toPath();
-              if (resourcePath.equals(currentResourcesDir)) {
+            for (String resourceDir : resourcesSubDirs) {
+              if (resourceDir.equals(currentResourcesDir)) {
                 continue;
               }
-              pathsToDelete.add(resourcePath);
+              pathsToDelete.add(path.resolve(resourceDir));
             }
           }
         } else {
