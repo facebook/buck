@@ -215,7 +215,7 @@ public class MergeAndroidResourcesStep implements Step {
         uberRDotTxt.forEach(
             rDot -> {
               try {
-                RDotTxtEntry.readResources(filesystem, rDot).forEach(uberRdotTxtEntries::add);
+                readResources(filesystem, rDot).forEach(uberRdotTxtEntries::add);
               } catch (IOException e) {
                 throw new RuntimeException(e);
               }
@@ -291,6 +291,22 @@ public class MergeAndroidResourcesStep implements Step {
           .setStderr(Optional.of(e.getMessage()))
           .build();
     }
+  }
+
+  /**
+   * Read resource IDs from a R.txt file and add them to a list of entries
+   *
+   * @param owningFilesystem The project filesystem to use
+   * @param rDotTxt the path to the R.txt file to read
+   * @return a list of RDotTxtEntry objects read from the file
+   * @throws IOException
+   */
+  public static List<RDotTxtEntry> readResources(ProjectFilesystem owningFilesystem, Path rDotTxt)
+      throws IOException {
+    return owningFilesystem.readLines(rDotTxt).stream()
+        .filter(input -> !Strings.isNullOrEmpty(input))
+        .map(RDotTxtEntry.TO_ENTRY)
+        .collect(Collectors.toList());
   }
 
   private Optional<SetMultimap<String, RDotTxtEntry>> loadOverrideSymbols(Iterable<Path> paths)
