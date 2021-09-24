@@ -35,13 +35,13 @@ public final class JavacFactory {
     this.javacProvider = javacProvider;
   }
 
-  /** Returns either the defautl javac or one created from the provided args. */
+  /** Returns either the default javac or one created from the provided args. */
   public Javac create(
       SourcePathRuleFinder ruleFinder,
       @Nullable JvmLibraryArg args,
       TargetConfiguration toolchainTargetConfiguration) {
     if (args != null) {
-      JavacSpec spec = args.getJavacSpec(ruleFinder);
+      JavacSpec spec = args.getJavacSpec();
       if (spec != null) {
         return spec.getJavacProvider().resolve(ruleFinder);
       }

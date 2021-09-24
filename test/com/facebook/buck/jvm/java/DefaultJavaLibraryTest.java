@@ -1553,7 +1553,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     TargetNode<?> ruleNode =
         createJavaLibraryBuilder(libraryOneTarget)
             .addSrc(Paths.get("java/src/com/libone/Bar.java"))
-            .setCompiler(DefaultBuildTargetSourcePath.of(javacTarget))
+            .setJavacJar(DefaultBuildTargetSourcePath.of(javacTarget))
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javacNode, ruleNode);

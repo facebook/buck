@@ -35,7 +35,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
-import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -157,9 +156,13 @@ public class JavaLibraryBuilder
     return this;
   }
 
-  public JavaLibraryBuilder setCompiler(SourcePath javac) {
-    Either<BuiltInJavac, SourcePath> value = Either.ofRight(javac);
-    getArgForPopulating().setCompiler(Optional.of(value));
+  public JavaLibraryBuilder setJavac(SourcePath javac) {
+    getArgForPopulating().setJavac(Optional.of(javac));
+    return this;
+  }
+
+  public JavaLibraryBuilder setJavacJar(SourcePath javacJar) {
+    getArgForPopulating().setJavacJar(Optional.of(javacJar));
     return this;
   }
 
