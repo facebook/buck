@@ -102,7 +102,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), RESOURCES, Paths.get("resource.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
 
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
     aapt.processXmlFile(
@@ -165,7 +165,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
             filesystem.getRootPath(), Paths.get("values.xml")));
@@ -222,7 +222,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
             filesystem.getRootPath(), Paths.get("values.xml")));
@@ -259,7 +259,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
             filesystem.getRootPath(), Paths.get("values.xml")));
@@ -283,7 +283,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
             filesystem.getRootPath(), Paths.get("values.xml")));
@@ -311,7 +311,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("android_drawable.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     aapt.processDrawables(
         ProjectFilesystemUtils.getPathForRelativePath(
             filesystem.getRootPath(), Paths.get("android_drawable.xml")));
@@ -343,7 +343,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("custom_drawable.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     aapt.processDrawables(
         ProjectFilesystemUtils.getPathForRelativePath(
             filesystem.getRootPath(), Paths.get("custom_drawable.xml")));
@@ -363,7 +363,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get(normalFilename));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     aapt.processDrawables(
         ProjectFilesystemUtils.getPathForRelativePath(
             filesystem.getRootPath(), Paths.get(grayscaleFilename)));
@@ -401,7 +401,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
             filesystem.getRootPath(), Paths.get("values.xml")));
@@ -421,7 +421,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
             filesystem.getRootPath(), Paths.get("values.xml")));
@@ -443,7 +443,7 @@ public class MiniAaptTest {
     Path resource = Paths.get("resource.xml");
     ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), lines, resource);
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     try {
       aapt.processXmlFile(
           ProjectFilesystemUtils.getPathForRelativePath(filesystem.getRootPath(), resource),
@@ -470,7 +470,7 @@ public class MiniAaptTest {
     Path resource = Paths.get("resource.xml");
     ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), lines, resource);
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     try {
       aapt.processXmlFile(
           ProjectFilesystemUtils.getPathForRelativePath(filesystem.getRootPath(), resource),
@@ -498,7 +498,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("values.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
             filesystem.getRootPath(), Paths.get("values.xml")));
@@ -522,14 +522,16 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), rDotTxt, depRTxt.getPath());
 
     MiniAapt aapt =
-        new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of(depRTxt));
+        new MiniAapt(
+            ImmutableSet.of(
+                ProjectFilesystemUtils.getPathForRelativePath(filesystem.getRootPath(), depRTxt)));
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
     aapt.processXmlFile(
         ProjectFilesystemUtils.getPathForRelativePath(
             filesystem.getRootPath(), Paths.get("resource.xml")),
         references);
 
-    Set<RDotTxtEntry> missing = aapt.verifyReferences(filesystem.getRootPath(), references.build());
+    Set<RDotTxtEntry> missing = aapt.verifyReferences(references.build());
 
     assertEquals(
         ImmutableSet.<RDotTxtEntry>of(
@@ -557,7 +559,7 @@ public class MiniAaptTest {
     Path resource = Paths.get("resource.xml");
     ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), lines, resource);
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
     aapt.processXmlFile(
         ProjectFilesystemUtils.getPathForRelativePath(filesystem.getRootPath(), resource),
         ImmutableSet.builder());
@@ -577,7 +579,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.touch(
         filesystem.getRootPath(), Paths.get("res/transition-v19/some_transition.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
 
     aapt.processNonValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
@@ -640,7 +642,7 @@ public class MiniAaptTest {
     Path resource = Paths.get("resource.xml");
     ProjectFilesystemUtils.writeLinesToPath(filesystem.getRootPath(), lines, resource);
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
 
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
     aapt.processXmlFile(
@@ -668,7 +670,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
 
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
@@ -693,7 +695,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
 
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
@@ -718,7 +720,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
 
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
@@ -743,7 +745,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
 
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
@@ -768,7 +770,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
 
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
@@ -793,7 +795,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("public.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
 
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(
@@ -818,7 +820,7 @@ public class MiniAaptTest {
     ProjectFilesystemUtils.writeLinesToPath(
         filesystem.getRootPath(), lines, Paths.get("non-public.xml"));
 
-    MiniAapt aapt = new MiniAapt(RelPath.get("res"), RelPath.get("R.txt"), ImmutableSet.of());
+    MiniAapt aapt = new MiniAapt(ImmutableSet.of());
 
     aapt.processValuesFile(
         ProjectFilesystemUtils.getPathForRelativePath(

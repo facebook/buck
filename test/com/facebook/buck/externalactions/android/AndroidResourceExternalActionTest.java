@@ -24,7 +24,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.facebook.buck.step.isolatedsteps.android.MiniAapt;
+import com.facebook.buck.step.isolatedsteps.android.MiniAaptStep;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.RmIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
@@ -84,7 +84,7 @@ public class AndroidResourceExternalActionTest {
     assertThat(
         steps.get(2).getIsolatedStepDescription(context), Matchers.equalTo(expectedDescription));
 
-    assertThat(steps.get(3), Matchers.instanceOf(MiniAapt.class));
+    assertThat(steps.get(3), Matchers.instanceOf(MiniAaptStep.class));
     assertThat(
         steps.get(3).getIsolatedStepDescription(context),
         Matchers.equalTo("generate_resource_ids res"));

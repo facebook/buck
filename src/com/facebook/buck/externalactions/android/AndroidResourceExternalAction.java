@@ -22,7 +22,7 @@ import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.android.ExtractFromAndroidManifestStep;
-import com.facebook.buck.step.isolatedsteps.android.MiniAapt;
+import com.facebook.buck.step.isolatedsteps.android.MiniAaptStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
@@ -92,7 +92,7 @@ public class AndroidResourceExternalAction implements ExternalAction {
             .map(RelPath::get)
             .collect(ImmutableSet.toImmutableSet());
     steps.add(
-        new MiniAapt(
+        new MiniAaptStep(
             RelPath.get(args.getResPath()),
             RelPath.get(args.getPathToTextSymbolsFile()),
             pathsToSymbolsOfDeps));

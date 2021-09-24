@@ -22,16 +22,6 @@ import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
-import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.facebook.buck.util.ThrowingPrintWriter;
 import com.facebook.buck.util.xml.XmlDomParserWithLineNumbers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -40,16 +30,12 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -74,7 +60,7 @@ import org.xml.sax.SAXException;
  *
  * <p>
  */
-public class MiniAapt extends IsolatedStep {
+public class MiniAapt {
 
   private static final String GRAYSCALE_SUFFIX = "_g.png";
 
@@ -115,15 +101,10 @@ public class MiniAapt extends IsolatedStep {
   private static final ImmutableSet<String> IGNORED_TAGS =
       ImmutableSet.of("eat-comment", "skip", PUBLIC_TAG);
 
-  private final RelPath resDirectory;
-  private final RelPath pathToOutputFile;
-  private final ImmutableSet<RelPath> pathsToSymbolsOfDeps;
+  private final ImmutableSet<Path> pathsToSymbolsOfDeps;
   private final RDotTxtResourceCollector resourceCollector;
 
-  public MiniAapt(
-      RelPath resDirectory, RelPath pathToOutputFile, ImmutableSet<RelPath> pathsToSymbolsOfDeps) {
-    this.resDirectory = resDirectory;
-    this.pathToOutputFile = pathToOutputFile;
+  public MiniAapt(ImmutableSet<Path> pathsToSymbolsOfDeps) {
     this.pathsToSymbolsOfDeps = pathsToSymbolsOfDeps;
     this.resourceCollector = new RDotTxtResourceCollector();
   }
@@ -147,50 +128,11 @@ public class MiniAapt extends IsolatedStep {
     return types.build();
   }
 
-  @VisibleForTesting
-  RDotTxtResourceCollector getResourceCollector() {
+  public RDotTxtResourceCollector getResourceCollector() {
     return resourceCollector;
   }
 
-  @Override
-  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
-      throws IOException, InterruptedException {
-    ImmutableSet<RDotTxtEntry> references;
-
-    try {
-      ImmutableMap<Path, Path> files = getAllResourceFiles(context.getRuleCellRoot(), resDirectory);
-      references = processAllFiles(files);
-    } catch (ResourceParseException | XPathExpressionException e) {
-      context.logError(e, "Error parsing resources to generate resource IDs for %s.", resDirectory);
-      return StepExecutionResults.ERROR;
-    }
-
-    Set<RDotTxtEntry> missing = verifyReferences(context.getRuleCellRoot(), references);
-    if (!missing.isEmpty()) {
-      context
-          .getIsolatedEventBus()
-          .post(
-              ConsoleEvent.severe(
-                  "The following resources were not found when processing %s: \n%s\n",
-                  resDirectory, Joiner.on('\n').join(missing)));
-      return StepExecutionResults.ERROR;
-    }
-
-    try (ThrowingPrintWriter writer =
-        new ThrowingPrintWriter(
-            ProjectFilesystemUtils.newFileOutputStream(
-                context.getRuleCellRoot(), pathToOutputFile.getPath()))) {
-      Set<RDotTxtEntry> sortedResources =
-          ImmutableSortedSet.copyOf(Ordering.natural(), resourceCollector.getResources());
-      for (RDotTxtEntry entry : sortedResources) {
-        writer.printf("%s %s %s %s\n", entry.idType, entry.type, entry.name, entry.idValue);
-      }
-    }
-
-    return StepExecutionResults.SUCCESS;
-  }
-
-  private ImmutableSet<RDotTxtEntry> processAllFiles(ImmutableMap<Path, Path> files)
+  public ImmutableSet<RDotTxtEntry> processAllFiles(ImmutableMap<Path, Path> files)
       throws IOException, ResourceParseException, XPathExpressionException {
     ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
     for (Map.Entry<Path, Path> entry : files.entrySet()) {
@@ -221,20 +163,6 @@ public class MiniAapt extends IsolatedStep {
     }
 
     return references.build();
-  }
-
-  private static ImmutableMap<Path, Path> getAllResourceFiles(
-      AbsPath root, RelPath resourceDirectory) throws IOException {
-    return ProjectFilesystemUtils.getFilesUnderPath(
-            root,
-            resourceDirectory.getPath(),
-            EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-            ProjectFilesystemUtils.getIgnoreFilter(root, false, ImmutableSet.of()))
-        .stream()
-        .collect(
-            ImmutableMap.toImmutableMap(
-                path -> MorePaths.relativize(resourceDirectory.getPath(), path),
-                path -> ProjectFilesystemUtils.getPathForRelativePath(root, path)));
   }
 
   /**
@@ -552,15 +480,14 @@ public class MiniAapt extends IsolatedStep {
         || AaptStep.isSilentlyIgnored(path);
   }
 
-  @VisibleForTesting
-  ImmutableSet<RDotTxtEntry> verifyReferences(AbsPath root, ImmutableSet<RDotTxtEntry> references)
+  public ImmutableSet<RDotTxtEntry> verifyReferences(ImmutableSet<RDotTxtEntry> references)
       throws IOException {
     ImmutableSet.Builder<RDotTxtEntry> unresolved = ImmutableSet.builder();
     ImmutableSet.Builder<RDotTxtEntry> definitionsBuilder = ImmutableSet.builder();
     definitionsBuilder.addAll(resourceCollector.getResources());
-    for (RelPath depRTxt : pathsToSymbolsOfDeps) {
+    for (Path depRTxt : pathsToSymbolsOfDeps) {
       Iterable<String> lines =
-          ProjectFilesystemUtils.readLines(root, depRTxt.getPath()).stream()
+          Files.readAllLines(depRTxt).stream()
               .filter(input -> !Strings.isNullOrEmpty(input))
               .collect(Collectors.toList());
       for (String line : lines) {
@@ -577,16 +504,6 @@ public class MiniAapt extends IsolatedStep {
       }
     }
     return unresolved.build();
-  }
-
-  @Override
-  public String getShortName() {
-    return "generate_resource_ids";
-  }
-
-  @Override
-  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
-    return getShortName() + " " + resDirectory;
   }
 
   @VisibleForTesting
