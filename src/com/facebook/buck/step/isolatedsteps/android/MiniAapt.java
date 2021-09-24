@@ -26,7 +26,7 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -42,11 +42,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileVisitOption;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -154,17 +155,17 @@ public class MiniAapt extends IsolatedStep {
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
-    ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
+    ImmutableSet<RDotTxtEntry> references;
 
     try {
-      collectResources(context.getRuleCellRoot(), context.getIsolatedEventBus());
-      processXmlFilesForIds(context.getRuleCellRoot(), references);
-    } catch (XPathExpressionException | ResourceParseException e) {
+      ImmutableMap<Path, Path> files = getAllResourceFiles(context.getRuleCellRoot(), resDirectory);
+      references = processAllFiles(files);
+    } catch (ResourceParseException | XPathExpressionException e) {
       context.logError(e, "Error parsing resources to generate resource IDs for %s.", resDirectory);
       return StepExecutionResults.ERROR;
     }
 
-    Set<RDotTxtEntry> missing = verifyReferences(context.getRuleCellRoot(), references.build());
+    Set<RDotTxtEntry> missing = verifyReferences(context.getRuleCellRoot(), references);
     if (!missing.isEmpty()) {
       context
           .getIsolatedEventBus()
@@ -187,6 +188,53 @@ public class MiniAapt extends IsolatedStep {
     }
 
     return StepExecutionResults.SUCCESS;
+  }
+
+  private ImmutableSet<RDotTxtEntry> processAllFiles(ImmutableMap<Path, Path> files)
+      throws IOException, ResourceParseException, XPathExpressionException {
+    ImmutableSet.Builder<RDotTxtEntry> references = ImmutableSet.builder();
+    for (Map.Entry<Path, Path> entry : files.entrySet()) {
+      Path relativePath = entry.getKey();
+      Path fullPath = entry.getValue();
+      if (shouldIgnoreFile(fullPath)) {
+        continue;
+      }
+
+      String dirName = relativePath.getName(0).toString();
+      if (dirName.equals(relativePath.toString())) {
+        // File in root directory, ignore
+        continue;
+      }
+      if (dirName.startsWith("values")) {
+        if (!isAValuesDir(dirName)) {
+          throw new ResourceParseException("'%s' is not a valid values directory.", dirName);
+        }
+        processValuesFile(fullPath);
+      } else {
+        processNonValuesFile(fullPath, dirName);
+        if (fullPath.endsWith("styles.xml")) {
+          processStyleFile(fullPath, references);
+        } else if (fullPath.toString().endsWith(".xml")) {
+          processXmlFile(fullPath, references);
+        }
+      }
+    }
+
+    return references.build();
+  }
+
+  private static ImmutableMap<Path, Path> getAllResourceFiles(
+      AbsPath root, RelPath resourceDirectory) throws IOException {
+    return ProjectFilesystemUtils.getFilesUnderPath(
+            root,
+            resourceDirectory.getPath(),
+            EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+            ProjectFilesystemUtils.getIgnoreFilter(root, false, ImmutableSet.of()))
+        .stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                path -> MorePaths.relativize(resourceDirectory.getPath(), path),
+                path -> ProjectFilesystemUtils.getPathForRelativePath(root, path)));
   }
 
   /**
@@ -215,68 +263,30 @@ public class MiniAapt extends IsolatedStep {
    *   <li>R.layout.my_view
    *   <li>R.layout.another_view
    * </ul>
-   *
-   * <p>For files under the {@code values*} directories, see {@link #processValuesFile(AbsPath,
-   * Path)}
    */
-  private void collectResources(AbsPath root, IsolatedEventBus eventBus)
+  void processNonValuesFile(Path fullPath, String dirName)
       throws IOException, ResourceParseException {
-    Collection<Path> contents =
-        ProjectFilesystemUtils.getDirectoryContents(
-            root, ImmutableSet.of(), resDirectory.getPath());
-    for (Path dir : contents) {
-      if (!ProjectFilesystemUtils.isDirectory(root, dir)) {
-        if (!shouldIgnoreFile(root, dir)) {
-          eventBus.post(ConsoleEvent.warning("MiniAapt [warning]: ignoring file '%s'.", dir));
-        }
-        continue;
-      }
+    String filename = fullPath.getFileName().toString();
 
-      String dirname = dir.getFileName().toString();
-      if (dirname.startsWith("values")) {
-        if (!isAValuesDir(dirname)) {
-          throw new ResourceParseException("'%s' is not a valid values directory.", dir);
-        }
-        processValues(root, eventBus, dir);
-      } else {
-        processFileNamesInDirectory(root, dir);
-      }
+    int dotIndex = filename.indexOf('.');
+    String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
+
+    int dashIndex = dirName.indexOf('-');
+    String standardizedDirName = dashIndex == -1 ? dirName : dirName.substring(0, dashIndex);
+    if (!RESOURCE_TYPES.containsKey(standardizedDirName)) {
+      throw new ResourceParseException(
+          "'%s' is not a valid resource sub-directory.", standardizedDirName);
+    }
+
+    RType rType = Objects.requireNonNull(RESOURCE_TYPES.get(standardizedDirName));
+    if (rType == RType.DRAWABLE) {
+      processDrawables(fullPath);
+    } else {
+      resourceCollector.addIntResourceIfNotPresent(rType, resourceName);
     }
   }
 
-  void processFileNamesInDirectory(AbsPath root, Path dir)
-      throws IOException, ResourceParseException {
-    String dirname = dir.getFileName().toString();
-    int dashIndex = dirname.indexOf('-');
-    if (dashIndex != -1) {
-      dirname = dirname.substring(0, dashIndex);
-    }
-
-    if (!RESOURCE_TYPES.containsKey(dirname)) {
-      throw new ResourceParseException("'%s' is not a valid resource sub-directory.", dir);
-    }
-
-    for (Path resourceFile :
-        ProjectFilesystemUtils.getDirectoryContents(root, ImmutableSet.of(), dir)) {
-      if (shouldIgnoreFile(root, resourceFile)) {
-        continue;
-      }
-
-      String filename = resourceFile.getFileName().toString();
-      int dotIndex = filename.indexOf('.');
-      String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
-
-      RType rType = Objects.requireNonNull(RESOURCE_TYPES.get(dirname));
-      if (rType == RType.DRAWABLE) {
-        processDrawables(root, resourceFile);
-      } else {
-        resourceCollector.addIntResourceIfNotPresent(rType, resourceName);
-      }
-    }
-  }
-
-  void processDrawables(AbsPath projectRoot, Path resourceFile)
-      throws IOException, ResourceParseException {
+  void processDrawables(Path resourceFile) throws IOException, ResourceParseException {
     String filename = resourceFile.getFileName().toString();
     int dotIndex = filename.indexOf('.');
     String resourceName = dotIndex != -1 ? filename.substring(0, dotIndex) : filename;
@@ -285,8 +295,7 @@ public class MiniAapt extends IsolatedStep {
     boolean isGrayscaleImage = false;
     boolean isCustomDrawable = false;
     if (filename.endsWith(".xml")) {
-      try (InputStream stream =
-          ProjectFilesystemUtils.newFileInputStream(projectRoot, resourceFile)) {
+      try (InputStream stream = new BufferedInputStream(Files.newInputStream(resourceFile))) {
         Document dom = parseXml(resourceFile, stream);
         Element root = dom.getDocumentElement();
         isCustomDrawable = root.getNodeName().startsWith(CUSTOM_DRAWABLE_PREFIX);
@@ -308,25 +317,6 @@ public class MiniAapt extends IsolatedStep {
           RType.DRAWABLE, resourceName, CustomDrawableType.GRAYSCALE_IMAGE);
     } else {
       resourceCollector.addIntResourceIfNotPresent(RType.DRAWABLE, resourceName);
-    }
-  }
-
-  void processValues(AbsPath root, IsolatedEventBus eventBus, Path valuesDir)
-      throws IOException, ResourceParseException {
-    for (Path path :
-        ProjectFilesystemUtils.getFilesUnderPath(
-            root,
-            valuesDir,
-            EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-            ProjectFilesystemUtils.getIgnoreFilter(root, false, ImmutableSet.of()))) {
-      if (shouldIgnoreFile(root, path)) {
-        continue;
-      }
-      if (!ProjectFilesystemUtils.isFile(root, path)) {
-        eventBus.post(ConsoleEvent.warning("MiniAapt [warning]: ignoring non-file '%s'.", path));
-        continue;
-      }
-      processValuesFile(root, path);
     }
   }
 
@@ -357,9 +347,8 @@ public class MiniAapt extends IsolatedStep {
    * </ul>
    */
   @VisibleForTesting
-  void processValuesFile(AbsPath projectRoot, Path valuesFile)
-      throws IOException, ResourceParseException {
-    try (InputStream stream = ProjectFilesystemUtils.newFileInputStream(projectRoot, valuesFile)) {
+  void processValuesFile(Path valuesFile) throws IOException, ResourceParseException {
+    try (InputStream stream = new BufferedInputStream(Files.newInputStream(valuesFile))) {
       Document dom = parseXml(valuesFile, stream);
       Element root = dom.getDocumentElement();
 
@@ -385,20 +374,20 @@ public class MiniAapt extends IsolatedStep {
           if (nameAttribute == null || nameAttribute.getNodeValue().isEmpty()) {
             throw new ResourceParseException(
                 "Error parsing file '%s', expected a 'name' attribute in \n'%s'\n",
-                valuesFile, node.toString());
+                valuesFile.getFileName(), node.toString());
           }
           String type = verifyNodeHasTypeAttribute(valuesFile, node).getNodeValue();
 
           if (!RESOURCE_TYPES.containsKey(type)) {
             throw new ResourceParseException(
                 "Invalid resource type '%s' in <public> resource '%s' in file '%s'.",
-                type, nameAttribute.getNodeValue(), valuesFile);
+                type, nameAttribute.getNodeValue(), valuesFile.getFileName());
           }
 
           if (!PUBLIC_FILENAME.equals(valuesFile.getFileName().toString())) {
             throw new ResourceParseException(
                 "<public> resource '%s' must be declared in res/values/public.xml, but was declared in '%s'",
-                nameAttribute.getNodeValue(), valuesFile);
+                nameAttribute.getNodeValue(), valuesFile.getFileName());
           }
         }
 
@@ -423,7 +412,7 @@ public class MiniAapt extends IsolatedStep {
     if (typeNode == null || typeNode.getNodeValue().isEmpty()) {
       throw new ResourceParseException(
           "Error parsing file '%s', expected a 'type' attribute in: \n'%s'\n",
-          valuesFile, node.toString());
+          valuesFile.getFileName(), node.toString());
     }
     return typeNode;
   }
@@ -460,30 +449,10 @@ public class MiniAapt extends IsolatedStep {
     }
   }
 
-  void processXmlFilesForIds(AbsPath root, ImmutableSet.Builder<RDotTxtEntry> references)
-      throws IOException, XPathExpressionException, ResourceParseException {
-    for (Path path :
-        ProjectFilesystemUtils.getFilesUnderPath(
-            root,
-            resDirectory.getPath(),
-            input -> input.toString().endsWith(".xml"),
-            EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-            ProjectFilesystemUtils.getIgnoreFilter(root, false, ImmutableSet.of()))) {
-      String dirname = resDirectory.relativize(path).getName(0).toString();
-      if (path.endsWith("styles.xml")) {
-        processStyleFile(root, path, references);
-      } else if (!isAValuesDir(dirname)) {
-        // Ignore files under values* directories.
-        processXmlFile(root, path, references);
-      }
-    }
-  }
-
   @VisibleForTesting
-  void processStyleFile(
-      AbsPath projectRoot, Path xmlFile, ImmutableSet.Builder<RDotTxtEntry> references)
+  void processStyleFile(Path xmlFile, ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
-    try (InputStream stream = ProjectFilesystemUtils.newFileInputStream(projectRoot, xmlFile)) {
+    try (InputStream stream = new BufferedInputStream(Files.newInputStream(xmlFile))) {
       Document dom = parseXml(xmlFile, stream);
 
       XPathExpression expression = ANDROID_ATTR_USAGE_FOR_STYLES;
@@ -504,10 +473,9 @@ public class MiniAapt extends IsolatedStep {
   }
 
   @VisibleForTesting
-  void processXmlFile(
-      AbsPath projectRoot, Path xmlFile, ImmutableSet.Builder<RDotTxtEntry> references)
+  void processXmlFile(Path xmlFile, ImmutableSet.Builder<RDotTxtEntry> references)
       throws IOException, XPathExpressionException, ResourceParseException {
-    try (InputStream stream = ProjectFilesystemUtils.newFileInputStream(projectRoot, xmlFile)) {
+    try (InputStream stream = new BufferedInputStream(Files.newInputStream(xmlFile))) {
       Document dom = parseXml(xmlFile, stream);
       NodeList nodesWithIds =
           (NodeList) ANDROID_ID_DEFINITION.evaluate(dom, XPathConstants.NODESET);
@@ -576,8 +544,9 @@ public class MiniAapt extends IsolatedStep {
     return dirname.equals("values") || dirname.startsWith("values-");
   }
 
-  private static boolean shouldIgnoreFile(AbsPath root, Path path) throws IOException {
-    return ProjectFilesystemUtils.isHidden(root, path)
+  @VisibleForTesting
+  static boolean shouldIgnoreFile(Path path) throws IOException {
+    return Files.isHidden(path)
         || IGNORED_FILE_EXTENSIONS.contains(
             com.google.common.io.Files.getFileExtension(path.getFileName().toString()))
         || AaptStep.isSilentlyIgnored(path);
