@@ -6,11 +6,11 @@
 	<dict>
 		<key>Resources/Info.plist</key>
 		<data>
-		zdnmQeiTcgP0GZU18a9z/TUwMNA=
+		G+hnNBTohO/P2Zs9AWX2ncm4f3U=
 		</data>
 		<key>Resources/libShimulator.dylib</key>
 		<data>
-		jh6g9UYVZVVK/JAPEE9RxCUJXeY=
+		csyngcNBQlbnZ7EKXByPbFe17a4=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -19,19 +19,19 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			yyB3dqxEk+ZlMQpHUntC8G/Wg60=
+			JYYKjXbd2WXWgFb8x1IEfIlU5+4=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"cb207776ac4493e665310a47527b42f06fd683ad"</string>
+			<string>cdhash H"25860a8d76ddd965d68056fcc752047c8954e7ee"</string>
 		</dict>
 		<key>Frameworks/XCTestBootstrap.framework</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			hciK5FSksKOA39NTbQuJ+FyajNo=
+			Ifs4O6poplHWQvIOruY6x/JXYBM=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"85c88ae454a4b0a380dfd3536d0b89f85c9a8cda"</string>
+			<string>cdhash H"21fb383baa68a651d642f20eaee63ac7f2576013"</string>
 		</dict>
 		<key>Headers/FBAFCConnection.h</key>
 		<dict>
@@ -93,7 +93,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			a2sMZEkr8LmK+9KFIEJJ8z69dY2n2ahl1A0XfPLWSlI=
+			xvLZNDocAn0Yp2vyyrasTKcafhL6IH20aTKUwQMNj0U=
 			</data>
 		</dict>
 		<key>Headers/FBDeviceControlError.h</key>
@@ -152,13 +152,6 @@
 			hY2MPSYzP6Gd0Yo5UkCTHKEodZEAp08ivWpW8upQLoc=
 			</data>
 		</dict>
-		<key>Headers/FBDeviceVideoFileEncoder.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			fxdko1YHpzy2rNTXlEQTLEpxAvy/DtVAF6vnA+QePfY=
-			</data>
-		</dict>
 		<key>Headers/FBDeviceVideoStream.h</key>
 		<dict>
 			<key>hash2</key>
@@ -170,14 +163,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			6CZpJW2yexkbmkZVVnhHSgy+IQMidA2Z8U/K6cqN1T4=
-			</data>
-		</dict>
-		<key>Headers/FBGDBClient.h</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			FmFFkyuzEFE3p4p8iyEf1OZn6kTPEmGa2P/mp9KSVr4=
+			txkX7VREI0xMUsA0VdhsxAznIzFmMf7qymtYxIS7ROY=
 			</data>
 		</dict>
 		<key>Headers/FBServiceConnectionClient.h</key>
@@ -205,14 +191,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			4/aNkakBOpsEzirYrFWkZ3AHzoeymP/4sLuxl6eQoJU=
+			keSLVXb7Z1oNpbHn8hPlV57r93UV+crfB2sD3R9SxyY=
 			</data>
 		</dict>
 		<key>Resources/libShimulator.dylib</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			gTjxNGdABqNT94O2PzVVOOq/IdjcUy3b4b0MA8fdkLk=
+			YJ2IoDAeg40Gb9WSGy6ipiA4Nd/U07TVu+P5/5oVSX8=
 			</data>
 		</dict>
 	</dict>
