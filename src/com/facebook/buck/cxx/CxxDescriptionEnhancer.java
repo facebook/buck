@@ -179,6 +179,7 @@ public class CxxDescriptionEnhancer {
       HeaderMode mode,
       ImmutableMap<Path, SourcePath> headers,
       HeaderVisibility headerVisibility,
+      Optional<String> moduleName,
       boolean useSubmodules,
       boolean moduleRequiresCplusplus,
       Flavor... flavors) {
@@ -195,7 +196,7 @@ public class CxxDescriptionEnhancer {
         headerSymlinkTreeRoot.getPath(),
         headers,
         mode,
-        Optional.empty(),
+        moduleName,
         useSubmodules,
         moduleRequiresCplusplus);
   }
@@ -218,6 +219,7 @@ public class CxxDescriptionEnhancer {
             shouldCreateHeadersSymlinks),
         headers,
         headerVisibility,
+        Optional.empty(),
         false,
         false,
         cxxPlatform.getFlavor());

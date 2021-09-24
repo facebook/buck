@@ -859,12 +859,14 @@ public class AppleLibraryDescription
               buildTarget, graphBuilder, cxxPlatform, HeaderVisibility.PUBLIC));
     }
 
+    String moduleName = args.getModuleName().orElse(headerPathPrefix.toString());
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
         HeaderMode.SYMLINK_TREE_WITH_MODULEMAP,
         headers.build(),
         HeaderVisibility.PUBLIC,
+        Optional.of(moduleName),
         args.getUseSubmodules(),
         args.getModuleRequiresCxx());
   }

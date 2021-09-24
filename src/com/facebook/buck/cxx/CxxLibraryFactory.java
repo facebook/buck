@@ -934,6 +934,7 @@ public class CxxLibraryFactory {
         CxxDescriptionEnhancer.parseExportedHeaders(
             buildTarget, graphBuilder, projectFilesystem, Optional.empty(), args),
         HeaderVisibility.PUBLIC,
+        Optional.empty(),
         false,
         false);
   }
