@@ -121,7 +121,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             projectFilesystem,
             symlinkTreeRoot.getPath(),
             links,
-            Optional.of("SomeModule"),
+            "SomeModule",
             false,
             false);
   }
@@ -176,7 +176,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 .putAll(links)
                 .put(swiftHeaderPath, FakeSourcePath.of("SomeModule"))
                 .build(),
-            Optional.of("SomeModule"),
+            "SomeModule",
             false,
             false);
 
@@ -219,7 +219,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 Paths.get("OtherModule", "Header.h"),
                 PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
-            Optional.of("OtherModule"),
+            "OtherModule",
             false,
             false);
 

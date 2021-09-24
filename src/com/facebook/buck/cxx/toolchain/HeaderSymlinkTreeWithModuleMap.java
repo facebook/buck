@@ -37,7 +37,7 @@ import java.util.Optional;
 
 public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
 
-  @AddToRuleKey private final Optional<String> moduleName;
+  @AddToRuleKey private final String moduleName;
   @AddToRuleKey private final boolean useSubmodules;
   @AddToRuleKey private boolean moduleRequiresCplusplus;
 
@@ -46,7 +46,7 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
-      Optional<String> moduleName,
+      String moduleName,
       boolean useSubmodules,
       boolean moduleRequiresCplusplus) {
     super(target, filesystem, root, links);
@@ -60,33 +60,17 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
       ProjectFilesystem filesystem,
       Path root,
       ImmutableMap<Path, SourcePath> links,
-      Optional<String> inputModuleName,
+      String moduleName,
       boolean useSubmodules,
       boolean moduleRequiresCplusplus) {
-    Optional<String> moduleName =
-        inputModuleName.isPresent() ? inputModuleName : getModuleName(links);
     return new HeaderSymlinkTreeWithModuleMap(
         target, filesystem, root, links, moduleName, useSubmodules, moduleRequiresCplusplus);
   }
 
-  public static HeaderSymlinkTreeWithModuleMap create(
-      BuildTarget target,
-      ProjectFilesystem filesystem,
-      Path root,
-      ImmutableMap<Path, SourcePath> links,
-      Optional<String> inputModuleName,
-      boolean useSubmodules) {
-    return create(target, filesystem, root, links, inputModuleName, useSubmodules, false);
-  }
-
   @Override
   public SourcePath getSourcePathToOutput() {
-    if (moduleName.isPresent()) {
-      return ExplicitBuildTargetSourcePath.of(
-          getBuildTarget(), moduleMapPath(getProjectFilesystem(), getBuildTarget()));
-    } else {
-      return super.getSourcePathToOutput();
-    }
+    return ExplicitBuildTargetSourcePath.of(
+        getBuildTarget(), moduleMapPath(getProjectFilesystem(), getBuildTarget()));
   }
 
   @Override
@@ -96,37 +80,26 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
 
     ImmutableList.Builder<Step> builder =
         ImmutableList.<Step>builder().addAll(super.getBuildSteps(context, buildableContext));
-    moduleName.ifPresent(
-        moduleName -> {
-          Path expectedSwiftHeaderPath = Paths.get(moduleName, moduleName + "-Swift.h");
-          ImmutableSortedSet<Path> pathsWithoutSwiftHeader =
-              paths.stream()
-                  .filter(path -> !path.equals(expectedSwiftHeaderPath))
-                  .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
-          Path moduleMapPath = moduleMapPath(getProjectFilesystem(), getBuildTarget()).getPath();
+    Path expectedSwiftHeaderPath = Paths.get(moduleName, moduleName + "-Swift.h");
+    ImmutableSortedSet<Path> pathsWithoutSwiftHeader =
+        paths.stream()
+            .filter(path -> !path.equals(expectedSwiftHeaderPath))
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    Path moduleMapPath = moduleMapPath(getProjectFilesystem(), getBuildTarget()).getPath();
 
-          builder.add(
-              new ModuleMapStep(
-                  getProjectFilesystem(),
-                  moduleMapPath,
-                  ModuleMap.create(
-                      moduleName,
-                      pathsWithoutSwiftHeader,
-                      paths.contains(expectedSwiftHeaderPath)
-                          ? Optional.of(expectedSwiftHeaderPath)
-                          : Optional.empty(),
-                      useSubmodules,
-                      moduleRequiresCplusplus)));
-        });
+    builder.add(
+        new ModuleMapStep(
+            getProjectFilesystem(),
+            moduleMapPath,
+            ModuleMap.create(
+                moduleName,
+                pathsWithoutSwiftHeader,
+                paths.contains(expectedSwiftHeaderPath)
+                    ? Optional.of(expectedSwiftHeaderPath)
+                    : Optional.empty(),
+                useSubmodules,
+                moduleRequiresCplusplus)));
     return builder.build();
-  }
-
-  static Optional<String> getModuleName(ImmutableMap<Path, SourcePath> links) {
-    if (links.size() > 0) {
-      return Optional.of(links.keySet().iterator().next().getName(0).toString());
-    } else {
-      return Optional.empty();
-    }
   }
 
   static RelPath moduleMapPath(ProjectFilesystem filesystem, BuildTarget target) {
