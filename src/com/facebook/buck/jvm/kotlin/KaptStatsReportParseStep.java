@@ -21,6 +21,8 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.AnnotationProcessorPerfStats;
 import com.facebook.buck.event.AnnotationProcessorStatsEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.KotlinPluginPerfStats;
+import com.facebook.buck.event.KotlinPluginStatsEvent;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -48,6 +50,7 @@ import javax.annotation.Nullable;
  * com.udinic.MetagenProcessor: total: 1650 ms, init: 39 ms, 3 round(s): 1611 ms, 0 ms, 0 ms
  * com.udinic.ComponentsProcessor: total: 11 ms, init: 11 ms, 0 round(s):
  * com.udinic.InjectorProcessor: total: 390 ms, init: 17 ms, 3 round(s): 293 ms, 47 ms, 33 ms
+ * General: totalTime: 3825 ms, initialAnalysis: 275 ms, stubs: 29 ms, annotationProcessing: 2104 ms
  * </pre>
  */
 public class KaptStatsReportParseStep extends IsolatedStep {
@@ -58,6 +61,9 @@ public class KaptStatsReportParseStep extends IsolatedStep {
       Pattern.compile(
           "([\\w.$]+)\\: total: (\\d+) ms, init: (\\d+) ms, (\\d+) round\\(s\\):([\\w\\d ,]*)");
   private static final Pattern PATTERN_ROUND_TIME = Pattern.compile(" (\\d+) ms");
+  private static final Pattern PATTERN_GENERAL_STATS_LINE =
+      Pattern.compile(
+          "General\\: totalTime: (\\d+) ms, initialAnalysis: (\\d+) ms, stubs: (\\d+) ms, annotationProcessing: (\\d+) ms(.*)");
 
   Path pathToReportFile;
   BuildTargetValue invokingRule;
@@ -95,6 +101,15 @@ public class KaptStatsReportParseStep extends IsolatedStep {
             new AnnotationProcessorStatsEvent(
                 invokingRule.getFullyQualifiedName(), annotationProcessorPerfStats);
         eventBus.post(statsEvent);
+      } else {
+        KotlinPluginPerfStats kotlinPluginPerfStats = parseKaptStats(lines.get(i));
+
+        if (kotlinPluginPerfStats != null) {
+          KotlinPluginStatsEvent kaptStatsEvent =
+              new KotlinPluginStatsEvent(
+                  invokingRule.getFullyQualifiedName(), kotlinPluginPerfStats);
+          eventBus.post(kaptStatsEvent);
+        }
       }
     }
   }
@@ -122,6 +137,33 @@ public class KaptStatsReportParseStep extends IsolatedStep {
               processorName, Long.parseLong(initTime), Long.parseLong(totalTime), roundTimesList);
 
       return annotationProcessorPerfStats;
+    }
+
+    return null;
+  }
+
+  @Nullable
+  private KotlinPluginPerfStats parseKaptStats(String line) {
+    Matcher matcher = PATTERN_GENERAL_STATS_LINE.matcher(line);
+
+    if (matcher.find()) {
+      // The first group is the entire line, so we start from the second group
+      String totalTime = matcher.group(1);
+      String initialAnalysis = matcher.group(2);
+      String stubs = matcher.group(3);
+      String annotationProcessing = matcher.group(4);
+      String extraData = matcher.group(5);
+
+      KotlinPluginPerfStats kotlinPluginPerfStats =
+          new KotlinPluginPerfStats(
+              "KAPT",
+              Long.parseLong(totalTime),
+              Long.parseLong(initialAnalysis),
+              Long.parseLong(stubs),
+              Long.parseLong(annotationProcessing),
+              extraData);
+
+      return kotlinPluginPerfStats;
     }
 
     return null;

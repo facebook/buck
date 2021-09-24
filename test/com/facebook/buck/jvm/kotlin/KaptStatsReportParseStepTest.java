@@ -26,6 +26,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.event.AnnotationProcessorPerfStats;
 import com.facebook.buck.event.AnnotationProcessorStatsEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.KotlinPluginPerfStats;
+import com.facebook.buck.event.KotlinPluginStatsEvent;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.nio.file.Path;
@@ -41,7 +43,8 @@ import org.junit.Test;
 public class KaptStatsReportParseStepTest {
 
   private KaptStatsReportParseStep step;
-  private Capture<AnnotationProcessorStatsEvent> captureStatsEvent;
+  private Capture<AnnotationProcessorStatsEvent> captureProcessorStatsEvent;
+  private Capture<KotlinPluginStatsEvent> captureKaptStatsEvent;
   private BuckEventBus mockEventBus;
 
   @Before
@@ -51,7 +54,8 @@ public class KaptStatsReportParseStepTest {
     BuildTargetValue dummyBuildTarget = BuildTargetValue.of(LIBRARY, "//udinic/test:test");
 
     mockEventBus = EasyMock.createMock(BuckEventBus.class);
-    captureStatsEvent = EasyMock.newCapture(CaptureType.ALL);
+    captureProcessorStatsEvent = EasyMock.newCapture(CaptureType.ALL);
+    captureKaptStatsEvent = EasyMock.newCapture(CaptureType.ALL);
 
     step = new KaptStatsReportParseStep(dummyPath, dummyBuildTarget, mockEventBus);
   }
@@ -63,13 +67,13 @@ public class KaptStatsReportParseStepTest {
             "Kapt Annotation Processing performance report:",
             "com.udinic.BlaProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms");
 
-    mockEventBus.post(capture(captureStatsEvent));
+    mockEventBus.post(capture(captureProcessorStatsEvent));
     EasyMock.expectLastCall().once();
     replay(mockEventBus);
 
     step.parseReport(reportLines);
 
-    AnnotationProcessorPerfStats processorStats = captureStatsEvent.getValue().getData();
+    AnnotationProcessorPerfStats processorStats = captureProcessorStatsEvent.getValue().getData();
 
     assertProcessorStats(
         processorStats, "com.udinic.BlaProcessor", 15, 999, 4, newArrayList(570L, 200L, 30L, 184L));
@@ -84,14 +88,14 @@ public class KaptStatsReportParseStepTest {
             "com.udinic.CoolProcessor: total: 314 ms, init: 1 ms, 4 round(s): 313 ms, 0 ms, 0 ms, 0 ms",
             "com.udinic.UdinicProcessor: total: 38 ms, init: 19 ms, 4 round(s): 16 ms, 2 ms, 1 ms, 0 ms");
 
-    mockEventBus.post(capture(captureStatsEvent));
+    mockEventBus.post(capture(captureProcessorStatsEvent));
     EasyMock.expectLastCall().times(3);
     replay(mockEventBus);
 
     step.parseReport(reportLines);
 
     List<AnnotationProcessorPerfStats> processorStatsList =
-        captureStatsEvent.getValues().stream()
+        captureProcessorStatsEvent.getValues().stream()
             .map(AnnotationProcessorStatsEvent::getData)
             .collect(Collectors.toList());
 
@@ -127,14 +131,60 @@ public class KaptStatsReportParseStepTest {
             "Kapt Annotation Processing performance report:",
             "com.udinic.SadProcessor: total: 0 ms, init: 0 ms, 0 round(s): ");
 
-    mockEventBus.post(capture(captureStatsEvent));
+    mockEventBus.post(capture(captureProcessorStatsEvent));
     EasyMock.expectLastCall().once();
     replay(mockEventBus);
 
     step.parseReport(reportLines);
 
-    AnnotationProcessorPerfStats processorStats = captureStatsEvent.getValue().getData();
+    AnnotationProcessorPerfStats processorStats = captureProcessorStatsEvent.getValue().getData();
 
+    assertProcessorStats(processorStats, "com.udinic.SadProcessor", 0, 0, 0, newArrayList());
+  }
+
+  @Test
+  public void testGeneralKaptData() {
+    List<String> reportLines =
+        newArrayList(
+            "Kapt Annotation Processing performance report:",
+            "com.udinic.SadProcessor: total: 0 ms, init: 0 ms, 0 round(s): ",
+            "General: totalTime: 3825 ms, initialAnalysis: 275 ms, stubs: 29 ms, annotationProcessing: 2104 ms");
+
+    mockEventBus.post(capture(captureProcessorStatsEvent));
+    EasyMock.expectLastCall().once();
+    mockEventBus.post(capture(captureKaptStatsEvent));
+    EasyMock.expectLastCall().once();
+    replay(mockEventBus);
+
+    step.parseReport(reportLines);
+
+    KotlinPluginPerfStats kaptStats = captureKaptStatsEvent.getValue().getData();
+    assertKaptStats(kaptStats, "KAPT", 3825, 275, 29, 2104, "");
+
+    AnnotationProcessorPerfStats processorStats = captureProcessorStatsEvent.getValue().getData();
+    assertProcessorStats(processorStats, "com.udinic.SadProcessor", 0, 0, 0, newArrayList());
+  }
+
+  @Test
+  public void testGeneralKaptDataWithExtraData() {
+    List<String> reportLines =
+        newArrayList(
+            "Kapt Annotation Processing performance report:",
+            "com.udinic.SadProcessor: total: 0 ms, init: 0 ms, 0 round(s): ",
+            "General: totalTime: 3825 ms, initialAnalysis: 275 ms, stubs: 29 ms, annotationProcessing: 2104 ms [data=good, ksp=better]");
+
+    mockEventBus.post(capture(captureProcessorStatsEvent));
+    EasyMock.expectLastCall().once();
+    mockEventBus.post(capture(captureKaptStatsEvent));
+    EasyMock.expectLastCall().once();
+    replay(mockEventBus);
+
+    step.parseReport(reportLines);
+
+    KotlinPluginPerfStats kaptStats = captureKaptStatsEvent.getValue().getData();
+    assertKaptStats(kaptStats, "KAPT", 3825, 275, 29, 2104, "[data=good, ksp=better]");
+
+    AnnotationProcessorPerfStats processorStats = captureProcessorStatsEvent.getValue().getData();
     assertProcessorStats(processorStats, "com.udinic.SadProcessor", 0, 0, 0, newArrayList());
   }
 
@@ -169,13 +219,13 @@ public class KaptStatsReportParseStepTest {
             "Kapt Annotation Processing performance report:",
             "com.udinic.MasterClass$SubProcessor: total: 999 ms, init: 15 ms, 4 round(s): 570 ms, 200 ms, 30 ms, 184 ms");
 
-    mockEventBus.post(capture(captureStatsEvent));
+    mockEventBus.post(capture(captureProcessorStatsEvent));
     EasyMock.expectLastCall().once();
     replay(mockEventBus);
 
     step.parseReport(reportLines);
 
-    AnnotationProcessorPerfStats processorStats = captureStatsEvent.getValue().getData();
+    AnnotationProcessorPerfStats processorStats = captureProcessorStatsEvent.getValue().getData();
 
     // Making sure the parser accounts for the "$" sign in the class name
     assertProcessorStats(
@@ -199,5 +249,21 @@ public class KaptStatsReportParseStepTest {
     assertEquals(processorStats.getTotalTime(), totalTime);
     assertEquals(processorStats.getRounds(), numRounds);
     assertEquals(processorStats.getRoundTimes(), roundTimes);
+  }
+
+  private void assertKaptStats(
+      KotlinPluginPerfStats kaptStats,
+      String name,
+      long totalTime,
+      long initialAnalysis,
+      long stubs,
+      long annotationProcessing,
+      String extraData) {
+    assertEquals(kaptStats.getName(), name);
+    assertEquals(kaptStats.getTotalTime(), totalTime);
+    assertEquals(kaptStats.getInitialAnalysis(), initialAnalysis);
+    assertEquals(kaptStats.getStubs(), stubs);
+    assertEquals(kaptStats.getAnnotationProcessing(), annotationProcessing);
+    assertEquals(kaptStats.getExtraData(), extraData);
   }
 }
