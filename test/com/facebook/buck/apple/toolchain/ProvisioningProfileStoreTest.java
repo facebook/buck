@@ -265,27 +265,6 @@ public class ProvisioningProfileStoreTest {
   }
 
   @Test
-  public void testGetByUUID() {
-    ProvisioningProfileMetadata expected =
-        makeTestMetadata(
-            "BBBBBBBBBB.*", new Date(Long.MAX_VALUE), "11111111-1111-1111-1111-111111111111");
-
-    ProvisioningProfileStore profiles =
-        createStorefromProvisioningProfiles(
-            ImmutableList.of(
-                expected,
-                makeTestMetadata(
-                    "BBBBBBBBBB.com.facebook.test",
-                    new Date(Long.MAX_VALUE),
-                    "00000000-0000-0000-0000-000000000000")));
-
-    Optional<ProvisioningProfileMetadata> actual =
-        profiles.getProvisioningProfileByUUID("11111111-1111-1111-1111-111111111111");
-
-    assertThat(actual.get(), is(equalTo(expected)));
-  }
-
-  @Test
   public void testMatchesSpecificApp() {
     ProvisioningProfileMetadata expected =
         makeTestMetadata(

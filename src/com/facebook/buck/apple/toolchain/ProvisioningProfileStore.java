@@ -73,16 +73,6 @@ public abstract class ProvisioningProfileStore implements AddsToRuleKey, Toolcha
     return getProvisioningProfilesSupplier().get();
   }
 
-  public Optional<ProvisioningProfileMetadata> getProvisioningProfileByUUID(
-      String provisioningProfileUUID) {
-    for (ProvisioningProfileMetadata profile : getProvisioningProfiles()) {
-      if (profile.getUUID().equals(provisioningProfileUUID)) {
-        return Optional.of(profile);
-      }
-    }
-    return Optional.empty();
-  }
-
   private static boolean matchesOrArrayIsSubsetOf(
       String entitlementName,
       @Nullable NSObject expectedEntitlementsPlistValue,

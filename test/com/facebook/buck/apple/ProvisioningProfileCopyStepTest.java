@@ -97,7 +97,9 @@ public class ProvisioningProfileCopyStepTest {
               ProvisioningProfileStoreFactory.fromSearchPath(
                   new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir);
           Optional<ProvisioningProfileMetadata> maybeSelectedProfile =
-              store.getProvisioningProfileByUUID("00000000-0000-0000-0000-000000000000");
+              store.getProvisioningProfiles().stream()
+                  .filter(x -> x.getUUID().equals("00000000-0000-0000-0000-000000000000"))
+                  .findFirst();
           assertTrue(maybeSelectedProfile.isPresent());
           return maybeSelectedProfile.get();
         };
