@@ -121,7 +121,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             projectFilesystem,
             symlinkTreeRoot.getPath(),
             links,
-            Optional.empty(),
+            Optional.of("SomeModule"),
+            false,
             false);
   }
 
@@ -153,7 +154,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                     BuildTargetPaths.getGenPath(
                             projectFilesystem.getBuckPaths(), buildTarget, "%s/module.modulemap")
                         .getPath(),
-                    ModuleMap.create("SomeModule", links.keySet(), Optional.empty(), false)))
+                    ModuleMap.create("SomeModule", links.keySet(), Optional.empty(), false, false)))
             .build();
     ImmutableList<Step> actualBuildSteps =
         symlinkTreeBuildRule.getBuildSteps(buildContext, buildableContext);
@@ -175,7 +176,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 .putAll(links)
                 .put(swiftHeaderPath, FakeSourcePath.of("SomeModule"))
                 .build(),
-            Optional.empty(),
+            Optional.of("SomeModule"),
+            false,
             false);
 
     ImmutableList<Step> actualBuildSteps =
@@ -187,7 +189,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             BuildTargetPaths.getGenPath(
                     projectFilesystem.getBuckPaths(), buildTarget, "%s/module.modulemap")
                 .getPath(),
-            ModuleMap.create("SomeModule", links.keySet(), Optional.of(swiftHeaderPath), false));
+            ModuleMap.create(
+                "SomeModule", links.keySet(), Optional.of(swiftHeaderPath), false, false));
     assertThat(actualBuildSteps, hasItem(moduleMapStep));
   }
 
@@ -216,7 +219,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 Paths.get("OtherModule", "Header.h"),
                 PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
-            Optional.empty(),
+            Optional.of("OtherModule"),
+            false,
             false);
 
     // Calculate their rule keys and verify they're different.
@@ -243,6 +247,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             ImmutableSet.of(
                 Paths.get("MyModule", "firstheader.h"), Paths.get("MyModule", "secondheader.h")),
             Optional.of(Paths.get("MyModule", "MyModule-Swift.h")),
+            false,
             false);
 
     assertEquals(
@@ -266,7 +271,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 Paths.get("MyModule", "conflict.h"),
                 Paths.get("MyModule", "conflict.hh")),
             Optional.of(Paths.get("MyModule", "MyModule-Swift.h")),
-            true);
+            true,
+            false);
     assertEquals(
         "module MyModule {\n"
             + "\tmodule _3rd_header {\n"
@@ -305,7 +311,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 Paths.get("BPrefix", "Sub.2", "a_header1.h"),
                 Paths.get("BPrefix", "Sub.2", "a_header2.h")),
             Optional.empty(),
-            true);
+            true,
+            false);
     assertEquals(
         "module MyModule {\n"
             + "\tmodule APrefix {\n"

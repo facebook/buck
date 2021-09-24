@@ -203,25 +203,6 @@ public class CxxDescriptionEnhancer {
   public static HeaderSymlinkTree createHeaderSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      HeaderMode mode,
-      ImmutableMap<Path, SourcePath> headers,
-      HeaderVisibility headerVisibility,
-      boolean useSubmodules,
-      Flavor... flavors) {
-    return createHeaderSymlinkTree(
-        buildTarget,
-        projectFilesystem,
-        mode,
-        headers,
-        headerVisibility,
-        useSubmodules,
-        false,
-        flavors);
-  }
-
-  public static HeaderSymlinkTree createHeaderSymlinkTree(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       ImmutableMap<Path, SourcePath> headers,

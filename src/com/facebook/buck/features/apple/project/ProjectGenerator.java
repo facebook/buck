@@ -3224,7 +3224,11 @@ public class ProjectGenerator {
 
           projectFilesystem.writeContentsToPath(
               ModuleMap.create(
-                      moduleName.get(), headerPathsWithoutSwiftObjCHeader, swiftHeaderPath, false)
+                      moduleName.get(),
+                      headerPathsWithoutSwiftObjCHeader,
+                      swiftHeaderPath,
+                      false,
+                      false)
                   .render(),
               moduleRoot.resolve("module.modulemap"));
           projectFilesystem.writeContentsToPath(
@@ -3232,6 +3236,7 @@ public class ProjectGenerator {
                       moduleName.get(),
                       headerPathsWithoutSwiftObjCHeader,
                       Optional.empty(), /* do not use the -Swift.h header */
+                      false,
                       false)
                   .render(),
               moduleRoot.resolve("objc.modulemap"));
@@ -3252,7 +3257,11 @@ public class ProjectGenerator {
         } else {
           projectFilesystem.writeContentsToPath(
               ModuleMap.create(
-                      moduleName.get(), headerPathsWithoutSwiftObjCHeader, Optional.empty(), false)
+                      moduleName.get(),
+                      headerPathsWithoutSwiftObjCHeader,
+                      Optional.empty(),
+                      false,
+                      false)
                   .render(),
               moduleRoot.resolve("module.modulemap"));
         }

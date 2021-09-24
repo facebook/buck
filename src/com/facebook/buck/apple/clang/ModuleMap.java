@@ -174,20 +174,6 @@ public class ModuleMap {
   }
 
   /**
-   * Creates a module map.
-   *
-   * @param moduleName The name of the module.
-   * @param headerPaths The exported headers of the module.
-   * @param swiftHeader The path to the optional `-Swift.h` header. It will create the Swift
-   *     submodule if provided.
-   * @return A module map instance.
-   */
-  public static ModuleMap create(
-      String moduleName, Set<Path> headerPaths, Optional<Path> swiftHeader, boolean useSubmodules) {
-    return ModuleMap.create(moduleName, headerPaths, swiftHeader, useSubmodules, false);
-  }
-
-  /**
    * Renders the modulemap to a string, to be written to a .modulemap file.
    *
    * @return A string representation of the modulemap.
