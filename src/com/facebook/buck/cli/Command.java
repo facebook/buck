@@ -93,4 +93,9 @@ public interface Command {
 
   /** @return file to write build ID too, if any */
   Optional<Path> getWriteBuildIdFile();
+
+  /** @return true if this command is implemented, otherwise false. */
+  default boolean isImplemented() {
+    return true;
+  }
 }

@@ -69,10 +69,14 @@ public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
       }
     }
     if (c != null) {
+      boolean isImplemented = true;
       try {
         Command command = (Command) subCommand(c, params);
-        command.setPluginManager(pluginManager);
-        cachedSetter.addValue(command);
+        isImplemented = command.isImplemented();
+        if (isImplemented) {
+          command.setPluginManager(pluginManager);
+          cachedSetter.addValue(command);
+        }
       } catch (CmdLineException e) {
         Object subCmdObj = instantiate(c);
         if (subCmdObj instanceof AbstractCommand) {
@@ -80,6 +84,10 @@ public class AdditionalOptionsSubCommandHandler extends SubCommandHandler {
         } else {
           throw e;
         }
+      }
+
+      if (!isImplemented) {
+        throw new CmdLineException(String.format("Rerun 'buck %s'", c.name()));
       }
       return params.size(); // consume all the remaining tokens
     } else {

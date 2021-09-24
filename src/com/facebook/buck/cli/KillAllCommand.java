@@ -20,6 +20,7 @@ import com.facebook.buck.util.ExitCode;
 
 /** Buck subcommand to kill all buck processes. */
 public class KillAllCommand extends AbstractCommand {
+
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) {
     throw new IllegalStateException(
@@ -35,5 +36,10 @@ public class KillAllCommand extends AbstractCommand {
   @Override
   public String getShortDescription() {
     return "kill all buckd processes";
+  }
+
+  @Override
+  public boolean isImplemented() {
+    return false;
   }
 }

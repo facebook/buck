@@ -35,4 +35,9 @@ public class KillCommand extends AbstractCommand {
   public String getShortDescription() {
     return "kill buckd for the current project";
   }
+
+  @Override
+  public boolean isImplemented() {
+    return false;
+  }
 }
