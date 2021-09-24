@@ -16,12 +16,12 @@
 
 package com.facebook.buck.step.isolatedsteps.android;
 
-import com.facebook.buck.android.AaptStep;
 import com.facebook.buck.android.aapt.FakeRDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.xml.XmlDomParserWithLineNumbers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -64,7 +64,7 @@ public class MiniAapt {
 
   private static final String GRAYSCALE_SUFFIX = "_g.png";
 
-  /** See {@link AaptStep} for a list of files that we ignore. */
+  // Ignore .orig files that Mercurial creates
   public static final ImmutableList<String> IGNORED_FILE_EXTENSIONS = ImmutableList.of("orig");
 
   private static final String ID_DEFINITION_PREFIX = "@+id/";
@@ -100,6 +100,21 @@ public class MiniAapt {
    */
   private static final ImmutableSet<String> IGNORED_TAGS =
       ImmutableSet.of("eat-comment", "skip", PUBLIC_TAG);
+
+  // aapt, unless specified a pattern, ignores certain files and directories. We follow the same
+  // logic as the default pattern found at http://goo.gl/OTTK88 and line 61.
+  public static boolean isSilentlyIgnored(Path path) {
+    String fileName = path.getFileName().toString();
+    return ".gitkeep".equalsIgnoreCase(fileName)
+        || ".svn".equalsIgnoreCase(fileName)
+        || ".git".equalsIgnoreCase(fileName)
+        || ".ds_store".equalsIgnoreCase(fileName)
+        || MoreStrings.endsWithIgnoreCase(fileName, ".scc")
+        || "cvs".equalsIgnoreCase(fileName)
+        || "thumbs.db".equalsIgnoreCase(fileName)
+        || "picasa.ini".equalsIgnoreCase(fileName)
+        || fileName.endsWith("~");
+  }
 
   private final ImmutableSet<Path> pathsToSymbolsOfDeps;
   private final RDotTxtResourceCollector resourceCollector;
@@ -477,7 +492,7 @@ public class MiniAapt {
     return Files.isHidden(path)
         || IGNORED_FILE_EXTENSIONS.contains(
             com.google.common.io.Files.getFileExtension(path.getFileName().toString()))
-        || AaptStep.isSilentlyIgnored(path);
+        || isSilentlyIgnored(path);
   }
 
   public ImmutableSet<RDotTxtEntry> verifyReferences(ImmutableSet<RDotTxtEntry> references)

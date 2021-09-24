@@ -5,7 +5,7 @@ load(
 
 java_immutables_library(
     name = "android_steps",
-    srcs = glob(["*.java"]),
+    srcs = glob(["*Step.java"]),
     visibility = [
         "//src/com/facebook/buck/android/...",
         "//src/com/facebook/buck/externalactions/...",
@@ -27,7 +27,39 @@ java_immutables_library(
         "//third-party/java/guava:guava",
     ],
     exported_deps = [
+        ":mini_aapt",
         "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//src/com/facebook/buck/step/isolatedsteps/shell:shell_steps",
     ],
 )
+
+java_library(
+    name = "mini_aapt",
+    srcs = ["MiniAapt.java", "MiniAaptExecutableMain.java"],
+    visibility = [
+        "//src/com/facebook/buck/android/...",
+        "//src/com/facebook/buck/externalactions/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/android/aapt:r_dot_txt",
+        "//src/com/facebook/buck/util/xml:xml",
+        "//src/com/facebook/buck/util/string:string",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
+        "//src/com/facebook/buck/step/isolatedsteps/shell:shell_steps",
+    ],
+)
+
+java_binary(
+    name = "mini_aapt_binary",
+    main_class = "com.facebook.buck.step.isolatedsteps.android.MiniAaptExecutableMain",
+    deps = [
+        ":mini_aapt",
+    ],
+)
+
+
