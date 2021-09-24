@@ -77,6 +77,11 @@ public abstract class LogBuckConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
+  public boolean isLogFileChangesEnabled() {
+    return getDelegate().getBooleanValue(LOG_SECTION, "log_file_changes_enabled", false);
+  }
+
+  @Value.Lazy
   public boolean isJavaGCEventLoggingEnabled() {
     return getDelegate().getBooleanValue(LOG_SECTION, "gc_event_logging_enabled", false);
   }

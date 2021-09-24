@@ -110,6 +110,7 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanError;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.io.watchman.WatchmanRecordChecker;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.io.watchman.WatchmanWatcher.FreshInstanceAction;
 import com.facebook.buck.io.watchman.WatchmanWatcherException;
@@ -206,6 +207,7 @@ import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
+import com.facebook.buck.util.versioncontrol.HgCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
@@ -1440,6 +1442,24 @@ public final class MainRunner {
           // The counters will be unregistered once the counter registry is closed.
           counterRegistry.registerCounters(
               parserAndCaches.getParser().getPermState().getCounters());
+
+          if (logBuckConfig.isLogFileChangesEnabled()) {
+            WatchmanRecordChecker checker =
+                new WatchmanRecordChecker(
+                    watchman,
+                    ImmutableSet.<PathMatcher>builder()
+                        .addAll(filesystem.getIgnoredDirectories())
+                        .addAll(DEFAULT_IGNORE_GLOBS)
+                        .build(),
+                    filesystem.getBuckPaths().getBuckOut().getPath(),
+                    new HgCmdLineInterface(
+                        new PrintStreamProcessExecutorFactory(),
+                        cells.getRootCell().getFilesystem().getRootPath().getPath(),
+                        vcBuckConfig.getHgCmd(),
+                        vcBuckConfig.getHgFastStatsTemplate(),
+                        buckConfig.getEnvironment()));
+            checker.checkFileChanges(buildEventBus);
+          }
 
           Optional<ProcessManager> processManager;
           if (platform == Platform.WINDOWS) {

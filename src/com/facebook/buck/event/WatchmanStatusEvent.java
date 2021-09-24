@@ -18,7 +18,10 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements BuckEvent {
   private final String eventName;
@@ -56,6 +59,11 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
 
   public static FileDeletion fileDeletion(String filename) {
     return new FileDeletion(filename);
+  }
+
+  public static FileChangesSinceLastBuild fileChangesSinceLastBuild(
+      List<FileChangesSinceLastBuild.FileChange> fileChanges, boolean tooManyFileChanges) {
+    return new FileChangesSinceLastBuild(fileChanges, tooManyFileChanges);
   }
 
   public static ZeroFileChanges zeroFileChanges() {
@@ -121,6 +129,60 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
 
     public String getFilename() {
       return this.filename;
+    }
+  }
+
+  /** FileChangesSinceLastBuild is used for represent file changes since last buck build */
+  public static class FileChangesSinceLastBuild extends WatchmanStatusEvent {
+
+    /** FileChange is used for represent a file change since last buck build */
+    public static class FileChange {
+      private final String cellPath;
+      private final String filePath;
+      private final String kind;
+
+      public FileChange(String cellPath, String filePath, String kind) {
+        this.cellPath = cellPath;
+        this.filePath = filePath;
+        this.kind = kind;
+      }
+
+      public String getFilePath() {
+        return "filePath=" + this.filePath;
+      }
+
+      public String getCellPath() {
+        return "cellPath=" + this.cellPath;
+      }
+
+      @Override
+      public String toString() {
+        return kind + "{" + getCellPath() + ", " + getFilePath() + "}";
+      }
+    }
+
+    private final List<FileChange> fileChangeList;
+    private final boolean tooManyFileChanges;
+
+    public FileChangesSinceLastBuild(List<FileChange> fileChangeList, boolean tooManyFileChanges) {
+      super(EventKey.unique(), "FileChangesSinceLastBuild");
+      this.fileChangeList = fileChangeList;
+      this.tooManyFileChanges = tooManyFileChanges;
+    }
+
+    public List<FileChange> getFileChangeList() {
+      return fileChangeList;
+    }
+
+    /** getEventPrintable is used for represent a series of file changes info */
+    public List<String> getEventPrintable() {
+      // This list can be very long
+      if (fileChangeList.size() == 0) {
+        return tooManyFileChanges
+            ? ImmutableList.of("Too many file changes (>10000)")
+            : ImmutableList.of("0 file change");
+      }
+      return fileChangeList.stream().map(FileChange::toString).collect(Collectors.toList());
     }
   }
 
