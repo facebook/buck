@@ -384,10 +384,12 @@ public class ProjectGenerator {
         xcconfigPathsBuilder.addAll(result.xcconfigPaths);
         targetConfigNamesBuilder.addAll(result.targetConfigNames);
 
-        result.headerSearchPathAttributes.ifPresent(
-            headerSearchPathAttributes ->
-                headerSearchPaths.createHeaderSearchPaths(
-                    headerSearchPathAttributes, headerSymlinkTreesBuilder));
+        if (!appleConfig.getProjectGeneratorIndexViaCompileArgs()) {
+          result.headerSearchPathAttributes.ifPresent(
+              headerSearchPathAttributes ->
+                  headerSearchPaths.createHeaderSearchPaths(
+                      headerSearchPathAttributes, headerSymlinkTreesBuilder));
+        }
 
         XCodeNativeTargetAttributes nativeTargetAttributes = result.targetAttributes;
         XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
@@ -433,21 +435,36 @@ public class ProjectGenerator {
 
       buckEventBus.post(ProjectGenerationEvent.processed());
 
-      ImmutableSet<BuildTarget> headerMapTargets =
-          ImmutableSet.<BuildTarget>builder()
-              .addAll(targetsInRequiredProjects)
-              .addAll(
-                  StreamSupport.stream(targetGraph.getAll(projectTargets).spliterator(), false)
-                      .filter(
-                          targetNode ->
-                              // Generate header maps for headers included in any Apple targets
-                              NodeHelper.getAppleNativeNode(targetGraph, targetNode).isPresent())
-                      .map(targetNode -> targetNode.getBuildTarget())
-                      .collect(Collectors.toSet()))
-              .build();
+      ImmutableList<BuildTargetSourcePath> buildTargetSourcePathsToBuild;
 
-      ImmutableList<SourcePath> sourcePathsToBuild =
-          headerSearchPaths.createMergedHeaderMap(headerMapTargets);
+      // We don't need to add additional build targets nor create merged header map if we're using
+      // index with compile args.
+      if (appleConfig.getProjectGeneratorIndexViaCompileArgs()) {
+        buildTargetSourcePathsToBuild = ImmutableList.of();
+      } else {
+        ImmutableSet<BuildTarget> headerMapTargets =
+            ImmutableSet.<BuildTarget>builder()
+                .addAll(targetsInRequiredProjects)
+                .addAll(
+                    StreamSupport.stream(targetGraph.getAll(projectTargets).spliterator(), false)
+                        .filter(
+                            targetNode ->
+                                // Generate header maps for headers included in any Apple targets
+                                NodeHelper.getAppleNativeNode(targetGraph, targetNode).isPresent())
+                        .map(targetNode -> targetNode.getBuildTarget())
+                        .collect(Collectors.toSet()))
+                .build();
+
+        ImmutableList<SourcePath> sourcePathsToBuild =
+            headerSearchPaths.createMergedHeaderMap(headerMapTargets);
+
+        buildTargetSourcePathsToBuild =
+            sourcePathsToBuild.stream()
+                .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(ImmutableList.toImmutableList());
+      }
 
       PBXProject project = xcodeProjectWriteOptions.project();
       for (String configName : targetConfigNamesBuilder.build()) {
@@ -485,11 +502,7 @@ public class ProjectGenerator {
           requiredBuildTargetsBuilder.build(),
           xcconfigPathsBuilder.build(),
           headerSymlinkTreesBuilder.build(),
-          sourcePathsToBuild.stream()
-              .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
-              .filter(Optional::isPresent)
-              .map(Optional::get)
-              .collect(ImmutableList.toImmutableList()));
+          buildTargetSourcePathsToBuild);
     } catch (UncheckedExecutionException e) {
       // if any code throws an exception, they tend to get wrapped in LoadingCache's
       // UncheckedExecutionException. Unwrap it if its cause is HumanReadable.

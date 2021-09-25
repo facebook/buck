@@ -130,7 +130,9 @@ class FlagParser {
     this.dependenciesCache = dependenciesCache;
     this.defaultPathResolver = defaultPathResolver;
     this.headerSearchPaths = headerSearchPaths;
-    this.indexViaBuildFlags = appleConfig.getProjectGeneratorIndexViaBuildFlags();
+    this.indexViaBuildFlags =
+        appleConfig.getProjectGeneratorIndexViaBuildFlags()
+            || appleConfig.getProjectGeneratorIndexViaCompileArgs();
     this.platformCxxBuckConfigs = cxxBuckConfig.getFlavoredConfigs();
   }
 

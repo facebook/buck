@@ -312,7 +312,9 @@ public class WorkspaceAndProjectGenerator {
         targetToProjectPathMap,
         buildTargetToPBXTarget);
 
-    if (projectGeneratorOptions.shouldBuildModularDepdenencyHeaders()) {
+    // We don't need to build additional module maps if we're using index via compile args
+    if (projectGeneratorOptions.shouldBuildModularDepdenencyHeaders()
+        && !appleConfig.getProjectGeneratorIndexViaCompileArgs()) {
       requiredBuildTargetsBuilder.addAll(getModularNodesToGenerate());
     }
 

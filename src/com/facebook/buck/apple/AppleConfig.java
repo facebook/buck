@@ -118,6 +118,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String PROJECT_GENERATOR_SWIFT_LABELS = "project_generator_swift_labels";
   private static final String PROJECT_GENERATOR_INDEX_VIA_BUILD_FLAGS =
       "project_generator_index_via_build_flags";
+  private static final String PROJECT_GENERATOR_INDEX_VIA_COMPILE_ARGS =
+      "project_generator_index_via_compile_args";
   private static final String PROJECT_GENERATOR_IGNORE_INVALID_TARGETS =
       "project_generator_ignore_invalid_targets";
 
@@ -674,6 +676,17 @@ public class AppleConfig implements ConfigView<BuckConfig> {
    */
   public boolean getProjectGeneratorIndexViaBuildFlags() {
     return delegate.getBooleanValue(APPLE_SECTION, PROJECT_GENERATOR_INDEX_VIA_BUILD_FLAGS, false);
+  }
+
+  /**
+   * @return If true inject Xcode indexing flags via OTHER_CFLAGS and OTHER_SWIFT_FLAGS instead of
+   *     using HEADER_SEARCH_PATHS and SWIFT_INDEX_PATHS. This allows for a single pass to generate
+   *     all indexing flags including Swift mixed module support. Uses compilation args provided by
+   *     Cxx and Swift compilation build rules to perform for Xcode indexing, which ensures indexing
+   *     success given successful builds.
+   */
+  public boolean getProjectGeneratorIndexViaCompileArgs() {
+    return delegate.getBooleanValue(APPLE_SECTION, PROJECT_GENERATOR_INDEX_VIA_COMPILE_ARGS, false);
   }
 
   /**
