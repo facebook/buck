@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.step.isolatedsteps.android;
+package com.facebook.buck.android.aapt;
 
-import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;

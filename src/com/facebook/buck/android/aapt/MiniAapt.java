@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.step.isolatedsteps.android;
+package com.facebook.buck.android.aapt;
 
-import com.facebook.buck.android.aapt.FakeRDotTxtEntry;
-import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
@@ -521,8 +519,7 @@ public class MiniAapt {
     return unresolved.build();
   }
 
-  @VisibleForTesting
-  static class ResourceParseException extends Exception {
+  public static class ResourceParseException extends Exception {
 
     ResourceParseException(String messageFormat, Object... args) {
       super(String.format(messageFormat, args));
@@ -534,7 +531,7 @@ public class MiniAapt {
    * ids to those resources. Resource ids are of the type {@code 0x7fxxyyyy}, where {@code xx}
    * represents the resource type, and {@code yyyy} represents the id within that resource type.
    */
-  static class RDotTxtResourceCollector {
+  public static class RDotTxtResourceCollector {
 
     private int currentTypeId;
     private final Map<RType, ResourceIdEnumerator> enumerators;

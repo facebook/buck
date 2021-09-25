@@ -1,10 +1,12 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
+MINI_AAPT_SOURCES = ["MiniAapt.java", "MiniAaptExecutableMain.java"]
+
 R_DOT_TXT_SOURCES = ["RDotTxtEntry.java", "FakeRDotTxtEntry.java"]
 
 java_immutables_library(
     name = "aapt",
-    srcs = glob(["*.java"], exclude = R_DOT_TXT_SOURCES),
+    srcs = glob(["*.java"], exclude = MINI_AAPT_SOURCES + R_DOT_TXT_SOURCES),
     tests = [
         "//test/com/facebook/buck/android:unit",
         "//test/com/facebook/buck/android/aapt:aapt",
@@ -50,5 +52,31 @@ java_immutables_library(
     deps = [
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
+    name = "mini_aapt",
+    srcs = ["MiniAapt.java", "MiniAaptExecutableMain.java"],
+    visibility = [
+        "//src/com/facebook/buck/android/...",
+        "//src/com/facebook/buck/step/isolatedsteps/android/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+        ":r_dot_txt",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/xml:xml",
+        "//src/com/facebook/buck/util/string:string",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_binary(
+    name = "mini_aapt_binary",
+    main_class = "com.facebook.buck.android.aapt.MiniAaptExecutableMain",
+    deps = [
+        ":mini_aapt",
     ],
 )

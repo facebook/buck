@@ -185,6 +185,7 @@ java_library_with_plugins(
         ":steps",
         "//src-gen:javacd-model",
         "//src/com/facebook/buck/android/aapt:aapt",
+        "//src/com/facebook/buck/android/aapt:mini_aapt",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
         "//src/com/facebook/buck/android/dalvik:dalvik",
         "//src/com/facebook/buck/android/dalvik:steps",

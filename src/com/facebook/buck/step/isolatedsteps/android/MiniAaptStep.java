@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step.isolatedsteps.android;
 
+import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
