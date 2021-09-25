@@ -78,6 +78,7 @@ import com.facebook.buck.cxx.PrebuiltCxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
 import com.facebook.buck.features.filegroup.FilegroupDescription;
@@ -175,6 +176,8 @@ public class XcodeNativeTargetGenerator {
    */
   private final Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle;
 
+  private final UnresolvedCxxPlatform unresolvedCxxPlatform;
+
   public XcodeNativeTargetGenerator(
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
@@ -188,6 +191,7 @@ public class XcodeNativeTargetGenerator {
       ProjectSourcePathResolver projectSourcePathResolver,
       ProjectGeneratorOptions options,
       CxxPlatform defaultCxxPlatform,
+      UnresolvedCxxPlatform unresolvedCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       ActionGraphBuilder actionGraphBuilder,
       HalideBuckConfig halideBuckConfig,
@@ -207,6 +211,7 @@ public class XcodeNativeTargetGenerator {
     this.buildFileName = buildFileName;
     this.options = options;
     this.defaultCxxPlatform = defaultCxxPlatform;
+    this.unresolvedCxxPlatform = unresolvedCxxPlatform;
     this.appleCxxFlavors = appleCxxFlavors;
     this.actionGraphBuilder = actionGraphBuilder;
     this.defaultPathResolver = defaultPathResolver;
@@ -725,10 +730,16 @@ public class XcodeNativeTargetGenerator {
     defaultSettingsBuilder.put("HALIDE_FUNC_NAME", buildTarget.getShortName());
     defaultSettingsBuilder.put(PRODUCT_NAME, productName);
 
+    // Must use the platform resolved from the CxxPlatform of the root input node,
+    // otherwise iphonesimulator targets can have macosx sdks set in Xcode
+    CxxPlatform cxxPlatform =
+        unresolvedCxxPlatform.resolve(
+            actionGraphBuilder, targetNode.getBuildTarget().getTargetConfiguration());
+
     BuildConfiguration.writeBuildConfigurationsForTarget(
         targetNode,
         buildTarget,
-        defaultCxxPlatform,
+        cxxPlatform,
         defaultPathResolver,
         xcodeNativeTargetAttributesBuilder,
         extraSettings,
@@ -1582,10 +1593,16 @@ public class XcodeNativeTargetGenerator {
 
     ImmutableMap<String, String> appendedConfig = appendConfigsBuilder.build();
 
+    // Must use the platform resolved from the CxxPlatform of the root input node,
+    // otherwise iphonesimulator targets can have macosx sdks set in Xcode
+    CxxPlatform cxxPlatform =
+        unresolvedCxxPlatform.resolve(
+            actionGraphBuilder, targetNode.getBuildTarget().getTargetConfiguration());
+
     BuildConfiguration.writeBuildConfigurationsForTarget(
         targetNode,
         buildTarget,
-        defaultCxxPlatform,
+        cxxPlatform,
         defaultPathResolver,
         xcodeNativeTargetAttributesBuilder,
         extraSettingsBuilder.build(),
@@ -1789,10 +1806,16 @@ public class XcodeNativeTargetGenerator {
         .addAllExtraXcodeSources(extraXcodeSources)
         .addAllExtraXcodeFiles(extraXcodeFiles);
 
+    // Must use the platform resolved from the CxxPlatform of the root input node,
+    // otherwise iphonesimulator targets can have macosx sdks set in Xcode
+    CxxPlatform cxxPlatform =
+        unresolvedCxxPlatform.resolve(
+            actionGraphBuilder, targetNode.getBuildTarget().getTargetConfiguration());
+
     BuildConfiguration.writeBuildConfigurationsForTarget(
         rootTargetNode,
         dummyTarget,
-        defaultCxxPlatform,
+        cxxPlatform,
         defaultPathResolver,
         xcodeNativeTargetAttributesBuilder,
         extraSettingsBuilder.build(),

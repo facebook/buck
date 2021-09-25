@@ -59,6 +59,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.features.halide.HalideCompile;
 import com.facebook.buck.features.halide.HalideLibraryDescription;
 import com.facebook.buck.features.halide.HalideLibraryDescriptionArg;
@@ -114,6 +115,7 @@ class HeaderSearchPaths {
       Cell projectCell,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
+      UnresolvedCxxPlatform unresolvedCxxPlatform,
       RuleKeyConfiguration ruleKeyConfiguration,
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,

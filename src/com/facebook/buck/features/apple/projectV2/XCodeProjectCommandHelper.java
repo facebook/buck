@@ -53,6 +53,7 @@ import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.event.BuckEventBus;
@@ -573,6 +574,17 @@ public class XCodeProjectCommandHelper {
               cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform());
       Cell workspaceCell = cells.getCell(inputTarget.getCell());
 
+      UnresolvedCxxPlatform unresolvedCxxPlatform =
+          cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform();
+      if (inputNode.getConstructorArg() instanceof AppleBundleDescriptionArg) {
+        Optional<Flavor> maybeFlavor =
+            ((AppleBundleDescriptionArg) inputNode.getConstructorArg()).getDefaultPlatform();
+        if (maybeFlavor.isPresent()) {
+          unresolvedCxxPlatform =
+              cxxPlatformsProvider.getUnresolvedCxxPlatforms().getValue(maybeFlavor.get());
+        }
+      }
+
       BuildContext buildContext =
           BuildContext.of(
               actionGraphBuilder.getSourcePathResolver(),
@@ -595,6 +607,7 @@ public class XCodeProjectCommandHelper {
               excludedTargetMatcher,
               !appleConfig.getXcodeDisableParallelizeBuild(),
               defaultCxxPlatform,
+              unresolvedCxxPlatform,
               appleCxxFlavors,
               buckConfig.getView(ParserConfig.class).getBuildFileName().getName(),
               actionGraphBuilder,

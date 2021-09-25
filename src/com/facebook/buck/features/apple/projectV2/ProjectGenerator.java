@@ -45,6 +45,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolve
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -119,6 +120,7 @@ public class ProjectGenerator {
   private final Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle;
 
   private final BuildContext buildContext;
+  private final UnresolvedCxxPlatform unresolvedCxxPlatform;
 
   public ProjectGenerator(
       XCodeDescriptions xcodeDescriptions,
@@ -135,6 +137,7 @@ public class ProjectGenerator {
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       FocusedTargetMatcher excludedTargetMatcher,
       CxxPlatform defaultCxxPlatform,
+      UnresolvedCxxPlatform unresolvedCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       ActionGraphBuilder actionGraphBuilder,
       BuildContext buildContext,
@@ -158,6 +161,7 @@ public class ProjectGenerator {
     this.workspaceTarget = workspaceTarget;
     this.targetsInRequiredProjects = targetsInRequiredProjects;
     this.defaultCxxPlatform = defaultCxxPlatform;
+    this.unresolvedCxxPlatform = unresolvedCxxPlatform;
     this.appleCxxFlavors = appleCxxFlavors;
     this.actionGraphBuilder = actionGraphBuilder;
     this.buildContext = buildContext;
@@ -255,6 +259,7 @@ public class ProjectGenerator {
               projectCell,
               cxxBuckConfig,
               defaultCxxPlatform,
+              unresolvedCxxPlatform,
               ruleKeyConfiguration,
               xcodeDescriptions,
               targetGraph,
@@ -296,6 +301,7 @@ public class ProjectGenerator {
               projectSourcePathResolver,
               options,
               defaultCxxPlatform,
+              unresolvedCxxPlatform,
               appleCxxFlavors,
               actionGraphBuilder,
               halideBuckConfig,

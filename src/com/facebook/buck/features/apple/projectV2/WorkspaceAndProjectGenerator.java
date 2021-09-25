@@ -48,6 +48,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.apple.common.CopyInXcode;
@@ -118,6 +119,7 @@ public class WorkspaceAndProjectGenerator {
   private final SwiftBuckConfig swiftBuckConfig;
   private final Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle;
   private final BuildContext buildContext;
+  private final UnresolvedCxxPlatform unresolvedCxxPlatform;
 
   /** The result of generating a workspace project. */
   public static class Result {
@@ -147,6 +149,7 @@ public class WorkspaceAndProjectGenerator {
       FocusedTargetMatcher excludedTargetMatcher,
       boolean parallelizeBuild,
       CxxPlatform defaultCxxPlatform,
+      UnresolvedCxxPlatform unresolvedCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       String buildFileName,
       ActionGraphBuilder actionGraphBuilder,
@@ -170,6 +173,7 @@ public class WorkspaceAndProjectGenerator {
     this.projectGeneratorOptions = projectGeneratorOptions;
     this.parallelizeBuild = parallelizeBuild;
     this.defaultCxxPlatform = defaultCxxPlatform;
+    this.unresolvedCxxPlatform = unresolvedCxxPlatform;
     this.appleCxxFlavors = appleCxxFlavors;
     this.buildFileName = buildFileName;
     this.actionGraphBuilder = actionGraphBuilder;
@@ -484,6 +488,7 @@ public class WorkspaceAndProjectGenerator {
             targetsInRequiredProjects,
             excludedTargetMatcher,
             defaultCxxPlatform,
+            unresolvedCxxPlatform,
             appleCxxFlavors,
             actionGraphBuilder,
             buildContext,
