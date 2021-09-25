@@ -28,6 +28,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXNativeTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -117,6 +118,8 @@ public class ProjectGenerator {
    */
   private final Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle;
 
+  private final BuildContext buildContext;
+
   public ProjectGenerator(
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
@@ -134,6 +137,7 @@ public class ProjectGenerator {
       CxxPlatform defaultCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       ActionGraphBuilder actionGraphBuilder,
+      BuildContext buildContext,
       BuckEventBus buckEventBus,
       HalideBuckConfig halideBuckConfig,
       CxxBuckConfig cxxBuckConfig,
@@ -156,6 +160,7 @@ public class ProjectGenerator {
     this.defaultCxxPlatform = defaultCxxPlatform;
     this.appleCxxFlavors = appleCxxFlavors;
     this.actionGraphBuilder = actionGraphBuilder;
+    this.buildContext = buildContext;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.defaultPathResolver =
         new SourcePathResolverAdapter(
@@ -254,6 +259,7 @@ public class ProjectGenerator {
               xcodeDescriptions,
               targetGraph,
               actionGraphBuilder,
+              buildContext,
               dependenciesCache,
               projectSourcePathResolver,
               pathRelativizer,

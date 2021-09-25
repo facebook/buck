@@ -30,6 +30,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -116,6 +117,7 @@ public class WorkspaceAndProjectGenerator {
   private final AppleConfig appleConfig;
   private final SwiftBuckConfig swiftBuckConfig;
   private final Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle;
+  private final BuildContext buildContext;
 
   /** The result of generating a workspace project. */
   public static class Result {
@@ -148,6 +150,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet<Flavor> appleCxxFlavors,
       String buildFileName,
       ActionGraphBuilder actionGraphBuilder,
+      BuildContext buildContext,
       BuckEventBus buckEventBus,
       RuleKeyConfiguration ruleKeyConfiguration,
       HalideBuckConfig halideBuckConfig,
@@ -170,6 +173,7 @@ public class WorkspaceAndProjectGenerator {
     this.appleCxxFlavors = appleCxxFlavors;
     this.buildFileName = buildFileName;
     this.actionGraphBuilder = actionGraphBuilder;
+    this.buildContext = buildContext;
     this.buckEventBus = buckEventBus;
     this.swiftBuckConfig = swiftBuckConfig;
     this.halideBuckConfig = halideBuckConfig;
@@ -482,6 +486,7 @@ public class WorkspaceAndProjectGenerator {
             defaultCxxPlatform,
             appleCxxFlavors,
             actionGraphBuilder,
+            buildContext,
             buckEventBus,
             halideBuckConfig,
             cxxBuckConfig,

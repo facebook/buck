@@ -74,6 +74,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
+import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
@@ -4602,6 +4603,7 @@ public class ProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             AppleProjectHelper.getActionGraphBuilderNodeFunction(targetGraph),
+            FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             halideBuckConfig,
             cxxBuckConfig,
@@ -4734,6 +4736,7 @@ public class ProjectGeneratorTest {
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
             AppleProjectHelper.getActionGraphBuilderNodeFunction(targetGraph),
+            FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             halideBuckConfig,
             cxxBuckConfig,
@@ -4898,6 +4901,7 @@ public class ProjectGeneratorTest {
         DEFAULT_PLATFORM,
         appleCxxFlavors,
         actionGraphBuilderForNode,
+        FakeBuildContext.NOOP_CONTEXT,
         getFakeBuckEventBus(),
         halideBuckConfig,
         cxxBuckConfig,

@@ -31,6 +31,7 @@ import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
+import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
@@ -154,6 +155,7 @@ public class XcodeNativeTargetGeneratorTest {
             xcodeDescriptions,
             targetGraph,
             actionGraphBuilder,
+            FakeBuildContext.NOOP_CONTEXT,
             dependenciesCache,
             projectSourcePathResolver,
             pathRelativizer,

@@ -34,7 +34,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.FakeActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -51,8 +51,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Optional;
-import org.easymock.EasyMock;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Before;
@@ -510,6 +510,6 @@ public class XCodeProjectCommandHelperTest {
         FocusedTargetMatcher.noFocus(),
         FocusedTargetMatcher.noExclude(),
         Optional.empty(),
-        EasyMock.createMock(ActionGraphBuilder.class));
+        new FakeActionGraphBuilder(new HashMap<>()));
   }
 }

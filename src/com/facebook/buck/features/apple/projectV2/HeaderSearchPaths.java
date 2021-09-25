@@ -31,6 +31,7 @@ import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -87,6 +88,7 @@ import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 
 /** Helper class to derive and generate all settings for file headers and where to find them. */
+@SuppressWarnings("unused")
 class HeaderSearchPaths {
 
   private static final Logger LOG = Logger.get(HeaderSearchPaths.class);
@@ -116,6 +118,7 @@ class HeaderSearchPaths {
       XCodeDescriptions xcodeDescriptions,
       TargetGraph targetGraph,
       ActionGraphBuilder actionGraphBuilder,
+      BuildContext buildContext,
       AppleDependenciesCache dependenciesCache,
       ProjectSourcePathResolver projectSourcePathResolver,
       PathRelativizer pathRelativizer,

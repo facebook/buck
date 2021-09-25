@@ -27,6 +27,7 @@ import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
@@ -61,6 +62,7 @@ import com.facebook.buck.features.apple.common.PathOutputPresenter;
 import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescriptionArg;
 import com.facebook.buck.features.halide.HalideBuckConfig;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -570,6 +572,16 @@ public class XCodeProjectCommandHelper {
           LegacyToolchainProvider.getLegacyTotallyUnsafe(
               cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform());
       Cell workspaceCell = cells.getCell(inputTarget.getCell());
+
+      BuildContext buildContext =
+          BuildContext.of(
+              actionGraphBuilder.getSourcePathResolver(),
+              cells.getRootCell().getRoot(),
+              buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder(),
+              buckEventBus,
+              buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries(),
+              cells.getRootCell().getCellPathResolver());
+
       WorkspaceAndProjectGenerator generator =
           new WorkspaceAndProjectGenerator(
               xcodeDescriptions,
@@ -586,6 +598,7 @@ public class XCodeProjectCommandHelper {
               appleCxxFlavors,
               buckConfig.getView(ParserConfig.class).getBuildFileName().getName(),
               actionGraphBuilder,
+              buildContext,
               buckEventBus,
               ruleKeyConfiguration,
               halideBuckConfig,
