@@ -379,23 +379,15 @@ public class ProjectGenerator {
       ImmutableList<XcodeNativeTargetGenerator.Result> generationResults =
           generationResultsBuilder.build();
 
-      ImmutableList.Builder<BuildTargetSourcePath> buildTargetSourcePathsBuilder =
-          ImmutableList.builder();
-
       for (XcodeNativeTargetGenerator.Result result : generationResults) {
         requiredBuildTargetsBuilder.addAll(result.requiredBuildTargets);
         xcconfigPathsBuilder.addAll(result.xcconfigPaths);
         targetConfigNamesBuilder.addAll(result.targetConfigNames);
 
-        if (result.headerSearchPathAttributes.isPresent()) {
-          ImmutableList<SourcePath> sourcePathsToBuild =
-              headerSearchPaths.createHeaderSearchPaths(
-                  result.headerSearchPathAttributes.get(), headerSymlinkTreesBuilder);
-          sourcePathsToBuild.stream()
-              .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
-              .filter(Optional::isPresent)
-              .forEach(sourcePath -> buildTargetSourcePathsBuilder.add(sourcePath.get()));
-        }
+        result.headerSearchPathAttributes.ifPresent(
+            headerSearchPathAttributes ->
+                headerSearchPaths.createHeaderSearchPaths(
+                    headerSearchPathAttributes, headerSymlinkTreesBuilder));
 
         XCodeNativeTargetAttributes nativeTargetAttributes = result.targetAttributes;
         XcodeNativeTargetProjectWriter nativeTargetProjectWriter =
@@ -456,13 +448,6 @@ public class ProjectGenerator {
 
       ImmutableList<SourcePath> sourcePathsToBuild =
           headerSearchPaths.createMergedHeaderMap(headerMapTargets);
-
-      buildTargetSourcePathsBuilder.addAll(
-          sourcePathsToBuild.stream()
-              .map(Utils::sourcePathTryIntoBuildTargetSourcePath)
-              .filter(Optional::isPresent)
-              .map(Optional::get)
-              .collect(Collectors.toList()));
 
       PBXProject project = xcodeProjectWriteOptions.project();
       for (String configName : targetConfigNamesBuilder.build()) {
