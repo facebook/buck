@@ -400,6 +400,11 @@ class HeaderSearchPaths {
         includeFlags.add(flag);
       }
 
+      // Add the module cache path
+      if (flag.startsWith("-fmodules-cache-path")) {
+        includeFlags.add(flag);
+      }
+
       // Enable the modules feature
       if (flag.equals("-fmodules")) {
         includeFlags.add(flag);

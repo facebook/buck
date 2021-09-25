@@ -155,6 +155,7 @@ standard_java_test(
         "//src/com/facebook/buck/features/apple/projectV2:projectV2",
         "//src/com/facebook/buck/features/halide:halide",
         "//src/com/facebook/buck/io:executable-finder",
+        "//test/com/facebook/buck/io/filesystem:testutil",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/io/watchman:watchman",

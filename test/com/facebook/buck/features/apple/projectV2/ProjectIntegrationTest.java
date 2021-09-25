@@ -16,15 +16,26 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
+import static com.facebook.buck.apple.AppleDescriptions.SWIFT_COMPILE_FLAVOR;
+import static com.facebook.buck.apple.AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -32,11 +43,15 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Before;
@@ -446,18 +461,169 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testBuckProjectWithSwiftDependencyOnModularObjectiveCLibrary()
-      throws IOException, InterruptedException {
+  public void testBuckProjectWithSwiftDependencyOnModularObjectiveCLibrary() throws IOException {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         createWorkspace(this, "project_with_swift_dependency_on_modular_objective_c_library");
 
-    ProcessResult result = workspace.runBuckCommand("project", "//Apps:App");
-    result.assertSuccess();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "project",
+            "//Apps:App",
+            "--experimental",
+            "--config",
+            "cxx.default_platform=iphonesimulator-x86_64",
+            "--config",
+            "apple.project_generator_index_via_compile_args=true");
 
-    runXcodebuild(workspace, "Apps/App.xcworkspace", "App");
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget swiftTarget = BuildTargetFactory.newInstance("//Libraries:SwiftDep");
+    BuildTarget objCTarget = BuildTargetFactory.newInstance("//Libraries:ObjCDep");
+
+    BuildTarget exportedHeadersTarget = getExportedHeaderTarget(objCTarget);
+
+    List<String> swiftArgs = getSwiftIndexingArgs("SwiftDep", workspace, filesystem, swiftTarget);
+
+    // assert we're setting the correct Swift flags to include the ObjC modular header
+    // and that we're setting the correct module name
+    assertEquals(
+        swiftArgs,
+        ImmutableList.of(
+            "-Xcc",
+            "-I",
+            "-Xcc",
+            getAbsolutePathString(exportedHeadersTarget, filesystem),
+            "-module-name",
+            "SwiftDep"));
+
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testBuckProjectWithSwiftObjectiveCMixedLibrary() throws IOException {
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace = createWorkspace(this, "project_with_mixed_module");
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "project",
+            "//Apps:App",
+            "--experimental",
+            "--config",
+            "cxx.default_platform=iphonesimulator-x86_64",
+            "--config",
+            "apple.project_generator_index_via_compile_args=true");
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget swiftTarget = BuildTargetFactory.newInstance("//Libraries:Primary");
+    BuildTarget swiftDepTarget = BuildTargetFactory.newInstance("//Libraries:DepA");
+    BuildTarget objCTarget = BuildTargetFactory.newInstance("//Libraries:ExternalHeaders");
+
+    BuildTarget swiftVfsOverlayTarget =
+        swiftTarget.withFlavors(
+            SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR, InternalFlavor.of("iphonesimulator-x86_64"));
+
+    BuildTarget swiftCompileTarget =
+        swiftTarget.withFlavors(
+            InternalFlavor.of("swift-compile"), InternalFlavor.of("iphonesimulator-x86_64"));
+    BuildTarget swiftDepCompileTarget =
+        swiftDepTarget.withFlavors(
+            InternalFlavor.of("swift-compile"), InternalFlavor.of("iphonesimulator-x86_64"));
+    BuildTarget swiftDepMixedModuleCompileTarget =
+        swiftDepTarget.withFlavors(
+            SWIFT_COMPILE_FLAVOR, InternalFlavor.of("iphonesimulator-x86_64"));
+
+    BuildTarget swiftExportedHeadersTarget = getExportedHeaderTarget(swiftTarget);
+    BuildTarget swiftDepExportedHeadersTarget = getExportedHeaderTarget(swiftDepTarget);
+    BuildTarget objCExportedHeadersTarget = getExportedHeaderTarget(objCTarget);
+
+    List<String> swiftArgs = getSwiftIndexingArgs("Primary", workspace, filesystem, swiftTarget);
+
+    List<String> expectedArgs =
+        ImmutableList.of(
+            "-import-underlying-module",
+            "-Xcc",
+            "-ivfsoverlay",
+            "-Xcc",
+            getAbsolutePathString(swiftVfsOverlayTarget, filesystem)
+                + "/unextended-module-overlay.yaml",
+            "-Xcc",
+            "-I",
+            "-Xcc",
+            getAbsolutePathString(swiftExportedHeadersTarget, filesystem),
+            "-Xcc",
+            "-I",
+            "-Xcc",
+            getAbsolutePathString(swiftDepExportedHeadersTarget, filesystem),
+            "-Xcc",
+            "-I",
+            "-Xcc",
+            getAbsolutePathString(swiftDepCompileTarget, filesystem),
+            "-Xcc",
+            "-I",
+            "-Xcc",
+            getAbsolutePathString(objCExportedHeadersTarget, filesystem),
+            "-Xcc",
+            "-I",
+            "-Xcc",
+            getAbsolutePathString(swiftCompileTarget, filesystem),
+            "-I",
+            getAbsolutePathString(swiftDepMixedModuleCompileTarget, filesystem),
+            "-I",
+            getAbsolutePathString(swiftDepCompileTarget, filesystem),
+            "-I",
+            getAbsolutePathString(swiftCompileTarget, filesystem),
+            "-module-name",
+            "Primary");
+
+    // assert we're setting the correct Swift flags to handle mixed modules
+    assertEquals(swiftArgs, expectedArgs);
+
+    result.assertSuccess();
+  }
+
+  private List<String> getSwiftIndexingArgs(
+      String targetName,
+      ProjectWorkspace workspace,
+      ProjectFilesystem filesystem,
+      BuildTarget swiftTarget)
+      throws IOException {
+    Path swiftTargetPath = workspace.getPath(getTargetOutputPath(swiftTarget, filesystem));
+
+    Path swiftTargetXCconfigPath =
+        swiftTargetPath.getParent().resolve(targetName + "-Debug.xcconfig");
+    List<String> configs = filesystem.readLines(swiftTargetXCconfigPath);
+    String swiftPath =
+        configs.stream().filter(config -> config.startsWith("OTHER_SWIFT_FLAGS")).findFirst().get();
+
+    Pattern responseFileRegex = Pattern.compile("OTHER_SWIFT_FLAGS = @(.+\\.argfile)");
+    Matcher m = responseFileRegex.matcher(swiftPath);
+    assertTrue(m.find());
+    RelPath swiftResponseFilePath = filesystem.relativize(Paths.get(m.group(1)));
+    return filesystem.readLines(swiftResponseFilePath.getPath());
+  }
+
+  private String getAbsolutePathString(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return filesystem.resolve(getTargetOutputPath(buildTarget, filesystem)).toString();
+  }
+
+  private RelPath getTargetOutputPath(BuildTarget target, ProjectFilesystem fileSystem) {
+    return BuildTargetPaths.getGenPath(fileSystem.getBuckPaths(), target, "%s");
+  }
+
+  private BuildTarget getExportedHeaderTarget(BuildTarget rawTarget) {
+    return rawTarget.withAppendedFlavors(
+        CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
+        InternalFlavor.of("iphonesimulator-x86_64"),
+        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor());
   }
 
   private void runXcodebuild(ProjectWorkspace workspace, String workspacePath, String schemeName)
