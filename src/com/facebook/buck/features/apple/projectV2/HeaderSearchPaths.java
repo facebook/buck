@@ -31,6 +31,7 @@ import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
@@ -40,12 +41,14 @@ import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -54,6 +57,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
+import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -66,7 +70,11 @@ import com.facebook.buck.features.halide.HalideLibraryDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
+import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -82,14 +90,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /** Helper class to derive and generate all settings for file headers and where to find them. */
-@SuppressWarnings("unused")
 class HeaderSearchPaths {
 
   private static final Logger LOG = Logger.get(HeaderSearchPaths.class);
@@ -109,6 +119,16 @@ class HeaderSearchPaths {
   private final ImmutableSet<String> swiftLabels;
   private final boolean indexViaBuildFlags;
   private final ProjectFilesystem projectFilesystem;
+  private final BuildContext buildContext;
+  private final UnresolvedCxxPlatform unresolvedCxxPlatform;
+  private final boolean indexViaCompileArgs;
+
+  private static final LoadingCache<ActionGraphBuilder, Map<UnflavoredBuildTarget, Set<BuildRule>>>
+      mappingCache =
+          CacheBuilder.newBuilder()
+              .weakKeys()
+              .maximumSize(1)
+              .build(CacheLoader.from(HeaderSearchPaths::makeBuildTargetToCompilationRulesMap));
 
   HeaderSearchPaths(
       Cells cells,
@@ -130,16 +150,19 @@ class HeaderSearchPaths {
     this.projectCell = projectCell;
     this.cxxBuckConfig = cxxBuckConfig;
     this.cxxPlatform = cxxPlatform;
+    this.unresolvedCxxPlatform = unresolvedCxxPlatform;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.xcodeDescriptions = xcodeDescriptions;
     this.targetGraph = targetGraph;
     this.actionGraphBuilder = actionGraphBuilder;
+    this.buildContext = buildContext;
     this.dependenciesCache = dependenciesCache;
     this.projectSourcePathResolver = projectSourcePathResolver;
     this.pathRelativizer = pathRelativizer;
     this.swiftAttributeParser = swiftAttributeParser;
     this.swiftLabels = ImmutableSet.copyOf(appleConfig.getProjectGeneratorSwiftLabels());
     this.indexViaBuildFlags = appleConfig.getProjectGeneratorIndexViaBuildFlags();
+    this.indexViaCompileArgs = appleConfig.getProjectGeneratorIndexViaCompileArgs();
     this.projectFilesystem = projectCell.getFilesystem();
   }
 
@@ -149,43 +172,276 @@ class HeaderSearchPaths {
     ImmutableHeaderSearchPathAttributes.Builder builder =
         ImmutableHeaderSearchPathAttributes.builder().setTargetNode(targetNode);
 
-    ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
-    builder.setPublicCxxHeaders(publicCxxHeaders);
+    if (indexViaCompileArgs) {
+      getBuildIncludeFlagsFromCompileArgs(targetNode, builder);
+    } else {
+      ImmutableSortedMap<Path, SourcePath> publicCxxHeaders = getPublicCxxHeaders(targetNode);
+      builder.setPublicCxxHeaders(publicCxxHeaders);
 
-    ImmutableSortedMap<Path, SourcePath> privateCxxHeaders = getPrivateCxxHeaders(targetNode);
-    builder.setPrivateCxxHeaders(privateCxxHeaders);
+      ImmutableSortedMap<Path, SourcePath> privateCxxHeaders = getPrivateCxxHeaders(targetNode);
+      builder.setPrivateCxxHeaders(privateCxxHeaders);
 
-    ImmutableSet<AbsPath> recursivePublicSystemIncludeDirectories =
-        collectRecursivePublicSystemIncludeDirectories(targetNode);
-    builder.setRecursivePublicSystemIncludeDirectories(
-        recursivePublicSystemIncludeDirectories.stream()
-            .map(PathWrapper::getPath)
-            .collect(ImmutableSet.toImmutableSet()));
+      ImmutableSet<AbsPath> recursivePublicSystemIncludeDirectories =
+          collectRecursivePublicSystemIncludeDirectories(targetNode);
+      builder.setRecursivePublicSystemIncludeDirectories(
+          recursivePublicSystemIncludeDirectories.stream()
+              .map(PathWrapper::getPath)
+              .collect(ImmutableSet.toImmutableSet()));
 
-    ImmutableSet<AbsPath> recursivePublicIncludeDirectories =
-        collectRecursivePublicIncludeDirectories(targetNode);
-    builder.setRecursivePublicIncludeDirectories(
-        recursivePublicIncludeDirectories.stream()
-            .map(PathWrapper::getPath)
-            .collect(ImmutableSet.toImmutableSet()));
+      ImmutableSet<AbsPath> recursivePublicIncludeDirectories =
+          collectRecursivePublicIncludeDirectories(targetNode);
+      builder.setRecursivePublicIncludeDirectories(
+          recursivePublicIncludeDirectories.stream()
+              .map(PathWrapper::getPath)
+              .collect(ImmutableSet.toImmutableSet()));
 
-    ImmutableSet<AbsPath> includeDirectories = extractIncludeDirectories(targetNode);
-    builder.setIncludeDirectories(
-        includeDirectories.stream()
-            .map(PathWrapper::getPath)
-            .collect(ImmutableSet.toImmutableSet()));
+      ImmutableSet<AbsPath> includeDirectories = extractIncludeDirectories(targetNode);
+      builder.setIncludeDirectories(
+          includeDirectories.stream()
+              .map(PathWrapper::getPath)
+              .collect(ImmutableSet.toImmutableSet()));
 
-    ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
-    builder.setRecursiveHeaderSearchPaths(recursiveHeaderSearchPaths);
+      ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
+      builder.setRecursiveHeaderSearchPaths(recursiveHeaderSearchPaths);
 
-    ImmutableSet<Path> swiftIncludePaths = collectRecursiveSwiftIncludePaths(targetNode);
-    builder.setSwiftIncludePaths(swiftIncludePaths);
+      ImmutableSet<Path> swiftIncludePaths = collectRecursiveSwiftIncludePaths(targetNode);
+      builder.setSwiftIncludePaths(swiftIncludePaths);
 
-    if (indexViaBuildFlags) {
-      getIncludeFlags(targetNode, builder);
+      if (indexViaBuildFlags) {
+        getIncludeFlags(targetNode, builder);
+      }
     }
 
     return builder.build();
+  }
+
+  private static Map<UnflavoredBuildTarget, Set<BuildRule>>
+      getCachedBuildTargetToCompilationRulesMap(ActionGraphBuilder actionGraphBuilder) {
+    return mappingCache.getUnchecked(actionGraphBuilder);
+  }
+
+  private static Map<UnflavoredBuildTarget, Set<BuildRule>> makeBuildTargetToCompilationRulesMap(
+      ActionGraphBuilder graph) {
+    Map<UnflavoredBuildTarget, Set<BuildRule>> result = new ConcurrentHashMap<>();
+
+    graph
+        .getBuildRules()
+        .parallelStream()
+        .filter(rule -> rule instanceof SwiftCompile || rule instanceof CxxPreprocessAndCompile)
+        .forEach(
+            rule -> {
+              if (!result.containsKey(rule.getBuildTarget().getUnflavoredBuildTarget())) {
+                result.put(rule.getBuildTarget().getUnflavoredBuildTarget(), new HashSet<>());
+              }
+              result.get(rule.getBuildTarget().getUnflavoredBuildTarget()).add(rule);
+            });
+
+    return result;
+  }
+
+  private void getBuildIncludeFlagsFromCompileArgs(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
+      ImmutableHeaderSearchPathAttributes.Builder headerSearchPathsBuilder) {
+    ImmutableSet.Builder<BuildTarget> requiredBuildTargets = ImmutableSet.builder();
+    ImmutableList.Builder<String> includeFlags = ImmutableList.builder();
+    ImmutableList.Builder<String> swiftIncludeFlags = ImmutableList.builder();
+
+    Flavor platformFlavor = getTargetPlatformFlavor(targetNode);
+
+    Map<UnflavoredBuildTarget, Set<BuildRule>> targetToCompileRuleMap =
+        getCachedBuildTargetToCompilationRulesMap(actionGraphBuilder);
+    Set<BuildRule> compilationRules =
+        targetToCompileRuleMap
+            .getOrDefault(targetNode.getBuildTarget().getUnflavoredBuildTarget(), new HashSet<>())
+            .stream()
+            .filter(rule -> rule.getBuildTarget().getFlavors().contains(platformFlavor))
+            .collect(Collectors.toSet());
+
+    Optional<BuildRule> maybeCxxCompileRule =
+        compilationRules.stream()
+            .filter(rule -> rule instanceof CxxPreprocessAndCompile)
+            .findFirst();
+    Optional<BuildRule> maybeMixedModuleSwiftCompileRule =
+        compilationRules.stream()
+            .filter(
+                rule ->
+                    rule instanceof SwiftCompile
+                        && rule.getBuildTarget().getFlavors().contains(SWIFT_COMPILE_FLAVOR))
+            .findFirst();
+    Optional<BuildRule> maybeSwiftCompileRule =
+        compilationRules.stream().filter(rule -> rule instanceof SwiftCompile).findFirst();
+
+    if (maybeCxxCompileRule.isPresent()) {
+      BuildRule compileRule = maybeCxxCompileRule.get();
+
+      // Get the compile args from the build rule
+      ImmutableList<String> compilationCommand =
+          ((CxxPreprocessAndCompile) compileRule).getCommand(buildContext);
+
+      // extracts the compile args used for building the source files for indexing
+      parseCommandAndAddToIncludeFlags(compilationCommand, includeFlags);
+
+      // Collects the build deps and add them to required build targets, so
+      // that we can build them later to ensure indexing works when users open Xcode.
+      for (BuildRule rule : compileRule.getBuildDeps()) {
+        // We cannot use a DependencyAggregation rule's build target to build the rule,
+        // and must flatten it to include the sub rules.
+        if (rule instanceof DependencyAggregation) {
+          for (BuildRule depRule : rule.getBuildDeps()) {
+            requiredBuildTargets.add(depRule.getBuildTarget());
+          }
+        } else {
+          requiredBuildTargets.add(rule.getBuildTarget());
+        }
+      }
+    }
+
+    if (maybeSwiftCompileRule.isPresent()) {
+      // If we're using mixed modules we need the mixed module compile args to include
+      // the mixed module specific flags such as `-ivfsoverlay`. Otherwise we can use
+      // the normal Swift compile args.
+      SwiftCompile swiftCompileRule =
+          maybeMixedModuleSwiftCompileRule
+              .map(buildRule -> (SwiftCompile) buildRule)
+              .orElseGet(() -> (SwiftCompile) maybeSwiftCompileRule.get());
+
+      // Get the compile args from the build rule
+      ImmutableList<String> swiftCompileArgs =
+          swiftCompileRule.constructCompilerArgs(actionGraphBuilder.getSourcePathResolver());
+
+      // extracts the compile args used for building the source files for indexing
+      parseCommandAndAddToSwiftIncludeFlags(swiftCompileArgs, swiftIncludeFlags);
+
+      // Collects the build deps and add them to required build targets, so
+      // that we can build them later to ensure indexing works when users open Xcode.
+      for (BuildRule rule : swiftCompileRule.getBuildDeps()) {
+        requiredBuildTargets.add(rule.getBuildTarget());
+      }
+    }
+
+    headerSearchPathsBuilder.setRequiredBuildTargets(requiredBuildTargets.build());
+    headerSearchPathsBuilder.setIncludeFlags(includeFlags.build());
+    headerSearchPathsBuilder.setSwiftIncludeFlags(swiftIncludeFlags.build());
+  }
+
+  /**
+   * Acquires the platform flavor of the build target we're generating the Xcode project target for.
+   *
+   * <p>To get the flavor, we first look for the target's own build flavors; if the target has no
+   * platform flavor, we check if there's a default platform set in its constructor args; If we get
+   * neither, we'll use the default platform.
+   *
+   * @param targetNode target node which we use to generate the Xcode project
+   * @return a platform flavor
+   */
+  private Flavor getTargetPlatformFlavor(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
+    for (Flavor flavor : targetNode.getBuildTarget().getFlavors().getSet()) {
+      if (ApplePlatformType.of(flavor.getName()) != ApplePlatformType.UNKNOWN) {
+        return flavor;
+      }
+    }
+
+    Optional<Flavor> maybeTargetNodeSpecificFlavor =
+        targetNode.getConstructorArg().getDefaultPlatform();
+    return maybeTargetNodeSpecificFlavor.orElseGet(
+        () ->
+            unresolvedCxxPlatform
+                .resolve(actionGraphBuilder, targetNode.getBuildTarget().getTargetConfiguration())
+                .getFlavor());
+  }
+
+  void parseCommandAndAddToSwiftIncludeFlags(
+      ImmutableList<String> swiftCompileArgs, ImmutableList.Builder<String> swiftIncludeFlags) {
+    Iterator<String> iterator = swiftCompileArgs.iterator();
+
+    while (iterator.hasNext()) {
+      String flag = iterator.next();
+
+      // Implicitly imports the Objective-C half of a module
+      if (flag.equals("-import-underlying-module")) {
+        swiftIncludeFlags.add(flag);
+      }
+
+      // Add directory to the import search path
+      if (flag.equals("-I")) {
+        swiftIncludeFlags.add(flag);
+        swiftIncludeFlags.add(projectFilesystem.resolve(iterator.next()).toString());
+      }
+
+      // Pass <arg> to the C/C++/Objective-C compiler
+      if (flag.equals("-Xcc")) {
+        String nextFlag = iterator.next();
+        if (isIncludeOption(nextFlag)) {
+          swiftIncludeFlags.add(flag);
+          swiftIncludeFlags.add(
+              nextFlag, iterator.next(), projectFilesystem.resolve(iterator.next()).toString());
+        }
+      }
+
+      // Name of the module to build
+      if (flag.equals("-module-name")) {
+        swiftIncludeFlags.add(flag);
+        swiftIncludeFlags.add(iterator.next());
+      }
+    }
+  }
+
+  void parseCommandAndAddToIncludeFlags(
+      ImmutableList<String> compilationCommand, ImmutableList.Builder<String> includeFlags) {
+    Iterator<String> iterator = compilationCommand.iterator();
+
+    while (iterator.hasNext()) {
+      String flag = iterator.next();
+
+      // Add the module name, comes in the form of
+      // `-fmodule-name=<module_name>` so it's done in one arg.
+      if (flag.startsWith("-fmodule-name")) {
+        includeFlags.add(flag);
+      }
+
+      // Enable the modules feature
+      if (flag.equals("-fmodules")) {
+        includeFlags.add(flag);
+      }
+
+      // Enable the modules feature for cxx
+      if (flag.equals("-fcxx-modules")) {
+        includeFlags.add(flag);
+      }
+
+      if (isIncludeOption(flag)) {
+        includeFlags.add(flag);
+        includeFlags.add(projectFilesystem.resolve(iterator.next()).toString());
+      }
+    }
+  }
+
+  /**
+   * Check the flag to match include options Note: `-isysroot` isn't checked because it's provided
+   * by Xcode during indexing based on Xcode target settings.
+   *
+   * @param flag input flag
+   * @return whether the flag is an include option flag
+   */
+  private boolean isIncludeOption(String flag) {
+    return ImmutableList.of(
+            // Include custom frameworks
+            "-F",
+            // Add the specified directory to the search path for include files.
+            "-I",
+            // Same as `-I`, but only applies to quote forms of directories,
+            // such as `#include "file"`
+            "-iquote",
+            // Adds an implicit #include into the predefines buffer
+            // which is read before the source file is preprocessed.
+            // Allows using precompiled headers for indexing
+            "-include",
+            // Include system headers
+            "-isystem",
+            // Include vfsoverlay
+            "-ivfsoverlay")
+        .contains(flag);
   }
 
   private void getIncludeFlags(

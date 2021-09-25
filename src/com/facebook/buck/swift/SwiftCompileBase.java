@@ -276,7 +276,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   }
 
   /** Creates the list of arguments to pass to the Swift compiler */
-  protected ImmutableList<String> constructCompilerArgs(SourcePathResolverAdapter resolver) {
+  public ImmutableList<String> constructCompilerArgs(SourcePathResolverAdapter resolver) {
     String frontendFlag = "-Xfrontend";
     ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
 
