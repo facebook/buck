@@ -1,0 +1,17 @@
+java_library(
+    name = "manifest",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/android/...",
+        "//src/com/facebook/buck/externalactions/...",
+        "//src/com/facebook/buck/step/isolatedsteps/android/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/aosp:aosp",
+        "//third-party/java/guava:guava",
+    ],
+)
