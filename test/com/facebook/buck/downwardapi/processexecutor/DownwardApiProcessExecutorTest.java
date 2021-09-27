@@ -139,7 +139,7 @@ public class DownwardApiProcessExecutorTest {
     }
   }
 
-  @Rule public Timeout globalTestTimeout = Timeout.seconds(10);
+  @Rule public Timeout globalTestTimeout = Timeout.seconds(30);
   @Rule public TestName testName = new TestName();
 
   @Rule public TestLogSink testToolLogSink = new TestLogSink(TEST_LOGGER_NAME);

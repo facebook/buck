@@ -108,7 +108,11 @@ public class JavaBinaryTest {
         basePath + pathResolver.getCellUnsafeRelPath(javaBinary.getSourcePathToOutput());
 
     List<String> expectedCommand =
-        ImmutableList.of(JavaRuntimeUtils.getBucksJavaBinCommand(), "-jar", expectedClasspath);
+        ImmutableList.of(
+            JavaRuntimeUtils.getBucksJavaBinCommand(),
+            "-XX:-MaxFDLimit",
+            "-jar",
+            expectedClasspath);
     assertEquals(
         expectedCommand,
         javaBinary.getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(pathResolver));

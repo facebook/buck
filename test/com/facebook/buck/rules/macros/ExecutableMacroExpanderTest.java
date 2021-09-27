@@ -99,7 +99,8 @@ public class ExecutableMacroExpanderTest {
             .toAbsolutePath();
     String expectedCmd =
         String.format(
-            "%s -jar %s $OUT", JavaRuntimeUtils.getBucksJavaBinCommand(), expectedClasspath);
+            "%s -XX:-MaxFDLimit -jar %s $OUT",
+            JavaRuntimeUtils.getBucksJavaBinCommand(), expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
@@ -121,7 +122,8 @@ public class ExecutableMacroExpanderTest {
             .toAbsolutePath();
     String expectedCmd =
         String.format(
-            "%s -jar %s $OUT", JavaRuntimeUtils.getBucksJavaBinCommand(), expectedClasspath);
+            "%s -XX:-MaxFDLimit -jar %s $OUT",
+            JavaRuntimeUtils.getBucksJavaBinCommand(), expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
@@ -144,7 +146,8 @@ public class ExecutableMacroExpanderTest {
             .toAbsolutePath();
     String expectedCmd =
         String.format(
-            "%s -jar %s $OUT", JavaRuntimeUtils.getBucksJavaBinCommand(), expectedClasspath);
+            "%s -XX:-MaxFDLimit -jar %s $OUT",
+            JavaRuntimeUtils.getBucksJavaBinCommand(), expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
