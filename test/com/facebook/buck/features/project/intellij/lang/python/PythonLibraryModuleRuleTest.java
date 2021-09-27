@@ -40,87 +40,95 @@ import org.junit.Test;
 public class PythonLibraryModuleRuleTest {
   private static final String TARGET = "//foo/bar/baz:target";
   private static final Path MODULE_PATH = Paths.get("foo", "bar", "baz");
-  private final PythonLibraryModuleRule rule =
-      new PythonLibraryModuleRule(
-          new FakeProjectFilesystem(),
-          new IjModuleFactoryResolver() {
-            @Override
-            public Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode) {
-              return Optional.empty();
-            }
 
-            @Override
-            public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescriptionArg> targetNode) {
-              return null;
-            }
+  private static PythonLibraryModuleRule getPythonLibraryModuleRule(
+      boolean pythonBaseModuleTransformEnabled) {
+    return new PythonLibraryModuleRule(
+        new FakeProjectFilesystem(),
+        new IjModuleFactoryResolver() {
+          @Override
+          public Optional<Path> getDummyRDotJavaPath(TargetNode<?> targetNode) {
+            return Optional.empty();
+          }
 
-            @Override
-            public Optional<Path> getLibraryAndroidManifestPath(
-                TargetNode<AndroidLibraryDescription.CoreArg> targetNode) {
-              return Optional.empty();
-            }
+          @Override
+          public Path getAndroidManifestPath(TargetNode<AndroidBinaryDescriptionArg> targetNode) {
+            return null;
+          }
 
-            @Override
-            public Optional<Path> getResourceAndroidManifestPath(
-                TargetNode<AndroidResourceDescriptionArg> targetNode) {
-              return Optional.empty();
-            }
+          @Override
+          public Optional<Path> getLibraryAndroidManifestPath(
+              TargetNode<AndroidLibraryDescription.CoreArg> targetNode) {
+            return Optional.empty();
+          }
 
-            @Override
-            public Optional<Path> getProguardConfigPath(
-                TargetNode<AndroidBinaryDescriptionArg> targetNode) {
-              return Optional.empty();
-            }
+          @Override
+          public Optional<Path> getResourceAndroidManifestPath(
+              TargetNode<AndroidResourceDescriptionArg> targetNode) {
+            return Optional.empty();
+          }
 
-            @Override
-            public Optional<Path> getAndroidResourcePath(
-                TargetNode<AndroidResourceDescriptionArg> targetNode) {
-              return Optional.empty();
-            }
+          @Override
+          public Optional<Path> getProguardConfigPath(
+              TargetNode<AndroidBinaryDescriptionArg> targetNode) {
+            return Optional.empty();
+          }
 
-            @Override
-            public Optional<Path> getAssetsPath(
-                TargetNode<AndroidResourceDescriptionArg> targetNode) {
-              return Optional.empty();
-            }
+          @Override
+          public Optional<Path> getAndroidResourcePath(
+              TargetNode<AndroidResourceDescriptionArg> targetNode) {
+            return Optional.empty();
+          }
 
-            @Override
-            public Optional<Path> getAnnotationOutputPath(
-                TargetNode<? extends JvmLibraryArg> targetNode) {
-              return Optional.empty();
-            }
+          @Override
+          public Optional<Path> getAssetsPath(
+              TargetNode<AndroidResourceDescriptionArg> targetNode) {
+            return Optional.empty();
+          }
 
-            @Override
-            public Optional<Path> getKaptAnnotationOutputPath(
-                TargetNode<? extends JvmLibraryArg> targetNode) {
-              return Optional.empty();
-            }
+          @Override
+          public Optional<Path> getAnnotationOutputPath(
+              TargetNode<? extends JvmLibraryArg> targetNode) {
+            return Optional.empty();
+          }
 
-            @Override
-            public Optional<Path> getCompilerOutputPath(
-                TargetNode<? extends JvmLibraryArg> targetNode) {
-              return Optional.empty();
-            }
-          },
-          new IjDepsQueryResolver() {
-            @Override
-            public ImmutableSortedSet<BuildTarget> getResolvedDeps(TargetNode<?> targetNode) {
-              return ImmutableSortedSet.of();
-            }
+          @Override
+          public Optional<Path> getKaptAnnotationOutputPath(
+              TargetNode<? extends JvmLibraryArg> targetNode) {
+            return Optional.empty();
+          }
 
-            @Override
-            public ImmutableSortedSet<BuildTarget> getResolvedProvidedDeps(
-                TargetNode<?> targetNode) {
-              return ImmutableSortedSet.of();
-            }
-          },
-          IjTestProjectConfig.create());
+          @Override
+          public Optional<Path> getCompilerOutputPath(
+              TargetNode<? extends JvmLibraryArg> targetNode) {
+            return Optional.empty();
+          }
+        },
+        new IjDepsQueryResolver() {
+          @Override
+          public ImmutableSortedSet<BuildTarget> getResolvedDeps(TargetNode<?> targetNode) {
+            return ImmutableSortedSet.of();
+          }
+
+          @Override
+          public ImmutableSortedSet<BuildTarget> getResolvedProvidedDeps(TargetNode<?> targetNode) {
+            return ImmutableSortedSet.of();
+          }
+        },
+        IjTestProjectConfig.createBuilder()
+            .setPythonBaseModuleTransformEnabled(pythonBaseModuleTransformEnabled)
+            .build());
+  }
+
+  private final PythonLibraryModuleRule ruleWithTransformEnabled = getPythonLibraryModuleRule(true);
+  private final PythonLibraryModuleRule ruleWithTransformDisabled =
+      getPythonLibraryModuleRule(false);
 
   @Test
   public void adjustModulePathWithNoBaseModule() {
     TargetNode<PythonLibraryDescriptionArg> targetNode =
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(TARGET)).build();
-    assertEquals(MODULE_PATH, rule.adjustModulePath(targetNode, MODULE_PATH));
+    assertEquals(MODULE_PATH, ruleWithTransformEnabled.adjustModulePath(targetNode, MODULE_PATH));
   }
 
   @Test
@@ -129,7 +137,7 @@ public class PythonLibraryModuleRuleTest {
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(TARGET))
             .setBaseModule("")
             .build();
-    assertEquals(MODULE_PATH, rule.adjustModulePath(targetNode, MODULE_PATH));
+    assertEquals(MODULE_PATH, ruleWithTransformEnabled.adjustModulePath(targetNode, MODULE_PATH));
   }
 
   @Test
@@ -138,7 +146,8 @@ public class PythonLibraryModuleRuleTest {
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(TARGET))
             .setBaseModule("bar.baz")
             .build();
-    assertEquals(Paths.get("foo"), rule.adjustModulePath(targetNode, MODULE_PATH));
+    assertEquals(
+        Paths.get("foo"), ruleWithTransformEnabled.adjustModulePath(targetNode, MODULE_PATH));
   }
 
   @Test
@@ -147,7 +156,7 @@ public class PythonLibraryModuleRuleTest {
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(TARGET))
             .setBaseModule("bar.baz1")
             .build();
-    assertEquals(MODULE_PATH, rule.adjustModulePath(targetNode, MODULE_PATH));
+    assertEquals(MODULE_PATH, ruleWithTransformEnabled.adjustModulePath(targetNode, MODULE_PATH));
   }
 
   @Test
@@ -156,6 +165,15 @@ public class PythonLibraryModuleRuleTest {
         PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(TARGET))
             .setBaseModule("foo.bar.baz")
             .build();
-    assertEquals(MODULE_PATH, rule.adjustModulePath(targetNode, MODULE_PATH));
+    assertEquals(MODULE_PATH, ruleWithTransformEnabled.adjustModulePath(targetNode, MODULE_PATH));
+  }
+
+  @Test
+  public void adjustModulePathWithValidBaseModuleAndTransformDisabled() {
+    TargetNode<PythonLibraryDescriptionArg> targetNode =
+        PythonLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(TARGET))
+            .setBaseModule("bar.baz")
+            .build();
+    assertEquals(MODULE_PATH, ruleWithTransformDisabled.adjustModulePath(targetNode, MODULE_PATH));
   }
 }

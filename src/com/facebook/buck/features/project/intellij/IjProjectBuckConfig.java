@@ -189,6 +189,10 @@ public class IjProjectBuckConfig {
             buckConfig
                 .getInteger(INTELLIJ_BUCK_CONFIG_SECTION, "module_library_threshold")
                 .orElse(-1))
+        .setPythonBaseModuleTransformEnabled(
+            buckConfig
+                .getBoolean(INTELLIJ_BUCK_CONFIG_SECTION, "python_base_module_transform")
+                .orElse(false))
         .setKotlinJavaRuntimeLibraryTemplatePath(
             buckConfig.getPath(
                 INTELLIJ_BUCK_CONFIG_SECTION, "kotlin_java_runtime_library_template_path"))

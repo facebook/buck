@@ -67,7 +67,9 @@ public class PythonLibraryModuleRule extends BaseIjModuleRule<PythonLibraryDescr
   public Path adjustModulePath(
       TargetNode<PythonLibraryDescriptionArg> targetNode, Path modulePath) {
     String baseModule = targetNode.getConstructorArg().getBaseModule().orElse(null);
-    if (baseModule == null || baseModule.isEmpty()) {
+    if (!projectConfig.isPythonBaseModuleTransformEnabled()
+        || baseModule == null
+        || baseModule.isEmpty()) {
       return modulePath;
     }
     String[] components = baseModule.split("\\.");

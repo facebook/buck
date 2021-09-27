@@ -80,6 +80,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
             "max_library_name_length_before_truncate",
             "max_module_name_length_before_truncate",
             "multi_cell_module_support",
+            "python_base_module_transform",
             "use_module_library"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "log",
