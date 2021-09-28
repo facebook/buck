@@ -116,12 +116,11 @@ class HeaderSearchPaths {
   private final ProjectSourcePathResolver projectSourcePathResolver;
   private final PathRelativizer pathRelativizer;
   private final SwiftAttributeParser swiftAttributeParser;
-  private final ImmutableSet<String> swiftLabels;
-  private final boolean indexViaBuildFlags;
   private final ProjectFilesystem projectFilesystem;
   private final BuildContext buildContext;
   private final UnresolvedCxxPlatform unresolvedCxxPlatform;
   private final boolean indexViaCompileArgs;
+  private final AppleConfig appleConfig;
 
   private static final LoadingCache<ActionGraphBuilder, Map<UnflavoredBuildTarget, Set<BuildRule>>>
       mappingCache =
@@ -160,10 +159,9 @@ class HeaderSearchPaths {
     this.projectSourcePathResolver = projectSourcePathResolver;
     this.pathRelativizer = pathRelativizer;
     this.swiftAttributeParser = swiftAttributeParser;
-    this.swiftLabels = ImmutableSet.copyOf(appleConfig.getProjectGeneratorSwiftLabels());
-    this.indexViaBuildFlags = appleConfig.getProjectGeneratorIndexViaBuildFlags();
     this.indexViaCompileArgs = appleConfig.getProjectGeneratorIndexViaCompileArgs();
     this.projectFilesystem = projectCell.getFilesystem();
+    this.appleConfig = appleConfig;
   }
 
   /** Derives header search path attributes for the {@code targetNode}. */
@@ -207,7 +205,7 @@ class HeaderSearchPaths {
       ImmutableSet<Path> swiftIncludePaths = collectRecursiveSwiftIncludePaths(targetNode);
       builder.setSwiftIncludePaths(swiftIncludePaths);
 
-      if (indexViaBuildFlags) {
+      if (Utils.getShouldIndexViaBuildFlagsForTargetNode(targetNode, appleConfig)) {
         getIncludeFlags(targetNode, builder);
       }
     }
@@ -522,7 +520,7 @@ class HeaderSearchPaths {
     requiredBuildTargets.add(buildTarget);
 
     // If the module is mixed then we need to import the VFS overlay and the -Swift.h header hmap
-    if (targetNodeContainsSwift(targetNode)
+    if (Utils.targetNodeContainsSwift(targetNode, appleConfig)
         && !targetNode.getConstructorArg().getExportedHeaders().isEmpty()) {
       BuildTarget privateSwiftHeaderMapTarget =
           targetNode
@@ -584,7 +582,7 @@ class HeaderSearchPaths {
     includeFlags.add("-I" + targetFilesystem.resolve(includePath));
     requiredBuildTargets.add(buildTarget);
 
-    if (targetNodeContainsSwift(targetNode)) {
+    if (Utils.targetNodeContainsSwift(targetNode, appleConfig)) {
       // Swift libraries also need to include their dependent libraries swiftmodule files
       BuildTarget swiftCompileTarget =
           targetNode
@@ -872,7 +870,7 @@ class HeaderSearchPaths {
                 SourceSortedSet.ofNamedSources(ImmutableSortedMap.of())));
       }
 
-      if (targetNodeContainsSwift(targetNode)) {
+      if (Utils.targetNodeContainsSwift(targetNode, appleConfig)) {
         // Mixed libraries need to see their -Swift.h header. This is exposed through the module,
         // but is also expected to be available in unprefixed form internally.
         String moduleName =
@@ -1118,7 +1116,7 @@ class HeaderSearchPaths {
     // but to do it right, it's likely that we'll need to add that. When that happens, we can also
     // update this "if" statement. If, long-term, we move towards using modules for all Objective-C
     // code, the merged header map will no longer work at all.
-    if (targetNodeContainsSwift(targetNode)) {
+    if (Utils.targetNodeContainsSwift(targetNode, appleConfig)) {
       Flavor defaultPlatformFlavor =
           targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
 
@@ -1180,7 +1178,7 @@ class HeaderSearchPaths {
           // we do need to add the paths to .swiftmodule files for dependencies.
           if (nativeNode != targetNode
               && headerVisibility.equals(HeaderVisibility.PUBLIC)
-              && targetNodeContainsSwift(nativeNode)) {
+              && Utils.targetNodeContainsSwift(nativeNode, appleConfig)) {
             BuildTarget flavoredSwiftCompileTarget =
                 NodeHelper.getSwiftModuleTarget(nativeNode, defaultPlatformFlavor);
 
@@ -1191,19 +1189,6 @@ class HeaderSearchPaths {
           }
         });
     return builder.build();
-  }
-
-  private boolean targetNodeContainsSwift(
-      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
-    // Codegen libraries will have empty srcs so we cannot only rely on target inputs.
-    // We first check for any of the labels specified in apple.project_generator_swift_labels
-    // to know if this target is specified as Swift in the build rules.
-    for (String label : targetNode.getConstructorArg().getLabels()) {
-      if (swiftLabels.contains(label)) {
-        return true;
-      }
-    }
-    return AppleDescriptions.targetNodeContainsSwiftSourceCode(targetNode);
   }
 
   /** Adds the set of headers defined by headerVisibility to the merged header maps. */

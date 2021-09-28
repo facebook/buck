@@ -16,6 +16,8 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
+import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -108,5 +110,39 @@ public class Utils {
       }
       requiredBuildTargetsBuilder.add(buildTarget);
     }
+  }
+
+  /**
+   * Checks whether the given target node contains Swift source code, including in generated files.
+   *
+   * @param targetNode The target node to check for Swift code.
+   * @param appleConfig The Apple config for the project.
+   */
+  public static boolean targetNodeContainsSwift(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode, AppleConfig appleConfig) {
+    // Codegen libraries will have empty srcs so we cannot only rely on target inputs.
+    // We first check for any of the labels specified in apple.project_generator_swift_labels
+    // to know if this target is specified as Swift in the build rules.
+    ImmutableSet<String> swiftLabels =
+        ImmutableSet.copyOf(appleConfig.getProjectGeneratorSwiftLabels());
+    for (String label : targetNode.getConstructorArg().getLabels()) {
+      if (swiftLabels.contains(label)) {
+        return true;
+      }
+    }
+    return AppleDescriptions.targetNodeContainsSwiftSourceCode(targetNode);
+  }
+
+  /**
+   * Determines whether indexing via build flags should be enabled for the given target node.
+   *
+   * @param targetNode The target node for the indexing via build flags check.
+   * @param appleConfig The Apple config for the project.
+   */
+  public static boolean getShouldIndexViaBuildFlagsForTargetNode(
+      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode, AppleConfig appleConfig) {
+    // Only enable indexing with build flags if the target contains Swift
+    return appleConfig.getProjectGeneratorIndexViaBuildFlags()
+        && Utils.targetNodeContainsSwift(targetNode, appleConfig);
   }
 }

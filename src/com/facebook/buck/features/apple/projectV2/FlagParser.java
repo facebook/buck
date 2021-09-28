@@ -100,7 +100,7 @@ class FlagParser {
   private final AppleDependenciesCache dependenciesCache;
   private final SourcePathResolverAdapter defaultPathResolver;
   private final HeaderSearchPaths headerSearchPaths;
-  private final boolean indexViaBuildFlags;
+  private final boolean indexViaCompileArgs;
   private final ImmutableMap<Flavor, CxxBuckConfig> platformCxxBuckConfigs;
 
   FlagParser(
@@ -130,9 +130,7 @@ class FlagParser {
     this.dependenciesCache = dependenciesCache;
     this.defaultPathResolver = defaultPathResolver;
     this.headerSearchPaths = headerSearchPaths;
-    this.indexViaBuildFlags =
-        appleConfig.getProjectGeneratorIndexViaBuildFlags()
-            || appleConfig.getProjectGeneratorIndexViaCompileArgs();
+    this.indexViaCompileArgs = appleConfig.getProjectGeneratorIndexViaCompileArgs();
     this.platformCxxBuckConfigs = cxxBuckConfig.getFlavoredConfigs();
   }
 
@@ -182,7 +180,9 @@ class FlagParser {
             .orElse(ImmutableList.of()));
 
     ImmutableList.Builder<String> cFlagsBuilder = ImmutableList.builder();
-    if (indexViaBuildFlags) {
+    if (com.facebook.buck.features.apple.projectV2.Utils.getShouldIndexViaBuildFlagsForTargetNode(
+            targetNode, appleConfig)
+        || indexViaCompileArgs) {
       // We use argfiles to prevent increasing the already large xcconfig files in size
       try {
         cFlagsBuilder.add(

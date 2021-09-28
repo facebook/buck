@@ -1488,7 +1488,7 @@ public class XcodeNativeTargetGenerator {
     // Don't use Xcode's PCH generation when indexing with build flags. We will already have the
     // correct include in the indexing flags.
     if (prefixHeaderOptional.isPresent()
-        && !appleConfig.getProjectGeneratorIndexViaBuildFlags()
+        && !Utils.getShouldIndexViaBuildFlagsForTargetNode(targetNode, appleConfig)
         && !appleConfig.getProjectGeneratorIndexViaCompileArgs()) {
       RelPath prefixHeaderRelative = resolveSourcePath(prefixHeaderOptional.get());
       Path prefixHeaderPath =
@@ -1554,7 +1554,7 @@ public class XcodeNativeTargetGenerator {
         getFrameworkAndLibrarySearchPathConfigs(
             targetNode, xcodeNativeTargetAttributesBuilder, includeFrameworks));
 
-    if (!appleConfig.getProjectGeneratorIndexViaBuildFlags()
+    if (!Utils.getShouldIndexViaBuildFlagsForTargetNode(targetNode, appleConfig)
         && !appleConfig.getProjectGeneratorIndexViaCompileArgs()) {
       appendConfigsBuilder.put(
           "HEADER_SEARCH_PATHS",
@@ -1859,7 +1859,7 @@ public class XcodeNativeTargetGenerator {
   }
 
   private void addDefaultSettingsAndExtraSettingsForNode(
-      TargetNode<? extends ConstructorArg> targetNode,
+      TargetNode<? extends CommonArg> targetNode,
       Builder<String, String> defaultSettingsBuilder,
       Builder<String, String> extraSettingsBuilder,
       Builder<String, String> appendConfigsBuilder,
@@ -1893,7 +1893,7 @@ public class XcodeNativeTargetGenerator {
     defaultSettingsBuilder.put("CONFIGURATION_BUILD_DIR", "$BUILT_PRODUCTS_DIR");
     defaultSettingsBuilder.put("EXECUTABLE_PREFIX", "lib");
 
-    if (!appleConfig.getProjectGeneratorIndexViaBuildFlags()
+    if (!Utils.getShouldIndexViaBuildFlagsForTargetNode(targetNode, appleConfig)
         && !appleConfig.getProjectGeneratorIndexViaCompileArgs()) {
       appendConfigsBuilder.put(
           "HEADER_SEARCH_PATHS",
