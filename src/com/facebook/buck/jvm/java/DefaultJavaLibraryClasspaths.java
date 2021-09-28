@@ -123,12 +123,7 @@ abstract class DefaultJavaLibraryClasspaths {
   private BuildRule getAbiDep(BuildRule compileTimeFullDep) {
     Preconditions.checkState(compileTimeFullDep instanceof HasJavaAbi);
     HasJavaAbi hasJavaAbi = (HasJavaAbi) compileTimeFullDep;
-    CompileAgainstLibraryType compileAgainstLibraryType = getCompileAgainstLibraryType();
-    Optional<BuildTarget> abiJarTarget = Optional.empty();
-
-    if (compileAgainstLibraryType.equals(CompileAgainstLibraryType.SOURCE_ONLY_ABI)) {
-      abiJarTarget = hasJavaAbi.getSourceOnlyAbiJar();
-    }
+    Optional<BuildTarget> abiJarTarget = hasJavaAbi.getSourceOnlyAbiJar();
 
     if (!abiJarTarget.isPresent()) {
       abiJarTarget = hasJavaAbi.getAbiJar();

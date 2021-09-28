@@ -74,8 +74,6 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
 
   Optional<AbiGenerationMode> getAbiGenerationMode();
 
-  Optional<CompileAgainstLibraryType> getCompileAgainst();
-
   Optional<SourceAbiVerificationMode> getSourceAbiVerificationMode();
 
   Optional<UnusedDependenciesParams.UnusedDependenciesAction> getOnUnusedDependencies();

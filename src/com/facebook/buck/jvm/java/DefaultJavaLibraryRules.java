@@ -674,17 +674,9 @@ public abstract class DefaultJavaLibraryRules {
 
   @Value.Lazy
   CompileAgainstLibraryType getCompileAgainstLibraryType() {
-    CoreArg args = getArgs();
-    CompileAgainstLibraryType result = CompileAgainstLibraryType.SOURCE_ONLY_ABI;
-    if (args != null) {
-      result = args.getCompileAgainst().orElse(result);
-    }
-
-    if (!getConfiguredCompilerFactory().shouldCompileAgainstAbis()) {
-      result = CompileAgainstLibraryType.FULL;
-    }
-
-    return result;
+    return getConfiguredCompilerFactory().shouldCompileAgainstAbis()
+        ? CompileAgainstLibraryType.ABI
+        : CompileAgainstLibraryType.FULL;
   }
 
   @Value.Lazy
