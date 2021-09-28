@@ -278,6 +278,10 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
 
     public boolean cancelDelegateLocked(Throwable reason) {
       Verify.verify(Thread.holdsLock(this));
+      if (delegateResult == null) {
+        LOG.debug("Nothing to cancel.");
+        return false;
+      }
 
       StrategyBuildResult capturedDelegateResult = Objects.requireNonNull(delegateResult);
       if (capturedDelegateResult.getBuildResult().isDone()) {
