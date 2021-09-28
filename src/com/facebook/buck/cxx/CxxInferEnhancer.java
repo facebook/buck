@@ -169,8 +169,7 @@ public final class CxxInferEnhancer {
     ImmutableSet<CxxInferCaptureRule> captureRules = aggregator.getAllTransitiveCaptures();
 
     return graphBuilder.addToIndex(
-        new CxxInferCaptureTransitiveRule(
-            target, filesystem, graphBuilder, captureRules, inferConfig.executeRemotely()));
+        new CxxInferCaptureTransitiveRule(target, filesystem, graphBuilder, captureRules));
   }
 
   private CxxInferCaptureRulesAggregator requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(

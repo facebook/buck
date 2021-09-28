@@ -50,9 +50,8 @@ public class CxxInferCaptureTransitiveRule
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       SourcePathRuleFinder ruleFinder,
-      ImmutableSet<CxxInferCaptureRule> captureRules,
-      boolean executeRemotely) {
-    super(buildTarget, filesystem, ruleFinder, new Impl(captureRules, executeRemotely));
+      ImmutableSet<CxxInferCaptureRule> captureRules) {
+    super(buildTarget, filesystem, ruleFinder, new Impl(captureRules));
   }
 
   @Override
@@ -77,15 +76,14 @@ public class CxxInferCaptureTransitiveRule
     /** Whether or not infer rules can be executed remotely. Fails serialization if false. */
     @AddToRuleKey
     @CustomFieldBehavior(RemoteExecutionEnabled.class)
-    private final boolean executeRemotely;
+    private final boolean executeRemotely = false;
 
-    public Impl(ImmutableSet<CxxInferCaptureRule> captureRules, boolean executeRemotely) {
+    public Impl(ImmutableSet<CxxInferCaptureRule> captureRules) {
       this.output = new OutputPath(OUTPUT_PATH);
       this.captureRulesOutputs =
           captureRules.stream()
               .map(CxxInferCaptureRule::getSourcePathToOutput)
               .collect(ImmutableSet.toImmutableSet());
-      this.executeRemotely = executeRemotely;
     }
 
     @Override
