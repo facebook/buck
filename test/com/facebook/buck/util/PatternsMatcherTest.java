@@ -20,8 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Arrays;
-import java.util.Collections;
+import com.google.common.collect.ImmutableList;
 import java.util.Map;
 import java.util.TreeMap;
 import org.junit.Test;
@@ -31,7 +30,7 @@ public class PatternsMatcherTest {
   @Test
   public void testMatchesPattern() {
     PatternsMatcher patternsMatcher =
-        new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));
+        new PatternsMatcher(ImmutableList.of("pattern.*", "test_pattern"));
 
     assertTrue(patternsMatcher.matches("pattern"));
     assertTrue(patternsMatcher.matches("test_pattern"));
@@ -42,7 +41,7 @@ public class PatternsMatcherTest {
   @Test
   public void testMatchesAnyWithExactMatch() {
     PatternsMatcher patternsMatcher =
-        new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));
+        new PatternsMatcher(ImmutableList.of("pattern.*", "test_pattern"));
 
     assertTrue(patternsMatcher.matches("test_pattern"));
   }
@@ -50,56 +49,56 @@ public class PatternsMatcherTest {
   @Test
   public void testMatchesAnyWithWildcard() {
     PatternsMatcher patternsMatcher =
-        new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));
+        new PatternsMatcher(ImmutableList.of("pattern.*", "test_pattern"));
 
     assertTrue(patternsMatcher.matches("pattern"));
   }
 
   @Test
   public void testDoesNotMatchPrefix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("test"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(ImmutableList.of("test"));
 
     assertFalse(patternsMatcher.matches("test_pattern"));
   }
 
   @Test
   public void testMatchAnyWithNonMatchingPrefixReturnsFalse() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("test"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(ImmutableList.of("test"));
 
     assertFalse(patternsMatcher.matches("test_pattern"));
   }
 
   @Test
   public void testSubstringMatchesPrefix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("test"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(ImmutableList.of("test"));
 
     assertTrue(patternsMatcher.substringMatches("test_pattern"));
   }
 
   @Test
   public void testDoesNotMatchSuffix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("pattern"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(ImmutableList.of("pattern"));
 
     assertFalse(patternsMatcher.matches("test_pattern"));
   }
 
   @Test
   public void testSubstringMatchesSuffix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("pattern"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(ImmutableList.of("pattern"));
 
     assertTrue(patternsMatcher.substringMatches("test_pattern"));
   }
 
   @Test
   public void testDoesNotMatchInfix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("_"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(ImmutableList.of("_"));
 
     assertFalse(patternsMatcher.matches("test_pattern"));
   }
 
   @Test
   public void testSubstringMatchesInfix() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.singletonList("_"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(ImmutableList.of("_"));
 
     assertTrue(patternsMatcher.substringMatches("test_pattern"));
   }
@@ -107,7 +106,7 @@ public class PatternsMatcherTest {
   @Test
   public void testDoesNotMatchPattern() {
     PatternsMatcher patternsMatcher =
-        new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));
+        new PatternsMatcher(ImmutableList.of("pattern.*", "test_pattern"));
 
     assertFalse(patternsMatcher.matches("wrong_pattern"));
     assertFalse(patternsMatcher.substringMatches("wrong_pat"));
@@ -116,7 +115,7 @@ public class PatternsMatcherTest {
   @Test
   public void testMatchesAnyDoesNotMatchPattern() {
     PatternsMatcher patternsMatcher =
-        new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));
+        new PatternsMatcher(ImmutableList.of("pattern.*", "test_pattern"));
 
     assertFalse(patternsMatcher.matches("wrong_pattern"));
   }
@@ -134,7 +133,7 @@ public class PatternsMatcherTest {
   @Test
   public void testHasPatterns() {
     PatternsMatcher patternsMatcher =
-        new PatternsMatcher(Arrays.asList("pattern.*", "test_pattern"));
+        new PatternsMatcher(ImmutableList.of("pattern.*", "test_pattern"));
 
     assertFalse(patternsMatcher.isMatchesAny());
     assertFalse(patternsMatcher.isMatchesNone());
@@ -142,7 +141,7 @@ public class PatternsMatcherTest {
 
   @Test
   public void testHasNoPatterns() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Collections.emptyList());
+    PatternsMatcher patternsMatcher = new PatternsMatcher(ImmutableList.of());
 
     assertTrue(patternsMatcher.isMatchesNone());
     assertFalse(patternsMatcher.isMatchesAny());
@@ -166,7 +165,7 @@ public class PatternsMatcherTest {
 
   @Test
   public void testFilterMatchingMapEntries() {
-    PatternsMatcher patternsMatcher = new PatternsMatcher(Arrays.asList("e1", "e2"));
+    PatternsMatcher patternsMatcher = new PatternsMatcher(ImmutableList.of("e1", "e2"));
 
     Map<String, String> entries =
         new TreeMap<String, String>() {

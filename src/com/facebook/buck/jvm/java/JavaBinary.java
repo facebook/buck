@@ -79,9 +79,9 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final ImmutableSet<Pattern> blacklist;
+  private final ImmutableSet<Pattern> blocklist;
 
-  private final PatternsMatcher blacklistPatternsMatcher;
+  private final PatternsMatcher blocklistPatternsMatcher;
 
   private final ImmutableSet<JavaLibrary> transitiveClasspathDeps;
   private final ImmutableSet<SourcePath> transitiveClasspaths;
@@ -99,7 +99,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       boolean mergeManifests,
       boolean disallowAllDuplicates,
       @Nullable Path metaInfDirectory,
-      ImmutableSet<Pattern> blacklist,
+      ImmutableSet<Pattern> blocklist,
       ImmutableSet<JavaLibrary> transitiveClasspathDeps,
       ImmutableSet<SourcePath> transitiveClasspaths,
       boolean cache,
@@ -114,8 +114,8 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         metaInfDirectory != null
             ? PathSourcePath.of(getProjectFilesystem(), metaInfDirectory)
             : null;
-    this.blacklist = blacklist;
-    blacklistPatternsMatcher = new PatternsMatcher(blacklist);
+    this.blocklist = blocklist;
+    this.blocklistPatternsMatcher = new PatternsMatcher(blocklist);
     this.transitiveClasspathDeps = transitiveClasspathDeps;
     this.transitiveClasspaths = transitiveClasspaths;
     this.cache = cache;
@@ -181,7 +181,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .setDuplicatesLogLevel(duplicatesLogLevel)
                 .setRemoveEntryPredicate(
                     entry ->
-                        blacklistPatternsMatcher.substringMatches(((ZipEntry) entry).getName()))
+                        blocklistPatternsMatcher.substringMatches(((ZipEntry) entry).getName()))
                 .build());
     commands.add(jar);
 

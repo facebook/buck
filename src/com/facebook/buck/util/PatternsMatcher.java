@@ -16,12 +16,12 @@
 
 package com.facebook.buck.util;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import java.util.Collection;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Helper class that keeps a list of compiled patterns and provides a method to check whether a
@@ -34,36 +34,26 @@ public class PatternsMatcher {
   /** A pattern which matches no string */
   public static final PatternsMatcher NONE = new PatternsMatcher(ImmutableSet.of(), false);
 
-  private final Collection<Pattern> patterns;
+  private final ImmutableSet<Pattern> patterns;
   /** True is like having a pattern {@code .*} in the pattern set */
   private final boolean matchesAny;
 
-  private PatternsMatcher(Collection<Pattern> patterns, boolean matchesAny) {
+  private PatternsMatcher(ImmutableSet<Pattern> patterns, boolean matchesAny) {
     this.patterns = patterns;
     this.matchesAny = matchesAny;
   }
 
-  public PatternsMatcher(Collection<String> rawPatterns) {
-    patterns = rawPatterns.stream().map(Pattern::compile).collect(Collectors.toList());
-    matchesAny = false;
+  public PatternsMatcher(ImmutableCollection<String> rawPatterns) {
+    this(rawPatterns.stream().map(Pattern::compile).collect(ImmutableSet.toImmutableSet()), false);
   }
 
   public PatternsMatcher(ImmutableSet<Pattern> compiledPatterns) {
-    patterns = compiledPatterns;
-    matchesAny = false;
+    this(compiledPatterns, false);
   }
 
   /** @return true if the given string matches some of the patterns */
   public boolean matches(String string) {
-    if (matchesAny) {
-      return true;
-    }
-    for (Pattern pattern : patterns) {
-      if (pattern.matcher(string).matches()) {
-        return true;
-      }
-    }
-    return false;
+    return match(string, true);
   }
 
   /**
@@ -71,11 +61,16 @@ public class PatternsMatcher {
    *     patterns
    */
   public boolean substringMatches(String string) {
+    return match(string, false);
+  }
+
+  private boolean match(String string, boolean fullMatch) {
     if (matchesAny) {
       return true;
     }
     for (Pattern pattern : patterns) {
-      if (pattern.matcher(string).find()) {
+      Matcher matcher = pattern.matcher(string);
+      if (fullMatch ? matcher.matches() : matcher.find()) {
         return true;
       }
     }
