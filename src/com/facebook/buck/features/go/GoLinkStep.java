@@ -29,7 +29,9 @@ import java.util.stream.Stream;
 public class GoLinkStep extends IsolatedShellStep {
 
   enum BuildMode {
-    EXECUTABLE("exe");
+    EXECUTABLE("exe"),
+    C_SHARED("c_shared"),
+    C_ARCHIVE("c_archive");
     // Other gc modes: http://blog.ralch.com/tutorial/golang-sharing-libraries/
 
     private final String buildMode;
@@ -108,7 +110,7 @@ public class GoLinkStep extends IsolatedShellStep {
             .addAll(linkCommandPrefix)
             .addAll(linkerFlags)
             .add("-o", output.toString())
-            .add("-buildmode", buildMode.getBuildMode())
+            .add("-buildmode", buildMode.getBuildMode().replace('_', '-'))
             .add("-buildid=") // Setting to a static buildid helps make the binary reproducible.
             .add("-linkmode", linkMode.getLinkMode());
 

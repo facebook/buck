@@ -1,0 +1,19 @@
+# setup go binary (shared object) and cgo_library (the actual exports)
+go_exported_library(
+    name = "shared",
+    srcs = ["main.go"],
+    build_mode = "c_shared",
+    compiler_flags = ["-shared"],
+    deps = [":example"],
+)
+
+cgo_library(
+    name = "example",
+    package_name = "cgo",
+    srcs = [
+        "export-to-c.go",
+    ],
+    cgo_compiler_flags = [],
+    compiler_flags = [],
+    headers = [],
+)

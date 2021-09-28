@@ -321,6 +321,7 @@ abstract class GoDescriptors {
       GoBuckConfig goBuckConfig,
       DownwardApiConfig downwardApiConfig,
       Linker.LinkableDepType linkStyle,
+      GoLinkStep.BuildMode buildMode,
       Optional<GoLinkStep.LinkMode> linkMode,
       ImmutableSet<SourcePath> srcs,
       ImmutableSortedSet<SourcePath> resources,
@@ -429,7 +430,9 @@ abstract class GoDescriptors {
     if (!linkMode.isPresent()) {
       linkMode =
           Optional.of(
-              (cxxLinkerArgs.size() > 0)
+              (cxxLinkerArgs.size() > 0
+                      || buildMode == GoLinkStep.BuildMode.C_SHARED
+                      || buildMode == GoLinkStep.BuildMode.C_ARCHIVE)
                   ? GoLinkStep.LinkMode.EXTERNAL
                   : GoLinkStep.LinkMode.INTERNAL);
     }
@@ -455,6 +458,7 @@ abstract class GoDescriptors {
         library,
         platform.getLinker(),
         cxxLinker,
+        buildMode,
         linkMode.get(),
         ImmutableList.copyOf(linkerArgs),
         cxxLinkerArgs,
@@ -508,6 +512,7 @@ abstract class GoDescriptors {
                   goBuckConfig,
                   downwardApiConfig,
                   Linker.LinkableDepType.STATIC_PIC,
+                  GoLinkStep.BuildMode.EXECUTABLE,
                   Optional.empty(),
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),
                   ImmutableSortedSet.of(),
