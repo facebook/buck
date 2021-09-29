@@ -1773,6 +1773,21 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void resourcesWithLoginitemsDestinationsAreProperlyCopiedOnMacosxPlatform()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "bundle_with_resource_with_logintimes_destination", tmp);
+    workspace.setUp();
+    Path outputPath =
+        workspace.buildAndReturnOutput(
+            "//:bundle#macosx-x86_64", "--config", "apple.codesign=/usr/bin/true");
+    assertTrue(
+        "Resource file should exist in Frameworks directory.",
+        Files.isRegularFile(outputPath.resolve("Contents/Library/LoginItems/file.txt")));
+  }
+
+  @Test
   public void resourcesWithExecutablesDestinationsAreProperlyCopiedOnIosPlatform()
       throws IOException {
     ProjectWorkspace workspace =

@@ -26,6 +26,7 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
   public enum Destination {
     ABSOLUTE(0),
     WRAPPER(1),
+    LOGINITEMS(1),
     EXECUTABLES(6),
     RESOURCES(7),
     FRAMEWORKS(10),
