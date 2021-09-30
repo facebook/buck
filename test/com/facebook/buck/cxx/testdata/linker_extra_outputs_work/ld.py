@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """A fake ld that can emit extra output."""
 
 import argparse

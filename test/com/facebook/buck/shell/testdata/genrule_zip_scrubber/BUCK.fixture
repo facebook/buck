@@ -6,7 +6,7 @@ genrule(
         script,
     ],
     out = "output-one.zip",
-    cmd = "python $SRCS $OUT 0",
+    cmd = "python3 $SRCS $OUT 0",
 )
 
 genrule(
@@ -20,7 +20,7 @@ genrule(
         ],
     },
     default_outs = ["output-one.zip"],
-    cmd = "python $SRCS $OUT/output-one.zip 0",
+    cmd = "python3 $SRCS $OUT/output-one.zip 0",
 )
 
 genrule(
@@ -29,7 +29,7 @@ genrule(
         script,
     ],
     out = "output-two.zip",
-    cmd = "python $SRCS $OUT 1",
+    cmd = "python3 $SRCS $OUT 1",
 )
 
 genrule(
@@ -43,7 +43,7 @@ genrule(
         ],
     },
     default_outs = ["output-two.zip"],
-    cmd = "python $SRCS $OUT/output-two.zip 0",
+    cmd = "python3 $SRCS $OUT/output-two.zip 0",
 )
 
 genrule(

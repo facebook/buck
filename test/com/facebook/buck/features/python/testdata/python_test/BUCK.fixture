@@ -1,4 +1,4 @@
-CMD_UNIX = "out=\"$(abs_output testbin)\" && cd \\$(dirname $out) && python $out"
+CMD_UNIX = "out=\"$(abs_output testbin)\" && cd \\$(dirname $out) && python3 $out"
 
 CMD_WIN = "\r\n".join([
     "set out=\"$(abs_output testbin)\"",

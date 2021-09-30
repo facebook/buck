@@ -317,7 +317,7 @@ public class DoctorCommandIntegrationTest {
   @Test
   public void testExtraInfo() throws Exception {
     DoctorConfig doctorConfig =
-        createDoctorConfig(0, "python, extra.py", DoctorProtocolVersion.SIMPLE);
+        createDoctorConfig(0, "python3, extra.py", DoctorProtocolVersion.SIMPLE);
     DoctorReportHelper helper =
         createDoctorHelper(workspace, userInputFixture.getUserInput(), doctorConfig);
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
