@@ -106,8 +106,11 @@ public interface WindowsNamedPipeLibrary extends WinNT, Library {
     if (windowsHandle.isClosed()) {
       return;
     }
-    INSTANCE.DisconnectNamedPipe(windowsHandle.getHandle());
-    windowsHandle.close();
+    try {
+      INSTANCE.DisconnectNamedPipe(windowsHandle.getHandle());
+    } finally {
+      windowsHandle.close();
+    }
   }
 
   /** Creates {@link WindowsHandle} that wraps the result of {@link #CreateEvent} result. */

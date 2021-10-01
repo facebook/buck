@@ -108,11 +108,17 @@ abstract class WindowsNamedPipeServerBase extends BaseNamedPipe implements Named
                 /* nDefaultTimeOut */ 0,
                 /* lpSecurityAttributes */ null),
             "CreateNamedPipe() for " + namedPipe);
+
     if (handle.isInvalidHandle()) {
-      throw new WindowsNamedPipeException(
-          "Could not create named pipe: %s, error %s",
-          namedPipe, Kernel32Util.getLastErrorMessage());
+      try {
+        throw new WindowsNamedPipeException(
+            "Could not create named pipe: %s, error %s",
+            namedPipe, Kernel32Util.getLastErrorMessage());
+      } finally {
+        handle.close();
+      }
     }
+
     openHandles.add(handle);
 
     int connectError;

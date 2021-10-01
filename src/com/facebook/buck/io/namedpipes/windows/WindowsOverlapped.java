@@ -33,12 +33,22 @@ class WindowsOverlapped {
   WindowsOverlapped(WindowsHandle windowsHandle) {
     Preconditions.checkArgument(
         !windowsHandle.isClosed(), "Windows handle " + windowsHandle + " is closed!");
-    Preconditions.checkArgument(
-        !windowsHandle.isInvalidHandle(), "Windows handle " + windowsHandle + " is invalid!");
+    verifyNotInvalid(windowsHandle);
+
     this.windowsHandle = windowsHandle;
     this.overlapped = new WinBase.OVERLAPPED();
     overlapped.hEvent = windowsHandle.getHandle();
     overlapped.write();
+  }
+
+  private void verifyNotInvalid(WindowsHandle windowsHandle) {
+    if (windowsHandle.isInvalidHandle()) {
+      try {
+        throw new IllegalArgumentException("Windows handle " + windowsHandle + " is invalid!");
+      } finally {
+        windowsHandle.close();
+      }
+    }
   }
 
   public Pointer getPointer() {
