@@ -322,9 +322,12 @@ public abstract class BaseNamedPipeEventHandler implements NamedPipeEventHandler
 
   private void awaitTillEventsProcessed() {
     int registeredParties = eventProcessingPhaser.getRegisteredParties();
-    if (registeredParties > 0) {
-      LOGGER.info("Starting waiting for %s events to process", registeredParties);
+    if (registeredParties == 0) {
+      LOGGER.info("No registered events to wait.");
+      // no events to wait
+      return;
     }
+    LOGGER.info("Starting waiting for %s events to process", registeredParties);
     int phase = eventProcessingPhaser.getPhase();
     try {
       eventProcessingPhaser.awaitAdvanceInterruptibly(
