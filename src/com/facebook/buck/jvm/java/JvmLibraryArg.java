@@ -64,8 +64,6 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
 
   ImmutableList<String> getAnnotationProcessorParams();
 
-  ImmutableList<String> getJavaPluginParams();
-
   ImmutableSet<String> getAnnotationProcessors();
 
   Optional<Boolean> getAnnotationProcessorOnly();
@@ -150,9 +148,6 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
 
     JavacPluginParams.Builder builder = JavacPluginParams.builder();
     addPlugins(builder, resolver, owner, JAVAC_PLUGIN);
-    for (String processorParam : getJavaPluginParams()) {
-      builder.addParameters(processorParam);
-    }
     return builder.build(resolver.getSourcePathResolver(), ruleCellRoot);
   }
 
