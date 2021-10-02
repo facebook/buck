@@ -57,8 +57,8 @@ public class MovePythonWhlDataStep implements Step {
     // to just list the couple of entries inside of the root of the extracted dir, rather than
     // parsing out the *.dist-info/METADATA file (we also would need the package name/version
     // anyways to find the .dist-info dir.
-    Optional<Path> dataDir = null;
-    try(Stream<Path> list = Files.list(resolvedWhlDir)) {
+    Optional<Path> dataDir = Optional.empty();
+    try (Stream<Path> list = Files.list(resolvedWhlDir)) {
         dataDir = list.filter(
                     path -> path.getFileName().toString().endsWith(".data") && Files.isDirectory(path))
                             .findFirst();
