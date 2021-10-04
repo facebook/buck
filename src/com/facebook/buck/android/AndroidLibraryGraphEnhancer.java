@@ -81,7 +81,7 @@ public class AndroidLibraryGraphEnhancer {
   }
 
   public Optional<DummyRDotJava> getBuildableForAndroidResources(
-      ActionGraphBuilder graphBuilder, boolean createBuildableIfEmptyDeps) {
+      ActionGraphBuilder graphBuilder, boolean assertNoEmptyDeps) {
     // Check if it exists first, since deciding whether to actually create it requires some
     // computation.
     Optional<BuildRule> previouslyCreated = graphBuilder.getRuleOptional(dummyRDotJavaBuildTarget);
@@ -95,7 +95,8 @@ public class AndroidLibraryGraphEnhancer {
             .filter(input -> input.getRes() != null)
             .toImmutableSet();
 
-    if (androidResourceDeps.isEmpty() && !createBuildableIfEmptyDeps) {
+    if (androidResourceDeps.isEmpty()) {
+      Preconditions.checkState(!assertNoEmptyDeps, "Shouldn't reach this point with empty deps!");
       return Optional.empty();
     }
 

@@ -56,7 +56,6 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -158,62 +157,41 @@ public class DummyRDotJava extends AbstractBuildRule
             BuildCellRelativePath.fromCellRelativePath(
                 buildCellRootPath, filesystem, rDotJavaSrcFolder)));
 
+    Preconditions.checkState(!androidResourceDeps.isEmpty());
+    MergeAndroidResourcesStep mergeStep =
+        MergeAndroidResourcesStep.createStepForDummyRDotJava(
+            filesystem,
+            sourcePathResolver,
+            androidResourceDeps,
+            rDotJavaSrcFolder.getPath(),
+            /* forceFinalResourceIds */ false,
+            unionPackage,
+            /* rName */ Optional.empty(),
+            skipNonUnionRDotJava);
+    steps.add(mergeStep);
+
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
     ImmutableSortedSet<RelPath> javaSourceFilePaths;
-    if (androidResourceDeps.isEmpty()) {
-      // In this case, the user is likely running a Robolectric test that does not happen to
-      // depend on any resources. However, if Robolectric doesn't find an R.java file, it flips
-      // out, so we have to create one, anyway.
-
-      // TODO(mbolin): Stop hardcoding com.facebook. This should match the package in the
-      // associated TestAndroidManifest.xml file.
-      RelPath emptyRDotJava = rDotJavaSrcFolder.resolveRel("com/facebook/R.java");
-
-      steps.addAll(
-          MakeCleanDirectoryStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  buildCellRootPath, filesystem, emptyRDotJava.getParent())));
-      steps.add(
-          WriteFileIsolatedStep.of(
-              "package com.facebook;\n public class R {}\n",
-              emptyRDotJava,
-              /* executable */ false));
-      javaSourceFilePaths =
-          ImmutableSortedSet.orderedBy(RelPath.comparator()).add(emptyRDotJava).build();
+    if (!finalRName.isPresent()) {
+      javaSourceFilePaths = mergeStep.getRDotJavaFiles();
     } else {
-      MergeAndroidResourcesStep mergeStep =
+      MergeAndroidResourcesStep mergeFinalRStep =
           MergeAndroidResourcesStep.createStepForDummyRDotJava(
               filesystem,
               sourcePathResolver,
               androidResourceDeps,
               rDotJavaSrcFolder.getPath(),
-              /* forceFinalResourceIds */ false,
+              /* forceFinalResourceIds */ true,
               unionPackage,
-              /* rName */ Optional.empty(),
+              finalRName,
               skipNonUnionRDotJava);
-      steps.add(mergeStep);
+      steps.add(mergeFinalRStep);
 
-      if (!finalRName.isPresent()) {
-        javaSourceFilePaths = mergeStep.getRDotJavaFiles();
-      } else {
-        MergeAndroidResourcesStep mergeFinalRStep =
-            MergeAndroidResourcesStep.createStepForDummyRDotJava(
-                filesystem,
-                sourcePathResolver,
-                androidResourceDeps,
-                rDotJavaSrcFolder.getPath(),
-                /* forceFinalResourceIds */ true,
-                unionPackage,
-                finalRName,
-                skipNonUnionRDotJava);
-        steps.add(mergeFinalRStep);
-
-        javaSourceFilePaths =
-            ImmutableSortedSet.orderedBy(RelPath.comparator())
-                .addAll(mergeStep.getRDotJavaFiles())
-                .addAll(mergeFinalRStep.getRDotJavaFiles())
-                .build();
-      }
+      javaSourceFilePaths =
+          ImmutableSortedSet.orderedBy(RelPath.comparator())
+              .addAll(mergeStep.getRDotJavaFiles())
+              .addAll(mergeFinalRStep.getRDotJavaFiles())
+              .build();
     }
 
     // Clear out the directory where the .class files will be generated.
