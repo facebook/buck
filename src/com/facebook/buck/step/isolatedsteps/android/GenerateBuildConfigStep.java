@@ -16,11 +16,11 @@
 
 package com.facebook.buck.step.isolatedsteps.android;
 
-import com.facebook.buck.android.BuildConfigs;
+import com.facebook.buck.android.build_config.BuildConfigFields;
+import com.facebook.buck.android.build_config.BuildConfigs;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;

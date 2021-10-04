@@ -18,10 +18,10 @@ package com.facebook.buck.externalactions.android;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.facebook.buck.android.build_config.BuildConfigFields;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;

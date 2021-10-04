@@ -1,0 +1,18 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_test",
+)
+
+java_test(
+    name = "build_config",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/android/build_config:build_config",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

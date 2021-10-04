@@ -187,6 +187,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/aapt:mini_aapt",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
+        "//src/com/facebook/buck/android/build_config:build_config",
         "//src/com/facebook/buck/android/dalvik:dalvik",
         "//src/com/facebook/buck/android/dalvik:steps",
         "//src/com/facebook/buck/android/redex:options",

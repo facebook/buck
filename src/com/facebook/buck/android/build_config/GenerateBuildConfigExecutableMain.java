@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android.build_config;
 
-import com.facebook.buck.android.BuildConfigs;
-import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;

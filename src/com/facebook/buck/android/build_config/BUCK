@@ -1,15 +1,30 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
     name = "build_config",
-    srcs = glob(["*.java"]),
+    srcs = ["BuildConfigFields.java", "BuildConfigs.java"],
     visibility = [
-        "//src/com/facebook/buck/android/...",
-        "//src/com/facebook/buck/externalactions/...",
-        "//src/com/facebook/buck/step/isolatedsteps/android/...",
-        "//test/com/facebook/buck/...",
+        "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/android:steps",
-        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//third-party/java/guava:guava"
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+    ],
+)
+
+java_library(
+    name = "executable",
+    srcs = ["GenerateBuildConfigExecutableMain.java"],
+    visibility = [
+        "//src/com/facebook/buck/android/build_config:generate_build_config_binary",
+    ],
+    deps = [
+        ":build_config",
+        "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava"
     ],
 )
@@ -19,5 +34,6 @@ java_binary(
     main_class = "com.facebook.buck.android.build_config.GenerateBuildConfigExecutableMain",
     deps = [
         ":build_config",
+        ":executable",
     ],
 )

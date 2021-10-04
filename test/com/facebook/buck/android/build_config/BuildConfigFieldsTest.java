@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.android.build_config;
 
 import static org.junit.Assert.assertEquals;
 

@@ -16,10 +16,10 @@
 
 package com.facebook.buck.externalactions.android;
 
+import com.facebook.buck.android.build_config.BuildConfigFields;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.external.model.ExternalAction;
 import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
-import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.android.GenerateBuildConfigStep;

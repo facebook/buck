@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.rules.coercer;
+package com.facebook.buck.android.build_config;
 
+import com.facebook.buck.android.build_config.BuildConfigFields.Field;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.rules.coercer.BuildConfigFields.Field;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -49,7 +49,7 @@ public abstract class BuildConfigFields implements Iterable<Field> {
 
     public abstract String getValue();
 
-    public static BuildConfigFields.Field of(String type, String name, String value) {
+    public static Field of(String type, String name, String value) {
       return ImmutableBuildConfigFields.Field.ofImpl(type, name, value);
     }
 
