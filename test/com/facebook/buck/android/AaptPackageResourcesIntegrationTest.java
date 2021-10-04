@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -72,7 +72,7 @@ public class AaptPackageResourcesIntegrationTest {
                 BuildTargetFactory.newInstance(MAIN_BUILD_TARGET)
                     .withFlavors(
                         AndroidBinaryResourcesGraphEnhancer.AAPT_PACKAGE_FLAVOR,
-                        InternalFlavor.of(APKModuleGraph.ROOT_APKMODULE_NAME)),
+                        InternalFlavor.of(APKModule.ROOT_APKMODULE_NAME)),
                 AaptPackageResources.RESOURCE_APK_PATH_FORMAT));
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(new FileInputStream(aaptOutput.toFile()))) {

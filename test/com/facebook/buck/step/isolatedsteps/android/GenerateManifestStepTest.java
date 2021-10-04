@@ -20,7 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -74,7 +74,7 @@ public class GenerateManifestStepTest {
     GenerateManifestStep manifestCommand =
         new GenerateManifestStep(
             skeletonPath,
-            APKModuleGraph.ROOT_APKMODULE_NAME,
+            APKModule.ROOT_APKMODULE_NAME,
             libraryManifestFiles,
             outputPath,
             mergeReportPath);

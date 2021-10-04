@@ -139,7 +139,7 @@ public class APKModuleTest {
 
       assertThat(dependencies.size(), is(2));
       assertThat(
-          Iterables.getFirst(dependencies, null).getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+          Iterables.getFirst(dependencies, null).getName(), is(APKModule.ROOT_APKMODULE_NAME));
       assertThat(Iterables.getLast(dependencies, null).getName(), not(sharedModuleName));
       assertThat(Iterables.getLast(dependencies, null).getName().length(), lessThan(255));
       assertThat(Iterables.getLast(dependencies, null).getName(), equalTo("s_" + expectedHashCode));
@@ -242,7 +242,7 @@ public class APKModuleTest {
 
       assertThat(dependencies.size(), is(1));
       assertThat(
-          Iterables.getFirst(dependencies, null).getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+          Iterables.getFirst(dependencies, null).getName(), is(APKModule.ROOT_APKMODULE_NAME));
       assertThat(Iterables.getFirst(dependencies, null).isRootModule(), is(true));
     }
 
@@ -358,7 +358,7 @@ public class APKModuleTest {
 
       assertThat(dependencies.size(), is(2));
       assertThat(
-          Iterables.getFirst(dependencies, null).getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+          Iterables.getFirst(dependencies, null).getName(), is(APKModule.ROOT_APKMODULE_NAME));
       assertThat(Iterables.getLast(dependencies, null).getName(), is(sharedModuleName));
     }
   }
@@ -471,12 +471,11 @@ public class APKModuleTest {
     assertThat(dependencies.size(), is(2));
 
     for (APKModule dependency : dependencies) {
-      assertThat(dependency.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java"));
+      assertThat(dependency.getName(), oneOf(APKModule.ROOT_APKMODULE_NAME, "java"));
       if (dependency.getName().equals("java")) {
         ImmutableSet<APKModule> javaDeps = dag.getGraph().getOutgoingNodesFor(dependency);
         assertThat(javaDeps.size(), is(1));
-        assertThat(
-            Iterables.getFirst(javaDeps, null).getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+        assertThat(Iterables.getFirst(javaDeps, null).getName(), is(APKModule.ROOT_APKMODULE_NAME));
       }
     }
   }
@@ -610,19 +609,17 @@ public class APKModuleTest {
         case "java2":
           Set<APKModule> java2Dependencies = dag.getGraph().getOutgoingNodesFor(topModule);
           for (APKModule dependency : java2Dependencies) {
-            assertThat(
-                dependency.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "s_java_java2"));
+            assertThat(dependency.getName(), oneOf(APKModule.ROOT_APKMODULE_NAME, "s_java_java2"));
           }
           break;
         case "android":
           Set<APKModule> androidDependencies = dag.getGraph().getOutgoingNodesFor(topModule);
           for (APKModule dependency : androidDependencies) {
-            assertThat(dependency.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java"));
+            assertThat(dependency.getName(), oneOf(APKModule.ROOT_APKMODULE_NAME, "java"));
             if (dependency.getName().equals("java")) {
               Set<APKModule> javaDeps = dag.getGraph().getOutgoingNodesFor(dependency);
               for (APKModule javaDep : javaDeps) {
-                assertThat(
-                    javaDep.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "s_java_java2"));
+                assertThat(javaDep.getName(), oneOf(APKModule.ROOT_APKMODULE_NAME, "s_java_java2"));
               }
             }
           }
@@ -712,12 +709,11 @@ public class APKModuleTest {
     assertThat(dependencies.size(), is(2));
 
     for (APKModule dependency : dependencies) {
-      assertThat(dependency.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java"));
+      assertThat(dependency.getName(), oneOf(APKModule.ROOT_APKMODULE_NAME, "java"));
       if (dependency.getName().equals("java")) {
         ImmutableSet<APKModule> javaDeps = dag.getGraph().getOutgoingNodesFor(dependency);
         assertThat(javaDeps.size(), is(1));
-        assertThat(
-            Iterables.getFirst(javaDeps, null).getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+        assertThat(Iterables.getFirst(javaDeps, null).getName(), is(APKModule.ROOT_APKMODULE_NAME));
       }
     }
   }
@@ -816,19 +812,17 @@ public class APKModuleTest {
     assertThat(dependencies.size(), is(2));
 
     for (final APKModule dependency : dependencies) {
-      assertThat(
-          dependency.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java", "java-dep"));
+      assertThat(dependency.getName(), oneOf(APKModule.ROOT_APKMODULE_NAME, "java", "java-dep"));
       if (dependency.getName().equals("java")) {
         ImmutableSet<APKModule> javaDeps = dag.getGraph().getOutgoingNodesFor(dependency);
         assertThat(javaDeps.size(), is(2));
         for (final APKModule javaDep : javaDeps) {
-          assertThat(javaDep.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java-dep"));
+          assertThat(javaDep.getName(), oneOf(APKModule.ROOT_APKMODULE_NAME, "java-dep"));
         }
       } else if (dependency.getName().equals("java-dep")) {
         ImmutableSet<APKModule> javaDeps = dag.getGraph().getOutgoingNodesFor(dependency);
         assertThat(javaDeps.size(), is(1));
-        assertThat(
-            Iterables.getFirst(javaDeps, null).getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+        assertThat(Iterables.getFirst(javaDeps, null).getName(), is(APKModule.ROOT_APKMODULE_NAME));
       }
     }
   }
@@ -966,7 +960,7 @@ public class APKModuleTest {
 
     APKModule middleModule = null;
     for (APKModule apkModule : topLevelDeps) {
-      assertThat(apkModule.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java", "java2"));
+      assertThat(apkModule.getName(), oneOf(APKModule.ROOT_APKMODULE_NAME, "java", "java2"));
       if (apkModule.getName().equals("java")) {
         middleModule = apkModule;
       }
@@ -977,7 +971,7 @@ public class APKModuleTest {
 
     APKModule bottomModule = null;
     for (APKModule apkModule : middleLevelDeps) {
-      assertThat(apkModule.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java2"));
+      assertThat(apkModule.getName(), oneOf(APKModule.ROOT_APKMODULE_NAME, "java2"));
       if (apkModule.getName().equals("java2")) {
         bottomModule = apkModule;
       }
@@ -987,7 +981,7 @@ public class APKModuleTest {
     assertThat(bottomLevelDeps.size(), is(1));
 
     APKModule bottomDep = Iterables.getFirst(bottomLevelDeps, null);
-    assertThat(bottomDep.getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+    assertThat(bottomDep.getName(), is(APKModule.ROOT_APKMODULE_NAME));
   }
 
   /*
@@ -1122,7 +1116,7 @@ public class APKModuleTest {
 
     APKModule middleModule = null;
     for (APKModule apkModule : topLevelDeps) {
-      assertThat(apkModule.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java", "java2"));
+      assertThat(apkModule.getName(), oneOf(APKModule.ROOT_APKMODULE_NAME, "java", "java2"));
       if (apkModule.getName().equals("java")) {
         middleModule = apkModule;
       }
@@ -1133,7 +1127,7 @@ public class APKModuleTest {
 
     APKModule bottomModule = null;
     for (APKModule apkModule : middleLevelDeps) {
-      assertThat(apkModule.getName(), oneOf(APKModuleGraph.ROOT_APKMODULE_NAME, "java2"));
+      assertThat(apkModule.getName(), oneOf(APKModule.ROOT_APKMODULE_NAME, "java2"));
       if (apkModule.getName().equals("java2")) {
         bottomModule = apkModule;
       }
@@ -1143,7 +1137,7 @@ public class APKModuleTest {
     assertThat(bottomLevelDeps.size(), is(1));
 
     APKModule bottomDep = Iterables.getFirst(bottomLevelDeps, null);
-    assertThat(bottomDep.getName(), is(APKModuleGraph.ROOT_APKMODULE_NAME));
+    assertThat(bottomDep.getName(), is(APKModule.ROOT_APKMODULE_NAME));
   }
 
   /*
@@ -1252,13 +1246,13 @@ public class APKModuleTest {
       ImmutableSet<APKModule> dependencies = dag.getGraph().getOutgoingNodesFor(apkModule);
 
       for (APKModule depModule : dependencies) {
-        assertThat(depModule.getName(), oneOf("java", APKModuleGraph.ROOT_APKMODULE_NAME));
+        assertThat(depModule.getName(), oneOf("java", APKModule.ROOT_APKMODULE_NAME));
         switch (depModule.getName()) {
-          case APKModuleGraph.ROOT_APKMODULE_NAME:
+          case APKModule.ROOT_APKMODULE_NAME:
             assertThat(dag.getGraph().getOutgoingNodesFor(depModule).size(), is(0));
             break;
           case "java":
-            verifyDependencies(dag, depModule, ImmutableSet.of(APKModuleGraph.ROOT_APKMODULE_NAME));
+            verifyDependencies(dag, depModule, ImmutableSet.of(APKModule.ROOT_APKMODULE_NAME));
             break;
         }
       }

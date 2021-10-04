@@ -90,7 +90,7 @@ public class PreDexedFilesSorterTest {
     ImmutableMap<String, PreDexedFilesSorter.Result> sortResults =
         generatePreDexSorterResults(
             numberOfPrimaryDexes, numberOfSecondaryDexes, numberOfExtraDexes);
-    PreDexedFilesSorter.Result rootResult = sortResults.get(APKModuleGraph.ROOT_APKMODULE_NAME);
+    PreDexedFilesSorter.Result rootResult = sortResults.get(APKModule.ROOT_APKMODULE_NAME);
     for (String store : sortResults.keySet()) {
       assertThat(store, is(moduleGraph.getRootAPKModule().getName()));
     }
@@ -111,7 +111,7 @@ public class PreDexedFilesSorterTest {
     for (String store : sortResults.keySet()) {
       assertThat(store, is(moduleGraph.getRootAPKModule().getName()));
     }
-    PreDexedFilesSorter.Result rootResult = sortResults.get(APKModuleGraph.ROOT_APKMODULE_NAME);
+    PreDexedFilesSorter.Result rootResult = sortResults.get(APKModule.ROOT_APKMODULE_NAME);
 
     assertThat(rootResult.metadataTxtDexEntries.size(), is(2));
 
@@ -140,7 +140,7 @@ public class PreDexedFilesSorterTest {
     }
     assertThat(sortResults.size(), is(2));
 
-    PreDexedFilesSorter.Result rootResult = sortResults.get(APKModuleGraph.ROOT_APKMODULE_NAME);
+    PreDexedFilesSorter.Result rootResult = sortResults.get(APKModule.ROOT_APKMODULE_NAME);
     assertThat(rootResult.primaryDexInputs.size(), is(numberOfPrimaryDexes));
 
     PreDexedFilesSorter.Result extraResult = sortResults.get(extraModule.getName());
@@ -163,7 +163,7 @@ public class PreDexedFilesSorterTest {
     for (String store : sortResults.keySet()) {
       assertThat(store, oneOf(moduleGraph.getRootAPKModule().getName(), extraModule.getName()));
     }
-    PreDexedFilesSorter.Result rootResult = sortResults.get(APKModuleGraph.ROOT_APKMODULE_NAME);
+    PreDexedFilesSorter.Result rootResult = sortResults.get(APKModule.ROOT_APKMODULE_NAME);
     PreDexedFilesSorter.Result extraResult = sortResults.get(extraModule.getName());
 
     assertThat(sortResults.size(), is(2));

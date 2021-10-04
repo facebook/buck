@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -49,7 +48,7 @@ public class AndroidManifestFactory {
         projectFilesystem,
         resolver,
         skeleton,
-        APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true),
+        APKModule.of(APKModule.ROOT_APKMODULE_NAME, true),
         manifestFiles,
         shouldExecuteInSeparateProcess);
   }

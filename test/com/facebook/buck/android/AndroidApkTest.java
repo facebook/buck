@@ -20,7 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
-import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -137,7 +137,7 @@ public class AndroidApkTest {
     BuildTarget aaptPackageTarget =
         binaryBuildTarget.withFlavors(
             AndroidBinaryResourcesGraphEnhancer.AAPT_PACKAGE_FLAVOR,
-            InternalFlavor.of(APKModuleGraph.ROOT_APKMODULE_NAME));
+            InternalFlavor.of(APKModule.ROOT_APKMODULE_NAME));
     RelPath aaptProguardDir =
         BuildTargetPaths.getGenPath(
             androidApk.getProjectFilesystem().getBuckPaths(), aaptPackageTarget, "%s/proguard");

@@ -34,7 +34,6 @@ import com.facebook.buck.android.NdkLibraryBuilder;
 import com.facebook.buck.android.PrebuiltNativeLibraryBuilder;
 import com.facebook.buck.android.TestAndroidPlatformTargetFactory;
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
@@ -322,7 +321,7 @@ public class AndroidPackageableCollectorTest {
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableList.toImmutableList());
 
-    APKModule rootModule = APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true);
+    APKModule rootModule = APKModule.of(APKModule.ROOT_APKMODULE_NAME, true);
 
     assertEquals(
         "Android resources should be topologically sorted.",
@@ -407,7 +406,7 @@ public class AndroidPackageableCollectorTest {
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         androidPackageableCollection
             .getResourceDetails()
-            .get(APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true));
+            .get(APKModule.of(APKModule.ROOT_APKMODULE_NAME, true));
     assertThat(
         resourceDetails.getResourceDirectories(), Matchers.contains(resAPath, resPath, resBPath));
   }

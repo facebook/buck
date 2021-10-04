@@ -73,8 +73,6 @@ import java.util.function.Supplier;
  */
 public class APKModuleGraph implements AddsToRuleKey {
 
-  public static final String ROOT_APKMODULE_NAME = "dex";
-
   private final TargetGraph targetGraph;
   @AddToRuleKey private final BuildTarget target;
 
@@ -510,7 +508,7 @@ public class APKModuleGraph implements AddsToRuleKey {
         }
       }.start();
     }
-    APKModule rootModule = APKModule.of(ROOT_APKMODULE_NAME, true);
+    APKModule rootModule = APKModule.of(APKModule.ROOT_APKMODULE_NAME, true);
     buildTargetsMap.put(rootModule, ImmutableSet.copyOf(rootTargets));
     return rootModule;
   }

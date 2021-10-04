@@ -24,6 +24,8 @@ import org.immutables.value.Value;
 @BuckStyleValue
 public abstract class APKModule implements Comparable<APKModule>, AddsToRuleKey {
 
+  public static final String ROOT_APKMODULE_NAME = "dex";
+
   public static APKModule of(String name, boolean hasResources) {
     return ImmutableAPKModule.ofImpl(name, hasResources);
   }
@@ -40,7 +42,7 @@ public abstract class APKModule implements Comparable<APKModule>, AddsToRuleKey 
   }
 
   public static boolean isRootModule(String moduleName) {
-    return moduleName.equals(APKModuleGraph.ROOT_APKMODULE_NAME);
+    return moduleName.equals(ROOT_APKMODULE_NAME);
   }
 
   @Value.Derived
