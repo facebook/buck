@@ -108,30 +108,6 @@ public class DummyRDotJava extends AbstractBuildRule
       Optional<String> unionPackage,
       Optional<String> finalRName,
       boolean skipNonUnionRDotJava) {
-    this(
-        buildTarget,
-        projectFilesystem,
-        ruleFinder,
-        androidResourceDeps,
-        compileStepFactory,
-        javac,
-        unionPackage,
-        finalRName,
-        abiPaths(androidResourceDeps),
-        skipNonUnionRDotJava);
-  }
-
-  private DummyRDotJava(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
-      Set<HasAndroidResourceDeps> androidResourceDeps,
-      JavacToJarStepFactory compileStepFactory,
-      Javac javac,
-      Optional<String> unionPackage,
-      Optional<String> finalRName,
-      ImmutableList<SourcePath> abiInputs,
-      boolean skipNonUnionRDotJava) {
     super(buildTarget, projectFilesystem);
 
     // Sort the input so that we get a stable ABI for the same set of resources.
@@ -145,7 +121,7 @@ public class DummyRDotJava extends AbstractBuildRule
     this.javac = javac;
     this.unionPackage = unionPackage;
     this.finalRName = finalRName;
-    this.abiInputs = abiInputs;
+    this.abiInputs = abiPaths(androidResourceDeps);
     this.javaAbiInfo = DefaultJavaAbiInfo.of(getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
 
