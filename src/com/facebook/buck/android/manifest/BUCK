@@ -8,10 +8,19 @@ java_library(
         "//test/com/facebook/buck/...",
     ],
     deps = [
-        "//src/com/facebook/buck/android/apkmodule:apkmodule",
+        "//src/com/facebook/buck/android/apkmodule:module-only",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util:util",
         "//third-party/java/aosp:aosp",
         "//third-party/java/guava:guava",
+    ],
+)
+
+java_binary(
+    name = "generate_manifest_binary",
+    main_class = "com.facebook.buck.android.manifest.GenerateManifestExecutableMain",
+    deps = [
+        ":manifest",
     ],
 )
