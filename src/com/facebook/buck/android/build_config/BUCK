@@ -1,0 +1,23 @@
+java_library(
+    name = "build_config",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/android/...",
+        "//src/com/facebook/buck/externalactions/...",
+        "//src/com/facebook/buck/step/isolatedsteps/android/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/android:steps",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//third-party/java/guava:guava"
+    ],
+)
+
+java_binary(
+    name = "generate_build_config_binary",
+    main_class = "com.facebook.buck.android.build_config.GenerateBuildConfigExecutableMain",
+    deps = [
+        ":build_config",
+    ],
+)
