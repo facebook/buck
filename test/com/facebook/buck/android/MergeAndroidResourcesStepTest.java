@@ -21,7 +21,6 @@ import static com.facebook.buck.android.aapt.RDotTxtEntry.RType.ID;
 import static com.facebook.buck.android.aapt.RDotTxtEntry.RType.STYLEABLE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.android.MergeAndroidResourcesStep.DuplicateResourceException;
@@ -54,12 +53,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.stream.Collectors;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
@@ -74,68 +71,9 @@ public class MergeAndroidResourcesStepTest {
 
   private FakeProjectFilesystem filesystem;
 
-  private List<RDotTxtEntry> createTestingFakesWithIds(List<RDotTxtEntry> ls) {
-    return ls.stream().map(RDotTxtEntryUtil::matchId).collect(Collectors.toList());
-  }
-
   @Before
   public void setUp() throws NoSuchBuildTargetException {
     filesystem = new FakeProjectFilesystem();
-  }
-
-  @Test
-  public void testGenerateRDotJavaForMultipleSymbolsFiles() throws DuplicateResourceException {
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
-
-    // Merge everything into the same package space.
-    String sharedPackageName = "com.facebook.abc";
-    entriesBuilder.add(
-        new RDotTxtFile(
-            sharedPackageName,
-            "a-R.txt",
-            ImmutableList.of(
-                "int id a1 0x7f010001", "int id a2 0x7f010002", "int string a1 0x7f020001")));
-
-    entriesBuilder.add(
-        new RDotTxtFile(
-            sharedPackageName,
-            "b-R.txt",
-            ImmutableList.of(
-                "int id b1 0x7f010001", "int id b2 0x7f010002", "int string a1 0x7f020001")));
-
-    entriesBuilder.add(
-        new RDotTxtFile(
-            sharedPackageName,
-            "c-R.txt",
-            ImmutableList.of("int attr c1 0x7f010001", "int[] styleable c1 { 0x7f010001 }")));
-
-    SortedSetMultimap<String, RDotTxtEntry> packageNameToResources =
-        MergeAndroidResourcesStep.sortSymbols(
-            entriesBuilder.buildFilePathToPackageNameSet(),
-            Optional.empty(),
-            ImmutableMap.of(),
-            Optional.empty(),
-            /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-            ImmutableSet.of(),
-            filesystem);
-
-    assertEquals(1, packageNameToResources.keySet().size());
-    SortedSet<RDotTxtEntry> resources = packageNameToResources.get(sharedPackageName);
-    assertEquals(7, resources.size());
-
-    Set<String> uniqueEntries = new HashSet<>();
-    for (RDotTxtEntry resource : resources) {
-      if (!resource.type.equals(STYLEABLE)) {
-        assertFalse(
-            "Duplicate ids should be fixed by renumerate=true; duplicate was: " + resource.idValue,
-            uniqueEntries.contains(resource.idValue));
-        uniqueEntries.add(resource.idValue);
-      }
-    }
-
-    assertEquals(6, uniqueEntries.size());
-
-    // All good, no need to further test whether we can write the Java file correctly...
   }
 
   @Test
@@ -189,73 +127,51 @@ public class MergeAndroidResourcesStepTest {
             ImmutableSet.of(),
             filesystem);
 
-    assertEquals(23, packageNameToResources.size());
+    assertEquals(24, packageNameToResources.size());
 
     ArrayList<RDotTxtEntry> resources =
         new ArrayList<>(packageNameToResources.get(sharedPackageName));
-    assertEquals(23, resources.size());
+    assertEquals(24, resources.size());
 
     System.out.println(resources);
 
-    ImmutableList<RDotTxtEntry> fakeRDotTxtEntryWithIDS =
-        ImmutableList.of(
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, ATTR, "android_layout_gravity", "0x07f01005"),
-            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, ATTR, "background", "0x07f01006"),
-            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, ATTR, "backgroundSplit", "0x07f01007"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, ATTR, "backgroundStacked", "0x07f01008"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, ATTR, "buttonPanelSideLayout", "0x07f01001"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, ATTR, "layout_heightPercent", "0x07f01009"),
-            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, ATTR, "listLayout", "0x07f01002"),
-            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, ID, "a1", "0x07f01003"),
-            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, ID, "a2", "0x07f01004"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT_ARRAY,
-                STYLEABLE,
-                "ActionBar",
-                "{ 0x07f01006,0x07f01007,0x07f01008 }"),
-            FakeEntry.createWithId(RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBar_background", "0"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBar_backgroundSplit", "1"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBar_backgroundStacked", "2"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT_ARRAY,
-                STYLEABLE,
-                "ActionBarLayout",
-                "{ 0x010100f2,0x07f01005 }"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBarLayout_android_layout", "0"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBarLayout_android_layout_gravity", "1"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT_ARRAY,
-                STYLEABLE,
-                "AlertDialog",
-                "{ 0x010100f2,0x07f01001,0x7f01003b }"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, STYLEABLE, "AlertDialog_android_layout", "0"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, STYLEABLE, "AlertDialog_buttonPanelSideLayout", "1"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, STYLEABLE, "AlertDialog_multiChoiceItemLayout", "2"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT_ARRAY,
-                STYLEABLE,
-                "PercentLayout_Layout",
-                "{ 0x00000000,0x07f01009 }"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT, STYLEABLE, "PercentLayout_Layout_layout_aspectRatio", "0"),
-            FakeEntry.createWithId(
-                RDotTxtEntry.IdType.INT,
-                STYLEABLE,
-                "PercentLayout_Layout_layout_heightPercent",
-                "1"));
+    ImmutableSet<RDotTxtEntry> fakeRDotTxtEntryWithIDS =
+        ImmutableSet.of(
+            FakeEntry.create(RDotTxtEntry.IdType.INT, ATTR, "android_layout"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, ATTR, "android_layout_gravity"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, ATTR, "background"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, ATTR, "backgroundSplit"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, ATTR, "backgroundStacked"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, ATTR, "buttonPanelSideLayout"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, ATTR, "layout_heightPercent"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, ATTR, "listLayout"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, ID, "a1"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, ID, "a2"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT_ARRAY, STYLEABLE, "ActionBar"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBar_background"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBar_backgroundSplit"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBar_backgroundStacked"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT_ARRAY, STYLEABLE, "ActionBarLayout"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBarLayout_android_layout"),
+            FakeEntry.create(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "ActionBarLayout_android_layout_gravity"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT_ARRAY, STYLEABLE, "AlertDialog"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT, STYLEABLE, "AlertDialog_android_layout"),
+            FakeEntry.create(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "AlertDialog_buttonPanelSideLayout"),
+            FakeEntry.create(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "AlertDialog_multiChoiceItemLayout"),
+            FakeEntry.create(RDotTxtEntry.IdType.INT_ARRAY, STYLEABLE, "PercentLayout_Layout"),
+            FakeEntry.create(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "PercentLayout_Layout_layout_aspectRatio"),
+            FakeEntry.create(
+                RDotTxtEntry.IdType.INT, STYLEABLE, "PercentLayout_Layout_layout_heightPercent"));
 
-    assertEquals(createTestingFakesWithIds(resources), fakeRDotTxtEntryWithIDS);
+    assertEquals(createTestingFakesWithoutIds(resources), fakeRDotTxtEntryWithIDS);
+  }
+
+  private Set<RDotTxtEntry> createTestingFakesWithoutIds(List<RDotTxtEntry> ls) {
+    return ls.stream().map(RDotTxtEntryUtil::matchDefault).collect(Collectors.toSet());
   }
 
   @Test
@@ -368,7 +284,7 @@ public class MergeAndroidResourcesStepTest {
     // Verify that the correct Java code is generated.
     assertThat(
         filesystem.readFileIfItExists(Paths.get("output/com/res1/R.java")).get(),
-        CoreMatchers.containsString("{\n    public static int id1=0x07f01001;"));
+        CoreMatchers.containsString("{\n    public static int id1=0x7f020000;"));
   }
 
   @Test

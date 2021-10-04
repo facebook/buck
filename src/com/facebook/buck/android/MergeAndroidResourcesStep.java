@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static com.google.common.collect.Ordering.natural;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
-import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -51,13 +50,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -179,9 +176,7 @@ public class MergeAndroidResourcesStep implements Step {
       //
       // Because the resulting files do not match their respective resources.arsc, the values are
       // meaningless and do not represent the usable final result.  This is why the R.java file is
-      // written without using final so that javac will not inline the values.  Unfortunately,
-      // though Robolectric doesn't read resources.arsc, it does assert that all the R.java resource
-      // ids are unique.  This forces us to re-enumerate new unique ids.
+      // written without using final so that javac will not inline the values.
       ImmutableMap.Builder<Path, String> rDotTxtToPackage = ImmutableMap.builder();
       ImmutableMap.Builder<Path, HasAndroidResourceDeps> symbolsFileToResourceDeps =
           ImmutableMap.builder();
@@ -276,7 +271,7 @@ public class MergeAndroidResourcesStep implements Step {
    * @return a list of RDotTxtEntry objects read from the file
    * @throws IOException
    */
-  public static List<RDotTxtEntry> readResources(ProjectFilesystem owningFilesystem, Path rDotTxt)
+  private static List<RDotTxtEntry> readResources(ProjectFilesystem owningFilesystem, Path rDotTxt)
       throws IOException {
     return owningFilesystem.readLines(rDotTxt).stream()
         .filter(input -> !Strings.isNullOrEmpty(input))
@@ -396,22 +391,14 @@ public class MergeAndroidResourcesStep implements Step {
       Set<String> duplicateResourceWhitelist,
       ProjectFilesystem filesystem)
       throws DuplicateResourceException {
-    // If we're reenumerating, start at 0x7f01001 so that the resulting file is human readable.
-    // This value range (0x7f010001 - ...) is easier to spot as an actual resource id instead of
-    // other values in styleable which can be enumerated integers starting at 0.
     Map<RDotTxtEntry, String> finalIds = null;
-    IntEnumerator enumerator = null;
     if (uberRDotTxtIds.isPresent()) {
       finalIds = uberRDotTxtIds.get();
-    } else {
-      enumerator = new IntEnumerator(0x7f01001);
     }
 
     SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToSymbolsFiles = TreeMultimap.create();
     SortedSetMultimap<RDotTxtEntry, Path> bannedDuplicateResourceToSymbolsFiles =
         TreeMultimap.create();
-
-    HashMap<RDotTxtEntry, RDotTxtEntry> resourceToIdValuesMap = new HashMap<>();
 
     // Expand the package overrides into per-package self-maps.
     // The self-maps are basically sets, but we need to be able to look up
@@ -467,44 +454,6 @@ public class MergeAndroidResourcesStep implements Step {
             continue;
           }
           resource = resource.copyWithNewIdValue(finalIds.get(resource));
-        } else {
-          if (resourceToIdValuesMap.containsKey(resource)) {
-            resource = Objects.requireNonNull(resourceToIdValuesMap.get(resource));
-
-          } else if (resource.idType == IdType.INT_ARRAY && resource.type == RType.STYLEABLE) {
-            Map<RDotTxtEntry, String> styleableResourcesMap =
-                getStyleableResources(
-                    resourceToIdValuesMap, linesInSymbolsFile, resource, index + 1);
-
-            for (RDotTxtEntry styleableResource : styleableResourcesMap.keySet()) {
-              resourceToIdValuesMap.put(styleableResource, styleableResource);
-            }
-
-            // int[] styleable entry is not added to the cache as
-            // the number of child can differ in dependent libraries
-            resource =
-                resource.copyWithNewIdValue(
-                    String.format(
-                        "{ %s }",
-                        Joiner.on(RDotTxtEntry.INT_ARRAY_SEPARATOR)
-                            .join(styleableResourcesMap.values())));
-          } else {
-            // Framework resources starts with 0x01 and are constants
-            // which should not be assigned a custom R value.
-            if (!resource.idValue.startsWith("0x01")) {
-              Objects.requireNonNull(enumerator);
-              resource = resource.copyWithNewIdValue(String.format("0x%08x", enumerator.next()));
-            }
-
-            // Add resource to cache so that the id value is consistent across all R.txt
-            resourceToIdValuesMap.put(resource, resource);
-          }
-
-          // Framework resources starts with 0x01 which should not be
-          // included in the R.txt as they come from android package.
-          if (resource.idValue.startsWith("0x01")) {
-            continue;
-          }
         }
 
         if (bannedDuplicateResourceTypes.contains(resource.type)) {
@@ -563,82 +512,6 @@ public class MergeAndroidResourcesStep implements Step {
     return whitelist.contains(resource.type.toString().toLowerCase() + " " + resource.name);
   }
 
-  private static Map<RDotTxtEntry, String> getStyleableResources(
-      Map<RDotTxtEntry, RDotTxtEntry> resourceToIdValuesMap,
-      List<RDotTxtEntry> linesInSymbolsFile,
-      RDotTxtEntry resource,
-      int index) {
-
-    Map<RDotTxtEntry, String> styleableResourceMap = new LinkedHashMap<>();
-    List<String> givenResourceIds = null;
-
-    for (int styleableIndex = 0;
-        styleableIndex + index < linesInSymbolsFile.size();
-        styleableIndex++) {
-
-      RDotTxtEntry styleableResource =
-          linesInSymbolsFile.get(styleableIndex + index).copyWithNewParent(resource.name);
-
-      String styleablePrefix = resource.name + "_";
-
-      if (styleableResource.idType == IdType.INT
-          && styleableResource.type == RType.STYLEABLE
-          && styleableResource.name.startsWith(styleablePrefix)) {
-
-        String attrName = styleableResource.name.substring(styleablePrefix.length());
-
-        RDotTxtEntry attrResource = new RDotTxtEntry(IdType.INT, RType.ATTR, attrName, "");
-
-        if (resourceToIdValuesMap.containsKey(attrResource)) {
-          attrResource = resourceToIdValuesMap.get(attrResource);
-        }
-
-        if (Strings.isNullOrEmpty(attrResource.idValue)) {
-          String attrIdValue;
-          if (givenResourceIds == null) {
-            if (resource.idValue.startsWith("{") && resource.idValue.endsWith("}")) {
-              givenResourceIds =
-                  Arrays.stream(
-                          resource
-                              .idValue
-                              .substring(1, resource.idValue.length() - 1)
-                              .split(RDotTxtEntry.INT_ARRAY_SEPARATOR))
-                      .map(String::trim)
-                      .filter(s -> s.length() > 0)
-                      .collect(Collectors.toList());
-            } else {
-              givenResourceIds = new ArrayList<>();
-            }
-          }
-
-          int styleableResourceIndex = Integer.parseInt(styleableResource.idValue);
-          if (styleableResourceIndex < givenResourceIds.size()) {
-
-            // These are attributes coming from android SDK -- `android_*`
-            attrIdValue = givenResourceIds.get(styleableResourceIndex);
-          } else {
-
-            // If not value is found just put the index.
-            attrIdValue = String.valueOf(styleableIndex);
-          }
-
-          // Add resource to cache so that the id value is consistent across all R.txt
-          attrResource = attrResource.copyWithNewIdValue(attrIdValue);
-          resourceToIdValuesMap.put(attrResource, attrResource);
-        }
-
-        styleableResourceMap.put(
-            styleableResource.copyWithNewIdValue(String.valueOf(styleableIndex)),
-            attrResource.idValue);
-
-      } else {
-        break;
-      }
-    }
-
-    return styleableResourceMap;
-  }
-
   private static RDotTxtEntry parseEntryOrThrow(String line) {
     Optional<RDotTxtEntry> parsedEntry = RDotTxtEntry.parse(line);
     Preconditions.checkState(parsedEntry.isPresent(), "Should be able to match '%s'.", line);
@@ -664,19 +537,6 @@ public class MergeAndroidResourcesStep implements Step {
   /** Returns {@link RelPath} to R. java file */
   protected RelPath getPathToRDotJava(String rDotJavaPackage) {
     return RelPath.of(outputDir.resolve(rDotJavaPackage.replace('.', '/')).resolve("R.java"));
-  }
-
-  private static class IntEnumerator {
-    private int value;
-
-    IntEnumerator(int start) {
-      value = start;
-    }
-
-    public int next() {
-      Preconditions.checkState(value < Integer.MAX_VALUE, "Stop goofing off");
-      return value++;
-    }
   }
 
   @VisibleForTesting
