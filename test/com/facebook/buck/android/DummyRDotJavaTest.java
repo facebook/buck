@@ -97,13 +97,11 @@ public class DummyRDotJavaTest {
             ImmutableSet.of(resourceRule1, resourceRule2),
             new JavacToJarStepFactory(ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY, false),
             DEFAULT_JAVAC,
-            Optional.empty(),
-            Optional.of("R2"),
-            /* skipNonUnionRDotJava */ false);
+            Optional.empty());
 
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     List<Step> steps = dummyRDotJava.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext);
-    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 14, steps.size());
+    assertEquals("DummyRDotJava returns an incorrect number of Steps.", 13, steps.size());
 
     BuildTarget target = dummyRDotJava.getBuildTarget();
     RelPath rDotJavaSrcFolder = DummyRDotJava.getRDotJavaSrcFolder(target, filesystem);
@@ -136,7 +134,6 @@ public class DummyRDotJavaTest {
     List<String> expectedStepDescriptions =
         new ImmutableList.Builder<String>()
             .addAll(makeCleanDirDescription(rootPath, rDotJavaSrcFolder.getPath()))
-            .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
             .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
             .addAll(makeCleanDirDescription(rootPath, rDotJavaBinFolder.getPath()))
             .addAll(makeCleanDirDescription(rootPath, rDotJavaOutputFolder.getPath()))
@@ -195,9 +192,7 @@ public class DummyRDotJavaTest {
             ImmutableSet.of(),
             new JavacToJarStepFactory(ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY, false),
             DEFAULT_JAVAC,
-            Optional.empty(),
-            Optional.empty(),
-            /* skipNonUnionRDotJava */ false);
+            Optional.empty());
     assertEquals(
         BuildTargetPaths.getScratchPath(
             dummyRDotJava.getProjectFilesystem(),

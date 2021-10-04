@@ -88,8 +88,6 @@ public class DummyRDotJava extends AbstractBuildRule
   @AddToRuleKey private final JavacToJarStepFactory compileStepFactory;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final Optional<String> unionPackage;
-  @AddToRuleKey private final Optional<String> finalRName;
-  @AddToRuleKey private final boolean skipNonUnionRDotJava;
 
   @AddToRuleKey
   @SuppressWarnings("PMD.UnusedPrivateField")
@@ -104,9 +102,7 @@ public class DummyRDotJava extends AbstractBuildRule
       Set<HasAndroidResourceDeps> androidResourceDeps,
       JavacToJarStepFactory compileStepFactory,
       Javac javac,
-      Optional<String> unionPackage,
-      Optional<String> finalRName,
-      boolean skipNonUnionRDotJava) {
+      Optional<String> unionPackage) {
     super(buildTarget, projectFilesystem);
 
     // Sort the input so that we get a stable ABI for the same set of resources.
@@ -114,12 +110,10 @@ public class DummyRDotJava extends AbstractBuildRule
         androidResourceDeps.stream()
             .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
             .collect(ImmutableList.toImmutableList());
-    this.skipNonUnionRDotJava = skipNonUnionRDotJava;
     this.outputJar = getOutputJarPath(getBuildTarget(), getProjectFilesystem());
     this.compileStepFactory = compileStepFactory;
     this.javac = javac;
     this.unionPackage = unionPackage;
-    this.finalRName = finalRName;
     this.abiInputs = abiPaths(androidResourceDeps);
     this.javaAbiInfo = DefaultJavaAbiInfo.of(getSourcePathToOutput());
     buildOutputInitializer = new BuildOutputInitializer<>(getBuildTarget(), this);
@@ -165,34 +159,11 @@ public class DummyRDotJava extends AbstractBuildRule
             androidResourceDeps,
             rDotJavaSrcFolder.getPath(),
             /* forceFinalResourceIds */ false,
-            unionPackage,
-            /* rName */ Optional.empty(),
-            skipNonUnionRDotJava);
+            unionPackage);
     steps.add(mergeStep);
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
-    ImmutableSortedSet<RelPath> javaSourceFilePaths;
-    if (!finalRName.isPresent()) {
-      javaSourceFilePaths = mergeStep.getRDotJavaFiles();
-    } else {
-      MergeAndroidResourcesStep mergeFinalRStep =
-          MergeAndroidResourcesStep.createStepForDummyRDotJava(
-              filesystem,
-              sourcePathResolver,
-              androidResourceDeps,
-              rDotJavaSrcFolder.getPath(),
-              /* forceFinalResourceIds */ true,
-              unionPackage,
-              finalRName,
-              skipNonUnionRDotJava);
-      steps.add(mergeFinalRStep);
-
-      javaSourceFilePaths =
-          ImmutableSortedSet.orderedBy(RelPath.comparator())
-              .addAll(mergeStep.getRDotJavaFiles())
-              .addAll(mergeFinalRStep.getRDotJavaFiles())
-              .build();
-    }
+    ImmutableSortedSet<RelPath> javaSourceFilePaths = mergeStep.getRDotJavaFiles();
 
     // Clear out the directory where the .class files will be generated.
     RelPath rDotJavaClassesFolder = getRDotJavaBinFolder();

@@ -359,9 +359,7 @@ public class MergeAndroidResourcesStepTest {
             ImmutableList.of(res),
             Paths.get("output"),
             /* forceFinalResourceIds */ false,
-            /* unionPackage */ Optional.empty(),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ false);
+            /* unionPackage */ Optional.empty());
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -424,9 +422,7 @@ public class MergeAndroidResourcesStepTest {
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             /* filteredResourcesProvider */ Optional.empty(),
             /* overrideSymbolsPath */ ImmutableList.of(),
-            /* unionPackage */ Optional.empty(),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ false);
+            /* unionPackage */ Optional.empty());
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -506,9 +502,7 @@ public class MergeAndroidResourcesStepTest {
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             /* filteredResourcesProvider */ Optional.empty(),
             /* overrideSymbolsPath */ ImmutableList.of(),
-            /* unionPackage */ Optional.empty(),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ false);
+            /* unionPackage */ Optional.empty());
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -531,53 +525,6 @@ public class MergeAndroidResourcesStepTest {
             .readFileIfItExists(Paths.get("output/com/facebook/R.java"))
             .get()
             .replace("\r", ""));
-  }
-
-  @Test
-  public void testGetRDotJavaFilesWithSkipPrebuiltRDotJava() {
-    BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
-    BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
-
-    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-
-    AndroidResource res1 =
-        AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(buildRuleResolver)
-            .setBuildTarget(res1Target)
-            .setRes(FakeSourcePath.of("res1"))
-            .setRDotJavaPackage("com.package1")
-            .build();
-
-    AndroidResource res2 =
-        AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(buildRuleResolver)
-            .setBuildTarget(res2Target)
-            .setRes(FakeSourcePath.of("res2"))
-            .setRDotJavaPackage("com.package2")
-            .build();
-
-    ImmutableList<HasAndroidResourceDeps> resourceDeps = ImmutableList.of(res1, res2);
-
-    MergeAndroidResourcesStep mergeStep =
-        MergeAndroidResourcesStep.createStepForDummyRDotJava(
-            filesystem,
-            buildRuleResolver.getSourcePathResolver(),
-            resourceDeps,
-            Paths.get("output"),
-            /* forceFinalResourceIds */ false,
-            Optional.of("com.package"),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ true);
-
-    ImmutableSortedSet<RelPath> rDotJavaFiles = mergeStep.getRDotJavaFiles();
-    assertEquals(rDotJavaFiles.size(), 1);
-
-    ImmutableSortedSet<RelPath> expected =
-        ImmutableSortedSet.orderedBy(RelPath.comparator())
-            .add(mergeStep.getPathToRDotJava("com.package"))
-            .build();
-
-    assertEquals(expected, rDotJavaFiles);
   }
 
   @Test
@@ -612,9 +559,7 @@ public class MergeAndroidResourcesStepTest {
             resourceDeps,
             Paths.get("output"),
             /* forceFinalResourceIds */ false,
-            Optional.of("com.package"),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ false);
+            Optional.of("com.package"));
 
     ImmutableSortedSet<RelPath> rDotJavaFiles = mergeStep.getRDotJavaFiles();
     assertEquals(rDotJavaFiles.size(), 3);
@@ -627,74 +572,6 @@ public class MergeAndroidResourcesStepTest {
             .build();
 
     assertEquals(expected, rDotJavaFiles);
-  }
-
-  @Test
-  public void testGenerateRDotJavaWithResourceUnionPackageAndSkipPrebuiltRDotJava()
-      throws Exception {
-    BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
-    BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
-
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    AndroidResource res1 =
-        AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(graphBuilder)
-            .setBuildTarget(res1Target)
-            .setRes(FakeSourcePath.of("res1"))
-            .setRDotJavaPackage("res1")
-            .build();
-    graphBuilder.addToIndex(res1);
-
-    AndroidResource res2 =
-        AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(graphBuilder)
-            .setBuildTarget(res2Target)
-            .setRes(FakeSourcePath.of("res2"))
-            .setRDotJavaPackage("res2")
-            .build();
-    graphBuilder.addToIndex(res2);
-
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "com.res1",
-            graphBuilder
-                .getSourcePathResolver()
-                .getRelativePath(filesystem, res1.getPathToTextSymbolsFile())
-                .getPath(),
-            ImmutableList.of("int id id1 0x7f020000")));
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "com.res2",
-            graphBuilder
-                .getSourcePathResolver()
-                .getRelativePath(filesystem, res2.getPathToTextSymbolsFile())
-                .getPath(),
-            ImmutableList.of("int id id2 0x7f020000")));
-
-    MergeAndroidResourcesStep mergeStep =
-        MergeAndroidResourcesStep.createStepForDummyRDotJava(
-            filesystem,
-            graphBuilder.getSourcePathResolver(),
-            ImmutableList.of(res1, res2),
-            Paths.get("output"),
-            /* forceFinalResourceIds */ false,
-            Optional.of("res"),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ true);
-
-    StepExecutionContext executionContext = TestExecutionContext.newInstance();
-
-    assertEquals(0, mergeStep.execute(executionContext).getExitCode());
-
-    String resJava = filesystem.readFileIfItExists(Paths.get("output/res/R.java")).get();
-    assertThat(resJava, StringContains.containsString("id1"));
-    assertThat(resJava, StringContains.containsString("id2"));
-
-    Optional<String> res1Java = filesystem.readFileIfItExists(Paths.get("output/res1/R.java"));
-    Optional<String> res2Java = filesystem.readFileIfItExists(Paths.get("output/res2/R.java"));
-    assertFalse(res1Java.isPresent());
-    assertFalse(res2Java.isPresent());
   }
 
   @Test
@@ -747,9 +624,7 @@ public class MergeAndroidResourcesStepTest {
             ImmutableList.of(res1, res2),
             Paths.get("output"),
             /* forceFinalResourceIds */ false,
-            Optional.of("res1"),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ false);
+            Optional.of("res1"));
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -794,9 +669,7 @@ public class MergeAndroidResourcesStepTest {
             ImmutableList.of(res1),
             Paths.get("output"),
             /* forceFinalResourceIds */ false,
-            Optional.of("resM"),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ false);
+            Optional.of("resM"));
 
     StepExecutionContext executionContext = TestExecutionContext.newInstance();
 
@@ -806,51 +679,6 @@ public class MergeAndroidResourcesStepTest {
     String resMjava = filesystem.readFileIfItExists(Paths.get("output/resM/R.java")).get();
     assertThat(res1java, StringContains.containsString("id1"));
     assertThat(resMjava, StringContains.containsString("id1"));
-  }
-
-  @Test
-  public void testGenerateRDotJavaWithRName() throws Exception {
-    BuildTarget res1Target = BuildTargetFactory.newInstance("//:res1");
-
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-
-    AndroidResource res1 =
-        AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(graphBuilder)
-            .setBuildTarget(res1Target)
-            .setRes(FakeSourcePath.of("res1"))
-            .setRDotJavaPackage("res1")
-            .build();
-    graphBuilder.addToIndex(res1);
-
-    RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
-    entriesBuilder.add(
-        new RDotTxtFile(
-            "com.res1",
-            graphBuilder
-                .getSourcePathResolver()
-                .getRelativePath(filesystem, res1.getPathToTextSymbolsFile())
-                .getPath(),
-            ImmutableList.of("int id id1 0x7f020000", "int id id2 0x7f020002")));
-
-    MergeAndroidResourcesStep mergeStep =
-        MergeAndroidResourcesStep.createStepForDummyRDotJava(
-            filesystem,
-            graphBuilder.getSourcePathResolver(),
-            ImmutableList.of(res1),
-            Paths.get("output"),
-            /* forceFinalResourceIds */ true,
-            Optional.of("res1"),
-            Optional.of("R2"),
-            /* skipNonUnionRDotJava */ false);
-
-    StepExecutionContext executionContext = TestExecutionContext.newInstance();
-
-    assertEquals(0, mergeStep.execute(executionContext).getExitCode());
-
-    String resR2Java = filesystem.readFileIfItExists(Paths.get("output/res1/R2.java")).get();
-    assertThat(resR2Java, StringContains.containsString("static final int id1=0x07f01001;"));
-    assertThat(resR2Java, StringContains.containsString("static final int id2=0x07f01002;"));
   }
 
   @Test
@@ -965,9 +793,7 @@ public class MergeAndroidResourcesStepTest {
             rtypes,
             duplicateWhitelistPath,
             /* overrideSymbolsPath */ ImmutableList.of(),
-            Optional.empty(),
-            Optional.empty(),
-            false);
+            Optional.empty());
 
     StepExecutionResult result = mergeStep.execute(TestExecutionContext.newInstance());
     String message = result.getStderr().orElse("");

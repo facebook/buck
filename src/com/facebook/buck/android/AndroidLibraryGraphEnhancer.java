@@ -45,9 +45,7 @@ public class AndroidLibraryGraphEnhancer {
   private final Javac javac;
   private final JavacOptions javacOptions;
   private final Optional<String> resourceUnionPackage;
-  private final Optional<String> finalRName;
   private final ProjectFilesystem projectFilesystem;
-  private final boolean skipNonUnionRDotJava;
   private final boolean withDownwardApi;
 
   public AndroidLibraryGraphEnhancer(
@@ -57,8 +55,6 @@ public class AndroidLibraryGraphEnhancer {
       Javac javac,
       JavacOptions javacOptions,
       Optional<String> resourceUnionPackage,
-      Optional<String> finalRName,
-      boolean skipNonUnionRDotJava,
       boolean withDownwardApi) {
     this.projectFilesystem = projectFilesystem;
     Preconditions.checkState(!JavaAbis.isAbiTarget(buildTarget));
@@ -71,8 +67,6 @@ public class AndroidLibraryGraphEnhancer {
             .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
             .build();
     this.resourceUnionPackage = resourceUnionPackage;
-    this.finalRName = finalRName;
-    this.skipNonUnionRDotJava = skipNonUnionRDotJava;
     this.withDownwardApi = withDownwardApi;
   }
 
@@ -117,9 +111,7 @@ public class AndroidLibraryGraphEnhancer {
                   androidResourceDeps,
                   compileToJarStepFactory,
                   javac,
-                  resourceUnionPackage,
-                  finalRName,
-                  skipNonUnionRDotJava);
+                  resourceUnionPackage);
             });
 
     return Optional.of((DummyRDotJava) dummyRDotJava);

@@ -62,8 +62,6 @@ public class AndroidLibraryGraphEnhancerTest {
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             /* unionPackage */ Optional.empty(),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ false,
             false);
 
     Optional<DummyRDotJava> result =
@@ -92,8 +90,6 @@ public class AndroidLibraryGraphEnhancerTest {
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             /* unionPackage */ Optional.empty(),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ false,
             false);
 
     Optional<DummyRDotJava> result =
@@ -132,8 +128,6 @@ public class AndroidLibraryGraphEnhancerTest {
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
             /* unionPackage */ Optional.empty(),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ false,
             false);
 
     Optional<DummyRDotJava> dummyRDotJava =
@@ -197,8 +191,6 @@ public class AndroidLibraryGraphEnhancerTest {
                         .build())
                 .build(),
             /* unionPackage */ Optional.empty(),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ false,
             false);
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(graphBuilder, /* assertNoEmptyDeps */ false);
@@ -245,8 +237,6 @@ public class AndroidLibraryGraphEnhancerTest {
                 .create(graphBuilder, null, UnconfiguredTargetConfiguration.INSTANCE),
             options,
             /* unionPackage */ Optional.empty(),
-            /* rName */ Optional.empty(),
-            /* skipNonUnionRDotJava */ false,
             false);
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(

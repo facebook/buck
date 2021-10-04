@@ -55,12 +55,10 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import java.util.function.Function;
-import org.immutables.value.Value;
 
 public class AndroidLibraryDescription
     implements DescriptionWithTargetGraph<AndroidLibraryDescriptionArg>,
@@ -123,12 +121,6 @@ public class AndroidLibraryDescription
     if (buildTarget.getFlavors().contains(JavaLibrary.SRC_JAR)) {
       return new JavaSourceJar(
           buildTarget, projectFilesystem, params, args.getSrcs(), args.getMavenCoords());
-    }
-
-    if (args.isSkipNonUnionRDotJava()) {
-      Preconditions.checkArgument(
-          args.getResourceUnionPackage().isPresent(),
-          "union_package should be specified if skip_non_union_r_dot_java is set");
     }
 
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
@@ -267,13 +259,6 @@ public class AndroidLibraryDescription
     Optional<SourcePath> getManifest();
 
     Optional<String> getResourceUnionPackage();
-
-    @Value.Default
-    default boolean isSkipNonUnionRDotJava() {
-      return false;
-    }
-
-    Optional<String> getFinalRName();
   }
 
   @RuleArg

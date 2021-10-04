@@ -267,8 +267,6 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
               rDotJavacOptions,
               args.getResourceUnionPackage(),
-              args.getFinalRName(),
-              args.isSkipNonUnionRDotJava(),
               downwardApiConfig.isEnabledForAndroid());
 
       getDummyRDotJava()
