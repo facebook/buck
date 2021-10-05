@@ -193,6 +193,10 @@ abstract class JUnitJvmArgs {
     // Disable the Java icon from appearing in the OS X Dock while running tests
     args.add("-Dapple.awt.UIElement=true");
 
+    // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+    // https://stackoverflow.com/a/16535804/5208808
+    args.add("-XX:-MaxFDLimit");
+
     // Include log levels
     if (getStdOutLogLevel().isPresent()) {
       args.add(String.format("-D%s=%s", STD_OUT_LOG_LEVEL_PROPERTY, getStdOutLogLevel().get()));

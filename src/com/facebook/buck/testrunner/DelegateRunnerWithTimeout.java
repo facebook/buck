@@ -45,14 +45,11 @@ class DelegateRunnerWithTimeout extends Runner {
    * <p>We use a {@link ThreadLocal} so that if a test spawns more tests that create their own
    * runners we don't deadlock.
    */
-  private static final ThreadLocal<ExecutorService> executor =
-      new ThreadLocal<ExecutorService>() {
-        @Override
-        protected ExecutorService initialValue() {
-          return MostExecutors.newSingleThreadExecutor(
-              DelegateRunnerWithTimeout.class.getSimpleName());
-        }
-      };
+  private static final ThreadLocal<ExecutorService> EXECUTOR =
+      ThreadLocal.withInitial(
+          () ->
+              MostExecutors.newSingleThreadExecutor(
+                  DelegateRunnerWithTimeout.class.getSimpleName()));
 
   private final Runner delegate;
   private final long defaultTestTimeoutMillis;
@@ -108,7 +105,7 @@ class DelegateRunnerWithTimeout extends Runner {
     CompletableFuture<Boolean> testCompleted = new CompletableFuture<>();
 
     // We run the Runner in an Executor so that we can tear it down if we need to.
-    executor
+    EXECUTOR
         .get()
         .submit(
             () -> {
@@ -172,6 +169,6 @@ class DelegateRunnerWithTimeout extends Runner {
   }
 
   private void shutdown() {
-    executor.get().shutdownNow();
+    EXECUTOR.get().shutdownNow();
   }
 }
