@@ -344,6 +344,17 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   /** @return the type of the glob handler used by the Skylark parser. */
   @Value.Lazy
   public SkylarkGlobHandler getSkylarkGlobHandler() {
+    // NOTE(xavierd): This is a temporary rollout hack. Since
+    // parser.skylark_glob_handler is set in the repository .buckconfig, and
+    // the /etc/buckconfig.d/experiments is loaded before the repository
+    // config, the experiments file cannot override the .buckconfig. Thus let's
+    // check to see if the experiments config is set.
+    //
+    // TODO(xavierd): Once parser.skylark_glob_handler is set to eden_globber
+    // everywhere, remove this condition.
+    if (getDelegate().getBooleanValue("experiments", "eden_globber", false)) {
+      return SkylarkGlobHandler.EDEN_THRIFT;
+    }
     return getDelegate()
         .getEnum("parser", "skylark_glob_handler", SkylarkGlobHandler.class)
         .orElse(SkylarkGlobHandler.JAVA);
