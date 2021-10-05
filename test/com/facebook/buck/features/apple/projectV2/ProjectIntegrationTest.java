@@ -461,6 +461,31 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testBuckProjectWithReuseActionGraph() throws IOException {
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        createWorkspace(this, "project_with_swift_dependency_on_modular_objective_c_library");
+    workspace.addBuckConfigLocalOption("cxx", "default_platform", "iphonesimulator-x86_64");
+    workspace.addBuckConfigLocalOption("apple", "project_generator_index_via_compile_args", "true");
+    workspace.addBuckConfigLocalOption("apple", "project_generator_reuse_action_graph", "true");
+
+    ProcessResult result = workspace.runBuckCommand("project", "//Apps:App", "--experimental");
+
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    BuildTarget objCTarget = BuildTargetFactory.newInstance("//Libraries:ObjCDep");
+    BuildTarget exportedHeadersTarget = getExportedHeaderTarget(objCTarget);
+
+    // Verify the required headers for indexing is generated
+    assertTrue(
+        filesystem.isDirectory(
+            filesystem.resolve(getTargetOutputPath(exportedHeadersTarget, filesystem))));
+    result.assertSuccess();
+  }
+
+  @Test
   public void testBuckProjectWithSwiftDependencyOnModularObjectiveCLibrary() throws IOException {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

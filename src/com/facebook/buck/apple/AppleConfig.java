@@ -122,6 +122,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
       "project_generator_index_via_compile_args";
   private static final String PROJECT_GENERATOR_IGNORE_INVALID_TARGETS =
       "project_generator_ignore_invalid_targets";
+  private static final String PROJECT_GENERATOR_REUSE_ACTION_GRAPH =
+      "project_generator_reuse_action_graph";
 
   private final BuckConfig delegate;
 
@@ -697,6 +699,16 @@ public class AppleConfig implements ConfigView<BuckConfig> {
    */
   public boolean getProjectGeneratorIgnoreInvalidTargets() {
     return delegate.getBooleanValue(APPLE_SECTION, PROJECT_GENERATOR_IGNORE_INVALID_TARGETS, false);
+  }
+
+  /**
+   * @return If true does not regenerate action graph during the build target phase of `buck
+   *     project`. This enables us to use the same target and action graph for both project
+   *     generation and building the required targets (header maps etc), saving the additional
+   *     target + action graph generation cost.
+   */
+  public boolean getProjectGeneratorReuseActionGraph() {
+    return delegate.getBooleanValue(APPLE_SECTION, PROJECT_GENERATOR_REUSE_ACTION_GRAPH, false);
   }
 
   @BuckStyleValue

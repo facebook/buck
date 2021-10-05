@@ -80,6 +80,7 @@ import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
 import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.util.function.TriFunction;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
@@ -140,7 +141,9 @@ public class XCodeProjectCommandHelper {
   private final ParsingContext parsingContext;
 
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
-  private final Function<ImmutableList<BuildTarget>, ExitCode> buildRunner;
+  private final TriFunction<
+          ImmutableList<BuildTarget>, TargetGraphCreationResult, ActionGraphBuilder, ExitCode>
+      buildRunner;
   private final Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier;
 
   private final FocusedTargetMatcher focusedTargetMatcher;
@@ -178,7 +181,9 @@ public class XCodeProjectCommandHelper {
       boolean readOnly,
       PathOutputPresenter outputPresenter,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
-      Function<ImmutableList<BuildTarget>, ExitCode> buildRunner,
+      TriFunction<
+              ImmutableList<BuildTarget>, TargetGraphCreationResult, ActionGraphBuilder, ExitCode>
+          buildRunner,
       List<String> arguments,
       ActionGraphProvider actionGraphProvider) {
     this.buckEventBus = buckEventBus;
@@ -439,7 +444,9 @@ public class XCodeProjectCommandHelper {
             .flatMap(b -> b.getBuildTargets().stream())
             .collect(ImmutableSet.toImmutableSet());
     if (!requiredBuildTargets.isEmpty()) {
-      exitCode = buildRunner.apply(requiredBuildTargets.asList());
+      exitCode =
+          buildRunner.apply(
+              requiredBuildTargets.asList(), targetGraphCreationResult, actionGraphBuilder);
     }
 
     // Write all output paths to stdout if requested.

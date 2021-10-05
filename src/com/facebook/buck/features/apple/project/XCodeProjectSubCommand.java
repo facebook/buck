@@ -16,8 +16,11 @@
 
 package com.facebook.buck.features.apple.project;
 
+import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.cli.BuildCommandForAppleProjectGenerator;
 import com.facebook.buck.cli.BuildCommandForProjectGenerators;
+import com.facebook.buck.cli.Command;
 import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.cli.ProjectGeneratorParameters;
@@ -25,6 +28,8 @@ import com.facebook.buck.cli.ProjectSubCommand;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.features.apple.common.Mode;
 import com.facebook.buck.features.apple.common.PrintStreamPathOutputPresenter;
 import com.facebook.buck.util.ExitCode;
@@ -205,9 +210,10 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
                       getOutputMode(),
                       params.getCells().getRootCell().getRoot().getPath()),
                   projectGeneratorParameters.getArgsParser(),
-                  arguments -> {
+                  (buildTargets, targetGraph, actionGraphBuilder) -> {
                     try {
-                      return runBuild(params, arguments);
+                      return runProjectV2Build(
+                          params, buildTargets, targetGraph, actionGraphBuilder);
                     } catch (Exception e) {
                       throw new RuntimeException("Cannot run a build", e);
                     }
@@ -221,6 +227,26 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
   private ExitCode runBuild(CommandRunnerParams params, ImmutableList<BuildTarget> arguments)
       throws Exception {
     BuildCommandForProjectGenerators buildCommand = new BuildCommandForProjectGenerators(arguments);
+    return buildCommand.run(params);
+  }
+
+  private ExitCode runProjectV2Build(
+      CommandRunnerParams params,
+      ImmutableList<BuildTarget> arguments,
+      TargetGraphCreationResult targetGraph,
+      ActionGraphBuilder actionGraphBuilder)
+      throws Exception {
+
+    Command buildCommand;
+    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
+
+    if (appleConfig.getProjectGeneratorReuseActionGraph()) {
+      buildCommand =
+          new BuildCommandForAppleProjectGenerator(arguments, targetGraph, actionGraphBuilder);
+    } else {
+      buildCommand = new BuildCommandForProjectGenerators(arguments);
+    }
+
     return buildCommand.run(params);
   }
 
