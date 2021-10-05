@@ -59,13 +59,11 @@ public class AppleBundleContentHashesReadStep extends AbstractExecutionStep {
       ProjectFilesystem filesystem, AbsPath hashesFilePath) throws IOException {
     ImmutableMap.Builder<RelPath, String> pathToHashBuilder = ImmutableMap.builder();
     if (filesystem.exists(hashesFilePath.getPath())) {
-      JsonParser parser = ObjectMappers.createParser(hashesFilePath.getPath());
-      Map<String, String> pathToHash =
-          parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
-      pathToHash.forEach(
-          (path, hash) -> {
-            pathToHashBuilder.put(RelPath.get(path), hash);
-          });
+      try (JsonParser parser = ObjectMappers.createParser(hashesFilePath.getPath())) {
+        Map<String, String> pathToHash =
+            parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+        pathToHash.forEach((path, hash) -> pathToHashBuilder.put(RelPath.get(path), hash));
+      }
     }
     return pathToHashBuilder.build();
   }

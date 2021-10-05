@@ -48,6 +48,7 @@ import javax.annotation.concurrent.NotThreadSafe;
  * <p>Note: currently we don't support offsets greater than MAX_SIGNED_INT.
  */
 public class HeaderMap {
+
   private static final double MAX_LOAD_FACTOR = 0.75;
 
   /**
@@ -55,6 +56,7 @@ public class HeaderMap {
    * more abstract than the one on disk (string offsets being already swapped/shifted).
    */
   private static class Bucket {
+
     /** Offset of the key string into stringBytes. */
     final int key;
 
@@ -112,6 +114,7 @@ public class HeaderMap {
   /** Visitor function for {@link #visit(HeaderMapVisitor)}. */
   @FunctionalInterface
   public interface HeaderMapVisitor {
+
     void apply(String str, String prefix, String suffix);
   }
 
@@ -192,19 +195,18 @@ public class HeaderMap {
   }
 
   public static HeaderMap loadFromFile(File hmapFile) throws IOException {
-    HeaderMap map;
-    try (FileInputStream inputStream = new FileInputStream(hmapFile)) {
-      FileChannel fileChannel = inputStream.getChannel();
+    try (FileInputStream inputStream = new FileInputStream(hmapFile);
+        FileChannel fileChannel = inputStream.getChannel()) {
       try (ByteBufferUnmapper unmapper =
           ByteBufferUnmapper.createUnsafe(
               fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, hmapFile.length()))) {
-        map = HeaderMap.deserialize(unmapper.getByteBuffer());
+        HeaderMap map = HeaderMap.deserialize(unmapper.getByteBuffer());
         if (map == null) {
           throw new IOException("Error while parsing header map " + hmapFile);
         }
+        return map;
       }
     }
-    return map;
   }
 
   @Nullable

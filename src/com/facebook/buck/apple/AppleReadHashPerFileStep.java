@@ -47,13 +47,11 @@ public class AppleReadHashPerFileStep extends AbstractExecutionStep {
   @Override
   public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
-    JsonParser parser = ObjectMappers.createParser(hashesFilePath.getPath());
-    Map<String, String> pathToHash =
-        parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
-    pathToHash.forEach(
-        (path, hash) -> {
-          pathToHashBuilder.put(RelPath.get(path), hash);
-        });
+    try (JsonParser parser = ObjectMappers.createParser(hashesFilePath.getPath())) {
+      Map<String, String> pathToHash =
+          parser.readValueAs(new TypeReference<TreeMap<String, String>>() {});
+      pathToHash.forEach((path, hash) -> pathToHashBuilder.put(RelPath.get(path), hash));
+    }
     return StepExecutionResults.SUCCESS;
   }
 }

@@ -98,8 +98,9 @@ public class HybridThriftOverHttpServiceImpl<
           }
         });
 
-    HttpResponse response = args.getService().makeRequest(args.getHybridThriftPath(), builder);
-    try (DataInputStream bodyStream = new DataInputStream(response.getBody())) {
+    try (HttpResponse response =
+            args.getService().makeRequest(args.getHybridThriftPath(), builder);
+        DataInputStream bodyStream = new DataInputStream(response.getBody())) {
       return readFromStream(bodyStream, args.getThriftProtocol(), responseHandler);
     }
   }

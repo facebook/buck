@@ -70,6 +70,7 @@ import java.util.stream.Stream;
 
 /** A simple, on-disk content addressed storage. */
 public class LocalContentAddressedStorage implements ContentAddressedStorageClient {
+
   private final Path cacheDir;
   private final StripedKeyedLocker<String> fileLock = new StripedKeyedLocker<>(8);
 
@@ -125,10 +126,10 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
 
           @Override
           public ListenableFuture<Unit> fetchToStream(Digest digest, WritableByteChannel channel) {
-            try (FileInputStream stream = getFileInputStream(digest)) {
-              FileChannel input = stream.getChannel();
+            try (FileInputStream stream = getFileInputStream(digest);
+                FileChannel input = stream.getChannel()) {
               input.transferTo(0, input.size(), channel);
-              return Futures.immediateFuture(null);
+              return Futures.immediateFuture(Unit.UNIT);
             } catch (IOException e) {
               return Futures.immediateFailedFuture(e);
             }
@@ -140,19 +141,20 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
               ImmutableMultimap<Digest, SettableFuture<Unit>> futures)
               throws IOException {
             for (Digest digest : requests.keySet()) {
-              FileInputStream stream = getFileInputStream(digest);
-              FileChannel input = stream.getChannel();
-              for (Callable<WritableByteChannel> callable : requests.get(digest)) {
-                try (WritableByteChannel channel = callable.call()) {
-                  input.transferTo(0, input.size(), channel);
-                } catch (Exception e) {
-                  throw new BuckUncheckedExecutionException(
-                      "Unable to write " + digest + " to channel");
+              try (FileInputStream stream = getFileInputStream(digest);
+                  FileChannel input = stream.getChannel()) {
+                for (Callable<WritableByteChannel> callable : requests.get(digest)) {
+                  try (WritableByteChannel channel = callable.call()) {
+                    input.transferTo(0, input.size(), channel);
+                  } catch (Exception e) {
+                    throw new BuckUncheckedExecutionException(
+                        "Unable to write " + digest + " to channel");
+                  }
                 }
               }
-              futures.get(digest).forEach(future -> future.set(null));
+              futures.get(digest).forEach(future -> future.set(Unit.UNIT));
             }
-            return Futures.immediateFuture(null);
+            return Futures.immediateFuture(Unit.UNIT);
           }
         };
     this.outputsMaterializer =
@@ -250,6 +252,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
       throws IOException {
     return fetcher.batchFetchBlobs(requests, futures);
   }
+
   /**
    * Materializes the outputs into the build root. All required data must be present (or inlined).
    */
@@ -292,6 +295,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
   }
 
   private static class InputsMaterializer {
+
     private final Protocol protocol;
     private final Delegate delegate;
 
@@ -301,6 +305,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
     }
 
     interface Delegate {
+
       void materializeFile(Path root, Protocol.FileNode file) throws IOException;
 
       InputStream getData(Protocol.Digest digest) throws IOException;

@@ -48,10 +48,11 @@ public class AppleBundleIncrementalInfoReadStep extends AbstractExecutionStep {
   public StepExecutionResult execute(StepExecutionContext context)
       throws IOException, InterruptedException {
     if (filesystem.exists(hashesFilePath.getPath())) {
-      JsonParser parser = ObjectMappers.createParser(hashesFilePath.getPath());
-      AppleBundleIncrementalInfo incrementalInfo =
-          parser.readValueAs(AppleBundleIncrementalInfo.class);
-      incrementalInfoHolder.setValue(incrementalInfo);
+      try (JsonParser parser = ObjectMappers.createParser(hashesFilePath.getPath())) {
+        AppleBundleIncrementalInfo incrementalInfo =
+            parser.readValueAs(AppleBundleIncrementalInfo.class);
+        incrementalInfoHolder.setValue(incrementalInfo);
+      }
     }
     return StepExecutionResults.SUCCESS;
   }
