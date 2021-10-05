@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
@@ -170,7 +171,13 @@ public class OutputsMaterializer {
       materializer.makeDirectories(dirRoot);
       pending.add(
           Futures.transformAsync(
-              fetcher.fetch(directory.getTreeDigest()),
+              // don't download tree if it is empty
+              // protobuf represents empty tree
+              // in the following way
+              // 00b28ff06b788b9b67c6b259800f404f9f3761fd:2
+              directory.getTreeDigest().isEmptyTree()
+                  ? Futures.immediateFuture(ByteString.EMPTY.asReadOnlyByteBuffer())
+                  : fetcher.fetch(directory.getTreeDigest()),
               data -> {
                 Tree tree = protocol.parseTree(data);
                 Map<Digest, Directory> childMap = new HashMap<>();

@@ -39,6 +39,12 @@ public interface Protocol {
     String getHash();
 
     long getSize();
+
+    default boolean isEmpty() {
+      return getSize() == 0;
+    }
+
+    boolean isEmptyTree();
   }
 
   /** Represents a tree node */

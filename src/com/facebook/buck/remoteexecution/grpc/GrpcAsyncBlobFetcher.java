@@ -89,6 +89,10 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
     }
 
     Data data = new Data();
+    if (digest.isEmpty()) {
+      return Futures.immediateFuture(data.get());
+    }
+
     return closeScopeWhenFutureCompletes(
         CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize()),
         Futures.transform(
@@ -100,6 +104,10 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
 
   @Override
   public ListenableFuture<Unit> fetchToStream(Protocol.Digest digest, WritableByteChannel channel) {
+    if (digest.isEmpty()) {
+      return Futures.immediateFuture(Unit.UNIT);
+    }
+
     return closeScopeWhenFutureCompletes(
         CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize()),
         GrpcRemoteExecutionClients.readByteStream(
@@ -126,6 +134,20 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
     BatchReadBlobsRequest.Builder requestBuilder = BatchReadBlobsRequest.newBuilder();
     requestBuilder.setInstanceName(instanceName);
     for (Protocol.Digest digest : requests.keySet()) {
+      if (digest.isEmpty()) {
+        // need to resolve the channel to trigger the file creation
+        for (Callable<WritableByteChannel> clb : requests.get(digest)) {
+          try (WritableByteChannel channel = clb.call()) {
+          } catch (Exception e) {
+            throw new BuckUncheckedExecutionException(
+                e, "Unable to create channel for digest=" + digest);
+          }
+        }
+
+        futures.get(digest).forEach(future -> future.set(Unit.UNIT));
+        continue;
+      }
+
       requestBuilder.addDigests(
           Digest.newBuilder().setHash(digest.getHash()).setSizeBytes(digest.getSize()).build());
     }

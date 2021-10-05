@@ -46,6 +46,18 @@ public class GrpcProtocol implements Protocol {
   // We still use the FileHashCache to compute hashes of source files. So until that is switched
   // over to SHA256, we cannot really change this.
   private static final HashFunction HASHER = Hashing.sha1();
+  private static final build.bazel.remote.execution.v2.Digest EMPTY_TREE_DIGEST =
+      createEmptyTreeDigest();
+
+  static build.bazel.remote.execution.v2.Digest createEmptyTreeDigest() {
+    build.bazel.remote.execution.v2.Tree tree =
+        build.bazel.remote.execution.v2.Tree.newBuilder().build();
+    byte[] data = tree.toByteArray();
+    return build.bazel.remote.execution.v2.Digest.newBuilder()
+        .setSizeBytes(data.length)
+        .setHash(HASHER.hashBytes(data).toString())
+        .build();
+  }
 
   /** Wrapped Grpc Digest. */
   public static class GrpcDigest implements Digest {
@@ -63,6 +75,11 @@ public class GrpcProtocol implements Protocol {
     @Override
     public long getSize() {
       return digest.getSizeBytes();
+    }
+
+    @Override
+    public boolean isEmptyTree() {
+      return EMPTY_TREE_DIGEST.equals(digest);
     }
 
     @Override
