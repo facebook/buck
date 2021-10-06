@@ -24,6 +24,6 @@ public class FileSystemNotWatchedException extends IllegalArgumentException {
    * @param s the detail message.
    */
   public FileSystemNotWatchedException(String s) {
-    super(s);
+    super(s.concat(WatchmanDiagnosticUtils.runWatchmanWatchList()));
   }
 }
