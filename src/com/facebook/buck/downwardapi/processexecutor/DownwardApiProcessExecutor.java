@@ -216,6 +216,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
         result.getStdout(),
         result.getStderr(),
         result.getCommand(),
+        result.getResourceUsage(),
         process.isReaderThreadTerminated());
   }
 

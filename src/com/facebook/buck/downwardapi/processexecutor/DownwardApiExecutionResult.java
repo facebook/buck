@@ -17,6 +17,7 @@
 package com.facebook.buck.downwardapi.processexecutor;
 
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.memory.ResourceUsage;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -35,8 +36,9 @@ class DownwardApiExecutionResult extends ProcessExecutor.Result {
       Optional<String> stdout,
       Optional<String> stderr,
       ImmutableList<String> command,
+      Optional<ResourceUsage> resourceUsage,
       boolean isReaderThreadTerminated) {
-    super(exitCode, timedOut, stdout, stderr, command, Optional.empty());
+    super(exitCode, timedOut, stdout, stderr, command, resourceUsage);
     this.isReaderThreadTerminated = isReaderThreadTerminated;
   }
 
