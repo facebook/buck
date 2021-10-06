@@ -17,12 +17,17 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.util.memory.LinuxTimeParser;
+import com.facebook.buck.util.memory.ResourceUsage;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -33,6 +38,8 @@ import java.util.function.Consumer;
  * executed.
  */
 public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
+  private static final Logger LOG = Logger.get(ResourceMonitoringProcessExecutor.class);
+
   /** A child ProcessExecutor to delegate actual process execution to. */
   private final ProcessExecutor delegateExecutor;
 
@@ -74,15 +81,17 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
   @Override
   public Result waitForLaunchedProcess(LaunchedProcess launchedProcess)
       throws InterruptedException {
-    return delegateExecutor.waitForLaunchedProcess(launchedProcess);
+    Result delegateResult = delegateExecutor.waitForLaunchedProcess(launchedProcess);
+    return wrapExecutionResultWithResourceUsage(launchedProcess, delegateResult);
   }
 
   @Override
   public Result waitForLaunchedProcessWithTimeout(
       LaunchedProcess launchedProcess, long millis, Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
-    return delegateExecutor.waitForLaunchedProcessWithTimeout(
-        launchedProcess, millis, timeOutHandler);
+    Result delegateResult =
+        delegateExecutor.waitForLaunchedProcessWithTimeout(launchedProcess, millis, timeOutHandler);
+    return wrapExecutionResultWithResourceUsage(launchedProcess, delegateResult);
   }
 
   @Override
@@ -93,9 +102,9 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
-    // TODO(swgillespie) attach a ResourceUsage structure to the Result type
-    // TODO(swgillespie) parse the temporary file time wrote and produce a ResourceUsage
-    return delegateExecutor.execute(launchedProcess, options, stdin, timeOutMs, timeOutHandler);
+    Result delegateResult =
+        delegateExecutor.execute(launchedProcess, options, stdin, timeOutMs, timeOutHandler);
+    return wrapExecutionResultWithResourceUsage(launchedProcess, delegateResult);
   }
 
   @Override
@@ -117,6 +126,36 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
             factory, namedPipeEventHandlerFactory, buckEventBus, actionId, clock));
   }
 
+  private Optional<ResourceUsage> extractResourceUsage(LaunchedProcess process) {
+    if (!(process instanceof ResourceMonitoringLaunchedProcess)) {
+      return Optional.empty();
+    }
+
+    // Note that this does "move" out of rmlProcess.timeFile. This is normal and expected;
+    // unfortunately LaunchedProcesses can be closed anywhere from zero to two times depending on
+    // code paths, so it's safest to dispose of it here.
+    ResourceMonitoringLaunchedProcess rmlProcess = (ResourceMonitoringLaunchedProcess) process;
+    try (NamedTemporaryFile file = rmlProcess.timeFile) {
+      String contents = new String(Files.readAllBytes(file.get()), StandardCharsets.UTF_8);
+      ResourceUsage usage = new LinuxTimeParser().parse(contents);
+      return Optional.of(usage);
+    } catch (IOException exn) {
+      LOG.error(exn, "failed to read ResourceUsage from time file");
+      return Optional.empty();
+    }
+  }
+
+  private Result wrapExecutionResultWithResourceUsage(
+      LaunchedProcess launchedProcess, Result delegateResult) {
+    return new Result(
+        delegateResult.getExitCode(),
+        delegateResult.isTimedOut(),
+        delegateResult.getStdout(),
+        delegateResult.getStderr(),
+        delegateResult.getCommand(),
+        extractResourceUsage(launchedProcess));
+  }
+
   /**
    * A {@link DelegateLaunchedProcess} that keeps track of the named temporary file that time is
    * going to write to when the process is complete.
@@ -126,7 +165,7 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
    * /usr/bin/time).
    */
   public static class ResourceMonitoringLaunchedProcess extends DelegateLaunchedProcess {
-    private NamedTemporaryFile timeFile;
+    private final NamedTemporaryFile timeFile;
     private final ImmutableList<String> originalCommand;
 
     public ResourceMonitoringLaunchedProcess(
@@ -141,19 +180,6 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
     @Override
     public ImmutableList<String> getCommand() {
       return originalCommand;
-    }
-
-    @Override
-    public void close() {
-      try {
-        if (timeFile != null) {
-          timeFile.close();
-          timeFile = null;
-        }
-      } catch (IOException exception) {
-        // TODO(swgillespie) do something reasonable here?
-        throw new RuntimeException(exception);
-      }
     }
   }
 }

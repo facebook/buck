@@ -19,7 +19,7 @@ package com.facebook.buck.util.memory;
 import java.util.Scanner;
 
 /** Parser for the output of GNU Time (/usr/bin/time). */
-class LinuxTimeParser {
+public class LinuxTimeParser {
   /**
    * Parses a {@link ResourceUsage} from the output of GNU Time (/usr/bin/time on Linux) systems.
    * Since GNU Time allows for users to specify arbitrary format strings to it that it will use to
@@ -30,7 +30,7 @@ class LinuxTimeParser {
    * @param timeOutput Output of GNU Time for a given process
    * @return A parsed {@link ResourceUsage} derived from the output of GNU Time
    */
-  ResourceUsage parse(String timeOutput) {
+  public ResourceUsage parse(String timeOutput) {
     try (Scanner sc = new Scanner(timeOutput)) {
       long maxRss = 0;
       while (sc.hasNextLine()) {
