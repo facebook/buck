@@ -18,9 +18,11 @@ package com.facebook.buck.step.isolatedsteps.shell;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
+import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.ResourceUsageEvent;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -154,6 +156,16 @@ public class ShellStepDelegate {
           OS_JMX.getAvailableProcessors(),
           stdout.orElse(""),
           stderr.orElse(""));
+    }
+
+    // This is a hack, no two ways about it. A successful downcast to a StepExecutionContext
+    // indicates that this isolated step is actually executing in-process and, as such, has access
+    // to Buck's internal event bus.
+    //
+    // We utilize this event bus to fire a ResourceUsageEvent, if we're using a process executor
+    // that supports it.
+    if (context instanceof StepExecutionContext) {
+      reportResourceUsage((StepExecutionContext) context, result);
     }
 
     return StepExecutionResult.builder()
@@ -350,5 +362,21 @@ public class ShellStepDelegate {
 
   public Path getWorkingDirectory() {
     return workingDirectory;
+  }
+
+  /**
+   * Given a StepExecutionContext (i.e. we are executing this step in-process, report a {@link
+   * ResourceUsageEvent} to the in-process event bus.
+   */
+  private void reportResourceUsage(StepExecutionContext context, ProcessExecutor.Result result) {
+    context
+        .getBuildTarget()
+        .ifPresent(
+            target ->
+                result
+                    .getResourceUsage()
+                    .ifPresent(
+                        usage ->
+                            context.getBuckEventBus().post(new ResourceUsageEvent(target, usage))));
   }
 }
