@@ -1339,7 +1339,8 @@ class CachingBuildRuleBuilder {
           StepExecutionContext.from(
               executionContext,
               rule.getProjectFilesystem().getRootPath(),
-              ActionId.of(buildTarget)),
+              ActionId.of(buildTarget),
+              Optional.of(buildTarget)),
           step,
           Optional.of(buildTarget));
 
@@ -1478,7 +1479,8 @@ class CachingBuildRuleBuilder {
           StepExecutionContext.from(
               executionContext.withProcessExecutor(contextualProcessExecutor),
               rule.getProjectFilesystem().getRootPath(),
-              ActionId.of(rule.getBuildTarget()));
+              ActionId.of(rule.getBuildTarget()),
+              Optional.of(rule.getBuildTarget()));
 
       if (stateHolderOptional.isPresent()) {
         @SuppressWarnings("unchecked")

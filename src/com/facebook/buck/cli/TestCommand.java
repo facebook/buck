@@ -341,8 +341,8 @@ public class TestCommand extends BuildCommand {
               StepExecutionContext.from(
                   build.getExecutionContext(),
                   filesystem.getRootPath(),
-                  ActionId.of(
-                      "test-running-" + buildContext.getEventBus().getBuildId().toString())),
+                  ActionId.of("test-running-" + buildContext.getEventBus().getBuildId().toString()),
+                  Optional.empty()),
               getTestRunningOptions(params),
               testPool.getWeightedListeningExecutorService(),
               buildEngine,
@@ -407,7 +407,8 @@ public class TestCommand extends BuildCommand {
                           StepExecutionContext.from(
                               build.getExecutionContext(),
                               filesystem.getRootPath(),
-                              ActionId.of(buildTarget)),
+                              ActionId.of(buildTarget),
+                              Optional.of(buildTarget)),
                           options,
                           buildContext);
                     } finally {

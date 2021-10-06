@@ -19,6 +19,7 @@ package com.facebook.buck.core.build.execution.context;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.event.BuckEventBus;
@@ -44,7 +45,10 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
    * {@code actionId}
    */
   public static StepExecutionContext from(
-      ExecutionContext executionContext, AbsPath ruleCellRoot, ActionId actionId) {
+      ExecutionContext executionContext,
+      AbsPath ruleCellRoot,
+      ActionId actionId,
+      Optional<BuildTarget> target) {
     return StepExecutionContext.builder()
         .setConsole(executionContext.getConsole())
         .setBuckEventBus(executionContext.getBuckEventBus())
@@ -64,6 +68,7 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
         .setActionId(actionId)
         .setClock(executionContext.getClock())
         .setWorkerToolPools(executionContext.getWorkerToolPools())
+        .setBuildTarget(target)
         .build();
   }
 
@@ -89,6 +94,12 @@ public abstract class StepExecutionContext extends IsolatedExecutionContext {
   public abstract Path getBuildCellRootPath();
 
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
+
+  /**
+   * The build target associated with the steps that we will execute with this context, if one
+   * exists.
+   */
+  public abstract Optional<BuildTarget> getBuildTarget();
 
   @Value.Default
   public boolean shouldReportAbsolutePaths() {
