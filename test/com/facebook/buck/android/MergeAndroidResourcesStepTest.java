@@ -256,10 +256,10 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
-            filesystem,
             graphBuilder.getSourcePathResolver(),
             ImmutableList.of(res),
-            Paths.get("output"),
+            ProjectFilesystemUtils.getPathForRelativePath(
+                filesystem.getRootPath(), Paths.get("output")),
             /* forceFinalResourceIds */ false,
             /* unionPackage */ Optional.empty());
 
@@ -269,7 +269,9 @@ public class MergeAndroidResourcesStepTest {
 
     // Verify that the correct Java code is generated.
     assertThat(
-        filesystem.readFileIfItExists(Paths.get("output/com/res1/R.java")).get(),
+        ProjectFilesystemUtils.readFileIfItExists(
+                filesystem.getRootPath(), Paths.get("output/com/res1/R.java"))
+            .get(),
         CoreMatchers.containsString("{\n    public static int id1=0x7f020000;"));
   }
 
@@ -317,11 +319,11 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep =
         new MergeAndroidResourcesStep(
-            filesystem,
             graphBuilder.getSourcePathResolver(),
             ImmutableList.of(resource),
             ImmutableList.of(uberRDotTxt.getPath()),
-            Paths.get("output"),
+            ProjectFilesystemUtils.getPathForRelativePath(
+                filesystem.getRootPath(), Paths.get("output")),
             /* forceFinalResourceIds */ true,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             /* filteredResourcesProvider */ Optional.empty(),
@@ -357,8 +359,8 @@ public class MergeAndroidResourcesStepTest {
             + "  }\n"
             + "\n"
             + "}\n",
-        filesystem
-            .readFileIfItExists(Paths.get("output/com/facebook/R.java"))
+        ProjectFilesystemUtils.readFileIfItExists(
+                filesystem.getRootPath(), Paths.get("output/com/facebook/R.java"))
             .get()
             .replace("\r", ""));
   }
@@ -399,11 +401,11 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep =
         new MergeAndroidResourcesStep(
-            filesystem,
             graphBuilder.getSourcePathResolver(),
             ImmutableList.of(resource),
             ImmutableList.of(uberRDotTxt.getPath()),
-            Paths.get("output"),
+            ProjectFilesystemUtils.getPathForRelativePath(
+                filesystem.getRootPath(), Paths.get("output")),
             /* forceFinalResourceIds */ true,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
             /* filteredResourcesProvider */ Optional.empty(),
@@ -427,8 +429,8 @@ public class MergeAndroidResourcesStepTest {
             + "  public static final int[] custom_drawables = { 0x7f010001 };\n"
             + "\n"
             + "}\n",
-        filesystem
-            .readFileIfItExists(Paths.get("output/com/facebook/R.java"))
+        ProjectFilesystemUtils.readFileIfItExists(
+                filesystem.getRootPath(), Paths.get("output/com/facebook/R.java"))
             .get()
             .replace("\r", ""));
   }
@@ -460,21 +462,27 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
-            filesystem,
             buildRuleResolver.getSourcePathResolver(),
             resourceDeps,
-            Paths.get("output"),
+            ProjectFilesystemUtils.getPathForRelativePath(
+                filesystem.getRootPath(), Paths.get("output")),
             /* forceFinalResourceIds */ false,
             Optional.of("com.package"));
 
-    ImmutableSortedSet<RelPath> rDotJavaFiles = mergeStep.getRDotJavaFiles();
+    ImmutableSortedSet<RelPath> rDotJavaFiles = mergeStep.getRDotJavaFiles(filesystem);
     assertEquals(rDotJavaFiles.size(), 3);
 
     ImmutableSortedSet<RelPath> expected =
         ImmutableSortedSet.orderedBy(RelPath.comparator())
-            .add(mergeStep.getPathToRDotJava("com.package"))
-            .add(mergeStep.getPathToRDotJava("com.package1"))
-            .add(mergeStep.getPathToRDotJava("com.package2"))
+            .add(
+                ProjectFilesystemUtils.relativize(
+                    filesystem.getRootPath(), mergeStep.getPathToRDotJava("com.package")))
+            .add(
+                ProjectFilesystemUtils.relativize(
+                    filesystem.getRootPath(), mergeStep.getPathToRDotJava("com.package1")))
+            .add(
+                ProjectFilesystemUtils.relativize(
+                    filesystem.getRootPath(), mergeStep.getPathToRDotJava("com.package2")))
             .build();
 
     assertEquals(expected, rDotJavaFiles);
@@ -525,10 +533,10 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
-            filesystem,
             graphBuilder.getSourcePathResolver(),
             ImmutableList.of(res1, res2),
-            Paths.get("output"),
+            ProjectFilesystemUtils.getPathForRelativePath(
+                filesystem.getRootPath(), Paths.get("output")),
             /* forceFinalResourceIds */ false,
             Optional.of("res1"));
 
@@ -536,8 +544,14 @@ public class MergeAndroidResourcesStepTest {
 
     assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
-    String res1java = filesystem.readFileIfItExists(Paths.get("output/res1/R.java")).get();
-    String res2java = filesystem.readFileIfItExists(Paths.get("output/res2/R.java")).get();
+    String res1java =
+        ProjectFilesystemUtils.readFileIfItExists(
+                filesystem.getRootPath(), Paths.get("output/res1/R.java"))
+            .get();
+    String res2java =
+        ProjectFilesystemUtils.readFileIfItExists(
+                filesystem.getRootPath(), Paths.get("output/res2/R.java"))
+            .get();
     assertThat(res1java, StringContains.containsString("id1"));
     assertThat(res1java, StringContains.containsString("id2"));
     assertThat(res2java, CoreMatchers.not(StringContains.containsString("id1")));
@@ -570,10 +584,10 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
-            filesystem,
             graphBuilder.getSourcePathResolver(),
             ImmutableList.of(res1),
-            Paths.get("output"),
+            ProjectFilesystemUtils.getPathForRelativePath(
+                filesystem.getRootPath(), Paths.get("output")),
             /* forceFinalResourceIds */ false,
             Optional.of("resM"));
 
@@ -581,8 +595,14 @@ public class MergeAndroidResourcesStepTest {
 
     assertEquals(0, mergeStep.execute(executionContext).getExitCode());
 
-    String res1java = filesystem.readFileIfItExists(Paths.get("output/res1/R.java")).get();
-    String resMjava = filesystem.readFileIfItExists(Paths.get("output/resM/R.java")).get();
+    String res1java =
+        ProjectFilesystemUtils.readFileIfItExists(
+                filesystem.getRootPath(), Paths.get("output/res1/R.java"))
+            .get();
+    String resMjava =
+        ProjectFilesystemUtils.readFileIfItExists(
+                filesystem.getRootPath(), Paths.get("output/resM/R.java"))
+            .get();
     assertThat(res1java, StringContains.containsString("id1"));
     assertThat(resMjava, StringContains.containsString("id1"));
   }
@@ -697,11 +717,11 @@ public class MergeAndroidResourcesStepTest {
 
     MergeAndroidResourcesStep mergeStep =
         new MergeAndroidResourcesStep(
-            filesystem,
             resolver,
             resourceDeps,
             /* uberRDotTxt */ ImmutableList.of(),
-            Paths.get("output"),
+            ProjectFilesystemUtils.getPathForRelativePath(
+                filesystem.getRootPath(), Paths.get("output")),
             true,
             rtypes,
             duplicateWhitelistPath,

@@ -25,6 +25,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -45,7 +46,9 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import com.google.common.collect.TreeMultimap;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -65,7 +68,6 @@ import java.util.stream.Collectors;
 public class MergeAndroidResourcesStep implements Step {
   private static final Logger LOG = Logger.get(MergeAndroidResourcesStep.class);
 
-  private final ProjectFilesystem filesystem;
   private final SourcePathResolverAdapter pathResolver;
   private final ImmutableList<HasAndroidResourceDeps> androidResourceDeps;
   private final ImmutableList<Path> uberRDotTxt;
@@ -84,7 +86,6 @@ public class MergeAndroidResourcesStep implements Step {
    */
   @VisibleForTesting
   MergeAndroidResourcesStep(
-      ProjectFilesystem filesystem,
       SourcePathResolverAdapter pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
       ImmutableList<Path> uberRDotTxt,
@@ -94,7 +95,6 @@ public class MergeAndroidResourcesStep implements Step {
       Optional<Path> duplicateResourceWhitelistPath,
       ImmutableList<Path> overrideSymbolsPath,
       Optional<String> unionPackage) {
-    this.filesystem = filesystem;
     this.pathResolver = pathResolver;
     this.androidResourceDeps = ImmutableList.copyOf(androidResourceDeps);
     this.uberRDotTxt = uberRDotTxt;
@@ -107,14 +107,12 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   public static MergeAndroidResourcesStep createStepForDummyRDotJava(
-      ProjectFilesystem filesystem,
       SourcePathResolverAdapter pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
       Path outputDir,
       boolean forceFinalResourceIds,
       Optional<String> unionPackage) {
     return new MergeAndroidResourcesStep(
-        filesystem,
         pathResolver,
         androidResourceDeps,
         /* uberRDotTxt */ ImmutableList.of(),
@@ -127,7 +125,6 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   public static MergeAndroidResourcesStep createStepForUberRDotJava(
-      ProjectFilesystem filesystem,
       SourcePathResolverAdapter pathResolver,
       List<HasAndroidResourceDeps> androidResourceDeps,
       ImmutableList<Path> uberRDotTxt,
@@ -137,7 +134,6 @@ public class MergeAndroidResourcesStep implements Step {
       ImmutableList<Path> overrideSymbolsPath,
       Optional<String> unionPackage) {
     return new MergeAndroidResourcesStep(
-        filesystem,
         pathResolver,
         androidResourceDeps,
         uberRDotTxt,
@@ -150,7 +146,7 @@ public class MergeAndroidResourcesStep implements Step {
   }
 
   /** Returns R. java files */
-  public ImmutableSortedSet<RelPath> getRDotJavaFiles() {
+  public ImmutableSortedSet<RelPath> getRDotJavaFiles(ProjectFilesystem projectFilesystem) {
     FluentIterable<String> packages =
         FluentIterable.from(
             unionPackage.map(Collections::singletonList).orElse(Collections.emptyList()));
@@ -159,7 +155,12 @@ public class MergeAndroidResourcesStep implements Step {
             FluentIterable.from(androidResourceDeps)
                 .transform(HasAndroidResourceDeps::getRDotJavaPackage));
 
-    return packages.transform(this::getPathToRDotJava).toSortedSet(RelPath.comparator());
+    return packages
+        .transform(
+            p ->
+                ProjectFilesystemUtils.relativize(
+                    projectFilesystem.getRootPath(), getPathToRDotJava(p)))
+        .toSortedSet(RelPath.comparator());
   }
 
   @Override
@@ -244,12 +245,12 @@ public class MergeAndroidResourcesStep implements Step {
         }
       }
 
-      writePerPackageRDotJava(rDotJavaPackageToResources, filesystem);
+      writePerPackageRDotJava(rDotJavaPackageToResources);
       Set<String> emptyPackages =
           Sets.difference(requiredPackages.build(), rDotJavaPackageToResources.keySet());
 
       if (!emptyPackages.isEmpty()) {
-        writeEmptyRDotJavaForPackages(emptyPackages, filesystem);
+        writeEmptyRDotJavaForPackages(emptyPackages);
       }
       return StepExecutionResults.SUCCESS;
     } catch (DuplicateResourceException e) {
@@ -263,7 +264,6 @@ public class MergeAndroidResourcesStep implements Step {
   /**
    * Read resource IDs from a R.txt file and add them to a list of entries
    *
-   * @param owningFilesystem The project filesystem to use
    * @param rDotTxt the path to the R.txt file to read
    * @return a list of RDotTxtEntry objects read from the file
    * @throws IOException
@@ -296,25 +296,25 @@ public class MergeAndroidResourcesStep implements Step {
     return Optional.of(symbolsBuilder.build());
   }
 
-  private void writeEmptyRDotJavaForPackages(
-      Set<String> rDotJavaPackages, ProjectFilesystem filesystem) throws IOException {
+  private void writeEmptyRDotJavaForPackages(Set<String> rDotJavaPackages) throws IOException {
     for (String rDotJavaPackage : rDotJavaPackages) {
-      RelPath outputFile = getPathToRDotJava(rDotJavaPackage);
-      filesystem.mkdirs(outputFile.getParent());
-      filesystem.writeContentsToPath(
-          String.format("package %s;\n\npublic class R {}\n", rDotJavaPackage), outputFile);
+      Path outputFile = getPathToRDotJava(rDotJavaPackage);
+      Files.createDirectories(outputFile.getParent());
+      Files.write(
+          outputFile,
+          String.format("package %s;\n\npublic class R {}\n", rDotJavaPackage)
+              .getBytes(StandardCharsets.UTF_8));
     }
   }
 
   @VisibleForTesting
-  void writePerPackageRDotJava(
-      SortedSetMultimap<String, RDotTxtEntry> packageToResources, ProjectFilesystem filesystem)
+  void writePerPackageRDotJava(SortedSetMultimap<String, RDotTxtEntry> packageToResources)
       throws IOException {
     for (String rDotJavaPackage : packageToResources.keySet()) {
-      RelPath outputFile = getPathToRDotJava(rDotJavaPackage);
-      filesystem.mkdirs(outputFile.getParent());
+      Path outputFile = getPathToRDotJava(rDotJavaPackage);
+      Files.createDirectories(outputFile.getParent());
       try (ThrowingPrintWriter writer =
-          new ThrowingPrintWriter(filesystem.newFileOutputStream(outputFile.getPath()))) {
+          new ThrowingPrintWriter(new FileOutputStream(outputFile.toFile()))) {
         writer.format("package %s;\n\n", rDotJavaPackage);
         writer.write("public class R {\n");
 
@@ -528,9 +528,9 @@ public class MergeAndroidResourcesStep implements Step {
     return getShortName() + " " + Joiner.on(' ').join(resources);
   }
 
-  /** Returns {@link RelPath} to R. java file */
-  protected RelPath getPathToRDotJava(String rDotJavaPackage) {
-    return RelPath.of(outputDir.resolve(rDotJavaPackage.replace('.', '/')).resolve("R.java"));
+  /** Returns {@link Path} to R. java file */
+  protected Path getPathToRDotJava(String rDotJavaPackage) {
+    return outputDir.resolve(rDotJavaPackage.replace('.', '/')).resolve("R.java");
   }
 
   @VisibleForTesting

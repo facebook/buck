@@ -38,6 +38,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.HasJavaAbi;
@@ -154,16 +155,16 @@ public class DummyRDotJava extends AbstractBuildRule
     Preconditions.checkState(!androidResourceDeps.isEmpty());
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
-            filesystem,
             sourcePathResolver,
             androidResourceDeps,
-            rDotJavaSrcFolder.getPath(),
+            ProjectFilesystemUtils.getPathForRelativePath(
+                filesystem.getRootPath(), rDotJavaSrcFolder),
             /* forceFinalResourceIds */ false,
             unionPackage);
     steps.add(mergeStep);
 
     // Generate the .java files and record where they will be written in javaSourceFilePaths.
-    ImmutableSortedSet<RelPath> javaSourceFilePaths = mergeStep.getRDotJavaFiles();
+    ImmutableSortedSet<RelPath> javaSourceFilePaths = mergeStep.getRDotJavaFiles(filesystem);
 
     // Clear out the directory where the .class files will be generated.
     RelPath rDotJavaClassesFolder = getRDotJavaBinFolder();

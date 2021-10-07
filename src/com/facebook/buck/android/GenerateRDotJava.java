@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.RmStep;
@@ -124,13 +125,13 @@ public class GenerateRDotJava extends AbstractBuildRule {
 
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForUberRDotJava(
-            projectFilesystem,
             buildContext.getSourcePathResolver(),
             resourceDeps,
             pathToRDotTxtFiles.stream()
                 .map(p -> pathResolver.getAbsolutePath(p).getPath())
                 .collect(ImmutableList.toImmutableList()),
-            rDotJavaSrc.getPath(),
+            ProjectFilesystemUtils.getPathForRelativePath(
+                projectFilesystem.getRootPath(), rDotJavaSrc.getPath()),
             bannedDuplicateResourceTypes,
             duplicateResourceWhitelistPath.map(
                 sourcePath -> pathResolver.getAbsolutePath(sourcePath).getPath()),
