@@ -85,19 +85,6 @@ public class JavacSpecTest {
         Matchers.contains(javacJarPath));
   }
 
-  @Test
-  public void customCompilerClassNameIsSet() {
-    PathSourcePath javacJarPath = FakeSourcePath.of("javac_jar");
-    String compilerClassName = "test.compiler";
-    specBuilder.setJavacJarPath(javacJarPath).setCompilerClassName(compilerClassName);
-
-    JarBackedJavac.ResolvedJarBackedJavac javac =
-        (JarBackedJavac.ResolvedJarBackedJavac)
-            getJavac().resolve(graphBuilder.getSourcePathResolver(), tmp.getRoot());
-
-    assertEquals(compilerClassName, javac.getCompilerClassName());
-  }
-
   @Test(expected = HumanReadableException.class)
   public void mayOnlyPassOneOfJavacOrJavacJar() {
     PathSourcePath sourcePath = FakeSourcePath.of("path");

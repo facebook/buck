@@ -66,8 +66,6 @@ public class ExternalJavacProvider implements JavacProvider {
 
   /** Creates a JavacProvider based on a spec. */
   public static JavacProvider getProviderForSpec(JavacSpec spec) {
-    String compilerClassName =
-        spec.getCompilerClassName().orElse(COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
     ResolvedJavac.Source javacSource = spec.getJavacSource();
     switch (javacSource) {
       case EXTERNAL:
@@ -75,7 +73,8 @@ public class ExternalJavacProvider implements JavacProvider {
         return new ExternalJavacProvider(spec.getJavacPath().get());
       case JAR:
         Preconditions.checkState(spec.getJavacJarPath().isPresent());
-        return new JarBackedJavacProvider(spec.getJavacJarPath().get(), compilerClassName);
+        return new JarBackedJavacProvider(
+            spec.getJavacJarPath().get(), COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
       case JDK:
         return new ConstantJavacProvider(JdkProvidedInMemoryJavac.INSTANCE);
     }

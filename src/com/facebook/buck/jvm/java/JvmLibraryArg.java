@@ -53,8 +53,6 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
 
   Optional<SourcePath> getJavacJar();
 
-  Optional<String> getCompilerClassName();
-
   ImmutableList<String> getExtraArguments();
 
   ImmutableSet<Pattern> getRemoveClasses();
@@ -101,7 +99,6 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
     }
 
     Builder builder = JavacSpec.builder();
-    builder.setCompilerClassName(getCompilerClassName());
     builder.setJavacPath(getJavac());
     builder.setJavacJarPath(getJavacJar());
 

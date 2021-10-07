@@ -141,18 +141,6 @@ public class JvmLibraryArgInterpreterTest {
   }
 
   @Test
-  public void testCompilerClassNameArgIsSet() {
-    JvmLibraryArg arg =
-        ExampleJvmLibraryArg.builder()
-            .setName("foo")
-            .setJavacJar(FakeSourcePath.of("does-not-exist"))
-            .setCompilerClassName("compiler")
-            .build();
-
-    assertEquals(arg.getCompilerClassName(), arg.getJavacSpec().getCompilerClassName());
-  }
-
-  @Test
   public void returnsExternalCompilerIfJavacArgHasPath() throws IOException {
     // newExecutableFile cannot be executed on windows.
     Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));

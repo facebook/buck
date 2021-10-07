@@ -3,7 +3,6 @@ java_library(
     srcs = [
         "Test.java",
     ],
-    compiler_class_name = "Compiler",
     javac_jar = ":javac_jar",
 )
 
