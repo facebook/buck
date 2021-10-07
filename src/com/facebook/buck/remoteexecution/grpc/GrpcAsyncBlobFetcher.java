@@ -133,6 +133,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
             requests.keySet().stream().mapToLong(Protocol.Digest::getSize).sum());
     BatchReadBlobsRequest.Builder requestBuilder = BatchReadBlobsRequest.newBuilder();
     requestBuilder.setInstanceName(instanceName);
+    int emptyDigestsCountSoFar = 0;
     for (Protocol.Digest digest : requests.keySet()) {
       if (digest.isEmpty()) {
         // need to resolve the channel to trigger the file creation
@@ -145,6 +146,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
         }
 
         futures.get(digest).forEach(future -> future.set(Unit.UNIT));
+        ++emptyDigestsCountSoFar;
         continue;
       }
 
@@ -152,6 +154,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
           Digest.newBuilder().setHash(digest.getHash()).setSizeBytes(digest.getSize()).build());
     }
 
+    final int emptyDigestsCount = emptyDigestsCountSoFar;
     ListenableFuture<BatchReadBlobsResponse> response =
         storageStub
             .withDeadlineAfter(casDeadline, TimeUnit.SECONDS)
@@ -166,7 +169,7 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
                 List<BatchReadBlobsResponse.Response> responses = blobs.getResponsesList();
 
                 Preconditions.checkState(
-                    responses.size() == requests.keySet().size(),
+                    responses.size() == requests.keySet().size() - emptyDigestsCount,
                     "Invalid response size from CAS server. Expected: %s Got: %s",
                     requests.keySet().size(),
                     responses.size());
