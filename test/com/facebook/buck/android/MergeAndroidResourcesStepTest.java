@@ -23,7 +23,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.android.MergeAndroidResourcesStep.DuplicateResourceException;
+import com.facebook.buck.android.MergeAndroidResources.DuplicateResourceException;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.aapt.RDotTxtEntryUtil;
@@ -123,7 +123,7 @@ public class MergeAndroidResourcesStepTest {
                 "int styleable PercentLayout_Layout_layout_heightPercent 1")));
 
     SortedSetMultimap<String, RDotTxtEntry> packageNameToResources =
-        MergeAndroidResourcesStep.sortSymbols(
+        MergeAndroidResources.sortSymbols(
             entriesBuilder.buildFilePathToPackageNameSet(),
             Optional.empty(),
             ImmutableMap.of(),
@@ -211,11 +211,11 @@ public class MergeAndroidResourcesStepTest {
                 "int string b1 0x7f010003",
                 "int string c1 0x7f010004")));
 
-    thrown.expect(DuplicateResourceException.class);
+    thrown.expect(MergeAndroidResources.DuplicateResourceException.class);
     thrown.expectMessage("Resource 'a1' (string) is duplicated across: ");
     thrown.expectMessage("Resource 'c1' (string) is duplicated across: ");
 
-    MergeAndroidResourcesStep.sortSymbols(
+    MergeAndroidResources.sortSymbols(
         entriesBuilder.buildFilePathToPackageNameSet(),
         Optional.empty(),
         ImmutableMap.of(
@@ -459,13 +459,14 @@ public class MergeAndroidResourcesStepTest {
             .build();
 
     ImmutableList<HasAndroidResourceDeps> resourceDeps = ImmutableList.of(res1, res2);
-
+    Path outputDir =
+        ProjectFilesystemUtils.getPathForRelativePath(
+            filesystem.getRootPath(), Paths.get("output"));
     MergeAndroidResourcesStep mergeStep =
         MergeAndroidResourcesStep.createStepForDummyRDotJava(
             buildRuleResolver.getSourcePathResolver(),
             resourceDeps,
-            ProjectFilesystemUtils.getPathForRelativePath(
-                filesystem.getRootPath(), Paths.get("output")),
+            outputDir,
             /* forceFinalResourceIds */ false,
             Optional.of("com.package"));
 
@@ -476,13 +477,16 @@ public class MergeAndroidResourcesStepTest {
         ImmutableSortedSet.orderedBy(RelPath.comparator())
             .add(
                 ProjectFilesystemUtils.relativize(
-                    filesystem.getRootPath(), mergeStep.getPathToRDotJava("com.package")))
+                    filesystem.getRootPath(),
+                    MergeAndroidResources.getPathToRDotJava(outputDir, "com.package")))
             .add(
                 ProjectFilesystemUtils.relativize(
-                    filesystem.getRootPath(), mergeStep.getPathToRDotJava("com.package1")))
+                    filesystem.getRootPath(),
+                    MergeAndroidResources.getPathToRDotJava(outputDir, "com.package1")))
             .add(
                 ProjectFilesystemUtils.relativize(
-                    filesystem.getRootPath(), mergeStep.getPathToRDotJava("com.package2")))
+                    filesystem.getRootPath(),
+                    MergeAndroidResources.getPathToRDotJava(outputDir, "com.package2")))
             .build();
 
     assertEquals(expected, rDotJavaFiles);

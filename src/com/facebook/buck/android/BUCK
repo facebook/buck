@@ -116,6 +116,7 @@ RULES_SRCS = [
     "HasDuplicateAndroidResourceTypes.java",
     "HasExopackageArgs.java",
     "IdentityResourcesProvider.java",
+    "MergeAndroidResources.java",
     "MergeAndroidResourcesStep.java",
     "MergeAssets.java",
     "MergeThirdPartyJarResources.java",
