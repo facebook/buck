@@ -35,14 +35,15 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -68,16 +69,18 @@ import org.junit.rules.ExpectedException;
 
 public class MergeAndroidResourcesStepTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private FakeProjectFilesystem filesystem;
 
   @Before
   public void setUp() throws NoSuchBuildTargetException {
-    filesystem = new FakeProjectFilesystem();
+    filesystem = new FakeProjectFilesystem(tmpFolder.getRoot());
   }
 
   @Test
-  public void testGenerateRDotJavaForWithStyleables() throws DuplicateResourceException {
+  public void testGenerateRDotJavaForWithStyleables()
+      throws DuplicateResourceException, IOException {
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
 
     // Merge everything into the same package space.
@@ -85,7 +88,8 @@ public class MergeAndroidResourcesStepTest {
     entriesBuilder.add(
         new RDotTxtFile(
             sharedPackageName,
-            "a-R.txt",
+            ProjectFilesystemUtils.getPathForRelativePath(filesystem.getRootPath(), "a-R.txt")
+                .getPath(),
             ImmutableList.of(
                 "int attr android_layout 0x010100f2",
                 "int attr buttonPanelSideLayout 0x7f01003a",
@@ -97,7 +101,8 @@ public class MergeAndroidResourcesStepTest {
     entriesBuilder.add(
         new RDotTxtFile(
             sharedPackageName,
-            "b-R.txt",
+            ProjectFilesystemUtils.getPathForRelativePath(filesystem.getRootPath(), "b-R.txt")
+                .getPath(),
             ImmutableList.of(
                 "int id a1 0x7f010001",
                 "int id a2 0x7f010002",
@@ -124,8 +129,7 @@ public class MergeAndroidResourcesStepTest {
             ImmutableMap.of(),
             Optional.empty(),
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
-            ImmutableSet.of(),
-            filesystem);
+            ImmutableSet.of());
 
     assertEquals(24, packageNameToResources.size());
 
@@ -176,7 +180,7 @@ public class MergeAndroidResourcesStepTest {
 
   @Test
   public void testGenerateRDotJavaForMultipleSymbolsFilesWithDuplicates()
-      throws DuplicateResourceException {
+      throws DuplicateResourceException, IOException {
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
 
     // Merge everything into the same package space.
@@ -184,20 +188,23 @@ public class MergeAndroidResourcesStepTest {
     entriesBuilder.add(
         new RDotTxtFile(
             sharedPackageName,
-            "a-R.txt",
+            ProjectFilesystemUtils.getPathForRelativePath(filesystem.getRootPath(), "a-R.txt")
+                .getPath(),
             ImmutableList.of("int id a1 0x7f010001", "int string a1 0x7f020001")));
 
     entriesBuilder.add(
         new RDotTxtFile(
             sharedPackageName,
-            "b-R.txt",
+            ProjectFilesystemUtils.getPathForRelativePath(filesystem.getRootPath(), "b-R.txt")
+                .getPath(),
             ImmutableList.of(
                 "int id a1 0x7f010001", "int string a1 0x7f010002", "int string c1 0x7f010003")));
 
     entriesBuilder.add(
         new RDotTxtFile(
             sharedPackageName,
-            "c-R.txt",
+            ProjectFilesystemUtils.getPathForRelativePath(filesystem.getRootPath(), "c-R.txt")
+                .getPath(),
             ImmutableList.of(
                 "int id a1 0x7f010001",
                 "int string a1 0x7f010002",
@@ -208,37 +215,16 @@ public class MergeAndroidResourcesStepTest {
     thrown.expectMessage("Resource 'a1' (string) is duplicated across: ");
     thrown.expectMessage("Resource 'c1' (string) is duplicated across: ");
 
-    BuildTarget resTarget = BuildTargetFactory.newInstance("//:res1");
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     MergeAndroidResourcesStep.sortSymbols(
         entriesBuilder.buildFilePathToPackageNameSet(),
         Optional.empty(),
         ImmutableMap.of(
-            filesystem.getPath("a-R.txt"),
-            AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
-                .setBuildTarget(resTarget)
-                .setRes(FakeSourcePath.of("a/res"))
-                .setRDotJavaPackage("com.res.a")
-                .build(),
-            filesystem.getPath("b-R.txt"),
-            AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
-                .setBuildTarget(resTarget)
-                .setRes(FakeSourcePath.of("b/res"))
-                .setRDotJavaPackage("com.res.b")
-                .build(),
-            filesystem.getPath("c-R.txt"),
-            AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
-                .setBuildTarget(resTarget)
-                .setRes(FakeSourcePath.of("c/res"))
-                .setRDotJavaPackage("com.res.c")
-                .build()),
+            filesystem.getPath("a-R.txt"), "//:resA",
+            filesystem.getPath("b-R.txt"), "//:resB",
+            filesystem.getPath("c-R.txt"), "//:resC"),
         Optional.empty(),
         /* bannedDuplicateResourceTypes */ EnumSet.of(RType.STRING),
-        ImmutableSet.of(),
-        filesystem);
+        ImmutableSet.of());
   }
 
   @Test
@@ -736,8 +722,12 @@ public class MergeAndroidResourcesStepTest {
       this.filesystem = filesystem;
     }
 
-    public void add(RDotTxtFile entry) {
-      filesystem.writeLinesToPath(entry.contents, entry.filePath);
+    public void add(RDotTxtFile entry) throws IOException {
+      if (entry.filePath.getParent() != null) {
+        ProjectFilesystemUtils.mkdirs(filesystem.getRootPath(), entry.filePath.getParent());
+      }
+      ProjectFilesystemUtils.writeLinesToPath(
+          filesystem.getRootPath(), entry.contents, entry.filePath);
       filePathToPackageName.put(entry.filePath, entry.packageName);
     }
 

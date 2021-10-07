@@ -22,7 +22,6 @@ import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -178,13 +177,12 @@ public class MergeAndroidResourcesStep implements Step {
       // meaningless and do not represent the usable final result.  This is why the R.java file is
       // written without using final so that javac will not inline the values.
       ImmutableMap.Builder<Path, String> rDotTxtToPackage = ImmutableMap.builder();
-      ImmutableMap.Builder<Path, HasAndroidResourceDeps> symbolsFileToResourceDeps =
-          ImmutableMap.builder();
+      ImmutableMap.Builder<Path, String> symbolsFileToResourceDeps = ImmutableMap.builder();
       for (HasAndroidResourceDeps res : androidResourceDeps) {
-        RelPath rDotTxtPath =
-            filesystem.relativize(pathResolver.getAbsolutePath(res.getPathToTextSymbolsFile()));
-        rDotTxtToPackage.put(rDotTxtPath.getPath(), res.getRDotJavaPackage());
-        symbolsFileToResourceDeps.put(rDotTxtPath.getPath(), res);
+        Path rDotTxtPath = pathResolver.getAbsolutePath(res.getPathToTextSymbolsFile()).getPath();
+        rDotTxtToPackage.put(rDotTxtPath, res.getRDotJavaPackage());
+        symbolsFileToResourceDeps.put(
+            rDotTxtPath, res.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName());
       }
       Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds;
       if (uberRDotTxt.isEmpty()) {
@@ -222,8 +220,7 @@ public class MergeAndroidResourcesStep implements Step {
               symbolsFileToResourceDeps.build(),
               overrideSymbols,
               bannedDuplicateResourceTypes,
-              duplicateResourceWhitelist,
-              filesystem);
+              duplicateResourceWhitelist);
 
       ImmutableSet.Builder<String> requiredPackages = ImmutableSet.builder();
 
@@ -385,11 +382,10 @@ public class MergeAndroidResourcesStep implements Step {
   static SortedSetMultimap<String, RDotTxtEntry> sortSymbols(
       Map<Path, String> symbolsFileToRDotJavaPackage,
       Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds,
-      ImmutableMap<Path, HasAndroidResourceDeps> symbolsFileToResourceDeps,
+      ImmutableMap<Path, String> symbolsFileToResourceDeps,
       Optional<SetMultimap<String, RDotTxtEntry>> overrides,
       EnumSet<RType> bannedDuplicateResourceTypes,
-      Set<String> duplicateResourceWhitelist,
-      ProjectFilesystem filesystem)
+      Set<String> duplicateResourceWhitelist)
       throws DuplicateResourceException {
     Map<RDotTxtEntry, String> finalIds = null;
     if (uberRDotTxtIds.isPresent()) {
@@ -421,7 +417,7 @@ public class MergeAndroidResourcesStep implements Step {
       List<RDotTxtEntry> linesInSymbolsFile;
       try {
         linesInSymbolsFile =
-            filesystem.readLines(symbolsFile).stream()
+            Files.readAllLines(symbolsFile).stream()
                 .filter(input -> !Strings.isNullOrEmpty(input))
                 .map(MergeAndroidResourcesStep::parseEntryOrThrow)
                 .collect(Collectors.toList());
@@ -489,14 +485,13 @@ public class MergeAndroidResourcesStep implements Step {
         duplicateResourcesMessage.append(
             String.format(
                 "Resource '%s' (%s) is duplicated across: ", resource.name, resource.type));
-        List<SourcePath> resourceDirs = new ArrayList<>(paths.size());
-        for (Path path : paths) {
-          SourcePath res = symbolsFileToResourceDeps.get(path).getRes();
-          if (res != null) {
-            resourceDirs.add(res);
-          }
-        }
-        duplicateResourcesMessage.append(Joiner.on(", ").join(resourceDirs));
+        duplicateResourcesMessage.append(
+            Joiner.on(", ")
+                .join(
+                    paths.stream()
+                        .map(symbolsFileToResourceDeps::get)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList())));
         duplicateResourcesMessage.append("\n");
       }
     }
