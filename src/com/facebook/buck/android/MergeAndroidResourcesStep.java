@@ -193,7 +193,7 @@ public class MergeAndroidResourcesStep implements Step {
         uberRDotTxt.forEach(
             rDot -> {
               try {
-                readResources(filesystem, rDot).forEach(uberRdotTxtEntries::add);
+                readResources(rDot).forEach(uberRdotTxtEntries::add);
               } catch (IOException e) {
                 throw new RuntimeException(e);
               }
@@ -210,7 +210,7 @@ public class MergeAndroidResourcesStep implements Step {
 
       ImmutableSet<String> duplicateResourceWhitelist =
           (duplicateResourceWhitelistPath.isPresent())
-              ? ImmutableSet.copyOf(filesystem.readLines(duplicateResourceWhitelistPath.get()))
+              ? ImmutableSet.copyOf(Files.readAllLines(duplicateResourceWhitelistPath.get()))
               : ImmutableSet.of();
 
       SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToResources =
@@ -268,9 +268,8 @@ public class MergeAndroidResourcesStep implements Step {
    * @return a list of RDotTxtEntry objects read from the file
    * @throws IOException
    */
-  private static List<RDotTxtEntry> readResources(ProjectFilesystem owningFilesystem, Path rDotTxt)
-      throws IOException {
-    return owningFilesystem.readLines(rDotTxt).stream()
+  private static List<RDotTxtEntry> readResources(Path rDotTxt) throws IOException {
+    return Files.readAllLines(rDotTxt).stream()
         .filter(input -> !Strings.isNullOrEmpty(input))
         .map(RDotTxtEntry.TO_ENTRY)
         .collect(Collectors.toList());

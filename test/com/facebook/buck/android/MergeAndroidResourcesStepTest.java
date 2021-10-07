@@ -310,8 +310,10 @@ public class MergeAndroidResourcesStepTest {
             .build();
     entriesBuilder.add(new RDotTxtFile(rDotJavaPackage, symbolsFile, outputTextSymbols));
 
-    AbsPath uberRDotTxt = filesystem.resolve("R.txt");
-    filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt.getPath());
+    AbsPath uberRDotTxt =
+        ProjectFilesystemUtils.getPathForRelativePath(filesystem.getRootPath(), "R.txt");
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), outputTextSymbols, uberRDotTxt.getPath());
 
     MergeAndroidResourcesStep mergeStep =
         new MergeAndroidResourcesStep(
@@ -390,8 +392,10 @@ public class MergeAndroidResourcesStepTest {
             .build();
     entriesBuilder.add(new RDotTxtFile(rDotJavaPackage, symbolsFile, outputTextSymbols));
 
-    AbsPath uberRDotTxt = filesystem.resolve("R.txt");
-    filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt.getPath());
+    AbsPath uberRDotTxt =
+        ProjectFilesystemUtils.getPathForRelativePath(filesystem.getRootPath(), "R.txt");
+    ProjectFilesystemUtils.writeLinesToPath(
+        filesystem.getRootPath(), outputTextSymbols, uberRDotTxt.getPath());
 
     MergeAndroidResourcesStep mergeStep =
         new MergeAndroidResourcesStep(
@@ -679,8 +683,15 @@ public class MergeAndroidResourcesStepTest {
     Optional<Path> duplicateWhitelistPath =
         duplicateWhitelist.map(
             whitelist -> {
-              AbsPath whitelistPath = filesystem.resolve("duplicate-whitelist.txt");
-              filesystem.writeLinesToPath(whitelist, whitelistPath.getPath());
+              AbsPath whitelistPath =
+                  ProjectFilesystemUtils.getPathForRelativePath(
+                      filesystem.getRootPath(), "duplicate-whitelist.txt");
+              try {
+                ProjectFilesystemUtils.writeLinesToPath(
+                    filesystem.getRootPath(), whitelist, whitelistPath.getPath());
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
               return whitelistPath.getPath();
             });
 
