@@ -52,7 +52,7 @@ public class WatchmanRecordChecker {
    * The maximum number of watchman changes to process in each call to postEvents before giving up
    * and generating an overflow.
    */
-  private static final int OVERFLOW_THRESHOLD = 10_000;
+  private static final int OVERFLOW_THRESHOLD = 1000;
 
   private final WatchmanClient watchmanClient;
   private final WatchmanCursorRecorder watchmanCursorRecorder;
