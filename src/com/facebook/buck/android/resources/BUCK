@@ -1,6 +1,8 @@
+MERGE_ANDROID_RESOURCES_SRCS = ["MergeAndroidResources.java"]
+
 java_library(
     name = "resources",
-    srcs = glob(["*.java"]),
+    srcs = glob(["*.java"], exclude = MERGE_ANDROID_RESOURCES_SRCS),
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/io:io",
@@ -12,5 +14,18 @@ java_library(
         "//src/com/facebook/buck/util/zip:zip",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
+    name = "merge_android_resources",
+    srcs = MERGE_ANDROID_RESOURCES_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/android/aapt:r_dot_txt",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//third-party/java/guava:guava",
     ],
 )

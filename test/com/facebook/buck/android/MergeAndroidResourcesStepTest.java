@@ -23,11 +23,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.android.MergeAndroidResources.DuplicateResourceException;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.aapt.RDotTxtEntryUtil;
 import com.facebook.buck.android.aapt.RDotTxtEntryUtil.FakeEntry;
+import com.facebook.buck.android.resources.MergeAndroidResources;
+import com.facebook.buck.android.resources.MergeAndroidResources.DuplicateResourceException;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;

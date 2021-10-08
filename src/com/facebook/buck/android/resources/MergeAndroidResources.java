@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.resources;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
@@ -198,8 +198,7 @@ public class MergeAndroidResources {
     }
   }
 
-  @VisibleForTesting
-  static void writePerPackageRDotJava(
+  private static void writePerPackageRDotJava(
       Path outputDir,
       SortedSetMultimap<String, RDotTxtEntry> packageToResources,
       boolean forceFinalResourceIds)
@@ -272,7 +271,7 @@ public class MergeAndroidResources {
   }
 
   @VisibleForTesting
-  static SortedSetMultimap<String, RDotTxtEntry> sortSymbols(
+  public static SortedSetMultimap<String, RDotTxtEntry> sortSymbols(
       Map<Path, String> symbolsFileToRDotJavaPackage,
       Optional<ImmutableMap<RDotTxtEntry, String>> uberRDotTxtIds,
       ImmutableMap<Path, String> symbolsFileToResourceDeps,
@@ -408,11 +407,10 @@ public class MergeAndroidResources {
   }
 
   /** Returns {@link Path} to R. java file */
-  protected static Path getPathToRDotJava(Path outputDir, String rDotJavaPackage) {
+  public static Path getPathToRDotJava(Path outputDir, String rDotJavaPackage) {
     return outputDir.resolve(rDotJavaPackage.replace('.', '/')).resolve("R.java");
   }
 
-  @VisibleForTesting
   public static class DuplicateResourceException extends Exception {
     DuplicateResourceException(String messageFormat, Object... args) {
       super(String.format(messageFormat, args));

@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.google.common.collect.Ordering.natural;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.android.resources.MergeAndroidResources;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
