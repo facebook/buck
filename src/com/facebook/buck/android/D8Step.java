@@ -243,14 +243,17 @@ public class D8Step extends IsolatedStep {
       minSdkVersion.ifPresent(builder::setMinApiLevel);
       primaryDexClassNamesPath.ifPresent(builder::addMainDexListFiles);
 
+      ImmutableSet.Builder<Path> absolutePaths = ImmutableSet.builder();
+      // Always include the Android SDK on the classpath to support JARs/AARs compiled for Android
+      absolutePaths.add(androidPlatformTarget.getAndroidJar());
       if (classpathFiles != null && !classpathFiles.isEmpty()) {
-        // classpathFiles is needed only for D8 java 8 desugar
-        ImmutableSet.Builder<Path> absolutePaths = ImmutableSet.builder();
+        // classpathFiles is needed only for D8 Java 8 desugar
         for (Path classpathFile : classpathFiles) {
           absolutePaths.add(filesystem.getPathForRelativeExistingPath(classpathFile));
         }
-        builder.addClasspathFiles(absolutePaths.build());
       }
+      builder.addClasspathFiles(absolutePaths.build());
+
       D8Command d8Command = builder.build();
       com.android.tools.r8.D8.run(d8Command);
 
