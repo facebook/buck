@@ -114,7 +114,6 @@ public class PreDexSplitDexGroupTest {
             projectFilesystem,
             TestBuildRuleParams.create(),
             AndroidTestUtils.createAndroidPlatformTarget(),
-            D8Step.D8,
             new DexSplitMode(
                 /* shouldSplitDex */ true,
                 ZipSplitter.DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,

@@ -116,7 +116,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   @AddToRuleKey private final boolean skipProguard;
   @AddToRuleKey private final int xzCompressionLevel;
   @AddToRuleKey private final boolean shouldSplitDex;
-  @AddToRuleKey private final String dexTool;
   @AddToRuleKey private final boolean desugarInterfaceMethods;
   @AddToRuleKey private final Optional<Integer> minSdkVersion;
   @AddToRuleKey private final boolean withDownwardApi;
@@ -176,7 +175,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
       NonPredexedDexBuildableArgs args,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
-      String dexTool,
       boolean desugarInterfaceMethods,
       boolean withDownwardApi) {
     super(buildTarget, filesystem);
@@ -213,7 +211,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
                 BuildableSupport.deriveDeps(this, ruleFinder)
                     .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
 
-    this.dexTool = dexTool;
     this.desugarInterfaceMethods = desugarInterfaceMethods;
     this.withDownwardApi = withDownwardApi;
   }
@@ -910,7 +907,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             dxOptions,
             dxExecutorService,
             xzCompressionLevel,
-            dexTool,
             desugarInterfaceMethods,
             true,
             Optional.of(

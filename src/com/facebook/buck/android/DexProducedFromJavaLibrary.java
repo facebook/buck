@@ -97,7 +97,6 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
       SourcePathRuleFinder ruleFinder,
       AndroidPlatformTarget androidPlatformTarget,
       JavaLibrary javaLibrary,
-      String dexTool,
       int weightFactor,
       ImmutableSortedSet<SourcePath> desugarDeps,
       boolean withDownwardApi) {
@@ -107,7 +106,6 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         ruleFinder,
         new Impl(
             projectFilesystem,
-            dexTool,
             weightFactor,
             desugarDeps,
             androidPlatformTarget,
@@ -130,7 +128,6 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         ruleFinder,
         androidPlatformTarget,
         javaLibrary,
-        D8Step.D8,
         1,
         ImmutableSortedSet.of(),
         withDownwardApi);
@@ -141,7 +138,6 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
 
     private static final String DEX_RULE_METADATA = "metadata";
 
-    @AddToRuleKey private final String dexTool;
     // Scale factor to apply to our weight estimate, for deceptive dexes.
     @AddToRuleKey private final int weightFactor;
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> desugarDeps;
@@ -158,13 +154,11 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
 
     Impl(
         ProjectFilesystem projectFilesystem,
-        String dexTool,
         int weightFactor,
         ImmutableSortedSet<SourcePath> desugarDeps,
         AndroidPlatformTarget androidPlatformTarget,
         JavaLibrary javaLibrary,
         boolean withDownwardApi) {
-      this.dexTool = dexTool;
       this.weightFactor = weightFactor;
       this.desugarDeps = desugarDeps;
       this.androidPlatformTarget = androidPlatformTarget;
@@ -220,8 +214,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
                 Collections.singleton(pathToOutputFile.getPath()),
                 options,
                 Optional.empty(),
-                dexTool,
-                dexTool.equals(D8Step.D8),
+                true,
                 getAbsolutePaths(desugarDeps, sourcePathResolverAdapter),
                 Optional.empty(),
                 Optional.empty() /* minSdkVersion */);

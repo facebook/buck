@@ -51,7 +51,6 @@ import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.step.fs.XzStep;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableCollection.Builder;
@@ -201,8 +200,6 @@ public class AndroidInstrumentationApkDescription
             buildTarget.getTargetConfiguration(),
             AndroidPlatformTarget.class);
 
-    String dexTool = args.getDexTool();
-    Preconditions.checkState(dexTool.equals(D8Step.D8));
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             toolchainProvider,
@@ -270,7 +267,6 @@ public class AndroidInstrumentationApkDescription
             apkUnderTest.getManifestEntries(),
             cxxBuckConfig,
             new APKModuleGraph(context.getTargetGraph(), buildTarget),
-            dexTool,
             /* postFilterResourcesCommands */ Optional.empty(),
             nonPreDexedDexBuildableArgs,
             createRulesToExcludeFromDexSupplier(
@@ -350,7 +346,7 @@ public class AndroidInstrumentationApkDescription
 
     @Value.Default
     default String getDexTool() {
-      return D8Step.D8;
-    }
+      return "d8";
+    };
   }
 }

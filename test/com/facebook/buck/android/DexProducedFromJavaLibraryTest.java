@@ -94,7 +94,6 @@ public class DexProducedFromJavaLibraryTest {
             graphBuilder,
             TestAndroidPlatformTargetFactory.create(),
             javaBarRule,
-            D8Step.D8,
             1,
             ImmutableSortedSet.of(javaLibRule.getSourcePathToOutput()),
             false);

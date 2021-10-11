@@ -214,7 +214,6 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.getManifestEntries(),
         cxxBuckConfig,
         apkModuleGraph,
-        args.getDexTool(),
         getPostFilterResourcesArgs(args, buildTarget, graphBuilder, cellPathResolver),
         nonPreDexedDexBuildableArgs,
         rulesToExcludeFromDex,

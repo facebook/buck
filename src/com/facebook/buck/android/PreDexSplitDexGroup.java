@@ -88,7 +88,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   private final ListeningExecutorService dxExecutorService;
   @AddToRuleKey private final int xzCompressionLevel;
 
-  @AddToRuleKey final String dexTool;
   @AddToRuleKey final AndroidPlatformTarget androidPlatformTarget;
 
   // If this isn't added to the rulekey, it's possible to clobber existing dex files and canary
@@ -108,7 +107,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AndroidPlatformTarget androidPlatformTarget,
-      String dexTool,
       DexSplitMode dexSplitMode,
       APKModuleGraph apkModuleGraph,
       APKModule apkModule,
@@ -120,7 +118,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       boolean isPerClassPrimaryDexMatching) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
-    this.dexTool = dexTool;
     this.dexSplitMode = dexSplitMode;
     this.apkModuleGraph = apkModuleGraph;
     this.dxExecutorService = dxExecutorService;
@@ -288,7 +285,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             PreDexMerge.DX_MERGE_OPTIONS,
             dxExecutorService,
             xzCompressionLevel,
-            dexTool,
             false,
             false,
             Optional.empty(),

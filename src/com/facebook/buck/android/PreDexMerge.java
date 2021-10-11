@@ -21,7 +21,6 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -57,19 +56,15 @@ public abstract class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraD
   static final EnumSet<D8Options> DX_MERGE_OPTIONS =
       EnumSet.of(D8Options.NO_DESUGAR, D8Options.NO_OPTIMIZE);
 
-  @AddToRuleKey final String dexTool;
-
   final AndroidPlatformTarget androidPlatformTarget;
 
   public PreDexMerge(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      AndroidPlatformTarget androidPlatformTarget,
-      String dexTool) {
+      AndroidPlatformTarget androidPlatformTarget) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
-    this.dexTool = dexTool;
   }
 
   RelPath getPrimaryDexRoot() {

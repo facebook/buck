@@ -98,7 +98,6 @@ public class SmartDexingStep implements Step {
   private final EnumSet<D8Options> dxOptions;
   private final ListeningExecutorService executorService;
   private final int xzCompressionLevel;
-  private final String dexTool;
   private final boolean useDexBuckedId;
   private final Optional<Set<Path>> additonalDesugarDeps;
   private final BuildTarget buildTarget;
@@ -131,7 +130,6 @@ public class SmartDexingStep implements Step {
       EnumSet<D8Options> dxOptions,
       ListeningExecutorService executorService,
       int xzCompressionLevel,
-      String dexTool,
       boolean desugarInterfaceMethods,
       boolean useDexBuckedId,
       Optional<Set<Path>> additonalDesugarDeps,
@@ -160,7 +158,6 @@ public class SmartDexingStep implements Step {
     this.dxOptions = dxOptions;
     this.executorService = executorService;
     this.xzCompressionLevel = xzCompressionLevel;
-    this.dexTool = dexTool;
     this.useDexBuckedId = useDexBuckedId;
     this.additonalDesugarDeps = additonalDesugarDeps;
     this.buildTarget = buildTarget;
@@ -363,7 +360,6 @@ public class SmartDexingStep implements Step {
                     dxOptions,
                     primaryDexClassNamesPath,
                     xzCompressionLevel,
-                    dexTool,
                     desugarInterfaceMethods
                         ? Sets.union(
                             Sets.difference(
@@ -404,7 +400,6 @@ public class SmartDexingStep implements Step {
     private final Optional<Path> primaryDexClassNamesPath;
     @Nullable private String newInputsHash;
     private final int xzCompressionLevel;
-    private final String dexTool;
     @Nullable private final Collection<Path> classpathFiles;
     private final boolean useDexBuckedId;
     private final Optional<Integer> minSdkVersion;
@@ -420,7 +415,6 @@ public class SmartDexingStep implements Step {
         EnumSet<D8Options> dxOptions,
         Optional<Path> primaryDexClassNamesPath,
         int xzCompressionLevel,
-        String dexTool,
         @Nullable Collection<Path> classpathFiles,
         boolean useDexBuckedId,
         Optional<Integer> minSdkVersion) {
@@ -434,7 +428,6 @@ public class SmartDexingStep implements Step {
       this.dxOptions = dxOptions;
       this.primaryDexClassNamesPath = primaryDexClassNamesPath;
       this.xzCompressionLevel = xzCompressionLevel;
-      this.dexTool = dexTool;
       this.classpathFiles = classpathFiles;
       this.useDexBuckedId = useDexBuckedId;
       this.minSdkVersion = minSdkVersion;
@@ -498,7 +491,6 @@ public class SmartDexingStep implements Step {
           dxOptions,
           primaryDexClassNamesPath,
           xzCompressionLevel,
-          dexTool,
           classpathFiles,
           useDexBuckedId,
           minSdkVersion);
@@ -523,7 +515,6 @@ public class SmartDexingStep implements Step {
       EnumSet<D8Options> dxOptions,
       Optional<Path> primaryDexClassNamesPath,
       int xzCompressionLevel,
-      String dexTool,
       @Nullable Collection<Path> classpathFiles,
       boolean useDexBuckedId,
       Optional<Integer> minSdkVersion) {
@@ -552,7 +543,6 @@ public class SmartDexingStep implements Step {
               filesToDex,
               dxOptions,
               primaryDexClassNamesPath,
-              dexTool,
               false,
               classpathFiles,
               buckedId,
@@ -593,7 +583,6 @@ public class SmartDexingStep implements Step {
               filesToDex,
               dxOptions,
               primaryDexClassNamesPath,
-              dexTool,
               false,
               classpathFiles,
               buckedId,
@@ -628,7 +617,6 @@ public class SmartDexingStep implements Step {
               filesToDex,
               dxOptions,
               primaryDexClassNamesPath,
-              dexTool,
               false,
               classpathFiles,
               buckedId,

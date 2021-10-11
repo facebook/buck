@@ -33,7 +33,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -60,9 +59,6 @@ public class D8Step extends IsolatedStep {
   public static final int DEX_METHOD_REFERENCE_OVERFLOW_EXIT_CODE = 2;
   public static final int DEX_FIELD_REFERENCE_OVERFLOW_EXIT_CODE = 3;
 
-  /** Available tools to create dex files * */
-  public static final String D8 = "d8";
-
   // TODO: Refactor project file system out of DxStep to make it a fully conforming isolated step
   private final ProjectFilesystem filesystem;
   // TODO: Refactor android platform target out of DxStep to make it a fully conforming isolated
@@ -73,7 +69,6 @@ public class D8Step extends IsolatedStep {
   private final Set<Path> filesToDex;
   private final Set<D8Options> options;
   private final Optional<Path> primaryDexClassNamesPath;
-  private final String dexTool;
   private final boolean intermediate;
   // used to differentiate different dexing buckets (if any)
   private final Optional<String> bucketId;
@@ -86,15 +81,13 @@ public class D8Step extends IsolatedStep {
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    *     files, or a directory of .class files.
    * @param options to pass to {@code dx}.
-   * @param dexTool the tool used to perform dexing.
    */
   public D8Step(
       ProjectFilesystem filesystem,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
-      EnumSet<D8Options> options,
-      String dexTool) {
+      EnumSet<D8Options> options) {
     this(
         filesystem,
         androidPlatformTarget,
@@ -102,7 +95,6 @@ public class D8Step extends IsolatedStep {
         filesToDex,
         options,
         Optional.empty(),
-        dexTool,
         false,
         null,
         Optional.empty(),
@@ -115,7 +107,6 @@ public class D8Step extends IsolatedStep {
    *     files, or a directory of .class files.
    * @param options to pass to {@code dx}.
    * @param primaryDexClassNamesPath
-   * @param dexTool the tool used to perform dexing.
    * @param classpathFiles specifies classpath for interface static and default methods desugaring.
    * @param minSdkVersion
    */
@@ -126,7 +117,6 @@ public class D8Step extends IsolatedStep {
       Iterable<Path> filesToDex,
       EnumSet<D8Options> options,
       Optional<Path> primaryDexClassNamesPath,
-      String dexTool,
       boolean intermediate,
       @Nullable Collection<Path> classpathFiles,
       Optional<String> bucketId,
@@ -139,12 +129,9 @@ public class D8Step extends IsolatedStep {
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
     this.primaryDexClassNamesPath = primaryDexClassNamesPath.map(filesystem::resolve);
-    this.dexTool = dexTool;
     this.intermediate = intermediate;
     this.bucketId = bucketId;
     this.minSdkVersion = minSdkVersion;
-
-    Preconditions.checkArgument(dexTool.equals(D8));
   }
 
   @Override
@@ -154,8 +141,6 @@ public class D8Step extends IsolatedStep {
   }
 
   private int executeInProcess(IsolatedExecutionContext context) throws IOException {
-    Preconditions.checkState(D8.equals(dexTool));
-
     D8DiagnosticsHandler diagnosticsHandler = new D8DiagnosticsHandler();
     try {
       Set<Path> inputs = new HashSet<>();

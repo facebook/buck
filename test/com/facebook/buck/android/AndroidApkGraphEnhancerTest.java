@@ -155,7 +155,6 @@ public class AndroidApkGraphEnhancerTest {
                 .setResourceCompressionMode(ResourcesFilter.ResourceCompressionMode.DISABLED)
                 .setShouldPredex(true)
                 .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
-                .setDexTool(D8Step.D8)
                 .build());
 
     BuildTarget aaptPackageResourcesTarget =
@@ -287,7 +286,6 @@ public class AndroidApkGraphEnhancerTest {
                 .setResourceCompressionMode(ResourcesFilter.ResourceCompressionMode.DISABLED)
                 .setShouldPredex(true)
                 .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
-                .setDexTool(D8Step.D8)
                 .build());
 
     BuildTarget aaptPackageResourcesTarget =
@@ -1022,11 +1020,6 @@ public class AndroidApkGraphEnhancerTest {
     EnumSet<ExopackageMode> getExopackageMode() {
       return EnumSet.of(ExopackageMode.SECONDARY_DEX);
     }
-
-    @Value.Default
-    String getDexTool() {
-      return D8Step.D8;
-    }
   }
 
   private AndroidBinaryGraphEnhancer createGraphEnhancer(TestGraphEnhancerArgs args) {
@@ -1092,7 +1085,6 @@ public class AndroidApkGraphEnhancerTest {
         /* manifestEntries */ ManifestEntries.empty(),
         CxxPlatformUtils.DEFAULT_CONFIG,
         new APKModuleGraph(TargetGraph.EMPTY, args.getTarget(), Optional.empty()),
-        args.getDexTool(),
         Optional.empty(),
         defaultNonPredexedArgs(),
         ImmutableSortedSet::of,

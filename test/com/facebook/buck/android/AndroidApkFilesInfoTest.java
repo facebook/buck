@@ -108,7 +108,6 @@ public class AndroidApkFilesInfoTest {
           new BuildRuleParams(
               ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of()),
           null,
-          "dx",
           new DexSplitMode(
               /* shouldSplitDex */ true,
               DexSplitStrategy.MINIMIZE_PRIMARY_DEX_SIZE,

@@ -151,7 +151,6 @@ public class AndroidBinaryGraphEnhancer {
   private final APKModuleGraph apkModuleGraph;
   private final Optional<BuildTarget> nativeLibraryProguardConfigGenerator;
   private final ListeningExecutorService dxExecutorService;
-  private final String dexTool;
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
   private final NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
   private final Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex;
@@ -222,7 +221,6 @@ public class AndroidBinaryGraphEnhancer {
       ManifestEntries manifestEntries,
       CxxBuckConfig cxxBuckConfig,
       APKModuleGraph apkModuleGraph,
-      String dexTool,
       Optional<Arg> postFilterResourcesCmd,
       NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs,
       Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex,
@@ -324,7 +322,6 @@ public class AndroidBinaryGraphEnhancer {
     this.apkModuleGraph = apkModuleGraph;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
-    this.dexTool = dexTool;
     this.javacFactory = javacFactory;
     this.javac =
         javacFactory.create(graphBuilder, null, originalBuildTarget.getTargetConfiguration());
@@ -686,12 +683,11 @@ public class AndroidBinaryGraphEnhancer {
               : rDotJavaWeightFactor;
       DexProducedFromJavaLibrary dexJar =
           new DexProducedFromJavaLibrary(
-              splitJarTarget.withAppendedFlavors(dexFlavor, rtypeFlavor, getDexFlavor(dexTool)),
+              splitJarTarget.withAppendedFlavors(dexFlavor, rtypeFlavor, D8_FLAVOR),
               projectFilesystem,
               graphBuilder,
               androidPlatformTarget,
               prebuiltJar,
-              dexTool,
               weightFactor,
               ImmutableSortedSet.of(),
               downwardApiConfig.isEnabledForAndroid());
@@ -800,7 +796,6 @@ public class AndroidBinaryGraphEnhancer {
         projectFilesystem,
         buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(dexes)),
         androidPlatformTarget,
-        dexTool,
         dexSplitMode,
         apkModuleGraph,
         apkModule,
@@ -924,13 +919,10 @@ public class AndroidBinaryGraphEnhancer {
     PreDexSplitDexMerge superDexMergeRule =
         new PreDexSplitDexMerge(
             originalBuildTarget.withAppendedFlavors(
-                DEX_MERGE_SPLIT_FLAVOR,
-                getDexFlavor(dexTool),
-                InternalFlavor.of("split_dex_merge")),
+                DEX_MERGE_SPLIT_FLAVOR, D8_FLAVOR, InternalFlavor.of("split_dex_merge")),
             projectFilesystem,
             buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(dexGroupRules)),
             androidPlatformTarget,
-            dexTool,
             dexSplitMode,
             apkModuleGraph,
             dexGroupRules,
@@ -953,11 +945,10 @@ public class AndroidBinaryGraphEnhancer {
       Collection<DexProducedFromJavaLibrary> allPreDexDeps) {
     PreDexSingleDexMerge preDexMerge =
         new PreDexSingleDexMerge(
-            originalBuildTarget.withAppendedFlavors(DEX_MERGE_SINGLE_FLAVOR, getDexFlavor(dexTool)),
+            originalBuildTarget.withAppendedFlavors(DEX_MERGE_SINGLE_FLAVOR, D8_FLAVOR),
             projectFilesystem,
             buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(allPreDexDeps)),
             androidPlatformTarget,
-            dexTool,
             allPreDexDeps,
             downwardApiConfig.isEnabledForAndroid());
     graphBuilder.addToIndex(preDexMerge);
@@ -992,12 +983,10 @@ public class AndroidBinaryGraphEnhancer {
 
       BuildRule preDexRule =
           graphBuilder.computeIfAbsent(
-              javaLibrary.getBuildTarget().withAppendedFlavors(getDexFlavor(dexTool)),
+              javaLibrary.getBuildTarget().withAppendedFlavors(D8_FLAVOR),
               preDexTarget -> {
                 ImmutableSortedSet<SourcePath> desugarDeps =
-                    dexTool.equals(D8Step.D8)
-                            && javaLibrary.isDesugarEnabled()
-                            && javaLibrary.isInterfaceMethodsDesugarEnabled()
+                    javaLibrary.isDesugarEnabled() && javaLibrary.isInterfaceMethodsDesugarEnabled()
                         ? getDesugarDeps(javaLibrary, graphBuilder::getRule)
                         : ImmutableSortedSet.of();
 
@@ -1007,7 +996,6 @@ public class AndroidBinaryGraphEnhancer {
                     graphBuilder,
                     androidPlatformTarget,
                     javaLibrary,
-                    dexTool,
                     1,
                     desugarDeps,
                     downwardApiConfig.isEnabledForAndroid());
@@ -1092,7 +1080,6 @@ public class AndroidBinaryGraphEnhancer {
             nonPreDexedDexBuildableArgs,
             projectFilesystem,
             originalBuildTarget.withFlavors(NON_PREDEXED_DEX_BUILDABLE_FLAVOR),
-            dexTool,
             desugarInterfaceMethods,
             withDownwardApi);
     graphBuilder.addToIndex(nonPreDexedDexBuildable);
@@ -1107,10 +1094,5 @@ public class AndroidBinaryGraphEnhancer {
     }
 
     return nonPreDexedDexBuildable;
-  }
-
-  private static Flavor getDexFlavor(String dexTool) {
-    Preconditions.checkArgument(D8Step.D8.equals(dexTool));
-    return D8_FLAVOR;
   }
 }

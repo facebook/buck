@@ -48,10 +48,9 @@ public class PreDexSingleDexMerge extends PreDexMerge {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AndroidPlatformTarget androidPlatformTarget,
-      String dexTool,
       Collection<DexProducedFromJavaLibrary> preDexDeps,
       boolean withDownwardApi) {
-    super(buildTarget, projectFilesystem, params, androidPlatformTarget, dexTool);
+    super(buildTarget, projectFilesystem, params, androidPlatformTarget);
     this.preDexDeps = preDexDeps;
     this.withDownwardApi = withDownwardApi;
   }
@@ -93,8 +92,7 @@ public class PreDexSingleDexMerge extends PreDexMerge {
             androidPlatformTarget,
             primaryDexPath,
             filesToDex.stream().map(AbsPath::getPath).collect(ImmutableList.toImmutableList()),
-            DX_MERGE_OPTIONS,
-            dexTool));
+            DX_MERGE_OPTIONS));
 
     return steps.build();
   }

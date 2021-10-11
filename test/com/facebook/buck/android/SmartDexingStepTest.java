@@ -92,7 +92,6 @@ public class SmartDexingStepTest {
             EnumSet.of(D8Options.NO_OPTIMIZE),
             Optional.empty(),
             XzStep.DEFAULT_COMPRESSION_LEVEL,
-            D8Step.D8,
             null,
             false,
             Optional.empty());
@@ -140,7 +139,6 @@ public class SmartDexingStepTest {
             EnumSet.of(D8Options.NO_OPTIMIZE),
             Optional.of(primaryDexClassNames),
             XzStep.DEFAULT_COMPRESSION_LEVEL,
-            D8Step.D8,
             null,
             false,
             Optional.empty());
@@ -177,7 +175,6 @@ public class SmartDexingStepTest {
         dxOptions,
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        D8Step.D8,
         null,
         false,
         Optional.empty());
@@ -220,7 +217,6 @@ public class SmartDexingStepTest {
         dxOptions,
         Optional.empty(),
         9,
-        D8Step.D8,
         null,
         false,
         Optional.empty());
@@ -262,7 +258,6 @@ public class SmartDexingStepTest {
         dxOptions,
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        D8Step.D8,
         null,
         false,
         Optional.empty());
@@ -298,7 +293,6 @@ public class SmartDexingStepTest {
         dxOptions,
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        D8Step.D8,
         null,
         false,
         Optional.of(28));
@@ -334,7 +328,6 @@ public class SmartDexingStepTest {
         dxOptions,
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        D8Step.D8,
         null,
         false,
         /* min-sdk-version */ Optional.of(28));
@@ -374,7 +367,6 @@ public class SmartDexingStepTest {
         dxOptions,
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        D8Step.D8,
         null,
         false,
         /* min-sdk-version */ Optional.of(28));
@@ -402,7 +394,6 @@ public class SmartDexingStepTest {
         dxOptions,
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
-        D8Step.D8,
         null,
         false,
         Optional.empty());

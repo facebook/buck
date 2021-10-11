@@ -97,14 +97,13 @@ public class PreDexSplitDexMerge extends PreDexMerge {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AndroidPlatformTarget androidPlatformTarget,
-      String dexTool,
       DexSplitMode dexSplitMode,
       APKModuleGraph apkModuleGraph,
       ImmutableCollection<PreDexSplitDexGroup> preDexDeps,
       ListeningExecutorService dxExecutorService,
       int xzCompressionLevel,
       boolean isPerClassPrimaryDexMatching) {
-    super(buildTarget, projectFilesystem, params, androidPlatformTarget, dexTool);
+    super(buildTarget, projectFilesystem, params, androidPlatformTarget);
     this.dexSplitMode = dexSplitMode;
     this.apkModuleGraph = apkModuleGraph;
     this.preDexDeps = preDexDeps;
@@ -188,7 +187,6 @@ public class PreDexSplitDexMerge extends PreDexMerge {
               DX_MERGE_OPTIONS,
               dxExecutorService,
               xzCompressionLevel,
-              dexTool,
               false,
               false,
               Optional.empty(),
@@ -229,7 +227,6 @@ public class PreDexSplitDexMerge extends PreDexMerge {
               DX_MERGE_OPTIONS,
               dxExecutorService,
               xzCompressionLevel,
-              dexTool,
               false,
               false,
               Optional.empty(),
@@ -335,7 +332,6 @@ public class PreDexSplitDexMerge extends PreDexMerge {
                         PreDexMerge.DX_MERGE_OPTIONS,
                         dxExecutorService,
                         xzCompressionLevel,
-                        dexTool,
                         false,
                         false,
                         Optional.empty(),

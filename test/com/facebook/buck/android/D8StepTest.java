@@ -62,8 +62,7 @@ public class D8StepTest {
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.of(D8Options.NO_OPTIMIZE),
-              D8Step.D8);
+              EnumSet.of(D8Options.NO_OPTIMIZE));
 
       String expected =
           String.format(
@@ -93,8 +92,7 @@ public class D8StepTest {
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.noneOf(D8Options.class),
-              D8Step.D8);
+              EnumSet.noneOf(D8Options.class));
 
       String expected =
           String.format(
@@ -124,8 +122,7 @@ public class D8StepTest {
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.of(D8Options.NO_OPTIMIZE, D8Options.FORCE_JUMBO),
-              D8Step.D8);
+              EnumSet.of(D8Options.NO_OPTIMIZE, D8Options.FORCE_JUMBO));
 
       String expected =
           String.format(
@@ -158,7 +155,6 @@ public class D8StepTest {
               SAMPLE_FILES_TO_DEX,
               EnumSet.noneOf(D8Options.class),
               Optional.empty(),
-              D8Step.D8,
               false,
               ImmutableSet.of(),
               Optional.empty(),
@@ -200,7 +196,6 @@ public class D8StepTest {
               SAMPLE_FILES_TO_DEX,
               EnumSet.noneOf(D8Options.class),
               Optional.of(mainDexFilePath),
-              D8Step.D8,
               false,
               ImmutableSet.of(),
               Optional.empty(),
