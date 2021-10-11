@@ -132,7 +132,8 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             outputDirectory.getPath(),
             ProjectFilesystemUtils.relativize(
                 getProjectFilesystem().getRootPath(), context.getBuildCellRootPath()),
-            withDownwardApi);
+            withDownwardApi,
+            AidlBackend.java);
     commands.add(command);
 
     // Files must ultimately be written to GEN_DIR to be used as source paths.
