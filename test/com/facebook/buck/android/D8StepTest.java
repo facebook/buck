@@ -88,7 +88,13 @@ public class D8StepTest {
     try (StepExecutionContext context = TestExecutionContext.newInstance()) {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
       D8Step dx =
-          new D8Step(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+          new D8Step(
+              filesystem,
+              androidPlatformTarget,
+              SAMPLE_OUTPUT_PATH,
+              SAMPLE_FILES_TO_DEX,
+              EnumSet.noneOf(D8Options.class),
+              D8Step.D8);
 
       String expected =
           String.format(

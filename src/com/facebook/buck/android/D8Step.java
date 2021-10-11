@@ -84,24 +84,6 @@ public class D8Step extends IsolatedStep {
   /**
    * @param outputDexFile path to the file where the generated classes.dex should go.
    * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
-   */
-  public D8Step(
-      ProjectFilesystem filesystem,
-      AndroidPlatformTarget androidPlatformTarget,
-      Path outputDexFile,
-      Iterable<Path> filesToDex) {
-    this(
-        filesystem,
-        androidPlatformTarget,
-        outputDexFile,
-        filesToDex,
-        EnumSet.noneOf(D8Options.class),
-        D8);
-  }
-
-  /**
-   * @param outputDexFile path to the file where the generated classes.dex should go.
-   * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
    *     files, or a directory of .class files.
    * @param options to pass to {@code dx}.
    * @param dexTool the tool used to perform dexing.
@@ -113,24 +95,6 @@ public class D8Step extends IsolatedStep {
       Iterable<Path> filesToDex,
       EnumSet<D8Options> options,
       String dexTool) {
-    this(filesystem, androidPlatformTarget, outputDexFile, filesToDex, options, dexTool, false);
-  }
-
-  /**
-   * @param outputDexFile path to the file where the generated classes.dex should go.
-   * @param filesToDex each element in this set is a path to a .class file, a zip file of .class
-   *     files, or a directory of .class files.
-   * @param options to pass to {@code dx}.
-   * @param dexTool the tool used to perform dexing.
-   */
-  public D8Step(
-      ProjectFilesystem filesystem,
-      AndroidPlatformTarget androidPlatformTarget,
-      Path outputDexFile,
-      Iterable<Path> filesToDex,
-      EnumSet<D8Options> options,
-      String dexTool,
-      boolean intermediate) {
     this(
         filesystem,
         androidPlatformTarget,
@@ -139,7 +103,7 @@ public class D8Step extends IsolatedStep {
         options,
         Optional.empty(),
         dexTool,
-        intermediate,
+        false,
         null,
         Optional.empty(),
         Optional.empty() /* minSdkVersion */);
