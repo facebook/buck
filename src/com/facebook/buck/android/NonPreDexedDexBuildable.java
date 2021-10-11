@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.android.AndroidBinaryBuildable.SMART_DEX_SECONDARY_DEX_SUBDIR;
 
 import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.dex.D8Options;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -884,10 +885,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     // directly apply to the internal threading/parallelization details of various build commands
     // being executed.  For example, aapt is internally threaded by default when preprocessing
     // images.
-    EnumSet<D8Step.Option> dxOptions =
-        shouldProguard
-            ? EnumSet.noneOf(D8Step.Option.class)
-            : EnumSet.of(D8Step.Option.NO_OPTIMIZE);
+    EnumSet<D8Options> dxOptions =
+        shouldProguard ? EnumSet.noneOf(D8Options.class) : EnumSet.of(D8Options.NO_OPTIMIZE);
     Path selectedPrimaryDexPath = primaryDexPath;
     if (reorderClassesIntraDex) {
       String primaryDexFileName = primaryDexPath.getFileName().toString();

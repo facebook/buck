@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.D8Step.Option;
+import com.facebook.buck.android.dex.D8Options;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -95,7 +95,7 @@ public class SmartDexingStep implements Step {
   private final Optional<Path> secondaryOutputDir;
   private final DexInputHashesProvider dexInputHashesProvider;
   private final Path successDir;
-  private final EnumSet<D8Step.Option> dxOptions;
+  private final EnumSet<D8Options> dxOptions;
   private final ListeningExecutorService executorService;
   private final int xzCompressionLevel;
   private final String dexTool;
@@ -128,7 +128,7 @@ public class SmartDexingStep implements Step {
       Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
       DexInputHashesProvider dexInputHashesProvider,
       Path successDir,
-      EnumSet<Option> dxOptions,
+      EnumSet<D8Options> dxOptions,
       ListeningExecutorService executorService,
       int xzCompressionLevel,
       String dexTool,
@@ -400,7 +400,7 @@ public class SmartDexingStep implements Step {
     private final Set<Path> srcs;
     private final Path outputPath;
     private final Path outputHashPath;
-    private final EnumSet<Option> dxOptions;
+    private final EnumSet<D8Options> dxOptions;
     private final Optional<Path> primaryDexClassNamesPath;
     @Nullable private String newInputsHash;
     private final int xzCompressionLevel;
@@ -417,7 +417,7 @@ public class SmartDexingStep implements Step {
         Set<Path> srcs,
         Path outputPath,
         Path outputHashPath,
-        EnumSet<Option> dxOptions,
+        EnumSet<D8Options> dxOptions,
         Optional<Path> primaryDexClassNamesPath,
         int xzCompressionLevel,
         String dexTool,
@@ -520,7 +520,7 @@ public class SmartDexingStep implements Step {
       ProjectFilesystem filesystem,
       Collection<Path> filesToDex,
       Path outputPath,
-      EnumSet<Option> dxOptions,
+      EnumSet<D8Options> dxOptions,
       Optional<Path> primaryDexClassNamesPath,
       int xzCompressionLevel,
       String dexTool,

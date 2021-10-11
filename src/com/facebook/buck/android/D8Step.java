@@ -24,6 +24,7 @@ import com.android.tools.r8.DiagnosticsHandler;
 import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.utils.AbortException;
 import com.android.tools.r8.utils.InternalOptions;
+import com.facebook.buck.android.dex.D8Options;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.event.ConsoleEvent;
@@ -54,19 +55,6 @@ import javax.annotation.Nullable;
 /** Runs d8. */
 public class D8Step extends IsolatedStep {
 
-  /** Options to pass to {@code d8}. */
-  public enum Option {
-    /** Specify the {@code --debug} flag. Otherwise --release is specified */
-    NO_OPTIMIZE,
-
-    /** Force the dexer to emit jumbo string references */
-    FORCE_JUMBO,
-
-    /** Disable java 8 desugaring when running D8 dexing tool. */
-    NO_DESUGAR,
-    ;
-  }
-
   public static final int SUCCESS_EXIT_CODE = 0;
   public static final int FAILURE_EXIT_CODE = 1;
   public static final int DEX_METHOD_REFERENCE_OVERFLOW_EXIT_CODE = 2;
@@ -83,7 +71,7 @@ public class D8Step extends IsolatedStep {
   @VisibleForTesting final @Nullable Collection<Path> classpathFiles;
   private final Path outputDexFile;
   private final Set<Path> filesToDex;
-  private final Set<Option> options;
+  private final Set<D8Options> options;
   private final Optional<Path> primaryDexClassNamesPath;
   private final String dexTool;
   private final boolean intermediate;
@@ -107,7 +95,7 @@ public class D8Step extends IsolatedStep {
         androidPlatformTarget,
         outputDexFile,
         filesToDex,
-        EnumSet.noneOf(D8Step.Option.class),
+        EnumSet.noneOf(D8Options.class),
         D8);
   }
 
@@ -123,7 +111,7 @@ public class D8Step extends IsolatedStep {
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
-      EnumSet<Option> options,
+      EnumSet<D8Options> options,
       String dexTool) {
     this(filesystem, androidPlatformTarget, outputDexFile, filesToDex, options, dexTool, false);
   }
@@ -140,7 +128,7 @@ public class D8Step extends IsolatedStep {
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
-      EnumSet<Option> options,
+      EnumSet<D8Options> options,
       String dexTool,
       boolean intermediate) {
     this(
@@ -172,7 +160,7 @@ public class D8Step extends IsolatedStep {
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
       Iterable<Path> filesToDex,
-      EnumSet<Option> options,
+      EnumSet<D8Options> options,
       Optional<Path> primaryDexClassNamesPath,
       String dexTool,
       boolean intermediate,
@@ -229,14 +217,15 @@ public class D8Step extends IsolatedStep {
               .setIntermediate(intermediate)
               .addLibraryFiles(androidPlatformTarget.getAndroidJar())
               .setMode(
-                  options.contains(Option.NO_OPTIMIZE)
+                  options.contains(D8Options.NO_OPTIMIZE)
                       ? CompilationMode.DEBUG
                       : CompilationMode.RELEASE)
               .setOutput(output, OutputMode.DexIndexed)
-              .setDisableDesugaring(options.contains(Option.NO_DESUGAR))
+              .setDisableDesugaring(options.contains(D8Options.NO_DESUGAR))
               .setInternalOptionsModifier(
                   (InternalOptions opt) -> {
-                    opt.testing.forceJumboStringProcessing = options.contains(Option.FORCE_JUMBO);
+                    opt.testing.forceJumboStringProcessing =
+                        options.contains(D8Options.FORCE_JUMBO);
                   });
 
       bucketId.ifPresent(builder::setBucketId);
@@ -323,15 +312,15 @@ public class D8Step extends IsolatedStep {
     commandArgs.add("--output");
     commandArgs.add(filesystem.resolve(outputDexFile).toString());
 
-    commandArgs.add(options.contains(Option.NO_OPTIMIZE) ? "--debug" : "--release");
+    commandArgs.add(options.contains(D8Options.NO_OPTIMIZE) ? "--debug" : "--release");
 
     commandArgs.add("--lib").add(androidPlatformTarget.getAndroidJar().toString());
 
-    if (options.contains(Option.NO_DESUGAR)) {
+    if (options.contains(D8Options.NO_DESUGAR)) {
       commandArgs.add("--no-desugaring");
     }
 
-    if (options.contains(Option.FORCE_JUMBO)) {
+    if (options.contains(D8Options.FORCE_JUMBO)) {
       commandArgs.add("--force-jumbo");
     }
 

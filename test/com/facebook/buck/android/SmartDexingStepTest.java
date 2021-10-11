@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.SmartDexingStep.DxPseudoRule;
+import com.facebook.buck.android.dex.D8Options;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -88,7 +89,7 @@ public class SmartDexingStepTest {
             ImmutableSet.of(testIn.toPath()),
             outputFile.toPath(),
             outputHashFile,
-            EnumSet.of(D8Step.Option.NO_OPTIMIZE),
+            EnumSet.of(D8Options.NO_OPTIMIZE),
             Optional.empty(),
             XzStep.DEFAULT_COMPRESSION_LEVEL,
             D8Step.D8,
@@ -136,7 +137,7 @@ public class SmartDexingStepTest {
             ImmutableSet.of(testIn.toPath()),
             outputFile.toPath(),
             outputHashFile,
-            EnumSet.of(D8Step.Option.NO_OPTIMIZE),
+            EnumSet.of(D8Options.NO_OPTIMIZE),
             Optional.of(primaryDexClassNames),
             XzStep.DEFAULT_COMPRESSION_LEVEL,
             D8Step.D8,
@@ -162,7 +163,7 @@ public class SmartDexingStepTest {
     ImmutableList<Path> filesToDex =
         ImmutableList.of(fileSystem.getPath("foo.dex.jar"), fileSystem.getPath("bar.dex.jar"));
     Path outputPath = fileSystem.getPath("classes.dex.jar.xz");
-    EnumSet<D8Step.Option> dxOptions = EnumSet.noneOf(D8Step.Option.class);
+    EnumSet<D8Options> dxOptions = EnumSet.noneOf(D8Options.class);
 
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
@@ -206,7 +207,7 @@ public class SmartDexingStepTest {
     ImmutableList<Path> filesToDex =
         ImmutableList.of(fileSystem.getPath("foo.dex.jar"), fileSystem.getPath("bar.dex.jar"));
     Path outputPath = fileSystem.getPath("classes.dex.jar.xz");
-    EnumSet<D8Step.Option> dxOptions = EnumSet.noneOf(D8Step.Option.class);
+    EnumSet<D8Options> dxOptions = EnumSet.noneOf(D8Options.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
@@ -248,7 +249,7 @@ public class SmartDexingStepTest {
     ImmutableList<Path> filesToDex =
         ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex");
-    EnumSet<D8Step.Option> dxOptions = EnumSet.noneOf(D8Step.Option.class);
+    EnumSet<D8Options> dxOptions = EnumSet.noneOf(D8Options.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
@@ -284,7 +285,7 @@ public class SmartDexingStepTest {
     ImmutableList<Path> filesToDex =
         ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex");
-    EnumSet<D8Step.Option> dxOptions = EnumSet.noneOf(D8Step.Option.class);
+    EnumSet<D8Options> dxOptions = EnumSet.noneOf(D8Options.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
@@ -320,7 +321,7 @@ public class SmartDexingStepTest {
     ImmutableList<Path> filesToDex =
         ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar");
-    EnumSet<D8Step.Option> dxOptions = EnumSet.noneOf(D8Step.Option.class);
+    EnumSet<D8Options> dxOptions = EnumSet.noneOf(D8Options.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
@@ -360,7 +361,7 @@ public class SmartDexingStepTest {
     ImmutableList<Path> filesToDex =
         ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.dex.jar");
-    EnumSet<D8Step.Option> dxOptions = EnumSet.noneOf(D8Step.Option.class);
+    EnumSet<D8Options> dxOptions = EnumSet.noneOf(D8Options.class);
     ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
     AbsPath rootPath = filesystem.getRootPath();
     SmartDexingStep.createDxStepForDxPseudoRule(
@@ -390,7 +391,7 @@ public class SmartDexingStepTest {
     ImmutableList<Path> filesToDex =
         ImmutableList.of(Paths.get("foo.dex.jar"), Paths.get("bar.dex.jar"));
     Path outputPath = Paths.get("classes.flex");
-    EnumSet<D8Step.Option> dxOptions = EnumSet.noneOf(D8Step.Option.class);
+    EnumSet<D8Options> dxOptions = EnumSet.noneOf(D8Options.class);
     SmartDexingStep.createDxStepForDxPseudoRule(
         androidPlatformTarget,
         new ImmutableList.Builder<>(),

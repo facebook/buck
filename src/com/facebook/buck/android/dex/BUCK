@@ -1,0 +1,9 @@
+java_library(
+    name = "dex",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
+)

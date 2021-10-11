@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.dex.D8Options;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -53,8 +54,8 @@ public abstract class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraD
     implements HasDexFiles {
 
   /** Options to use with {@link D8Step} when merging pre-dexed files. */
-  static final EnumSet<D8Step.Option> DX_MERGE_OPTIONS =
-      EnumSet.of(D8Step.Option.NO_DESUGAR, D8Step.Option.NO_OPTIMIZE);
+  static final EnumSet<D8Options> DX_MERGE_OPTIONS =
+      EnumSet.of(D8Options.NO_DESUGAR, D8Options.NO_OPTIMIZE);
 
   @AddToRuleKey final String dexTool;
 

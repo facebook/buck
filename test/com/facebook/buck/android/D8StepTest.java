@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.D8Step.Option;
+import com.facebook.buck.android.dex.D8Options;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -62,7 +62,7 @@ public class D8StepTest {
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.of(Option.NO_OPTIMIZE),
+              EnumSet.of(D8Options.NO_OPTIMIZE),
               D8Step.D8);
 
       String expected =
@@ -118,7 +118,7 @@ public class D8StepTest {
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.of(D8Step.Option.NO_OPTIMIZE, D8Step.Option.FORCE_JUMBO),
+              EnumSet.of(D8Options.NO_OPTIMIZE, D8Options.FORCE_JUMBO),
               D8Step.D8);
 
       String expected =
@@ -150,7 +150,7 @@ public class D8StepTest {
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.noneOf(D8Step.Option.class),
+              EnumSet.noneOf(D8Options.class),
               Optional.empty(),
               D8Step.D8,
               false,
@@ -192,7 +192,7 @@ public class D8StepTest {
               androidPlatformTarget,
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
-              EnumSet.noneOf(D8Step.Option.class),
+              EnumSet.noneOf(D8Options.class),
               Optional.of(mainDexFilePath),
               D8Step.D8,
               false,
