@@ -401,8 +401,8 @@ public class DefaultProcessExecutor implements ProcessExecutor {
 
   private LaunchedProcessImpl getLaunchedProcessImpl(LaunchedProcess launchedProcess) {
     LaunchedProcess process = launchedProcess;
-    if (launchedProcess instanceof DelegateLaunchedProcess) {
-      DelegateLaunchedProcess delegateLaunchedProcess = (DelegateLaunchedProcess) launchedProcess;
+    while (process instanceof DelegateLaunchedProcess) {
+      DelegateLaunchedProcess delegateLaunchedProcess = (DelegateLaunchedProcess) process;
       process = delegateLaunchedProcess.getDelegate();
     }
 
