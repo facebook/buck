@@ -202,7 +202,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
 
         // To be conservative, use --force-jumbo for these intermediate .dex files so that they can
         // be merged into a final classes.dex that uses jumbo instructions.
-        EnumSet<D8Options> options = EnumSet.of(D8Options.NO_OPTIMIZE, D8Options.FORCE_JUMBO);
+        EnumSet<D8Options> options =
+            EnumSet.of(D8Options.NO_OPTIMIZE, D8Options.FORCE_JUMBO, D8Options.INTERMEDIATE);
         if (!desugarEnabled) {
           options.add(D8Options.NO_DESUGAR);
         }
@@ -214,7 +215,6 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
                 Collections.singleton(pathToOutputFile.getPath()),
                 options,
                 Optional.empty(),
-                true,
                 getAbsolutePaths(desugarDeps, sourcePathResolverAdapter),
                 Optional.empty(),
                 Optional.empty() /* minSdkVersion */);

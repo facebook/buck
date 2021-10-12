@@ -26,5 +26,8 @@ public enum D8Options {
 
   /** Disable java 8 desugaring when running D8 dexing tool. */
   NO_DESUGAR,
+
+  /** Compile an intermediate result intended for later merging */
+  INTERMEDIATE,
   ;
 }

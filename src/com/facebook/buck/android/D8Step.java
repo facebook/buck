@@ -69,7 +69,6 @@ public class D8Step extends IsolatedStep {
   private final Set<Path> filesToDex;
   private final Set<D8Options> options;
   private final Optional<Path> primaryDexClassNamesPath;
-  private final boolean intermediate;
   // used to differentiate different dexing buckets (if any)
   private final Optional<String> bucketId;
   private final Optional<Integer> minSdkVersion;
@@ -95,7 +94,6 @@ public class D8Step extends IsolatedStep {
         filesToDex,
         options,
         Optional.empty(),
-        false,
         null,
         Optional.empty(),
         Optional.empty() /* minSdkVersion */);
@@ -117,7 +115,6 @@ public class D8Step extends IsolatedStep {
       Iterable<Path> filesToDex,
       EnumSet<D8Options> options,
       Optional<Path> primaryDexClassNamesPath,
-      boolean intermediate,
       @Nullable Collection<Path> classpathFiles,
       Optional<String> bucketId,
       Optional<Integer> minSdkVersion) {
@@ -129,7 +126,6 @@ public class D8Step extends IsolatedStep {
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
     this.primaryDexClassNamesPath = primaryDexClassNamesPath.map(filesystem::resolve);
-    this.intermediate = intermediate;
     this.bucketId = bucketId;
     this.minSdkVersion = minSdkVersion;
   }
@@ -163,7 +159,7 @@ public class D8Step extends IsolatedStep {
       D8Command.Builder builder =
           D8Command.builder(diagnosticsHandler)
               .addProgramFiles(inputs)
-              .setIntermediate(intermediate)
+              .setIntermediate(options.contains(D8Options.INTERMEDIATE))
               .addLibraryFiles(androidPlatformTarget.getAndroidJar())
               .setMode(
                   options.contains(D8Options.NO_OPTIMIZE)
@@ -273,7 +269,7 @@ public class D8Step extends IsolatedStep {
       commandArgs.add("--force-jumbo");
     }
 
-    if (intermediate) {
+    if (options.contains(D8Options.INTERMEDIATE)) {
       commandArgs.add("--intermediate");
     }
 

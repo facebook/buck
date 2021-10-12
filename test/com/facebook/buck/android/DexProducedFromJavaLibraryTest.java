@@ -113,6 +113,14 @@ public class DexProducedFromJavaLibraryTest {
                 .getSourcePathResolver()
                 .getAbsolutePath(javaLibRule.getSourcePathToOutput())
                 .getPath()));
+
+    assertThat(
+        d8Step.getIsolatedStepDescription(null),
+        Matchers.allOf(
+            Matchers.containsString("--no-desugaring"),
+            Matchers.containsString("--intermediate"),
+            Matchers.containsString("--force-jumbo"),
+            Matchers.containsString("--debug")));
   }
 
   private void createFiles(ProjectFilesystem filesystem, String... paths) throws IOException {

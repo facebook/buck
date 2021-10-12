@@ -543,7 +543,6 @@ public class SmartDexingStep implements Step {
               filesToDex,
               dxOptions,
               primaryDexClassNamesPath,
-              false,
               classpathFiles,
               buckedId,
               minSdkVersion));
@@ -583,7 +582,6 @@ public class SmartDexingStep implements Step {
               filesToDex,
               dxOptions,
               primaryDexClassNamesPath,
-              false,
               classpathFiles,
               buckedId,
               minSdkVersion));
@@ -617,7 +615,6 @@ public class SmartDexingStep implements Step {
               filesToDex,
               dxOptions,
               primaryDexClassNamesPath,
-              false,
               classpathFiles,
               buckedId,
               minSdkVersion));

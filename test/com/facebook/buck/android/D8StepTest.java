@@ -155,7 +155,6 @@ public class D8StepTest {
               SAMPLE_FILES_TO_DEX,
               EnumSet.noneOf(D8Options.class),
               Optional.empty(),
-              false,
               ImmutableSet.of(),
               Optional.empty(),
               Optional.of(28));
@@ -196,7 +195,6 @@ public class D8StepTest {
               SAMPLE_FILES_TO_DEX,
               EnumSet.noneOf(D8Options.class),
               Optional.of(mainDexFilePath),
-              false,
               ImmutableSet.of(),
               Optional.empty(),
               Optional.empty());
