@@ -132,6 +132,7 @@ java_test(
         "//src/com/facebook/buck/features/zip/rules:rules",
         "//src/com/facebook/buck/features/go:go",
         "//src/com/facebook/buck/features/python:module",
+        "//src/com/facebook/buck/features/rust:rust",
     ],
     resources = glob(["testdata/**"]),
     deps = [

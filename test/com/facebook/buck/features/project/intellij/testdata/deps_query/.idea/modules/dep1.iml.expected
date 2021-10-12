@@ -20,7 +20,6 @@
       <sourceFolder url="file://$MODULE_DIR$/../../buck-out/android/dep1/gen" isTestSource="false" />
     </content>
     <content url="file://$MODULE_DIR$/../../dep1">
-      <excludeFolder url="file://$MODULE_DIR$/../../dep1/src" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

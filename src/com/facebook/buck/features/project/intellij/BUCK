@@ -11,6 +11,7 @@ buck_module(
     ),
     module_deps = [
         "//src/com/facebook/buck/features/python:module",
+        "//src/com/facebook/buck/features/rust:rust",
         "//src/com/facebook/buck/features/filegroup:filegroup",
         "//src/com/facebook/buck/features/zip/rules:rules",
     ],

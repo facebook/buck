@@ -1,0 +1,6 @@
+rust_binary(
+    name = "rust_binary",
+    srcs = glob(["*.rs"]),
+    deps = ["//rust_library:rust_library"],
+    visibility = ["PUBLIC"],
+)

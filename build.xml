@@ -804,13 +804,14 @@
     </build-buck-module-jar>
   </target>
 
-  <target name="build-module-intellij" depends="compile, build-module-python, build-module-filegroup, build-module-ziprules">
+  <target name="build-module-intellij" depends="compile, build-module-python, build-module-rust, build-module-filegroup, build-module-ziprules">
     <build-buck-module-jar-with-resources module-name="intellij">
       <module-javac-params>
         <include name="com/facebook/buck/features/project/intellij/**/*.java" />
       </module-javac-params>
       <additional-classpath-entries>
         <include name="python.jar"/>
+        <include name="rust.jar"/>
         <include name="filegroup.jar" />
         <include name="ziprules.jar" />
       </additional-classpath-entries>

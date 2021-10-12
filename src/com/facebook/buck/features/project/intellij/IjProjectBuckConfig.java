@@ -197,7 +197,9 @@ public class IjProjectBuckConfig {
             buckConfig.getPath(
                 INTELLIJ_BUCK_CONFIG_SECTION, "kotlin_java_runtime_library_template_path"))
         .setBuckOutPathForGeneratedProjectFiles(
-            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "buck_out_path_for_generated_files"));
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "buck_out_path_for_generated_files"))
+        .setRustModuleEnabled(
+            buckConfig.getBooleanValue(INTELLIJ_BUCK_CONFIG_SECTION, "enable_rust_module", false));
   }
 
   private static String getModuleGroupName(String moduleGroupName, BuckConfig buckConfig) {

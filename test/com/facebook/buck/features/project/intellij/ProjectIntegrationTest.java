@@ -401,6 +401,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testRustRules() throws IOException {
+    runBuckProjectAndVerify("rust_rules");
+  }
+
+  @Test
   public void testTwoConfigurations() throws IOException {
     runBuckProjectAndVerify("two_configurations");
   }

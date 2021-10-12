@@ -1,0 +1,5 @@
+rust_library(
+    name = "rust_library",
+    srcs = glob(["*.rs"]),
+    visibility = ["PUBLIC"],
+)

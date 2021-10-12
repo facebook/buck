@@ -55,7 +55,9 @@ buck_module(
         "//test/com/facebook/buck/features/rust:rust",
     ],
     visibility = [
+        "//test/com/facebook/buck/crosscell:crosscell",
         "//test/com/facebook/buck/features/rust/...",
+        "//src/com/facebook/buck/features/project/intellij/...",
         "//test/com/facebook/buck/rules/modern:subclass_exclusion",
     ],
 )

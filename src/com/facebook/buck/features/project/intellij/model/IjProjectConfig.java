@@ -137,6 +137,8 @@ public abstract class IjProjectConfig {
 
   public abstract Optional<String> getBuckOutPathForGeneratedProjectFiles();
 
+  public abstract boolean isRustModuleEnabled();
+
   public static Builder builder() {
     return new Builder();
   }

@@ -39,6 +39,8 @@ import com.facebook.buck.features.project.intellij.lang.kotlin.KotlinLibraryModu
 import com.facebook.buck.features.project.intellij.lang.kotlin.KotlinTestModuleRule;
 import com.facebook.buck.features.project.intellij.lang.python.PythonLibraryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.python.PythonTestModuleRule;
+import com.facebook.buck.features.project.intellij.lang.rust.RustBinaryModuleRule;
+import com.facebook.buck.features.project.intellij.lang.rust.RustLibraryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.scala.ScalaLibraryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.scala.ScalaTestModuleRule;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
@@ -46,6 +48,8 @@ import com.facebook.buck.features.project.intellij.model.IjModuleRule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.python.PythonLibraryDescription;
 import com.facebook.buck.features.python.PythonTestDescription;
+import com.facebook.buck.features.rust.RustBinaryDescription;
+import com.facebook.buck.features.rust.RustLibraryDescription;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription;
@@ -84,7 +88,9 @@ public class SupportedTargetTypeRegistry {
               PythonLibraryDescription.class,
               PythonTestDescription.class,
               ScalaLibraryDescription.class,
-              ScalaTestDescription.class);
+              ScalaTestDescription.class,
+              RustLibraryDescription.class,
+              RustBinaryDescription.class);
 
   public static boolean isTargetTypeSupported(Class<?> descriptionClass) {
     return SUPPORTED_MODULE_DESCRIPTION_CLASSES.contains(descriptionClass);
@@ -162,6 +168,12 @@ public class SupportedTargetTypeRegistry {
             projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
     addToIndex(
         new ScalaTestModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
+    addToIndex(
+        new RustLibraryModuleRule(
+            projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
+    addToIndex(
+        new RustBinaryModuleRule(
             projectFilesystem, moduleFactoryResolver, depsQueryResolver, projectConfig));
     Preconditions.checkState(areTargetTypesEqual(moduleRuleIndex.keySet()));
   }

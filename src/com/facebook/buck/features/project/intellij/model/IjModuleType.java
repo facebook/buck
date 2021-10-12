@@ -112,6 +112,18 @@ public enum IjModuleType {
     }
   },
 
+  RUST_MODULE("RUST_MODULE") {
+    @Override
+    public Optional<String> getSdkName(IjProjectConfig projectConfig) {
+      return Optional.empty();
+    }
+
+    @Override
+    public String getSdkType(IjProjectConfig projectConfig) {
+      return SDK_TYPE_JAVA;
+    }
+  },
+
   UNKNOWN_MODULE("JAVA_MODULE") {
     @Override
     public Optional<String> getSdkName(IjProjectConfig projectConfig) {
