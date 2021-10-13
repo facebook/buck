@@ -118,9 +118,6 @@ public final class DownwardApiExecutionContext implements AutoCloseable {
   @Override
   public synchronized void close() {
     verifyAllEventsProcessed();
-    chromeTraceStartedEvents.clear();
-    stepStartedEvents.clear();
-    actionToThreadIdMap.clear();
   }
 
   private void verifyAllEventsProcessed() {
