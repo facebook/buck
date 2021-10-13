@@ -1,0 +1,185 @@
+#!<PYTHON> <PYTHON_INTERPRETER_FLAGS>
+
+import os
+import platform
+import signal
+import subprocess
+import sys
+
+modules_dir = <MODULES_DIR>
+native_libs_env_var = <NATIVE_LIBS_ENV_VAR>
+native_libs_dir = <NATIVE_LIBS_DIR>
+native_libs_preload_env_var = <NATIVE_LIBS_PRELOAD_ENV_VAR>
+native_libs_preload = <NATIVE_LIBS_PRELOAD>
+
+def exec_interpreter(dirpath, interpreter_opts, module_call, program_args):
+    env_vals_to_restore = {}
+    # Update the environment variable for the dynamic loader to the native
+    # libraries location.
+    if native_libs_dir is not None:
+        old_native_libs_dir = os.environ.get(native_libs_env_var)
+        os.environ[native_libs_env_var] = os.path.join(dirpath, native_libs_dir)
+        env_vals_to_restore[native_libs_env_var] = old_native_libs_dir
+
+    # Update the environment variable for the dynamic loader to find libraries
+    # to preload.
+    if native_libs_preload is not None:
+        old_native_libs_preload = os.environ.get(native_libs_preload_env_var)
+        env_vals_to_restore[native_libs_preload_env_var] = old_native_libs_preload
+
+        # On macos, preloaded libs are found via paths.
+        os.environ[native_libs_preload_env_var] = ":".join(
+            os.path.join(dirpath, native_libs_dir, l)
+            for l in native_libs_preload.split(":")
+        )
+
+    # Note: this full block of code will be included as the argument to Python,
+    # and will be the first thing that shows up in the process arguments as displayed
+    # by programs like ps and top.
+    #
+    # We include arg0 at the start of this comment just to make it more visible what program
+    # is being run in the ps and top output.
+    startup = """\
+# {arg0!r}
+# Wrap everything in a private function to prevent globals being captured by
+# the `runpy._run_module_as_main` below.
+def __run():
+    import platform
+    import sys
+
+    # We set the paths beforehand to have a minimal amount of imports before
+    # nuking PWD from sys.path. Otherwise, there can be problems if someone runs
+    # from a directory with a similarly named file, even if their code is properly
+    # namespaced. e.g. if one has foo/bar/contextlib.py and while in foo/bar runs
+    # `buck run foo/bar:bin`, runpy will fail as it tries to import
+    # foo/bar/contextlib.py. You're just out of luck if you have sys.py or os.py
+
+    # Set `argv[0]` to the executing script.
+    assert sys.argv[0] == '-c'
+    sys.argv[0] = {arg0!r}
+
+    # Use the interpreter wrapper as the mp executable so native libraries can
+    # be loaded correctly for spawned processes.
+    if sys.version_info >= (3, 0) and platform.system() == "Linux":
+        import multiprocessing
+        context = multiprocessing.get_context("spawn")
+        context.set_executable({mp_executable!r})
+        # `spawn_main` expects conventional `argv`.
+        if len(sys.argv) >= 3 and sys.argv[2] == "--multiprocessing-fork":
+            sys.argv = ["-c"] + sys.argv[2:]
+
+    # Replace the working directory with location of the modules directory.
+    assert sys.path[0] == ''
+    sys.path[0] = {pythonpath!r}
+
+    import os
+    import runpy
+
+    def setenv(var, val):
+        if val is None:
+            os.environ.pop(var, None)
+        else:
+            os.environ[var] = val
+
+    def restoreenv(d):
+        for k, v in d.items():
+            setenv(k, v)
+
+    restoreenv({env_vals_to_restore!r})
+    {module_call}
+
+__run()
+    """.format(
+        arg0=sys.argv[0],
+        mp_executable=__file__,
+        pythonpath=os.path.join(dirpath, modules_dir),
+        env_vals_to_restore=env_vals_to_restore,
+        module_call=module_call,
+    )
+
+    interpreter_args = interpreter_opts + ["-c", startup] + program_args
+
+    if platform.system() == "Windows":
+        # exec on Windows is not true exec - there is only 'spawn' ('CreateProcess').
+        # However, creating processes unnecessarily is painful, so we only do the spawn
+        # path if we have to, which is on Windows. That said, this complicates signal
+        # handling, so we need to set up some signal forwarding logic.
+        p = subprocess.Popen([sys.executable] + interpreter_args)
+
+        def handler(signum, frame):
+            # If we're getting this, we need to forward signum to subprocesses
+            if signum == signal.SIGINT:
+                p.send_signal(signal.CTRL_C_EVENT)
+            elif signum == signal.SIGBREAK:
+                p.send_signal(signal.CTRL_BREAK_EVENT)
+            else:
+                # shouldn't happen, we should be killed instead
+                p.terminate()
+
+        signal.signal(signal.SIGINT, handler)
+        signal.signal(signal.SIGBREAK, handler)
+
+        p.wait()
+        sys.exit(p.returncode)
+    else:
+        os.execv(sys.executable, [sys.executable] + interpreter_args)
+
+
+if __name__ == "__main__":
+    """
+    Mimics Python interpreter's CLI. Sets up `LD_PRELOAD` for system native
+    dependencies and injects neccessary prologues to the program before
+    `execv`-ing the real Python interpreter.
+
+    NOTE: currently the only dependent of this entrypoint is multiprocessing's
+    spawn method on Linux, which uses the script as the executable for child
+    processes. The entrypoint closely resembles Python interpreter's CLI and
+    can be used as an interpreter with access to the build target's native
+    dependencies. However, for simplicity, it doesn't handle some uncommon ways
+    for specifying interpreter arguments (e.g. -Ec [command]).
+    """
+    interpreter_opts = []
+    module_call = None
+    program_args = []
+
+    # Parse the command line arguments to separate Python options and program
+    # arguments. Identify the program (i.e. one of -m, -c, or script path) so
+    # it can be deferred after the prologue.
+    # According to https://docs.python.org/3/using/cmdline.html, all arguments
+    # followed by the first occurrence of (1) -c [command] (2) -m [module-name]
+    # (3) [script] are program arguments.
+    argv = sys.argv[1:]
+    for opt_idx, opt in enumerate(argv):
+        if not opt.startswith("-"):
+            if (
+                opt_idx > 0
+                and argv[opt_idx - 1].startswith("-")
+                and argv[opt_idx - 1].endswith(("W", "X"))
+            ):
+                interpreter_opts.append(opt)
+                continue
+            # Encountered positional argument before encountering "-c" or "-m".
+            # This means that the argument is a script path.
+            module_call = "runpy.run_path({script!r})".format(script=opt)
+            program_args = argv[opt_idx:]
+            break
+        elif opt == "-":
+            raise RuntimeError("The interpreter wrapper doesn't support reading from stdin.")
+        elif opt == "-c":
+            module_call = argv[opt_idx + 1]
+            program_args = argv[opt_idx + 1:]
+            break
+        elif opt == "-m":
+            module_call = "runpy._run_module_as_main({main_module!r}, False)".format(
+                main_module=argv[opt_idx + 1]
+            )
+            program_args = sys.argv[opt_idx + 1:]
+            break
+        else:
+            interpreter_opts.append(opt)
+
+    if module_call is None:
+        module_call = "import code; code.interact()"
+
+    dirpath = os.path.dirname(os.path.realpath(__file__))
+    exec_interpreter(dirpath, interpreter_opts, module_call, program_args)

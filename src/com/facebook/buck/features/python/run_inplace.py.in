@@ -7,11 +7,6 @@ import subprocess
 import sys
 
 main_module = <MAIN_MODULE>
-modules_dir = <MODULES_DIR>
-native_libs_env_var = <NATIVE_LIBS_ENV_VAR>
-native_libs_dir = <NATIVE_LIBS_DIR>
-native_libs_preload_env_var = <NATIVE_LIBS_PRELOAD_ENV_VAR>
-native_libs_preload = <NATIVE_LIBS_PRELOAD>
 
 def try_resolve_possible_symlink(path):
     import ctypes
@@ -63,26 +58,6 @@ if platform.system() == "Windows":
     # does *not* dereference symlinks on windows until, like, 3.8 maybe.
     dirpath = os.path.dirname(try_resolve_possible_symlink(sys.argv[0]))
 
-env_vals_to_restore = {}
-# Update the environment variable for the dynamic loader to the native
-# libraries location.
-if native_libs_dir is not None:
-    old_native_libs_dir = os.environ.get(native_libs_env_var)
-    os.environ[native_libs_env_var] = os.path.join(dirpath, native_libs_dir)
-    env_vals_to_restore[native_libs_env_var] = old_native_libs_dir
-
-# Update the environment variable for the dynamic loader to find libraries
-# to preload.
-if native_libs_preload is not None:
-    old_native_libs_preload = os.environ.get(native_libs_preload_env_var)
-    env_vals_to_restore[native_libs_preload_env_var] = old_native_libs_preload
-
-    # On macos, preloaded libs are found via paths.
-    os.environ[native_libs_preload_env_var] = ":".join(
-        os.path.join(dirpath, native_libs_dir, l)
-        for l in native_libs_preload.split(":")
-    )
-
 # Allow users to decorate the main module. In normal Python invocations this
 # can be done by prefixing the arguments with `-m decoratingmodule`. It's not
 # that easy for par files. The startup script below sets up `sys.path` from
@@ -128,73 +103,18 @@ if os.environ.pop("PYTHONDEBUGWITHPDB", None):
         initial_commands=initial_commands,
     )
 
-# Note: this full block of code will be included as the argument to Python,
-# and will be the first thing that shows up in the process arguments as displayed
-# by programs like ps and top.
-#
-# We include arg0 at the start of this comment just to make it more visible what program
-# is being run in the ps and top output.
-STARTUP = """\
-# {arg0!r}
-# Wrap everything in a private function to prevent globals being captured by
-# the `runpy._run_module_as_main` below.
-def __run():
-    import sys
-
-    # We set the paths beforehand to have a minimal amount of imports before
-    # nuking PWD from sys.path. Otherwise, there can be problems if someone runs
-    # from a directory with a similarly named file, even if their code is properly
-    # namespaced. e.g. if one has foo/bar/contextlib.py and while in foo/bar runs
-    # `buck run foo/bar:bin`, runpy will fail as it tries to import
-    # foo/bar/contextlib.py. You're just out of luck if you have sys.py or os.py
-
-    # Set `argv[0]` to the executing script.
-    assert sys.argv[0] == '-c'
-    sys.argv[0] = {arg0!r}
-
-    # Replace the working directory with location of the modules directory.
-    assert sys.path[0] == ''
-    sys.path[0] = {pythonpath!r}
-
-    import os
-    import runpy
-
-    def setenv(var, val):
-        if val is None:
-            os.environ.pop(var, None)
-        else:
-            os.environ[var] = val
-
-    def restoreenv(d):
-        for k, v in d.items():
-            setenv(k, v)
-
-    restoreenv({env_vals!r})
-    {module_call}
-
-__run()
-""".format(
-    arg0=sys.argv[0],
-    pythonpath=os.path.join(dirpath, modules_dir),
-    env_vals=env_vals_to_restore,
-    main_module=main_module,
-    this_file=__file__,
-    module_call=module_call,
-)
-
-args = [sys.executable, "<PYTHON_INTERPRETER_FLAGS>", "-c", STARTUP]
-
+interpreter_opts = ["<PYTHON_INTERPRETER_FLAGS>"]
 # Default to 'd' warnings, but allow users to control this via PYTHONWARNINGS
 # The -E causes python to ignore all PYTHON* environment vars so we have to
 # pass this down using the command line.
 warnings = os.environ.get("PYTHONWARNINGS", "d").split(",")
 for item in reversed(warnings):
-    args.insert(1, "-W{0}".format(item.strip()))
+    interpreter_opts.insert(0, "-W{0}".format(item.strip()))
 
 # Allow users to disable byte code generation by setting the standard environment var.
 # Same as above, because of -E we have to pass this down using the command line.
 if "PYTHONDONTWRITEBYTECODE" in os.environ:
-    args.insert(1, "-B")
+    interpreter_opts.insert(0, "-B")
 
 # Python 3.7 allows benchmarking import time with this variable. Similar issues to
 # PYTHONDONTWRITEBYTECODE above. If using an earlier version of python... dont set this
@@ -205,30 +125,17 @@ if (
     and platform.python_implementation() == "CPython"
     and (sys.version_info[0], sys.version_info[1]) >= (3, 7)
 ):
-    args[1:1] = ["-X", "importtime"]
+    interpreter_opts[0:0] = ["-X", "importtime"]
 
-if platform.system() == "Windows":
-    # exec on Windows is not true exec - there is only 'spawn' ('CreateProcess').
-    # However, creating processes unnecessarily is painful, so we only do the spawn
-    # path if we have to, which is on Windows. That said, this complicates signal
-    # handling, so we need to set up some signal forwarding logic.
-
-    p = subprocess.Popen(args + sys.argv[1:])
-
-    def handler(signum, frame):
-        # If we're getting this, we need to forward signum to subprocesses
-        if signum == signal.SIGINT:
-            p.send_signal(signal.CTRL_C_EVENT)
-        elif signum == signal.SIGBREAK:
-            p.send_signal(signal.CTRL_BREAK_EVENT)
-        else:
-            # shouldn't happen, we should be killed instead
-            p.terminate()
-
-    signal.signal(signal.SIGINT, handler)
-    signal.signal(signal.SIGBREAK, handler)
-
-    p.wait()
-    sys.exit(p.returncode)
+interpreter_wrapper_path = os.path.join(dirpath, <INTERPRETER_WRAPPER_REL_PATH>)
+if sys.version_info >= (3, 0):
+    import importlib.machinery
+    loader = importlib.machinery.SourceFileLoader("interpreter_wrapper", interpreter_wrapper_path)
+    interpreter_wrapper = loader.load_module()
 else:
-    os.execv(sys.executable, args + sys.argv[1:])
+    # Buck is sunsetting Python2 support. However this is still needed for some
+    # unit tests.
+    import imp
+    interpreter_wrapper = imp.load_source("interpreter_wrapper", interpreter_wrapper_path)
+
+interpreter_wrapper.exec_interpreter(dirpath, interpreter_opts, module_call, sys.argv[1:])
