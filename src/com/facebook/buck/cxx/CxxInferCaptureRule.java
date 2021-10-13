@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
@@ -61,7 +62,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -69,6 +69,7 @@ import java.util.function.Predicate;
 /** Generate the CFG for a source file */
 class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
     implements SupportsDependencyFileRuleKey {
+  private static final Logger LOG = Logger.get(CxxInferCaptureRule.class);
 
   @VisibleForTesting static final RelPath RESULT_DIR_PATH = RelPath.get("infer-out");
 
@@ -224,13 +225,16 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
 
             @Override
             public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
-              // For buck-cell capture using remote-exection, we need to help infer find its config.
-              Path inferconfigPath = Paths.get(buildCellRootPath.toString(), ".inferconfig");
-              if (filesystem.exists(inferconfigPath)) {
-                return ImmutableMap.of("INFERCONFIG", inferconfigPath.toString());
-              } else {
-                return ImmutableMap.of();
+              // For buck-cell capture using remote-execution, we need to help infer find its
+              // config.
+              Optional<SourcePath> inferConfig = inferPlatform.getInferConfig();
+
+              if (executeRemotely && !inferConfig.isPresent()) {
+                LOG.debug("Remote execution is enabled without infer.config set.");
               }
+
+              return inferConfig.map(s -> sourcePathResolver.getAbsolutePath(s)).stream()
+                  .collect(ImmutableMap.toImmutableMap(p -> "INFERCONFIG", p -> p.toString()));
             }
 
             @Override
