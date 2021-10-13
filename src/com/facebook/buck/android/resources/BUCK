@@ -1,4 +1,4 @@
-MERGE_ANDROID_RESOURCES_SRCS = ["MergeAndroidResources.java"]
+MERGE_ANDROID_RESOURCES_SRCS = ["MergeAndroidResources.java", "MergeAndroidResourcesExecutableMain.java"]
 
 java_library(
     name = "resources",
@@ -27,5 +27,13 @@ java_library(
         "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/core/util/log:log",
         "//third-party/java/guava:guava",
+    ],
+)
+
+java_binary(
+    name = "merge_android_resources_binary",
+    main_class = "com.facebook.buck.android.resources.MergeAndroidResourcesExecutableMain",
+    deps = [
+        ":merge_android_resources",
     ],
 )
