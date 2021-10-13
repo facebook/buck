@@ -31,8 +31,6 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -191,42 +189,29 @@ public class AndroidApkGraphEnhancerTest {
             /* additionalJavaLibrariesToDex */
             ImmutableList.of(), collection));
 
-    BuildRule javaDep1Abi =
-        graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep1#class-abi"));
-
-    BuildRule javaDep2Abi =
-        graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep2#class-abi"));
-
     // dep2 should have no desugar dependencies
     DexProducedFromJavaLibrary javaDep2DexRule =
         (DexProducedFromJavaLibrary)
             graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep2#d8"));
     assertNotNull(javaDep2DexRule);
     assertThat(javaDep2DexRule.getDesugarDeps(), empty());
-    assertThat(
-        javaDep2DexRule.getBuildDeps(),
-        allOf(not(hasItem(javaDep2Abi)), not(hasItem(javaDep1Abi))));
+    assertThat(javaDep2DexRule.getBuildDeps(), contains(javaDep2));
 
-    // dep1 should have only dep1 abi dependency
+    // dep1 should have only dep2 dependency
     DexProducedFromJavaLibrary javaDep1DexRule =
         (DexProducedFromJavaLibrary)
             graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep1#d8"));
     assertNotNull(javaDep1DexRule);
-    assertThat(javaDep1DexRule.getDesugarDeps(), hasSize(1));
-    assertThat(javaDep1DexRule.getDesugarDeps(), hasItem(javaDep2Abi.getSourcePathToOutput()));
-    assertThat(
-        javaDep1DexRule.getBuildDeps(), allOf(hasItem(javaDep2Abi), not(hasItem(javaDep1Abi))));
+    assertThat(javaDep1DexRule.getDesugarDeps(), contains(javaDep2.getSourcePathToOutput()));
+    assertThat(javaDep1DexRule.getBuildDeps(), containsInAnyOrder(javaDep1, javaDep2));
 
-    // lib should have both dep1 and dep2 abi dependencies
+    // lib should have dep1 dependency
     DexProducedFromJavaLibrary javaLibDexRule =
         (DexProducedFromJavaLibrary)
             graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:lib#d8"));
     assertNotNull(javaLibDexRule);
-    assertThat(javaLibDexRule.getDesugarDeps(), hasSize(2));
-    assertThat(
-        javaLibDexRule.getDesugarDeps(),
-        hasItems(javaDep1Abi.getSourcePathToOutput(), javaDep2Abi.getSourcePathToOutput()));
-    assertThat(javaLibDexRule.getBuildDeps(), hasItems(javaDep1Abi, javaDep2Abi));
+    assertThat(javaLibDexRule.getDesugarDeps(), contains(javaDep1.getSourcePathToOutput()));
+    assertThat(javaLibDexRule.getBuildDeps(), containsInAnyOrder(javaLib, javaDep1));
   }
 
   /**

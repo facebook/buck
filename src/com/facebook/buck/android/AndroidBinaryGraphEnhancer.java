@@ -51,7 +51,6 @@ import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
-import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
@@ -87,7 +86,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.SortedSet;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -987,7 +985,7 @@ public class AndroidBinaryGraphEnhancer {
               preDexTarget -> {
                 ImmutableSortedSet<SourcePath> desugarDeps =
                     javaLibrary.isDesugarEnabled() && javaLibrary.isInterfaceMethodsDesugarEnabled()
-                        ? getDesugarDeps(javaLibrary, graphBuilder::getRule)
+                        ? ImmutableSortedSet.copyOf(javaLibrary.getDesugarDeps())
                         : ImmutableSortedSet.of();
 
                 return new DexProducedFromJavaLibrary(
@@ -1003,37 +1001,6 @@ public class AndroidBinaryGraphEnhancer {
       preDexDeps.add((DexProducedFromJavaLibrary) preDexRule);
     }
     return preDexDeps.build();
-  }
-
-  /**
-   * Provides {@see BuildRule} set of abi dependencies that have desugar enabled on them.
-   *
-   * <p>These are the deps that are required for full desugaring of default and static interface
-   * methods
-   */
-  private ImmutableSortedSet<SourcePath> getDesugarDeps(
-      JavaLibrary javaLibrary, Function<BuildTarget, BuildRule> targetToRule) {
-    if (javaBuckConfig.useCompileTimeClasspathForD8Desugaring()) {
-      return ImmutableSortedSet.copyOf(javaLibrary.getDesugarDeps());
-    } else {
-      ImmutableSortedSet.Builder<SourcePath> resultBuilder = ImmutableSortedSet.naturalOrder();
-      for (JavaLibrary library :
-          JavaLibraryClasspathProvider.getTransitiveClasspathDeps(javaLibrary)) {
-        if (javaLibrary != library && library.isDesugarEnabled()) {
-          library
-              .getAbiJar()
-              .ifPresent(
-                  buildTarget -> {
-                    SourcePath sourcePath = targetToRule.apply(buildTarget).getSourcePathToOutput();
-                    if (sourcePath != null) {
-                      resultBuilder.add(sourcePath);
-                    }
-                  });
-        }
-      }
-
-      return resultBuilder.build();
-    }
   }
 
   private NonPreDexedDexBuildable createNonPredexedDexBuildable(

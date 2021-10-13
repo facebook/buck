@@ -235,15 +235,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public boolean shouldDesugarInterfaceMethodsInPrebuiltJars() {
-    boolean desugarPrebuilts =
-        delegate.getBoolean(SECTION, "desugar_interface_methods_in_prebuilt_jars").orElse(false);
-    // use_compile_time_classpath_for_d8_desugaring must be true to desugar prebuilts since
-    // PrebuiltJar reports dependencies via getCompileTimeClasspathSourcePaths
-    if (desugarPrebuilts && !useCompileTimeClasspathForD8Desugaring()) {
-      throw new HumanReadableException(
-          "Enabling desugar_interface_methods_in_prebuilt_jars also requires enabling use_compile_time_classpath_for_d8_desugaring");
-    }
-    return desugarPrebuilts;
+    return delegate.getBoolean(SECTION, "desugar_interface_methods_in_prebuilt_jars").orElse(false);
   }
 
   public boolean shouldAddBuckLDSymlinkTree() {
@@ -324,10 +316,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public Optional<String> getDefaultCxxPlatform() {
     return delegate.getValue(SECTION, "default_cxx_platform");
-  }
-
-  public boolean useCompileTimeClasspathForD8Desugaring() {
-    return delegate.getBooleanValue(SECTION, "use_compile_time_classpath_for_d8_desugaring", false);
   }
 
   public UnusedDependenciesConfig getUnusedDependenciesAction() {
