@@ -73,7 +73,6 @@ public class GenAidlTest {
   private String pathToFrameworkAidl;
   private String importPath;
   private AndroidPlatformTarget androidPlatformTarget;
-  private AidlBackend backend;
 
   @Before
   public void setUp() throws IOException {
@@ -105,7 +104,6 @@ public class GenAidlTest {
 
     target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
     pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
-    backend = AidlBackend.java;
   }
 
   private GenAidl createGenAidlRule(ImmutableSortedSet<SourcePath> aidlSourceDeps) {
@@ -154,15 +152,14 @@ public class GenAidlTest {
     assertEquals(
         "gen_aidl() should use the aidl binary to write .java files.",
         String.format(
-            "(cd %s && %s -p%s --lang=%s -I%s -o%s %s)",
+            "(cd %s && %s -p%s -I%s -o%s %s)",
             stubFilesystem.getRootPath(),
             pathToAidlExecutable,
             pathToFrameworkAidl,
-            backend.name(),
             stubFilesystem.resolve(importPath),
             stubFilesystem.resolve(outputDirectory),
             pathToAidl.getRelativePath()),
-        aidlStep.getDescription(TestExecutionContext.newBuilder().build()).replace("'", ""));
+        aidlStep.getDescription(TestExecutionContext.newBuilder().build()));
 
     assertEquals(7, steps.size());
   }

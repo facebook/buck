@@ -40,7 +40,6 @@ public class AidlStep extends IsolatedShellStep {
   private final Path aidlFilePath;
   private final Set<String> importDirectoryPaths;
   private final Path destinationDirectory;
-  private final AidlBackend backend;
 
   public AidlStep(
       ProjectFilesystem filesystem,
@@ -50,8 +49,7 @@ public class AidlStep extends IsolatedShellStep {
       Set<String> importDirectoryPaths,
       Path destinationDirectory,
       RelPath cellPath,
-      boolean withDownwardApi,
-      AidlBackend backend) {
+      boolean withDownwardApi) {
     super(filesystem.getRootPath(), cellPath, withDownwardApi);
 
     this.filesystem = filesystem;
@@ -60,7 +58,6 @@ public class AidlStep extends IsolatedShellStep {
     this.aidlFilePath = aidlFilePath;
     this.importDirectoryPaths = ImmutableSet.copyOf(importDirectoryPaths);
     this.destinationDirectory = destinationDirectory;
-    this.backend = backend;
   }
 
   @Override
@@ -84,9 +81,6 @@ public class AidlStep extends IsolatedShellStep {
 
     // file created by --preprocess to import
     args.add("-p" + androidPlatformTarget.getAndroidFrameworkIdlFile());
-
-    // target language
-    args.add("--lang=" + backend.name());
 
     // search path for import statements
     for (String importDirectoryPath : importDirectoryPaths) {
