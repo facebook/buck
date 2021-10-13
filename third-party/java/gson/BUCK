@@ -16,6 +16,7 @@ prebuilt_jar(
         "//starlark/...",
         "//test/com/facebook/buck/worker:worker",  # Legacy caller
         "//third-party/java/aosp:aosp",  # Sad transitive deps are sad
+        "//third-party/java/d8:d8",  # Legacy caller
         "//third-party/java/grpc:grpc-core",  # Legacy caller which should probably use Jackson
         "//tools/ideabuck:",  # Not inside buck
     ],

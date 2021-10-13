@@ -6,5 +6,14 @@ java_library(
     ],
     deps = [
         "//third-party/java/d8:d8",
+        "//third-party/java/guava:guava",
+    ],
+)
+
+java_binary(
+    name = "run_d8_binary",
+    main_class = "com.facebook.buck.android.dex.D8ExecutableMain",
+    deps = [
+        ":dex",
     ],
 )
