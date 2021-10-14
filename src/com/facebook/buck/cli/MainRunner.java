@@ -354,7 +354,9 @@ public final class MainRunner {
           // Windows
           ExactPathMatcher.of("$RECYCLE.BIN"),
           // Sublime
-          FileExtensionMatcher.of("sublime-workspace"));
+          FileExtensionMatcher.of("sublime-workspace"),
+          // Opened but deleted files on an NFS mount
+          GlobPatternMatcher.of("**/.nfs*"));
 
   private static final Logger LOG = Logger.get(MainRunner.class);
 
