@@ -23,7 +23,7 @@ import java.util.Objects;
 /** Represents serialized target info. */
 public class TargetInfo {
   /** Type of buck rule. */
-  public static enum BuckType {
+  public enum BuckType {
     android_binary,
     android_build_config,
     android_library,
@@ -39,18 +39,20 @@ public class TargetInfo {
     prebuilt_jar,
     python_library,
     python_test,
-    robolectric_test
+    robolectric_test,
+    rust_library,
+    rust_binary,
   }
 
   /** IntelliJ Module type. */
-  public static enum IntelliJType {
+  public enum IntelliJType {
     library,
     module,
     module_library
   }
 
   /** Module language. */
-  public static enum ModuleLanguage {
+  public enum ModuleLanguage {
     JAVA,
     KOTLIN,
     SCALA
