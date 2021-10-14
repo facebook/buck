@@ -311,10 +311,7 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testPrimaryDexOnlyIncludesSpecifiedClasses() throws IOException {
     Path apkPath =
-        workspace.buildAndReturnOutput(
-            "//apps/multidex:app_with_sample_class_in_primary",
-            "-c",
-            "java.is_pre_dex_per_class_primary_dex_matching=true");
+        workspace.buildAndReturnOutput("//apps/multidex:app_with_sample_class_in_primary");
 
     String primaryDex = "classes.dex";
     String standardSecondaryDex = "assets/secondary-program-dex-jars/secondary-1_1.dex.jar";
@@ -347,10 +344,7 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
     workspace.replaceFileContents(
         "apps/multidex/BUCK", "# ADDED_IN_PRIMARY_CLASS_NAMES_TEST", "\"/Sample2^\"");
     Path newApkPath =
-        workspace.buildAndReturnOutput(
-            "//apps/multidex:app_with_sample_class_in_primary",
-            "-c",
-            "java.is_pre_dex_per_class_primary_dex_matching=true");
+        workspace.buildAndReturnOutput("//apps/multidex:app_with_sample_class_in_primary");
 
     String newPrimaryDex = "classes.dex";
     String newStandardSecondaryDex = "assets/secondary-program-dex-jars/secondary-1_1.dex.jar";
@@ -384,9 +378,7 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
   public void testPrimaryDexOnlyIncludesSpecifiedClassesWithRawCompression() throws IOException {
     Path apkPath =
         workspace.buildAndReturnOutput(
-            "//apps/multidex:app_with_sample_class_in_primary_and_raw_compression",
-            "-c",
-            "java.is_pre_dex_per_class_primary_dex_matching=true");
+            "//apps/multidex:app_with_sample_class_in_primary_and_raw_compression");
 
     String primaryDex = "classes.dex";
     String standardSecondaryDex = "classes2.dex";
@@ -420,9 +412,7 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
         "\"/Sample2^\"");
     Path newApkPath =
         workspace.buildAndReturnOutput(
-            "//apps/multidex:app_with_sample_class_in_primary_and_raw_compression",
-            "-c",
-            "java.is_pre_dex_per_class_primary_dex_matching=true");
+            "//apps/multidex:app_with_sample_class_in_primary_and_raw_compression");
 
     String newPrimaryDex = "classes.dex";
     String newStandardSecondaryDex = "classes2.dex";
@@ -454,9 +444,7 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
   public void testPrimaryDexOnlyIncludesSpecifiedClassesWithXZCompression() throws IOException {
     Path apkPath =
         workspace.buildAndReturnOutput(
-            "//apps/multidex:app_with_sample_class_in_primary_and_xz_compression",
-            "-c",
-            "java.is_pre_dex_per_class_primary_dex_matching=true");
+            "//apps/multidex:app_with_sample_class_in_primary_and_xz_compression");
 
     String primaryDex = "classes.dex";
     String standardSecondaryDex = "assets/secondary-program-dex-jars/secondary-1.dex.jar.xz";
@@ -492,9 +480,7 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
         "\"/Sample2^\"");
     Path newApkPath =
         workspace.buildAndReturnOutput(
-            "//apps/multidex:app_with_sample_class_in_primary_and_xz_compression",
-            "-c",
-            "java.is_pre_dex_per_class_primary_dex_matching=true");
+            "//apps/multidex:app_with_sample_class_in_primary_and_xz_compression");
 
     String newPrimaryDex = "classes.dex";
     String newStandardSecondaryDex = "assets/secondary-program-dex-jars/secondary-1.dex.jar.xz";
@@ -528,9 +514,7 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
   public void testPrimaryDexOnlyIncludesSpecifiedClassesWithXZSCompression() throws IOException {
     Path apkPath =
         workspace.buildAndReturnOutput(
-            "//apps/multidex:app_with_sample_class_in_primary_and_xzs_compression",
-            "-c",
-            "java.is_pre_dex_per_class_primary_dex_matching=true");
+            "//apps/multidex:app_with_sample_class_in_primary_and_xzs_compression");
 
     ZipInspector zipInspector = new ZipInspector(apkPath);
 
@@ -608,9 +592,7 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
         "\"/Sample2^\"");
     Path newApkPath =
         workspace.buildAndReturnOutput(
-            "//apps/multidex:app_with_sample_class_in_primary_and_xzs_compression",
-            "-c",
-            "java.is_pre_dex_per_class_primary_dex_matching=true");
+            "//apps/multidex:app_with_sample_class_in_primary_and_xzs_compression");
 
     DexTestUtils.validateMetadata(newApkPath);
 

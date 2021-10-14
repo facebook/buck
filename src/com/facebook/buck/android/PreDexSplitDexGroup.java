@@ -100,8 +100,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final ImmutableList<SourcePath> preDexInputs;
 
-  @AddToRuleKey private final boolean isPerClassPrimaryDexMatching;
-
   public PreDexSplitDexGroup(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -114,8 +112,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       ListeningExecutorService dxExecutorService,
       int xzCompressionLevel,
       Optional<Integer> groupIndex,
-      int secondaryDexWeightLimit,
-      boolean isPerClassPrimaryDexMatching) {
+      int secondaryDexWeightLimit) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
     this.dexSplitMode = dexSplitMode;
@@ -131,7 +128,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             .map(DexProducedFromJavaLibrary::getSourcePathToDex)
             .collect(ImmutableList.toImmutableList());
     this.secondaryDexWeightLimit = secondaryDexWeightLimit;
-    this.isPerClassPrimaryDexMatching = isPerClassPrimaryDexMatching;
   }
 
   public List<DexWithClasses> getDexWithClasses() {
@@ -231,10 +227,8 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
           @Override
           public StepExecutionResult execute(StepExecutionContext context) throws IOException {
             ImmutableList.Builder<String> classNames = ImmutableList.builder();
-            if (isPerClassPrimaryDexMatching) {
-              result.primaryDexInputs.forEach(
-                  primaryDexInput -> classNames.addAll(primaryDexInput.classNames));
-            }
+            result.primaryDexInputs.forEach(
+                primaryDexInput -> classNames.addAll(primaryDexInput.classNames));
 
             writePrimaryDexClassNames(primaryDexClassNamesPath, classNames.build());
             return StepExecutionResults.SUCCESS;

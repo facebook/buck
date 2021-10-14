@@ -167,7 +167,10 @@ public class D8Step extends IsolatedStep {
 
   private boolean isOverloadedDexException(CompilationFailedException e) {
     return e.getCause() instanceof AbortException
-        && e.getCause().getMessage().contains("Cannot fit requested classes in a single dex file");
+        && (e.getCause().getMessage().contains("Cannot fit requested classes in a single dex file")
+            || e.getCause()
+                .getMessage()
+                .contains("Cannot fit requested classes in the main-dex file"));
   }
 
   private void postCompilationFailureToConsole(

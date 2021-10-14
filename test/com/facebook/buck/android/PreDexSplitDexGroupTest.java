@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
@@ -69,16 +68,6 @@ public class PreDexSplitDexGroupTest {
 
   @Test
   public void testWritesPrimaryDexClassNames() throws IOException, InterruptedException {
-    runTestWritesPrimaryDexClassNames(true);
-  }
-
-  @Test
-  public void testDoesNotWritePrimaryDexClassNames() throws IOException, InterruptedException {
-    runTestWritesPrimaryDexClassNames(false);
-  }
-
-  private void runTestWritesPrimaryDexClassNames(boolean writesNames)
-      throws IOException, InterruptedException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
@@ -132,8 +121,7 @@ public class PreDexSplitDexGroupTest {
             MoreExecutors.newDirectExecutorService(),
             0,
             Optional.empty(),
-            10000,
-            writesNames);
+            10000);
 
     ImmutableList<Step> buildSteps =
         preDexSplitDexGroup.getBuildSteps(buildContext, new FakeBuildableContext());
@@ -149,10 +137,6 @@ public class PreDexSplitDexGroupTest {
     Optional<String> primaryDexFile =
         projectFilesystem.readFileIfItExists(preDexSplitDexGroup.getPrimaryDexClassNamesPath());
     assertTrue(primaryDexFile.isPresent());
-    if (writesNames) {
-      assertTrue(primaryDexFile.get().contains("com/example/Primary"));
-    } else {
-      assertFalse(primaryDexFile.get().contains("com/example/Primary"));
-    }
+    assertTrue(primaryDexFile.get().contains("com/example/Primary"));
   }
 }

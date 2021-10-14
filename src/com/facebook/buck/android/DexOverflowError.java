@@ -99,7 +99,9 @@ public class DexOverflowError {
     }
 
     StringBuilder builder = new StringBuilder();
-    boolean primaryDexOverflow = d8Step.getOutputDexFile().endsWith("classes.dex");
+    boolean primaryDexOverflow =
+        d8Step.getOutputDexFile().endsWith("classes.dex")
+            || d8Step.getOutputDexFile().toString().contains("primaryDex");
     String overflowName = type.name().toLowerCase();
     if (primaryDexOverflow) {
       builder.append(String.format(PRIMARY_DEX_OVERFLOW_MESSAGE, overflowName));

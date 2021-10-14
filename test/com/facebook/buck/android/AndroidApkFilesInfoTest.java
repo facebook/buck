@@ -123,8 +123,7 @@ public class AndroidApkFilesInfoTest {
           apkModuleGraph,
           null,
           MoreExecutors.newDirectExecutorService(),
-          XzStep.DEFAULT_COMPRESSION_LEVEL,
-          /* isPerClassPrimaryDexMatching */ true);
+          XzStep.DEFAULT_COMPRESSION_LEVEL);
     }
 
     @Override

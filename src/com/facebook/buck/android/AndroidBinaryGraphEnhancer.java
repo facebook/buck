@@ -156,7 +156,6 @@ public class AndroidBinaryGraphEnhancer {
   private final int rDotJavaWeightFactor;
   private final int secondaryDexWeightLimit;
   private final ImmutableSet<String> resourcePackagesToExclude;
-  private final boolean isPreDexPerClassPrimaryDexMatching;
 
   AndroidBinaryGraphEnhancer(
       ToolchainProvider toolchainProvider,
@@ -327,7 +326,6 @@ public class AndroidBinaryGraphEnhancer {
     this.rDotJavaWeightFactor = rDotJavaWeightFactor;
     this.secondaryDexWeightLimit = secondaryDexWeightLimit;
     this.resourcePackagesToExclude = resourcePackagesToExclude;
-    this.isPreDexPerClassPrimaryDexMatching = javaBuckConfig.isPreDexPerClassPrimaryDexMatching();
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() {
@@ -801,8 +799,7 @@ public class AndroidBinaryGraphEnhancer {
         dxExecutorService,
         xzCompressionLevel,
         group,
-        secondaryDexWeightLimit,
-        isPreDexPerClassPrimaryDexMatching);
+        secondaryDexWeightLimit);
   }
 
   /**
@@ -925,8 +922,7 @@ public class AndroidBinaryGraphEnhancer {
             apkModuleGraph,
             dexGroupRules,
             dxExecutorService,
-            xzCompressionLevel,
-            isPreDexPerClassPrimaryDexMatching);
+            xzCompressionLevel);
     graphBuilder.addToIndex(superDexMergeRule);
 
     return superDexMergeRule;
