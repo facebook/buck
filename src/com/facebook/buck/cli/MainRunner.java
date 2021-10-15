@@ -1445,7 +1445,8 @@ public final class MainRunner {
           counterRegistry.registerCounters(
               parserAndCaches.getParser().getPermState().getCounters());
 
-          if (logBuckConfig.isLogFileChangesEnabled()) {
+          if (logBuckConfig.isLogFileChangesEnabled()
+              && command.subcommand instanceof BuildCommand) {
             WatchmanRecordChecker checker =
                 new WatchmanRecordChecker(
                     watchman,
