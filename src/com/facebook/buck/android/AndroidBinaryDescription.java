@@ -249,7 +249,6 @@ public class AndroidBinaryDescription
         args.getPrimaryDexScenarioFile(),
         args.isPrimaryDexScenarioOverflowAllowed(),
         args.getSecondaryDexHeadClassesFile(),
-        args.getSecondaryDexTailClassesFile(),
         args.isAllowRDotJavaInSecondaryDex());
   }
 
@@ -328,8 +327,6 @@ public class AndroidBinaryDescription
     }
 
     abstract Optional<SourcePath> getSecondaryDexHeadClassesFile();
-
-    abstract Optional<SourcePath> getSecondaryDexTailClassesFile();
 
     abstract Optional<SourcePath> getAndroidAppModularityResult();
 

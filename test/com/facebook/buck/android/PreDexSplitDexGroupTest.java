@@ -111,7 +111,6 @@ public class PreDexSplitDexGroupTest {
                 /* primaryDexScenarioFile */ Optional.empty(),
                 /* isPrimaryDexScenarioOverflowAllowed */ false,
                 /* secondaryDexHeadClassesFile */ Optional.empty(),
-                /* secondaryDexTailClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
             moduleGraph,
             moduleGraph.getRootAPKModule(),

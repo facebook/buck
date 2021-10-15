@@ -42,7 +42,6 @@ class DexSplitMode implements AddsToRuleKey {
           /* primaryDexScenarioFile */ Optional.empty(),
           /* isPrimaryDexScenarioOverflowAllowed */ false,
           /* secondaryDexHeadClassesFile */ Optional.empty(),
-          /* secondaryDexTailClassesFile */ Optional.empty(),
           /* allowRDotJavaInSecondaryDex */ false);
 
   /**
@@ -117,18 +116,6 @@ class DexSplitMode implements AddsToRuleKey {
   @AddToRuleKey private final Optional<SourcePath> secondaryDexHeadClassesFile;
 
   /**
-   * File that whitelists the class files that should be in the last secondary dexes.
-   *
-   * <p>Values in this file must match JAR entries (without the .class suffix), so they should
-   * contain path separators. For example:
-   *
-   * <pre>
-   * java/util/Map$Entry
-   * </pre>
-   */
-  @AddToRuleKey private final Optional<SourcePath> secondaryDexTailClassesFile;
-
-  /**
    * Boolean identifying whether we should allow the dex splitting to move R classes into secondary
    * dex files.
    */
@@ -147,7 +134,6 @@ class DexSplitMode implements AddsToRuleKey {
    *     to proceed on a best-effort basis (true).
    * @param secondaryDexHeadClassesFile Path to a file containing a list of classes that are put in
    *     the first secondary dexes.
-   * @param secondaryDexTailClassesFile Path to a file containing a list of classes that are put in
    * @param allowRDotJavaInSecondaryDex whether to allow R.java classes in the secondary dex files
    */
   public DexSplitMode(
@@ -162,7 +148,6 @@ class DexSplitMode implements AddsToRuleKey {
       Optional<SourcePath> primaryDexScenarioFile,
       boolean isPrimaryDexScenarioOverflowAllowed,
       Optional<SourcePath> secondaryDexHeadClassesFile,
-      Optional<SourcePath> secondaryDexTailClassesFile,
       boolean allowRDotJavaInSecondaryDex) {
     this.shouldSplitDex = shouldSplitDex;
     this.dexSplitStrategy = dexSplitStrategy;
@@ -175,7 +160,6 @@ class DexSplitMode implements AddsToRuleKey {
     this.primaryDexScenarioFile = primaryDexScenarioFile;
     this.isPrimaryDexScenarioOverflowAllowed = isPrimaryDexScenarioOverflowAllowed;
     this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
-    this.secondaryDexTailClassesFile = secondaryDexTailClassesFile;
     this.allowRDotJavaInSecondaryDex = allowRDotJavaInSecondaryDex;
   }
 
@@ -188,7 +172,6 @@ class DexSplitMode implements AddsToRuleKey {
       Optional<SourcePath> primaryDexScenarioFile,
       boolean isPrimaryDexScenarioOverflowAllowed,
       Optional<SourcePath> secondaryDexHeadClassesFile,
-      Optional<SourcePath> secondaryDexTailClassesFile,
       boolean allowRDotJavaInSecondaryDex) {
     this(
         shouldSplitDex,
@@ -202,7 +185,6 @@ class DexSplitMode implements AddsToRuleKey {
         primaryDexScenarioFile,
         isPrimaryDexScenarioOverflowAllowed,
         secondaryDexHeadClassesFile,
-        secondaryDexTailClassesFile,
         allowRDotJavaInSecondaryDex);
   }
 
@@ -249,10 +231,6 @@ class DexSplitMode implements AddsToRuleKey {
 
   public Optional<SourcePath> getSecondaryDexHeadClassesFile() {
     return secondaryDexHeadClassesFile;
-  }
-
-  public Optional<SourcePath> getSecondaryDexTailClassesFile() {
-    return secondaryDexTailClassesFile;
   }
 
   public boolean isAllowRDotJavaInSecondaryDex() {

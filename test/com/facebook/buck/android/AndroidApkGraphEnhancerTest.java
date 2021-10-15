@@ -531,7 +531,6 @@ public class AndroidApkGraphEnhancerTest {
             Optional.empty(),
             false,
             Optional.empty(),
-            Optional.empty(),
             false);
 
     AndroidBinaryGraphEnhancer graphEnhancer =
@@ -669,7 +668,6 @@ public class AndroidApkGraphEnhancerTest {
             ImmutableList.of(),
             Optional.empty(),
             false,
-            Optional.empty(),
             Optional.empty(),
             false);
 

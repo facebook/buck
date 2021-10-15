@@ -50,12 +50,10 @@ public interface ZipSplitterFactory {
    *     output zip file. Note that this is referring to the entries contained within {@code
    *     inFiles}, not the input files themselves.
    * @param secondaryHeadSet list of classes to include in the primary dex until it is full
-   * @param secondaryTailSet list of classes to include last in the secondary dex
    * @param additionalDexStores mapping of APKModules to module names for creating additional dex
    *     stores beyond the primary and secondary dex
    * @param rootAPKModule
    * @param reportDir Directory where to publish a report of which classes were written to which zip
-   *     files with a corresponding size estimate.
    */
   ZipSplitter newInstance(
       ProjectFilesystem filesystem,
@@ -66,7 +64,6 @@ public interface ZipSplitterFactory {
       Path outDexStoresDir,
       Predicate<String> requiredInPrimaryZip,
       ImmutableSet<String> secondaryHeadSet,
-      ImmutableSet<String> secondaryTailSet,
       ImmutableMultimap<APKModule, String> additionalDexStores,
       APKModule rootAPKModule,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,

@@ -117,7 +117,7 @@ public class AndroidApkFilesInfoTest {
               /* primaryDexScenarioFile */ Optional.empty(),
               /* isPrimaryDexScenarioOverflowAllowed */ false,
               /* secondaryDexHeadClassesFile */ Optional.empty(),
-              /* secondaryDexTailClassesFile */ Optional.empty(),
+              /* secondaryDexTailClassesFile */
               /* allowRDotJavaInSecondaryDex */ false),
           apkModuleGraph,
           null,

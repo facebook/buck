@@ -235,7 +235,6 @@ public class AndroidBundleDescription
         args.getPrimaryDexScenarioFile(),
         args.isPrimaryDexScenarioOverflowAllowed(),
         args.getSecondaryDexHeadClassesFile(),
-        args.getSecondaryDexTailClassesFile(),
         args.isAllowRDotJavaInSecondaryDex());
   }
 
@@ -302,8 +301,6 @@ public class AndroidBundleDescription
     }
 
     abstract Optional<SourcePath> getSecondaryDexHeadClassesFile();
-
-    abstract Optional<SourcePath> getSecondaryDexTailClassesFile();
 
     abstract Optional<SourcePath> getBundleConfigFile();
 

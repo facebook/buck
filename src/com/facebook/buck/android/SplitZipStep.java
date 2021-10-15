@@ -92,7 +92,6 @@ public class SplitZipStep implements Step {
 
   private final Optional<Path> primaryDexScenarioFile;
   private final Optional<Path> secondaryDexHeadClassesFile;
-  private final Optional<Path> secondaryDexTailClassesFile;
   private final ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap;
   private final APKModule rootAPKModule;
 
@@ -130,7 +129,6 @@ public class SplitZipStep implements Step {
       DexSplitMode dexSplitMode,
       Optional<Path> primaryDexScenarioFile,
       Optional<Path> secondaryDexHeadClassesFile,
-      Optional<Path> secondaryDexTailClassesFile,
       ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
       ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap,
       APKModule rootAPKModule,
@@ -149,7 +147,6 @@ public class SplitZipStep implements Step {
     this.dexSplitMode = dexSplitMode;
     this.primaryDexScenarioFile = primaryDexScenarioFile;
     this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
-    this.secondaryDexTailClassesFile = secondaryDexTailClassesFile;
     this.apkModuleToJarPathMap = apkModuleToJarPathMap;
     this.pathToReportDir = pathToReportDir;
     this.rootAPKModule = rootAPKModule;
@@ -176,7 +173,6 @@ public class SplitZipStep implements Step {
     ImmutableSet<String> wantedInPrimaryZip =
         getWantedPrimaryDexEntries(translatorFactory, classes);
     ImmutableSet<String> secondaryHeadSet = getSecondaryHeadSet(translatorFactory);
-    ImmutableSet<String> secondaryTailSet = getSecondaryTailSet(translatorFactory);
     ImmutableMultimap<APKModule, String> additionalDexStoreClasses =
         APKModuleGraph.getAPKModuleToClassesMap(
             apkModuleToJarPathMap,
@@ -202,7 +198,6 @@ public class SplitZipStep implements Step {
                 additionalDexStoreJarDir,
                 requiredInPrimaryZip,
                 secondaryHeadSet,
-                secondaryTailSet,
                 additionalDexStoreClasses,
                 rootAPKModule,
                 dexSplitMode.getDexSplitStrategy(),
@@ -303,28 +298,6 @@ public class SplitZipStep implements Step {
 
     if (secondaryDexHeadClassesFile.isPresent()) {
       filesystem.readLines(secondaryDexHeadClassesFile.get()).stream()
-          .map(String::trim)
-          .filter(SplitZipStep::isNeitherEmptyNorComment)
-          .map(translatorFactory.createObfuscationFunction())
-          .forEach(builder::add);
-    }
-
-    return builder.build();
-  }
-  /**
-   * Construct a {@link Set} of internal class names that must go into the beginning of the
-   * secondary dexes.
-   *
-   * <p>
-   *
-   * @return ImmutableSet of class internal names.
-   */
-  private ImmutableSet<String> getSecondaryTailSet(ProguardTranslatorFactory translatorFactory)
-      throws IOException {
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-
-    if (secondaryDexTailClassesFile.isPresent()) {
-      filesystem.readLines(secondaryDexTailClassesFile.get()).stream()
           .map(String::trim)
           .filter(SplitZipStep::isNeitherEmptyNorComment)
           .map(translatorFactory.createObfuscationFunction())

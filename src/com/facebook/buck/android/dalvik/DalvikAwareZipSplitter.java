@@ -36,7 +36,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -76,7 +75,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private final DalvikStatsCache dalvikStatsCache;
   private final DexSplitStrategy dexSplitStrategy;
   private final ImmutableSet<String> secondaryHeadSet;
-  private final ImmutableSet<String> secondaryTailSet;
   @Nullable private final ImmutableMultimap<String, APKModule> classPathToDexStore;
 
   private final MySecondaryDexHelper secondaryDexWriter;
@@ -98,7 +96,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       Predicate<String> requiredInPrimaryZip,
       Set<String> wantedInPrimaryZip,
       ImmutableSet<String> secondaryHeadSet,
-      ImmutableSet<String> secondaryTailSet,
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
       APKModule rootAPKModule,
       DexSplitStrategy dexSplitStrategy,
@@ -115,7 +112,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     this.requiredInPrimaryZip = requiredInPrimaryZip;
     this.wantedInPrimaryZip = ImmutableSet.copyOf(wantedInPrimaryZip);
     this.secondaryHeadSet = secondaryHeadSet;
-    this.secondaryTailSet = secondaryTailSet;
     this.classPathToDexStore = additionalDexStoreSets.inverse();
     for (APKModule dexStore : additionalDexStoreSets.keySet()) {
       if (!dexStore.equals(rootAPKModule)) {
@@ -149,7 +145,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       Predicate<String> requiredInPrimaryZip,
       Set<String> wantedInPrimaryZip,
       ImmutableSet<String> secondaryHeadSet,
-      ImmutableSet<String> secondaryTailSet,
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
       APKModule rootAPKModule,
       DexSplitStrategy dexSplitStrategy,
@@ -167,7 +162,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         requiredInPrimaryZip,
         wantedInPrimaryZip,
         secondaryHeadSet,
-        secondaryTailSet,
         additionalDexStoreSets,
         rootAPKModule,
         dexSplitStrategy,
@@ -177,7 +171,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   @Override
   public ImmutableMultimap<APKModule, Path> execute() throws IOException {
     ClasspathTraverser classpathTraverser = new DefaultClasspathTraverser();
-    Set<String> secondaryTail = new HashSet<String>();
 
     // Start out by writing the primary zip and recording which entries were added to it.
     primaryOut = newZipOutput(outPrimary);
@@ -211,9 +204,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
             } else if (wantedInPrimaryZip.contains(relativePath)
                 || (secondaryHeadSet != null && secondaryHeadSet.contains(relativePath))) {
               entriesBuilder.put(relativePath, new BufferedFileLike(entry));
-            } else if (secondaryTailSet != null && secondaryTailSet.contains(relativePath)) {
-              entriesBuilder.put(relativePath, new BufferedFileLike(entry));
-              secondaryTail.add(relativePath);
             } else {
               ImmutableCollection<APKModule> containingModule = classPathToDexStore.get(classPath);
               if (!containingModule.isEmpty()) {
@@ -282,23 +272,10 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
               if (secondaryHeadSet != null && secondaryHeadSet.contains(relativePath)) {
                 return;
               }
-              if (secondaryTail.contains(relativePath)) {
-                return;
-              }
               secondaryDexWriter.getOutputToWriteTo(entry).putEntry(entry);
             }
           }
         });
-    if (secondaryTailSet != null) {
-      for (String tail : secondaryTailSet) {
-        FileLike tailEntry = entries.get(tail);
-        if ((tailEntry != null)
-            && !primaryOut.containsEntry(tailEntry)
-            && secondaryTail.contains(tail)) {
-          secondaryDexWriter.getOutputToWriteTo(tailEntry).putEntry(tailEntry);
-        }
-      }
-    }
     primaryOut.close();
     secondaryDexWriter.close();
 
