@@ -19,7 +19,6 @@ package com.facebook.buck.util.zip.collect;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -57,9 +56,7 @@ public class ZipEntrySourceCollectionWriterTest {
 
     ZipEntrySourceCollection collection = builder.build();
 
-    ZipEntrySourceCollectionWriter writer =
-        new ZipEntrySourceCollectionWriter(
-            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
+    ZipEntrySourceCollectionWriter writer = new ZipEntrySourceCollectionWriter(tmp.getRoot());
 
     AbsPath output = tmp.newFolder("output").resolve("output.zip");
     writer.copyToZip(collection, output.getPath());
@@ -84,9 +81,7 @@ public class ZipEntrySourceCollectionWriterTest {
 
     ZipEntrySourceCollection collection = builder.build();
 
-    ZipEntrySourceCollectionWriter writer =
-        new ZipEntrySourceCollectionWriter(
-            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
+    ZipEntrySourceCollectionWriter writer = new ZipEntrySourceCollectionWriter(tmp.getRoot());
 
     AbsPath output = tmp.newFolder("output").resolve("output.zip");
     writer.copyToZip(collection, output.getPath());
@@ -109,9 +104,7 @@ public class ZipEntrySourceCollectionWriterTest {
 
     ZipEntrySourceCollection collection = builder.build();
 
-    ZipEntrySourceCollectionWriter writer =
-        new ZipEntrySourceCollectionWriter(
-            TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
+    ZipEntrySourceCollectionWriter writer = new ZipEntrySourceCollectionWriter(tmp.getRoot());
 
     AbsPath output = tmp.newFolder("output").resolve("output.zip");
     writer.copyToZip(collection, output.getPath());

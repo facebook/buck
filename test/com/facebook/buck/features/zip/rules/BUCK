@@ -17,6 +17,7 @@ standard_java_test(
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/step:testutil",
         "//test/com/facebook/buck/testutil:testutil",
+        "//src/com/facebook/buck/step/isolatedsteps:isolatedsteps",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/commons-compress:commons-compress",
         "//third-party/java/guava:guava",

@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -38,10 +39,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildable {
+
   @AddToRuleKey private final String name;
   @AddToRuleKey private final ImmutableSet<SourcePath> sources;
   @AddToRuleKey private final ImmutableList<SourcePath> zipSources;
@@ -74,26 +75,21 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
       ProjectFilesystem filesystem,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    RelPath outputPath = outputPathResolver.resolvePath(this.output);
-
-    SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
+    RelPath outputPath = outputPathResolver.resolvePath(output);
+    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
+    CellRelativePath cellRelativeBasePath = getBuildTarget().getCellRelativeBasePath();
     ImmutableMap<Path, AbsPath> entryPathToAbsolutePathMap =
-        sourcePathResolverAdapter.createRelativeMap(
-            filesystem.resolve(
-                getBuildTarget()
-                    .getCellRelativeBasePath()
-                    .getPath()
-                    .toPath(filesystem.getFileSystem())),
-            sources);
+        sourcePathResolver.createRelativeMap(
+            filesystem.resolve(cellRelativeBasePath.getPath()).getPath(), sources);
     return ImmutableList.of(
         new CopyToZipStep(
-            filesystem,
-            outputPath.getPath(),
+            outputPath,
             entryPathToAbsolutePathMap.entrySet().stream()
                 .collect(
-                    ImmutableMap.toImmutableMap(Map.Entry::getKey, e -> e.getValue().getPath())),
+                    ImmutableMap.toImmutableMap(
+                        e -> RelPath.of(e.getKey()), e -> filesystem.relativize(e.getValue()))),
             zipSources.stream()
-                .map(sourcePath -> sourcePathResolverAdapter.getAbsolutePath(sourcePath).getPath())
+                .map(s -> sourcePathResolver.getRelativePath(filesystem, s))
                 .collect(ImmutableList.toImmutableList()),
             entriesToExclude,
             onDuplicateEntry));

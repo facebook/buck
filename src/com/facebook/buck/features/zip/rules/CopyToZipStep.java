@@ -16,13 +16,16 @@
 
 package com.facebook.buck.features.zip.rules;
 
-import com.facebook.buck.core.build.execution.context.StepExecutionContext;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.zip.collect.OnDuplicateEntry;
 import com.facebook.buck.util.zip.collect.ZipEntrySourceCollection;
 import com.facebook.buck.util.zip.collect.ZipEntrySourceCollectionBuilder;
@@ -32,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -41,62 +43,81 @@ import java.util.regex.Pattern;
  *
  * <p>This implementation does not use filesystem to store files temporarily.
  */
-public class CopyToZipStep implements Step {
+public class CopyToZipStep extends IsolatedStep {
 
-  private final ProjectFilesystem projectFilesystem;
-  private final Path outputPath;
-  private final ImmutableMap<Path, Path> entryPathToAbsolutePathMap;
-  private final ImmutableList<Path> zipSourceAbsolutePaths;
+  private final RelPath outputPath;
+  private final ImmutableMap<RelPath, RelPath> entryMap;
+  private final ImmutableList<RelPath> zipSources;
   private final ImmutableSet<Pattern> entriesToExclude;
   private final OnDuplicateEntry onDuplicateEntry;
 
   public CopyToZipStep(
-      ProjectFilesystem projectFilesystem,
-      Path outputPath,
-      ImmutableMap<Path, Path> entryPathToAbsolutePathMap,
-      ImmutableList<Path> zipSourceAbsolutePaths,
+      RelPath outputPath,
+      ImmutableMap<RelPath, RelPath> entryMap,
+      ImmutableList<RelPath> zipSources,
       ImmutableSet<Pattern> entriesToExclude,
       OnDuplicateEntry onDuplicateEntry) {
     this.outputPath = outputPath;
-    this.zipSourceAbsolutePaths = zipSourceAbsolutePaths;
-    this.projectFilesystem = projectFilesystem;
-    this.entryPathToAbsolutePathMap = entryPathToAbsolutePathMap;
+    this.zipSources = zipSources;
+    this.entryMap = entryMap;
     this.entriesToExclude = entriesToExclude;
     this.onDuplicateEntry = onDuplicateEntry;
   }
 
   @Override
-  public StepExecutionResult execute(StepExecutionContext context)
+  public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
-    if (projectFilesystem.exists(outputPath)) {
+    AbsPath ruleCellRoot = context.getRuleCellRoot();
+    if (ProjectFilesystemUtils.exists(ruleCellRoot, outputPath.getPath())) {
       context.postEvent(
           ConsoleEvent.severe("Attempting to overwrite an existing zip: %s", outputPath));
       return StepExecutionResults.ERROR;
     }
 
-    ZipEntrySourceCollection zipEntrySourceCollection = buildCollection();
     try {
-      new ZipEntrySourceCollectionWriter(projectFilesystem)
-          .copyToZip(zipEntrySourceCollection, outputPath);
+      createZipFile(
+          ruleCellRoot, entryMap, zipSources, entriesToExclude, onDuplicateEntry, outputPath);
       return StepExecutionResults.SUCCESS;
     } catch (IOException e) {
       throw new HumanReadableException(e, "Cannot create zip %s: %s", outputPath, e.getMessage());
     }
   }
 
-  private ZipEntrySourceCollection buildCollection() {
+  private static void createZipFile(
+      AbsPath ruleCellRoot,
+      ImmutableMap<RelPath, RelPath> entryMap,
+      ImmutableList<RelPath> zipSources,
+      ImmutableSet<Pattern> entriesToExclude,
+      OnDuplicateEntry onDuplicateEntry,
+      RelPath outputPath)
+      throws IOException {
+    ZipEntrySourceCollection zipEntrySourceCollection =
+        buildCollection(ruleCellRoot, entryMap, zipSources, entriesToExclude, onDuplicateEntry);
+    new ZipEntrySourceCollectionWriter(ruleCellRoot)
+        .copyToZip(zipEntrySourceCollection, outputPath.getPath());
+  }
+
+  private static ZipEntrySourceCollection buildCollection(
+      AbsPath ruleCellRoot,
+      ImmutableMap<RelPath, RelPath> entryMap,
+      ImmutableList<RelPath> zipSources,
+      ImmutableSet<Pattern> entriesToExclude,
+      OnDuplicateEntry onDuplicateEntry) {
     ZipEntrySourceCollectionBuilder builder =
         new ZipEntrySourceCollectionBuilder(entriesToExclude, onDuplicateEntry);
-    for (Path zipPath : zipSourceAbsolutePaths) {
+    for (RelPath zipPath : zipSources) {
+      AbsPath zipSourceAbsPath = ruleCellRoot.resolve(zipPath);
       try {
-        builder.addZipFile(zipPath);
+        builder.addZipFile(zipSourceAbsPath.getPath());
       } catch (IOException e) {
         throw new HumanReadableException(
-            e, "Error while reading archive entries from %s: %s", zipPath, e.getMessage());
+            e, "Error while reading archive entries from %s: %s", zipSourceAbsPath, e.getMessage());
       }
     }
-    for (Map.Entry<Path, Path> pathEntry : entryPathToAbsolutePathMap.entrySet()) {
-      builder.addFile(pathEntry.getKey().toString(), pathEntry.getValue());
+    for (Map.Entry<RelPath, RelPath> pathEntry : entryMap.entrySet()) {
+      String entryName = pathEntry.getKey().toString();
+      AbsPath entryAbsPath = ruleCellRoot.resolve(pathEntry.getValue());
+      builder.addFile(entryName, entryAbsPath.getPath());
     }
     return builder.build();
   }
@@ -107,20 +128,20 @@ public class CopyToZipStep implements Step {
   }
 
   @Override
-  public String getDescription(StepExecutionContext context) {
+  public String getIsolatedStepDescription(IsolatedExecutionContext context) {
     StringBuilder result = new StringBuilder();
     result.append("Create zip archive ").append(outputPath);
-    if (!entryPathToAbsolutePathMap.isEmpty()) {
+    if (!entryMap.isEmpty()) {
       result.append(" with source files [");
-      Joiner.on(", ").withKeyValueSeparator('=').appendTo(result, entryPathToAbsolutePathMap);
+      Joiner.on(", ").withKeyValueSeparator('=').appendTo(result, entryMap);
       result.append("]");
-      if (!zipSourceAbsolutePaths.isEmpty()) {
+      if (!zipSources.isEmpty()) {
         result.append(" and");
       }
     }
-    if (!zipSourceAbsolutePaths.isEmpty()) {
+    if (!zipSources.isEmpty()) {
       result.append(" with source zip files [");
-      Joiner.on(", ").appendTo(result, zipSourceAbsolutePaths);
+      Joiner.on(", ").appendTo(result, zipSources);
       result.append("]");
     }
     if (!entriesToExclude.isEmpty()) {

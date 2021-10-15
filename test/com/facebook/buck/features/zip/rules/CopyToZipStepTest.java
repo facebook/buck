@@ -18,78 +18,56 @@ package com.facebook.buck.features.zip.rules;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.zip.collect.OnDuplicateEntry;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.regex.Pattern;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 public class CopyToZipStepTest {
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths();
-
-  private ProjectFilesystem filesystem;
-  private Path outputPath;
-
-  @Before
-  public void setUp() {
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    outputPath = filesystem.resolve("output.zip").getPath();
-  }
+  private static final RelPath OUTPUT_PATH = RelPath.get("output.zip");
 
   @Test
   public void descriptionWithAllInformation() {
-    AbsPath sourceFile1 = filesystem.resolve("sourceFile1");
-    AbsPath sourceFile2 = filesystem.resolve("sourceFile2");
-    ImmutableMap<Path, Path> sources =
+    RelPath sourceFile1 = RelPath.get("sourceFile1");
+    RelPath sourceFile2 = RelPath.get("sourceFile2");
+    ImmutableMap<RelPath, RelPath> sources =
         ImmutableMap.of(
-            Paths.get("entry1"), sourceFile1.getPath(),
-            Paths.get("entry2"), sourceFile2.getPath());
-    AbsPath zipFile1 = filesystem.resolve("zipFile1");
-    AbsPath zipFile2 = filesystem.resolve("zipFile2");
-    ImmutableList<Path> zipSources = ImmutableList.of(zipFile1.getPath(), zipFile2.getPath());
+            RelPath.get("entry1"), sourceFile1,
+            RelPath.get("entry2"), sourceFile2);
+    RelPath zipFile1 = RelPath.get("zipFile1");
+    RelPath zipFile2 = RelPath.get("zipFile2");
+    ImmutableList<RelPath> zipSources = ImmutableList.of(zipFile1, zipFile2);
     ImmutableSet<Pattern> entriesToExclude =
         ImmutableSet.of(Pattern.compile("e.*"), Pattern.compile("META-INF"));
     CopyToZipStep step =
         new CopyToZipStep(
-            filesystem,
-            outputPath,
-            sources,
-            zipSources,
-            entriesToExclude,
-            OnDuplicateEntry.OVERWRITE);
+            OUTPUT_PATH, sources, zipSources, entriesToExclude, OnDuplicateEntry.OVERWRITE);
 
     String expected =
         String.format(
             "Create zip archive %s with source files [entry1=%s, entry2=%s]"
                 + " and with source zip files [%s, %s] excluding entries matching [e.*, META-INF]",
-            outputPath, sourceFile1, sourceFile2, zipFile1, zipFile2);
+            OUTPUT_PATH, sourceFile1, sourceFile2, zipFile1, zipFile2);
 
-    assertEquals(expected, step.getDescription(TestExecutionContext.newInstance()));
+    assertEquals(expected, step.getIsolatedStepDescription(TestExecutionContext.newInstance()));
   }
 
   @Test
   public void descriptionWithSourcesOnly() {
-    AbsPath sourceFile1 = filesystem.resolve("sourceFile1");
-    AbsPath sourceFile2 = filesystem.resolve("sourceFile2");
-    ImmutableMap<Path, Path> sources =
+    RelPath sourceFile1 = RelPath.get("sourceFile1");
+    RelPath sourceFile2 = RelPath.get("sourceFile2");
+    ImmutableMap<RelPath, RelPath> sources =
         ImmutableMap.of(
-            Paths.get("entry1"), sourceFile1.getPath(),
-            Paths.get("entry2"), sourceFile2.getPath());
+            RelPath.get("entry1"), sourceFile1,
+            RelPath.get("entry2"), sourceFile2);
     CopyToZipStep step =
         new CopyToZipStep(
-            filesystem,
-            outputPath,
+            OUTPUT_PATH,
             sources,
             ImmutableList.of(),
             ImmutableSet.of(),
@@ -98,20 +76,19 @@ public class CopyToZipStepTest {
     String expected =
         String.format(
             "Create zip archive %s with source files [entry1=%s, entry2=%s]",
-            outputPath, sourceFile1, sourceFile2);
+            OUTPUT_PATH, sourceFile1, sourceFile2);
 
-    assertEquals(expected, step.getDescription(TestExecutionContext.newInstance()));
+    assertEquals(expected, step.getIsolatedStepDescription(TestExecutionContext.newInstance()));
   }
 
   @Test
   public void descriptionWithZipSourcesOnly() {
-    AbsPath zipFile1 = filesystem.resolve("zipFile1");
-    AbsPath zipFile2 = filesystem.resolve("zipFile2");
-    ImmutableList<Path> zipSources = ImmutableList.of(zipFile1.getPath(), zipFile2.getPath());
+    RelPath zipFile1 = RelPath.get("zipFile1");
+    RelPath zipFile2 = RelPath.get("zipFile2");
+    ImmutableList<RelPath> zipSources = ImmutableList.of(zipFile1, zipFile2);
     CopyToZipStep step =
         new CopyToZipStep(
-            filesystem,
-            outputPath,
+            OUTPUT_PATH,
             ImmutableMap.of(),
             zipSources,
             ImmutableSet.of(),
@@ -119,8 +96,9 @@ public class CopyToZipStepTest {
 
     String expected =
         String.format(
-            "Create zip archive %s with source zip files [%s, %s]", outputPath, zipFile1, zipFile2);
+            "Create zip archive %s with source zip files [%s, %s]",
+            OUTPUT_PATH, zipFile1, zipFile2);
 
-    assertEquals(expected, step.getDescription(TestExecutionContext.newInstance()));
+    assertEquals(expected, step.getIsolatedStepDescription(TestExecutionContext.newInstance()));
   }
 }

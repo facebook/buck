@@ -16,7 +16,8 @@
 
 package com.facebook.buck.util.zip.collect;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
@@ -43,10 +44,10 @@ import java.util.zip.ZipInputStream;
 /** Writes a {@link ZipEntrySourceCollection} to a zip file. */
 public class ZipEntrySourceCollectionWriter {
 
-  private final ProjectFilesystem projectFilesystem;
+  private final AbsPath rootPath;
 
-  public ZipEntrySourceCollectionWriter(ProjectFilesystem projectFilesystem) {
-    this.projectFilesystem = projectFilesystem;
+  public ZipEntrySourceCollectionWriter(AbsPath rootPath) {
+    this.rootPath = rootPath;
   }
 
   /** Creates a zip archive in a given file by copying all entries listed in the collection. */
@@ -66,7 +67,7 @@ public class ZipEntrySourceCollectionWriter {
                     .put(entry.getEntryName(), entry.getEntryPosition()));
 
     Set<Path> seenFiles = new HashSet<>();
-    try (OutputStream baseOut = projectFilesystem.newFileOutputStream(outputFile);
+    try (OutputStream baseOut = ProjectFilesystemUtils.newFileOutputStream(rootPath, outputFile);
         CustomZipOutputStream zip = ZipOutputStreams.newSimpleOutputStream(baseOut)) {
       for (ZipEntrySource entrySource : collection.getSources()) {
         if (!seenFiles.add(entrySource.getSourceFilePath())) {
@@ -93,7 +94,7 @@ public class ZipEntrySourceCollectionWriter {
    */
   private void addDirectoryEntries(CustomZipOutputStream out, Set<Path> seenFiles, String entryName)
       throws IOException {
-    Path entryPath = projectFilesystem.getPath(entryName).getParent();
+    Path entryPath = ProjectFilesystemUtils.getPath(rootPath, entryName).getParent();
     if (entryPath == null) {
       return;
     }
@@ -115,13 +116,17 @@ public class ZipEntrySourceCollectionWriter {
   private void copyFile(CustomZipOutputStream out, String entryName, Path from) throws IOException {
     CustomZipEntry entry = new CustomZipEntry(entryName);
     entry.setFakeTime();
-    entry.setExternalAttributes(projectFilesystem.getFileAttributesForZipEntry(from));
+    entry.setExternalAttributes(getFileAttributesForZipEntry(from));
 
     out.putNextEntry(entry);
-    try (InputStream input = projectFilesystem.newFileInputStream(from)) {
+    try (InputStream input = ProjectFilesystemUtils.newFileInputStream(rootPath, from)) {
       ByteStreams.copy(input, out);
     }
     out.closeEntry();
+  }
+
+  public long getFileAttributesForZipEntry(Path path) throws IOException {
+    return ProjectFilesystemUtils.getPosixFileModes(rootPath, path) << 16;
   }
 
   private static void copyZip(
