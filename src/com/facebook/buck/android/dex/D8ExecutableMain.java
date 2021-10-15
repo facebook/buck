@@ -18,13 +18,18 @@ package com.facebook.buck.android.dex;
 
 import com.android.tools.r8.CompilationFailedException;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Optional;
 import java.util.logging.Logger; // NOPMD
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Main entry point for executing {@link com.android.tools.r8.D8Command} calls.
@@ -57,6 +62,7 @@ public class D8ExecutableMain {
     Collection<Path> classpathFiles = null;
     Optional<String> bucketId = Optional.empty();
     Optional<Integer> minSdkVersion = Optional.empty();
+    Optional<Path> weightEstimatePath = Optional.empty();
 
     for (int argsConsumed = 3; argsConsumed < args.length; argsConsumed++) {
       String arg = args[argsConsumed];
@@ -93,6 +99,9 @@ public class D8ExecutableMain {
         case "--min-sdk-version":
           minSdkVersion = Optional.of(Integer.parseInt(args[++argsConsumed]));
           break;
+        case "--weight-estimate-path":
+          weightEstimatePath = Optional.of(Paths.get(args[++argsConsumed]));
+          break;
         default:
           throw new RuntimeException("Unknown arg: " + arg);
       }
@@ -113,6 +122,25 @@ public class D8ExecutableMain {
 
       if (referencedResourcesPath.isPresent()) {
         Files.write(referencedResourcesPath.get(), referencedResources);
+      }
+
+      if (weightEstimatePath.isPresent()) {
+        int totalWeightEstimate = 0;
+        try (ZipFile zipFile = new ZipFile(Iterables.getOnlyElement(filesToDex).toFile())) {
+          Enumeration<? extends ZipEntry> entries = zipFile.entries();
+          while (entries.hasMoreElements()) {
+            ZipEntry zipEntry = entries.nextElement();
+            // Ignore non-.class files.
+            if (!zipEntry.getName().endsWith(".class")) {
+              continue;
+            }
+
+            totalWeightEstimate += (int) zipEntry.getSize();
+          }
+        }
+        Files.write(
+            weightEstimatePath.get(),
+            Collections.singletonList(Integer.toString(totalWeightEstimate)));
       }
     } catch (CompilationFailedException e) {
       throw new IOException(e);
