@@ -317,8 +317,8 @@ public class DefaultIsolatedEventBusTest {
       double msWaited = Double.parseDouble(matcher.group(1));
 
       int expectedWaitTime = unlockTheSecondBatchTime - startTheSecondBatchTime;
-      // compare with 5% tolerance
-      assertThat(msWaited, closeTo(expectedWaitTime, expectedWaitTime * 0.05));
+      // compare with 10% tolerance
+      assertThat(msWaited, closeTo(expectedWaitTime, expectedWaitTime * 0.1));
     } finally {
       executorService.shutdownNow();
     }
