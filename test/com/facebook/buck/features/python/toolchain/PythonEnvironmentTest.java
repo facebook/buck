@@ -37,7 +37,7 @@ public class PythonEnvironmentTest {
   @Test
   public void testSerialization() throws IOException {
     String configSection = "python#pypypy";
-    PythonVersion pythonVersion = PythonVersion.of("python", "pypypy-3");
+    PythonVersion pythonVersion = PythonVersion.of("python3", "pypypy-3");
     Path pythonPath = Paths.get("pypypy");
     Path otherPythonPath = Paths.get("pppyyy");
     PythonEnvironment environment =
@@ -74,7 +74,7 @@ public class PythonEnvironmentTest {
             });
 
     assertEquals("pppyyy", reconstructed.getPythonPath().toString());
-    assertEquals("python", reconstructed.getPythonVersion().getInterpreterName());
+    assertEquals("python3", reconstructed.getPythonVersion().getInterpreterName());
     assertEquals("pypypy-3", reconstructed.getPythonVersion().getVersionString());
   }
 }

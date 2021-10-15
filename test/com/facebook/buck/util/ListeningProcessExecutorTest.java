@@ -89,7 +89,7 @@ public class ListeningProcessExecutorTest {
     if (Platform.detect() == Platform.WINDOWS) {
       params =
           ProcessExecutorParams.ofCommand(
-              "python", "-c", "import sys, shutil; shutil.copyfileobj(sys.stdin, sys.stdout)");
+              "python3", "-c", "import sys, shutil; shutil.copyfileobj(sys.stdin, sys.stdout)");
     } else {
       params = ProcessExecutorParams.ofCommand("cat");
     }
@@ -109,7 +109,7 @@ public class ListeningProcessExecutorTest {
     if (Platform.detect() == Platform.WINDOWS) {
       params =
           ProcessExecutorParams.ofCommand(
-              "python", "-c", "import sys, shutil; shutil.copyfileobj(sys.stdin, sys.stdout)");
+              "python3", "-c", "import sys, shutil; shutil.copyfileobj(sys.stdin, sys.stdout)");
     } else {
       params = ProcessExecutorParams.ofCommand("cat");
     }
@@ -185,7 +185,7 @@ public class ListeningProcessExecutorTest {
     CapturingListener listener = new CapturingListener();
     ProcessExecutorParams params;
     if (Platform.detect() == Platform.WINDOWS) {
-      params = ProcessExecutorParams.ofCommand("python", "-c", "import time; time.sleep(50)");
+      params = ProcessExecutorParams.ofCommand("python3", "-c", "import time; time.sleep(50)");
     } else {
       params = ProcessExecutorParams.ofCommand("sleep", "50");
     }

@@ -58,7 +58,7 @@ public class FixEndToEndTest {
     // Not all test environments have properly registered python3 as the .py handler. So,
     // make sure that we run our fix script with a python3 that we find on the path
     return new ExecutableFinder()
-        .getExecutable(Paths.get("python"), EnvVariablesProvider.getSystemEnv())
+        .getExecutable(Paths.get("python3"), EnvVariablesProvider.getSystemEnv())
         .toAbsolutePath();
   }
 

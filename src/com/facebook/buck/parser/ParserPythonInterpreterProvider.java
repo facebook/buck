@@ -31,7 +31,7 @@ import java.util.Optional;
 public class ParserPythonInterpreterProvider {
 
   private static final ImmutableList<String> PYTHON_INTERPRETER_NAMES =
-      ImmutableList.of("python2", "python", "python3");
+      ImmutableList.of("python2", "python3");
 
   private final ParserConfig parserConfig;
   private final ExecutableFinder executableFinder;

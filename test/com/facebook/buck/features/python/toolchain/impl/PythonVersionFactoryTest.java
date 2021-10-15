@@ -37,9 +37,9 @@ public class PythonVersionFactoryTest {
   public void testGetPythonVersion() {
     PythonVersion version =
         PythonVersionFactory.extractPythonVersion(
-            Paths.get("usr", "bin", "python"),
-            new ProcessExecutor.Result(0, "", "CPython 2.7\n", ImmutableList.of()));
-    assertEquals("CPython 2.7", version.toString());
+            Paths.get("usr", "bin", "python3"),
+            new ProcessExecutor.Result(0, "", "CPython 3.7\n", ImmutableList.of()));
+    assertEquals("CPython 3.7", version.toString());
   }
 
   @Test

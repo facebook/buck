@@ -851,7 +851,7 @@ class TestInvocationVariants:
 
     def test_has_plugin(self, request):
         """Test hasplugin function of the plugin manager (#932)."""
-        assert request.config.pluginmanager.hasplugin("python")
+        assert request.config.pluginmanager.hasplugin("python3")
 
 
 class TestDurations:

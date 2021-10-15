@@ -55,8 +55,8 @@ public abstract class UnixUtils extends PlatformUtils {
   @Override
   public String getPython2Executable() {
     return getExecutableFinder()
-        .getOptionalExecutable(Paths.get("python2"), EnvVariablesProvider.getSystemEnv())
+        .getOptionalExecutable(Paths.get("python3"), EnvVariablesProvider.getSystemEnv())
         .map(Path::toString)
-        .orElse("python");
+        .orElse("python3");
   }
 }

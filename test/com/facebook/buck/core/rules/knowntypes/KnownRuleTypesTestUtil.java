@@ -45,11 +45,7 @@ public final class KnownRuleTypesTestUtil {
     // Utility class.
   }
 
-  private static final ImmutableMap<String, String> PYTHONS =
-      ImmutableMap.of(
-          "python", "2.6",
-          "python2", "2.6",
-          "python3", "3.5");
+  private static final ImmutableMap<String, String> PYTHONS = ImmutableMap.of("python3", "3.5");
 
   protected static ImmutableMap<ProcessExecutorParams, FakeProcess> getPythonProcessMap(
       List<String> paths) {

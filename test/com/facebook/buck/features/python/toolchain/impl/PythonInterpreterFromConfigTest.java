@@ -60,7 +60,7 @@ public class PythonInterpreterFromConfigTest {
 
   @Test
   public void whenPythonOnPathIsExecutableFileThenItIsUsed() throws IOException {
-    temporaryFolder.newExecutableFile("python");
+    temporaryFolder.newExecutableFile("python2");
     PythonBuckConfig config =
         new PythonBuckConfig(
             FakeBuckConfig.builder()

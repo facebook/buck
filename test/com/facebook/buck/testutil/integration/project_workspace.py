@@ -27,7 +27,7 @@ def run_buck_process(command, cwd=None):
     if not buck_path:
         raise Exception("TEST_BUCK environment variable must be set for tests")
     if platform.system() == "Windows":
-        args = ["python", buck_path] + list(command)
+        args = ["python3", buck_path] + list(command)
     else:
         args = [buck_path] + list(command)
     # Pass thru our environment, except disabling buckd so that we can be sure the right buck

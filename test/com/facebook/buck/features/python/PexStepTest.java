@@ -58,7 +58,7 @@ import org.junit.Test;
 public class PexStepTest {
 
   private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:target");
-  private static final Path PYTHON_PATH = Paths.get("/usr/local/bin/python");
+  private static final Path PYTHON_PATH = Paths.get("/usr/local/bin/python3");
   private static final PythonVersion PYTHON_VERSION = PythonVersion.of("CPython", "2.6");
   private static final ImmutableMap<String, String> PEX_ENVIRONMENT = ImmutableMap.of();
   private static final ImmutableList<String> PEX_COMMAND = ImmutableList.of();

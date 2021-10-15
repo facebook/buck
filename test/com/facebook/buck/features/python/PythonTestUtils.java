@@ -46,14 +46,14 @@ public class PythonTestUtils {
       new TestPythonPlatform(
           InternalFlavor.of("default-py-platform"),
           new PythonEnvironment(
-              Paths.get("python"),
+              Paths.get("python3"),
               PythonVersion.of("CPython", "2.6"),
               PythonBuckConfig.SECTION,
               UnconfiguredTargetConfiguration.INSTANCE),
           Optional.empty());
 
   public static final FlavorDomain<PythonPlatform> PYTHON_PLATFORMS =
-      FlavorDomain.of("python", PYTHON_PLATFORM);
+      FlavorDomain.of("python3", PYTHON_PLATFORM);
 
   public static Path assumeInterpreter(String name) {
     ExecutableFinder finder = new ExecutableFinder();
