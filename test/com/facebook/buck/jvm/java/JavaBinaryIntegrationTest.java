@@ -27,7 +27,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
-import com.facebook.buck.jvm.java.testutil.Bootclasspath;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -218,18 +217,17 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
 
   @Test
   public void testBootclasspathPathResolution() throws IOException {
-    String systemBootclasspath = Bootclasspath.getJdk8StubJarPath();
     setUpProjectWorkspaceForScenario("fat_jar");
 
     ProcessResult result =
         workspace.runBuckBuild(
             "//:bin-output",
             "--config",
-            "java.source_level=8",
+            "java.source_level=11",
             "--config",
-            "java.target_level=8",
+            "java.target_level=11",
             "--config",
-            String.format("java.bootclasspath-8=clowntown.jar:%s", systemBootclasspath),
+            "java.bootclasspath-11=clowntown.jar",
             "-v",
             "5");
     result.assertSuccess();

@@ -47,7 +47,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.jvm.java.testutil.Bootclasspath;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TestParserFactory;
@@ -72,7 +71,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -302,21 +300,17 @@ public class InterCellIntegrationTest {
         prepare("inter-cell/java/primary", "inter-cell/java/secondary");
     ProjectWorkspace primary = cells.getFirst();
 
-    String systemBootclasspath = Bootclasspath.getJdk8StubJarPath();
     ProcessResult result =
         primary.runBuckBuild(
             "//:java-binary",
             "--config",
-            "java.source_level=7",
+            "java.source_level=11",
             "--config",
-            "java.target_level=7",
+            "java.target_level=11",
             "--config",
-            String.format(
-                "//java.bootclasspath-7=primary.jar%s%s", File.pathSeparator, systemBootclasspath),
+            "//java.bootclasspath-11=primary.jar",
             "--config",
-            String.format(
-                "secondary//java.bootclasspath-7=secondary.jar%s%s",
-                File.pathSeparator, systemBootclasspath),
+            "secondary//java.bootclasspath-11=secondary.jar",
             "-v",
             "5");
     result.assertSuccess();
@@ -331,7 +325,7 @@ public class InterCellIntegrationTest {
             allOf(
                 containsString("javac"),
                 containsString("-bootclasspath"),
-                containsString(String.format("%sprimary.jar", File.separator)),
+                containsString("primary.jar"),
                 containsString("primary_lib"))));
     assertThat(
         verboseLogs,
@@ -339,7 +333,7 @@ public class InterCellIntegrationTest {
             allOf(
                 containsString("javac"),
                 containsString("-bootclasspath"),
-                containsString(String.format("%ssecondary.jar", File.separator)),
+                containsString("secondary.jar"),
                 containsString("secondary_lib"),
                 not(containsString("primary_lib")))));
   }

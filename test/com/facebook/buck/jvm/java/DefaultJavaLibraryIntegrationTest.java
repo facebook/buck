@@ -42,7 +42,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
-import com.facebook.buck.jvm.java.testutil.Bootclasspath;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.testutil.ProcessResult;
@@ -122,15 +121,13 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   public void testBootclasspathIsPassedCorrectly() throws IOException {
     setUpProjectWorkspaceForScenario("bootclasspath");
     workspace.addBuckConfigLocalOption(
-        JavaBuckConfig.SECTION,
-        "bootclasspath-8",
-        Joiner.on(":").join("boot.jar", "other.jar", Bootclasspath.getJdk8StubJarPath()));
+        JavaBuckConfig.SECTION, "bootclasspath-11", Joiner.on(":").join("boot.jar", "other.jar"));
     ProcessResult processResult =
         workspace.runBuckBuild(
             "--config",
-            "java.source_level=8",
+            "java.source_level=11",
             "--config",
-            "java.target_level=8",
+            "java.target_level=11",
             "-v",
             "5",
             "//:lib");

@@ -228,11 +228,6 @@ public class JavaCDIntegrationTest {
             TEST_RESOURCES_BASE.resolve(src), targetPath, StandardCopyOption.REPLACE_EXISTING);
       }
 
-      String jdkJar = "third-party/java/jdk/jdk8-rt-stub.jar";
-      Path jdkTarget = Paths.get(workingDir.toString(), jdkJar);
-      Files.createDirectories(jdkTarget);
-      Files.copy(Paths.get(USER_DIR, jdkJar), jdkTarget, StandardCopyOption.REPLACE_EXISTING);
-
       for (String dep :
           new String[] {
             "exceptions-abi.jar",
@@ -325,11 +320,6 @@ public class JavaCDIntegrationTest {
         content = content.replaceAll("hashCode()", "h@shC0de()");
         Files.write(targetPath, content.getBytes(UTF_8));
       }
-
-      String jdkJar = "third-party/java/jdk/jdk8-rt-stub.jar";
-      Path jdkTarget = Paths.get(workingDir.toString(), jdkJar);
-      Files.createDirectories(jdkTarget);
-      Files.copy(Paths.get(USER_DIR, jdkJar), jdkTarget, StandardCopyOption.REPLACE_EXISTING);
 
       for (String dep :
           new String[] {
@@ -590,12 +580,10 @@ public class JavaCDIntegrationTest {
                 .build())
         .setResolvedJavacOptions(
             ResolvedJavacOptions.newBuilder()
-                .addBootclasspathList(
-                    RelPath.newBuilder().setPath("third-party/java/jdk/jdk8-rt-stub.jar").build())
                 .setLanguageLevelOptions(
                     ResolvedJavacOptions.JavacLanguageLevelOptions.newBuilder()
-                        .setSourceLevel("8")
-                        .setTargetLevel("8")
+                        .setSourceLevel("11")
+                        .setTargetLevel("11")
                         .build())
                 .setDebug(true)
                 .build())
