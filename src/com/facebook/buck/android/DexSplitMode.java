@@ -39,8 +39,6 @@ class DexSplitMode implements AddsToRuleKey {
           /* fieldRefCountBufferSpace */ 0,
           /* splitDexLibLimit */ 0,
           /* primaryDexPatterns */ ImmutableSet.of(),
-          /* primaryDexScenarioFile */ Optional.empty(),
-          /* isPrimaryDexScenarioOverflowAllowed */ false,
           /* secondaryDexHeadClassesFile */ Optional.empty(),
           /* allowRDotJavaInSecondaryDex */ false);
 
@@ -83,27 +81,6 @@ class DexSplitMode implements AddsToRuleKey {
   @AddToRuleKey private final ImmutableSortedSet<String> primaryDexPatterns;
 
   /**
-   * File identifying the class files used in scenarios we want to fit in the primary dex. We will
-   * add these classes and their dependencies, as well as base classes/interfaces thereof to the
-   * primary dex.
-   *
-   * <p>Values in this file must match JAR entries (without the .class suffix), so they should
-   * contain path separators. For example:
-   *
-   * <pre>
-   *   java/util/Map$Entry
-   * </pre>
-   */
-  @AddToRuleKey private final Optional<SourcePath> primaryDexScenarioFile;
-
-  /**
-   * Boolean identifying whether we should allow the build to succeed if all the classes identified
-   * by primaryDexScenarioFile + dependencies do not fit in the primary dex. The default is false,
-   * which causes the build to fail in this case.
-   */
-  @AddToRuleKey private final boolean isPrimaryDexScenarioOverflowAllowed;
-
-  /**
    * File that whitelists the class files that should be in the first secondary dexes.
    *
    * <p>Values in this file must match JAR entries (without the .class suffix), so they should
@@ -125,13 +102,6 @@ class DexSplitMode implements AddsToRuleKey {
    * @param primaryDexPatterns Set of substrings that, when matched, will cause individual input
    *     class or resource files to be placed into the primary jar (and thus the primary dex
    *     output). These classes are required for correctness.
-   * @param primaryDexScenarioFile Path to a file containing a list of classes used in a scenario
-   *     that should be included in the primary dex along with all dependency classes required for
-   *     preverification. These dependencies will be calculated by buck. This list is used for
-   *     performance, not correctness.
-   * @param isPrimaryDexScenarioOverflowAllowed A boolean indicating whether to fail the build if
-   *     any classes required by primaryDexScenarioFile cannot fit (false) or to allow the build to
-   *     to proceed on a best-effort basis (true).
    * @param secondaryDexHeadClassesFile Path to a file containing a list of classes that are put in
    *     the first secondary dexes.
    * @param allowRDotJavaInSecondaryDex whether to allow R.java classes in the secondary dex files
@@ -145,8 +115,6 @@ class DexSplitMode implements AddsToRuleKey {
       long fieldRefCountBufferSpace,
       int dexGroupLibLimit,
       Collection<String> primaryDexPatterns,
-      Optional<SourcePath> primaryDexScenarioFile,
-      boolean isPrimaryDexScenarioOverflowAllowed,
       Optional<SourcePath> secondaryDexHeadClassesFile,
       boolean allowRDotJavaInSecondaryDex) {
     this.shouldSplitDex = shouldSplitDex;
@@ -157,8 +125,6 @@ class DexSplitMode implements AddsToRuleKey {
     this.fieldRefCountBufferSpace = fieldRefCountBufferSpace;
     this.dexGroupLibLimit = dexGroupLibLimit;
     this.primaryDexPatterns = ImmutableSortedSet.copyOf(primaryDexPatterns);
-    this.primaryDexScenarioFile = primaryDexScenarioFile;
-    this.isPrimaryDexScenarioOverflowAllowed = isPrimaryDexScenarioOverflowAllowed;
     this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
     this.allowRDotJavaInSecondaryDex = allowRDotJavaInSecondaryDex;
   }
@@ -169,8 +135,6 @@ class DexSplitMode implements AddsToRuleKey {
       DexStore dexStore,
       long linearAllocHardLimit,
       Collection<String> primaryDexPatterns,
-      Optional<SourcePath> primaryDexScenarioFile,
-      boolean isPrimaryDexScenarioOverflowAllowed,
       Optional<SourcePath> secondaryDexHeadClassesFile,
       boolean allowRDotJavaInSecondaryDex) {
     this(
@@ -182,8 +146,6 @@ class DexSplitMode implements AddsToRuleKey {
         0,
         DEFAULT_DEX_GROUP_LIB_LIMIT,
         primaryDexPatterns,
-        primaryDexScenarioFile,
-        isPrimaryDexScenarioOverflowAllowed,
         secondaryDexHeadClassesFile,
         allowRDotJavaInSecondaryDex);
   }
@@ -219,14 +181,6 @@ class DexSplitMode implements AddsToRuleKey {
 
   public ImmutableSet<String> getPrimaryDexPatterns() {
     return primaryDexPatterns;
-  }
-
-  public Optional<SourcePath> getPrimaryDexScenarioFile() {
-    return primaryDexScenarioFile;
-  }
-
-  public boolean isPrimaryDexScenarioOverflowAllowed() {
-    return isPrimaryDexScenarioOverflowAllowed;
   }
 
   public Optional<SourcePath> getSecondaryDexHeadClassesFile() {

@@ -20,7 +20,6 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.dalvik.DalvikAwareZipSplitterFactory;
 import com.facebook.buck.android.dalvik.ZipSplitterFactory;
-import com.facebook.buck.android.dalvik.firstorder.FirstOrderHelper;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -58,8 +57,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
-import org.objectweb.asm.Type;
-import org.objectweb.asm.tree.ClassNode;
 
 /**
  * Split zipping tool designed to divide input code blobs into a set of output jar files such that
@@ -90,7 +87,6 @@ public class SplitZipStep implements Step {
   private final DexSplitMode dexSplitMode;
   private final Path pathToReportDir;
 
-  private final Optional<Path> primaryDexScenarioFile;
   private final Optional<Path> secondaryDexHeadClassesFile;
   private final ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap;
   private final APKModule rootAPKModule;
@@ -127,7 +123,6 @@ public class SplitZipStep implements Step {
       Optional<Path> proguardMappingFile,
       boolean skipProguard,
       DexSplitMode dexSplitMode,
-      Optional<Path> primaryDexScenarioFile,
       Optional<Path> secondaryDexHeadClassesFile,
       ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
       ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap,
@@ -145,7 +140,6 @@ public class SplitZipStep implements Step {
     this.proguardMappingFile = proguardMappingFile;
     this.skipProguard = skipProguard;
     this.dexSplitMode = dexSplitMode;
-    this.primaryDexScenarioFile = primaryDexScenarioFile;
     this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
     this.apkModuleToJarPathMap = apkModuleToJarPathMap;
     this.pathToReportDir = pathToReportDir;
@@ -163,15 +157,10 @@ public class SplitZipStep implements Step {
   public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     Set<Path> inputJarPaths =
         inputPathsToSplit.stream().map(filesystem::resolve).collect(ImmutableSet.toImmutableSet());
-    Supplier<ImmutableList<ClassNode>> classes =
-        ClassNodeListSupplier.createMemoized(inputJarPaths);
     ProguardTranslatorFactory translatorFactory =
         ProguardTranslatorFactory.create(
             filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard);
-    Predicate<String> requiredInPrimaryZip =
-        createRequiredInPrimaryZipPredicate(translatorFactory, classes);
-    ImmutableSet<String> wantedInPrimaryZip =
-        getWantedPrimaryDexEntries(translatorFactory, classes);
+    Predicate<String> requiredInPrimaryZip = createRequiredInPrimaryZipPredicate(translatorFactory);
     ImmutableSet<String> secondaryHeadSet = getSecondaryHeadSet(translatorFactory);
     ImmutableMultimap<APKModule, String> additionalDexStoreClasses =
         APKModuleGraph.getAPKModuleToClassesMap(
@@ -184,8 +173,7 @@ public class SplitZipStep implements Step {
         new DalvikAwareZipSplitterFactory(
             dexSplitMode.getLinearAllocHardLimit(),
             dexSplitMode.getMethodRefCountBufferSpace(),
-            dexSplitMode.getFieldRefCountBufferSpace(),
-            wantedInPrimaryZip);
+            dexSplitMode.getFieldRefCountBufferSpace());
 
     outputFiles =
         zipSplitterFactory
@@ -245,12 +233,8 @@ public class SplitZipStep implements Step {
 
   @VisibleForTesting
   Predicate<String> createRequiredInPrimaryZipPredicate(
-      ProguardTranslatorFactory translatorFactory,
-      Supplier<ImmutableList<ClassNode>> classesSupplier)
-      throws IOException {
+      ProguardTranslatorFactory translatorFactory) {
     Function<String, String> deobfuscate = translatorFactory.createDeobfuscationFunction();
-    ImmutableSet<String> primaryDexClassNames =
-        getRequiredPrimaryDexClassNames(translatorFactory, classesSupplier);
     ClassNameFilter primaryDexFilter =
         ClassNameFilter.fromConfiguration(dexSplitMode.getPrimaryDexPatterns());
 
@@ -259,31 +243,10 @@ public class SplitZipStep implements Step {
       String internalClassName =
           Objects.requireNonNull(deobfuscate.apply(classFileName.replaceAll("\\.class$", "")));
 
-      return primaryDexClassNames.contains(internalClassName)
-          || primaryDexFilter.matches(internalClassName);
+      return primaryDexFilter.matches(internalClassName);
     };
   }
 
-  /**
-   * Construct a {@link Set} of internal class names that must go into the primary dex.
-   *
-   * <p>
-   *
-   * @return ImmutableSet of class internal names.
-   */
-  private ImmutableSet<String> getRequiredPrimaryDexClassNames(
-      ProguardTranslatorFactory translatorFactory,
-      Supplier<ImmutableList<ClassNode>> classesSupplier)
-      throws IOException {
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-    // If there is a scenario file but overflow is not allowed, then the scenario dependencies
-    // are required, and therefore get added here.
-    if (!dexSplitMode.isPrimaryDexScenarioOverflowAllowed() && primaryDexScenarioFile.isPresent()) {
-      addScenarioClasses(translatorFactory, classesSupplier, builder, primaryDexScenarioFile.get());
-    }
-
-    return builder.build();
-  }
   /**
    * Construct a {@link Set} of internal class names that must go into the beginning of the
    * secondary dexes.
@@ -305,65 +268,6 @@ public class SplitZipStep implements Step {
     }
 
     return builder.build();
-  }
-
-  /**
-   * Construct a {@link Set} of zip file entry names that should go into the primary dex to improve
-   * performance.
-   *
-   * <p>
-   *
-   * @return ImmutableList of zip file entry names.
-   */
-  private ImmutableSet<String> getWantedPrimaryDexEntries(
-      ProguardTranslatorFactory translatorFactory,
-      Supplier<ImmutableList<ClassNode>> classesSupplier)
-      throws IOException {
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-
-    // If there is a scenario file and overflow is allowed, then the scenario dependencies
-    // are wanted but not required, and therefore get added here.
-    if (dexSplitMode.isPrimaryDexScenarioOverflowAllowed() && primaryDexScenarioFile.isPresent()) {
-      addScenarioClasses(translatorFactory, classesSupplier, builder, primaryDexScenarioFile.get());
-    }
-
-    return builder.build().stream()
-        .map(input -> input + ".class")
-        .collect(ImmutableSet.toImmutableSet());
-  }
-
-  /**
-   * Adds classes listed in the scenario file along with their dependencies. This adds classes plus
-   * dependencies in the order the classes appear in the scenario file.
-   *
-   * <p>
-   *
-   * @throws IOException
-   */
-  private void addScenarioClasses(
-      ProguardTranslatorFactory translatorFactory,
-      Supplier<ImmutableList<ClassNode>> classesSupplier,
-      ImmutableSet.Builder<String> builder,
-      Path scenarioFile)
-      throws IOException {
-
-    Function<String, String> obfuscationFunction = translatorFactory.createObfuscationFunction();
-    Function<String, String> deObfuscationFunction =
-        translatorFactory.createDeobfuscationFunction();
-
-    ImmutableList<Type> scenarioClasses =
-        filesystem.readLines(scenarioFile).stream()
-            .map(String::trim)
-            .filter(SplitZipStep::isNeitherEmptyNorComment)
-            .map(obfuscationFunction)
-            .map(Type::getObjectType)
-            .collect(ImmutableList.toImmutableList());
-
-    ImmutableSet.Builder<String> classBuilder = ImmutableSet.builder();
-    FirstOrderHelper.addTypesAndDependencies(scenarioClasses, classesSupplier.get(), classBuilder);
-
-    builder.addAll(
-        classBuilder.build().stream().map(deObfuscationFunction).collect(Collectors.toSet()));
   }
 
   @VisibleForTesting

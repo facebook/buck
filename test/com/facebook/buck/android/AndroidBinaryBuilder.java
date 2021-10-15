@@ -143,11 +143,6 @@ public class AndroidBinaryBuilder
     return this;
   }
 
-  public AndroidBinaryBuilder setPrimaryDexScenarioOverflowAllowed(boolean allowed) {
-    getArgForPopulating().setPrimaryDexScenarioOverflowAllowed(allowed);
-    return this;
-  }
-
   public AndroidBinaryBuilder setBuildTargetsToExcludeFromDex(
       Set<BuildTarget> buildTargetsToExcludeFromDex) {
     getArgForPopulating().setNoDx(buildTargetsToExcludeFromDex);

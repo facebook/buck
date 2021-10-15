@@ -29,17 +29,12 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
   private final long linearAllocLimit;
   private final long methodRefCountBufferSpace;
   private final long fieldRefCountBufferSpace;
-  private final Set<String> wantedInPrimaryZip;
 
   public DalvikAwareZipSplitterFactory(
-      long linearAllocLimit,
-      long methodRefCountBufferSpace,
-      long fieldRefCountBufferSpace,
-      Set<String> wantedInPrimaryZip) {
+      long linearAllocLimit, long methodRefCountBufferSpace, long fieldRefCountBufferSpace) {
     this.linearAllocLimit = linearAllocLimit;
     this.methodRefCountBufferSpace = methodRefCountBufferSpace;
     this.fieldRefCountBufferSpace = fieldRefCountBufferSpace;
-    this.wantedInPrimaryZip = wantedInPrimaryZip;
   }
 
   @Override
@@ -67,7 +62,6 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
         methodRefCountBufferSpace,
         fieldRefCountBufferSpace,
         requiredInPrimaryZip,
-        wantedInPrimaryZip,
         secondaryHeadSet,
         additionalDexStoreSets,
         rootAPKModule,

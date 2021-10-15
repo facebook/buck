@@ -47,16 +47,13 @@ import javax.annotation.Nullable;
  * Implementation of {@link ZipSplitter} that uses estimates from {@link DalvikStatsTool} to
  * determine how many classes to pack into a dex.
  *
- * <p>It does three passes through the .class files:
+ * <p>It does two passes through the .class files:
  *
  * <ul>
  *   <li>During the first pass, it uses the {@code requiredInPrimaryZip} predicate to filter the set
  *       of classes that <em>must</em> be included in the primary dex. These classes are added to
  *       the primary zip.
- *   <li>During the second pass, it uses the {@code wantedInPrimaryZip} list to find classes that
- *       were not included in the first pass but that should still be in the primary zip for
- *       performance reasons, and adds them to the primary zip.
- *   <li>During the third pass, classes that were not matched during the earlier passes are added to
+ *   <li>During the second pass, classes that were not matched during the first pass are added to
  *       zips as space allows. This is a simple, greedy algorithm.
  * </ul>
  */
@@ -67,7 +64,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private final Set<Path> inFiles;
   private final Path outPrimary;
   private final Predicate<String> requiredInPrimaryZip;
-  private final Set<String> wantedInPrimaryZip;
   private final Path reportDir;
   private final long linearAllocLimit;
   private final long methodRefCountBufferSpace;
@@ -94,7 +90,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       long methodRefCountBufferSpace,
       long fieldRefCountBufferSpace,
       Predicate<String> requiredInPrimaryZip,
-      Set<String> wantedInPrimaryZip,
       ImmutableSet<String> secondaryHeadSet,
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
       APKModule rootAPKModule,
@@ -110,7 +105,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         new MySecondaryDexHelper("secondary", outSecondaryDir, secondaryPattern);
     this.additionalDexWriters = new HashMap<>();
     this.requiredInPrimaryZip = requiredInPrimaryZip;
-    this.wantedInPrimaryZip = ImmutableSet.copyOf(wantedInPrimaryZip);
     this.secondaryHeadSet = secondaryHeadSet;
     this.classPathToDexStore = additionalDexStoreSets.inverse();
     for (APKModule dexStore : additionalDexStoreSets.keySet()) {
@@ -143,7 +137,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       long methodRefCountBufferSpace,
       long fieldRefCountBufferSpace,
       Predicate<String> requiredInPrimaryZip,
-      Set<String> wantedInPrimaryZip,
       ImmutableSet<String> secondaryHeadSet,
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
       APKModule rootAPKModule,
@@ -160,7 +153,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         methodRefCountBufferSpace,
         fieldRefCountBufferSpace,
         requiredInPrimaryZip,
-        wantedInPrimaryZip,
         secondaryHeadSet,
         additionalDexStoreSets,
         rootAPKModule,
@@ -201,8 +193,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
 
             if (requiredInPrimaryZip.test(relativePath)) {
               primaryOut.putEntry(entry);
-            } else if (wantedInPrimaryZip.contains(relativePath)
-                || (secondaryHeadSet != null && secondaryHeadSet.contains(relativePath))) {
+            } else if (secondaryHeadSet != null && secondaryHeadSet.contains(relativePath)) {
               entriesBuilder.put(relativePath, new BufferedFileLike(entry));
             } else {
               ImmutableCollection<APKModule> containingModule = classPathToDexStore.get(classPath);
@@ -225,15 +216,7 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
           }
         });
 
-    // Put as many of the items wanted in the primary dex as we can into the primary dex.
     ImmutableMap<String, FileLike> entries = entriesBuilder.build();
-    for (String wanted : wantedInPrimaryZip) {
-      FileLike entry = entries.get(wanted);
-      if ((entry != null) && !primaryOut.containsEntry(entry) && primaryOut.canPutEntry(entry)) {
-        primaryOut.putEntry(entry);
-      }
-    }
-
     if (secondaryHeadSet != null) {
       for (String head : secondaryHeadSet) {
         FileLike headEntry = entries.get(head);

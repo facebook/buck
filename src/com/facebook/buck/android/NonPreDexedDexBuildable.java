@@ -771,9 +771,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
               skipProguard,
               dexSplitMode,
               dexSplitMode
-                  .getPrimaryDexScenarioFile()
-                  .map(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath()),
-              dexSplitMode
                   .getSecondaryDexHeadClassesFile()
                   .map(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath()),
               additionalDexStoreToJarPathMap,

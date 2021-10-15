@@ -246,8 +246,6 @@ public class AndroidBinaryDescription
         args.getFieldRefCountBufferSpace(),
         args.getDexGroupLibLimit(),
         args.getPrimaryDexPatterns(),
-        args.getPrimaryDexScenarioFile(),
-        args.isPrimaryDexScenarioOverflowAllowed(),
         args.getSecondaryDexHeadClassesFile(),
         args.isAllowRDotJavaInSecondaryDex());
   }
@@ -318,13 +316,6 @@ public class AndroidBinaryDescription
     abstract Optional<DexStore> getDexCompression();
 
     abstract List<String> getPrimaryDexPatterns();
-
-    abstract Optional<SourcePath> getPrimaryDexScenarioFile();
-
-    @Value.Default
-    boolean isPrimaryDexScenarioOverflowAllowed() {
-      return false;
-    }
 
     abstract Optional<SourcePath> getSecondaryDexHeadClassesFile();
 

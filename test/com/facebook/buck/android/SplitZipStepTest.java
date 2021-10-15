@@ -22,10 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.dalvik.ZipSplitter;
-import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -156,11 +154,8 @@ public class SplitZipStepTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 /* primaryDexPatterns */ ImmutableSet.of("List"),
-                /* primaryDexScenarioFile */ Optional.empty(),
-                /* isPrimaryDexScenarioOverflowAllowed */ false,
                 /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
-            Optional.empty(),
             Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
             /* pathToReportDir */
@@ -170,8 +165,7 @@ public class SplitZipStepTest {
 
     Predicate<String> requiredInPrimaryZipPredicate =
         splitZipStep.createRequiredInPrimaryZipPredicate(
-            ProguardTranslatorFactory.createForTest(Optional.empty()),
-            Suppliers.ofInstance(ImmutableList.of()));
+            ProguardTranslatorFactory.createForTest(Optional.empty()));
     assertFalse(
         "com/google/common/collect/ImmutableSortedSet.class is not even mentioned.",
         requiredInPrimaryZipPredicate.test("com/google/common/collect/ImmutableSortedSet.class"));
@@ -244,11 +238,8 @@ public class SplitZipStepTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 primaryDexPatterns,
-                /* primaryDexScenarioFile */ Optional.empty(),
-                /* isPrimaryDexScenarioOverflowAllowed */ false,
                 /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
-            Optional.empty(),
             Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
             /* pathToReportDir */
@@ -264,8 +255,7 @@ public class SplitZipStepTest {
             false);
 
     Predicate<String> requiredInPrimaryZipPredicate =
-        splitZipStep.createRequiredInPrimaryZipPredicate(
-            translatorFactory, Suppliers.ofInstance(ImmutableList.of()));
+        splitZipStep.createRequiredInPrimaryZipPredicate(translatorFactory);
     assertTrue(
         "Mapped class from primary list should be in primary.",
         requiredInPrimaryZipPredicate.test("foo/bar/a.class"));
@@ -316,11 +306,8 @@ public class SplitZipStepTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 /* primaryDexPatterns */ ImmutableSet.of("primary"),
-                /* primaryDexScenarioFile */ Optional.empty(),
-                /* isPrimaryDexScenarioOverflowAllowed */ false,
                 /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
-            Optional.empty(),
             Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
             /* pathToReportDir */
@@ -336,8 +323,7 @@ public class SplitZipStepTest {
             false);
 
     Predicate<String> requiredInPrimaryZipPredicate =
-        splitZipStep.createRequiredInPrimaryZipPredicate(
-            translatorFactory, Suppliers.ofInstance(ImmutableList.of()));
+        splitZipStep.createRequiredInPrimaryZipPredicate(translatorFactory);
     assertTrue(
         "Primary class should be in primary.", requiredInPrimaryZipPredicate.test("primary.class"));
     assertFalse(
@@ -355,155 +341,5 @@ public class SplitZipStepTest {
         SplitZipStep.CLASS_FILE_PATTERN
             .matcher("com/facebook/orca/threads/ParticipantInfo$1.class")
             .matches());
-  }
-
-  @Test
-  public void testRequiredInPrimaryDexScenarioFile() throws IOException {
-    Path primaryDexScenarioFile = Paths.get("the/primary_dex_scenario.txt");
-    List<String> linesInManifestFile =
-        ImmutableList.of(
-            "com/google/common/collect/ImmutableSortedSet",
-            "  com/google/common/collect/ImmutableSet",
-            "# com/google/common/collect/ImmutableMap");
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    projectFilesystem.writeLinesToPath(linesInManifestFile, primaryDexScenarioFile);
-
-    SplitZipStep splitZipStep =
-        new SplitZipStep(
-            projectFilesystem,
-            /* inputPathsToSplit */ ImmutableSet.of(),
-            /* secondaryJarMetaPath */ Paths.get(""),
-            /* primaryJarPath */ Paths.get(""),
-            /* secondaryJarDir */ Paths.get(""),
-            /* secondaryJarPattern */ "",
-            /* additionalDexStoreJarMetaPath */ Paths.get(""),
-            /* additionalDexStoreJarDir */ Paths.get(""),
-            /* proguardFullConfigFile */ Optional.empty(),
-            /* proguardMappingFile */ Optional.empty(),
-            true,
-            new DexSplitMode(
-                /* shouldSplitDex */ true,
-                ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-                DexStore.JAR,
-                /* linearAllocHardLimit */ 4 * 1024 * 1024,
-                /* primaryDexPatterns */ ImmutableSet.of(),
-                Optional.of(FakeSourcePath.of("the/primary_dex_scenario.txt")),
-                /* isPrimaryDexScenarioOverflowAllowed */ false,
-                /* secondaryDexHeadClassesFile */ Optional.empty(),
-                /* allowRDotJavaInSecondaryDex */ false),
-            Optional.of(Paths.get("the/primary_dex_scenario.txt")),
-            Optional.empty(),
-            /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            /* pathToReportDir */
-            ImmutableSortedMap.of(),
-            null,
-            Paths.get(""));
-
-    Predicate<String> requiredInPrimaryZipPredicate =
-        splitZipStep.createRequiredInPrimaryZipPredicate(
-            ProguardTranslatorFactory.createForTest(Optional.empty()),
-            Suppliers.ofInstance(ImmutableList.of()));
-    assertTrue(
-        "com/google/common/collect/ImmutableSortedSet.class is listed in the manifest verbatim.",
-        requiredInPrimaryZipPredicate.test("com/google/common/collect/ImmutableSortedSet.class"));
-    assertTrue(
-        "com/google/common/collect/ImmutableSet.class is in the manifest with whitespace.",
-        requiredInPrimaryZipPredicate.test("com/google/common/collect/ImmutableSet.class"));
-    assertFalse(
-        "com/google/common/collect/ImmutableSet.class cannot have whitespace as param.",
-        requiredInPrimaryZipPredicate.test("  com/google/common/collect/ImmutableSet.class"));
-    assertFalse(
-        "com/google/common/collect/ImmutableMap.class is commented out.",
-        requiredInPrimaryZipPredicate.test("com/google/common/collect/ImmutableMap.class"));
-    assertFalse(
-        "com/google/common/collect/Iterables.class is not even mentioned.",
-        requiredInPrimaryZipPredicate.test("com/google/common/collect/Iterables.class"));
-  }
-
-  @Test
-  public void testRequiredInPrimaryDexScenarioFileWithProguard() throws IOException {
-    List<String> linesInMappingFile =
-        ImmutableList.of(
-            "foo.bar.MappedPrimary -> foo.bar.a:",
-            "foo.bar.MappedSecondary -> foo.bar.b:",
-            "foo.bar.UnmappedPrimary -> foo.bar.UnmappedPrimary:",
-            "foo.bar.UnmappedSecondary -> foo.bar.UnmappedSecondary:",
-            "foo.primary.MappedPackage -> x.a:",
-            "foo.secondary.MappedPackage -> x.b:",
-            "foo.primary.UnmappedPackage -> foo.primary.UnmappedPackage:");
-    List<String> linesInScenarioFile =
-        ImmutableList.of(
-            // Actual primary dex classes.
-            "foo/bar/MappedPrimary",
-            "foo/bar/UnmappedPrimary",
-            "foo/secondary/MappedPackage",
-            "foo/secondary/NotInMap");
-
-    Path proguardConfigFile = Paths.get("the/configuration.txt");
-    Path proguardMappingFile = Paths.get("the/mapping.txt");
-    Path primaryDexScenarioFile = Paths.get("the/primary_dex_scenario.txt");
-
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    projectFilesystem.writeLinesToPath(linesInScenarioFile, primaryDexScenarioFile);
-    projectFilesystem.writeLinesToPath(ImmutableList.of(), proguardConfigFile);
-    projectFilesystem.writeLinesToPath(linesInMappingFile, proguardMappingFile);
-
-    SplitZipStep splitZipStep =
-        new SplitZipStep(
-            projectFilesystem,
-            /* inputPathsToSplit */ ImmutableSet.of(),
-            /* secondaryJarMetaPath */ Paths.get(""),
-            /* primaryJarPath */ Paths.get(""),
-            /* secondaryJarDir */ Paths.get(""),
-            /* secondaryJarPattern */ "",
-            /* additionalDexStoreJarMetaPath */ Paths.get(""),
-            /* additionalDexStoreJarDir */ Paths.get(""),
-            /* proguardFullConfigFile */ Optional.of(proguardConfigFile),
-            /* proguardMappingFile */ Optional.of(proguardMappingFile),
-            false,
-            new DexSplitMode(
-                /* shouldSplitDex */ true,
-                ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-                DexStore.JAR,
-                /* linearAllocHardLimit */ 4 * 1024 * 1024,
-                /* primaryDexPatterns */ ImmutableSet.of(),
-                Optional.of(FakeSourcePath.of("the/primary_dex_scenario.txt")),
-                /* isPrimaryDexScenarioOverflowAllowed */ false,
-                /* secondaryDexHeadClassesFile */ Optional.empty(),
-                /* allowRDotJavaInSecondaryDex */ false),
-            Optional.of(Paths.get("the/primary_dex_scenario.txt")),
-            Optional.empty(),
-            /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            /* pathToReportDir */
-            ImmutableSortedMap.of(),
-            null,
-            Paths.get(""));
-
-    ProguardTranslatorFactory translatorFactory =
-        ProguardTranslatorFactory.create(
-            projectFilesystem,
-            Optional.of(proguardConfigFile),
-            Optional.of(proguardMappingFile),
-            false);
-
-    Predicate<String> requiredInPrimaryZipPredicate =
-        splitZipStep.createRequiredInPrimaryZipPredicate(
-            translatorFactory, Suppliers.ofInstance(ImmutableList.of()));
-    assertTrue(
-        "Mapped class from primary scenario file should be in primary.",
-        requiredInPrimaryZipPredicate.test("foo/bar/a.class"));
-    assertTrue(
-        "Unmapped class from primary scenario file should be in primary.",
-        requiredInPrimaryZipPredicate.test("foo/bar/UnmappedPrimary.class"));
-    assertTrue(
-        "Mapped class from primary scenario file should be in primary.",
-        requiredInPrimaryZipPredicate.test("x/b.class"));
-    assertTrue(
-        "Not in proguard map class from primary scenario list should be in primary.",
-        requiredInPrimaryZipPredicate.test("foo/secondary/NotInMap.class"));
-
-    assertFalse(
-        "Not in primary scenario list should not be in primary.",
-        requiredInPrimaryZipPredicate.test("foo/secondary/Unknown.class"));
   }
 }

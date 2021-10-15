@@ -232,8 +232,6 @@ public class AndroidBundleDescription
         args.getFieldRefCountBufferSpace(),
         args.getDexGroupLibLimit(),
         args.getPrimaryDexPatterns(),
-        args.getPrimaryDexScenarioFile(),
-        args.isPrimaryDexScenarioOverflowAllowed(),
         args.getSecondaryDexHeadClassesFile(),
         args.isAllowRDotJavaInSecondaryDex());
   }
@@ -292,13 +290,6 @@ public class AndroidBundleDescription
     abstract Optional<DexStore> getDexCompression();
 
     abstract List<String> getPrimaryDexPatterns();
-
-    abstract Optional<SourcePath> getPrimaryDexScenarioFile();
-
-    @Value.Default
-    boolean isPrimaryDexScenarioOverflowAllowed() {
-      return false;
-    }
 
     abstract Optional<SourcePath> getSecondaryDexHeadClassesFile();
 

@@ -335,7 +335,6 @@ public class AndroidApkTest {
             .setKeystore(addKeystoreRule(graphBuilder).getBuildTarget())
             .setShouldSplitDex(true)
             .setLinearAllocHardLimit(0)
-            .setPrimaryDexScenarioOverflowAllowed(true)
             .setDexCompression(DexStore.JAR)
             // Force no predexing.
             .setPreprocessJavaClassesBash(StringWithMacrosUtils.format("cp"))
@@ -388,7 +387,6 @@ public class AndroidApkTest {
             .setKeystore(addKeystoreRule(graphBuilder).getBuildTarget())
             .setShouldSplitDex(true)
             .setLinearAllocHardLimit(0)
-            .setPrimaryDexScenarioOverflowAllowed(true)
             .setDexCompression(DexStore.JAR)
             .setIntraDexReorderResources(true, reorderTool, reorderData)
             // Force no predexing.

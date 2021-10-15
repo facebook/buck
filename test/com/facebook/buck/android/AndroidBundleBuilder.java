@@ -138,11 +138,6 @@ public class AndroidBundleBuilder
     return this;
   }
 
-  public AndroidBundleBuilder setPrimaryDexScenarioOverflowAllowed(boolean allowed) {
-    getArgForPopulating().setPrimaryDexScenarioOverflowAllowed(allowed);
-    return this;
-  }
-
   public AndroidBundleBuilder setBuildTargetsToExcludeFromDex(
       Set<BuildTarget> buildTargetsToExcludeFromDex) {
     getArgForPopulating().setNoDx(buildTargetsToExcludeFromDex);
