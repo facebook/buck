@@ -28,6 +28,7 @@ import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceRuleBuilder;
+import com.facebook.buck.android.FilterResourcesSteps;
 import com.facebook.buck.android.NativeLibraryBuildRule;
 import com.facebook.buck.android.NdkLibrary;
 import com.facebook.buck.android.NdkLibraryBuilder;
@@ -343,6 +344,7 @@ public class AndroidPackageableCollectorTest {
         AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:e"))
             .setManifest(FakeSourcePath.of("AndroidManfiest.xml"))
             .setKeystore(keystoreTarget)
+            .setResourceFilter(new FilterResourcesSteps.ResourceFilter(ImmutableList.of("mdpi")))
             .setOriginalDeps(declaredDepsTargets)
             .build(graphBuilder);
 

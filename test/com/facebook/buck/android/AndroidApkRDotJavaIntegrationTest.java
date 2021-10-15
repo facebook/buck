@@ -391,14 +391,6 @@ public class AndroidApkRDotJavaIntegrationTest {
         secondFlataBytes);
   }
 
-  // TODO(bduff): find a better place for this and other aapt2 tests
-  @Test
-  public void aapt2FilteringWithAapt1Fails() throws IOException {
-    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
-
-    workspace.runBuckBuild("//apps/sample_wrong_aapt:sample_wrong_aapt").assertFailure();
-  }
-
   @Test
   public void aapt2FilteringStripsLocales() throws Exception {
     AssumeAndroidPlatform.get(workspace).assumeBuildToolsVersionIsAtLeast("29");

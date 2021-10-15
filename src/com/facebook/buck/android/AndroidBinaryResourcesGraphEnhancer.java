@@ -151,6 +151,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.resourceCompressionMode = resourceCompressionMode;
     this.locales = locales;
     this.localizedStringFileName = localizedStringFileName;
+    Preconditions.checkState(aaptMode.equals(AaptMode.AAPT2));
     this.aaptMode = aaptMode;
     this.additionalAaptParams = additionalAaptParams;
     this.rawManifest = rawManifest;

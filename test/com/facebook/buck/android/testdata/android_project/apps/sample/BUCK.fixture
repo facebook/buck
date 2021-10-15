@@ -181,7 +181,6 @@ android_binary(
 
 android_binary(
     name = "app_en",
-    aapt_mode = "aapt1",  # app_en
     keystore = "//keystores:debug",
     locales = ["en"],
     manifest = "AndroidManifest.xml",
@@ -193,7 +192,6 @@ android_binary(
 
 android_binary(
     name = "app_with_res_overrides",
-    aapt_mode = "aapt1",  # app_with_res_overrides
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     deps = [
@@ -923,14 +921,6 @@ android_bundle(
         ":many_libs",
         "//native/cxx:foo1",
     ],
-)
-
-genrule(
-    # Hackily check for the presence of aapt2 until all of our users have it.
-    name = "check_for_aapt2",
-    out = "does-aapt2-exist",
-    bash = "test -x `dirname $DX`/aapt2 > $OUT",
-    need_android_tools = True,
 )
 
 android_binary(

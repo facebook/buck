@@ -50,7 +50,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -356,24 +355,6 @@ public class AndroidResourceFilterIntegrationTest {
                 filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
 
     matchingLines = runAaptDumpResources(apkFile);
-    assertEquals(1, matchingLines);
-  }
-
-  @Test
-  public void testEnglishBuildDoesntContainFrenchStringsAapt2()
-      throws IOException, InterruptedException {
-    // TODO(dreiss): Remove this when aapt2 is everywhere.
-    ProcessResult foundAapt2 = workspace.runBuckBuild("//apps/sample:check_for_aapt2");
-    Assume.assumeTrue(foundAapt2.getExitCode().getCode() == 0);
-
-    String target = "//apps/sample:app_en";
-    workspace.replaceFileContents("apps/sample/BUCK", "'aapt1', # app_en", "'aapt2',");
-    workspace.runBuckBuild(target).assertSuccess();
-    Path apkFile =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
-    int matchingLines = runAaptDumpResources(apkFile);
     assertEquals(1, matchingLines);
   }
 

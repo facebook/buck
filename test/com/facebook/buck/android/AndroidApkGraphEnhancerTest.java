@@ -831,53 +831,14 @@ public class AndroidApkGraphEnhancerTest {
         androidBuildConfig.getBuildConfigFields());
 
     BuildRule resourcesFilterRule = findRuleOfType(graphBuilder, ResourcesFilter.class);
-
-    BuildRule aaptPackageResourcesRule = findRuleOfType(graphBuilder, AaptPackageResources.class);
-    MoreAsserts.assertDepends(
-        "AaptPackageResources must depend on ResourcesFilter",
-        aaptPackageResourcesRule,
-        resourcesFilterRule);
-
     BuildRule packageStringAssetsRule = findRuleOfType(graphBuilder, PackageStringAssets.class);
     MoreAsserts.assertDepends(
         "PackageStringAssets must depend on ResourcesFilter",
         packageStringAssetsRule,
-        aaptPackageResourcesRule);
+        resourcesFilterRule);
 
     assertFalse(result.getPreDexMergeSplitDex().isPresent());
     assertTrue(result.getPackageStringAssets().isPresent());
-  }
-
-  @Test
-  public void testResourceRulesBecomeDepsOfAaptPackageResources() {
-    TargetNode<?> resourceNode =
-        AndroidResourceBuilder.createBuilder(BuildTargetFactory.newInstance("//:resource"))
-            .setRDotJavaPackage("package")
-            .setRes(Paths.get("res"))
-            .build();
-
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceNode);
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-
-    AndroidResource resource =
-        (AndroidResource) graphBuilder.requireRule(resourceNode.getBuildTarget());
-
-    // set it up.
-    BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    BuildRuleParams originalParams =
-        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
-    AndroidBinaryGraphEnhancer graphEnhancer =
-        createGraphEnhancer(
-            ImmutableTestGraphEnhancerArgs.builder()
-                .setTarget(target)
-                .setBuildRuleParams(originalParams)
-                .setGraphBuilder(graphBuilder)
-                .build());
-    graphEnhancer.createAdditionalBuildables();
-
-    BuildRule aaptPackageResourcesRule = findRuleOfType(graphBuilder, AaptPackageResources.class);
-    MoreAsserts.assertDepends(
-        "AaptPackageResources must depend on resource rules", aaptPackageResourcesRule, resource);
   }
 
   @Test
@@ -1009,7 +970,7 @@ public class AndroidApkGraphEnhancerTest {
         TestAndroidPlatformTargetFactory.create(),
         args.getBuildRuleParams(),
         args.getGraphBuilder(),
-        AaptMode.AAPT1,
+        AaptMode.AAPT2,
         ImmutableList.of(),
         args.getResourceCompressionMode(),
         FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,

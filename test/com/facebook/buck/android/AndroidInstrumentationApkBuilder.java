@@ -22,6 +22,7 @@ import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_EXTERN
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVACD_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.DxToolchain;
 import com.facebook.buck.android.toolchain.ndk.impl.TestNdkCxxPlatformsProviderFactory;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -69,6 +70,8 @@ public class AndroidInstrumentationApkBuilder
         .withToolchain(
             JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
         .withToolchain(JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
+        .withToolchain(
+            AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
         .build();
   }
 
