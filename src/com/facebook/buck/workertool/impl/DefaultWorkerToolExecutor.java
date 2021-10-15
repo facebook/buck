@@ -34,6 +34,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -98,7 +99,7 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
   private static final NamedPipeFactory NAMED_PIPE_FACTORY = NamedPipeFactory.getFactory();
 
   private final int workerId;
-  private final DownwardApiProcessExecutor downwardApiProcessExecutor;
+  private final ProcessExecutor downwardApiProcessExecutor;
   private final ImmutableList<String> startWorkerToolCommand;
 
   private final NamedPipeWriter namedPipeWriter;
@@ -122,12 +123,13 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     this.namedPipeWriter = NAMED_PIPE_FACTORY.createAsWriter();
     String namedPipeName = namedPipeWriter.getName();
 
-    Pair<DownwardApiLaunchedProcess, OutputStream> pair =
+    Pair<LaunchedProcess, OutputStream> pair =
         launchProcessAndOpenOutputStream(startWorkerToolCommand, envs, namedPipeName);
-    this.launchedProcess = pair.getFirst();
+    this.launchedProcess =
+        DownwardApiProcessExecutor.getDownwardApiLaunchedProcess(pair.getFirst());
     this.outputStream = pair.getSecond();
 
-    checkState(launchedProcess.isAlive(), "Worker tool process has to be alive.");
+    checkState(this.launchedProcess.isAlive(), "Worker tool process has to be alive.");
     checkState(
         !namedPipeWriter.isClosed(),
         "Named pipe %s used for communication with worker tool has to be open.",
@@ -152,19 +154,19 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
             });
   }
 
-  private Pair<DownwardApiLaunchedProcess, OutputStream> launchProcessAndOpenOutputStream(
+  private Pair<LaunchedProcess, OutputStream> launchProcessAndOpenOutputStream(
       ImmutableList<String> startWorkerToolCommand,
       ImmutableMap<String, String> envs,
       String namedPipeName)
       throws IOException {
 
-    DownwardApiLaunchedProcess process;
+    LaunchedProcess process;
     OutputStream stream;
 
     // open stream
     Future<OutputStream> streamFuture = WORKER_POO_THREAD_POOL.submit(this::openStream);
     // launch process
-    Future<DownwardApiLaunchedProcess> processFuture =
+    Future<LaunchedProcess> processFuture =
         WORKER_POO_THREAD_POOL.submit(
             () -> launchProcess(startWorkerToolCommand, envs, namedPipeName));
 
@@ -199,12 +201,12 @@ public class DefaultWorkerToolExecutor implements WorkerToolExecutor {
     }
   }
 
-  private DownwardApiLaunchedProcess launchProcess(
+  private LaunchedProcess launchProcess(
       ImmutableList<String> startWorkerToolCommand,
       ImmutableMap<String, String> envs,
       String namedPipeName)
       throws IOException {
-    DownwardApiLaunchedProcess launchedProcess;
+    LaunchedProcess launchedProcess;
     boolean launched = false;
     try {
       ImmutableMap<String, String> environment = buildEnvs(envs, namedPipeName);

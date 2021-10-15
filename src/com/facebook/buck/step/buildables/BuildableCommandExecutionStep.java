@@ -20,7 +20,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.external.constants.ExternalBinaryBuckConstants;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
@@ -84,7 +83,7 @@ public class BuildableCommandExecutionStep extends IsolatedStep {
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
     Path buildableCommandPath = writeBuildableCommandAndGetPath();
-    DownwardApiProcessExecutor downwardApiProcessExecutor = context.getDownwardApiProcessExecutor();
+    ProcessExecutor downwardApiProcessExecutor = context.getDownwardApiProcessExecutor();
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
             .addAllCommand(getCommand(buildableCommandPath))

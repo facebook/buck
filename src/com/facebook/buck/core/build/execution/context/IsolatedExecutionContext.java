@@ -135,12 +135,12 @@ public abstract class IsolatedExecutionContext implements Closeable {
    * Returns {@link DownwardApiProcessExecutor} created from the given {@link
    * #getProcessExecutor()}.
    */
-  public DownwardApiProcessExecutor getDownwardApiProcessExecutor() {
+  public ProcessExecutor getDownwardApiProcessExecutor() {
     return getDownwardApiProcessExecutor(getProcessExecutor());
   }
 
   /** Returns {@link DownwardApiProcessExecutor} created from the given {@code processExecutor}. */
-  public DownwardApiProcessExecutor getDownwardApiProcessExecutor(ProcessExecutor processExecutor) {
+  public ProcessExecutor getDownwardApiProcessExecutor(ProcessExecutor processExecutor) {
     return getDownwardApiProcessExecutor(processExecutor, DefaultNamedPipeEventHandler.FACTORY);
   }
 
@@ -148,7 +148,7 @@ public abstract class IsolatedExecutionContext implements Closeable {
    * Returns {@link DownwardApiProcessExecutor} that would use {@link NamedPipeEventHandler} create
    * by passed {@link NamedPipeEventHandlerFactory}
    */
-  public DownwardApiProcessExecutor getDownwardApiProcessExecutor(
+  public ProcessExecutor getDownwardApiProcessExecutor(
       NamedPipeEventHandlerFactory namedPipeEventReaderFactory) {
     return getDownwardApiProcessExecutor(getProcessExecutor(), namedPipeEventReaderFactory);
   }
@@ -157,15 +157,14 @@ public abstract class IsolatedExecutionContext implements Closeable {
    * Returns {@link DownwardApiProcessExecutor} that would use {@link NamedPipeEventHandler} create
    * by passed {@link NamedPipeEventHandlerFactory}
    */
-  private DownwardApiProcessExecutor getDownwardApiProcessExecutor(
+  private ProcessExecutor getDownwardApiProcessExecutor(
       ProcessExecutor processExecutor, NamedPipeEventHandlerFactory namedPipeEventReaderFactory) {
-    return (DownwardApiProcessExecutor)
-        processExecutor.withDownwardAPI(
-            DownwardApiProcessExecutor.FACTORY,
-            namedPipeEventReaderFactory,
-            getIsolatedEventBus(),
-            getActionId(),
-            getClock());
+    return processExecutor.withDownwardAPI(
+        DownwardApiProcessExecutor.FACTORY,
+        namedPipeEventReaderFactory,
+        getIsolatedEventBus(),
+        getActionId(),
+        getClock());
   }
 
   @Value.Default

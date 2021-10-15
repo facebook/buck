@@ -16,8 +16,6 @@
 
 package com.facebook.buck.downwardapi.processexecutor;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.namedpipes.DownwardPOSIXNamedPipeFactory;
@@ -28,11 +26,13 @@ import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.util.ConsoleParams;
+import com.facebook.buck.util.DelegateLaunchedProcess;
 import com.facebook.buck.util.DelegateProcessExecutor;
 import com.facebook.buck.util.DownwardApiProcessExecutorFactory;
 import com.facebook.buck.util.NamedPipeEventHandler;
 import com.facebook.buck.util.NamedPipeEventHandlerFactory;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.timing.Clock;
@@ -148,8 +148,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
             .from(params)
             .setEnvironment(buildEnvs(params, namedPipeName))
             .build();
-    ProcessExecutor.LaunchedProcess launchedProcess =
-        getDelegate().launchProcess(updatedParams, context);
+    LaunchedProcess launchedProcess = getDelegate().launchProcess(updatedParams, context);
 
     return new DownwardApiLaunchedProcess(launchedProcess, namedPipe, namedPipeEventHandler);
   }
@@ -189,16 +188,14 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
   @Override
   public DownwardApiExecutionResult execute(
-      ProcessExecutor.LaunchedProcess launchedProcess,
+      LaunchedProcess launchedProcess,
       Set<ProcessExecutor.Option> options,
       Optional<ProcessExecutor.Stdin> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
 
-    checkState(launchedProcess instanceof DownwardApiLaunchedProcess);
-    DownwardApiLaunchedProcess process = (DownwardApiLaunchedProcess) launchedProcess;
-
+    DownwardApiLaunchedProcess process = getDownwardApiLaunchedProcess(launchedProcess);
     Result result;
     try {
       result =
@@ -207,7 +204,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       LOG.info(e, "Downward process interrupted during execution");
       throw e;
     } finally {
-      launchedProcess.close();
+      process.close();
     }
 
     return new DownwardApiExecutionResult(
@@ -218,6 +215,25 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
         result.getCommand(),
         result.getResourceUsage(),
         process.isReaderThreadTerminated());
+  }
+
+  /** Extracts {@link DownwardApiLaunchedProcess} from the given {@link LaunchedProcess} */
+  public static DownwardApiLaunchedProcess getDownwardApiLaunchedProcess(
+      LaunchedProcess launchedProcess) {
+    if (launchedProcess instanceof DownwardApiLaunchedProcess) {
+      return (DownwardApiLaunchedProcess) launchedProcess;
+    }
+
+    while (launchedProcess instanceof DelegateLaunchedProcess) {
+      DelegateLaunchedProcess delegateLaunchedProcess = (DelegateLaunchedProcess) launchedProcess;
+      launchedProcess = delegateLaunchedProcess.getDelegate();
+      if (launchedProcess instanceof DownwardApiLaunchedProcess) {
+        return (DownwardApiLaunchedProcess) launchedProcess;
+      }
+    }
+
+    throw new IllegalStateException(
+        "Created process is not a " + DownwardApiLaunchedProcess.class.getSimpleName());
   }
 
   @Override

@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Optional;
 import java.util.Set;
@@ -37,14 +36,12 @@ import java.util.function.Consumer;
  * child executor is instructed to keep track of the resource utilization of the process being
  * executed.
  */
-public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
+public class ResourceMonitoringProcessExecutor extends DelegateProcessExecutor {
+
   private static final Logger LOG = Logger.get(ResourceMonitoringProcessExecutor.class);
 
-  /** A child ProcessExecutor to delegate actual process execution to. */
-  private final ProcessExecutor delegateExecutor;
-
   public ResourceMonitoringProcessExecutor(ProcessExecutor delegateExecutor) {
-    this.delegateExecutor = delegateExecutor;
+    super(delegateExecutor);
   }
 
   @Override
@@ -74,14 +71,14 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
             .build();
     ProcessExecutorParams childParams =
         ProcessExecutorParams.builder().from(params).setCommand(timeCommand).build();
-    LaunchedProcess delegate = delegateExecutor.launchProcess(childParams, context);
+    LaunchedProcess delegate = getDelegate().launchProcess(childParams, context);
     return new ResourceMonitoringLaunchedProcess(delegate, timeOutputFile, params.getCommand());
   }
 
   @Override
   public Result waitForLaunchedProcess(LaunchedProcess launchedProcess)
       throws InterruptedException {
-    Result delegateResult = delegateExecutor.waitForLaunchedProcess(launchedProcess);
+    Result delegateResult = getDelegate().waitForLaunchedProcess(launchedProcess);
     return wrapExecutionResultWithResourceUsage(launchedProcess, delegateResult);
   }
 
@@ -90,7 +87,7 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
       LaunchedProcess launchedProcess, long millis, Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
     Result delegateResult =
-        delegateExecutor.waitForLaunchedProcessWithTimeout(launchedProcess, millis, timeOutHandler);
+        getDelegate().waitForLaunchedProcessWithTimeout(launchedProcess, millis, timeOutHandler);
     return wrapExecutionResultWithResourceUsage(launchedProcess, delegateResult);
   }
 
@@ -103,7 +100,7 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
     Result delegateResult =
-        delegateExecutor.execute(launchedProcess, options, stdin, timeOutMs, timeOutHandler);
+        getDelegate().execute(launchedProcess, options, stdin, timeOutMs, timeOutHandler);
     return wrapExecutionResultWithResourceUsage(launchedProcess, delegateResult);
   }
 
@@ -111,7 +108,7 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
   public ProcessExecutor cloneWithOutputStreams(
       PrintStream stdOutStream, PrintStream stdErrStream) {
     return new ResourceMonitoringProcessExecutor(
-        delegateExecutor.cloneWithOutputStreams(stdOutStream, stdErrStream));
+        getDelegate().cloneWithOutputStreams(stdOutStream, stdErrStream));
   }
 
   @Override
@@ -122,8 +119,8 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
       ActionId actionId,
       Clock clock) {
     return new ResourceMonitoringProcessExecutor(
-        delegateExecutor.withDownwardAPI(
-            factory, namedPipeEventHandlerFactory, buckEventBus, actionId, clock));
+        getDelegate()
+            .withDownwardAPI(factory, namedPipeEventHandlerFactory, buckEventBus, actionId, clock));
   }
 
   private Optional<ResourceUsage> extractResourceUsage(LaunchedProcess process) {
@@ -136,7 +133,7 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
     // code paths, so it's safest to dispose of it here.
     ResourceMonitoringLaunchedProcess rmlProcess = (ResourceMonitoringLaunchedProcess) process;
     try (NamedTemporaryFile file = rmlProcess.timeFile) {
-      String contents = new String(Files.readAllBytes(file.get()), StandardCharsets.UTF_8);
+      String contents = Files.readString(file.get());
       ResourceUsage usage = new LinuxTimeParser().parse(contents);
       return Optional.of(usage);
     } catch (IOException exn) {
@@ -165,6 +162,7 @@ public class ResourceMonitoringProcessExecutor implements ProcessExecutor {
    * /usr/bin/time).
    */
   public static class ResourceMonitoringLaunchedProcess extends DelegateLaunchedProcess {
+
     private final NamedTemporaryFile timeFile;
     private final ImmutableList<String> originalCommand;
 
