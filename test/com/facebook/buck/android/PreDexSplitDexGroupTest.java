@@ -30,7 +30,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -109,7 +108,6 @@ public class PreDexSplitDexGroupTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 /* primaryDexPatterns */ ImmutableSet.of("Primary"),
-                Optional.of(FakeSourcePath.of("the/manifest.txt")),
                 /* primaryDexScenarioFile */ Optional.empty(),
                 /* isPrimaryDexScenarioOverflowAllowed */ false,
                 /* secondaryDexHeadClassesFile */ Optional.empty(),

@@ -135,14 +135,7 @@ public class SplitZipStepTest {
 
   @Test
   public void testRequiredInPrimaryZipPredicate() throws IOException {
-    Path primaryDexClassesFile = Paths.get("the/manifest.txt");
-    List<String> linesInManifestFile =
-        ImmutableList.of(
-            "com/google/common/collect/ImmutableSortedSet",
-            "  com/google/common/collect/ImmutableSet",
-            "# com/google/common/collect/ImmutableMap");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    projectFilesystem.writeLinesToPath(linesInManifestFile, primaryDexClassesFile);
 
     SplitZipStep splitZipStep =
         new SplitZipStep(
@@ -163,14 +156,12 @@ public class SplitZipStepTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 /* primaryDexPatterns */ ImmutableSet.of("List"),
-                Optional.of(FakeSourcePath.of("the/manifest.txt")),
                 /* primaryDexScenarioFile */ Optional.empty(),
                 /* isPrimaryDexScenarioOverflowAllowed */ false,
                 /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* secondaryDexTailClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
             Optional.empty(),
-            Optional.of(Paths.get("the/manifest.txt")),
             Optional.empty(),
             Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
@@ -183,17 +174,17 @@ public class SplitZipStepTest {
         splitZipStep.createRequiredInPrimaryZipPredicate(
             ProguardTranslatorFactory.createForTest(Optional.empty()),
             Suppliers.ofInstance(ImmutableList.of()));
-    assertTrue(
-        "com/google/common/collect/ImmutableSortedSet.class is listed in the manifest verbatim.",
+    assertFalse(
+        "com/google/common/collect/ImmutableSortedSet.class is not even mentioned.",
         requiredInPrimaryZipPredicate.test("com/google/common/collect/ImmutableSortedSet.class"));
-    assertTrue(
-        "com/google/common/collect/ImmutableSet.class is in the manifest with whitespace.",
+    assertFalse(
+        "com/google/common/collect/ImmutableSet.class is not even mentioned.",
         requiredInPrimaryZipPredicate.test("com/google/common/collect/ImmutableSet.class"));
     assertFalse(
         "com/google/common/collect/ImmutableSet.class cannot have whitespace as param.",
         requiredInPrimaryZipPredicate.test("  com/google/common/collect/ImmutableSet.class"));
     assertFalse(
-        "com/google/common/collect/ImmutableMap.class is commented out.",
+        "com/google/common/collect/ImmutableMap.class is not even mentioned.",
         requiredInPrimaryZipPredicate.test("com/google/common/collect/ImmutableMap.class"));
     assertFalse(
         "com/google/common/collect/Iterables.class is not even mentioned.",
@@ -217,8 +208,11 @@ public class SplitZipStepTest {
             "foo.primary.MappedPackage -> x.a:",
             "foo.secondary.MappedPackage -> x.b:",
             "foo.primary.UnmappedPackage -> foo.primary.UnmappedPackage:");
-    List<String> linesInManifestFile =
-        ImmutableList.of(
+
+    ImmutableSet<String> primaryDexPatterns =
+        ImmutableSet.of(
+            "/primary/",
+            "x/",
             // Actual primary dex classes.
             "foo/bar/MappedPrimary",
             "foo/bar/UnmappedPrimary",
@@ -228,10 +222,8 @@ public class SplitZipStepTest {
 
     Path proguardConfigFile = Paths.get("the/configuration.txt");
     Path proguardMappingFile = Paths.get("the/mapping.txt");
-    Path primaryDexClassesFile = Paths.get("the/manifest.txt");
 
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    projectFilesystem.writeLinesToPath(linesInManifestFile, primaryDexClassesFile);
     projectFilesystem.writeLinesToPath(ImmutableList.of(), proguardConfigFile);
     projectFilesystem.writeLinesToPath(linesInMappingFile, proguardMappingFile);
 
@@ -253,15 +245,13 @@ public class SplitZipStepTest {
                 ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
-                /* primaryDexPatterns */ ImmutableSet.of("/primary/", "x/"),
-                Optional.of(FakeSourcePath.of("the/manifest.txt")),
+                primaryDexPatterns,
                 /* primaryDexScenarioFile */ Optional.empty(),
                 /* isPrimaryDexScenarioOverflowAllowed */ false,
                 /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* secondaryDexTailClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
             Optional.empty(),
-            Optional.of(Paths.get("the/manifest.txt")),
             Optional.empty(),
             Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
@@ -330,13 +320,11 @@ public class SplitZipStepTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 /* primaryDexPatterns */ ImmutableSet.of("primary"),
-                /* primaryDexClassesFile */ Optional.empty(),
                 /* primaryDexScenarioFile */ Optional.empty(),
                 /* isPrimaryDexScenarioOverflowAllowed */ false,
                 /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* secondaryDexTailClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
-            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
@@ -405,14 +393,12 @@ public class SplitZipStepTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 /* primaryDexPatterns */ ImmutableSet.of(),
-                /* primaryDexClassesFile */ Optional.empty(),
                 Optional.of(FakeSourcePath.of("the/primary_dex_scenario.txt")),
                 /* isPrimaryDexScenarioOverflowAllowed */ false,
                 /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* secondaryDexTailClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
             Optional.of(Paths.get("the/primary_dex_scenario.txt")),
-            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
@@ -489,14 +475,12 @@ public class SplitZipStepTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 /* primaryDexPatterns */ ImmutableSet.of(),
-                /* primaryDexClassesFile */ Optional.empty(),
                 Optional.of(FakeSourcePath.of("the/primary_dex_scenario.txt")),
                 /* isPrimaryDexScenarioOverflowAllowed */ false,
                 /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* secondaryDexTailClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
             Optional.of(Paths.get("the/primary_dex_scenario.txt")),
-            Optional.empty(),
             Optional.empty(),
             Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),

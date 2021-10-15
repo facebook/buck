@@ -91,7 +91,6 @@ public class SplitZipStep implements Step {
   private final Path pathToReportDir;
 
   private final Optional<Path> primaryDexScenarioFile;
-  private final Optional<Path> primaryDexClassesFile;
   private final Optional<Path> secondaryDexHeadClassesFile;
   private final Optional<Path> secondaryDexTailClassesFile;
   private final ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap;
@@ -130,7 +129,6 @@ public class SplitZipStep implements Step {
       boolean skipProguard,
       DexSplitMode dexSplitMode,
       Optional<Path> primaryDexScenarioFile,
-      Optional<Path> primaryDexClassesFile,
       Optional<Path> secondaryDexHeadClassesFile,
       Optional<Path> secondaryDexTailClassesFile,
       ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
@@ -150,7 +148,6 @@ public class SplitZipStep implements Step {
     this.skipProguard = skipProguard;
     this.dexSplitMode = dexSplitMode;
     this.primaryDexScenarioFile = primaryDexScenarioFile;
-    this.primaryDexClassesFile = primaryDexClassesFile;
     this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
     this.secondaryDexTailClassesFile = secondaryDexTailClassesFile;
     this.apkModuleToJarPathMap = apkModuleToJarPathMap;
@@ -284,16 +281,6 @@ public class SplitZipStep implements Step {
       Supplier<ImmutableList<ClassNode>> classesSupplier)
       throws IOException {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-
-    if (primaryDexClassesFile.isPresent()) {
-      Iterable<String> classes =
-          filesystem.readLines(primaryDexClassesFile.get()).stream()
-              .map(String::trim)
-              .filter(SplitZipStep::isNeitherEmptyNorComment)
-              .collect(Collectors.toList());
-      builder.addAll(classes);
-    }
-
     // If there is a scenario file but overflow is not allowed, then the scenario dependencies
     // are required, and therefore get added here.
     if (!dexSplitMode.isPrimaryDexScenarioOverflowAllowed() && primaryDexScenarioFile.isPresent()) {

@@ -246,7 +246,6 @@ public class AndroidBinaryDescription
         args.getFieldRefCountBufferSpace(),
         args.getDexGroupLibLimit(),
         args.getPrimaryDexPatterns(),
-        args.getPrimaryDexClassesFile(),
         args.getPrimaryDexScenarioFile(),
         args.isPrimaryDexScenarioOverflowAllowed(),
         args.getSecondaryDexHeadClassesFile(),
@@ -320,8 +319,6 @@ public class AndroidBinaryDescription
     abstract Optional<DexStore> getDexCompression();
 
     abstract List<String> getPrimaryDexPatterns();
-
-    abstract Optional<SourcePath> getPrimaryDexClassesFile();
 
     abstract Optional<SourcePath> getPrimaryDexScenarioFile();
 

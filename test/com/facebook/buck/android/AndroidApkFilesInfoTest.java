@@ -114,7 +114,6 @@ public class AndroidApkFilesInfoTest {
               DexStore.JAR,
               /* linearAllocHardLimit */ 4 * 1024 * 1024,
               /* primaryDexPatterns */ ImmutableSet.of("List"),
-              Optional.of(FakeSourcePath.of("the/manifest.txt")),
               /* primaryDexScenarioFile */ Optional.empty(),
               /* isPrimaryDexScenarioOverflowAllowed */ false,
               /* secondaryDexHeadClassesFile */ Optional.empty(),

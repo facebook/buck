@@ -39,7 +39,6 @@ class DexSplitMode implements AddsToRuleKey {
           /* fieldRefCountBufferSpace */ 0,
           /* splitDexLibLimit */ 0,
           /* primaryDexPatterns */ ImmutableSet.of(),
-          /* primaryDexClassesFile */ Optional.empty(),
           /* primaryDexScenarioFile */ Optional.empty(),
           /* isPrimaryDexScenarioOverflowAllowed */ false,
           /* secondaryDexHeadClassesFile */ Optional.empty(),
@@ -83,18 +82,6 @@ class DexSplitMode implements AddsToRuleKey {
   @AddToRuleKey private final int dexGroupLibLimit;
 
   @AddToRuleKey private final ImmutableSortedSet<String> primaryDexPatterns;
-
-  /**
-   * File that whitelists the class files that should be in the primary dex.
-   *
-   * <p>Values in this file must match JAR entries (without the .class suffix), so they should
-   * contain path separators. For example:
-   *
-   * <pre>
-   * java/util/Map$Entry
-   * </pre>
-   */
-  @AddToRuleKey private final Optional<SourcePath> primaryDexClassesFile;
 
   /**
    * File identifying the class files used in scenarios we want to fit in the primary dex. We will
@@ -151,8 +138,6 @@ class DexSplitMode implements AddsToRuleKey {
    * @param primaryDexPatterns Set of substrings that, when matched, will cause individual input
    *     class or resource files to be placed into the primary jar (and thus the primary dex
    *     output). These classes are required for correctness.
-   * @param primaryDexClassesFile Path to a file containing a list of classes that must be included
-   *     in the primary dex. These classes are required for correctness.
    * @param primaryDexScenarioFile Path to a file containing a list of classes used in a scenario
    *     that should be included in the primary dex along with all dependency classes required for
    *     preverification. These dependencies will be calculated by buck. This list is used for
@@ -174,7 +159,6 @@ class DexSplitMode implements AddsToRuleKey {
       long fieldRefCountBufferSpace,
       int dexGroupLibLimit,
       Collection<String> primaryDexPatterns,
-      Optional<SourcePath> primaryDexClassesFile,
       Optional<SourcePath> primaryDexScenarioFile,
       boolean isPrimaryDexScenarioOverflowAllowed,
       Optional<SourcePath> secondaryDexHeadClassesFile,
@@ -188,7 +172,6 @@ class DexSplitMode implements AddsToRuleKey {
     this.fieldRefCountBufferSpace = fieldRefCountBufferSpace;
     this.dexGroupLibLimit = dexGroupLibLimit;
     this.primaryDexPatterns = ImmutableSortedSet.copyOf(primaryDexPatterns);
-    this.primaryDexClassesFile = primaryDexClassesFile;
     this.primaryDexScenarioFile = primaryDexScenarioFile;
     this.isPrimaryDexScenarioOverflowAllowed = isPrimaryDexScenarioOverflowAllowed;
     this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
@@ -202,7 +185,6 @@ class DexSplitMode implements AddsToRuleKey {
       DexStore dexStore,
       long linearAllocHardLimit,
       Collection<String> primaryDexPatterns,
-      Optional<SourcePath> primaryDexClassesFile,
       Optional<SourcePath> primaryDexScenarioFile,
       boolean isPrimaryDexScenarioOverflowAllowed,
       Optional<SourcePath> secondaryDexHeadClassesFile,
@@ -217,7 +199,6 @@ class DexSplitMode implements AddsToRuleKey {
         0,
         DEFAULT_DEX_GROUP_LIB_LIMIT,
         primaryDexPatterns,
-        primaryDexClassesFile,
         primaryDexScenarioFile,
         isPrimaryDexScenarioOverflowAllowed,
         secondaryDexHeadClassesFile,
@@ -256,10 +237,6 @@ class DexSplitMode implements AddsToRuleKey {
 
   public ImmutableSet<String> getPrimaryDexPatterns() {
     return primaryDexPatterns;
-  }
-
-  public Optional<SourcePath> getPrimaryDexClassesFile() {
-    return primaryDexClassesFile;
   }
 
   public Optional<SourcePath> getPrimaryDexScenarioFile() {
