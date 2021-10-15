@@ -35,10 +35,6 @@
       <excludeFolder url="file://$MODULE_DIR$/logd-out" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij" />
-      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/java8" />
-      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/source/java8" />
-      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/plugin/adapter/java8" />
-      <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/multitenant" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/agent/util/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/exopackage/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/android/testdata" />

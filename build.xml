@@ -108,6 +108,10 @@
     <istrue value="${error.prone}" />
   </condition>
 
+  <condition property="jdk11_or_higher">
+    <hasmethod classname="java.lang.String" method="stripTrailing"/>
+  </condition>
+
   <!-- Javadoc became stricter about parsing the docs. This disables some of those checks -->
   <property name="javadoc.doclint" value="-Xdoclint:-reference" />
 
@@ -347,10 +351,9 @@
                                   dx, javac-plugin, kotlinc-plugin, report-generator-jar, create-classpath,
                                   create-resources-signature, gen-package-info, mark-successful-build" />
 
+
   <target name="checkversion" depends="print-java-version">
-    <!-- The function Function class was only introduced in Java 8. -->
-    <available property="jdk8" classname="java.util.function.Function"/>
-    <fail message="Require JDK 8 or higher" unless="jdk8"/>
+    <fail message="Require JDK 11 or higher" unless="jdk11_or_higher"/>
   </target>
 
   <target name="compile-manual-gen-src" depends="checkversion">
@@ -482,7 +485,6 @@
         <include name="com/facebook/buck/jvm/java/abi/source/*.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/java11/*.java" />
         <include name="com/facebook/buck/jvm/java/plugin/adapter/**/*.java" />
-        <exclude name="com/facebook/buck/**/java8/*.java"/>
       </javac-params>
     </compiler>
     <jar destfile="${javac-plugin.jar}">
@@ -660,7 +662,6 @@
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
-          <exclude name="com/facebook/buck/jvm/java/abi/java8/**"/>
         </patternset>
       </javac-params>
     </compiler>
@@ -1301,7 +1302,6 @@
         <fileset dir="${src.dir}">
           <include name="**/*.java" />
           <exclude name="com/facebook/buck/android/support/exopackage/**" />
-          <exclude name="com/facebook/buck/**/java8/*.java"/>
         </fileset>
         <fileset dir="${gensrc.dir}" />
         <fileset dir="${buck.modules.classes.dir}/gen/" />
