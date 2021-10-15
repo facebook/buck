@@ -107,20 +107,9 @@
     else="${ecj.compiler.path}">
     <istrue value="${error.prone}" />
   </condition>
-  <condition property="jdk11_or_higher">
-    <hasmethod classname="java.lang.String" method="stripTrailing"/>
-  </condition>
 
-  <!-- Javadoc in 1.8 became stricter about parsing the docs. This disables some of those checks -->
-  <available property="jdk8_or_higher" classname="java.util.stream.Stream"/>
-  <condition
-          property="javadoc.doclint"
-          value="-Xdoclint:-reference"
-          else="">
-    <and>
-      <isset property="jdk8_or_higher"/>
-    </and>
-  </condition>
+  <!-- Javadoc became stricter about parsing the docs. This disables some of those checks -->
+  <property name="javadoc.doclint" value="-Xdoclint:-reference" />
 
   <typedef resource="org/jetbrains/kotlin/ant/antlib.xml" classpath="${kotlin.lib}kotlin-ant.jar"/>
 
@@ -397,9 +386,6 @@
            classpathref="testrunner.classpath"
            debug="on"
            includeAntRuntime="no"
-           source="8"
-           target="8"
-           bootclasspath="third-party/java/jdk/jdk8-rt-stub.jar"
            >
       <include name="com/facebook/buck/log/AppendableLogRecord.java" />
       <include name="com/facebook/buck/testrunner/**" />
@@ -494,12 +480,9 @@
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/PropagatesNullable.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/*.java" />
-        <include name="com/facebook/buck/jvm/java/abi/source/java8/*.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/java11/*.java" />
         <include name="com/facebook/buck/jvm/java/plugin/adapter/**/*.java" />
-        <!-- Conditional compilation so we can simultaneously build against Java 8 and 11. -->
-        <exclude name="com/facebook/buck/**/java8/*.java" if="jdk11_or_higher"/>
-        <exclude name="com/facebook/buck/**/java11/*.java" unless="jdk11_or_higher"/>
+        <exclude name="com/facebook/buck/**/java8/*.java"/>
       </javac-params>
     </compiler>
     <jar destfile="${javac-plugin.jar}">
@@ -677,10 +660,7 @@
           <exclude name="com/facebook/buck/jvm/java/lang/model/**" />
           <exclude name="com/facebook/buck/jvm/java/plugin/adapter/**" />
           <exclude name="com/facebook/buck/testrunner/**" />
-
-          <!-- Conditional compilation so we can simultaneously build against Java 8 and 11. -->
-          <exclude name="com/facebook/buck/jvm/java/abi/java8/**" if="jdk11_or_higher"/>
-          <exclude name="com/facebook/buck/jvm/java/abi/java11/**" unless="jdk11_or_higher"/>
+          <exclude name="com/facebook/buck/jvm/java/abi/java8/**"/>
         </patternset>
       </javac-params>
     </compiler>
@@ -961,8 +941,8 @@
 
     <javac destdir="${build.dir}/bazel"
       debug="on"
-      source="8"
-      target="8">
+      source="11"
+      target="11">
       <compilerarg value="-processorpath"/>
       <compilerarg value="${bazel.processorpath}"/>
       <src path="starlark/src/main/java"/>
@@ -1321,9 +1301,7 @@
         <fileset dir="${src.dir}">
           <include name="**/*.java" />
           <exclude name="com/facebook/buck/android/support/exopackage/**" />
-          <!-- Conditional compilation so we can simultaneously build against Java 8 and 11. -->
-          <exclude name="com/facebook/buck/**/java8/*.java" if="jdk11_or_higher"/>
-          <exclude name="com/facebook/buck/**/java11/*.java" unless="jdk11_or_higher"/>
+          <exclude name="com/facebook/buck/**/java8/*.java"/>
         </fileset>
         <fileset dir="${gensrc.dir}" />
         <fileset dir="${buck.modules.classes.dir}/gen/" />
