@@ -77,7 +77,7 @@ import java.util.zip.ZipFile;
  * Buildable that takes in a list of {@link HasAndroidResourceDeps} and for each of these rules,
  * first creates an {@code R.java} file using {@link MergeAndroidResourcesStep} and compiles it to
  * generate a corresponding {@code R.class} file. These are called "dummy" {@code R.java} files
- * since these are later merged together into a single {@code R.java} file by {@link AaptStep}.
+ * since these only created to enable {@link AndroidLibrary}s to build.
  */
 public class DummyRDotJava extends AbstractBuildRule
     implements SupportsInputBasedRuleKey, InitializableFromDisk<Object>, HasJavaAbi {

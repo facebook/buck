@@ -41,13 +41,16 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.IOException;
@@ -157,7 +160,7 @@ public class Aapt2Link extends AbstractBuildRule {
                 getProjectFilesystem(),
                 getResourceApkPath().getParent())));
 
-    AaptPackageResources.prepareManifestForAapt(
+    prepareManifestForAapt(
         context,
         steps,
         getProjectFilesystem(),
@@ -211,6 +214,32 @@ public class Aapt2Link extends AbstractBuildRule {
     buildableContext.recordArtifact(getInitialRDotJavaDir());
 
     return steps.build();
+  }
+
+  static void prepareManifestForAapt(
+      BuildContext context,
+      ImmutableList.Builder<Step> stepBuilder,
+      ProjectFilesystem projectFilesystem,
+      RelPath finalManifestPath,
+      Path rawManifestPath,
+      ManifestEntries manifestEntries) {
+    // Copy manifest to a path named AndroidManifest.xml after replacing the manifest placeholders
+    // if needed. Do this before running any other commands to ensure that it is available at the
+    // desired path.
+
+    stepBuilder.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), projectFilesystem, finalManifestPath.getParent())));
+
+    Optional<ImmutableMap<String, String>> placeholders = manifestEntries.getPlaceholders();
+    if (placeholders.isPresent() && !placeholders.get().isEmpty()) {
+      stepBuilder.add(
+          new ReplaceManifestPlaceholdersStep(
+              projectFilesystem, rawManifestPath, finalManifestPath.getPath(), placeholders.get()));
+    } else {
+      stepBuilder.add(CopyStep.forFile(rawManifestPath, finalManifestPath.getPath()));
+    }
   }
 
   @Nullable
