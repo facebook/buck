@@ -61,7 +61,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       UnzipAar unzipAar,
       CompileToJarStepFactory<?> configuredCompiler,
       Javac javac,
-      Iterable<PrebuiltJar> exportedDeps,
+      Iterable<BuildRule> exportedDeps,
       boolean requiredForSourceAbi,
       Optional<String> mavenCoords,
       boolean useSystemLibraryLoader,
