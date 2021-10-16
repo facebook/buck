@@ -195,16 +195,14 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException {
 
-    DownwardApiLaunchedProcess process = getDownwardApiLaunchedProcess(launchedProcess);
+    var process = getDownwardApiLaunchedProcess(launchedProcess);
     Result result;
-    try {
+    try (process) {
       result =
           getDelegate().execute(process.getDelegate(), options, stdin, timeOutMs, timeOutHandler);
     } catch (InterruptedException e) {
       LOG.info(e, "Downward process interrupted during execution");
       throw e;
-    } finally {
-      process.close();
     }
 
     return new DownwardApiExecutionResult(

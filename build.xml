@@ -548,8 +548,8 @@
       classpathref="android-annotations.classpath" >
       <compiler-params>
         <!-- suppress ManifestMerger2 warnings -->
-        <compilerarg value="-err:-all" compiler="${ecj.compiler}"/>
-        <compilerarg value="-warn:-all" compiler="${ecj.compiler}"/>
+        <compilerarg value="-err:-all" />
+        <compilerarg value="-warn:-all" />
       </compiler-params>
     </compiler>
   </target>
@@ -597,10 +597,13 @@
           http://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fcore%2FJavaCore.html
           Apparently Eclipse refuses to publish traditional Javadoc with manageable URLs.
         -->
-        <compilerarg line="-properties '${eclipse.dir}/${eclipse.jdt.core.prefs.file}'" compiler="${ecj.compiler}" />
+        <compilerarg line="-properties '${eclipse.dir}/${eclipse.jdt.core.prefs.file}'"  />
         <compilerarg value="-Xlint:rawtypes" />
         <compilerarg value="-Xlint:unchecked" />
-        <compilerarg value="-time" compiler="${ecj.compiler}" />
+        <!--  Support of sun.security modules in java 9+ -->
+        <compilerarg line="--add-exports java.base/sun.security.pkcs=ALL-UNNAMED" />
+        <compilerarg line="--add-exports java.base/sun.security.x509=ALL-UNNAMED" />
+        <compilerarg value="-time"  />
         <compilerclasspath>
             <pathelement location="${buck.build.compiler.jar.path}" />
         </compilerclasspath>
@@ -1286,9 +1289,6 @@
       <delete dir="@{destdir}" />
       <mkdir dir="@{destdir}" />
       <record name="@{destdir}/javadoc.log" action="start" />
-
-      <!-- Explicitly set source to 8 to work around JDK-8212233 when run under
-           Java 11.0.2. -->
       <javadoc destdir="@{destdir}"
                access="@{access}"
                classpathref="@{classpathref}"
@@ -1296,7 +1296,7 @@
                failonerror="true"
                additionalparam="${javadoc.doclint}"
                useexternalfile="true"
-               source="8"
+               source="11"
                >
         <arg value="-notimestamp"/>
         <fileset dir="${src.dir}">
@@ -1305,9 +1305,6 @@
         </fileset>
         <fileset dir="${gensrc.dir}" />
         <fileset dir="${buck.modules.classes.dir}/gen/" />
-        <link href="http://docs.oracle.com/javase/7/docs/api/"
-              offline="true"
-              packagelistloc="third-party/java/javase" />
         <link href="http://docs.guava-libraries.googlecode.com/git-history/v18.0/javadoc/"
               offline="true"
               packagelistloc="third-party/java/guava"/>
