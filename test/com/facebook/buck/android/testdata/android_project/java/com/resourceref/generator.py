@@ -14,8 +14,8 @@ def main(argv):
         )
         for c in range(RES_COUNT):
             print('  <color name="color_%d">#000</color>' % c)
-            print('  <string name="string_%d">hi</string>'% c)
-            print('  <item type="id" name="id_%d" />'% c)
+            print('  <string name="string_%d">hi</string>' % c)
+            print('  <item type="id" name="id_%d" />' % c)
         print(
             """\
 </resources>
