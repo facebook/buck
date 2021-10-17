@@ -91,6 +91,8 @@ import okio.Source;
 /** Creates instances of the {@link ArtifactCache}. */
 public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
 
+  private static final String RE_USE_CASE = "buckcache";
+
   private static final Logger LOG = Logger.get(ArtifactCaches.class);
   private static final int TIMEOUT_SECONDS = 60;
 
@@ -722,7 +724,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                         .setScheduleType(buckConfig.getScheduleType())
                         .setRepository(buckConfig.getRepository())
                         .build())
-                .setUseCaseId("buck-default")
+                .setUseCaseId(RE_USE_CASE)
                 .build();
 
         casClient =
