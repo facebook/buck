@@ -30,7 +30,5 @@ abstract class AaptOutputInfo {
 
   public abstract SourcePath getPrimaryResourcesApkPath();
 
-  public abstract SourcePath getAndroidManifestXml();
-
   public abstract SourcePath getAaptGeneratedProguardConfigFile();
 }

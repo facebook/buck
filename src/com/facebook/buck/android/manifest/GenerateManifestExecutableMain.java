@@ -18,6 +18,7 @@ package com.facebook.buck.android.manifest;
 
 import com.android.common.utils.StdLogger;
 import com.facebook.buck.util.ThrowingPrintWriter;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -61,6 +62,7 @@ public class GenerateManifestExecutableMain {
             skeletonManifestPath,
             moduleName,
             libraryManifestsFilePaths,
+            ImmutableMap.of(),
             outputPath,
             mergeReportPath,
             new StdLogger(StdLogger.Level.ERROR));

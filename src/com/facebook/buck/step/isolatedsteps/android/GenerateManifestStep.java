@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 
@@ -37,18 +38,21 @@ public class GenerateManifestStep extends IsolatedStep {
   private final RelPath outManifestPath;
   private final RelPath mergeReportPath;
   private final String moduleName;
+  private final ImmutableMap<String, String> placeholders;
 
   public GenerateManifestStep(
       RelPath skeletonManifestPath,
       String moduleName,
       ImmutableSet<RelPath> libraryManifestPaths,
       RelPath outManifestPath,
-      RelPath mergeReportPath) {
+      RelPath mergeReportPath,
+      ImmutableMap<String, String> placeholders) {
     this.skeletonManifestPath = skeletonManifestPath;
     this.moduleName = moduleName;
     this.libraryManifestPaths = ImmutableSet.copyOf(libraryManifestPaths);
     this.outManifestPath = outManifestPath;
     this.mergeReportPath = mergeReportPath;
+    this.placeholders = placeholders;
   }
 
   @Override
@@ -62,6 +66,7 @@ public class GenerateManifestStep extends IsolatedStep {
             libraryManifestPaths.stream()
                 .map(relPath -> ProjectFilesystemUtils.getPathForRelativePath(root, relPath))
                 .collect(ImmutableSet.toImmutableSet()),
+            placeholders,
             ProjectFilesystemUtils.getPathForRelativePath(root, outManifestPath),
             ProjectFilesystemUtils.getPathForRelativePath(root, mergeReportPath),
             new ManifestMergerLogger(context.getIsolatedEventBus()));

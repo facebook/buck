@@ -32,6 +32,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.stream.RichStream;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -77,7 +78,8 @@ public class GenerateManifestStepTest {
             APKModule.ROOT_APKMODULE_NAME,
             libraryManifestFiles,
             outputPath,
-            mergeReportPath);
+            mergeReportPath,
+            ImmutableMap.of("PERMISSION_TO_REPLACE", "INTERNET"));
     int result = manifestCommand.execute(context).getExitCode();
 
     assertEquals(0, result);
@@ -118,7 +120,12 @@ public class GenerateManifestStepTest {
 
     GenerateManifestStep manifestCommand =
         new GenerateManifestStep(
-            skeletonPath, "MODULE_NAME", libraryManifestFiles, outputPath, mergeReportPath);
+            skeletonPath,
+            "MODULE_NAME",
+            libraryManifestFiles,
+            outputPath,
+            mergeReportPath,
+            ImmutableMap.of());
     int result = manifestCommand.execute(context).getExitCode();
 
     assertEquals(0, result);

@@ -27,6 +27,7 @@ import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.android.GenerateManifestStep;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -47,7 +48,8 @@ public class AndroidManifestExternalActionTest {
             ImmutableList.of("library_manifest1", "library_manifest2"),
             "output_manifest",
             "merge_report",
-            "module_name");
+            "module_name",
+            ImmutableMap.of());
 
     try {
       String json = ObjectMappers.WRITER.writeValueAsString(args);

@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -50,6 +51,7 @@ public class AndroidManifestFactory {
         skeleton,
         APKModule.of(APKModule.ROOT_APKMODULE_NAME, true),
         manifestFiles,
+        ManifestEntries.empty(),
         shouldExecuteInSeparateProcess);
   }
 }

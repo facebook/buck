@@ -36,21 +36,17 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.IOException;
@@ -73,7 +69,6 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final boolean noResourceRemoval;
   @AddToRuleKey private final ImmutableList<Aapt2Compile> compileRules;
   @AddToRuleKey private final SourcePath manifest;
-  @AddToRuleKey private final ManifestEntries manifestEntries;
   @AddToRuleKey private final int packageIdOffset;
   @AddToRuleKey private final ImmutableList<SourcePath> dependencyResourceApks;
   @AddToRuleKey private final Tool aapt2Tool;
@@ -97,7 +92,6 @@ public class Aapt2Link extends AbstractBuildRule {
       SourcePathRuleFinder ruleFinder,
       ImmutableList<Aapt2Compile> compileRules,
       SourcePath manifest,
-      ManifestEntries manifestEntries,
       int packageIdOffset,
       ImmutableList<SourcePath> dependencyResourceApks,
       boolean includesVectorDrawables,
@@ -120,7 +114,6 @@ public class Aapt2Link extends AbstractBuildRule {
     super(buildTarget, projectFilesystem);
     this.compileRules = compileRules;
     this.manifest = manifest;
-    this.manifestEntries = manifestEntries;
     this.packageIdOffset = packageIdOffset;
     this.dependencyResourceApks = dependencyResourceApks;
     this.includesVectorDrawables = includesVectorDrawables;
@@ -160,14 +153,6 @@ public class Aapt2Link extends AbstractBuildRule {
                 getProjectFilesystem(),
                 getResourceApkPath().getParent())));
 
-    prepareManifestForAapt(
-        context,
-        steps,
-        getProjectFilesystem(),
-        getFinalManifestPath(),
-        context.getSourcePathResolver().getAbsolutePath(manifest).getPath(),
-        manifestEntries);
-
     // Need to reverse the order of the rules because aapt2 allows later resources
     // to override earlier ones, but aapt gives the earlier ones precedence.
     List<Path> compiledResourcePaths =
@@ -206,7 +191,6 @@ public class Aapt2Link extends AbstractBuildRule {
               withDownwardApi));
     }
 
-    buildableContext.recordArtifact(getFinalManifestPath().getPath());
     buildableContext.recordArtifact(getResourceApkPath());
     buildableContext.recordArtifact(getProguardConfigPath());
     buildableContext.recordArtifact(getRDotTxtPath());
@@ -214,32 +198,6 @@ public class Aapt2Link extends AbstractBuildRule {
     buildableContext.recordArtifact(getInitialRDotJavaDir());
 
     return steps.build();
-  }
-
-  static void prepareManifestForAapt(
-      BuildContext context,
-      ImmutableList.Builder<Step> stepBuilder,
-      ProjectFilesystem projectFilesystem,
-      RelPath finalManifestPath,
-      Path rawManifestPath,
-      ManifestEntries manifestEntries) {
-    // Copy manifest to a path named AndroidManifest.xml after replacing the manifest placeholders
-    // if needed. Do this before running any other commands to ensure that it is available at the
-    // desired path.
-
-    stepBuilder.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), projectFilesystem, finalManifestPath.getParent())));
-
-    Optional<ImmutableMap<String, String>> placeholders = manifestEntries.getPlaceholders();
-    if (placeholders.isPresent() && !placeholders.get().isEmpty()) {
-      stepBuilder.add(
-          new ReplaceManifestPlaceholdersStep(
-              projectFilesystem, rawManifestPath, finalManifestPath.getPath(), placeholders.get()));
-    } else {
-      stepBuilder.add(CopyStep.forFile(rawManifestPath, finalManifestPath.getPath()));
-    }
   }
 
   @Nullable
@@ -254,10 +212,6 @@ public class Aapt2Link extends AbstractBuildRule {
 
   private Path getArgsPath() {
     return getGenDir().resolve("aapt2-R-args.txt");
-  }
-
-  private RelPath getFinalManifestPath() {
-    return getGenDir().resolveRel("AndroidManifest.xml");
   }
 
   private Path getResourceApkPath() {
@@ -281,7 +235,6 @@ public class Aapt2Link extends AbstractBuildRule {
     return ImmutableAaptOutputInfo.ofImpl(
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getRDotTxtPath()),
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResourceApkPath()),
-        ExplicitBuildTargetSourcePath.of(getBuildTarget(), getFinalManifestPath()),
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getProguardConfigPath()));
   }
 
@@ -365,7 +318,7 @@ public class Aapt2Link extends AbstractBuildRule {
       // aapt2 only supports @ for -R or input files, not for all args, so we pass in all "normal"
       // args here.
       builder.add("-o", getResourceApkPath().toString());
-      builder.add("--manifest", getFinalManifestPath().toString());
+      builder.add("--manifest", pathResolver.getAbsolutePath(manifest).toString());
       if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
         builder.add("-v");
       }

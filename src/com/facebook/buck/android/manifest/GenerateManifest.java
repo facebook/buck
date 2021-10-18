@@ -22,7 +22,10 @@ import com.android.manifmerger.MergingReport;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
@@ -30,6 +33,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class GenerateManifest {
 
@@ -37,6 +42,7 @@ public class GenerateManifest {
       Path skeletonManifestPath,
       String moduleName,
       ImmutableSet<Path> libraryManifestPaths,
+      ImmutableMap<String, String> placeholders,
       Path outManifestPath,
       Path mergeReportPath,
       ILogger logger)
@@ -63,6 +69,7 @@ public class GenerateManifest {
             logger);
 
     String xmlText = mergingReport.getMergedDocument(MergingReport.MergedManifestKind.MERGED);
+    xmlText = replacePlaceholders(xmlText, placeholders);
 
     if (Platform.detect() == Platform.WINDOWS) {
       // Convert line endings to Lf on Windows.
@@ -108,5 +115,23 @@ public class GenerateManifest {
       throw new HumanReadableException(
           e.getCause(), "Error generating manifest file: %s", e.getMessage());
     }
+  }
+
+  @VisibleForTesting
+  static String replacePlaceholders(String content, ImmutableMap<String, String> placeholders) {
+    Iterable<String> escaped = Iterables.transform(placeholders.keySet(), Pattern::quote);
+
+    Joiner joiner = Joiner.on("|");
+    String patternString =
+        Pattern.quote("${") + "(" + joiner.join(escaped) + ")" + Pattern.quote("}");
+    Pattern pattern = Pattern.compile(patternString);
+    Matcher matcher = pattern.matcher(content);
+
+    StringBuffer sb = new StringBuffer();
+    while (matcher.find()) {
+      matcher.appendReplacement(sb, placeholders.get(matcher.group(1)));
+    }
+    matcher.appendTail(sb);
+    return sb.toString();
   }
 }

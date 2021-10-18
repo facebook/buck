@@ -243,7 +243,6 @@ public class RobolectricTestDescription
             graphBuilder,
             compileables,
             args.getRobolectricManifest(),
-            args.getManifestEntries(),
             0,
             ImmutableList.of(),
             false,

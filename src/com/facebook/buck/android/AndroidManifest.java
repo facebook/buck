@@ -29,11 +29,13 @@ import com.facebook.buck.externalactions.android.AndroidManifestExternalAction;
 import com.facebook.buck.externalactions.android.AndroidManifestExternalActionArgs;
 import com.facebook.buck.externalactions.utils.ExternalActionsUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.modern.BuildableWithExternalAction;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -76,6 +78,7 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
       SourcePath skeletonFile,
       APKModule module,
       Collection<SourcePath> manifestFiles,
+      ManifestEntries manifestEntries,
       boolean shouldExecuteInSeparateProcess) {
     super(
         buildTarget,
@@ -85,6 +88,7 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
             skeletonFile,
             module,
             ImmutableSortedSet.copyOf(manifestFiles),
+            manifestEntries,
             new OutputPath(
                 String.format(
                     "AndroidManifest__%s__.xml", buildTarget.getShortNameAndFlavorPostfix())),
@@ -106,6 +110,8 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
     /** These must be sorted so the rule key is stable. */
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> manifestFiles;
 
+    @AddToRuleKey private final ManifestEntries manifestEntries;
+
     @AddToRuleKey private final OutputPath outputPath;
     @AddToRuleKey private final OutputPath mergeReportOutputPath;
 
@@ -113,12 +119,14 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
         SourcePath skeletonFile,
         APKModule module,
         ImmutableSortedSet<SourcePath> manifestFiles,
+        ManifestEntries manifestEntries,
         OutputPath outputPath,
         OutputPath mergeReportOutputPath,
         boolean shouldExecuteInSeparateProcess) {
       super(shouldExecuteInSeparateProcess);
       this.skeletonFile = skeletonFile;
       this.manifestFiles = manifestFiles;
+      this.manifestEntries = manifestEntries;
       this.moduleName = module.getName();
       this.outputPath = outputPath;
       this.mergeReportOutputPath = mergeReportOutputPath;
@@ -139,7 +147,8 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
                   .collect(ImmutableSet.toImmutableSet()),
               outputPathResolver.resolvePath(outputPath).toString(),
               outputPathResolver.resolvePath(mergeReportOutputPath).toString(),
-              moduleName);
+              moduleName,
+              manifestEntries.getPlaceholders().orElse(ImmutableMap.of()));
       ExternalActionsUtils.writeJsonArgs(jsonFilePath, jsonArgs);
 
       return BuildableCommand.newBuilder()

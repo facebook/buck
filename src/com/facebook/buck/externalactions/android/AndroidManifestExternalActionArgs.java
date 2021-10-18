@@ -21,6 +21,7 @@ import com.facebook.buck.externalactions.model.JsonArgs;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Collection;
+import java.util.Map;
 
 /** Args for {@link AndroidManifestExternalAction}. */
 @BuckStyleValue
@@ -42,18 +43,23 @@ public abstract class AndroidManifestExternalActionArgs implements JsonArgs {
   @JsonProperty("moduleName")
   abstract String getModuleName();
 
+  @JsonProperty("placeholders")
+  abstract Map<String, String> getPlaceholders();
+
   /** Returns an instance of {@link AndroidManifestExternalActionArgs}. */
   public static AndroidManifestExternalActionArgs of(
       String skeletonManifestPath,
       Collection<String> libraryManifestPaths,
       String outputManifestPath,
       String mergeReportPath,
-      String moduleName) {
+      String moduleName,
+      Map<String, String> placeholders) {
     return ImmutableAndroidManifestExternalActionArgs.ofImpl(
         skeletonManifestPath,
         libraryManifestPaths,
         outputManifestPath,
         mergeReportPath,
-        moduleName);
+        moduleName,
+        placeholders);
   }
 }

@@ -36,9 +36,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
-import com.facebook.buck.shell.ExportFile;
-import com.facebook.buck.shell.ExportFileDescription;
-import com.facebook.buck.shell.ExportFileDirectoryAction;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -68,7 +65,6 @@ class AndroidBinaryResourcesGraphEnhancer {
       InternalFlavor.of("merge_third_party_jar_resources");
   private static final Flavor WRITE_EXO_RESOURCES_HASH_FLAVOR =
       InternalFlavor.of("write_exo_resources_hash");
-  private static final Flavor COPY_MANIFEST_FLAVOR = InternalFlavor.of("copy_manifest");
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final FilterResourcesSteps.ResourceFilter resourceFilter;
@@ -276,6 +272,7 @@ class AndroidBinaryResourcesGraphEnhancer {
                 moduleManifestSkeleton.get(),
                 module,
                 packageableCollection.getAndroidManifestPieces().get(module),
+                manifestEntries,
                 shouldExecuteInSeparateProcess);
         graphBuilder.addToIndex(moduleManifestMergeRule);
         manifestPath = moduleManifestMergeRule.getSourcePathToOutput();
@@ -343,21 +340,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             packageStringAssets,
             withDownwardApi,
             shouldExecuteInSeparateProcess);
-
-        // Create a rule that copies the AndroidManifest. This allows the AndroidBinary rule (and
-        // exopackage installation rules) to have a runtime dep on the manifest without having to
-        // have a runtime dep on the full aapt output.
-        ExportFile manifestCopyRule =
-            new ExportFile(
-                originalBuildTarget.withAppendedFlavors(COPY_MANIFEST_FLAVOR),
-                projectFilesystem,
-                graphBuilder,
-                "AndroidManifest.xml",
-                ExportFileDescription.Mode.COPY,
-                aaptOutputInfo.getAndroidManifestXml(),
-                ExportFileDirectoryAction.FAIL);
-        graphBuilder.addToIndex(manifestCopyRule);
-        resultBuilder.setAndroidManifestXml(manifestCopyRule.getSourcePathToOutput());
+        resultBuilder.setAndroidManifestXml(manifestPath);
       } else {
         resultBuilder.putModuleResourceApkPaths(
             module, aaptOutputInfo.getPrimaryResourcesApkPath());
@@ -473,6 +456,7 @@ class AndroidBinaryResourcesGraphEnhancer {
               manifestSkeleton.get(),
               module,
               packageableCollection.getAndroidManifestPieces().values(),
+              manifestEntries,
               shouldExecuteInSeparateProcess);
       graphBuilder.addToIndex(manifestMergeRule);
       realManifest = manifestMergeRule.getSourcePathToOutput();
@@ -565,7 +549,6 @@ class AndroidBinaryResourcesGraphEnhancer {
         graphBuilder,
         compileListBuilder.build(),
         realManifest,
-        manifestEntries,
         packageId,
         dependencyResourceApks,
         includesVectorDrawables,

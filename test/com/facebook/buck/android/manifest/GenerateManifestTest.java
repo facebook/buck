@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.manifest;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
 /** Test manifest placeholder replacement */
-public class ReplaceManifestPlaceholdersStepTest {
+public class GenerateManifestTest {
 
   @Test
   public void shouldReplaceManifestPlaceholders() {
@@ -34,8 +34,7 @@ public class ReplaceManifestPlaceholdersStepTest {
             + "</manifest>";
     ImmutableMap<String, String> placeholders =
         ImmutableMap.of("applicationId", "com.example", "custom$", "0x2");
-    String replaced =
-        ReplaceManifestPlaceholdersStep.replacePlaceholders(placeholderText, placeholders);
+    String replaced = GenerateManifest.replacePlaceholders(placeholderText, placeholders);
     String expected =
         "<manifest>\n"
             + "    <permission\n"

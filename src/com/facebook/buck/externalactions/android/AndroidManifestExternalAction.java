@@ -24,6 +24,7 @@ import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.android.GenerateManifestStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.util.List;
@@ -56,6 +57,7 @@ public class AndroidManifestExternalAction implements ExternalAction {
                 .map(RelPath::get)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator())),
             RelPath.get(args.getOutputManifestPath()),
-            RelPath.get(args.getMergeReportPath())));
+            RelPath.get(args.getMergeReportPath()),
+            ImmutableMap.copyOf(args.getPlaceholders())));
   }
 }
