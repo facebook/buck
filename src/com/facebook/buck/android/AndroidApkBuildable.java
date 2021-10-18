@@ -21,7 +21,6 @@ import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -46,7 +45,6 @@ public class AndroidApkBuildable extends AndroidBinaryBuildable {
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       Optional<CompressionAlgorithm> assetCompressionAlgorithm,
-      Tool javaRuntimeLauncher,
       SourcePath androidManifestPath,
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
@@ -63,7 +61,6 @@ public class AndroidApkBuildable extends AndroidBinaryBuildable {
         packageAssetLibraries,
         compressAssetLibraries,
         assetCompressionAlgorithm,
-        javaRuntimeLauncher,
         androidManifestPath,
         dexFilesInfo,
         nativeFilesInfo,
@@ -98,8 +95,6 @@ public class AndroidApkBuildable extends AndroidBinaryBuildable {
             zipFiles.build(),
             thirdPartyJars,
             pathResolver.getAbsolutePath(keystorePath).getPath(),
-            keystoreProperties,
-            false,
-            javaRuntimeLauncher.getCommandPrefix(pathResolver)));
+            keystoreProperties));
   }
 }

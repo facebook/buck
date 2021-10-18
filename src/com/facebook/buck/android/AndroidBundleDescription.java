@@ -209,8 +209,7 @@ public class AndroidBundleDescription
             dexSplitMode,
             exopackageModes,
             resourceFilter,
-            args,
-            javaOptions.apply(buildTarget.getTargetConfiguration()));
+            args);
     return androidBundle;
   }
 

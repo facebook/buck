@@ -55,8 +55,6 @@ public class ApkBuilderStep implements Step {
   private final ImmutableSet<Path> nativeLibraryDirectories;
   private final ImmutableSet<Path> zipFiles;
   private final ImmutableSet<Path> jarFilesThatMayContainResources;
-  private final boolean debugMode;
-  private final ImmutableList<String> javaRuntimeLauncher;
   private final AppBuilderBase appBuilderBase;
 
   /**
@@ -66,7 +64,6 @@ public class ApkBuilderStep implements Step {
    * @param assetDirectories List of paths to assets to be included in the apk.
    * @param nativeLibraryDirectories List of paths to native directories.
    * @param zipFiles List of paths to zipfiles to be included into the apk.
-   * @param debugMode Whether or not to run ApkBuilder with debug mode turned on.
    */
   public ApkBuilderStep(
       ProjectFilesystem filesystem,
@@ -78,9 +75,7 @@ public class ApkBuilderStep implements Step {
       ImmutableSet<Path> zipFiles,
       ImmutableSet<Path> jarFilesThatMayContainResources,
       Path pathToKeystore,
-      Supplier<KeystoreProperties> keystorePropertiesSupplier,
-      boolean debugMode,
-      ImmutableList<String> javaRuntimeLauncher) {
+      Supplier<KeystoreProperties> keystorePropertiesSupplier) {
     this.filesystem = filesystem;
     this.resourceApk = resourceApk;
     this.pathToOutputApkFile = pathToOutputApkFile;
@@ -89,8 +84,6 @@ public class ApkBuilderStep implements Step {
     this.nativeLibraryDirectories = nativeLibraryDirectories;
     this.jarFilesThatMayContainResources = jarFilesThatMayContainResources;
     this.zipFiles = zipFiles;
-    this.debugMode = debugMode;
-    this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.appBuilderBase =
         new AppBuilderBase(filesystem, keystorePropertiesSupplier, pathToKeystore);
   }
@@ -113,7 +106,6 @@ public class ApkBuilderStep implements Step {
               privateKeyAndCertificate.privateKey,
               privateKeyAndCertificate.certificate,
               output);
-      builder.setDebugMode(debugMode);
       for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
         builder.addNativeLibraries(
             filesystem.getPathForRelativePath(nativeLibraryDirectory).toFile());
@@ -158,8 +150,8 @@ public class ApkBuilderStep implements Step {
   @Override
   public String getDescription(StepExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.addAll(javaRuntimeLauncher);
     args.add(
+        "java",
         "-classpath",
         // TODO(mbolin): Make the directory that corresponds to $ANDROID_HOME a field that is
         // accessible via an AndroidPlatformTarget and insert that here in place of "$ANDROID_HOME".
@@ -167,9 +159,6 @@ public class ApkBuilderStep implements Step {
         "com.android.sdklib.build.ApkBuilderMain");
     args.add(String.valueOf(pathToOutputApkFile));
     args.add("-v" /* verbose */);
-    if (debugMode) {
-      args.add("-d");
-    }
 
     // Unfortunately, ApkBuilderMain does not have CLI args to set the keystore,
     // so these member variables are left out of the command:

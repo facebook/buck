@@ -32,7 +32,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.Keystore;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
@@ -63,8 +62,7 @@ public class AndroidBundleFactory {
       DexSplitMode dexSplitMode,
       EnumSet<ExopackageMode> exopackageModes,
       ResourceFilter resourceFilter,
-      AndroidBundleDescriptionArg args,
-      JavaOptions javaOptions) {
+      AndroidBundleDescriptionArg args) {
 
     BuildRule keystore = graphBuilder.getRule(args.getKeystore());
     if (!(keystore instanceof Keystore)) {
@@ -140,7 +138,6 @@ public class AndroidBundleFactory {
             args.isCompressAssetLibraries(),
             args.getAssetCompressionAlgorithm(),
             args.getManifestEntries(),
-            javaOptions.getJavaRuntime(),
             androidPlatformTarget
                 .getZipalignToolProvider()
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),

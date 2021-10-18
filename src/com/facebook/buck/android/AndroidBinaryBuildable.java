@@ -31,7 +31,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -95,9 +94,6 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
 
   @AddToRuleKey protected final ImmutableSortedSet<APKModule> apkModules;
 
-  // The java launcher is used for ApkBuilder.
-  @AddToRuleKey protected final Tool javaRuntimeLauncher;
-
   @AddToRuleKey private final ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths;
 
   protected final BinaryType binaryType;
@@ -116,7 +112,6 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       Optional<CompressionAlgorithm> assetCompressionAlgorithm,
-      Tool javaRuntimeLauncher,
       SourcePath androidManifestPath,
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
@@ -130,7 +125,6 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
     this.keystorePropertiesPath = keystorePropertiesPath;
     this.exopackageModes = exopackageModes;
     this.xzCompressionLevel = xzCompressionLevel;
-    this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.androidManifestPath = androidManifestPath;
     this.apkModules = apkModules;
     this.moduleResourceApkPaths = moduleResourceApkPaths;

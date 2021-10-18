@@ -23,7 +23,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +53,6 @@ public class AndroidBundleBuildable extends AndroidBinaryBuildable implements Ad
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       Optional<CompressionAlgorithm> assetCompressionAlgorithm,
-      Tool javaRuntimeLauncher,
       SourcePath androidManifestPath,
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
@@ -72,7 +70,6 @@ public class AndroidBundleBuildable extends AndroidBinaryBuildable implements Ad
         packageAssetLibraries,
         compressAssetLibraries,
         assetCompressionAlgorithm,
-        javaRuntimeLauncher,
         androidManifestPath,
         dexFilesInfo,
         nativeFilesInfo,

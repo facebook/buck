@@ -220,7 +220,6 @@ public class AndroidApk extends AbstractBuildRule
             packageAssetLibraries,
             compressAssetLibraries,
             assetCompressionAlgorithm,
-            javaRuntimeLauncher,
             enhancementResult.getAndroidManifestPath(),
             dexFilesInfo,
             nativeFilesInfo,

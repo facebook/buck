@@ -93,7 +93,6 @@ public class AndroidBundle extends AbstractBuildRule
   private final AndroidGraphEnhancementResult enhancementResult;
   private final ManifestEntries manifestEntries;
   private final boolean skipProguard;
-  private final Tool javaRuntimeLauncher;
   private final boolean isCacheable;
 
   private final Optional<BuildRule> moduleVerification;
@@ -126,7 +125,6 @@ public class AndroidBundle extends AbstractBuildRule
       boolean compressAssetLibraries,
       Optional<CompressionAlgorithm> assetCompressionAlgorithm,
       ManifestEntries manifestEntries,
-      Tool javaRuntimeLauncher,
       Tool zipalignTool,
       boolean isCacheable,
       Optional<BuildRule> moduleVerification,
@@ -141,7 +139,6 @@ public class AndroidBundle extends AbstractBuildRule
     this.ruleFinder = ruleFinder;
     this.proguardJvmArgs = proguardJvmArgs;
     this.keystore = keystore;
-    this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.optimizationPasses = proguardOptimizationPasses;
     this.proguardConfig = proguardConfig;
     this.cpuFilters = ImmutableSet.copyOf(cpuFilters);
@@ -188,7 +185,6 @@ public class AndroidBundle extends AbstractBuildRule
             packageAssetLibraries,
             compressAssetLibraries,
             assetCompressionAlgorithm,
-            javaRuntimeLauncher,
             enhancementResult.getAndroidManifestPath(),
             dexFilesInfo,
             nativeFilesInfo,
@@ -266,10 +262,6 @@ public class AndroidBundle extends AbstractBuildRule
 
   public ManifestEntries getManifestEntries() {
     return manifestEntries;
-  }
-
-  Tool getJavaRuntimeLauncher() {
-    return javaRuntimeLauncher;
   }
 
   @Override
