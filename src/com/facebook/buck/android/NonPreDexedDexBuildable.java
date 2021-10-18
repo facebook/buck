@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.AndroidBinaryBuildable.SMART_DEX_SECONDARY_DEX_SUBDIR;
-
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.dex.D8Options;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
@@ -70,7 +68,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -92,8 +89,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   private final ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap;
 
   @AddToRuleKey private final ImmutableSet<SourcePath> classpathEntriesToDexSourcePaths;
-  @AddToRuleKey private final Optional<SourcePath> dexReorderDataDumpFile;
-  @AddToRuleKey private final Optional<SourcePath> dexReorderToolFile;
   @AddToRuleKey private final DexSplitMode dexSplitMode;
   @AddToRuleKey private final Tool javaRuntimeLauncher;
 
@@ -110,7 +105,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   @AddToRuleKey private final Optional<SourcePath> proguardJarOverride;
   @AddToRuleKey private final Optional<List<String>> proguardJvmArgs;
   @AddToRuleKey private final String proguardMaxHeapSize;
-  @AddToRuleKey private final boolean reorderClassesIntraDex;
   @AddToRuleKey private final APKModule rootAPKModule;
   @AddToRuleKey private final ProGuardObfuscateStep.SdkProguardType sdkProguardConfig;
   @AddToRuleKey private final boolean skipProguard;
@@ -133,12 +127,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     Optional<String> getProguardAgentPath();
 
     Optional<Arg> getPreprocessJavaClassesBash();
-
-    boolean getReorderClassesIntraDex();
-
-    Optional<SourcePath> getDexReorderToolFile();
-
-    Optional<SourcePath> getDexReorderDataDumpFile();
 
     ListeningExecutorService getDxExecutorService();
 
@@ -182,8 +170,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     this.additionalJarsForProguardAndDesugar = additionalJarsForProguardAndDesugar;
     this.apkModuleMap = apkModuleMap;
     this.classpathEntriesToDexSourcePaths = classpathEntriesToDexSourcePaths;
-    this.dexReorderDataDumpFile = args.getDexReorderDataDumpFile();
-    this.dexReorderToolFile = args.getDexReorderToolFile();
     this.dexSplitMode = dexSplitMode;
     this.dxExecutorService = args.getDxExecutorService();
     this.javaRuntimeLauncher = args.getJavaRuntimeLauncher();
@@ -197,7 +183,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     this.proguardAgentPath = args.getProguardAgentPath();
     this.proguardJarOverride = args.getProguardJarOverride();
     this.proguardMaxHeapSize = args.getProguardMaxHeapSize();
-    this.reorderClassesIntraDex = args.getReorderClassesIntraDex();
     this.rootAPKModule = rootAPKModule;
     this.sdkProguardConfig = args.getSdkProguardConfig();
     this.skipProguard = args.getSkipProguard();
@@ -464,11 +449,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
         },
         steps,
         primaryDexPath,
-        dexReorderToolFile,
-        dexReorderDataDumpFile,
         additionalDexStoreToJarPathMap,
-        buildContext,
-        withDownwardApi);
+        buildContext);
 
     steps.add(
         new AbstractExecutionStep("writing_secondary_dex_listing") {
@@ -657,11 +639,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
       Consumer<Path> secondaryDexDirectoriesConsumer,
       ImmutableList.Builder<Step> steps,
       Path primaryDexPath,
-      Optional<SourcePath> dexReorderToolFile,
-      Optional<SourcePath> dexReorderDataDumpFile,
       ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap,
-      BuildContext buildContext,
-      boolean withDownwardApi) {
+      BuildContext buildContext) {
     SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     Supplier<Set<Path>> primaryInputsToDex;
     Optional<Path> secondaryDexDir;
@@ -781,35 +760,13 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
 
       // Add the secondary dex directory that has yet to be created, but will be by the
       // smart dexing command.  Smart dex will handle "cleaning" this directory properly.
-      if (reorderClassesIntraDex) {
-        secondaryDexDir =
-            Optional.of(secondaryDexParentDir.resolve(SMART_DEX_SECONDARY_DEX_SUBDIR));
-        Path intraDexReorderSecondaryDexDir =
-            secondaryDexParentDir.resolve(AndroidApk.SECONDARY_DEX_SUBDIR);
-
-        steps.addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    secondaryDexDir.get())));
-
-        steps.addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    intraDexReorderSecondaryDexDir)));
-      } else {
-        secondaryDexDir =
-            Optional.of(secondaryDexParentDir.resolve(AndroidApk.SECONDARY_DEX_SUBDIR));
-        steps.add(
-            MkdirStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    secondaryDexDir.get())));
-      }
+      secondaryDexDir = Optional.of(secondaryDexParentDir.resolve(AndroidApk.SECONDARY_DEX_SUBDIR));
+      steps.add(
+          MkdirStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  secondaryDexDir.get())));
 
       if (additionalDexStoreToJarPathMap.isEmpty()) {
         additionalDexDirs = Optional.empty();
@@ -875,20 +832,12 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     // images.
     EnumSet<D8Options> dxOptions =
         shouldProguard ? EnumSet.noneOf(D8Options.class) : EnumSet.of(D8Options.NO_OPTIMIZE);
-    Path selectedPrimaryDexPath = primaryDexPath;
-    if (reorderClassesIntraDex) {
-      String primaryDexFileName = primaryDexPath.getFileName().toString();
-      String smartDexPrimaryDexFileName = "smart-dex-" + primaryDexFileName;
-      selectedPrimaryDexPath =
-          Paths.get(
-              primaryDexPath.toString().replace(primaryDexFileName, smartDexPrimaryDexFileName));
-    }
     SmartDexingStep smartDexingCommand =
         new SmartDexingStep(
             androidPlatformTarget,
             buildContext,
             getProjectFilesystem(),
-            Optional.of(selectedPrimaryDexPath),
+            Optional.of(primaryDexPath),
             Optional.of(primaryInputsToDex),
             Optional.empty(),
             secondaryDexDir,
@@ -909,22 +858,5 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             getBuildTarget(),
             minSdkVersion);
     steps.add(smartDexingCommand);
-
-    if (reorderClassesIntraDex) {
-      IntraDexReorderStep intraDexReorderStep =
-          new IntraDexReorderStep(
-              buildContext,
-              getProjectFilesystem(),
-              resolver.getAbsolutePath(dexReorderToolFile.get()).getPath(),
-              resolver.getAbsolutePath(dexReorderDataDumpFile.get()).getPath(),
-              getBuildTarget(),
-              selectedPrimaryDexPath,
-              primaryDexPath,
-              secondaryOutputToInputs,
-              SMART_DEX_SECONDARY_DEX_SUBDIR,
-              AndroidApk.SECONDARY_DEX_SUBDIR,
-              withDownwardApi);
-      steps.add(intraDexReorderStep);
-    }
   }
 }

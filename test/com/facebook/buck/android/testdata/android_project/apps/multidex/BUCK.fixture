@@ -694,28 +694,6 @@ android_binary(
     ],
 )
 
-android_binary(
-    name = "app-dex-native-exo-intra-reorder",
-    dex_reorder_data_dump_file = "//external_files:fake_data_file",
-    dex_reorder_tool_file = "//external_files:fake_reorder_tool.sh",
-    exopackage_modes = [
-        "native_library",
-        "secondary_dex",
-    ],
-    keystore = "//keystores:debug",
-    manifest = "AndroidManifest.xml",
-    primary_dex_patterns = [
-        "/MyApplication^",
-    ],
-    reorder_classes_intra_dex = True,
-    use_split_dex = True,
-    deps = [
-        "//java/com/sample/app:app",
-        "//java/com/sample/lib:lib",
-        "//third-party:kiwi",
-    ],
-)
-
 android_app_modularity(
     name = "modularity-metadata",
     application_module_configs = {

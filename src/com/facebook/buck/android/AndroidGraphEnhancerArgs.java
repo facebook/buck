@@ -171,18 +171,9 @@ public interface AndroidGraphEnhancerArgs
   Optional<StringWithMacros> getPreprocessJavaClassesBash();
 
   @Value.Default
-  default boolean isReorderClassesIntraDex() {
-    return false;
-  }
-
-  @Value.Default
   default String getDexTool() {
     return "d8";
   }
-
-  Optional<SourcePath> getDexReorderToolFile();
-
-  Optional<SourcePath> getDexReorderDataDumpFile();
 
   Map<String, List<Pattern>> getNativeLibraryMergeMap();
 

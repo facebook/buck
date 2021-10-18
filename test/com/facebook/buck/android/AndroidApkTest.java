@@ -35,7 +35,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
@@ -357,64 +356,8 @@ public class AndroidApkTest {
             secondaryDexDirectories::add,
             commandsBuilder,
             primaryDexPath,
-            Optional.empty(),
-            Optional.empty(),
             /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
-            false);
-
-    assertEquals(
-        "Expected 2 new assets paths (one for metadata.txt and the other for the "
-            + "secondary zips)",
-        2,
-        secondaryDexDirectories.build().size());
-
-    List<Step> steps = commandsBuilder.build();
-    assertCommandsInOrder(steps, ImmutableList.of(SplitZipStep.class, SmartDexingStep.class));
-  }
-
-  @Test
-  public void testDexingCommandWithIntraDexReorder() {
-    SourcePath reorderTool = FakeSourcePath.of("tools#reorder_tool");
-    SourcePath reorderData = FakeSourcePath.of("tools#reorder_data");
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    AndroidApk splitDexRule =
-        AndroidBinaryBuilder.createBuilder(
-                BuildTargetFactory.newInstance("//:fbandroid_with_dash_debug_fbsign"))
-            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
-            .setKeystore(addKeystoreRule(graphBuilder).getBuildTarget())
-            .setShouldSplitDex(true)
-            .setLinearAllocHardLimit(0)
-            .setDexCompression(DexStore.JAR)
-            .setIntraDexReorderResources(true, reorderTool, reorderData)
-            // Force no predexing.
-            .setPreprocessJavaClassesBash(StringWithMacrosUtils.format("cp"))
-            .build(graphBuilder);
-
-    Set<Path> classpath = new HashSet<>();
-    ImmutableSet.Builder<Path> secondaryDexDirectories = ImmutableSet.builder();
-    ImmutableList.Builder<Step> commandsBuilder = ImmutableList.builder();
-    Path primaryDexPath =
-        splitDexRule
-            .getProjectFilesystem()
-            .getBuckPaths()
-            .getScratchDir()
-            .resolve(".dex/classes.dex");
-    splitDexRule
-        .getEnhancementResult()
-        .getNonPreDexedDex()
-        .get()
-        .addDexingSteps(
-            classpath,
-            Suppliers.ofInstance(ImmutableMap.of()),
-            secondaryDexDirectories::add,
-            commandsBuilder,
-            primaryDexPath,
-            Optional.of(reorderTool),
-            Optional.of(reorderData),
-            /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
-            false);
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "

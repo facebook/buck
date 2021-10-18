@@ -135,9 +135,6 @@ public class AndroidBinaryGraphEnhancerFactory {
             .setSdkProguardConfig(androidSdkProguardConfig)
             .setPreprocessJavaClassesBash(
                 getPreprocessJavaClassesBash(args, buildTarget, graphBuilder, cellPathResolver))
-            .setReorderClassesIntraDex(args.isReorderClassesIntraDex())
-            .setDexReorderToolFile(args.getDexReorderToolFile())
-            .setDexReorderDataDumpFile(args.getDexReorderDataDumpFile())
             .setDxExecutorService(dxExecutorService)
             .setOptimizationPasses(args.getOptimizationPasses())
             .setProguardJvmArgs(args.getProguardJvmArgs())

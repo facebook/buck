@@ -940,13 +940,10 @@ public class AndroidApkGraphEnhancerTest {
   private NonPreDexedDexBuildable.NonPredexedDexBuildableArgs defaultNonPredexedArgs() {
     return ImmutableNonPredexedDexBuildableArgs.builder()
         .setSdkProguardConfig(ProGuardObfuscateStep.SdkProguardType.NONE)
-        .setDexReorderDataDumpFile(FakeSourcePath.of(""))
-        .setDexReorderToolFile(FakeSourcePath.of(""))
         .setDxExecutorService(MoreExecutors.newDirectExecutorService())
         .setJavaRuntimeLauncher(new FakeTool())
         .setOptimizationPasses(0)
         .setProguardMaxHeapSize("")
-        .setReorderClassesIntraDex(false)
         .setSkipProguard(true)
         .setShouldProguard(false)
         .build();

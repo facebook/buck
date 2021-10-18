@@ -156,14 +156,6 @@ public class AndroidBundleBuilder
     return this;
   }
 
-  public AndroidBundleBuilder setIntraDexReorderResources(
-      boolean enableReorder, SourcePath reorderTool, SourcePath reorderData) {
-    getArgForPopulating().setReorderClassesIntraDex(enableReorder);
-    getArgForPopulating().setDexReorderToolFile(Optional.of(reorderTool));
-    getArgForPopulating().setDexReorderDataDumpFile(Optional.of(reorderData));
-    return this;
-  }
-
   public AndroidBundleBuilder setNoDx(Set<BuildTarget> noDx) {
     getArgForPopulating().setNoDx(noDx);
     return this;

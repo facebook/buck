@@ -161,14 +161,6 @@ public class AndroidBinaryBuilder
     return this;
   }
 
-  public AndroidBinaryBuilder setIntraDexReorderResources(
-      boolean enableReorder, SourcePath reorderTool, SourcePath reorderData) {
-    getArgForPopulating().setReorderClassesIntraDex(enableReorder);
-    getArgForPopulating().setDexReorderToolFile(Optional.of(reorderTool));
-    getArgForPopulating().setDexReorderDataDumpFile(Optional.of(reorderData));
-    return this;
-  }
-
   public AndroidBinaryBuilder setNoDx(Set<BuildTarget> noDx) {
     getArgForPopulating().setNoDx(noDx);
     return this;

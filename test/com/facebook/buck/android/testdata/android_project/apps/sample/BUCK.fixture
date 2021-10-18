@@ -210,17 +210,6 @@ genrule(
 )
 
 android_binary(
-    name = "app_reorder_dex",
-    keystore = "//keystores:debug",
-    manifest = "AndroidManifest.xml",
-    reorder_classes_intra_dex = True,
-    deps = [
-        "//java/com/sample/lib:lib",
-        "//res/com/sample/base:base",
-    ],
-)
-
-android_binary(
     name = "app_mdpi",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
