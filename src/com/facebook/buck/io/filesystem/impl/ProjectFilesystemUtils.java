@@ -753,10 +753,20 @@ public class ProjectFilesystemUtils {
 
   /** Returns ignore filter. */
   public static DirectoryStream.Filter<? super Path> getIgnoreFilter(
-      AbsPath projectRoot, boolean skipIgnored, ImmutableCollection<PathMatcher> ignores) {
+      @Nullable AbsPath projectRoot,
+      boolean skipIgnored,
+      ImmutableCollection<PathMatcher> ignores) {
     return skipIgnored
         ? input -> !isIgnored(relativize(projectRoot, input), ignores)
         : input -> true;
+  }
+
+  public static DirectoryStream.Filter<? super Path> getEmptyIgnoreFilter() {
+    return getIgnoreFilter(null, false, ImmutableSet.of());
+  }
+
+  public static EnumSet<FileVisitOption> getDefaultVisitOptions() {
+    return EnumSet.of(FileVisitOption.FOLLOW_LINKS);
   }
 
   public static void walkFileTree(

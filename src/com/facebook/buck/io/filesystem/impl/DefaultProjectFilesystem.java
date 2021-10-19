@@ -431,7 +431,10 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   public void walkRelativeFileTree(Path pathRelativeToProjectRoot, FileVisitor<Path> fileVisitor)
       throws IOException {
     walkRelativeFileTree(
-        pathRelativeToProjectRoot, EnumSet.of(FileVisitOption.FOLLOW_LINKS), fileVisitor, true);
+        pathRelativeToProjectRoot,
+        ProjectFilesystemUtils.getDefaultVisitOptions(),
+        fileVisitor,
+        true);
   }
 
   @Override
@@ -440,7 +443,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
       throws IOException {
     walkRelativeFileTree(
         pathRelativeToProjectRoot,
-        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+        ProjectFilesystemUtils.getDefaultVisitOptions(),
         fileVisitor,
         skipIgnored);
   }
@@ -469,7 +472,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   public ImmutableSet<Path> getFilesUnderPath(
       Path pathRelativeToProjectRoot, Predicate<Path> predicate) throws IOException {
     return getFilesUnderPath(
-        pathRelativeToProjectRoot, predicate, EnumSet.of(FileVisitOption.FOLLOW_LINKS));
+        pathRelativeToProjectRoot, predicate, ProjectFilesystemUtils.getDefaultVisitOptions());
   }
 
   @Override

@@ -30,7 +30,6 @@ import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
@@ -38,16 +37,12 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 
 public class Zip {
   private static final Logger LOG = Logger.get(Zip.class);
-
-  private static final EnumSet<FileVisitOption> FOLLOW_LINKS =
-      EnumSet.of(FileVisitOption.FOLLOW_LINKS);
 
   private Zip() {}
 
@@ -158,7 +153,11 @@ public class Zip {
     DirectoryStream.Filter<? super Path> ignoreFilter =
         ProjectFilesystemUtils.getIgnoreFilter(rootPath, true, ignoredPaths);
     ProjectFilesystemUtils.walkRelativeFileTree(
-        rootPath, baseDir, FOLLOW_LINKS, pathFileVisitor, ignoreFilter);
+        rootPath,
+        baseDir,
+        ProjectFilesystemUtils.getDefaultVisitOptions(),
+        pathFileVisitor,
+        ignoreFilter);
   }
 
   /** Writes entries to zipOut stream. */

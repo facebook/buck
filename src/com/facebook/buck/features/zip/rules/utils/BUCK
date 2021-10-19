@@ -1,0 +1,20 @@
+
+java_library(
+    name = "utils",
+    srcs = glob(["*.java"]),
+    deps = ["//src/com/facebook/buck/core/filesystems:filesystems",
+            "//src/com/facebook/buck/util/zip/collect:collect",
+            "//third-party/java/guava:guava",
+            "//src/com/facebook/buck/core/exceptions:exceptions",
+            "//src/com/facebook/buck/core/sourcepath/resolver/impl/utils:utils",
+    ],
+    visibility = [ "PUBLIC" ]
+)
+
+java_binary(
+    name = "zip_binary",
+    main_class = "com.facebook.buck.features.zip.rules.utils.ZipMain",
+    deps = [
+        ":utils",
+    ],
+)

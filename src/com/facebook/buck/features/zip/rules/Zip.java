@@ -27,6 +27,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.features.zip.rules.utils.ZipUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -81,13 +82,11 @@ public class Zip extends ModernBuildRule<Zip> implements HasOutputName, Buildabl
     ImmutableMap<Path, AbsPath> entryPathToAbsolutePathMap =
         sourcePathResolver.createRelativeMap(
             filesystem.resolve(cellRelativeBasePath.getPath()).getPath(), sources);
+    AbsPath rootPath = filesystem.getRootPath();
     return ImmutableList.of(
         new CopyToZipStep(
             outputPath,
-            entryPathToAbsolutePathMap.entrySet().stream()
-                .collect(
-                    ImmutableMap.toImmutableMap(
-                        e -> RelPath.of(e.getKey()), e -> filesystem.relativize(e.getValue()))),
+            ZipUtils.toRelPathEntryMap(entryPathToAbsolutePathMap, rootPath),
             zipSources.stream()
                 .map(s -> sourcePathResolver.getRelativePath(filesystem, s))
                 .collect(ImmutableList.toImmutableList()),

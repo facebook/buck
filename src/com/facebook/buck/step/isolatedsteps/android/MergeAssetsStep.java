@@ -153,8 +153,7 @@ public class MergeAssetsStep extends IsolatedStep {
               return super.visitFile(file, attrs);
             }
           },
-          ProjectFilesystemUtils.getIgnoreFilter(
-              context.getRuleCellRoot(), false, ImmutableSet.of()));
+          ProjectFilesystemUtils.getEmptyIgnoreFilter());
     }
 
     return assets;

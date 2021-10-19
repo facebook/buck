@@ -34,9 +34,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Path;
-import java.util.EnumSet;
 import java.util.Set;
 import javax.xml.xpath.XPathExpressionException;
 
@@ -111,8 +109,8 @@ public class MiniAaptStep extends IsolatedStep {
     return ProjectFilesystemUtils.getFilesUnderPath(
             root,
             resourceDirectory.getPath(),
-            EnumSet.of(FileVisitOption.FOLLOW_LINKS),
-            ProjectFilesystemUtils.getIgnoreFilter(root, false, ImmutableSet.of()))
+            ProjectFilesystemUtils.getDefaultVisitOptions(),
+            ProjectFilesystemUtils.getEmptyIgnoreFilter())
         .stream()
         .collect(
             ImmutableMap.toImmutableMap(
