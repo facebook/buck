@@ -20,21 +20,33 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTreeWithModuleMap;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.modern.SerializationTestHelper;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class CxxSymlinkTreeHeadersTest {
@@ -115,5 +127,63 @@ public class CxxSymlinkTreeHeadersTest {
                     cellPath -> fakeFilesystem));
 
     assertEquals(exception.getMessage(), "Cannot be or reference anonymous classes.");
+  }
+
+  @Rule public final TemporaryPaths tmpDir = new TemporaryPaths();
+
+  @Test
+  public void testHeadersIncludeModulemap() throws IOException {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem(tmpDir.getRoot());
+
+    // Create a build target to use when building the symlink tree.
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//test:test");
+
+    // Get the first file we're symlinking
+    Path link1 = Paths.get("SomeModule", "SomeModule.h");
+    AbsPath file1 = tmpDir.newFile();
+    Files.write(file1.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
+
+    // Get the second file we're symlinking
+    Path link2 = Paths.get("SomeModule", "Header.h");
+    AbsPath file2 = tmpDir.newFile();
+    Files.write(file2.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
+
+    // Setup the map representing the link tree.
+    ImmutableMap<Path, SourcePath> links =
+        ImmutableMap.of(
+            link1,
+            PathSourcePath.of(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file1)),
+            link2,
+            PathSourcePath.of(projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), file2)));
+
+    // The output path used by the buildable for the link tree.
+    RelPath symlinkTreeRoot =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(), buildTarget, "%s/symlink-tree-root");
+
+    // Setup the symlink tree buildable.
+    HeaderSymlinkTreeWithModuleMap symlinkTreeBuildRule =
+        HeaderSymlinkTreeWithModuleMap.create(
+            buildTarget,
+            projectFilesystem,
+            symlinkTreeRoot.getPath(),
+            links,
+            "SomeModule",
+            false,
+            false);
+
+    CxxSymlinkTreeHeaders headers =
+        CxxSymlinkTreeHeaders.from(symlinkTreeBuildRule, CxxPreprocessables.IncludeType.LOCAL);
+
+    ImmutableSortedMap.Builder<Path, SourcePath> expectedHeadersBuilder =
+        ImmutableSortedMap.naturalOrder();
+    expectedHeadersBuilder.putAll(symlinkTreeBuildRule.getLinks());
+    Path modulemapPath =
+        BuildTargetPaths.getGenPath(
+                projectFilesystem.getBuckPaths(), buildTarget, "%s/module.modulemap")
+            .getPath();
+    expectedHeadersBuilder.put(modulemapPath, symlinkTreeBuildRule.getSourcePathToOutput());
+
+    assertEquals(expectedHeadersBuilder.build(), headers.getNameToPathMap());
   }
 }

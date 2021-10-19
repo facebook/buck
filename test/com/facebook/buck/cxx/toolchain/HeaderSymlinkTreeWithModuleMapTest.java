@@ -58,6 +58,7 @@ import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -369,5 +370,16 @@ public class HeaderSymlinkTreeWithModuleMapTest {
             + "\t}\n"
             + "}\n",
         moduleMapWithMultiplePrefixes.render());
+  }
+
+  @Test
+  public void testModulemapContainedInExtraHeaders() {
+    Path modulemapPath =
+        BuildTargetPaths.getGenPath(
+                projectFilesystem.getBuckPaths(), buildTarget, "%s/module.modulemap")
+            .getPath();
+    assertEquals(
+        ImmutableSortedMap.of(modulemapPath, symlinkTreeBuildRule.getSourcePathToOutput()),
+        symlinkTreeBuildRule.getExtraHeaders());
   }
 }

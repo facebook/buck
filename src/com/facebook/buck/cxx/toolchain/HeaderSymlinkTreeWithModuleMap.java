@@ -29,6 +29,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
@@ -104,5 +105,14 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
 
   static RelPath moduleMapPath(ProjectFilesystem filesystem, BuildTarget target) {
     return BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target, "%s/module.modulemap");
+  }
+
+  @Override
+  public ImmutableSortedMap<Path, SourcePath> getExtraHeaders() {
+    // If this symlink tree has a modulemap we need to add it to the nameToPathMap. This is
+    // required for depfile pruning to work correctly, if we don't include the modulemap path
+    // then the .d file entry will not be included in the CxxPreprocessAndCompile inputs.
+    Path modulemapPath = moduleMapPath(getProjectFilesystem(), getBuildTarget()).getPath();
+    return ImmutableSortedMap.of(modulemapPath, getSourcePathToOutput());
   }
 }

@@ -151,12 +151,18 @@ public abstract class CxxSymlinkTreeHeaders extends CxxHeaders implements RuleKe
       includeRoot = Either.ofRight(symlinkTree.getRootSourcePath());
       headerMap = Optional.empty();
     }
+
+    ImmutableSortedMap.Builder<Path, SourcePath> namePathMapBuilder =
+        ImmutableSortedMap.naturalOrder();
+    namePathMapBuilder.putAll(symlinkTree.getLinks());
+    namePathMapBuilder.putAll(symlinkTree.getExtraHeaders());
+
     return of(
         includeType,
         symlinkTree.getRootSourcePath(),
         includeRoot,
         headerMap,
-        symlinkTree.getLinks(),
+        namePathMapBuilder.build(),
         symlinkTree.getClass().getName());
   }
 

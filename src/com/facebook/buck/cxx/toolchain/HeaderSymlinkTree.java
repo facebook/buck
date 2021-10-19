@@ -22,6 +22,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -51,5 +52,14 @@ public class HeaderSymlinkTree extends MappedSymlinkTree {
 
   public Optional<SourcePath> getHeaderMapSourcePath() {
     return Optional.empty();
+  }
+
+  /**
+   * Any extra headers that need to be declared as input to CxxPreprocessAndCompile rules. This is
+   * used by the HeaderSymlinkTreeWithModuleMap to export the modulemap file as a compilation input
+   * so that we correctly invalidate compile rules when it changes.
+   */
+  public ImmutableSortedMap<Path, SourcePath> getExtraHeaders() {
+    return ImmutableSortedMap.of();
   }
 }
