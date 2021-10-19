@@ -19,6 +19,8 @@ package com.facebook.buck.android;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
+import com.facebook.buck.android.apk.ApkBuilderUtils;
+import com.facebook.buck.android.apk.KeystoreProperties;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

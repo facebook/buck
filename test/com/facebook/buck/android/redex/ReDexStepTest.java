@@ -18,7 +18,7 @@ package com.facebook.buck.android.redex;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.android.KeystoreProperties;
+import com.facebook.buck.android.apk.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;

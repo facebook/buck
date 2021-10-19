@@ -5,6 +5,7 @@ prebuilt_jar(
     binary_jar = "sdklib-%s.jar" % version,
     source_jar = "sdklib-%s-sources.jar" % version,
     visibility = [
+        "//src/com/facebook/buck/android/apk:apk",
         "//src/com/facebook/buck/android:steps",
         "//third-party/java/aosp:aosp",
     ],

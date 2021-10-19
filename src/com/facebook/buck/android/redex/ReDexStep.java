@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android.redex;
 
-import com.facebook.buck.android.KeystoreProperties;
+import com.facebook.buck.android.apk.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;

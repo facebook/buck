@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.android.BinaryType.APK;
 
+import com.facebook.buck.android.apk.KeystoreProperties;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;

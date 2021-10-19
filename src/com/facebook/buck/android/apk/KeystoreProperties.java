@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.apk;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.base.Strings;

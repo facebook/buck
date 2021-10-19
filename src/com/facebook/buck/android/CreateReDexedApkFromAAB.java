@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static com.facebook.buck.android.BinaryType.AAB;
 import static com.facebook.buck.android.BinaryType.APK;
 
+import com.facebook.buck.android.apk.KeystoreProperties;
 import com.facebook.buck.android.redex.ReDexStep;
 import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
