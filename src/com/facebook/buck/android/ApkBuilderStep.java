@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-import com.android.common.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
@@ -55,7 +54,8 @@ public class ApkBuilderStep implements Step {
   private final ImmutableSet<Path> nativeLibraryDirectories;
   private final ImmutableSet<Path> zipFiles;
   private final ImmutableSet<Path> jarFilesThatMayContainResources;
-  private final AppBuilderBase appBuilderBase;
+  private final Supplier<KeystoreProperties> keystorePropertiesSupplier;
+  private final Path pathToKeystore;
 
   /**
    * @param resourceApk Path to the Apk which only contains resources, no dex files.
@@ -84,8 +84,8 @@ public class ApkBuilderStep implements Step {
     this.nativeLibraryDirectories = nativeLibraryDirectories;
     this.jarFilesThatMayContainResources = jarFilesThatMayContainResources;
     this.zipFiles = zipFiles;
-    this.appBuilderBase =
-        new AppBuilderBase(filesystem, keystorePropertiesSupplier, pathToKeystore);
+    this.keystorePropertiesSupplier = keystorePropertiesSupplier;
+    this.pathToKeystore = pathToKeystore;
   }
 
   @Override
@@ -96,36 +96,25 @@ public class ApkBuilderStep implements Step {
     }
 
     try {
-      AppBuilderBase.PrivateKeyAndCertificate privateKeyAndCertificate =
-          appBuilderBase.createKeystoreProperties();
-      ApkBuilder builder =
-          new ApkBuilder(
-              filesystem.getPathForRelativePath(pathToOutputApkFile).toFile(),
-              filesystem.getPathForRelativePath(resourceApk).toFile(),
-              filesystem.getPathForRelativePath(dexFile).toFile(),
-              privateKeyAndCertificate.privateKey,
-              privateKeyAndCertificate.certificate,
-              output);
-      for (Path nativeLibraryDirectory : nativeLibraryDirectories) {
-        builder.addNativeLibraries(
-            filesystem.getPathForRelativePath(nativeLibraryDirectory).toFile());
-      }
-      for (Path assetDirectory : assetDirectories) {
-        builder.addSourceFolder(filesystem.getPathForRelativePath(assetDirectory).toFile());
-      }
-      for (Path zipFile : zipFiles) {
-        // TODO(natthu): Skipping silently is bad. These should really be assertions.
-        if (filesystem.exists(zipFile) && filesystem.isFile(zipFile)) {
-          builder.addZipFile(filesystem.getPathForRelativePath(zipFile).toFile());
-        }
-      }
-      for (Path jarFileThatMayContainResources : jarFilesThatMayContainResources) {
-        Path jarFile = filesystem.getPathForRelativePath(jarFileThatMayContainResources);
-        builder.addResourcesFromJar(jarFile.toFile());
-      }
-
-      // Build the APK
-      builder.sealApk();
+      ApkBuilderUtils.buildApk(
+          filesystem.getPathForRelativePath(resourceApk),
+          filesystem.getPathForRelativePath(pathToOutputApkFile),
+          filesystem.getPathForRelativePath(dexFile),
+          assetDirectories.stream()
+              .map(filesystem::getPathForRelativePath)
+              .collect(ImmutableSet.toImmutableSet()),
+          nativeLibraryDirectories.stream()
+              .map(filesystem::getPathForRelativePath)
+              .collect(ImmutableSet.toImmutableSet()),
+          zipFiles.stream()
+              .map(filesystem::getPathForRelativePath)
+              .collect(ImmutableSet.toImmutableSet()),
+          jarFilesThatMayContainResources.stream()
+              .map(filesystem::getPathForRelativePath)
+              .collect(ImmutableSet.toImmutableSet()),
+          filesystem.getPathForRelativePath(pathToKeystore),
+          keystorePropertiesSupplier.get(),
+          output);
     } catch (ApkCreationException
         | KeyStoreException
         | NoSuchAlgorithmException
