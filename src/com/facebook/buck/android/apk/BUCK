@@ -11,3 +11,11 @@ java_library(
         "//third-party/java/guava:guava",
     ],
 )
+
+java_binary(
+    name = "apk_builder_binary",
+    main_class = "com.facebook.buck.android.apk.ApkBuilderExecutableMain",
+    deps = [
+        ":apk",
+    ],
+)
