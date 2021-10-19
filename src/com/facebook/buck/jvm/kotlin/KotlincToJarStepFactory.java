@@ -78,7 +78,6 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -332,7 +331,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
                     AP_OPTIONS
                         + encodeKaptApOptions(
                             apOptions.build(), rootPath.resolve(kaptGeneratedOutput).toString()))
-                .add(JAVAC_ARG + encodeOptions(Collections.emptyMap()))
+                .add(JAVAC_ARG + encodeOptions(getJavacArguments()))
                 .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument
                 .add(CORRECT_ERROR_TYPES + "true");
 
@@ -622,6 +621,15 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     return extraParams.getCellRelativeBasePath().toString().replace('/', '.')
         + "."
         + extraParams.getShortName();
+  }
+
+  private Map<String, String> getJavacArguments() {
+    Map<String, String> arguments = new HashMap<>();
+    if (jvmTarget.isPresent()) {
+      arguments.put("-source", jvmTarget.get());
+      arguments.put("-target", jvmTarget.get());
+    }
+    return arguments;
   }
 
   public static RelPath getKaptAnnotationGenPath(BuckPaths buckPaths, BuildTarget buildTarget) {
