@@ -45,7 +45,6 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.jar.Manifest;
@@ -158,8 +157,6 @@ public interface ProjectFilesystem {
    * @param pathRelativeToProjectRoot path to the file
    */
   void deleteFileAtPath(Path pathRelativeToProjectRoot) throws IOException;
-
-  Properties readPropertiesFile(Path propertiesFile) throws IOException;
 
   /** Checks whether there is a normal file at the specified path. */
   boolean isFile(Path pathRelativeToProjectRoot, LinkOption... options);

@@ -59,7 +59,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -345,11 +344,6 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   @Override
   public void deleteFileAtPath(Path pathRelativeToProjectRoot) throws IOException {
     ProjectFilesystemUtils.deleteFileAtPath(projectRoot, pathRelativeToProjectRoot);
-  }
-
-  @Override
-  public Properties readPropertiesFile(Path propertiesFile) throws IOException {
-    return ProjectFilesystemUtils.readPropertiesFile(projectRoot, propertiesFile);
   }
 
   /** Checks whether there is a normal file at the specified path. */

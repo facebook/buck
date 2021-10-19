@@ -34,10 +34,8 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -67,7 +65,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -221,23 +218,6 @@ public class ProjectFilesystemUtils {
   public static void deleteFileAtPath(AbsPath root, Path pathRelativeToProjectRoot)
       throws IOException {
     Files.delete(getPathForRelativePath(root, pathRelativeToProjectRoot));
-  }
-
-  /** Reads properties file. */
-  public static Properties readPropertiesFile(AbsPath root, Path propertiesFile)
-      throws IOException {
-    Properties properties = new Properties();
-    if (exists(root, propertiesFile)) {
-      try (BufferedReader reader =
-          new BufferedReader(
-              new InputStreamReader(
-                  newFileInputStream(root, propertiesFile), StandardCharsets.UTF_8))) {
-        properties.load(reader);
-      }
-      return properties;
-    } else {
-      throw new FileNotFoundException(propertiesFile.toString());
-    }
   }
 
   /** Opens a file, returning an input stream to read from the file. */

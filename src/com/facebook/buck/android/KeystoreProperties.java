@@ -17,9 +17,13 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Strings;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
@@ -54,9 +58,8 @@ public class KeystoreProperties {
   }
 
   public static KeystoreProperties createFromPropertiesFile(
-      Path pathToStore, Path pathToKeystorePropertiesFile, ProjectFilesystem projectFilesystem)
-      throws IOException {
-    Properties properties = projectFilesystem.readPropertiesFile(pathToKeystorePropertiesFile);
+      Path pathToStore, Path pathToKeystorePropertiesFile) throws IOException {
+    Properties properties = readPropertiesFile(pathToKeystorePropertiesFile);
 
     String keystorePassword =
         getOrThrowException(properties, "key.store.password", pathToKeystorePropertiesFile);
@@ -65,6 +68,19 @@ public class KeystoreProperties {
         getOrThrowException(properties, "key.alias.password", pathToKeystorePropertiesFile);
 
     return new KeystoreProperties(pathToStore, keystorePassword, aliasPassword, alias);
+  }
+
+  private static Properties readPropertiesFile(Path propertiesFile) throws IOException {
+    Properties properties = new Properties();
+    try (BufferedReader reader =
+        new BufferedReader(
+            new InputStreamReader(
+                new BufferedInputStream(Files.newInputStream(propertiesFile)),
+                StandardCharsets.UTF_8))) {
+      properties.load(reader);
+    }
+
+    return properties;
   }
 
   /**

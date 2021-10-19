@@ -583,8 +583,9 @@ abstract class AndroidBinaryBuildable implements AddsToRuleKey {
           try {
             return KeystoreProperties.createFromPropertiesFile(
                 pathToKeystore.getPath(),
-                resolver.getAbsolutePath(keystorePropertiesPath).getPath(),
-                getProjectFilesystem());
+                getProjectFilesystem()
+                    .getPathForRelativePath(
+                        resolver.getAbsolutePath(keystorePropertiesPath).getPath()));
           } catch (IOException e) {
             throw new RuntimeException();
           }

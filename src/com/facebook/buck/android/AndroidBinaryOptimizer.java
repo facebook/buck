@@ -194,8 +194,8 @@ public abstract class AndroidBinaryOptimizer implements AddsToRuleKey {
           try {
             return KeystoreProperties.createFromPropertiesFile(
                 pathToKeystore,
-                resolver.getAbsolutePath(keystorePropertiesPath).getPath(),
-                filesystem);
+                filesystem.getPathForRelativePath(
+                    resolver.getAbsolutePath(keystorePropertiesPath).getPath()));
           } catch (IOException e) {
             throw new RuntimeException();
           }
