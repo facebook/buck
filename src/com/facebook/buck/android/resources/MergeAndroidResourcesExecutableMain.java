@@ -75,7 +75,7 @@ public class MergeAndroidResourcesExecutableMain {
     Optional<Path> duplicateResourceWhitelistPath = Optional.empty();
     Optional<String> unionPackage = Optional.empty();
 
-    for (int argsIndex = 4; argsIndex < args.length; argsIndex += 2) {
+    for (int argsIndex = 3; argsIndex < args.length; argsIndex += 2) {
       String arg = args[argsIndex];
 
       switch (arg) {
