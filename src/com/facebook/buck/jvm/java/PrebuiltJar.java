@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
-import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -61,7 +60,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import com.google.common.collect.Streams;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -169,12 +167,11 @@ public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableSortedSet<SourcePath> getDesugarDeps() {
     // We only need deps for desugaring interface methods
     if (isDesugarEnabled() && isInterfaceMethodsDesugarEnabled()) {
-      // We provide all transitive Java dependencies to support Java 8 interface desugaring in D8.
+      // We provide all declared Java dependencies to support Java 8 interface desugaring in D8.
       // If this JAR is built with Java 8 and depends on anther Java 8 library using default or
       // static interface methods, we need to desugar them together so that implementers of that
       // interface in this JAR get correctly desugared as well.
-      return Streams.concat(
-              getDeclaredDeps().stream(), BuildRules.getExportedRules(getDeclaredDeps()).stream())
+      return getDeclaredDeps().stream()
           .filter(JavaLibrary.class::isInstance)
           .map(BuildRule::getSourcePathToOutput)
           .filter(Objects::nonNull)

@@ -41,7 +41,6 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
-import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -61,7 +60,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /**
@@ -143,18 +141,13 @@ public class AndroidPrebuiltAarDescription
         buildTarget);
     UnzipAar unzipAar = (UnzipAar) unzipAarRule;
 
-    Iterable<BuildRule> javaDeps =
-        graphBuilder.getAllRules(args.getDeps()).stream()
-            .filter(JavaLibrary.class::isInstance)
-            .map(
-                buildRule -> {
-                  if (buildRule instanceof AndroidPrebuiltAar) {
-                    return ((AndroidPrebuiltAar) buildRule).getPrebuiltJar();
-                  } else {
-                    return buildRule;
-                  }
-                })
-            .collect(Collectors.toList());
+    Iterable<PrebuiltJar> javaDeps =
+        Iterables.concat(
+            Iterables.filter(graphBuilder.getAllRules(args.getDeps()), PrebuiltJar.class),
+            Iterables.transform(
+                Iterables.filter(
+                    graphBuilder.getAllRules(args.getDeps()), AndroidPrebuiltAar.class),
+                AndroidPrebuiltAar::getPrebuiltJar));
 
     if (flavors.contains(AAR_PREBUILT_JAR_FLAVOR)) {
       SourcePath prebuiltJarSourcePath =
