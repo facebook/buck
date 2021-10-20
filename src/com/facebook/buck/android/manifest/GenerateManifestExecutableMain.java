@@ -31,7 +31,7 @@ import java.util.logging.Logger; // NOPMD
  * Main entry point for executing {@link GenerateManifest} calls.
  *
  * <p>Expected usage: {@code this_binary <skeleton_manifest_path> <module_name>
- * <library_manifest_paths_file> <output_path> <merge_report_path} .
+ * <library_manifest_paths_file> <placeholder_entries_file> <output_path> <merge_report_path} .
  */
 public class GenerateManifestExecutableMain {
 
@@ -39,9 +39,9 @@ public class GenerateManifestExecutableMain {
       Logger.getLogger(GenerateManifestExecutableMain.class.getName());
 
   public static void main(String[] args) throws IOException {
-    if (args.length != 5) {
+    if (args.length != 6) {
       LOG.severe(
-          "Must specify a skeleton manifest path, a module name, a file of library manifest paths, an output path and a merge report path");
+          "Must specify a skeleton manifest path, a module name, a file of library manifest paths, a file of placeholder entries an output path and a merge report path");
       System.exit(1);
     }
 
@@ -54,15 +54,21 @@ public class GenerateManifestExecutableMain {
             .map(Paths::get)
             .collect(ImmutableSet.toImmutableSet());
 
-    Path outputPath = Paths.get(args[3]);
-    Path mergeReportPath = Paths.get(args[4]);
+    Path placeholderEntriesFilePath = Paths.get(args[3]);
+    ImmutableMap<String, String> placeholderEntries =
+        Files.readAllLines(placeholderEntriesFilePath).stream()
+            .map(s -> s.split(" "))
+            .collect(ImmutableMap.toImmutableMap(arr -> arr[0], arr -> arr[1]));
+
+    Path outputPath = Paths.get(args[4]);
+    Path mergeReportPath = Paths.get(args[5]);
 
     String xmlText =
         GenerateManifest.generateXml(
             skeletonManifestPath,
             moduleName,
             libraryManifestsFilePaths,
-            ImmutableMap.of(),
+            placeholderEntries,
             outputPath,
             mergeReportPath,
             new StdLogger(StdLogger.Level.ERROR));
