@@ -86,8 +86,6 @@ public class D8Utils {
     minSdkVersion.ifPresent(builder::setMinApiLevel);
     primaryDexClassNamesPath.ifPresent(builder::addMainDexListFiles);
 
-    // Include the Android SDK on the classpath to support JARs/AARs compiled for Android
-    builder.addClasspathFiles(androidJarPath);
     if (classpathFiles != null) {
       // classpathFiles is needed only for D8 Java 8 desugar
       builder.addClasspathFiles(classpathFiles);
