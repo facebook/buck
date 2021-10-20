@@ -338,6 +338,11 @@ public final class WindowsCmdExeEscaper {
      * <code>%PATH%</code> being expanded). Outside of cmd.exe quotes, using <code>"^%"</code> will
      * prevent expansion while yielding a literal <code>'%'</code>.
      *
+     * <p>Additionally, <code>'!'</code> may also be special if DELAYEDEXPANSION is turned on in the
+     * shell. This can be enabled by a user-specific registry key. Buck disables this feature via
+     * cmd.exe's <code>/V:OFF</code> switch. Individual rules that depend on this behavior can use
+     * <code>setlocal ENABLEDELAYEDEXPANSION</code> to turn it back on in their commands.
+     *
      * <p><code>parse</code> can be called repeatedly, i.e. <code>string</code> need not be a
      * complete command line. The cmd.exe "in-quotes" state is maintained across calls in order to
      * facilitate the parsing of multiple {@link EscapedCommandSubstring}s (that may be interleaved

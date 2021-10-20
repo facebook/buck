@@ -49,7 +49,7 @@ public class WindowsUtils extends PlatformUtils {
   @Override
   public ImmutableList.Builder<String> getCommandBuilder() {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
-    commandBuilder.add("cmd").add("/c");
+    commandBuilder.add("cmd").add("/v:off").add("/c");
     return commandBuilder;
   }
 

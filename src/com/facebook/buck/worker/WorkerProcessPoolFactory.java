@@ -140,7 +140,7 @@ public class WorkerProcessPoolFactory {
   public ImmutableList<String> getCommand(Platform platform, WorkerProcessParams paramsToUse) {
     ImmutableList<String> executionArgs =
         platform == Platform.WINDOWS
-            ? ImmutableList.of("cmd.exe", "/c")
+            ? ImmutableList.of("cmd.exe", "/v:off", "/c")
             : ImmutableList.of("/bin/bash", "-e", "-c");
 
     return ImmutableList.<String>builder()

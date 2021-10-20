@@ -49,7 +49,7 @@ public class ListeningProcessExecutorTest {
     CapturingListener listener = new CapturingListener();
     ProcessExecutorParams params;
     if (Platform.detect() == Platform.WINDOWS) {
-      params = ProcessExecutorParams.ofCommand("cmd.exe", "/c", "echo", "Hello");
+      params = ProcessExecutorParams.ofCommand("cmd.exe", "/v:off", "/c", "echo", "Hello");
     } else {
       params = ProcessExecutorParams.ofCommand("echo", "Hello");
     }
@@ -64,7 +64,7 @@ public class ListeningProcessExecutorTest {
   public void processCwdIsRespected() throws Exception {
     ProcessExecutorParams.Builder paramsBuilder = ProcessExecutorParams.builder();
     if (Platform.detect() == Platform.WINDOWS) {
-      paramsBuilder.addCommand("cmd.exe", "/c", "type");
+      paramsBuilder.addCommand("cmd.exe", "/v:off", "/c", "type");
     } else {
       paramsBuilder.addCommand("cat");
     }
@@ -137,7 +137,7 @@ public class ListeningProcessExecutorTest {
   public void processFailureExitCodeNotZero() throws Exception {
     ProcessExecutorParams params;
     if (Platform.detect() == Platform.WINDOWS) {
-      params = ProcessExecutorParams.ofCommand("cmd.exe", "/c", "exit", "1");
+      params = ProcessExecutorParams.ofCommand("cmd.exe", "/v:off", "/c", "exit", "1");
     } else {
       params = ProcessExecutorParams.ofCommand("false");
     }
@@ -204,7 +204,7 @@ public class ListeningProcessExecutorTest {
     CapturingListener listener = new CapturingListener();
     ProcessExecutorParams params;
     if (Platform.detect() == Platform.WINDOWS) {
-      params = ProcessExecutorParams.ofCommand("cmd.exe", "/c", "set");
+      params = ProcessExecutorParams.ofCommand("cmd.exe", "/v:off", "/c", "set");
     } else {
       params = ProcessExecutorParams.ofCommand("env");
     }

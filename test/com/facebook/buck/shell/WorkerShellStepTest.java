@@ -231,7 +231,8 @@ public class WorkerShellStepTest {
             ImmutableList.of("/bin/bash", "-e", "-c", "command --platform unix-like")));
     assertThat(
         step.getFactory().getCommand(Platform.WINDOWS, cmdExeParams.getWorkerProcessParams()),
-        Matchers.equalTo(ImmutableList.of("cmd.exe", "/c", "command --platform windows")));
+        Matchers.equalTo(
+            ImmutableList.of("cmd.exe", "/v:off", "/c", "command --platform windows")));
   }
 
   @Test

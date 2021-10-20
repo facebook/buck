@@ -318,7 +318,7 @@ public class GenruleTest {
     String scriptFileContents = genruleCommand.getScriptFileContents(executionContext);
     if (Platform.detect() == Platform.WINDOWS) {
       assertEquals(
-          ImmutableList.of(scriptFilePath.toString()),
+          ImmutableList.of("cmd.exe", "/v:off", "/c", scriptFilePath.toString()),
           genruleCommand.getShellCommand(executionContext));
       assertEquals("python convert_to_katana.py AndroidManifest.xml > %OUT%", scriptFileContents);
     } else {
@@ -548,7 +548,7 @@ public class GenruleTest {
     assertGenruleCommandAndScript(
         createGenruleStep(genrule, buildContext),
         windowsExecutionContext,
-        ImmutableList.of(),
+        ImmutableList.of("cmd.exe", "/v:off", "/c"),
         cmdExe);
 
     // Test fallback
@@ -566,7 +566,7 @@ public class GenruleTest {
     assertGenruleCommandAndScript(
         createGenruleStep(genrule, buildContext),
         windowsExecutionContext,
-        ImmutableList.of(),
+        ImmutableList.of("cmd.exe", "/v:off", "/c"),
         cmdForCmdExe);
 
     // Test command absent
