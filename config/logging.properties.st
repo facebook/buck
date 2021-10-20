@@ -95,7 +95,7 @@ com.facebook.buck.log.memory.MemoryHandler.level=WARNING
 com.facebook.buck.log.memory.MemoryHandler.size=1
 
 # Define the push level.
-com.facebook.buck.log.memory.MemoryHandler.push=WARNING
+com.facebook.buck.log.memory.MemoryHandler.push=SEVERE
 
 
 # Max size in bytes all logs will take.
