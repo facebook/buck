@@ -144,7 +144,7 @@ public class SwiftIOSBundleIntegrationTest {
     target = workspace.newBuildTarget("//:libparent");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    target = workspace.newBuildTarget("//:ios-sos#iphonesimulator-x86_64,no-debug");
+    target = workspace.newBuildTarget("//:ios_sos#iphonesimulator-x86_64,no-debug");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     Path appPath =
@@ -169,7 +169,7 @@ public class SwiftIOSBundleIntegrationTest {
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget parentDynamicTarget =
-        BuildTargetFactory.newInstance("//:ios-parent-dynamic")
+        BuildTargetFactory.newInstance("//:ios_parent_dynamic")
             .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
 
     ProcessResult result =
@@ -212,7 +212,7 @@ public class SwiftIOSBundleIntegrationTest {
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget parentDynamicTarget =
-        BuildTargetFactory.newInstance("//:ios-parent-dynamic")
+        BuildTargetFactory.newInstance("//:ios_parent_dynamic")
             .withAppendedFlavors(InternalFlavor.of("iphonesimulator-x86_64"));
 
     ProcessResult result =
@@ -241,7 +241,7 @@ public class SwiftIOSBundleIntegrationTest {
                 BuildTargetPaths.getGenPath(
                     filesystem.getBuckPaths(),
                     BuildTargetFactory.newInstance(
-                        "//:ios-parent-dynamic#iphonesimulator-x86_64,swift-compile"),
+                        "//:ios_parent_dynamic#iphonesimulator-x86_64,swift-compile"),
                     "%s"))
             .resolve("ios_parent_dynamic.swiftmodule");
     assertThat(Files.exists(parentOutput.getPath()), CoreMatchers.is(true));
@@ -269,7 +269,7 @@ public class SwiftIOSBundleIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "build", ":dep1-soname#iphonesimulator-x86_64,shared", "--config", "cxx.cflags=-g");
+            "build", ":dep1_soname#iphonesimulator-x86_64,shared", "--config", "cxx.cflags=-g");
     result.assertSuccess();
 
     AbsPath binaryOutput =
@@ -277,7 +277,7 @@ public class SwiftIOSBundleIntegrationTest {
             .resolve(
                 BuildTargetPaths.getGenPath(
                     filesystem.getBuckPaths(),
-                    BuildTargetFactory.newInstance("//:dep1-soname#iphonesimulator-x86_64"),
+                    BuildTargetFactory.newInstance("//:dep1_soname#iphonesimulator-x86_64"),
                     "%s"))
             .resolve("custom-soname");
     assertThat(Files.exists(binaryOutput.getPath()), CoreMatchers.is(true));
@@ -314,7 +314,7 @@ public class SwiftIOSBundleIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "build", ":ios-parent-dynamic#iphonesimulator-x86_64", "--config", "cxx.cflags=-g");
+            "build", ":ios_parent_dynamic#iphonesimulator-x86_64", "--config", "cxx.cflags=-g");
     result.assertSuccess();
 
     AbsPath binaryOutput =
@@ -322,7 +322,7 @@ public class SwiftIOSBundleIntegrationTest {
             .resolve(
                 BuildTargetPaths.getGenPath(
                     filesystem.getBuckPaths(),
-                    BuildTargetFactory.newInstance("//:ios-parent-dynamic#iphonesimulator-x86_64"),
+                    BuildTargetFactory.newInstance("//:ios_parent_dynamic#iphonesimulator-x86_64"),
                     "%s"));
     assertThat(Files.exists(binaryOutput.getPath()), CoreMatchers.is(true));
 

@@ -1942,10 +1942,6 @@ public class CxxDescriptionEnhancer {
     return platform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty());
   }
 
-  public static String normalizeModuleName(String moduleName) {
-    return moduleName.replaceAll("[^A-Za-z0-9]", "_");
-  }
-
   /**
    * @return a {@link BuildRule} that produces a single file that contains linker map produced
    *     during the linking process.

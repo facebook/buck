@@ -1176,7 +1176,7 @@ public class AppleLibraryIntegrationTest {
     workspace.setUp();
     BuildTarget target =
         workspace
-            .newBuildTarget("//:none-swift")
+            .newBuildTarget("//:none_swift")
             .withAppendedFlavors(platformFlavor)
             .withAppendedFlavors(CxxDescriptionEnhancer.SHARED_FLAVOR);
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
@@ -1187,7 +1187,7 @@ public class AppleLibraryIntegrationTest {
     Path binaryOutput =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem.getBuckPaths(), target, "%s/libnone-swift.dylib"));
+                filesystem.getBuckPaths(), target, "%s/libnone_swift.dylib"));
     assertThat(Files.exists(binaryOutput), is(true));
 
     assertThat(

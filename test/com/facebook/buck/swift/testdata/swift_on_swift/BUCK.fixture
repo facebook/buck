@@ -32,7 +32,7 @@ swift_library(
 )
 
 apple_binary(
-    name = "ios-parent",
+    name = "ios_parent",
     srcs = ["ios-parent/AppDelegate.swift"],
     frameworks = [
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
@@ -42,7 +42,7 @@ apple_binary(
 )
 
 apple_binary(
-    name = "ios-parent-dynamic",
+    name = "ios_parent_dynamic",
     srcs = ["ios-parent/AppDelegate.swift"],
     frameworks = [
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
@@ -53,14 +53,14 @@ apple_binary(
 )
 
 swift_library(
-    name = "dep1-soname",
+    name = "dep1_soname",
     srcs = ["dep1/dep1.swift"],
     soname = "custom-soname",
 )
 
 apple_bundle(
-    name = "ios-sos",
-    binary = ":ios-parent",
+    name = "ios_sos",
+    binary = ":ios_parent",
     extension = "app",
     info_plist = "ios-parent/Info.plist",
     info_plist_substitutions = {

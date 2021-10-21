@@ -1,5 +1,5 @@
 apple_library(
-    name = "none-swift",
+    name = "none_swift",
     srcs = ["dummy.swift"],
 )
 

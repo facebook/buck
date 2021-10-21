@@ -164,10 +164,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   // We can't make the debug prefix map part of the rulekey as it is machine specific.
   private final ImmutableBiMap<Path, String> debugPrefixMap;
 
-  public static String getNormalizedModuleName(String moduleName) {
-    return CxxDescriptionEnhancer.normalizeModuleName(moduleName);
-  }
-
   SwiftCompileBase(
       SwiftBuckConfig swiftBuckConfig,
       BuildTarget buildTarget,
@@ -204,11 +200,9 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.importUnderlyingModule = importUnderlyingModule;
     this.addXCTestImportPaths = addXCTestImportPaths;
     this.headerPath = outputPath.resolve(SwiftDescriptions.toSwiftHeaderName(moduleName) + ".h");
-
-    String escapedModuleName = SwiftCompileBase.getNormalizedModuleName(moduleName);
-    this.moduleName = escapedModuleName;
-    this.objectFilePath = outputPath.resolve(escapedModuleName + ".o");
-    this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");
+    this.moduleName = moduleName;
+    this.objectFilePath = outputPath.resolve(moduleName + ".o");
+    this.modulePath = outputPath.resolve(moduleName + ".swiftmodule");
     this.objectPaths = ImmutableList.of(objectFilePath);
 
     RelPath scratchDir =
@@ -222,7 +216,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
             : Optional.empty());
 
     this.shouldEmitSwiftdocs = swiftBuckConfig.getEmitSwiftdocs();
-    this.swiftdocPath = outputPath.resolve(escapedModuleName + ".swiftdoc");
+    this.swiftdocPath = outputPath.resolve(moduleName + ".swiftdoc");
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.swiftTarget = swiftTarget;
