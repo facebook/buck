@@ -40,7 +40,9 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.zip.ZipScrubberStep;
@@ -153,6 +155,17 @@ public class Aapt2Link extends AbstractBuildRule {
                 getProjectFilesystem(),
                 getResourceApkPath().getParent())));
 
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                getFinalManifestPath().getParent())));
+    steps.add(
+        CopyStep.forFile(
+            context.getSourcePathResolver().getRelativePath(getProjectFilesystem(), manifest),
+            getFinalManifestPath()));
+
     // Need to reverse the order of the rules because aapt2 allows later resources
     // to override earlier ones, but aapt gives the earlier ones precedence.
     List<Path> compiledResourcePaths =
@@ -191,6 +204,7 @@ public class Aapt2Link extends AbstractBuildRule {
               withDownwardApi));
     }
 
+    buildableContext.recordArtifact(getFinalManifestPath().getPath());
     buildableContext.recordArtifact(getResourceApkPath());
     buildableContext.recordArtifact(getProguardConfigPath());
     buildableContext.recordArtifact(getRDotTxtPath());
@@ -214,6 +228,10 @@ public class Aapt2Link extends AbstractBuildRule {
     return getGenDir().resolve("aapt2-R-args.txt");
   }
 
+  private RelPath getFinalManifestPath() {
+    return getGenDir().resolveRel("AndroidManifest.xml");
+  }
+
   private Path getResourceApkPath() {
     return getGenDir().resolve("resource-apk.ap_");
   }
@@ -235,6 +253,7 @@ public class Aapt2Link extends AbstractBuildRule {
     return ImmutableAaptOutputInfo.ofImpl(
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getRDotTxtPath()),
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getResourceApkPath()),
+        ExplicitBuildTargetSourcePath.of(getBuildTarget(), getFinalManifestPath()),
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), getProguardConfigPath()));
   }
 
@@ -318,7 +337,7 @@ public class Aapt2Link extends AbstractBuildRule {
       // aapt2 only supports @ for -R or input files, not for all args, so we pass in all "normal"
       // args here.
       builder.add("-o", getResourceApkPath().toString());
-      builder.add("--manifest", pathResolver.getAbsolutePath(manifest).toString());
+      builder.add("--manifest", getFinalManifestPath().toString());
       if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()) {
         builder.add("-v");
       }
