@@ -162,9 +162,11 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
   protected ImmutableList<String> getShellCommandInternal(StepExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(javaRuntimeLauncher);
+    // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+    // https://stackoverflow.com/a/16535804/5208808
+    args.add("-XX:-MaxFDLimit");
 
     // Generate report from JaCoCo exec file using 'ReportGenerator.java'
-
     args.add("-jar", System.getProperty("buck.report_generator_jar"));
     args.add(filesystem.resolve(propertyFile).toString());
 

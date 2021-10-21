@@ -35,7 +35,7 @@ public class InstrumentationStep extends IsolatedShellStep {
   private final AndroidInstrumentationTestJVMArgs jvmArgs;
   private final Supplier<Path> classpathArgfile;
 
-  private Optional<Long> testRuleTimeoutMs;
+  private final Optional<Long> testRuleTimeoutMs;
 
   public InstrumentationStep(
       ProjectFilesystem filesystem,
@@ -72,6 +72,9 @@ public class InstrumentationStep extends IsolatedShellStep {
   protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(javaRuntimeLauncher);
+    // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+    // https://stackoverflow.com/a/16535804/5208808
+    args.add("-XX:-MaxFDLimit");
     jvmArgs.formatCommandLineArgsToList(filesystem, args, classpathArgfile);
 
     if (jvmArgs.isDebugEnabled()) {

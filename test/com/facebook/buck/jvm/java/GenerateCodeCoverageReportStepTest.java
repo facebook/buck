@@ -116,6 +116,7 @@ public class GenerateCodeCoverageReportStepTest {
 
     shellCommandBuilder.add(
         "java",
+        "-XX:-MaxFDLimit",
         "-jar",
         MorePathsForTests.rootRelativePath("/absolute/path/to/report/generator/jar").toString(),
         absolutifyPath(Paths.get(OUTPUT_DIRECTORY + "/parameters.properties")));
@@ -224,9 +225,8 @@ public class GenerateCodeCoverageReportStepTest {
     assertEquals(
         String.format(
             "%s:%s",
-            MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory1/src").toString(),
-            MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory2/src")
-                .toString()),
+            MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory1/src"),
+            MorePathsForTests.rootRelativePath("/absolute/path/to/parentDirectory2/src")),
         actual.getProperty("src.dir"));
   }
 

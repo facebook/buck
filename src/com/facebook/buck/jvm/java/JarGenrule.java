@@ -86,6 +86,9 @@ public final class JarGenrule extends BaseGenrule<GenruleBuildable> implements B
   @Override
   public Tool getExecutableCommand(OutputLabel outputLabel) {
     return new CommandTool.Builder(javaRuntimeLauncher)
+        // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+        // https://stackoverflow.com/a/16535804/5208808
+        .addArg("-XX:-MaxFDLimit")
         .addArg("-jar")
         .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .build();
