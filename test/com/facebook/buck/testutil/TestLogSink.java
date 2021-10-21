@@ -62,7 +62,7 @@ public final class TestLogSink extends Handler implements TestRule {
   }
 
   /** Retrieve the log records that were published. */
-  public ImmutableList<LogRecord> getRecords() {
+  public synchronized ImmutableList<LogRecord> getRecords() {
     return records.build();
   }
 
@@ -72,8 +72,7 @@ public final class TestLogSink extends Handler implements TestRule {
    * @param messageMatcher Matcher for the message.
    */
   public static Matcher<LogRecord> logRecordWithMessage(Matcher<String> messageMatcher) {
-    return new FeatureMatcher<LogRecord, String>(
-        messageMatcher, "a LogRecord with message", "message") {
+    return new FeatureMatcher<>(messageMatcher, "a LogRecord with message", "message") {
       @Override
       protected String featureValueOf(LogRecord logRecord) {
         return logRecord.getMessage();
@@ -98,7 +97,7 @@ public final class TestLogSink extends Handler implements TestRule {
   }
 
   @Override
-  public void publish(LogRecord record) {
+  public synchronized void publish(LogRecord record) {
     if (record != null) {
       records.add(record);
     }
