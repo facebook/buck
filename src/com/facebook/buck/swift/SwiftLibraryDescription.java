@@ -310,7 +310,7 @@ public class SwiftLibraryDescription
           getFrameworkPathToSearchPath(
               cxxPlatform, graphBuilder, cxxBuckConfig.getSkipSystemFrameworkSearchPaths()),
           cxxPlatform.getFlavor(),
-          getModuleName(buildTarget, args, false),
+          getModuleName(buildTarget, args),
           BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
               .getPath(),
           args.getSrcs(),
@@ -491,7 +491,7 @@ public class SwiftLibraryDescription
         getFrameworkPathToSearchPath(
             cxxPlatform, graphBuilder, cxxBuckConfig.getSkipSystemFrameworkSearchPaths()),
         cxxPlatform.getFlavor(),
-        getModuleName(buildTarget, args, false),
+        getModuleName(buildTarget, args),
         BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s").getPath(),
         args.getSrcs(),
         args.getVersion(),
@@ -582,7 +582,7 @@ public class SwiftLibraryDescription
         getFrameworkPathToSearchPath(
             cxxPlatform, graphBuilder, cxxBuckConfig.getSkipSystemFrameworkSearchPaths()),
         cxxPlatform.getFlavor(),
-        getModuleName(buildTarget, args, false),
+        getModuleName(buildTarget, args),
         BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s").getPath(),
         args.getSrcs(),
         args.getVersion(),
@@ -606,11 +606,8 @@ public class SwiftLibraryDescription
         args.getSerializeDebuggingOptions());
   }
 
-  public static String getModuleName(
-      BuildTarget buildTarget, AbstractSwiftCxxCommonArg args, boolean shouldNormalizeName) {
-    String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
-
-    return shouldNormalizeName ? SwiftCompileBase.getNormalizedModuleName(moduleName) : moduleName;
+  private static String getModuleName(BuildTarget buildTarget, SwiftLibraryDescriptionArg args) {
+    return args.getModuleName().orElse(buildTarget.getShortName());
   }
 
   public static boolean isSwiftTarget(BuildTarget buildTarget) {

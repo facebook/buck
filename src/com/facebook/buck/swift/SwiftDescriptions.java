@@ -77,20 +77,25 @@ public class SwiftDescriptions {
       output.setVersion(swiftVersion);
       output.setSerializeDebuggingOptions(swiftArgs.getSerializeDebuggingOptions());
       output.setEnableCxxInterop(swiftArgs.getEnableCxxInterop());
+      output.setModuleName(getModuleName(buildTarget, swiftArgs));
     } else {
       output.setCompilerFlags(args.getCompilerFlags());
     }
+
     output.setFrameworks(args.getFrameworks());
     output.setLibraries(args.getLibraries());
     output.setDeps(args.getDeps());
     output.setSupportedPlatformsRegex(args.getSupportedPlatformsRegex());
-    output.setModuleName(
-        args.getModuleName().map(Optional::of).orElse(Optional.of(buildTarget.getShortName())));
     output.setBridgingHeader(args.getBridgingHeader());
 
     boolean isCompanionTarget = buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR);
     output.setPreferredLinkage(
         isCompanionTarget ? Optional.of(STATIC) : args.getPreferredLinkage());
+  }
+
+  public static String getModuleName(BuildTarget buildTarget, SwiftCommonArg args) {
+    return args.getModuleName()
+        .orElse(args.getHeaderPathPrefix().orElse(buildTarget.getShortName()));
   }
 
   static String toSwiftHeaderName(String moduleName) {

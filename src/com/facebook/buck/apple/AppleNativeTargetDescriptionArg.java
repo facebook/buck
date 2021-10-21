@@ -30,8 +30,6 @@ public interface AppleNativeTargetDescriptionArg
   @Value.NaturalOrder
   ImmutableSortedMap<String, ImmutableMap<String, String>> getConfigs();
 
-  Optional<String> getHeaderPathPrefix();
-
   @Value.Default
   default boolean isModular() {
     return false;

@@ -24,6 +24,10 @@ import org.immutables.value.Value;
 
 /** Common argument for swift rules */
 public interface SwiftCommonArg extends BuildRuleArg {
+  Optional<String> getHeaderPathPrefix();
+
+  Optional<String> getModuleName();
+
   ImmutableList<StringWithMacros> getSwiftCompilerFlags();
 
   Optional<String> getSwiftVersion();

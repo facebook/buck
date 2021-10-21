@@ -91,6 +91,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCompile;
+import com.facebook.buck.swift.SwiftDescriptions;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftRuntimeNativeLinkableGroup;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
@@ -859,7 +860,8 @@ public class AppleLibraryDescription
               buildTarget, graphBuilder, cxxPlatform, HeaderVisibility.PUBLIC));
     }
 
-    String moduleName = args.getModuleName().orElse(headerPathPrefix.toString());
+    String moduleName = SwiftDescriptions.getModuleName(buildTarget, args);
+
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,
@@ -888,7 +890,7 @@ public class AppleLibraryDescription
 
     RelPath root = BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s");
 
-    String moduleName = SwiftLibraryDescription.getModuleName(buildTarget, args, true);
+    String moduleName = SwiftDescriptions.getModuleName(buildTarget, args);
 
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
         buildTarget,
