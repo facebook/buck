@@ -16,10 +16,11 @@
 
 package com.facebook.buck.remoteexecution;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
+import build.bazel.remote.execution.v2.Platform;
+import com.facebook.buck.remoteexecution.proto.ActionHistoryInfo;
+import com.facebook.buck.util.types.Pair;
 
 /** Provides rule's RE worker requirements for given target */
 public interface WorkerRequirementsProvider {
-  WorkerRequirements resolveRequirements(BuildTarget target, String auxiliaryBuildTag);
+  Pair<Platform, ActionHistoryInfo> resolveRequirements();
 }

@@ -16,7 +16,9 @@
 
 package com.facebook.buck.remoteexecution.interfaces;
 
-import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
+import build.bazel.remote.execution.v2.Platform;
+import com.facebook.buck.remoteexecution.proto.ActionHistoryInfo;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -128,7 +130,7 @@ public interface Protocol {
       ImmutableList<String> command,
       ImmutableSortedMap<String, String> commandEnvironment,
       Set<Path> outputs,
-      WorkerRequirements workerRequirements);
+      Pair<Platform, ActionHistoryInfo> workerRequirements);
 
   Action newAction(Digest commandDigest, Digest inputRootDigest);
 

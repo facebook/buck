@@ -24,8 +24,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
-import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Verify;
@@ -76,12 +74,6 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
   private final ListeningExecutorService scheduler =
       MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
 
-  private final Optional<WorkerRequirements.WorkerSize> maxWorkerSizeToStealFrom;
-
-  private final WorkerRequirementsProvider workerRequirementsProvider;
-
-  private final String auxiliaryBuildTag;
-
   // If this is non-null, we've hit some unexpected unrecoverable condition.
   @Nullable private volatile Throwable hardFailure;
 
@@ -125,14 +117,8 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
       int numLocalDelegateJobs,
       int numDelegateJobs,
       BuildRuleStrategy delegate,
-      WorkerRequirementsProvider workerRequirementsProvider,
-      Optional<WorkerRequirements.WorkerSize> maxWorkerSizeToStealFrom,
-      String auxiliaryBuildTag,
       BuckEventBus eventBus) {
     this.delegate = delegate;
-    this.workerRequirementsProvider = workerRequirementsProvider;
-    this.maxWorkerSizeToStealFrom = maxWorkerSizeToStealFrom;
-    this.auxiliaryBuildTag = auxiliaryBuildTag;
     this.localSemaphore = new Semaphore(numLocalJobs);
     this.localDelegateSemaphore = new Semaphore(numLocalDelegateJobs);
     this.delegateSemaphore = new Semaphore(numDelegateJobs);
@@ -140,21 +126,6 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     this.pendingLocalQueue = new ConcurrentLinkedQueue<>();
     this.pendingDelegateOrLocalQueue = new ConcurrentLinkedQueue<>();
     this.pendingDelegateOnlyQueue = new ConcurrentLinkedQueue<>();
-  }
-
-  boolean isStealingSupportedForJob(Job job) {
-    // Ensure that we do not steal actions for which require a worker greater than the max
-    // configured limit, as this could lead to OOMs on the local machine.
-    if (!maxWorkerSizeToStealFrom.isPresent()) {
-      return true;
-    }
-
-    WorkerRequirements.WorkerSize workerSizeRequirement =
-        workerRequirementsProvider
-            .resolveRequirements(job.rule.getBuildTarget(), auxiliaryBuildTag)
-            .getWorkerSize();
-
-    return workerSizeRequirement.getNumber() <= maxWorkerSizeToStealFrom.get().getNumber();
   }
 
   private class Job {
@@ -214,9 +185,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
         delegateResult = capturedDelegateResult;
 
         // Only register delegate job if there is a possibility for it to be stolen
-        if (isStealingSupportedForJob(this)) {
-          tracker.register(this);
-        }
+        tracker.register(this);
 
         ListenableFuture<Optional<BuildResult>> buildResult =
             capturedDelegateResult.getBuildResult();
@@ -321,12 +290,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     Job job = new Job(strategyContext, rule, canBuildOnDelegate);
 
     if (canBuildOnDelegate) {
-      if (isStealingSupportedForJob(job)) {
-        pendingDelegateOrLocalQueue.add(job);
-      } else {
-        pendingDelegateOnlyQueue.add(job);
-      }
-
+      pendingDelegateOrLocalQueue.add(job);
     } else {
       pendingLocalQueue.add(job);
     }

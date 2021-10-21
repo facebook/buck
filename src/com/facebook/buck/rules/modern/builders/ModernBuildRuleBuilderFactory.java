@@ -26,7 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.remoteexecution.FileBasedWorkerRequirementsProvider;
+import com.facebook.buck.remoteexecution.OOMWorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.factory.RemoteExecutionClientsFactory;
@@ -45,8 +45,6 @@ import java.util.Optional;
  * modern_build_rule.strategy config option.
  */
 public class ModernBuildRuleBuilderFactory {
-
-  private static final int WORKER_REQUIREMENTS_PROVIDER_DEFAULT_MAX_CACHE_SIZE = 1000;
 
   /** Creates a BuildRuleStrategy for ModernBuildRules based on the buck configuration. */
   public static Optional<BuildRuleStrategy> getBuildStrategy(
@@ -67,11 +65,8 @@ public class ModernBuildRuleBuilderFactory {
           new RemoteExecutionClientsFactory(remoteExecutionConfig);
       strategy = config.getBuildStrategy(remoteExecutionAutoEnabled, forceDisableRemoteExecution);
       WorkerRequirementsProvider workerRequirementsProvider =
-          new FileBasedWorkerRequirementsProvider(
-              cells.getRootCell().getFilesystem(),
-              remoteExecutionConfig.getStrategyConfig().getWorkerRequirementsFilename(),
-              remoteExecutionConfig.getStrategyConfig().tryLargerWorkerOnOom(),
-              WORKER_REQUIREMENTS_PROVIDER_DEFAULT_MAX_CACHE_SIZE);
+          new OOMWorkerRequirementsProvider(
+              remoteExecutionConfig.getStrategyConfig().tryLargerWorkerOnOom());
       switch (strategy) {
         case NONE:
           return Optional.empty();
@@ -92,7 +87,6 @@ public class ModernBuildRuleBuilderFactory {
                   metadataProvider,
                   remoteExecutionAutoEnabled,
                   forceDisableRemoteExecution,
-                  workerRequirementsProvider,
                   consoleParams));
         case REMOTE:
           return Optional.of(
@@ -124,7 +118,6 @@ public class ModernBuildRuleBuilderFactory {
       MetadataProvider metadataProvider,
       boolean remoteExecutionAutoEnabled,
       boolean forceDisableRemoteExecution,
-      WorkerRequirementsProvider workerRequirementsProvider,
       ConsoleParams consoleParams) {
     BuildRuleStrategy delegate =
         getBuildStrategy(
@@ -146,9 +139,6 @@ public class ModernBuildRuleBuilderFactory {
         hybridLocalConfig.getLocalDelegateJobs(),
         hybridLocalConfig.getDelegateJobs(),
         delegate,
-        workerRequirementsProvider,
-        remoteExecutionConfig.getMaxWorkerSizeToStealFrom(),
-        remoteExecutionConfig.getAuxiliaryBuildTag(),
         eventBus);
   }
 

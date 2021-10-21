@@ -16,9 +16,11 @@
 
 package com.facebook.buck.remoteexecution;
 
+import build.bazel.remote.execution.v2.Platform;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
+import com.facebook.buck.remoteexecution.proto.ActionHistoryInfo;
 import com.facebook.buck.remoteexecution.proto.BuckInfo;
 import com.facebook.buck.remoteexecution.proto.CasClientInfo;
 import com.facebook.buck.remoteexecution.proto.ClientActionInfo;
@@ -27,9 +29,9 @@ import com.facebook.buck.remoteexecution.proto.CreatorInfo;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.remoteexecution.proto.TraceInfo;
-import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.rules.keys.config.impl.BuckVersion;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.types.Pair;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -195,14 +197,16 @@ public class MetadataProviderFactory {
 
   /** Wraps the argument MetadataProvider with worker requirements info */
   public static MetadataProvider wrapForRuleWithWorkerRequirements(
-      MetadataProvider metadataProvider, Supplier<WorkerRequirements> requirementsSupplier) {
+      MetadataProvider metadataProvider,
+      Supplier<Pair<Platform, ActionHistoryInfo>> requirementsSupplier) {
     return new MetadataProvider() {
       @Override
       public RemoteExecutionMetadata get() {
         return metadataProvider
             .get()
             .toBuilder()
-            .setWorkerRequirements(requirementsSupplier.get())
+            .setPlatform(requirementsSupplier.get().getFirst())
+            .setActionHistoryInfo(requirementsSupplier.get().getSecond())
             .build();
       }
 
@@ -211,7 +215,8 @@ public class MetadataProviderFactory {
           String actionDigest, String ruleName, String ruleType) {
         return metadataProvider
             .getBuilderForAction(actionDigest, ruleName, ruleType)
-            .setWorkerRequirements(requirementsSupplier.get());
+            .setPlatform(requirementsSupplier.get().getFirst())
+            .setActionHistoryInfo(requirementsSupplier.get().getSecond());
       }
 
       @Override

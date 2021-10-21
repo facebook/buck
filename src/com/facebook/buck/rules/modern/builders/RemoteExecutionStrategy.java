@@ -105,7 +105,6 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final OptionalLong largeBlobSizeBytes;
   private final WorkerRequirementsProvider requirementsProvider;
   private final MetadataProvider metadataProvider;
-  private final String auxiliaryBuildTag;
   private final RemoteExecutionSessionEvent.Started remoteExecutionSessionStartedEvent;
 
   RemoteExecutionStrategy(
@@ -115,8 +114,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       MetadataProvider metadataProvider,
       RemoteExecutionHelper mbrHelper,
       WorkerRequirementsProvider requirementsProvider,
-      ListeningExecutorService service,
-      String auxiliaryBuildTag) {
+      ListeningExecutorService service) {
     this.executionClients = executionClients;
     this.service = service;
     this.computeActionLimiter = new JobLimiter(strategyConfig.getMaxConcurrentActionComputations());
@@ -129,7 +127,6 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.metadataProvider = metadataProvider;
     this.mbrHelper = mbrHelper;
     this.requirementsProvider = requirementsProvider;
-    this.auxiliaryBuildTag = auxiliaryBuildTag;
     this.remoteExecutionSessionStartedEvent = RemoteExecutionSessionEvent.started();
     this.eventBus.post(remoteExecutionSessionStartedEvent);
   }
@@ -163,8 +160,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 remoteExecutionConfig.sanitizeBuckConfig()),
             workerRequirementsProvider,
             MoreExecutors.listeningDecorator(
-                MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads())),
-            remoteExecutionConfig.getAuxiliaryBuildTag()),
+                MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads()))),
         eventBus,
         strategyConfig.isLocalFallbackEnabled(),
         strategyConfig.isLocalFallbackDisabledOnCorruptedArtifacts(),
@@ -446,7 +442,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   }
                   return !executionClients.getContentAddressedStorage().containsDigest(digest);
                 },
-                requirementsProvider.resolveRequirements(rule.getBuildTarget(), auxiliaryBuildTag));
+                requirementsProvider.resolveRequirements());
       }
       RemoteExecutionActionEvent.sendInputsUploadedEventIfNeed(eventBus, rule, largeBlobs);
       return actionInfo;
@@ -462,10 +458,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       String ruleName) {
     MetadataProvider metadataProvider =
         MetadataProviderFactory.wrapForRuleWithWorkerRequirements(
-            this.metadataProvider,
-            () ->
-                requirementsProvider.resolveRequirements(
-                    buildRule.getBuildTarget(), auxiliaryBuildTag));
+            this.metadataProvider, () -> requirementsProvider.resolveRequirements());
     String ruleType = buildRule.getType();
     ListenableFuture<ExecutionResult> executionResult =
         executionLimiter.schedule(

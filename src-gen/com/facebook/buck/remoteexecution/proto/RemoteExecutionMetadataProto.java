@@ -62,11 +62,6 @@ public final class RemoteExecutionMetadataProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_facebook_remote_execution_CapabilityValue_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_facebook_remote_execution_WorkerRequirements_descriptor;
-  static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_facebook_remote_execution_WorkerRequirements_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_facebook_remote_execution_ClientJobInfo_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -125,64 +120,49 @@ public final class RemoteExecutionMetadataProto {
       "e\022B\n\017manifold_bucket\030\004 \001(\0132).facebook.re" +
       "mote_execution.ManifoldBucket\")\n\020CasStre" +
       "amingMode\022\013\n\007BUCKETS\020\000\022\010\n\004HTTP\020\001\" \n\017Capa" +
-      "bilityValue\022\r\n\005value\030\001 \001(\t\"\204\004\n\022WorkerReq" +
-      "uirements\022M\n\013worker_size\030\001 \001(\01628.faceboo" +
-      "k.remote_execution.WorkerRequirements.Wo" +
-      "rkerSize\022W\n\rplatform_type\030\002 \001(\0162@.facebo" +
-      "ok.remote_execution.WorkerRequirements.W" +
-      "orkerPlatformType\022\'\n\037should_try_larger_w" +
-      "orker_on_oom\030\003 \001(\010\022;\n\007testing\030\004 \001(\0132*.fa" +
-      "cebook.remote_execution.CapabilityValue\022" +
-      "=\n\ttask_name\030\005 \001(\0132*.facebook.remote_exe" +
-      "cution.CapabilityValue\"X\n\022WorkerPlatform" +
-      "Type\022\t\n\005LINUX\020\000\022\024\n\020ANDROID_EMULATOR\020\001\022\r\n" +
-      "\tLINUX_GPU\020\002\022\022\n\016BROWSER_CHROME\020\003\"G\n\nWork" +
-      "erSize\022\t\n\005SMALL\020\000\022\n\n\006MEDIUM\020\001\022\t\n\005LARGE\020\002" +
-      "\022\n\n\006XLARGE\020\003\022\013\n\007XXLARGE\020\004\"l\n\rClientJobIn" +
-      "fo\022\030\n\020deployment_stage\030\001 \001(\t\022\023\n\013instance" +
-      "_id\030\002 \001(\t\022\020\n\010group_id\030\003 \001(\t\022\032\n\022client_si" +
-      "de_tenant\030\004 \001(\t\"j\n\020ClientActionInfo\022\022\n\nr" +
-      "epository\030\001 \001(\t\022\025\n\rschedule_type\030\002 \001(\t\022\030" +
-      "\n\020re_session_label\030\003 \001(\t\022\021\n\ttenant_id\030\004 " +
-      "\001(\t\"E\n\021ActionHistoryInfo\022\022\n\naction_key\030\001" +
-      " \001(\t\022\034\n\024disable_retry_on_oom\030\002 \001(\010\"\333\002\n\022E" +
-      "xecutedActionInfo\022\033\n\023cpu_stat_usage_usec" +
-      "\030\001 \001(\003\022\032\n\022cpu_stat_user_usec\030\002 \001(\003\022\034\n\024cp" +
-      "u_stat_system_usec\030\003 \001(\003\022L\n(is_fallback_" +
-      "enabled_for_completed_action\030\004 \001(\0132\032.goo" +
-      "gle.protobuf.BoolValue\022\036\n\026engine_schedul" +
-      "ed_count\030\005 \001(\003\022\024\n\014max_used_mem\030\006 \001(\003\022\026\n\016" +
-      "host_total_mem\030\007 \001(\003\022\026\n\016task_total_mem\030\010" +
-      " \001(\003\022$\n\034executed_on_elastic_capacity\030\t \001" +
-      "(\010\022\024\n\014deduplicated\030\n \001(\010\"/\n\tDebugInfo\022\"\n" +
-      "\032pause_before_clean_timeout\030\001 \001(\r\"\310\007\n\027Re" +
-      "moteExecutionMetadata\022=\n\rre_session_id\030\001" +
-      " \001(\0132&.facebook.remote_execution.RESessi" +
-      "onID\0226\n\tbuck_info\030\002 \001(\0132#.facebook.remot" +
-      "e_execution.BuckInfo\0228\n\ntrace_info\030\003 \001(\013" +
-      "2$.facebook.remote_execution.TraceInfo\022<" +
-      "\n\014creator_info\030\004 \001(\0132&.facebook.remote_e" +
-      "xecution.CreatorInfo\022C\n\013engine_info\030\005 \001(" +
-      "\0132..facebook.remote_execution.ExecutionE" +
-      "ngineInfo\022:\n\013worker_info\030\006 \001(\0132%.faceboo" +
-      "k.remote_execution.WorkerInfo\022A\n\017cas_cli" +
-      "ent_info\030\007 \001(\0132(.facebook.remote_executi" +
-      "on.CasClientInfo\022J\n\023worker_requirements\030" +
-      "\010 \001(\0132-.facebook.remote_execution.Worker" +
-      "Requirements\022G\n\022client_action_info\030\n \001(\013" +
-      "2+.facebook.remote_execution.ClientActio" +
-      "nInfo\022K\n\024executed_action_info\030\013 \001(\0132-.fa" +
-      "cebook.remote_execution.ExecutedActionIn" +
-      "fo\0228\n\ndebug_info\030\014 \001(\0132$.facebook.remote" +
-      "_execution.DebugInfo\022A\n\017client_job_info\030" +
-      "\r \001(\0132(.facebook.remote_execution.Client" +
-      "JobInfo\022;\n\010platform\030\017 \001(\0132).build.bazel." +
-      "remote.execution.v2.Platform\022\023\n\013use_case" +
-      "_id\030\022 \001(\t\022I\n\023action_history_info\030\023 \001(\0132," +
-      ".facebook.remote_execution.ActionHistory" +
-      "InfoBI\n\'com.facebook.buck.remoteexecutio" +
-      "n.protoB\034RemoteExecutionMetadataProtoP\001b" +
-      "\006proto3"
+      "bilityValue\022\r\n\005value\030\001 \001(\t\"l\n\rClientJobI" +
+      "nfo\022\030\n\020deployment_stage\030\001 \001(\t\022\023\n\013instanc" +
+      "e_id\030\002 \001(\t\022\020\n\010group_id\030\003 \001(\t\022\032\n\022client_s" +
+      "ide_tenant\030\004 \001(\t\"j\n\020ClientActionInfo\022\022\n\n" +
+      "repository\030\001 \001(\t\022\025\n\rschedule_type\030\002 \001(\t\022" +
+      "\030\n\020re_session_label\030\003 \001(\t\022\021\n\ttenant_id\030\004" +
+      " \001(\t\"E\n\021ActionHistoryInfo\022\022\n\naction_key\030" +
+      "\001 \001(\t\022\034\n\024disable_retry_on_oom\030\002 \001(\010\"\333\002\n\022" +
+      "ExecutedActionInfo\022\033\n\023cpu_stat_usage_use" +
+      "c\030\001 \001(\003\022\032\n\022cpu_stat_user_usec\030\002 \001(\003\022\034\n\024c" +
+      "pu_stat_system_usec\030\003 \001(\003\022L\n(is_fallback" +
+      "_enabled_for_completed_action\030\004 \001(\0132\032.go" +
+      "ogle.protobuf.BoolValue\022\036\n\026engine_schedu" +
+      "led_count\030\005 \001(\003\022\024\n\014max_used_mem\030\006 \001(\003\022\026\n" +
+      "\016host_total_mem\030\007 \001(\003\022\026\n\016task_total_mem\030" +
+      "\010 \001(\003\022$\n\034executed_on_elastic_capacity\030\t " +
+      "\001(\010\022\024\n\014deduplicated\030\n \001(\010\"/\n\tDebugInfo\022\"" +
+      "\n\032pause_before_clean_timeout\030\001 \001(\r\"\374\006\n\027R" +
+      "emoteExecutionMetadata\022=\n\rre_session_id\030" +
+      "\001 \001(\0132&.facebook.remote_execution.RESess" +
+      "ionID\0226\n\tbuck_info\030\002 \001(\0132#.facebook.remo" +
+      "te_execution.BuckInfo\0228\n\ntrace_info\030\003 \001(" +
+      "\0132$.facebook.remote_execution.TraceInfo\022" +
+      "<\n\014creator_info\030\004 \001(\0132&.facebook.remote_" +
+      "execution.CreatorInfo\022C\n\013engine_info\030\005 \001" +
+      "(\0132..facebook.remote_execution.Execution" +
+      "EngineInfo\022:\n\013worker_info\030\006 \001(\0132%.facebo" +
+      "ok.remote_execution.WorkerInfo\022A\n\017cas_cl" +
+      "ient_info\030\007 \001(\0132(.facebook.remote_execut" +
+      "ion.CasClientInfo\022G\n\022client_action_info\030" +
+      "\n \001(\0132+.facebook.remote_execution.Client" +
+      "ActionInfo\022K\n\024executed_action_info\030\013 \001(\013" +
+      "2-.facebook.remote_execution.ExecutedAct" +
+      "ionInfo\0228\n\ndebug_info\030\014 \001(\0132$.facebook.r" +
+      "emote_execution.DebugInfo\022A\n\017client_job_" +
+      "info\030\r \001(\0132(.facebook.remote_execution.C" +
+      "lientJobInfo\022;\n\010platform\030\017 \001(\0132).build.b" +
+      "azel.remote.execution.v2.Platform\022\023\n\013use" +
+      "_case_id\030\022 \001(\t\022I\n\023action_history_info\030\023 " +
+      "\001(\0132,.facebook.remote_execution.ActionHi" +
+      "storyInfoBI\n\'com.facebook.buck.remoteexe" +
+      "cution.protoB\034RemoteExecutionMetadataPro" +
+      "toP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -252,48 +232,42 @@ public final class RemoteExecutionMetadataProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_CapabilityValue_descriptor,
         new java.lang.String[] { "Value", });
-    internal_static_facebook_remote_execution_WorkerRequirements_descriptor =
-      getDescriptor().getMessageTypes().get(9);
-    internal_static_facebook_remote_execution_WorkerRequirements_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_facebook_remote_execution_WorkerRequirements_descriptor,
-        new java.lang.String[] { "WorkerSize", "PlatformType", "ShouldTryLargerWorkerOnOom", "Testing", "TaskName", });
     internal_static_facebook_remote_execution_ClientJobInfo_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_facebook_remote_execution_ClientJobInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_ClientJobInfo_descriptor,
         new java.lang.String[] { "DeploymentStage", "InstanceId", "GroupId", "ClientSideTenant", });
     internal_static_facebook_remote_execution_ClientActionInfo_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_facebook_remote_execution_ClientActionInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_ClientActionInfo_descriptor,
         new java.lang.String[] { "Repository", "ScheduleType", "ReSessionLabel", "TenantId", });
     internal_static_facebook_remote_execution_ActionHistoryInfo_descriptor =
-      getDescriptor().getMessageTypes().get(12);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_facebook_remote_execution_ActionHistoryInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_ActionHistoryInfo_descriptor,
         new java.lang.String[] { "ActionKey", "DisableRetryOnOom", });
     internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor =
-      getDescriptor().getMessageTypes().get(13);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_facebook_remote_execution_ExecutedActionInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_ExecutedActionInfo_descriptor,
         new java.lang.String[] { "CpuStatUsageUsec", "CpuStatUserUsec", "CpuStatSystemUsec", "IsFallbackEnabledForCompletedAction", "EngineScheduledCount", "MaxUsedMem", "HostTotalMem", "TaskTotalMem", "ExecutedOnElasticCapacity", "Deduplicated", });
     internal_static_facebook_remote_execution_DebugInfo_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_facebook_remote_execution_DebugInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_DebugInfo_descriptor,
         new java.lang.String[] { "PauseBeforeCleanTimeout", });
     internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_facebook_remote_execution_RemoteExecutionMetadata_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_facebook_remote_execution_RemoteExecutionMetadata_descriptor,
-        new java.lang.String[] { "ReSessionId", "BuckInfo", "TraceInfo", "CreatorInfo", "EngineInfo", "WorkerInfo", "CasClientInfo", "WorkerRequirements", "ClientActionInfo", "ExecutedActionInfo", "DebugInfo", "ClientJobInfo", "Platform", "UseCaseId", "ActionHistoryInfo", });
+        new java.lang.String[] { "ReSessionId", "BuckInfo", "TraceInfo", "CreatorInfo", "EngineInfo", "WorkerInfo", "CasClientInfo", "ClientActionInfo", "ExecutedActionInfo", "DebugInfo", "ClientJobInfo", "Platform", "UseCaseId", "ActionHistoryInfo", });
     com.google.protobuf.WrappersProto.getDescriptor();
     build.bazel.remote.execution.v2.RemoteExecutionProto.getDescriptor();
   }

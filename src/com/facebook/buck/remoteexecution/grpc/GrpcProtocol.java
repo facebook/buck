@@ -19,10 +19,10 @@ package com.facebook.buck.remoteexecution.grpc;
 import build.bazel.remote.execution.v2.Command.EnvironmentVariable;
 import build.bazel.remote.execution.v2.OutputFile.Builder;
 import build.bazel.remote.execution.v2.Platform;
-import build.bazel.remote.execution.v2.Platform.Property;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
-import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
+import com.facebook.buck.remoteexecution.proto.ActionHistoryInfo;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -376,21 +376,10 @@ public class GrpcProtocol implements Protocol {
       ImmutableList<String> command,
       ImmutableSortedMap<String, String> commandEnvironment,
       Set<Path> outputs,
-      WorkerRequirements workerRequirements) {
+      Pair<Platform, ActionHistoryInfo> workerRequirements) {
     List<String> outputStrings =
         outputs.stream().map(Path::toString).sorted().collect(Collectors.toList());
 
-    Platform.Builder platformBuilder = Platform.newBuilder();
-    platformBuilder.addProperties(
-        Property.newBuilder()
-            .setName("SIZE")
-            .setValue(workerRequirements.getWorkerSize().name())
-            .build());
-    platformBuilder.addProperties(
-        Property.newBuilder()
-            .setName("PLATFORM")
-            .setValue(workerRequirements.getPlatformType().name())
-            .build());
     return new GrpcCommand(
         build.bazel.remote.execution.v2.Command.newBuilder()
             .addAllArguments(command)
@@ -405,7 +394,7 @@ public class GrpcProtocol implements Protocol {
                     .collect(Collectors.toList()))
             .addAllOutputFiles(outputStrings)
             .addAllOutputDirectories(outputStrings)
-            .setPlatform(platformBuilder.build())
+            .setPlatform(workerRequirements.getFirst())
             .build());
   }
 

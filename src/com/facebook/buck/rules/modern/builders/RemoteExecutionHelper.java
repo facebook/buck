@@ -16,9 +16,11 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import build.bazel.remote.execution.v2.Platform;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
-import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
+import com.facebook.buck.remoteexecution.proto.ActionHistoryInfo;
 import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.util.types.Pair;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.BiPredicate;
@@ -40,7 +42,7 @@ public interface RemoteExecutionHelper {
   RemoteExecutionActionInfo prepareRemoteExecution(
       ModernBuildRule<?> rule,
       BiPredicate<Digest, String> requiredDataPredicate,
-      WorkerRequirements workerRequirements)
+      Pair<Platform, ActionHistoryInfo> workerRequirements)
       throws IOException;
 
   /**

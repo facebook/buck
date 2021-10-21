@@ -111,34 +111,6 @@ message CapabilityValue {
   string value = 1;
 }
 
-// minimal worker requirements which should be satisfied to execute a given action
-message WorkerRequirements {
-  enum WorkerPlatformType {
-    LINUX = 0;
-    ANDROID_EMULATOR = 1;
-    LINUX_GPU = 2;
-    BROWSER_CHROME = 3;
-  }
-
-  enum WorkerSize {
-    SMALL = 0;
-    MEDIUM = 1;
-    LARGE = 2;
-    XLARGE = 3;
-    XXLARGE = 4;
-  }
-
-  WorkerSize worker_size = 1;
-  WorkerPlatformType platform_type = 2;
-  // Indicates if execution engine should try to execute current action with more powerful requirements
-  bool should_try_larger_worker_on_oom = 3;
-
-  // Canaried workers have a "testing" capability (with a random value). This
-  // should be set when we want the request to go to a specific canaried worker.
-  CapabilityValue testing = 4;
-  CapabilityValue task_name = 5;
-}
-
 // Information about the job that generated an action. Unknown fields can simply be left empty.
 message ClientJobInfo {
   // Deployment stage of the job producing this action (e.g. prod).
@@ -215,7 +187,7 @@ message RemoteExecutionMetadata {
   ExecutionEngineInfo engine_info = 5;
   WorkerInfo worker_info = 6;
   CasClientInfo cas_client_info = 7;
-  WorkerRequirements worker_requirements = 8;
+  // 8 - Do not use, deprecated field.
   // 9 - Do not use, deprecated field.
   ClientActionInfo client_action_info = 10;
   ExecutedActionInfo executed_action_info = 11;

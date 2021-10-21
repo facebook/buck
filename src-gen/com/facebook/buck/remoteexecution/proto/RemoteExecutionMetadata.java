@@ -140,19 +140,6 @@ private static final long serialVersionUID = 0L;
 
             break;
           }
-          case 66: {
-            com.facebook.buck.remoteexecution.proto.WorkerRequirements.Builder subBuilder = null;
-            if (workerRequirements_ != null) {
-              subBuilder = workerRequirements_.toBuilder();
-            }
-            workerRequirements_ = input.readMessage(com.facebook.buck.remoteexecution.proto.WorkerRequirements.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom(workerRequirements_);
-              workerRequirements_ = subBuilder.buildPartial();
-            }
-
-            break;
-          }
           case 82: {
             com.facebook.buck.remoteexecution.proto.ClientActionInfo.Builder subBuilder = null;
             if (clientActionInfo_ != null) {
@@ -416,31 +403,11 @@ private static final long serialVersionUID = 0L;
     return getCasClientInfo();
   }
 
-  public static final int WORKER_REQUIREMENTS_FIELD_NUMBER = 8;
-  private com.facebook.buck.remoteexecution.proto.WorkerRequirements workerRequirements_;
-  /**
-   * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-   */
-  public boolean hasWorkerRequirements() {
-    return workerRequirements_ != null;
-  }
-  /**
-   * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-   */
-  public com.facebook.buck.remoteexecution.proto.WorkerRequirements getWorkerRequirements() {
-    return workerRequirements_ == null ? com.facebook.buck.remoteexecution.proto.WorkerRequirements.getDefaultInstance() : workerRequirements_;
-  }
-  /**
-   * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-   */
-  public com.facebook.buck.remoteexecution.proto.WorkerRequirementsOrBuilder getWorkerRequirementsOrBuilder() {
-    return getWorkerRequirements();
-  }
-
   public static final int CLIENT_ACTION_INFO_FIELD_NUMBER = 10;
   private com.facebook.buck.remoteexecution.proto.ClientActionInfo clientActionInfo_;
   /**
    * <pre>
+   * 8 - Do not use, deprecated field.
    * 9 - Do not use, deprecated field.
    * </pre>
    *
@@ -451,6 +418,7 @@ private static final long serialVersionUID = 0L;
   }
   /**
    * <pre>
+   * 8 - Do not use, deprecated field.
    * 9 - Do not use, deprecated field.
    * </pre>
    *
@@ -461,6 +429,7 @@ private static final long serialVersionUID = 0L;
   }
   /**
    * <pre>
+   * 8 - Do not use, deprecated field.
    * 9 - Do not use, deprecated field.
    * </pre>
    *
@@ -652,9 +621,6 @@ private static final long serialVersionUID = 0L;
     if (casClientInfo_ != null) {
       output.writeMessage(7, getCasClientInfo());
     }
-    if (workerRequirements_ != null) {
-      output.writeMessage(8, getWorkerRequirements());
-    }
     if (clientActionInfo_ != null) {
       output.writeMessage(10, getClientActionInfo());
     }
@@ -712,10 +678,6 @@ private static final long serialVersionUID = 0L;
     if (casClientInfo_ != null) {
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(7, getCasClientInfo());
-    }
-    if (workerRequirements_ != null) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(8, getWorkerRequirements());
     }
     if (clientActionInfo_ != null) {
       size += com.google.protobuf.CodedOutputStream
@@ -794,11 +756,6 @@ private static final long serialVersionUID = 0L;
       if (!getCasClientInfo()
           .equals(other.getCasClientInfo())) return false;
     }
-    if (hasWorkerRequirements() != other.hasWorkerRequirements()) return false;
-    if (hasWorkerRequirements()) {
-      if (!getWorkerRequirements()
-          .equals(other.getWorkerRequirements())) return false;
-    }
     if (hasClientActionInfo() != other.hasClientActionInfo()) return false;
     if (hasClientActionInfo()) {
       if (!getClientActionInfo()
@@ -869,10 +826,6 @@ private static final long serialVersionUID = 0L;
     if (hasCasClientInfo()) {
       hash = (37 * hash) + CAS_CLIENT_INFO_FIELD_NUMBER;
       hash = (53 * hash) + getCasClientInfo().hashCode();
-    }
-    if (hasWorkerRequirements()) {
-      hash = (37 * hash) + WORKER_REQUIREMENTS_FIELD_NUMBER;
-      hash = (53 * hash) + getWorkerRequirements().hashCode();
     }
     if (hasClientActionInfo()) {
       hash = (37 * hash) + CLIENT_ACTION_INFO_FIELD_NUMBER;
@@ -1079,12 +1032,6 @@ private static final long serialVersionUID = 0L;
         casClientInfo_ = null;
         casClientInfoBuilder_ = null;
       }
-      if (workerRequirementsBuilder_ == null) {
-        workerRequirements_ = null;
-      } else {
-        workerRequirements_ = null;
-        workerRequirementsBuilder_ = null;
-      }
       if (clientActionInfoBuilder_ == null) {
         clientActionInfo_ = null;
       } else {
@@ -1183,11 +1130,6 @@ private static final long serialVersionUID = 0L;
         result.casClientInfo_ = casClientInfo_;
       } else {
         result.casClientInfo_ = casClientInfoBuilder_.build();
-      }
-      if (workerRequirementsBuilder_ == null) {
-        result.workerRequirements_ = workerRequirements_;
-      } else {
-        result.workerRequirements_ = workerRequirementsBuilder_.build();
       }
       if (clientActionInfoBuilder_ == null) {
         result.clientActionInfo_ = clientActionInfo_;
@@ -1288,9 +1230,6 @@ private static final long serialVersionUID = 0L;
       }
       if (other.hasCasClientInfo()) {
         mergeCasClientInfo(other.getCasClientInfo());
-      }
-      if (other.hasWorkerRequirements()) {
-        mergeWorkerRequirements(other.getWorkerRequirements());
       }
       if (other.hasClientActionInfo()) {
         mergeClientActionInfo(other.getClientActionInfo());
@@ -2162,128 +2101,12 @@ private static final long serialVersionUID = 0L;
       return casClientInfoBuilder_;
     }
 
-    private com.facebook.buck.remoteexecution.proto.WorkerRequirements workerRequirements_;
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.remoteexecution.proto.WorkerRequirements, com.facebook.buck.remoteexecution.proto.WorkerRequirements.Builder, com.facebook.buck.remoteexecution.proto.WorkerRequirementsOrBuilder> workerRequirementsBuilder_;
-    /**
-     * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-     */
-    public boolean hasWorkerRequirements() {
-      return workerRequirementsBuilder_ != null || workerRequirements_ != null;
-    }
-    /**
-     * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-     */
-    public com.facebook.buck.remoteexecution.proto.WorkerRequirements getWorkerRequirements() {
-      if (workerRequirementsBuilder_ == null) {
-        return workerRequirements_ == null ? com.facebook.buck.remoteexecution.proto.WorkerRequirements.getDefaultInstance() : workerRequirements_;
-      } else {
-        return workerRequirementsBuilder_.getMessage();
-      }
-    }
-    /**
-     * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-     */
-    public Builder setWorkerRequirements(com.facebook.buck.remoteexecution.proto.WorkerRequirements value) {
-      if (workerRequirementsBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        workerRequirements_ = value;
-        onChanged();
-      } else {
-        workerRequirementsBuilder_.setMessage(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-     */
-    public Builder setWorkerRequirements(
-        com.facebook.buck.remoteexecution.proto.WorkerRequirements.Builder builderForValue) {
-      if (workerRequirementsBuilder_ == null) {
-        workerRequirements_ = builderForValue.build();
-        onChanged();
-      } else {
-        workerRequirementsBuilder_.setMessage(builderForValue.build());
-      }
-
-      return this;
-    }
-    /**
-     * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-     */
-    public Builder mergeWorkerRequirements(com.facebook.buck.remoteexecution.proto.WorkerRequirements value) {
-      if (workerRequirementsBuilder_ == null) {
-        if (workerRequirements_ != null) {
-          workerRequirements_ =
-            com.facebook.buck.remoteexecution.proto.WorkerRequirements.newBuilder(workerRequirements_).mergeFrom(value).buildPartial();
-        } else {
-          workerRequirements_ = value;
-        }
-        onChanged();
-      } else {
-        workerRequirementsBuilder_.mergeFrom(value);
-      }
-
-      return this;
-    }
-    /**
-     * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-     */
-    public Builder clearWorkerRequirements() {
-      if (workerRequirementsBuilder_ == null) {
-        workerRequirements_ = null;
-        onChanged();
-      } else {
-        workerRequirements_ = null;
-        workerRequirementsBuilder_ = null;
-      }
-
-      return this;
-    }
-    /**
-     * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-     */
-    public com.facebook.buck.remoteexecution.proto.WorkerRequirements.Builder getWorkerRequirementsBuilder() {
-      
-      onChanged();
-      return getWorkerRequirementsFieldBuilder().getBuilder();
-    }
-    /**
-     * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-     */
-    public com.facebook.buck.remoteexecution.proto.WorkerRequirementsOrBuilder getWorkerRequirementsOrBuilder() {
-      if (workerRequirementsBuilder_ != null) {
-        return workerRequirementsBuilder_.getMessageOrBuilder();
-      } else {
-        return workerRequirements_ == null ?
-            com.facebook.buck.remoteexecution.proto.WorkerRequirements.getDefaultInstance() : workerRequirements_;
-      }
-    }
-    /**
-     * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-     */
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.remoteexecution.proto.WorkerRequirements, com.facebook.buck.remoteexecution.proto.WorkerRequirements.Builder, com.facebook.buck.remoteexecution.proto.WorkerRequirementsOrBuilder> 
-        getWorkerRequirementsFieldBuilder() {
-      if (workerRequirementsBuilder_ == null) {
-        workerRequirementsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-            com.facebook.buck.remoteexecution.proto.WorkerRequirements, com.facebook.buck.remoteexecution.proto.WorkerRequirements.Builder, com.facebook.buck.remoteexecution.proto.WorkerRequirementsOrBuilder>(
-                getWorkerRequirements(),
-                getParentForChildren(),
-                isClean());
-        workerRequirements_ = null;
-      }
-      return workerRequirementsBuilder_;
-    }
-
     private com.facebook.buck.remoteexecution.proto.ClientActionInfo clientActionInfo_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.remoteexecution.proto.ClientActionInfo, com.facebook.buck.remoteexecution.proto.ClientActionInfo.Builder, com.facebook.buck.remoteexecution.proto.ClientActionInfoOrBuilder> clientActionInfoBuilder_;
     /**
      * <pre>
+     * 8 - Do not use, deprecated field.
      * 9 - Do not use, deprecated field.
      * </pre>
      *
@@ -2294,6 +2117,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
+     * 8 - Do not use, deprecated field.
      * 9 - Do not use, deprecated field.
      * </pre>
      *
@@ -2308,6 +2132,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
+     * 8 - Do not use, deprecated field.
      * 9 - Do not use, deprecated field.
      * </pre>
      *
@@ -2328,6 +2153,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
+     * 8 - Do not use, deprecated field.
      * 9 - Do not use, deprecated field.
      * </pre>
      *
@@ -2346,6 +2172,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
+     * 8 - Do not use, deprecated field.
      * 9 - Do not use, deprecated field.
      * </pre>
      *
@@ -2368,6 +2195,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
+     * 8 - Do not use, deprecated field.
      * 9 - Do not use, deprecated field.
      * </pre>
      *
@@ -2386,6 +2214,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
+     * 8 - Do not use, deprecated field.
      * 9 - Do not use, deprecated field.
      * </pre>
      *
@@ -2398,6 +2227,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
+     * 8 - Do not use, deprecated field.
      * 9 - Do not use, deprecated field.
      * </pre>
      *
@@ -2413,6 +2243,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
+     * 8 - Do not use, deprecated field.
      * 9 - Do not use, deprecated field.
      * </pre>
      *

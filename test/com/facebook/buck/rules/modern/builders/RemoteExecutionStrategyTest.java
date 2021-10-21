@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import build.bazel.remote.execution.v2.ExecuteOperationMetadata;
 import build.bazel.remote.execution.v2.ExecutedActionMetadata;
+import build.bazel.remote.execution.v2.Platform;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -50,11 +51,12 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
+import com.facebook.buck.remoteexecution.proto.ActionHistoryInfo;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
-import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.NoOpModernBuildRule;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
@@ -125,8 +127,7 @@ public class RemoteExecutionStrategyTest {
             MetadataProviderFactory.emptyMetadataProvider(),
             new TestRemoteExecutionHelper(),
             new NoOpWorkerRequirementsProvider(),
-            service,
-            "" /* auxiliaryBuildTag */);
+            service);
 
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
@@ -245,8 +246,7 @@ public class RemoteExecutionStrategyTest {
             MetadataProviderFactory.emptyMetadataProvider(),
             new TestRemoteExecutionHelper(),
             new NoOpWorkerRequirementsProvider(),
-            service,
-            "" /* auxiliaryBuildTag */);
+            service);
 
     StrategyBuildResult result = beginCustomStrategyBuild();
     result.cancelIfNotComplete(new CancellationException("Job is being stolen"));
@@ -413,7 +413,7 @@ public class RemoteExecutionStrategyTest {
     public RemoteExecutionActionInfo prepareRemoteExecution(
         ModernBuildRule<?> rule1,
         BiPredicate<Digest, String> requiredDataPredicate,
-        WorkerRequirements workerRequirements) {
+        Pair<Platform, ActionHistoryInfo> workerRequirements) {
       requiredDataPredicate.test(missingDigest, "data");
       return RemoteExecutionActionInfo.of(
           protocol.computeDigest(new byte[] {1}),

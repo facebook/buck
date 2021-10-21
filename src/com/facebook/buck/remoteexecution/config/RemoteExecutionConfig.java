@@ -26,7 +26,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
-import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.util.RemoteExecutionUtil;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -279,23 +278,6 @@ public abstract class RemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   private String getDebugURLFormatString() {
     return getValue(DEBUG_FORMAT_STRING_URL_KEY).orElse(FORMAT_SESSION_ID_VARIABLE_STRING);
-  }
-
-  public Optional<WorkerRequirements.WorkerSize> getMaxWorkerSizeToStealFrom() {
-    Optional<String> workerSizeOptional = getValue(MAX_WORKER_SIZE_TO_STEAL_FROM);
-
-    if (!workerSizeOptional.isPresent()) {
-      return Optional.empty();
-    }
-
-    WorkerRequirements.WorkerSize workerSize =
-        WorkerRequirements.WorkerSize.valueOf(workerSizeOptional.get());
-    if (workerSize == WorkerRequirements.WorkerSize.UNRECOGNIZED) {
-      throw new IllegalArgumentException(
-          "Invalid value given for key " + MAX_WORKER_SIZE_TO_STEAL_FROM);
-    }
-
-    return Optional.of(workerSize);
   }
 
   public String getTenantId() {

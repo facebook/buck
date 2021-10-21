@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import build.bazel.remote.execution.v2.Platform;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.Cells;
@@ -42,7 +43,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Directory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.DirectoryNode;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.SymlinkNode;
-import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
+import com.facebook.buck.remoteexecution.proto.ActionHistoryInfo;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.NodeData;
@@ -60,6 +61,7 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.hashing.FileHashLoader;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
@@ -395,7 +397,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   public RemoteExecutionActionInfo prepareRemoteExecution(
       ModernBuildRule<?> rule,
       BiPredicate<Digest, String> requiredDataPredicate,
-      WorkerRequirements workerRequirements)
+      Pair<Platform, ActionHistoryInfo> workerRequirements)
       throws IOException {
     Set<Path> outputs;
     HashCode hash;

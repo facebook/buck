@@ -16,25 +16,24 @@
 
 package com.facebook.buck.remoteexecution;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
+import build.bazel.remote.execution.v2.Platform;
+import build.bazel.remote.execution.v2.Platform.Property;
+import com.facebook.buck.remoteexecution.proto.ActionHistoryInfo;
+import com.facebook.buck.util.types.Pair;
 
-/** WorkerRequirementsProvider that always returns default WorkerRequirements */
+/** WorkerRequirementsProvider that always returns default Platform + ActionHistoryInfo */
 public class NoOpWorkerRequirementsProvider implements WorkerRequirementsProvider {
 
-  /**
-   * Returns default WorkerRequirements always.
-   *
-   * @param target
-   * @param auxiliaryBuildTag
-   * @return
-   */
   @Override
-  public WorkerRequirements resolveRequirements(BuildTarget target, String auxiliaryBuildTag) {
-    return WorkerRequirements.newBuilder()
-        .setWorkerSize(WorkerRequirements.WorkerSize.SMALL)
-        .setPlatformType(WorkerRequirements.WorkerPlatformType.LINUX)
-        .setShouldTryLargerWorkerOnOom(false)
-        .build();
+  public Pair<Platform, ActionHistoryInfo> resolveRequirements() {
+    return new Pair<>(
+        Platform.newBuilder()
+            .addProperties(
+                Property.newBuilder()
+                    .setName("platform")
+                    .setValue("linux-remote-execution")
+                    .build())
+            .build(),
+        ActionHistoryInfo.newBuilder().setDisableRetryOnOom(true).build());
   }
 }

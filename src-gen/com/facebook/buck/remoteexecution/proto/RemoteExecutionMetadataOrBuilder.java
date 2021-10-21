@@ -101,20 +101,8 @@ public interface RemoteExecutionMetadataOrBuilder extends
   com.facebook.buck.remoteexecution.proto.CasClientInfoOrBuilder getCasClientInfoOrBuilder();
 
   /**
-   * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-   */
-  boolean hasWorkerRequirements();
-  /**
-   * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-   */
-  com.facebook.buck.remoteexecution.proto.WorkerRequirements getWorkerRequirements();
-  /**
-   * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
-   */
-  com.facebook.buck.remoteexecution.proto.WorkerRequirementsOrBuilder getWorkerRequirementsOrBuilder();
-
-  /**
    * <pre>
+   * 8 - Do not use, deprecated field.
    * 9 - Do not use, deprecated field.
    * </pre>
    *
@@ -123,6 +111,7 @@ public interface RemoteExecutionMetadataOrBuilder extends
   boolean hasClientActionInfo();
   /**
    * <pre>
+   * 8 - Do not use, deprecated field.
    * 9 - Do not use, deprecated field.
    * </pre>
    *
@@ -131,6 +120,7 @@ public interface RemoteExecutionMetadataOrBuilder extends
   com.facebook.buck.remoteexecution.proto.ClientActionInfo getClientActionInfo();
   /**
    * <pre>
+   * 8 - Do not use, deprecated field.
    * 9 - Do not use, deprecated field.
    * </pre>
    *
