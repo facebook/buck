@@ -23,7 +23,7 @@ import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
  */
 @javax.annotation.Generated(
     value = "by gRPC proto compiler (version 1.10.1)",
-    comments = "Source: src/com/facebook/buck/logd/proto/logdservice.proto")
+    comments = "Source: logd/proto/logdservice.proto")
 public final class LogdServiceGrpc {
 
   private LogdServiceGrpc() {}

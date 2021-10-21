@@ -33,6 +33,7 @@ java_library(
     }),
     exported_deps = [
         "//third-party/java/protobuf:protobuf",
+        "//third-party/java/remote-apis:remote-apis",
     ],
 )
 

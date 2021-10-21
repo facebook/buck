@@ -72,6 +72,8 @@ remove_files src-gen/**/proto/*.java
 remove_files src-gen/**/model/*.java
 for f in $(ls_files_cmd src/**/*.proto); do
    $PROTOC \
+   -I=third-party/java/remote-apis \
+   -I=src/com/facebook/buck \
    --java_out=src-gen/ \
    --java_opt=annotate_code \
    --plugin=protoc-gen-grpc-java=third-party/java/grpc/protoc-gen-grpc-java-1.10.1-${OS}-x86_64.exe \

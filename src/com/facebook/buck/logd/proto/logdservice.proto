@@ -31,7 +31,7 @@ option java_outer_classname = "LogdServiceOuterFile";
 // best practices to include version number in package
 package logd.v1;
 
-import "third-party/java/remote-apis/google/rpc/status.proto";
+import "google/rpc/status.proto";
 
 // Request message for [LogdService.CreateLogFile] to request a log file be created
 // in file-system and/or storage
@@ -117,6 +117,3 @@ service LogdService {
     // streams to log files, return a Status message and shutdown server.
     rpc ShutdownServer(ShutdownRequest) returns (google.rpc.Status) {}
 }
-
-
-
