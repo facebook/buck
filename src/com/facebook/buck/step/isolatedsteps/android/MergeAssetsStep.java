@@ -25,8 +25,8 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.TreeMultimap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
@@ -39,6 +39,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -70,7 +71,7 @@ public class MergeAssetsStep extends IsolatedStep {
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
       throws IOException, InterruptedException {
-    TreeMultimap<Path, Path> assets = getAllAssets(context);
+    ImmutableMap<Path, Path> assets = getAllAssets(context);
 
     try (ResourcesZipBuilder output =
         new ResourcesZipBuilder(
@@ -102,34 +103,34 @@ public class MergeAssetsStep extends IsolatedStep {
       }
 
       Path assetsZipRoot = Paths.get("assets");
-      for (Path assetRoot : assets.keySet()) {
-        for (Path asset : assets.get(assetRoot)) {
-          ByteSource assetSource = Files.asByteSource(assetRoot.resolve(asset).toFile());
-          HashCode assetCrc32 = assetSource.hash(Hashing.crc32());
-          String extension = Files.getFileExtension(asset.toString());
-          int compression =
-              NO_COMPRESS_EXTENSIONS.contains(extension) ? 0 : Deflater.BEST_COMPRESSION;
-          try (InputStream assetStream = assetSource.openStream()) {
-            output.addEntry(
-                assetStream,
-                assetSource.size(),
-                // CRC32s are only 32 bits, but setCrc() takes a
-                // long.  Avoid sign-extension here during the
-                // conversion to long by masking off the high 32 bits.
-                assetCrc32.asInt() & 0xFFFFFFFFL,
-                assetsZipRoot.resolve(asset).toString(),
-                compression,
-                false);
-          }
+      for (Map.Entry<Path, Path> assetPaths : assets.entrySet()) {
+        Path packagingPathForAsset = assetPaths.getKey();
+        Path fullPathToAsset = assetPaths.getValue();
+        ByteSource assetSource = Files.asByteSource(fullPathToAsset.toFile());
+        HashCode assetCrc32 = assetSource.hash(Hashing.crc32());
+        String extension = Files.getFileExtension(fullPathToAsset.toString());
+        int compression =
+            NO_COMPRESS_EXTENSIONS.contains(extension) ? 0 : Deflater.BEST_COMPRESSION;
+        try (InputStream assetStream = assetSource.openStream()) {
+          output.addEntry(
+              assetStream,
+              assetSource.size(),
+              // CRC32s are only 32 bits, but setCrc() takes a
+              // long.  Avoid sign-extension here during the
+              // conversion to long by masking off the high 32 bits.
+              assetCrc32.asInt() & 0xFFFFFFFFL,
+              assetsZipRoot.resolve(packagingPathForAsset).toString(),
+              compression,
+              false);
         }
       }
     }
     return StepExecutionResults.SUCCESS;
   }
 
-  private TreeMultimap<Path, Path> getAllAssets(IsolatedExecutionContext context)
+  private ImmutableMap<Path, Path> getAllAssets(IsolatedExecutionContext context)
       throws IOException {
-    TreeMultimap<Path, Path> assets = TreeMultimap.create();
+    ImmutableMap.Builder<Path, Path> assets = ImmutableMap.builder();
 
     for (RelPath assetDirectory : assetsDirectories) {
       AbsPath absolutePath =
@@ -140,7 +141,7 @@ public class MergeAssetsStep extends IsolatedStep {
           context.getRuleCellRoot(),
           assetDirectory.getPath(),
           ImmutableSet.of(),
-          new SimpleFileVisitor<Path>() {
+          new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                 throws IOException {
@@ -148,15 +149,15 @@ public class MergeAssetsStep extends IsolatedStep {
                   !Files.getFileExtension(file.toString()).equals("gz"),
                   "BUCK doesn't support adding .gz files to assets (%s).",
                   file);
-              assets.put(
-                  absolutePath.getPath(), absolutePath.getPath().relativize(file.normalize()));
+              Path normalized = file.normalize();
+              assets.put(absolutePath.getPath().relativize(normalized), normalized);
               return super.visitFile(file, attrs);
             }
           },
           ProjectFilesystemUtils.getEmptyIgnoreFilter());
     }
 
-    return assets;
+    return assets.build();
   }
 
   @Override
