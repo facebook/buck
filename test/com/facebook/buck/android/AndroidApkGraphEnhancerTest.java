@@ -139,6 +139,7 @@ public class AndroidApkGraphEnhancerTest {
 
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleParams originalParams =
         new BuildRuleParams(
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
@@ -153,6 +154,25 @@ public class AndroidApkGraphEnhancerTest {
                 .setShouldPredex(true)
                 .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
                 .build());
+
+    BuildTarget aaptPackageResourcesTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
+    AaptPackageResources aaptPackageResources =
+        new AaptPackageResources(
+            aaptPackageResourcesTarget,
+            filesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            graphBuilder,
+            /* manifest */ FakeSourcePath.of("java/src/com/facebook/base/AndroidManifest.xml"),
+            ImmutableList.of(),
+            new IdentityResourcesProvider(ImmutableList.of()),
+            ImmutableList.of(),
+            /* skipCrunchPngs */ false,
+            /* includesVectorDrawables */ false,
+            /* manifestEntries */ ManifestEntries.empty(),
+            ImmutableList.of(),
+            false);
+    graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
         new AndroidPackageableCollector(
@@ -237,6 +257,7 @@ public class AndroidApkGraphEnhancerTest {
 
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleParams originalParams =
         new BuildRuleParams(
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
@@ -251,6 +272,25 @@ public class AndroidApkGraphEnhancerTest {
                 .setShouldPredex(true)
                 .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
                 .build());
+
+    BuildTarget aaptPackageResourcesTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
+    AaptPackageResources aaptPackageResources =
+        new AaptPackageResources(
+            aaptPackageResourcesTarget,
+            filesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            graphBuilder,
+            /* manifest */ FakeSourcePath.of("java/src/com/facebook/base/AndroidManifest.xml"),
+            ImmutableList.of(),
+            new IdentityResourcesProvider(ImmutableList.of()),
+            ImmutableList.of(),
+            /* skipCrunchPngs */ false,
+            /* includesVectorDrawables */ false,
+            /* manifestEntries */ ManifestEntries.empty(),
+            ImmutableList.of(),
+            false);
+    graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
         new AndroidPackageableCollector(
@@ -365,6 +405,7 @@ public class AndroidApkGraphEnhancerTest {
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
     ImmutableSet<BuildTarget> buildRulesToExcludeFromDex = ImmutableSet.of(javaDep2BuildTarget);
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleParams originalParams =
         new BuildRuleParams(
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
@@ -379,6 +420,25 @@ public class AndroidApkGraphEnhancerTest {
                 .setBuildRulesToExcludeFromDex(buildRulesToExcludeFromDex)
                 .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
                 .build());
+
+    BuildTarget aaptPackageResourcesTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
+    AaptPackageResources aaptPackageResources =
+        new AaptPackageResources(
+            aaptPackageResourcesTarget,
+            filesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            graphBuilder,
+            /* manifest */ FakeSourcePath.of("java/src/com/facebook/base/AndroidManifest.xml"),
+            ImmutableList.of(),
+            new IdentityResourcesProvider(ImmutableList.of()),
+            ImmutableList.of(),
+            /* skipCrunchPngs */ false,
+            /* includesVectorDrawables */ false,
+            /* manifestEntries */ ManifestEntries.empty(),
+            ImmutableList.of(),
+            false);
+    graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
         new AndroidPackageableCollector(
@@ -456,6 +516,7 @@ public class AndroidApkGraphEnhancerTest {
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
     ImmutableSet<BuildTarget> buildRulesToExcludeFromDex = ImmutableSet.of(javaDep2BuildTarget);
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleParams originalParams =
         new BuildRuleParams(
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
@@ -482,6 +543,25 @@ public class AndroidApkGraphEnhancerTest {
                 .setBuildRulesToExcludeFromDex(buildRulesToExcludeFromDex)
                 .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
                 .build());
+
+    BuildTarget aaptPackageResourcesTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
+    AaptPackageResources aaptPackageResources =
+        new AaptPackageResources(
+            aaptPackageResourcesTarget,
+            filesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            graphBuilder,
+            /* manifest */ FakeSourcePath.of("java/src/com/facebook/base/AndroidManifest.xml"),
+            ImmutableList.of(),
+            new IdentityResourcesProvider(ImmutableList.of()),
+            ImmutableList.of(),
+            /* skipCrunchPngs */ false,
+            /* includesVectorDrawables */ false,
+            /* manifestEntries */ ManifestEntries.empty(),
+            ImmutableList.of(),
+            false);
+    graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
         new AndroidPackageableCollector(
@@ -569,6 +649,7 @@ public class AndroidApkGraphEnhancerTest {
     ImmutableSortedSet<BuildRule> originalDeps = ImmutableSortedSet.of(javaLib);
     ImmutableSet<BuildTarget> buildRulesToExcludeFromDex = ImmutableSet.of(javaDep2BuildTarget);
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//java/com/example:apk");
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleParams originalParams =
         new BuildRuleParams(
             Suppliers.ofInstance(originalDeps), ImmutableSortedSet::of, ImmutableSortedSet.of());
@@ -599,6 +680,25 @@ public class AndroidApkGraphEnhancerTest {
                 .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
                 .setTrimResourceIds(true)
                 .build());
+
+    BuildTarget aaptPackageResourcesTarget =
+        BuildTargetFactory.newInstance("//java/com/example:apk#aapt_package");
+    AaptPackageResources aaptPackageResources =
+        new AaptPackageResources(
+            aaptPackageResourcesTarget,
+            filesystem,
+            TestAndroidPlatformTargetFactory.create(),
+            graphBuilder,
+            /* manifest */ FakeSourcePath.of("java/src/com/facebook/base/AndroidManifest.xml"),
+            ImmutableList.of(),
+            new IdentityResourcesProvider(ImmutableList.of()),
+            ImmutableList.of(),
+            /* skipCrunchPngs */ false,
+            /* includesVectorDrawables */ false,
+            /* manifestEntries */ ManifestEntries.empty(),
+            ImmutableList.of(),
+            false);
+    graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
         new AndroidPackageableCollector(
@@ -731,14 +831,53 @@ public class AndroidApkGraphEnhancerTest {
         androidBuildConfig.getBuildConfigFields());
 
     BuildRule resourcesFilterRule = findRuleOfType(graphBuilder, ResourcesFilter.class);
+
+    BuildRule aaptPackageResourcesRule = findRuleOfType(graphBuilder, AaptPackageResources.class);
+    MoreAsserts.assertDepends(
+        "AaptPackageResources must depend on ResourcesFilter",
+        aaptPackageResourcesRule,
+        resourcesFilterRule);
+
     BuildRule packageStringAssetsRule = findRuleOfType(graphBuilder, PackageStringAssets.class);
     MoreAsserts.assertDepends(
         "PackageStringAssets must depend on ResourcesFilter",
         packageStringAssetsRule,
-        resourcesFilterRule);
+        aaptPackageResourcesRule);
 
     assertFalse(result.getPreDexMergeSplitDex().isPresent());
     assertTrue(result.getPackageStringAssets().isPresent());
+  }
+
+  @Test
+  public void testResourceRulesBecomeDepsOfAaptPackageResources() {
+    TargetNode<?> resourceNode =
+        AndroidResourceBuilder.createBuilder(BuildTargetFactory.newInstance("//:resource"))
+            .setRDotJavaPackage("package")
+            .setRes(Paths.get("res"))
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(resourceNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+
+    AndroidResource resource =
+        (AndroidResource) graphBuilder.requireRule(resourceNode.getBuildTarget());
+
+    // set it up.
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    BuildRuleParams originalParams =
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(resource));
+    AndroidBinaryGraphEnhancer graphEnhancer =
+        createGraphEnhancer(
+            ImmutableTestGraphEnhancerArgs.builder()
+                .setTarget(target)
+                .setBuildRuleParams(originalParams)
+                .setGraphBuilder(graphBuilder)
+                .build());
+    graphEnhancer.createAdditionalBuildables();
+
+    BuildRule aaptPackageResourcesRule = findRuleOfType(graphBuilder, AaptPackageResources.class);
+    MoreAsserts.assertDepends(
+        "AaptPackageResources must depend on resource rules", aaptPackageResourcesRule, resource);
   }
 
   @Test
@@ -870,7 +1009,7 @@ public class AndroidApkGraphEnhancerTest {
         TestAndroidPlatformTargetFactory.create(),
         args.getBuildRuleParams(),
         args.getGraphBuilder(),
-        AaptMode.AAPT2,
+        AaptMode.AAPT1,
         ImmutableList.of(),
         args.getResourceCompressionMode(),
         FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,

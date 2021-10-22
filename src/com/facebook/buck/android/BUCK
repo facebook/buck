@@ -41,6 +41,7 @@ java_immutables_library(
 RULES_SRCS = [
     "Aapt2Compile.java",
     "Aapt2Link.java",
+    "AaptPackageResources.java",
     "AndroidGraphEnhancementResult.java",
     "AndroidInstrumentationTestJVMArgs.java",
     "AndroidAar.java",

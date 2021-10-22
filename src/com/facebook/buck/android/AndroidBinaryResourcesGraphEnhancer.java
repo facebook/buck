@@ -151,7 +151,6 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.resourceCompressionMode = resourceCompressionMode;
     this.locales = locales;
     this.localizedStringFileName = localizedStringFileName;
-    Preconditions.checkState(aaptMode.equals(AaptMode.AAPT2));
     this.aaptMode = aaptMode;
     this.additionalAaptParams = additionalAaptParams;
     this.rawManifest = rawManifest;
@@ -261,6 +260,8 @@ class AndroidBinaryResourcesGraphEnhancer {
       }
       filteredResourcesProviderBuilder.put(module, filteredResourcesProvider);
 
+      AaptOutputInfo aaptOutputInfo;
+
       SourcePath manifestPath;
       if (module.isRootModule()) {
         manifestPath = createBaseManifestRule(packageableCollection, module);
@@ -282,36 +283,65 @@ class AndroidBinaryResourcesGraphEnhancer {
         manifestPath = moduleManifestMergeRule.getSourcePathToOutput();
       }
 
-      Preconditions.checkState(aaptMode.equals(AaptMode.AAPT2), "Unexpected aaptMode: " + aaptMode);
-      Aapt2Link aapt2Link =
-          createAapt2Link(
-              packageIdOffset,
-              moduleFlavor,
-              manifestPath,
-              resourceDetails,
-              needsResourceFiltering ? Optional.of(filteredResourcesProvider) : Optional.empty(),
-              ImmutableList.copyOf(apkResourceDependencyList),
-              useProtoFormat);
-      graphBuilder.addToIndex(aapt2Link);
-      if (useProtoFormat) {
-        // also build an ARSC flavor that we can use to as parent dependencies to other
-        // modules
-        Aapt2Link aapt2LinkArsc =
-            createAapt2Link(
-                packageIdOffset,
-                moduleFlavor,
-                manifestPath,
-                resourceDetails,
-                needsResourceFiltering ? Optional.of(filteredResourcesProvider) : Optional.empty(),
-                ImmutableList.copyOf(apkResourceDependencyList),
-                false);
-        graphBuilder.addToIndex(aapt2LinkArsc);
-        apkResourceDependencyList.add(
-            aapt2LinkArsc.getAaptOutputInfo().getPrimaryResourcesApkPath());
-      } else {
-        apkResourceDependencyList.add(aapt2Link.getAaptOutputInfo().getPrimaryResourcesApkPath());
+      switch (aaptMode) {
+        case AAPT1:
+          {
+            // Create the AaptPackageResourcesBuildable.
+            AaptPackageResources aaptPackageResources =
+                createAaptPackageResources(
+                    buildTarget.withAppendedFlavors(AAPT_PACKAGE_FLAVOR, moduleFlavor),
+                    manifestPath,
+                    ImmutableList.copyOf(apkResourceDependencyList),
+                    resourceDetails,
+                    filteredResourcesProvider);
+            graphBuilder.addToIndex(aaptPackageResources);
+            aaptOutputInfo = aaptPackageResources.getAaptOutputInfo();
+            apkResourceDependencyList.add(aaptOutputInfo.getPrimaryResourcesApkPath());
+          }
+          break;
+
+        case AAPT2:
+          {
+            Aapt2Link aapt2Link =
+                createAapt2Link(
+                    packageIdOffset,
+                    moduleFlavor,
+                    manifestPath,
+                    resourceDetails,
+                    needsResourceFiltering
+                        ? Optional.of(filteredResourcesProvider)
+                        : Optional.empty(),
+                    ImmutableList.copyOf(apkResourceDependencyList),
+                    useProtoFormat);
+            graphBuilder.addToIndex(aapt2Link);
+            if (useProtoFormat) {
+              // also build an ARSC flavor that we can use to as parent dependencies to other
+              // modules
+              Aapt2Link aapt2LinkArsc =
+                  createAapt2Link(
+                      packageIdOffset,
+                      moduleFlavor,
+                      manifestPath,
+                      resourceDetails,
+                      needsResourceFiltering
+                          ? Optional.of(filteredResourcesProvider)
+                          : Optional.empty(),
+                      ImmutableList.copyOf(apkResourceDependencyList),
+                      false);
+              graphBuilder.addToIndex(aapt2LinkArsc);
+              apkResourceDependencyList.add(
+                  aapt2LinkArsc.getAaptOutputInfo().getPrimaryResourcesApkPath());
+            } else {
+              apkResourceDependencyList.add(
+                  aapt2Link.getAaptOutputInfo().getPrimaryResourcesApkPath());
+            }
+            aaptOutputInfo = aapt2Link.getAaptOutputInfo();
+          }
+          break;
+
+        default:
+          throw new RuntimeException("Unexpected aaptMode: " + aaptMode);
       }
-      AaptOutputInfo aaptOutputInfo = aapt2Link.getAaptOutputInfo();
 
       if (module.isRootModule()) {
         Optional<PackageStringAssets> packageStringAssets = Optional.empty();
@@ -666,6 +696,28 @@ class AndroidBinaryResourcesGraphEnhancer {
         withDownwardApi);
   }
 
+  private AaptPackageResources createAaptPackageResources(
+      BuildTarget target,
+      SourcePath realManifest,
+      ImmutableList<SourcePath> dependencyResourceApks,
+      AndroidPackageableCollection.ResourceDetails resourceDetails,
+      FilteredResourcesProvider filteredResourcesProvider) {
+    return new AaptPackageResources(
+        target,
+        projectFilesystem,
+        androidPlatformTarget,
+        graphBuilder,
+        realManifest,
+        dependencyResourceApks,
+        filteredResourcesProvider,
+        getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
+        skipCrunchPngs,
+        includesVectorDrawables,
+        manifestEntries,
+        additionalAaptParams,
+        withDownwardApi);
+  }
+
   private PackageStringAssets createPackageStringAssets(
       ImmutableSortedSet<BuildRule> resourceRules,
       ImmutableCollection<BuildRule> rulesWithResourceDirectories,
@@ -699,5 +751,16 @@ class AndroidBinaryResourcesGraphEnhancer {
 
   private ImmutableSortedSet<BuildRule> getTargetsAsRules(Collection<BuildTarget> buildTargets) {
     return BuildRules.toBuildRulesFor(originalBuildTarget, graphBuilder, buildTargets);
+  }
+
+  private ImmutableList<HasAndroidResourceDeps> getTargetsAsResourceDeps(
+      Collection<BuildTarget> targets) {
+    return getTargetsAsRules(targets).stream()
+        .map(
+            input -> {
+              Preconditions.checkState(input instanceof HasAndroidResourceDeps);
+              return (HasAndroidResourceDeps) input;
+            })
+        .collect(ImmutableList.toImmutableList());
   }
 }

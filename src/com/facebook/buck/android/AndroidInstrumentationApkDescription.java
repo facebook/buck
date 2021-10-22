@@ -333,7 +333,7 @@ public class AndroidInstrumentationApkDescription
 
     @Value.Default
     default AaptMode getAaptMode() {
-      return AaptMode.AAPT2;
+      return AaptMode.AAPT1;
     }
 
     @Value.Default

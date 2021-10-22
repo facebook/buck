@@ -81,6 +81,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import org.apache.commons.compress.archivers.zip.ZipUtil;
+import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -1117,6 +1118,9 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testResourceOverridesAapt2() throws Exception {
     AssumeAndroidPlatform.get(workspace).assumeAapt2WithOutputTextSymbolsIsAvailable();
+    workspace.replaceFileContents(
+        "apps/sample/BUCK", "'aapt1',  # app_with_res_overrides", "'aapt2',");
+
     testResourceOverrides();
   }
 
@@ -1353,7 +1357,9 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
             outputs.get("//apps/sample:proguard_output_dontobfuscate_no_aapt"));
 
     assertThat(withAapt, containsString("-printmapping"));
+    assertThat(withAapt, containsString("#generated"));
     assertThat(withoutAapt, containsString("-printmapping"));
+    assertThat(withoutAapt, CoreMatchers.not(containsString("#generated")));
   }
 
   @Test

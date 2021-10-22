@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
@@ -36,13 +37,16 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -199,9 +203,7 @@ public class AndroidApkTest {
         expectedSteps,
         false);
 
-    assertEquals(
-        expectedSteps.build().stream().map(Step::getShortName).collect(Collectors.toList()),
-        commands.build().stream().map(Step::getShortName).collect(Collectors.toList()));
+    assertEquals(expectedSteps.build(), commands.build());
 
     assertEquals(expectedRecordedArtifacts, buildableContext.getRecordedArtifacts());
   }
@@ -367,6 +369,45 @@ public class AndroidApkTest {
 
     List<Step> steps = commandsBuilder.build();
     assertCommandsInOrder(steps, ImmutableList.of(SplitZipStep.class, SmartDexingStep.class));
+  }
+
+  @Test
+  public void testAddPostFilterCommandSteps() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildRule keystoreRule = addKeystoreRule(graphBuilder);
+    BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    AndroidBinaryBuilder builder =
+        AndroidBinaryBuilder.createBuilder(target)
+            .setPostFilterResourcesCmd(Optional.of(StringWithMacrosUtils.format("cmd")))
+            .setResourceFilter(new ResourceFilter(ImmutableList.of("mdpi")))
+            .setKeystore(keystoreRule.getBuildTarget())
+            .setManifest(FakeSourcePath.of("manifest"));
+    AndroidApk androidApk = builder.build(graphBuilder);
+    ProjectFilesystem projectFilesystem = androidApk.getProjectFilesystem();
+
+    BuildRule aaptPackageRule =
+        graphBuilder.getRule(BuildTargetFactory.newInstance("//:target#aapt_package,dex"));
+    ResourcesFilter resourcesFilter =
+        (ResourcesFilter) ((AaptPackageResources) aaptPackageRule).getFilteredResourcesProvider();
+    ImmutableList.Builder<Step> stepsBuilder = new ImmutableList.Builder<>();
+    resourcesFilter.addPostFilterCommandSteps(
+        StringArg.of("cmd"),
+        graphBuilder.getSourcePathResolver(),
+        projectFilesystem.getRootPath().getPath(),
+        stepsBuilder);
+    ImmutableList<Step> steps = stepsBuilder.build();
+
+    RelPath dataPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(),
+            resourcesFilter.getBuildTarget(),
+            "%s/post_filter_resources_data.json");
+    RelPath rJsonPath =
+        BuildTargetPaths.getGenPath(
+            projectFilesystem.getBuckPaths(), resourcesFilter.getBuildTarget(), "%s/R.json");
+    assertEquals(
+        ImmutableList.of("bash", "-c", "cmd " + dataPath + " " + rJsonPath),
+        ((BashStep) steps.get(0)).getShellCommand(null));
   }
 
   @Test

@@ -1,0 +1,14 @@
+# An android_binary that tries to use aapt1 with aapt2_locale_filtering.
+# This should fail to build.
+android_binary(
+    name = "sample_wrong_aapt",
+    aapt2_locale_filtering = True,
+    aapt_mode = "aapt1",
+    keystore = "//keystores:debug",
+    locales = ["en"],
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/base:base",
+    ],
+)
