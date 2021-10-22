@@ -290,6 +290,7 @@ public class PythonBinaryDescription
             preloadLibraries,
             pythonBuckConfig.shouldCacheBinaries(),
             pythonBuckConfig.legacyOutputPath(),
+            pythonPlatform.getEnvironment().getPythonPath().toString(),
             downwardApiConfig.isEnabledForPython());
 
       default:

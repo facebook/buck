@@ -58,6 +58,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   @AddToRuleKey private final PythonEnvironment pythonEnvironment;
   @AddToRuleKey private final ImmutableSet<String> preloadLibraries;
   private final boolean cache;
+  @AddToRuleKey private final String pythonPath;
   @AddToRuleKey private final boolean withDownwardApi;
 
   private final ImmutableSortedSet<BuildRule> buildDeps;
@@ -78,6 +79,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
       ImmutableSet<String> preloadLibraries,
       boolean cache,
       boolean legacyOutputPath,
+      String pythonPath,
       boolean withDownwardApi) {
     super(
         buildTarget,
@@ -96,6 +98,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
     this.mainModule = mainModule;
     this.preloadLibraries = preloadLibraries;
     this.cache = cache;
+    this.pythonPath = pythonPath;
     this.withDownwardApi = withDownwardApi;
     this.buildDeps =
         ImmutableSortedSet.<BuildRule>naturalOrder()

@@ -101,6 +101,7 @@ public class PythonPackagedBinaryTest {
             ImmutableSortedSet.of(),
             /* cache */ true,
             /* legacyOutputPath */ false,
+            "fake_python",
             false);
 
     // Calculate and return the rule key.
