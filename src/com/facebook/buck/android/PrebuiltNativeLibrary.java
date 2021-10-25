@@ -21,21 +21,30 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 
 /**
  * An object that represents the resources prebuilt native library.
@@ -53,23 +62,31 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithDeclaredAndExtra
     implements NativeLibraryBuildRule, AndroidPackageable {
 
   @AddToRuleKey private final boolean isAsset;
-  private final Path libraryPath;
+  @AddToRuleKey private final SourcePath nativeLibsPath;
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
   private final ImmutableSortedSet<? extends SourcePath> librarySources;
 
+  @ExcludeFromRuleKey(
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class)
+  private final RelPath genDirectory;
+
   protected PrebuiltNativeLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      Path nativeLibsDirectory,
+      SourcePath nativeLibsPath,
       boolean isAsset,
       ImmutableSortedSet<? extends SourcePath> librarySources) {
     super(buildTarget, projectFilesystem, params);
-    this.isAsset = isAsset;
-    this.libraryPath = nativeLibsDirectory;
+
     this.librarySources = librarySources;
+    this.genDirectory =
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), buildTarget, "__lib%s");
+    this.isAsset = isAsset;
+    this.nativeLibsPath = nativeLibsPath;
   }
 
   @Override
@@ -79,21 +96,35 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithDeclaredAndExtra
 
   @Override
   public Path getLibraryPath() {
-    return libraryPath;
+    return genDirectory.getPath();
   }
 
   @Override
-  @Nullable
   public SourcePath getSourcePathToOutput() {
-    // A prebuilt_native_library does not have a "primary output" at this time.
-    return null;
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), genDirectory);
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    // We're checking in prebuilt libraries for now, so this is a noop.
-    return ImmutableList.of();
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
+    AbsPath resolvedNativePath = resolver.getAbsolutePath(nativeLibsPath);
+
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), genDirectory.getPath())));
+    steps.add(
+        CopyStep.forDirectory(
+            resolvedNativePath.getPath(),
+            genDirectory.getPath(),
+            CopyStep.DirectoryMode.CONTENTS_ONLY));
+
+    buildableContext.recordArtifact(genDirectory.getPath());
+
+    return steps.build();
   }
 
   @Override
@@ -107,10 +138,10 @@ public class PrebuiltNativeLibrary extends AbstractBuildRuleWithDeclaredAndExtra
       ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
     if (isAsset) {
       collector.addNativeLibAssetsDirectory(
-          getBuildTarget(), PathSourcePath.of(getProjectFilesystem(), getLibraryPath()));
+          getBuildTarget(), ExplicitBuildTargetSourcePath.of(getBuildTarget(), getLibraryPath()));
     } else {
       collector.addNativeLibsDirectory(
-          getBuildTarget(), PathSourcePath.of(getProjectFilesystem(), getLibraryPath()));
+          getBuildTarget(), ExplicitBuildTargetSourcePath.of(getBuildTarget(), getLibraryPath()));
     }
   }
 }

@@ -120,7 +120,7 @@ class TargetDataGenerator:
             "keystore.properties": source_path,
             "keystore.store": source_path,
             "prebuilt_jar.binary_jar": source_path,
-            "prebuilt_native_library.native_libs": path,
+            "prebuilt_native_library.native_libs": source_path,
             "python_library.resources": None,
             "python_library.srcs": None,
             "sh_binary.main": source_path,

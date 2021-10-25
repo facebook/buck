@@ -113,7 +113,7 @@ public class AndroidPackageableCollectorTest {
         BuildTargetFactory.newInstance("//java/com/facebook/prebuilt_native_library:library");
     TargetNode<?> prebuiltNativeLibraryBuild =
         PrebuiltNativeLibraryBuilder.newBuilder(prebuiltNativeLibraryTarget, projectFilesystem)
-            .setNativeLibs(prebuiltNativeLibraryPath)
+            .setNativeLibs(FakeSourcePath.of(prebuiltNativeLibraryPath))
             .setIsAsset(true)
             .build();
 

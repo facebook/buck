@@ -239,7 +239,7 @@ public class AndroidApkTest {
           BuildTargetFactory.newInstance(buildTarget + "_native_libs");
       BuildRule nativeLibsRule =
           PrebuiltNativeLibraryBuilder.newBuilder(nativeLibOnebuildTarget)
-              .setNativeLibs(Paths.get(nativeLibsDirectory))
+              .setNativeLibs(FakeSourcePath.of(nativeLibsDirectory))
               .build(graphBuilder);
       graphBuilder.addToIndex(nativeLibsRule);
       androidLibraryRuleBuilder.addDep(nativeLibsRule.getBuildTarget());

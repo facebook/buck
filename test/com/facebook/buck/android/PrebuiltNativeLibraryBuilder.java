@@ -18,9 +18,9 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 public class PrebuiltNativeLibraryBuilder
@@ -52,7 +52,7 @@ public class PrebuiltNativeLibraryBuilder
     return this;
   }
 
-  public PrebuiltNativeLibraryBuilder setNativeLibs(@Nullable Path nativeLibs) {
+  public PrebuiltNativeLibraryBuilder setNativeLibs(@Nullable SourcePath nativeLibs) {
     getArgForPopulating().setNativeLibs(nativeLibs);
     return this;
   }

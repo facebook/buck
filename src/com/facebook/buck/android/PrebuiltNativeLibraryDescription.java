@@ -31,7 +31,8 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.IOException;
-import java.nio.file.Path;
+import java.nio.file.Files;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 public class PrebuiltNativeLibraryDescription
@@ -49,23 +50,34 @@ public class PrebuiltNativeLibraryDescription
       BuildRuleParams params,
       PrebuiltNativeLibraryDescriptionArg args) {
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    ImmutableSortedSet<? extends SourcePath> librarySources;
-    try {
-      librarySources =
-          FluentIterable.from(projectFilesystem.getFilesUnderPath(args.getNativeLibs()))
-              .transform(p -> PathSourcePath.of(projectFilesystem, p))
-              .toSortedSet(Ordering.natural());
-    } catch (IOException e) {
-      throw new HumanReadableException(e, "Error traversing directory %s.", args.getNativeLibs());
-    }
 
-    return new PrebuiltNativeLibrary(
-        buildTarget,
-        projectFilesystem,
-        params,
-        args.getNativeLibs(),
-        args.getIsAsset(),
-        librarySources);
+    Optional<PathSourcePath> nativeLibsDir = PathSourcePath.from(args.getNativeLibs());
+    if (nativeLibsDir.isPresent() && Files.isDirectory(nativeLibsDir.get().getRelativePath())) {
+      try {
+        ImmutableSortedSet<? extends SourcePath> librarySources =
+            FluentIterable.from(
+                    projectFilesystem.getFilesUnderPath(nativeLibsDir.get().getRelativePath()))
+                .transform(p -> PathSourcePath.of(projectFilesystem, p))
+                .toSortedSet(Ordering.natural());
+        return new PrebuiltNativeLibrary(
+            buildTarget,
+            projectFilesystem,
+            params,
+            args.getNativeLibs(),
+            args.getIsAsset(),
+            librarySources);
+      } catch (IOException e) {
+        throw new HumanReadableException(e, "Error traversing directory %s.", nativeLibsDir.get());
+      }
+    } else {
+      return new PrebuiltNativeLibrary(
+          buildTarget,
+          projectFilesystem,
+          params,
+          args.getNativeLibs(),
+          args.getIsAsset(),
+          ImmutableSortedSet.of());
+    }
   }
 
   @RuleArg
@@ -75,6 +87,6 @@ public class PrebuiltNativeLibraryDescription
       return false;
     }
 
-    Path getNativeLibs();
+    SourcePath getNativeLibs();
   }
 }
