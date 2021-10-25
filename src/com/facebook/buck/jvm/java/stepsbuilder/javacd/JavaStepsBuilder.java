@@ -125,7 +125,6 @@ public class JavaStepsBuilder {
         command.getAbiCompatibilityMode(),
         command.getAbiGenerationMode(),
         command.getIsRequiredForSourceOnlyAbi(),
-        ImmutableList.copyOf(libraryJarCommand.getPostprocessClassesCommandsList()),
         command.getTrackClassUsage(),
         command.getTrackJavacPhaseEvents(),
         withDownwardApi,

@@ -78,7 +78,6 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             ImmutableSortedSet.of(),
             ResourcesParameters.of(),
             /* manifestFile */ Optional.empty(), // Manifest means something else for Android rules
-            /* postprocessClassesCommands */ ImmutableList.of(),
             /* trackClassUsage */ false,
             /* trackJavacPhaseEvents */ false,
             RemoveClassesPatternsMatcher.EMPTY,

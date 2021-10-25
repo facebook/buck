@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.util.log.Logger;
@@ -213,13 +212,10 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
       BuildTargetValue invokingRule,
       CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters compilerParameters,
-      ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       ImmutableList.Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
-      boolean withDownwardApi,
-      AbsPath buildCellRootPath,
       ResolvedJavac resolvedJavac,
       JavaExtraParams extraParams) {
     Preconditions.checkArgument(
@@ -235,16 +231,14 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
     // (3) Tha compile API must be JSR 199.
     boolean isSpoolingToJarEnabled =
         AbiGenerationModeUtils.isSourceAbi(compilerParameters.getAbiGenerationMode())
-            || (postprocessClassesCommands.isEmpty()
-                && this.spoolMode == SpoolMode.DIRECT_TO_JAR
+            || (this.spoolMode == SpoolMode.DIRECT_TO_JAR
                 && resolvedJavac instanceof Jsr199Javac.ResolvedJsr199Javac);
 
     LOG.info(
-        "Target: %s SpoolMode: %s Expected SpoolMode: %s Postprocessing steps: %s",
+        "Target: %s. SpoolMode: %s. Expected SpoolMode: %s.",
         invokingRule.getFullyQualifiedName(),
         (isSpoolingToJarEnabled) ? (SpoolMode.DIRECT_TO_JAR) : (SpoolMode.INTERMEDIATE_TO_DISK),
-        spoolMode,
-        postprocessClassesCommands.toString());
+        spoolMode);
 
     if (isSpoolingToJarEnabled) {
       steps.add(
@@ -266,13 +260,10 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
           invokingRule,
           compilerOutputPathsValue,
           compilerParameters,
-          postprocessClassesCommands,
           null,
           libraryJarParameters,
           steps,
           buildableContext,
-          withDownwardApi,
-          buildCellRootPath,
           resolvedJavac,
           extraParams);
     }

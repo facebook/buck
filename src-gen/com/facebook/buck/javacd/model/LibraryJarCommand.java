@@ -22,7 +22,6 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private LibraryJarCommand() {
-    postprocessClassesCommands_ = com.google.protobuf.LazyStringArrayList.EMPTY;
   }
 
   @java.lang.Override
@@ -63,15 +62,6 @@ private static final long serialVersionUID = 0L;
             break;
           }
           case 18: {
-            java.lang.String s = input.readStringRequireUtf8();
-            if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-              postprocessClassesCommands_ = new com.google.protobuf.LazyStringArrayList();
-              mutable_bitField0_ |= 0x00000002;
-            }
-            postprocessClassesCommands_.add(s);
-            break;
-          }
-          case 26: {
             com.facebook.buck.javacd.model.LibraryJarBaseCommand.Builder subBuilder = null;
             if (libraryJarBaseCommand_ != null) {
               subBuilder = libraryJarBaseCommand_.toBuilder();
@@ -99,9 +89,6 @@ private static final long serialVersionUID = 0L;
       throw new com.google.protobuf.InvalidProtocolBufferException(
           e).setUnfinishedMessage(this);
     } finally {
-      if (((mutable_bitField0_ & 0x00000002) != 0)) {
-        postprocessClassesCommands_ = postprocessClassesCommands_.getUnmodifiableView();
-      }
       this.unknownFields = unknownFields.build();
       makeExtensionsImmutable();
     }
@@ -119,7 +106,6 @@ private static final long serialVersionUID = 0L;
             com.facebook.buck.javacd.model.LibraryJarCommand.class, com.facebook.buck.javacd.model.LibraryJarCommand.Builder.class);
   }
 
-  private int bitField0_;
   public static final int BASEJARCOMMAND_FIELD_NUMBER = 1;
   private com.facebook.buck.javacd.model.BaseJarCommand baseJarCommand_;
   /**
@@ -141,51 +127,22 @@ private static final long serialVersionUID = 0L;
     return getBaseJarCommand();
   }
 
-  public static final int POSTPROCESSCLASSESCOMMANDS_FIELD_NUMBER = 2;
-  private com.google.protobuf.LazyStringList postprocessClassesCommands_;
-  /**
-   * <code>repeated string postprocessClassesCommands = 2;</code>
-   */
-  public com.google.protobuf.ProtocolStringList
-      getPostprocessClassesCommandsList() {
-    return postprocessClassesCommands_;
-  }
-  /**
-   * <code>repeated string postprocessClassesCommands = 2;</code>
-   */
-  public int getPostprocessClassesCommandsCount() {
-    return postprocessClassesCommands_.size();
-  }
-  /**
-   * <code>repeated string postprocessClassesCommands = 2;</code>
-   */
-  public java.lang.String getPostprocessClassesCommands(int index) {
-    return postprocessClassesCommands_.get(index);
-  }
-  /**
-   * <code>repeated string postprocessClassesCommands = 2;</code>
-   */
-  public com.google.protobuf.ByteString
-      getPostprocessClassesCommandsBytes(int index) {
-    return postprocessClassesCommands_.getByteString(index);
-  }
-
-  public static final int LIBRARYJARBASECOMMAND_FIELD_NUMBER = 3;
+  public static final int LIBRARYJARBASECOMMAND_FIELD_NUMBER = 2;
   private com.facebook.buck.javacd.model.LibraryJarBaseCommand libraryJarBaseCommand_;
   /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
    */
   public boolean hasLibraryJarBaseCommand() {
     return libraryJarBaseCommand_ != null;
   }
   /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
    */
   public com.facebook.buck.javacd.model.LibraryJarBaseCommand getLibraryJarBaseCommand() {
     return libraryJarBaseCommand_ == null ? com.facebook.buck.javacd.model.LibraryJarBaseCommand.getDefaultInstance() : libraryJarBaseCommand_;
   }
   /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
    */
   public com.facebook.buck.javacd.model.LibraryJarBaseCommandOrBuilder getLibraryJarBaseCommandOrBuilder() {
     return getLibraryJarBaseCommand();
@@ -208,11 +165,8 @@ private static final long serialVersionUID = 0L;
     if (baseJarCommand_ != null) {
       output.writeMessage(1, getBaseJarCommand());
     }
-    for (int i = 0; i < postprocessClassesCommands_.size(); i++) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 2, postprocessClassesCommands_.getRaw(i));
-    }
     if (libraryJarBaseCommand_ != null) {
-      output.writeMessage(3, getLibraryJarBaseCommand());
+      output.writeMessage(2, getLibraryJarBaseCommand());
     }
     unknownFields.writeTo(output);
   }
@@ -227,17 +181,9 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(1, getBaseJarCommand());
     }
-    {
-      int dataSize = 0;
-      for (int i = 0; i < postprocessClassesCommands_.size(); i++) {
-        dataSize += computeStringSizeNoTag(postprocessClassesCommands_.getRaw(i));
-      }
-      size += dataSize;
-      size += 1 * getPostprocessClassesCommandsList().size();
-    }
     if (libraryJarBaseCommand_ != null) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(3, getLibraryJarBaseCommand());
+        .computeMessageSize(2, getLibraryJarBaseCommand());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -259,8 +205,6 @@ private static final long serialVersionUID = 0L;
       if (!getBaseJarCommand()
           .equals(other.getBaseJarCommand())) return false;
     }
-    if (!getPostprocessClassesCommandsList()
-        .equals(other.getPostprocessClassesCommandsList())) return false;
     if (hasLibraryJarBaseCommand() != other.hasLibraryJarBaseCommand()) return false;
     if (hasLibraryJarBaseCommand()) {
       if (!getLibraryJarBaseCommand()
@@ -280,10 +224,6 @@ private static final long serialVersionUID = 0L;
     if (hasBaseJarCommand()) {
       hash = (37 * hash) + BASEJARCOMMAND_FIELD_NUMBER;
       hash = (53 * hash) + getBaseJarCommand().hashCode();
-    }
-    if (getPostprocessClassesCommandsCount() > 0) {
-      hash = (37 * hash) + POSTPROCESSCLASSESCOMMANDS_FIELD_NUMBER;
-      hash = (53 * hash) + getPostprocessClassesCommandsList().hashCode();
     }
     if (hasLibraryJarBaseCommand()) {
       hash = (37 * hash) + LIBRARYJARBASECOMMAND_FIELD_NUMBER;
@@ -432,8 +372,6 @@ private static final long serialVersionUID = 0L;
         baseJarCommand_ = null;
         baseJarCommandBuilder_ = null;
       }
-      postprocessClassesCommands_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000002);
       if (libraryJarBaseCommandBuilder_ == null) {
         libraryJarBaseCommand_ = null;
       } else {
@@ -466,24 +404,16 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.facebook.buck.javacd.model.LibraryJarCommand buildPartial() {
       com.facebook.buck.javacd.model.LibraryJarCommand result = new com.facebook.buck.javacd.model.LibraryJarCommand(this);
-      int from_bitField0_ = bitField0_;
-      int to_bitField0_ = 0;
       if (baseJarCommandBuilder_ == null) {
         result.baseJarCommand_ = baseJarCommand_;
       } else {
         result.baseJarCommand_ = baseJarCommandBuilder_.build();
       }
-      if (((bitField0_ & 0x00000002) != 0)) {
-        postprocessClassesCommands_ = postprocessClassesCommands_.getUnmodifiableView();
-        bitField0_ = (bitField0_ & ~0x00000002);
-      }
-      result.postprocessClassesCommands_ = postprocessClassesCommands_;
       if (libraryJarBaseCommandBuilder_ == null) {
         result.libraryJarBaseCommand_ = libraryJarBaseCommand_;
       } else {
         result.libraryJarBaseCommand_ = libraryJarBaseCommandBuilder_.build();
       }
-      result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
     }
@@ -535,16 +465,6 @@ private static final long serialVersionUID = 0L;
       if (other.hasBaseJarCommand()) {
         mergeBaseJarCommand(other.getBaseJarCommand());
       }
-      if (!other.postprocessClassesCommands_.isEmpty()) {
-        if (postprocessClassesCommands_.isEmpty()) {
-          postprocessClassesCommands_ = other.postprocessClassesCommands_;
-          bitField0_ = (bitField0_ & ~0x00000002);
-        } else {
-          ensurePostprocessClassesCommandsIsMutable();
-          postprocessClassesCommands_.addAll(other.postprocessClassesCommands_);
-        }
-        onChanged();
-      }
       if (other.hasLibraryJarBaseCommand()) {
         mergeLibraryJarBaseCommand(other.getLibraryJarBaseCommand());
       }
@@ -576,7 +496,6 @@ private static final long serialVersionUID = 0L;
       }
       return this;
     }
-    private int bitField0_;
 
     private com.facebook.buck.javacd.model.BaseJarCommand baseJarCommand_;
     private com.google.protobuf.SingleFieldBuilderV3<
@@ -695,111 +614,17 @@ private static final long serialVersionUID = 0L;
       return baseJarCommandBuilder_;
     }
 
-    private com.google.protobuf.LazyStringList postprocessClassesCommands_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-    private void ensurePostprocessClassesCommandsIsMutable() {
-      if (!((bitField0_ & 0x00000002) != 0)) {
-        postprocessClassesCommands_ = new com.google.protobuf.LazyStringArrayList(postprocessClassesCommands_);
-        bitField0_ |= 0x00000002;
-       }
-    }
-    /**
-     * <code>repeated string postprocessClassesCommands = 2;</code>
-     */
-    public com.google.protobuf.ProtocolStringList
-        getPostprocessClassesCommandsList() {
-      return postprocessClassesCommands_.getUnmodifiableView();
-    }
-    /**
-     * <code>repeated string postprocessClassesCommands = 2;</code>
-     */
-    public int getPostprocessClassesCommandsCount() {
-      return postprocessClassesCommands_.size();
-    }
-    /**
-     * <code>repeated string postprocessClassesCommands = 2;</code>
-     */
-    public java.lang.String getPostprocessClassesCommands(int index) {
-      return postprocessClassesCommands_.get(index);
-    }
-    /**
-     * <code>repeated string postprocessClassesCommands = 2;</code>
-     */
-    public com.google.protobuf.ByteString
-        getPostprocessClassesCommandsBytes(int index) {
-      return postprocessClassesCommands_.getByteString(index);
-    }
-    /**
-     * <code>repeated string postprocessClassesCommands = 2;</code>
-     */
-    public Builder setPostprocessClassesCommands(
-        int index, java.lang.String value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  ensurePostprocessClassesCommandsIsMutable();
-      postprocessClassesCommands_.set(index, value);
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>repeated string postprocessClassesCommands = 2;</code>
-     */
-    public Builder addPostprocessClassesCommands(
-        java.lang.String value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  ensurePostprocessClassesCommandsIsMutable();
-      postprocessClassesCommands_.add(value);
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>repeated string postprocessClassesCommands = 2;</code>
-     */
-    public Builder addAllPostprocessClassesCommands(
-        java.lang.Iterable<java.lang.String> values) {
-      ensurePostprocessClassesCommandsIsMutable();
-      com.google.protobuf.AbstractMessageLite.Builder.addAll(
-          values, postprocessClassesCommands_);
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>repeated string postprocessClassesCommands = 2;</code>
-     */
-    public Builder clearPostprocessClassesCommands() {
-      postprocessClassesCommands_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      bitField0_ = (bitField0_ & ~0x00000002);
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>repeated string postprocessClassesCommands = 2;</code>
-     */
-    public Builder addPostprocessClassesCommandsBytes(
-        com.google.protobuf.ByteString value) {
-      if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-      ensurePostprocessClassesCommandsIsMutable();
-      postprocessClassesCommands_.add(value);
-      onChanged();
-      return this;
-    }
-
     private com.facebook.buck.javacd.model.LibraryJarBaseCommand libraryJarBaseCommand_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.LibraryJarBaseCommand, com.facebook.buck.javacd.model.LibraryJarBaseCommand.Builder, com.facebook.buck.javacd.model.LibraryJarBaseCommandOrBuilder> libraryJarBaseCommandBuilder_;
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
      */
     public boolean hasLibraryJarBaseCommand() {
       return libraryJarBaseCommandBuilder_ != null || libraryJarBaseCommand_ != null;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
      */
     public com.facebook.buck.javacd.model.LibraryJarBaseCommand getLibraryJarBaseCommand() {
       if (libraryJarBaseCommandBuilder_ == null) {
@@ -809,7 +634,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
      */
     public Builder setLibraryJarBaseCommand(com.facebook.buck.javacd.model.LibraryJarBaseCommand value) {
       if (libraryJarBaseCommandBuilder_ == null) {
@@ -825,7 +650,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
      */
     public Builder setLibraryJarBaseCommand(
         com.facebook.buck.javacd.model.LibraryJarBaseCommand.Builder builderForValue) {
@@ -839,7 +664,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
      */
     public Builder mergeLibraryJarBaseCommand(com.facebook.buck.javacd.model.LibraryJarBaseCommand value) {
       if (libraryJarBaseCommandBuilder_ == null) {
@@ -857,7 +682,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
      */
     public Builder clearLibraryJarBaseCommand() {
       if (libraryJarBaseCommandBuilder_ == null) {
@@ -871,7 +696,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
      */
     public com.facebook.buck.javacd.model.LibraryJarBaseCommand.Builder getLibraryJarBaseCommandBuilder() {
       
@@ -879,7 +704,7 @@ private static final long serialVersionUID = 0L;
       return getLibraryJarBaseCommandFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
      */
     public com.facebook.buck.javacd.model.LibraryJarBaseCommandOrBuilder getLibraryJarBaseCommandOrBuilder() {
       if (libraryJarBaseCommandBuilder_ != null) {
@@ -890,7 +715,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+     * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.LibraryJarBaseCommand, com.facebook.buck.javacd.model.LibraryJarBaseCommand.Builder, com.facebook.buck.javacd.model.LibraryJarBaseCommandOrBuilder> 

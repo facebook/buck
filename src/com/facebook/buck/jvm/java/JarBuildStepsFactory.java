@@ -102,7 +102,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   @AddToRuleKey private final ResourcesParameters resourcesParameters;
 
   @AddToRuleKey private final Optional<SourcePath> manifestFile;
-  @AddToRuleKey private final ImmutableList<String> postprocessClassesCommands;
 
   @AddToRuleKey private final DependencyInfoHolder dependencyInfos;
   @AddToRuleKey private final ZipArchiveDependencySupplier abiClasspath;
@@ -130,7 +129,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ImmutableSortedSet<SourcePath> resources,
       ResourcesParameters resourcesParameters,
       Optional<SourcePath> manifestFile,
-      ImmutableList<String> postprocessClassesCommands,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       RemoveClassesPatternsMatcher classesToRemoveFromJar,
@@ -148,7 +146,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         resources,
         resourcesParameters,
         manifestFile,
-        postprocessClassesCommands,
         trackClassUsage,
         trackJavacPhaseEvents,
         classesToRemoveFromJar,
@@ -288,7 +285,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
       ImmutableSortedSet<SourcePath> resources,
       ResourcesParameters resourcesParameters,
       Optional<SourcePath> manifestFile,
-      ImmutableList<String> postprocessClassesCommands,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       RemoveClassesPatternsMatcher classesToRemoveFromJar,
@@ -304,7 +300,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     this.srcs = srcs;
     this.resources = resources;
     this.resourcesParameters = resourcesParameters;
-    this.postprocessClassesCommands = postprocessClassesCommands;
     this.manifestFile = manifestFile;
     this.trackClassUsage = trackClassUsage;
     this.trackJavacPhaseEvents = trackJavacPhaseEvents;
@@ -537,7 +532,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         abiCompatibilityMode,
         abiGenerationMode,
         isRequiredForSourceOnlyAbi,
-        postprocessClassesCommands,
         trackClassUsage,
         trackJavacPhaseEvents,
         withDownwardApi,
@@ -813,7 +807,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         && Objects.equal(resources, that.resources)
         && Objects.equal(resourcesParameters, that.resourcesParameters)
         && Objects.equal(manifestFile, that.manifestFile)
-        && Objects.equal(postprocessClassesCommands, that.postprocessClassesCommands)
         && Objects.equal(dependencyInfos, that.dependencyInfos)
         && Objects.equal(abiClasspath, that.abiClasspath)
         && Objects.equal(classesToRemoveFromJar, that.classesToRemoveFromJar)
@@ -830,7 +823,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         resources,
         resourcesParameters,
         manifestFile,
-        postprocessClassesCommands,
         dependencyInfos,
         abiClasspath,
         trackClassUsage,
@@ -853,7 +845,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         .add("resources", resources)
         .add("resourcesParameters", resourcesParameters)
         .add("manifestFile", manifestFile)
-        .add("postprocessClassesCommands", postprocessClassesCommands)
         .add("dependencyInfos", dependencyInfos)
         .add("abiClasspath", abiClasspath)
         .add("trackClassUsage", trackClassUsage)

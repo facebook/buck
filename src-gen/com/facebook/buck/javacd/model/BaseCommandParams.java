@@ -114,8 +114,7 @@ private static final long serialVersionUID = 0L;
      * <pre>
      **
      * Writes the compiler output directly to a .jar file while retaining the intermediate .class
-     * files in memory. If `postprocessClassesCommands` are present, the builder will resort to writing .class files to
-     * disk by necessity.
+     * files in memory.
      * </pre>
      *
      * <code>DIRECT_TO_JAR = 1;</code>
@@ -142,8 +141,7 @@ private static final long serialVersionUID = 0L;
      * <pre>
      **
      * Writes the compiler output directly to a .jar file while retaining the intermediate .class
-     * files in memory. If `postprocessClassesCommands` are present, the builder will resort to writing .class files to
-     * disk by necessity.
+     * files in memory.
      * </pre>
      *
      * <code>DIRECT_TO_JAR = 1;</code>

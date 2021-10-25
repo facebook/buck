@@ -52,7 +52,6 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection.Builder;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -315,8 +314,6 @@ public class JavaLibraryDescription
     ImmutableSortedSet<SourcePath> getResources();
 
     Optional<SourcePath> getProguardConfig();
-
-    ImmutableList<String> getPostprocessClassesCommands();
 
     @Hint(isInput = false)
     Optional<Path> getResourcesRoot();

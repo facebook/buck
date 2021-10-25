@@ -151,8 +151,6 @@ public abstract class DefaultJavaLibraryRules {
 
   abstract Optional<SourcePath> getProguardConfig();
 
-  abstract ImmutableList<String> getPostprocessClassesCommands();
-
   abstract Optional<Path> getResourcesRoot();
 
   abstract Optional<SourcePath> getManifestFile();
@@ -391,9 +389,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   private boolean shouldBuildSourceAbi() {
-    return getConfiguredCompilerFactory().shouldGenerateSourceAbi()
-        && !getSrcs().isEmpty()
-        && getPostprocessClassesCommands().isEmpty();
+    return getConfiguredCompilerFactory().shouldGenerateSourceAbi() && !getSrcs().isEmpty();
   }
 
   private boolean pluginsSupportSourceOnlyAbis() {
@@ -693,7 +689,6 @@ public abstract class DefaultJavaLibraryRules {
         getResources(),
         getResourcesParameters(),
         getManifestFile(),
-        getPostprocessClassesCommands(),
         getConfiguredCompilerFactory().trackClassUsage(javacOptions),
         javacOptions.trackJavacPhaseEvents(),
         getClassesToRemoveFromJar(),
@@ -719,7 +714,6 @@ public abstract class DefaultJavaLibraryRules {
         getResources(),
         getResourcesParameters(),
         getManifestFile(),
-        getPostprocessClassesCommands(),
         getConfiguredCompilerFactory().trackClassUsage(javacOptions),
         javacOptions.trackJavacPhaseEvents(),
         getClassesToRemoveFromJar(),
@@ -807,7 +801,6 @@ public abstract class DefaultJavaLibraryRules {
             .setResources(args.getResources())
             .setResourcesRoot(args.getResourcesRoot())
             .setProguardConfig(args.getProguardConfig())
-            .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
             .setDeps(
                 JavaLibraryDeps.newInstance(
                     args,

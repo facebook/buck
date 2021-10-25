@@ -82,7 +82,6 @@ class DefaultLibraryStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
       AbiGenerationMode abiCompatibilityMode,
       AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
-      ImmutableList<String> postprocessClassesCommands,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       boolean withDownwardApi,
@@ -123,15 +122,12 @@ class DefaultLibraryStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
         buildTargetValue,
         compilerOutputPathsValue,
         compilerParameters,
-        postprocessClassesCommands,
         null,
         libraryJarParameters,
         stepsBuilder,
         buildableContext,
-        withDownwardApi,
         cellToPathMappings,
         resourcesMap,
-        buildCellRootPath,
         resolvedJavac,
         extraParamsType.cast(extraParams));
 

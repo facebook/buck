@@ -23,34 +23,15 @@ public interface LibraryJarCommandOrBuilder extends
   com.facebook.buck.javacd.model.BaseJarCommandOrBuilder getBaseJarCommandOrBuilder();
 
   /**
-   * <code>repeated string postprocessClassesCommands = 2;</code>
-   */
-  java.util.List<java.lang.String>
-      getPostprocessClassesCommandsList();
-  /**
-   * <code>repeated string postprocessClassesCommands = 2;</code>
-   */
-  int getPostprocessClassesCommandsCount();
-  /**
-   * <code>repeated string postprocessClassesCommands = 2;</code>
-   */
-  java.lang.String getPostprocessClassesCommands(int index);
-  /**
-   * <code>repeated string postprocessClassesCommands = 2;</code>
-   */
-  com.google.protobuf.ByteString
-      getPostprocessClassesCommandsBytes(int index);
-
-  /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
    */
   boolean hasLibraryJarBaseCommand();
   /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
    */
   com.facebook.buck.javacd.model.LibraryJarBaseCommand getLibraryJarBaseCommand();
   /**
-   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 3;</code>
+   * <code>.javacd.api.v1.LibraryJarBaseCommand libraryJarBaseCommand = 2;</code>
    */
   com.facebook.buck.javacd.model.LibraryJarBaseCommandOrBuilder getLibraryJarBaseCommandOrBuilder();
 }

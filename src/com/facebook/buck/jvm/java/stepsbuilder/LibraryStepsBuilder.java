@@ -50,7 +50,6 @@ public interface LibraryStepsBuilder extends JavaCompileStepsBuilder {
       AbiGenerationMode abiCompatibilityMode,
       AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
-      ImmutableList<String> postprocessClassesCommands,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       boolean withDownwardApi,

@@ -43,8 +43,7 @@ message BaseCommandParams{
 
         /**
          * Writes the compiler output directly to a .jar file while retaining the intermediate .class
-         * files in memory. If `postprocessClassesCommands` are present, the builder will resort to writing .class files to
-         * disk by necessity.
+         * files in memory.
          */
         DIRECT_TO_JAR = 1;
 
@@ -123,8 +122,7 @@ message LibraryJarBaseCommand{
 // library jar command
 message LibraryJarCommand {
     BaseJarCommand baseJarCommand = 1;
-    repeated string postprocessClassesCommands = 2;
-    LibraryJarBaseCommand libraryJarBaseCommand = 3;
+    LibraryJarBaseCommand libraryJarBaseCommand = 2;
 }
 
 // abi jar command

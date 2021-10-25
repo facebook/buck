@@ -24,24 +24,16 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -62,15 +54,12 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       BuildTargetValue buildTargetValue,
       CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters compilerParameters,
-      ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
-      boolean withDownwardApi,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       ImmutableMap<RelPath, RelPath> resourcesMap,
-      AbsPath buildCellRootPath,
       ResolvedJavac resolvedJavac,
       T extraParams) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
@@ -101,13 +90,10 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
           buildTargetValue,
           compilerOutputPathsValue,
           compilerParameters,
-          postprocessClassesCommands,
           abiJarParameters,
           libraryJarParameters,
           steps,
           buildableContext,
-          withDownwardApi,
-          buildCellRootPath,
           resolvedJavac,
           extraParams);
     }
@@ -178,13 +164,10 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
       BuildTargetValue target,
       CompilerOutputPathsValue compilerOutputPathsValue,
       CompilerParameters compilerParameters,
-      ImmutableList<String> postprocessClassesCommands,
       @Nullable JarParameters abiJarParameters,
       @Nullable JarParameters libraryJarParameters,
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
-      boolean withDownwardApi,
-      AbsPath buildCellRootPath,
       ResolvedJavac resolvedJavac,
       T extraParams) {
     Preconditions.checkArgument(abiJarParameters == null);
@@ -193,8 +176,6 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
             && libraryJarParameters
                 .getEntriesToJar()
                 .contains(compilerParameters.getOutputPaths().getClassesDir()));
-
-    AbsPath rootPath = getRootPath(filesystemParams);
 
     createCompileStep(
         filesystemParams,
@@ -207,16 +188,6 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
         resolvedJavac,
         extraParams);
 
-    steps.addAll(
-        addPostprocessClassesCommands(
-            rootPath,
-            postprocessClassesCommands,
-            compilerParameters.getOutputPaths().getClassesDir(),
-            compilerParameters.getClasspathEntries(),
-            getBootClasspath(),
-            withDownwardApi,
-            buildCellRootPath));
-
     steps.add(new JarDirectoryStep(libraryJarParameters));
   }
 
@@ -227,67 +198,6 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
    */
   protected Optional<String> getBootClasspath() {
     return Optional.empty();
-  }
-
-  /**
-   * Adds a BashStep for each postprocessClasses command that runs the command followed by the
-   * outputDirectory of javac outputs.
-   *
-   * <p>The expectation is that the command will inspect and update the directory by modifying,
-   * adding, and deleting the .class files in the directory.
-   *
-   * <p>The outputDirectory should be a valid java root. I.e., if outputDirectory is
-   * buck-out/bin/java/abc/lib__abc__classes/, then a contained class abc.AbcModule should be at
-   * buck-out/bin/java/abc/lib__abc__classes/abc/AbcModule.class
-   *
-   * @param postprocessClassesCommands the list of commands to post-process .class files.
-   * @param outputDirectory the directory that will contain all the javac output.
-   * @param declaredClasspathEntries the list of classpath entries.
-   * @param bootClasspath the compilation boot classpath.
-   */
-  @VisibleForTesting
-  static ImmutableList<IsolatedStep> addPostprocessClassesCommands(
-      AbsPath rootPath,
-      List<String> postprocessClassesCommands,
-      RelPath outputDirectory,
-      ImmutableSortedSet<RelPath> declaredClasspathEntries,
-      Optional<String> bootClasspath,
-      boolean withDownwardApi,
-      AbsPath buildCellRootPath) {
-    if (postprocessClassesCommands.isEmpty()) {
-      return ImmutableList.of();
-    }
-
-    ImmutableList.Builder<IsolatedStep> commands = new ImmutableList.Builder<>();
-    ImmutableMap<String, String> envVars =
-        getEnvs(rootPath, declaredClasspathEntries, bootClasspath);
-
-    RelPath cellPath = ProjectFilesystemUtils.relativize(rootPath, buildCellRootPath);
-    for (String postprocessClassesCommand : postprocessClassesCommands) {
-      String bashCommand = postprocessClassesCommand + " " + outputDirectory;
-      commands.add(
-          new BashStep(rootPath, cellPath, withDownwardApi, bashCommand) {
-
-            @Override
-            public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
-              return envVars;
-            }
-          });
-    }
-    return commands.build();
-  }
-
-  private static ImmutableMap<String, String> getEnvs(
-      AbsPath rootPath,
-      ImmutableSortedSet<RelPath> declaredClasspathEntries,
-      Optional<String> bootClasspath) {
-    ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();
-    envVarBuilder.put(
-        "COMPILATION_CLASSPATH",
-        Joiner.on(':').join(Iterables.transform(declaredClasspathEntries, rootPath::resolve)));
-
-    bootClasspath.ifPresent(s -> envVarBuilder.put("COMPILATION_BOOTCLASSPATH", s));
-    return envVarBuilder.build();
   }
 
   public abstract void createCompileStep(

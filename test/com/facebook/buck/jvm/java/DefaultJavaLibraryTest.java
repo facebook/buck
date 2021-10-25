@@ -974,8 +974,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
           /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
           /* deps */ ImmutableSortedSet.of(),
           /* exportedDeps */ ImmutableSortedSet.of(genrule),
-          /* spoolMode */ Optional.empty(),
-          /* postprocessClassesCommands */ ImmutableList.of());
+          /* spoolMode */ Optional.empty());
       fail("A non-java library listed as exported dep should have thrown.");
     } catch (Exception e) {
       String expected =
@@ -1000,8 +999,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(SpoolMode.DIRECT_TO_JAR),
-            /* postprocessClassesCommands */ ImmutableList.of());
+            Optional.of(SpoolMode.DIRECT_TO_JAR));
 
     BuildContext buildContext = createBuildContext();
 
@@ -1010,29 +1008,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     assertThat(steps, hasItem(instanceOf(JavacStep.class)));
     assertThat(steps, not(hasItem(instanceOf(JarDirectoryStep.class))));
-  }
-
-  @Test
-  public void testJavacDirectToJarStepIsNotPresentWhenPostprocessClassesCommandsPresent()
-      throws NoSuchBuildTargetException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:lib");
-
-    DefaultJavaLibrary javaLibraryBuildRule =
-        createDefaultJavaLibraryRuleWithAbiKey(
-            buildTarget,
-            /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
-            /* deps */ ImmutableSortedSet.of(),
-            /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(SpoolMode.DIRECT_TO_JAR),
-            /* postprocessClassesCommands */ ImmutableList.of("process_class_files.py"));
-
-    BuildContext buildContext = createBuildContext();
-
-    ImmutableList<Step> steps =
-        javaLibraryBuildRule.getBuildSteps(buildContext, new FakeBuildableContext());
-
-    assertThat(steps, hasItem(instanceOf(JavacStep.class)));
-    assertThat(steps, hasItem(instanceOf(JarDirectoryStep.class)));
   }
 
   @Test
@@ -1046,8 +1021,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(SpoolMode.INTERMEDIATE_TO_DISK),
-            /* postprocessClassesCommands */ ImmutableList.of());
+            Optional.of(SpoolMode.INTERMEDIATE_TO_DISK));
 
     BuildContext buildContext = createBuildContext();
 
@@ -1407,8 +1381,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       ImmutableSet<String> srcs,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps,
-      Optional<SpoolMode> spoolMode,
-      ImmutableList<String> postprocessClassesCommands)
+      Optional<SpoolMode> spoolMode)
       throws NoSuchBuildTargetException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableSortedSet<SourcePath> srcsAsPaths =
@@ -1452,7 +1425,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                 cellPathResolver)
             .setJavacOptions(javacOptions)
             .setSrcs(srcsAsPaths)
-            .setPostprocessClassesCommands(postprocessClassesCommands)
             .setDeps(depsBuilder.build())
             .build()
             .buildLibrary();
@@ -1802,7 +1774,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
               .setResources(ImmutableSortedSet.of())
               .setDeps(new JavaLibraryDeps.Builder(graphBuilder).build())
               .setProguardConfig(Optional.empty())
-              .setPostprocessClassesCommands(ImmutableList.of())
               .setResourcesRoot(Optional.empty())
               .setManifestFile(Optional.empty())
               .setMavenCoords(Optional.empty())

@@ -87,15 +87,12 @@ class DefaultAbiStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
         buildTargetValue,
         compilerOutputPathsValue,
         compilerParameters,
-        ImmutableList.of(),
         abiJarParameters,
         libraryJarParameters,
         stepsBuilder,
         buildableContext,
-        withDownwardApi,
         cellToPathMappings,
         resourcesMap,
-        buildCellRootPath,
         resolvedJavac,
         extraParamsType.cast(extraParams));
   }

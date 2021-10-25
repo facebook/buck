@@ -70,7 +70,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             ImmutableSortedSet.of(),
             ResourcesParameters.of(),
             /* manifest file */ Optional.empty(),
-            /* postprocessClassesCommands */ ImmutableList.of(),
             /* trackClassUsage */ javacOptions.trackClassUsage(),
             /* trackJavacPhaseEvents */ javacOptions.trackJavacPhaseEvents(),
             /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY,

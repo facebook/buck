@@ -61,7 +61,6 @@ public class JavaCDLibraryStepsBuilder extends JavaCDStepsBuilderBase<LibraryJar
       AbiGenerationMode abiCompatibilityMode,
       AbiGenerationMode abiGenerationMode,
       boolean isRequiredForSourceOnlyAbi,
-      ImmutableList<String> postprocessClassesCommands,
       boolean trackClassUsage,
       boolean trackJavacPhaseEvents,
       boolean withDownwardApi,
@@ -104,9 +103,6 @@ public class JavaCDLibraryStepsBuilder extends JavaCDStepsBuilderBase<LibraryJar
             extraParams);
 
     commandBuilder.setBaseJarCommand(baseJarCommand);
-    for (String postprocessClassesCommand : postprocessClassesCommands) {
-      commandBuilder.addPostprocessClassesCommands(postprocessClassesCommand);
-    }
 
     LibraryJarBaseCommand.Builder libraryJarBaseCommandBuilder =
         commandBuilder.getLibraryJarBaseCommandBuilder();
