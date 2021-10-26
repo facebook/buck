@@ -21,6 +21,7 @@ import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjProjectElement;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -71,8 +72,8 @@ public class IjDependencyListBuilder {
   public enum SortOrder {
     // Declaration order defines sorting order.
     MODULE,
-    LIBRARY,
     MODULE_LIBRARY,
+    LIBRARY,
     SOURCE_FOLDER,
     COMPILED_SHADOW
   }
@@ -154,10 +155,14 @@ public class IjDependencyListBuilder {
     public abstract IjProjectElement getElement();
   }
 
-  private ImmutableSet.Builder<DependencyEntry> builder;
+  private final ImmutableSet.Builder<DependencyEntry> builder;
 
-  public IjDependencyListBuilder() {
-    builder = ImmutableSet.builder();
+  public IjDependencyListBuilder(boolean sorted) {
+    if (sorted) {
+      builder = ImmutableSortedSet.naturalOrder();
+    } else {
+      builder = ImmutableSet.builder();
+    }
   }
 
   public void addModule(String name, Scope scope, boolean exported) {

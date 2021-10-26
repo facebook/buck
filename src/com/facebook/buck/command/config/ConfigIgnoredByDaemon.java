@@ -80,6 +80,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
             "kotlin_java_runtime_library_template_path",
             "max_library_name_length_before_truncate",
             "max_module_name_length_before_truncate",
+            "module_dependencies_sorted",
             "multi_cell_module_support",
             "python_base_module_transform",
             "use_module_library"));

@@ -189,6 +189,9 @@ public class IjProjectBuckConfig {
             buckConfig
                 .getInteger(INTELLIJ_BUCK_CONFIG_SECTION, "module_library_threshold")
                 .orElse(-1))
+        .setModuleDependenciesSorted(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "module_dependencies_sorted", false))
         .setPythonBaseModuleTransformEnabled(
             buckConfig
                 .getBoolean(INTELLIJ_BUCK_CONFIG_SECTION, "python_base_module_transform")

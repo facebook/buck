@@ -304,7 +304,8 @@ public class IjProjectTemplateDataPreparer {
   public ImmutableSet<IjDependencyListBuilder.DependencyEntry> getDependencies(
       IjModule module, @Nullable Function<IjLibrary, IjLibrary> moduleLibraryTransformer) {
     ImmutableMap<IjProjectElement, DependencyType> deps = moduleGraph.getDepsFor(module);
-    IjDependencyListBuilder dependencyListBuilder = new IjDependencyListBuilder();
+    IjDependencyListBuilder dependencyListBuilder =
+        new IjDependencyListBuilder(projectConfig.isModuleDependenciesSorted());
 
     for (Map.Entry<IjProjectElement, DependencyType> entry : deps.entrySet()) {
       IjProjectElement element = entry.getKey();

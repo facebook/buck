@@ -133,6 +133,8 @@ public abstract class IjProjectConfig {
 
   public abstract int getModuleLibraryThreshold();
 
+  public abstract boolean isModuleDependenciesSorted();
+
   public abstract boolean isPythonBaseModuleTransformEnabled();
 
   public abstract Optional<String> getBuckOutPathForGeneratedProjectFiles();
