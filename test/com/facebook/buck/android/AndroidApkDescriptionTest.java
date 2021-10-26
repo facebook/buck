@@ -27,19 +27,15 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Paths;
 import java.util.EnumSet;
-import java.util.Locale;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -83,33 +79,6 @@ public class AndroidApkDescriptionTest {
         graphBuilder.requireRule(
             target.withFlavors(AndroidBinaryGraphEnhancer.NON_PREDEXED_DEX_BUILDABLE_FLAVOR));
     assertThat(nonPredexedRule.getBuildDeps(), Matchers.hasItem(transitiveDep));
-  }
-
-  @Test
-  public void turkishCaseRulesDoNotCrashConstructor() {
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:keystore");
-    Keystore keystore =
-        graphBuilder.addToIndex(
-            new Keystore(
-                buildTarget,
-                new FakeProjectFilesystem(),
-                TestBuildRuleParams.create(),
-                FakeSourcePath.of("store"),
-                FakeSourcePath.of("properties")));
-    Locale originalLocale = Locale.getDefault();
-    try {
-      Locale.setDefault(new Locale("tr"));
-      // Make sure this doesn't crash in Enum.valueOf() when default Turkish locale rules
-      // upper-case "instrumented" to "\u0130NSTRUMENTED".
-      AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:rule"))
-          .setManifest(FakeSourcePath.of("manifest.xml"))
-          .setKeystore(keystore.getBuildTarget())
-          .setPackageType("instrumented")
-          .build(graphBuilder, new FakeProjectFilesystem(), TargetGraph.EMPTY);
-    } finally {
-      Locale.setDefault(originalLocale);
-    }
   }
 
   @Test

@@ -45,7 +45,6 @@ import com.facebook.buck.step.fs.XzStep;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.EnumSet;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -165,7 +164,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.getManifest(),
         args.getManifestSkeleton(),
         args.getModuleManifestSkeleton(),
-        getPackageType(args),
+        args.getPackageType(),
         ImmutableSet.copyOf(args.getCpuFilters()),
         args.isBuildStringSourceMap(),
         shouldPreDex,
@@ -236,13 +235,6 @@ public class AndroidBinaryGraphEnhancerFactory {
       }
     }
     return allLocales.build();
-  }
-
-  private PackageType getPackageType(AndroidGraphEnhancerArgs args) {
-    if (!args.getPackageType().isPresent()) {
-      return PackageType.DEBUG;
-    }
-    return PackageType.valueOf(args.getPackageType().get().toUpperCase(Locale.US));
   }
 
   private Optional<Arg> getPostFilterResourcesArgs(

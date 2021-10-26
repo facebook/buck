@@ -118,11 +118,6 @@ public class AndroidBundleBuilder
     return this;
   }
 
-  public AndroidBundleBuilder setPackageType(String packageType) {
-    getArgForPopulating().setPackageType(Optional.of(packageType));
-    return this;
-  }
-
   public AndroidBundleBuilder setShouldSplitDex(boolean shouldSplitDex) {
     getArgForPopulating().setUseSplitDex(shouldSplitDex);
     return this;

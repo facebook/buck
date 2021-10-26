@@ -44,7 +44,10 @@ public interface AndroidGraphEnhancerArgs
 
   Optional<SourcePath> getModuleManifestSkeleton();
 
-  Optional<String> getPackageType();
+  @Value.Default
+  default PackageType getPackageType() {
+    return PackageType.DEBUG;
+  }
 
   @Hint(isDep = false)
   ImmutableSet<BuildTarget> getNoDx();

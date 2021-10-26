@@ -123,11 +123,6 @@ public class AndroidBinaryBuilder
     return this;
   }
 
-  public AndroidBinaryBuilder setPackageType(String packageType) {
-    getArgForPopulating().setPackageType(Optional.of(packageType));
-    return this;
-  }
-
   public AndroidBinaryBuilder setShouldSplitDex(boolean shouldSplitDex) {
     getArgForPopulating().setUseSplitDex(shouldSplitDex);
     return this;
