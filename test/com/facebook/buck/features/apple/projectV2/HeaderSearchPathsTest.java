@@ -161,6 +161,14 @@ public class HeaderSearchPathsTest {
   }
 
   @Test
+  public void testParseSwiftArgsWnoFlags() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    headerSearchPaths.parseCommandAndAddToSwiftIncludeFlags(
+        ImmutableList.of("-Xcc", "-Wno-unknown-warning-option"), builder);
+    assertEquals(ImmutableList.of("-Xcc", "-Wno-unknown-warning-option"), builder.build());
+  }
+
+  @Test
   public void testParseCxxArgsModuleName() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     headerSearchPaths.parseCommandAndAddToIncludeFlags(
@@ -188,5 +196,13 @@ public class HeaderSearchPathsTest {
         ImmutableList.of("-I", includePath), builder);
     assertEquals(
         ImmutableList.of("-I", projectFilesystem.resolve(includePath).toString()), builder.build());
+  }
+
+  @Test
+  public void testParseCxxArgsWnoFlags() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    headerSearchPaths.parseCommandAndAddToIncludeFlags(
+        ImmutableList.of("-Wno-unknown-warning-option"), builder);
+    assertEquals(ImmutableList.of("-Wno-unknown-warning-option"), builder.build());
   }
 }

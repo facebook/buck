@@ -370,6 +370,13 @@ class HeaderSearchPaths {
       // Pass <arg> to the C/C++/Objective-C compiler
       if (flag.equals("-Xcc")) {
         String nextFlag = iterator.next();
+
+        // Don't raise warnings that are suppressed for builds
+        if (nextFlag.startsWith("-Wno")) {
+          swiftIncludeFlags.add(flag);
+          swiftIncludeFlags.add(nextFlag);
+        }
+
         if (isIncludeOption(nextFlag)) {
           swiftIncludeFlags.add(flag);
           swiftIncludeFlags.add(
@@ -410,6 +417,11 @@ class HeaderSearchPaths {
 
       // Enable the modules feature for cxx
       if (flag.equals("-fcxx-modules")) {
+        includeFlags.add(flag);
+      }
+
+      // Don't raise warnings that are suppressed for builds
+      if (flag.startsWith("-Wno")) {
         includeFlags.add(flag);
       }
 
