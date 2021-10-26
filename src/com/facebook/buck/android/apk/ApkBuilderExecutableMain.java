@@ -27,53 +27,82 @@ import java.nio.file.Paths;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
-import java.util.logging.Logger; // NOPMD
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 /** Main entry point for executing {@link ApkBuilderUtils} calls. */
 public class ApkBuilderExecutableMain {
+  @Option(name = "--output-apk", required = true)
+  private String outputApk;
 
-  private static final Logger LOG = Logger.getLogger(ApkBuilderExecutableMain.class.getName());
+  @Option(name = "--resource-apk", required = true)
+  private String resourceApk;
+
+  @Option(name = "--dex-file", required = true)
+  private String dexFile;
+
+  @Option(name = "--keystore-path", required = true)
+  private String keystore;
+
+  @Option(name = "--keystore-properties-path", required = true)
+  private String keystoreProperties;
+
+  @Option(name = "--asset-directories-list", required = true)
+  private String assetDirectoriesList;
+
+  @Option(name = "--native-libraries-directories-list", required = true)
+  private String nativeLibrariesDirectoriesList;
+
+  @Option(name = "--zip-files-list", required = true)
+  private String zipFilesList;
+
+  @Option(name = "--jar-files-that-may-contain-resources-list", required = true)
+  private String jarFilesThatMayContainResourcesList;
 
   public static void main(String[] args) throws IOException {
-    if (args.length != 9) {
-      LOG.severe(
-          "Must specify the following mandatory arguments:\n"
-              + "output_apk resource_apk dex_file keystore_path keystore_properties_path "
-              + "asset_directories native_library_directories zip_files jar_files_that_may_contain_resources\n");
+    ApkBuilderExecutableMain main = new ApkBuilderExecutableMain();
+    CmdLineParser parser = new CmdLineParser(main);
+    try {
+      parser.parseArgument(args);
+      main.run();
+      System.exit(0);
+    } catch (CmdLineException e) {
+      System.err.println(e.getMessage());
+      parser.printUsage(System.err);
       System.exit(1);
     }
+  }
 
-    Path pathToOutputApkFile = Paths.get(args[0]);
-    Path resourceApk = Paths.get(args[1]);
-    Path dexFile = Paths.get(args[2]);
-    Path keystorePath = Paths.get(args[3]);
-    Path keystorePropertiesPath = Paths.get(args[4]);
-
+  private void run() throws IOException {
     ImmutableSet<Path> assetDirectories =
-        Files.readAllLines(Paths.get(args[5])).stream()
+        Files.readAllLines(Paths.get(assetDirectoriesList)).stream()
             .map(Paths::get)
             .collect(ImmutableSet.toImmutableSet());
 
     ImmutableSet<Path> nativeLibraryDirectories =
-        Files.readAllLines(Paths.get(args[6])).stream()
+        Files.readAllLines(Paths.get(nativeLibrariesDirectoriesList)).stream()
             .map(Paths::get)
             .collect(ImmutableSet.toImmutableSet());
 
     ImmutableSet<Path> zipFiles =
-        Files.readAllLines(Paths.get(args[7])).stream()
+        Files.readAllLines(Paths.get(zipFilesList)).stream()
             .map(Paths::get)
             .collect(ImmutableSet.toImmutableSet());
 
     ImmutableSet<Path> jarFilesThatMayContainResources =
-        Files.readAllLines(Paths.get(args[8])).stream()
+        Files.readAllLines(Paths.get(jarFilesThatMayContainResourcesList)).stream()
             .map(Paths::get)
             .collect(ImmutableSet.toImmutableSet());
 
+    Path keystorePath = Paths.get(keystore);
+    Path keystorePropertiesPath = Paths.get(keystoreProperties);
+
     try {
       ApkBuilderUtils.buildApk(
-          resourceApk,
-          pathToOutputApkFile,
-          dexFile,
+          Paths.get(resourceApk),
+          Paths.get(outputApk),
+          Paths.get(dexFile),
           assetDirectories,
           nativeLibraryDirectories,
           zipFiles,

@@ -8,6 +8,7 @@ java_library(
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//third-party/java/aosp:aosp",
         "//third-party/java/android:sdklib",
+        "//third-party/java/args4j:args4j",
         "//third-party/java/guava:guava",
     ],
 )
