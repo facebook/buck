@@ -393,8 +393,7 @@ class CxxInferCaptureRule extends ModernBuildRule<CxxInferCaptureRule.Impl>
               buildable.getDepFilePath(outputPathResolver).getPath(),
               sourcePathResolver.getRelativePath(filesystem, buildable.input).getPath(),
               outputPathResolver.resolvePath(buildable.output).getPath(),
-              DependencyTrackingMode.MAKEFILE,
-              false);
+              DependencyTrackingMode.MAKEFILE);
     } catch (Depfiles.HeaderVerificationException e) {
       throw new HumanReadableException(e);
     }
