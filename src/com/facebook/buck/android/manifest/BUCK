@@ -12,6 +12,7 @@ java_library(
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util:util",
+        "//third-party/java/args4j:args4j",
         "//third-party/java/aosp:aosp",
         "//third-party/java/guava:guava",
     ],

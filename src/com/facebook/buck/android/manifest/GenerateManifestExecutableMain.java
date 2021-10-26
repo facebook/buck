@@ -25,7 +25,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Logger; // NOPMD
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
 /**
  * Main entry point for executing {@link GenerateManifest} calls.
@@ -34,43 +36,59 @@ import java.util.logging.Logger; // NOPMD
  * <library_manifest_paths_file> <placeholder_entries_file> <output_path> <merge_report_path} .
  */
 public class GenerateManifestExecutableMain {
+  @Option(name = "--skeleton-manifest", required = true)
+  private String skeletonManifest;
 
-  private static final Logger LOG =
-      Logger.getLogger(GenerateManifestExecutableMain.class.getName());
+  @Option(name = "--module-name", required = true)
+  private String moduleName;
+
+  @Option(name = "--library-manifests-list", required = true)
+  private String libraryManifestsList;
+
+  @Option(name = "--placeholder-entries-list", required = true)
+  private String placeholderEntriesList;
+
+  @Option(name = "--output", required = true)
+  private String output;
+
+  @Option(name = "--merge-report", required = true)
+  private String mergeReport;
 
   public static void main(String[] args) throws IOException {
-    if (args.length != 6) {
-      LOG.severe(
-          "Must specify a skeleton manifest path, a module name, a file of library manifest paths, a file of placeholder entries an output path and a merge report path");
+    GenerateManifestExecutableMain main = new GenerateManifestExecutableMain();
+    CmdLineParser parser = new CmdLineParser(main);
+    try {
+      parser.parseArgument(args);
+      main.run();
+      System.exit(0);
+    } catch (CmdLineException e) {
+      System.err.println(e.getMessage());
+      parser.printUsage(System.err);
       System.exit(1);
     }
+  }
 
-    Path skeletonManifestPath = Paths.get(args[0]);
-    String moduleName = args[1];
-
-    Path libraryManifestsFilePath = Paths.get(args[2]);
+  private void run() throws IOException {
     ImmutableSet<Path> libraryManifestsFilePaths =
-        Files.readAllLines(libraryManifestsFilePath).stream()
+        Files.readAllLines(Paths.get(libraryManifestsList)).stream()
             .map(Paths::get)
             .collect(ImmutableSet.toImmutableSet());
 
-    Path placeholderEntriesFilePath = Paths.get(args[3]);
     ImmutableMap<String, String> placeholderEntries =
-        Files.readAllLines(placeholderEntriesFilePath).stream()
+        Files.readAllLines(Paths.get(placeholderEntriesList)).stream()
             .map(s -> s.split(" "))
             .collect(ImmutableMap.toImmutableMap(arr -> arr[0], arr -> arr[1]));
 
-    Path outputPath = Paths.get(args[4]);
-    Path mergeReportPath = Paths.get(args[5]);
+    Path outputPath = Paths.get(output);
 
     String xmlText =
         GenerateManifest.generateXml(
-            skeletonManifestPath,
+            Paths.get(skeletonManifest),
             moduleName,
             libraryManifestsFilePaths,
             placeholderEntries,
             outputPath,
-            mergeReportPath,
+            Paths.get(mergeReport),
             new StdLogger(StdLogger.Level.ERROR));
 
     try (ThrowingPrintWriter writer =
