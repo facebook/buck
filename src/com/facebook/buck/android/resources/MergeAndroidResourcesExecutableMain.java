@@ -28,32 +28,59 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Optional;
-import java.util.logging.Logger; // NOPMD
 import java.util.stream.Collectors;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
-/**
- * Main entry point for executing {@link MergeAndroidResources} calls.
- *
- * <p>Expected usage: {@code this_binary <symbol_file_info> <output_dir> <output_files_path>}.
- */
+/** Main entry point for executing {@link MergeAndroidResources} calls. */
 public class MergeAndroidResourcesExecutableMain {
+  @Option(name = "--symbol-file-info", required = true)
+  private String symbolFileInfo;
 
-  private static final Logger LOG =
-      Logger.getLogger(MergeAndroidResourcesExecutableMain.class.getName());
+  @Option(name = "--output-dir", required = true)
+  private String outputDirString;
+
+  @Option(name = "--output-files", required = true)
+  private String outputFiles;
+
+  @Option(name = "--force-final-resource-ids")
+  private boolean forceFinalResourceIds = false;
+
+  @Option(name = "--uber-r-dot-txt")
+  private String uberRDotTxtFilesList;
+
+  @Option(name = "--banned-duplicate-resource-types")
+  private String bannedDuplicateResourceTypesList;
+
+  @Option(name = "--override-symbols")
+  private String overrideSymbolsList;
+
+  @Option(name = "--duplicate-resource-allowlist-path")
+  private String duplicateResourceAllowlist;
+
+  @Option(name = "--union-package")
+  private String unionPackageString;
 
   public static void main(String[] args) throws IOException {
-    if (args.length < 3) {
-      LOG.severe(
-          "Must specify the following mandatory arguments:\n"
-              + "symbol_file_info output_dir output_files\n");
+    MergeAndroidResourcesExecutableMain main = new MergeAndroidResourcesExecutableMain();
+    CmdLineParser parser = new CmdLineParser(main);
+    try {
+      parser.parseArgument(args);
+      main.run();
+      System.exit(0);
+    } catch (CmdLineException e) {
+      System.err.println(e.getMessage());
+      parser.printUsage(System.err);
       System.exit(1);
     }
+  }
 
+  private void run() throws IOException {
     ImmutableMap.Builder<Path, String> symbolsFileToRDotJavaPackage = ImmutableMap.builder();
     ImmutableMap.Builder<Path, String> symbolsFileToTargetName = ImmutableMap.builder();
 
-    Path symbolsFileInfo = Paths.get(args[0]);
-    for (String line : Files.readAllLines(symbolsFileInfo)) {
+    for (String line : Files.readAllLines(Paths.get(symbolFileInfo))) {
       String[] parts = line.split(" ");
       Preconditions.checkState(parts.length == 3);
       Path symbolsFilePath = Paths.get(parts[0]);
@@ -63,54 +90,30 @@ public class MergeAndroidResourcesExecutableMain {
       symbolsFileToTargetName.put(symbolsFilePath, parts[2]);
     }
 
-    Path outputDir = Paths.get(args[1]);
-
-    String outputFiles = args[2];
-
-    boolean forceFinalResourceIds = false;
-    ImmutableList<Path> uberRDotTxt = ImmutableList.of();
+    ImmutableList<Path> uberRDotTxt =
+        uberRDotTxtFilesList != null
+            ? Files.readAllLines(Paths.get(uberRDotTxtFilesList)).stream()
+                .map(Paths::get)
+                .collect(ImmutableList.toImmutableList())
+            : ImmutableList.of();
     EnumSet<RDotTxtEntry.RType> bannedDuplicateResourceTypes =
-        EnumSet.noneOf(RDotTxtEntry.RType.class);
-    ImmutableList<Path> overrideSymbols = ImmutableList.of();
-    Optional<Path> duplicateResourceWhitelistPath = Optional.empty();
-    Optional<String> unionPackage = Optional.empty();
+        bannedDuplicateResourceTypesList != null
+            ? EnumSet.copyOf(
+                Files.readAllLines(Paths.get(bannedDuplicateResourceTypesList)).stream()
+                    .map(RDotTxtEntry.RType::valueOf)
+                    .collect(Collectors.toList()))
+            : EnumSet.noneOf(RDotTxtEntry.RType.class);
+    ImmutableList<Path> overrideSymbols =
+        overrideSymbolsList != null
+            ? Files.readAllLines(Paths.get(overrideSymbolsList)).stream()
+                .map(Paths::get)
+                .collect(ImmutableList.toImmutableList())
+            : ImmutableList.of();
+    Optional<Path> duplicateResourceAllowlistPath =
+        Optional.ofNullable(duplicateResourceAllowlist).map(Paths::get);
+    Optional<String> unionPackage = Optional.ofNullable(unionPackageString);
 
-    for (int argsIndex = 3; argsIndex < args.length; argsIndex += 2) {
-      String arg = args[argsIndex];
-
-      switch (arg) {
-        case "--force-final-resource-ids":
-          forceFinalResourceIds = Boolean.parseBoolean(args[argsIndex + 1]);
-          break;
-        case "--uber-r-dot-txt":
-          uberRDotTxt =
-              Files.readAllLines(Paths.get(args[argsIndex + 1])).stream()
-                  .map(Paths::get)
-                  .collect(ImmutableList.toImmutableList());
-          break;
-        case "--banned-duplicate-resource-types":
-          bannedDuplicateResourceTypes =
-              EnumSet.copyOf(
-                  Files.readAllLines(Paths.get(args[argsIndex + 1])).stream()
-                      .map(RDotTxtEntry.RType::valueOf)
-                      .collect(Collectors.toList()));
-          break;
-        case "--override-symbols":
-          overrideSymbols =
-              Files.readAllLines(Paths.get(args[argsIndex + 1])).stream()
-                  .map(Paths::get)
-                  .collect(ImmutableList.toImmutableList());
-          break;
-        case "--duplicate-resource-whitelist-path":
-          duplicateResourceWhitelistPath = Optional.of(Paths.get(args[argsIndex + 1]));
-          break;
-        case "--union-package":
-          unionPackage = Optional.of(args[argsIndex + 1]);
-          break;
-        default:
-          throw new RuntimeException("Unknown arg: " + arg);
-      }
-    }
+    Path outputDir = Paths.get(outputDirString);
 
     try {
       MergeAndroidResources.mergeAndroidResources(
@@ -119,7 +122,7 @@ public class MergeAndroidResourcesExecutableMain {
           symbolsFileToTargetName.build(),
           forceFinalResourceIds,
           bannedDuplicateResourceTypes,
-          duplicateResourceWhitelistPath,
+          duplicateResourceAllowlistPath,
           unionPackage,
           overrideSymbols,
           outputDir);
