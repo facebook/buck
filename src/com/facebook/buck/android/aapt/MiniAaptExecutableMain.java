@@ -29,37 +29,47 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
-import java.util.logging.Logger; // NOPMD
 import javax.xml.xpath.XPathExpressionException;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
-/**
- * Main entry point for executing {@link MiniAapt} calls.
- *
- * <p>Expected usage: {@code this_binary <resource_paths_file> <dep_symbols_path_file>
- * <output_path}.
- */
+/** Main entry point for executing {@link MiniAapt} calls. */
 public class MiniAaptExecutableMain {
 
-  private static final Logger LOG = Logger.getLogger(MiniAaptExecutableMain.class.getName());
+  @Option(name = "--resource-paths", required = true)
+  private String resourcePathsList;
+
+  @Option(name = "--dep-symbol-paths", required = true)
+  private String depSymbolsPathsList;
+
+  @Option(name = "--output-path", required = true)
+  private String outputPath;
 
   public static void main(String[] args) throws IOException {
-    if (args.length != 3) {
-      LOG.severe(
-          "Must specify a file containing resource paths, a file containing dep symbols, and an output path");
+    MiniAaptExecutableMain main = new MiniAaptExecutableMain();
+    CmdLineParser parser = new CmdLineParser(main);
+    try {
+      parser.parseArgument(args);
+      main.run();
+      System.exit(0);
+    } catch (CmdLineException e) {
+      System.err.println(e.getMessage());
+      parser.printUsage(System.err);
       System.exit(1);
     }
+  }
 
-    Path resourcePathsFilePath = Paths.get(args[0]);
+  private void run() throws IOException {
     ImmutableMap.Builder<Path, Path> resourcePaths = ImmutableMap.builder();
-    for (String line : Files.readAllLines(resourcePathsFilePath)) {
+    for (String line : Files.readAllLines(Paths.get(resourcePathsList))) {
       String[] parts = line.split(" ");
       Preconditions.checkState(parts.length == 2);
       resourcePaths.put(Paths.get(parts[0]), Paths.get(parts[1]));
     }
 
-    Path depSymbolsFilePath = Paths.get(args[1]);
     ImmutableSet<Path> depSymbolsFilePaths =
-        Files.readAllLines(depSymbolsFilePath).stream()
+        Files.readAllLines(Paths.get(depSymbolsPathsList)).stream()
             .map(Paths::get)
             .collect(ImmutableSet.toImmutableSet());
     ImmutableSet<RDotTxtEntry> references;
@@ -78,7 +88,7 @@ public class MiniAaptExecutableMain {
               "The following resources were not found: \n%s\n", Joiner.on('\n').join(missing)));
     }
 
-    try (ThrowingPrintWriter writer = new ThrowingPrintWriter(new FileOutputStream(args[2]))) {
+    try (ThrowingPrintWriter writer = new ThrowingPrintWriter(new FileOutputStream(outputPath))) {
       Set<RDotTxtEntry> sortedResources =
           ImmutableSortedSet.copyOf(
               Ordering.natural(), miniAapt.getResourceCollector().getResources());
