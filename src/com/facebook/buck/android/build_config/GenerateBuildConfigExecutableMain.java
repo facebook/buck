@@ -22,40 +22,56 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Logger; // NOPMD
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
-/**
- * Main entry point for generating BuildConfig.java.
- *
- * <p>Expected usage: {@code this_binary <source> <java_package> <use_constant_expressions>
- * <default_values_file> <values_file> <output_path} .
- */
+/** Main entry point for generating BuildConfig.java. */
 public class GenerateBuildConfigExecutableMain {
+  @Option(name = "--source", required = true)
+  private String source;
 
-  private static final Logger LOG =
-      Logger.getLogger(GenerateBuildConfigExecutableMain.class.getName());
+  @Option(name = "--java-package", required = true)
+  private String javaPackage;
+
+  @Option(name = "--use-constant-expressions", required = true)
+  private String useConstantExpressions;
+
+  @Option(name = "--default-values-file", required = true)
+  private String defaultValuesFile;
+
+  @Option(name = "--values-file")
+  private String valuesFile;
+
+  @Option(name = "--output", required = true)
+  private String output;
 
   public static void main(String[] args) throws IOException {
-    if (args.length < 5 || args.length > 6) {
-      LOG.severe(
-          "Must specify a source, a java package, whether to use constant expressions, a default values file, an output path and optionally a values file");
+    GenerateBuildConfigExecutableMain main = new GenerateBuildConfigExecutableMain();
+    CmdLineParser parser = new CmdLineParser(main);
+    try {
+      parser.parseArgument(args);
+      main.run();
+      System.exit(0);
+    } catch (CmdLineException e) {
+      System.err.println(e.getMessage());
+      parser.printUsage(System.err);
       System.exit(1);
     }
+  }
 
-    String source = args[0];
-    String javaPackage = args[1];
-    boolean useConstantExpressions = Boolean.parseBoolean(args[2]);
-    Path defaultValuesPath = Paths.get(args[3]);
-    Path outputPath = Paths.get(args[4]);
+  private void run() throws IOException {
+    Path defaultValuesPath = Paths.get(defaultValuesFile);
+    Path outputPath = Paths.get(output);
 
     BuildConfigFields defaultValues =
         BuildConfigFields.fromFieldDeclarations(Files.readAllLines(defaultValuesPath));
 
     BuildConfigFields fields;
-    if (args.length == 5) {
+    if (valuesFile == null) {
       fields = defaultValues;
     } else {
-      Path valuesPath = Paths.get(args[5]);
+      Path valuesPath = Paths.get(valuesFile);
       fields =
           defaultValues.putAll(
               BuildConfigFields.fromFieldDeclarations(Files.readAllLines(valuesPath)));
@@ -63,7 +79,7 @@ public class GenerateBuildConfigExecutableMain {
 
     String java =
         BuildConfigs.generateBuildConfigDotJava(
-            source, javaPackage, useConstantExpressions, fields);
+            source, javaPackage, Boolean.parseBoolean(useConstantExpressions), fields);
 
     try (ThrowingPrintWriter writer =
         new ThrowingPrintWriter(new FileOutputStream(outputPath.toFile()))) {
