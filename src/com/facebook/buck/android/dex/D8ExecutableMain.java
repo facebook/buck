@@ -27,95 +27,100 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Optional;
-import java.util.logging.Logger; // NOPMD
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
 
-/**
- * Main entry point for executing {@link com.android.tools.r8.D8Command} calls.
- *
- * <p>Expected usage: {@code this_binary <output_dex_file> <files_to_dex_path> <android_jar_path>
- * options}.
- */
+/** Main entry point for executing {@link com.android.tools.r8.D8Command} calls. */
 public class D8ExecutableMain {
+  @Option(name = "--output-dex-file", required = true)
+  private String outputDex;
 
-  private static final Logger LOG = Logger.getLogger(D8ExecutableMain.class.getName());
+  @Option(name = "--files-to-dex-list", required = true)
+  private String filesToDexList;
+
+  @Option(name = "--android-jar", required = true)
+  private String androidJar;
+
+  @Option(name = "--intermediate")
+  private boolean intermediate = false;
+
+  @Option(name = "--no-desugar")
+  private boolean noDesugar = false;
+
+  @Option(name = "--no-optimize")
+  private boolean noOptimize = false;
+
+  @Option(name = "--force-jumbo")
+  private boolean forceJumbo = false;
+
+  @Option(name = "--primary-dex-class-names-path")
+  private String primaryDexClassNamesList;
+
+  @Option(name = "--referenced-resources-path")
+  private String referencedResourcesList;
+
+  @Option(name = "--classpath-files")
+  private String classpathFilesList;
+
+  @Option(name = "--bucket-id")
+  private String bucketIdString;
+
+  @Option(name = "--min-sdk-version")
+  private String minSdkVersionString;
+
+  @Option(name = "--weight-estimate-path")
+  private String weightEstimateOutput;
 
   public static void main(String[] args) throws IOException {
-    if (args.length < 3) {
-      LOG.severe(
-          "Must specify an output dex file, a file containing the files to dex, and an android jar path, plus any other optional parameters");
+    D8ExecutableMain main = new D8ExecutableMain();
+    CmdLineParser parser = new CmdLineParser(main);
+    try {
+      parser.parseArgument(args);
+      main.run();
+      System.exit(0);
+    } catch (CmdLineException e) {
+      System.err.println(e.getMessage());
+      parser.printUsage(System.err);
       System.exit(1);
     }
+  }
 
-    Path outputDexFile = Paths.get(args[0]);
-    Path filesToDexPath = Paths.get(args[1]);
+  private void run() throws IOException {
     ImmutableSet<Path> filesToDex =
-        Files.readAllLines(filesToDexPath).stream()
+        Files.readAllLines(Paths.get(filesToDexList)).stream()
             .map(Paths::get)
             .collect(ImmutableSet.toImmutableSet());
-    Path androidJarPath = Paths.get(args[2]);
 
-    Optional<Path> primaryDexClassNamesPath = Optional.empty();
-    Optional<Path> referencedResourcesPath = Optional.empty();
-    ImmutableSet.Builder<D8Options> d8OptionsBuilder = ImmutableSet.builder();
-    Collection<Path> classpathFiles = null;
-    Optional<String> bucketId = Optional.empty();
-    Optional<Integer> minSdkVersion = Optional.empty();
-    Optional<Path> weightEstimatePath = Optional.empty();
+    Optional<Path> primaryDexClassNamesPath =
+        Optional.ofNullable(primaryDexClassNamesList).map(Paths::get);
+    Optional<Path> referencedResourcesPath =
+        Optional.ofNullable(referencedResourcesList).map(Paths::get);
 
-    for (int argsConsumed = 3; argsConsumed < args.length; argsConsumed++) {
-      String arg = args[argsConsumed];
+    ImmutableSet<Path> classpathFiles =
+        classpathFilesList == null
+            ? ImmutableSet.of()
+            : Files.readAllLines(Paths.get(classpathFilesList)).stream()
+                .map(Paths::get)
+                .collect(ImmutableSet.toImmutableSet());
 
-      switch (arg) {
-        case "--intermediate":
-          d8OptionsBuilder.add(D8Options.INTERMEDIATE);
-          break;
-        case "--no-optimize":
-          d8OptionsBuilder.add(D8Options.NO_OPTIMIZE);
-          break;
-        case "--force-jumbo":
-          d8OptionsBuilder.add(D8Options.FORCE_JUMBO);
-          break;
-        case "--no-desugar":
-          d8OptionsBuilder.add(D8Options.NO_DESUGAR);
-          break;
-        case "--primary-dex-class-names-path":
-          primaryDexClassNamesPath = Optional.of(Paths.get(args[++argsConsumed]));
-          break;
-        case "--referenced-resources-path":
-          referencedResourcesPath = Optional.of(Paths.get(args[++argsConsumed]));
-          break;
-        case "--classpathFiles":
-          Path classpathFilesPath = Paths.get(args[++argsConsumed]);
-          classpathFiles =
-              Files.readAllLines(classpathFilesPath).stream()
-                  .map(Paths::get)
-                  .collect(ImmutableSet.toImmutableSet());
-          break;
-        case "--bucket-id":
-          bucketId = Optional.of(args[++argsConsumed]);
-          break;
-        case "--min-sdk-version":
-          minSdkVersion = Optional.of(Integer.parseInt(args[++argsConsumed]));
-          break;
-        case "--weight-estimate-path":
-          weightEstimatePath = Optional.of(Paths.get(args[++argsConsumed]));
-          break;
-        default:
-          throw new RuntimeException("Unknown arg: " + arg);
-      }
-    }
+    Optional<Integer> minSdkVersion =
+        Optional.ofNullable(minSdkVersionString).map(Integer::parseInt);
+    Optional<Path> weightEstimatePath = Optional.ofNullable(weightEstimateOutput).map(Paths::get);
+    Optional<String> bucketId = Optional.ofNullable(bucketIdString);
 
     try {
       Collection<String> referencedResources =
           D8Utils.runD8Command(
               new D8Utils.D8DiagnosticsHandler(),
-              outputDexFile,
+              Paths.get(outputDex),
               filesToDex,
-              d8OptionsBuilder.build(),
+              getD8Options(),
               primaryDexClassNamesPath,
-              androidJarPath,
+              Paths.get(androidJar),
               classpathFiles,
               bucketId,
               minSdkVersion);
@@ -147,5 +152,23 @@ public class D8ExecutableMain {
     }
 
     System.exit(0);
+  }
+
+  private Set<D8Options> getD8Options() {
+    ImmutableSet.Builder<D8Options> d8OptionsBuilder = ImmutableSet.builder();
+    if (intermediate) {
+      d8OptionsBuilder.add(D8Options.INTERMEDIATE);
+    }
+    if (noOptimize) {
+      d8OptionsBuilder.add(D8Options.NO_OPTIMIZE);
+    }
+    if (forceJumbo) {
+      d8OptionsBuilder.add(D8Options.FORCE_JUMBO);
+    }
+    if (noDesugar) {
+      d8OptionsBuilder.add(D8Options.NO_DESUGAR);
+    }
+
+    return d8OptionsBuilder.build();
   }
 }

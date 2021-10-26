@@ -5,6 +5,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//third-party/java/args4j:args4j",
         "//third-party/java/d8:d8",
         "//third-party/java/guava:guava",
     ],
