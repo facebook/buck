@@ -42,24 +42,39 @@ public class ProviderBackedUnresolvedAppleCxxPlatform implements UnresolvedApple
   private final Flavor flavor;
   private final UnresolvedCxxPlatform cxxPlatformProvider;
   private final UnresolvedSwiftPlatform swiftPlatformProvider;
+  private final Optional<AppleCxxPlatform> fallbackPlatform;
 
-  public ProviderBackedUnresolvedAppleCxxPlatform(BuildTarget toolchainSetTarget, Flavor flavor) {
+  public ProviderBackedUnresolvedAppleCxxPlatform(
+      BuildTarget toolchainSetTarget, Flavor flavor, Optional<AppleCxxPlatform> fallbackPlatform) {
     this.toolchainSetTarget = toolchainSetTarget;
     this.flavor = flavor;
     this.cxxPlatformProvider = new AppleUnresolvedCxxPlatform();
     this.swiftPlatformProvider = new AppleUnresolvedSwiftPlatform();
+    this.fallbackPlatform = fallbackPlatform;
   }
 
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-    return ImmutableList.of(toolchainSetTarget);
+    ImmutableList.Builder<BuildTarget> deps = ImmutableList.builder();
+    deps.add(toolchainSetTarget);
+    if (fallbackPlatform.isPresent()) {
+      deps.addAll(
+          fallbackPlatform.get().getCodesignProvider().getParseTimeDeps(targetConfiguration));
+    }
+    return deps.build();
   }
 
   @Override
   public AppleCxxPlatform resolve(BuildRuleResolver ruleResolver) {
     BuildRule rule = ruleResolver.getRule(toolchainSetTarget);
     Verify.verify(rule instanceof AppleToolchainSetBuildRule);
-    return ((AppleToolchainSetBuildRule) rule).getAppleCxxPlatform(flavor);
+    AppleToolchainSetBuildRule toolchainSetBuildRule = (AppleToolchainSetBuildRule) rule;
+    if (!toolchainSetBuildRule.hasApplePlatforms() && fallbackPlatform.isPresent()) {
+      // The toolchain_set is empty but we have a target defined. This can happen when a select
+      // evaluates to []. In this case we should fall back to a static platform if available.
+      return fallbackPlatform.get();
+    }
+    return toolchainSetBuildRule.getAppleCxxPlatform(flavor);
   }
 
   @Override
@@ -98,7 +113,7 @@ public class ProviderBackedUnresolvedAppleCxxPlatform implements UnresolvedApple
 
     @Override
     public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-      return ProviderBackedUnresolvedAppleCxxPlatform.this.getParseTimeDeps(targetConfiguration);
+      return ImmutableList.of(toolchainSetTarget);
     }
 
     @Override
@@ -112,7 +127,7 @@ public class ProviderBackedUnresolvedAppleCxxPlatform implements UnresolvedApple
 
     @Override
     public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-      return ProviderBackedUnresolvedAppleCxxPlatform.this.getParseTimeDeps(targetConfiguration);
+      return ImmutableList.of(toolchainSetTarget);
     }
 
     @Override

@@ -43,4 +43,8 @@ public class AppleToolchainSetBuildRule extends NoopBuildRule {
   public AppleCxxPlatform getAppleCxxPlatform(Flavor flavor) {
     return appleCxxPlatformsFlavorDomain.getValue(flavor);
   }
+
+  public boolean hasApplePlatforms() {
+    return !appleCxxPlatformsFlavorDomain.getFlavors().isEmpty();
+  }
 }

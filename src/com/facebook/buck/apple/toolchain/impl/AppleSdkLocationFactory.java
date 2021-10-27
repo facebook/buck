@@ -47,9 +47,6 @@ public class AppleSdkLocationFactory implements ToolchainFactory<AppleSdkLocatio
     AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
     Optional<BuildTarget> toolchainSetTarget =
         appleConfig.getAppleToolchainSetTarget(toolchainTargetConfiguration);
-    if (toolchainSetTarget.isPresent()) {
-      return Optional.empty();
-    }
 
     Optional<Path> appleDeveloperDir =
         toolchainProvider
@@ -58,6 +55,10 @@ public class AppleSdkLocationFactory implements ToolchainFactory<AppleSdkLocatio
                 toolchainTargetConfiguration,
                 AppleDeveloperDirectoryProvider.class)
             .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
+
+    if (toolchainSetTarget.isPresent() && !appleDeveloperDir.isPresent()) {
+      return Optional.empty();
+    }
 
     AppleToolchainProvider appleToolchainProvider =
         toolchainProvider.getByName(

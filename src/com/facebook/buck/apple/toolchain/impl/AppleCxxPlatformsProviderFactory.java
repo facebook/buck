@@ -52,18 +52,11 @@ public class AppleCxxPlatformsProviderFactory
       ToolchainCreationContext context,
       TargetConfiguration toolchainTargetConfiguration) {
     AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
-    Optional<BuildTarget> toolchainSetTarget =
-        appleConfig.getAppleToolchainSetTarget(toolchainTargetConfiguration);
-    if (toolchainSetTarget.isPresent()) {
-      return Optional.of(
-          AppleCxxPlatformsProvider.of(createDynamicPlatforms(toolchainSetTarget.get())));
-    }
     Optional<AppleSdkLocation> appleSdkLocation =
         toolchainProvider.getByNameIfPresent(
             AppleSdkLocation.DEFAULT_NAME, toolchainTargetConfiguration, AppleSdkLocation.class);
     Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths =
         appleSdkLocation.map(AppleSdkLocation::getAppleSdkPaths);
-
     Optional<AppleToolchainProvider> appleToolchainProvider =
         toolchainProvider.getByNameIfPresent(
             AppleToolchainProvider.DEFAULT_NAME,
@@ -71,21 +64,21 @@ public class AppleCxxPlatformsProviderFactory
             AppleToolchainProvider.class);
     Optional<ImmutableMap<String, AppleToolchain>> appleToolchains =
         appleToolchainProvider.map(AppleToolchainProvider::getAppleToolchains);
-
-    try {
+    ImmutableList<AppleCxxPlatform> appleCxxPlatforms =
+        buildStaticAppleCxxPlatforms(
+            context.getBuckConfig(), context.getFilesystem(), appleSdkPaths, appleToolchains);
+    Optional<BuildTarget> toolchainSetTarget =
+        appleConfig.getAppleToolchainSetTarget(toolchainTargetConfiguration);
+    if (toolchainSetTarget.isPresent()) {
       return Optional.of(
           AppleCxxPlatformsProvider.of(
-              create(
-                  context.getBuckConfig(),
-                  context.getFilesystem(),
-                  appleSdkPaths,
-                  appleToolchains)));
-    } catch (HumanReadableException e) {
-      throw ToolchainInstantiationException.wrap(e);
+              createDynamicPlatforms(toolchainSetTarget.get(), appleCxxPlatforms)));
+    } else {
+      return Optional.of(AppleCxxPlatformsProvider.of(createStaticPlatforms(appleCxxPlatforms)));
     }
   }
 
-  private static FlavorDomain<UnresolvedAppleCxxPlatform> create(
+  private static ImmutableList<AppleCxxPlatform> buildStaticAppleCxxPlatforms(
       BuckConfig config,
       ProjectFilesystem filesystem,
       Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths,
@@ -93,7 +86,16 @@ public class AppleCxxPlatformsProviderFactory
     ImmutableList<AppleCxxPlatform> appleCxxPlatforms =
         AppleCxxPlatforms.buildAppleCxxPlatforms(
             appleSdkPaths, appleToolchains, filesystem, config);
-    checkApplePlatforms(appleCxxPlatforms);
+    try {
+      checkApplePlatforms(appleCxxPlatforms);
+    } catch (HumanReadableException e) {
+      throw ToolchainInstantiationException.wrap(e);
+    }
+    return appleCxxPlatforms;
+  }
+
+  private static FlavorDomain<UnresolvedAppleCxxPlatform> createStaticPlatforms(
+      ImmutableList<AppleCxxPlatform> appleCxxPlatforms) {
     ImmutableList<UnresolvedAppleCxxPlatform> unresolvedAppleCxxPlatforms =
         appleCxxPlatforms.stream()
             .map(platform -> StaticUnresolvedAppleCxxPlatform.of(platform, platform.getFlavor()))
@@ -101,7 +103,8 @@ public class AppleCxxPlatformsProviderFactory
     return FlavorDomain.from("Apple C++ Platform", unresolvedAppleCxxPlatforms);
   }
 
-  private static void checkApplePlatforms(ImmutableList<AppleCxxPlatform> appleCxxPlatforms) {
+  private static void checkApplePlatforms(ImmutableList<AppleCxxPlatform> appleCxxPlatforms)
+      throws HumanReadableException {
     Map<Flavor, AppleCxxPlatform> platformsMap = new HashMap<>();
     for (AppleCxxPlatform platform : appleCxxPlatforms) {
       Flavor flavor = platform.getFlavor();
@@ -121,10 +124,24 @@ public class AppleCxxPlatformsProviderFactory
   }
 
   private static FlavorDomain<UnresolvedAppleCxxPlatform> createDynamicPlatforms(
-      BuildTarget toolchainSetTarget) {
+      BuildTarget toolchainSetTarget, Iterable<AppleCxxPlatform> fallbackPlatforms) {
+
+    ImmutableMap.Builder<Flavor, AppleCxxPlatform> fallbackPlatformBuilder = ImmutableMap.builder();
+    for (AppleCxxPlatform platform : fallbackPlatforms) {
+      fallbackPlatformBuilder.put(platform.getFlavor(), platform);
+    }
+    ImmutableMap<Flavor, AppleCxxPlatform> fallbackPlatformMap = fallbackPlatformBuilder.build();
+
     ImmutableList<UnresolvedAppleCxxPlatform> unresolvedAppleCxxPlatforms =
         ApplePlatform.ALL_PLATFORM_FLAVORS.stream()
-            .map(flavor -> new ProviderBackedUnresolvedAppleCxxPlatform(toolchainSetTarget, flavor))
+            .map(
+                flavor ->
+                    new ProviderBackedUnresolvedAppleCxxPlatform(
+                        toolchainSetTarget,
+                        flavor,
+                        fallbackPlatformMap.containsKey(flavor)
+                            ? Optional.of(fallbackPlatformMap.get(flavor))
+                            : Optional.empty()))
             .collect(ImmutableList.toImmutableList());
     return FlavorDomain.from("Apple C++ Platform", unresolvedAppleCxxPlatforms);
   }

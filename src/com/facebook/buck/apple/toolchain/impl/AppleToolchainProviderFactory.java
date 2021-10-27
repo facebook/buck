@@ -42,10 +42,6 @@ public class AppleToolchainProviderFactory implements ToolchainFactory<AppleTool
     AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
     Optional<BuildTarget> toolchainSetTarget =
         appleConfig.getAppleToolchainSetTarget(toolchainTargetConfiguration);
-    if (toolchainSetTarget.isPresent()) {
-      return Optional.empty();
-    }
-
     Optional<Path> appleDeveloperDir =
         toolchainProvider
             .getByNameIfPresent(
@@ -53,6 +49,10 @@ public class AppleToolchainProviderFactory implements ToolchainFactory<AppleTool
                 toolchainTargetConfiguration,
                 AppleDeveloperDirectoryProvider.class)
             .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
+
+    if (toolchainSetTarget.isPresent() && !appleDeveloperDir.isPresent()) {
+      return Optional.empty();
+    }
 
     Optional<AppleToolchainProvider> appleToolchainProvider;
     try {

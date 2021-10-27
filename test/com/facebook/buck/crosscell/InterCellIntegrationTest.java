@@ -454,9 +454,7 @@ public class InterCellIntegrationTest {
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
-        containsString(
-            "Overridden cxx:cc path not found: /does/not/exist\n\n"
-                + "This error happened while trying to get dependency 'secondary//:cxxlib' of target '//:cxxbinary'"));
+        containsString("Overridden cxx:cc path not found: /does/not/exist\n"));
   }
 
   @Test
