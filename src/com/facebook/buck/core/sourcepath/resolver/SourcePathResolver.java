@@ -22,10 +22,12 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -42,10 +44,17 @@ public interface SourcePathResolver {
 
   /**
    * Returns the {@link RelPath} instances associated with the given {@link SourcePath} instances
-   * relative to the given {@link ProjectFilesystem}.
+   * relative to the given {@link ProjectFilesystem}, sorted by {@code RelPath#comparator()}.
    */
   ImmutableSortedSet<RelPath> getAllRelativePaths(
       ProjectFilesystem projectFilesystem, Collection<? extends SourcePath> sourcePaths);
+
+  /**
+   * Returns the {@link RelPath} instances associated with the given {@link SourcePath} instances
+   * relative to the given {@link ProjectFilesystem}, with the same order as the given List.
+   */
+  ImmutableList<RelPath> getAllRelativePaths(
+      ProjectFilesystem projectFilesystem, List<? extends SourcePath> sourcePaths);
 
   /**
    * @return The {@link RelPath} instances the {@code sourcePath} refers to, relative to its owning

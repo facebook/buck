@@ -32,8 +32,8 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.stream.RichStream;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
@@ -64,10 +64,10 @@ public class GenerateManifestStepTest {
 
     RelPath expectedOutputPath = RelPath.get("AndroidManifest.expected.xml");
     RelPath skeletonPath = RelPath.get("AndroidManifestSkeleton.xml");
-    ImmutableSet<RelPath> libraryManifestFiles =
+    ImmutableList<RelPath> libraryManifestFiles =
         RichStream.of("AndroidManifestA.xml", "AndroidManifestB.xml", "AndroidManifestC.xml")
             .map(RelPath::get)
-            .toImmutableSet();
+            .toImmutableList();
 
     RelPath outputPath = RelPath.get("AndroidManifest.xml");
     RelPath mergeReportPath = RelPath.get("merge-report.txt");
@@ -110,10 +110,10 @@ public class GenerateManifestStepTest {
 
     RelPath expectedOutputPath = RelPath.get("ModuleManifest.expected.xml");
     RelPath skeletonPath = RelPath.get("ModuleManifestSkeleton.xml");
-    ImmutableSet<RelPath> libraryManifestFiles =
+    ImmutableList<RelPath> libraryManifestFiles =
         RichStream.of("AndroidManifestA.xml", "AndroidManifestB.xml", "AndroidManifestC.xml")
             .map(RelPath::get)
-            .toImmutableSet();
+            .toImmutableList();
 
     RelPath outputPath = RelPath.get("AndroidManifest.xml");
     RelPath mergeReportPath = RelPath.get("merge-report.txt");

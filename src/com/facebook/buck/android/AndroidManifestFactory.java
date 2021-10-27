@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.ManifestEntries;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 
 public class AndroidManifestFactory {
@@ -42,7 +42,7 @@ public class AndroidManifestFactory {
       SourcePath skeleton) {
     AndroidTransitiveDependencyGraph transitiveDependencyGraph =
         new AndroidTransitiveDependencyGraph(resolver.getAllRules(deps));
-    ImmutableSet<SourcePath> manifestFiles = transitiveDependencyGraph.findManifestFiles();
+    ImmutableList<SourcePath> manifestFiles = transitiveDependencyGraph.findManifestFiles();
 
     return new AndroidManifest(
         buildTarget,

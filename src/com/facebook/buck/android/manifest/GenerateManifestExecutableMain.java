@@ -18,8 +18,8 @@ package com.facebook.buck.android.manifest;
 
 import com.android.common.utils.StdLogger;
 import com.facebook.buck.util.ThrowingPrintWriter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -69,10 +69,10 @@ public class GenerateManifestExecutableMain {
   }
 
   private void run() throws IOException {
-    ImmutableSet<Path> libraryManifestsFilePaths =
+    ImmutableList<Path> libraryManifestsFilePaths =
         Files.readAllLines(Paths.get(libraryManifestsList)).stream()
             .map(Paths::get)
-            .collect(ImmutableSet.toImmutableSet());
+            .collect(ImmutableList.toImmutableList());
 
     ImmutableMap<String, String> placeholderEntries =
         Files.readAllLines(Paths.get(placeholderEntriesList)).stream()

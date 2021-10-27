@@ -276,7 +276,7 @@ class AndroidBinaryResourcesGraphEnhancer {
                 graphBuilder,
                 moduleManifestSkeleton.get(),
                 module,
-                packageableCollection.getAndroidManifestPieces().get(module),
+                ImmutableList.copyOf(packageableCollection.getAndroidManifestPieces().get(module)),
                 manifestEntries,
                 shouldExecuteInSeparateProcess);
         graphBuilder.addToIndex(moduleManifestMergeRule);
@@ -502,7 +502,7 @@ class AndroidBinaryResourcesGraphEnhancer {
               graphBuilder,
               manifestSkeleton.get(),
               module,
-              packageableCollection.getAndroidManifestPieces().values(),
+              ImmutableList.copyOf(packageableCollection.getAndroidManifestPieces().values()),
               manifestEntries,
               shouldExecuteInSeparateProcess);
       graphBuilder.addToIndex(manifestMergeRule);

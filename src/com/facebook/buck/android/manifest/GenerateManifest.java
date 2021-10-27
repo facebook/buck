@@ -26,7 +26,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
@@ -41,7 +40,7 @@ public class GenerateManifest {
   public static String generateXml(
       Path skeletonManifestPath,
       String moduleName,
-      ImmutableSet<Path> libraryManifestPaths,
+      ImmutableList<Path> libraryManifestPaths,
       ImmutableMap<String, String> placeholders,
       Path outManifestPath,
       Path mergeReportPath,

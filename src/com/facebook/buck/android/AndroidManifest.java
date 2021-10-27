@@ -35,12 +35,10 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.model.BuildableCommand;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
 
 /**
  * {@link AndroidManifest} is a {@link BuildRule} that can generate an Android manifest from a
@@ -77,7 +75,7 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
       SourcePathRuleFinder finder,
       SourcePath skeletonFile,
       APKModule module,
-      Collection<SourcePath> manifestFiles,
+      ImmutableList<SourcePath> manifestFiles,
       ManifestEntries manifestEntries,
       boolean shouldExecuteInSeparateProcess) {
     super(
@@ -87,7 +85,7 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
         new Impl(
             skeletonFile,
             module,
-            ImmutableSortedSet.copyOf(manifestFiles),
+            manifestFiles,
             manifestEntries,
             new OutputPath(
                 String.format(
@@ -108,7 +106,7 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
     @AddToRuleKey private final SourcePath skeletonFile;
     @AddToRuleKey private final String moduleName;
     /** These must be sorted so the rule key is stable. */
-    @AddToRuleKey private final ImmutableSortedSet<SourcePath> manifestFiles;
+    @AddToRuleKey private final ImmutableList<SourcePath> manifestFiles;
 
     @AddToRuleKey private final ManifestEntries manifestEntries;
 
@@ -118,7 +116,7 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
     Impl(
         SourcePath skeletonFile,
         APKModule module,
-        ImmutableSortedSet<SourcePath> manifestFiles,
+        ImmutableList<SourcePath> manifestFiles,
         ManifestEntries manifestEntries,
         OutputPath outputPath,
         OutputPath mergeReportOutputPath,
@@ -144,7 +142,7 @@ public class AndroidManifest extends ModernBuildRule<AndroidManifest.Impl> {
               sourcePathResolverAdapter.getRelativePath(filesystem, skeletonFile).toString(),
               sourcePathResolverAdapter.getAllRelativePaths(filesystem, manifestFiles).stream()
                   .map(RelPath::toString)
-                  .collect(ImmutableSet.toImmutableSet()),
+                  .collect(ImmutableList.toImmutableList()),
               outputPathResolver.resolvePath(outputPath).toString(),
               outputPathResolver.resolvePath(mergeReportOutputPath).toString(),
               moduleName,

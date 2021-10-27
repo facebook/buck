@@ -20,6 +20,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Set;
@@ -36,9 +37,9 @@ public class AndroidTransitiveDependencyGraph {
     this.rulesToTraverseForTransitiveDeps = deps;
   }
 
-  public ImmutableSet<SourcePath> findManifestFiles() {
+  public ImmutableList<SourcePath> findManifestFiles() {
 
-    ImmutableSet.Builder<SourcePath> manifestFiles = ImmutableSet.builder();
+    ImmutableList.Builder<SourcePath> manifestFiles = ImmutableList.builder();
 
     new AbstractBreadthFirstTraversal<BuildRule>(rulesToTraverseForTransitiveDeps) {
       @Override

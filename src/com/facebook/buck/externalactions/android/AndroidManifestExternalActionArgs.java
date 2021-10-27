@@ -20,7 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.externalactions.model.JsonArgs;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import java.util.Collection;
+import com.google.common.collect.ImmutableList;
 import java.util.Map;
 
 /** Args for {@link AndroidManifestExternalAction}. */
@@ -32,7 +32,7 @@ public abstract class AndroidManifestExternalActionArgs implements JsonArgs {
   abstract String getSkeletonManifestPath();
 
   @JsonProperty("libraryManifestPaths")
-  abstract Collection<String> getLibraryManifestPaths();
+  abstract ImmutableList<String> getLibraryManifestPaths();
 
   @JsonProperty("getOutputManifestPath")
   abstract String getOutputManifestPath();
@@ -49,7 +49,7 @@ public abstract class AndroidManifestExternalActionArgs implements JsonArgs {
   /** Returns an instance of {@link AndroidManifestExternalActionArgs}. */
   public static AndroidManifestExternalActionArgs of(
       String skeletonManifestPath,
-      Collection<String> libraryManifestPaths,
+      ImmutableList<String> libraryManifestPaths,
       String outputManifestPath,
       String mergeReportPath,
       String moduleName,

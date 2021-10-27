@@ -33,12 +33,14 @@ import com.facebook.buck.core.sourcepath.resolver.impl.utils.RelativePathMapUtil
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -129,6 +131,14 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
     return sourcePaths.stream()
         .flatMap(sourcePath -> getRelativePath(projectFilesystem, sourcePath).stream())
         .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
+  }
+
+  @Override
+  public ImmutableList<RelPath> getAllRelativePaths(
+      ProjectFilesystem projectFilesystem, List<? extends SourcePath> sourcePaths) {
+    return sourcePaths.stream()
+        .flatMap(sourcePath -> getRelativePath(projectFilesystem, sourcePath).stream())
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override
