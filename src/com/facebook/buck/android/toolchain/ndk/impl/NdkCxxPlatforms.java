@@ -868,6 +868,15 @@ public class NdkCxxPlatforms {
           "-B" + PathFormatter.pathWithUnixSeparators(toolchainPaths.getLibPath()));
     }
 
+    if (getNdkMajorVersion(version) >= 22) {
+      flags.add(
+          "-L" + PathFormatter.pathWithUnixSeparators(toolchainPaths.getPlatformToolchainLibPath()),
+          "-L" + PathFormatter.pathWithUnixSeparators(toolchainPaths.getPlatformSysroot()));
+      flags.add(
+          "-B" + PathFormatter.pathWithUnixSeparators(toolchainPaths.getPlatformToolchainBinPath()),
+          "-B" + PathFormatter.pathWithUnixSeparators(toolchainPaths.getPlatformSysroot()));
+    }
+
     // Add the path to the C/C++ runtime libraries, if necessary.
     if (cxxRuntime != NdkCxxRuntime.SYSTEM) {
       flags.add(
@@ -1156,6 +1165,10 @@ public class NdkCxxPlatforms {
                     "{gcc_compiler_version}", targetConfiguration.getCompiler().getGccVersion());
             s = s.replace("{hostname}", hostName);
             s = s.replace("{target_platform}", targetConfiguration.getTargetAppPlatform());
+            s =
+                s.replace(
+                    "{target_platform_level}",
+                    String.valueOf(targetConfiguration.getTargetAppPlatformLevel()));
             s = s.replace("{target_arch}", targetConfiguration.getTargetArch().toString());
             s = s.replace("{target_arch_abi}", targetConfiguration.getTargetArchAbi().toString());
           }
@@ -1216,7 +1229,12 @@ public class NdkCxxPlatforms {
 
     /** @return the path to arch-specific include files; only use with unified headers */
     Path getArchSpecificIncludes() {
-      return processDirectoryPathPattern("sysroot/usr/include/{toolchain_target}");
+      if (ndkMajorVersion < 22) {
+        return processDirectoryPathPattern("sysroot/usr/include/{toolchain_target}");
+      }
+
+      return processDirectoryPathPattern(
+          "toolchains/llvm/prebuilt/{hostname}/sysroot/usr/include/{toolchain_target}");
     }
 
     /**
@@ -1224,6 +1242,9 @@ public class NdkCxxPlatforms {
      *     architecture.
      */
     Path getIncludeSysroot() {
+      if (ndkMajorVersion >= 22) {
+        return processDirectoryPathPattern("toolchains/llvm/prebuilt/{hostname}/sysroot");
+      }
       if (isUnifiedHeaders()) {
         return processDirectoryPathPattern("sysroot");
       }
@@ -1231,7 +1252,12 @@ public class NdkCxxPlatforms {
     }
 
     Path getPlatformSysroot() {
-      return processDirectoryPathPattern("platforms/{target_platform}/arch-{target_arch}");
+      if (ndkMajorVersion < 22) {
+        return processDirectoryPathPattern("platforms/{target_platform}/arch-{target_arch}");
+      }
+
+      return processDirectoryPathPattern(
+          "toolchains/llvm/prebuilt/{hostname}/sysroot/usr/lib/{toolchain_target}/{target_platform_level}");
     }
 
     Path getLibexecGccToolPath() {
@@ -1277,6 +1303,14 @@ public class NdkCxxPlatforms {
       } else {
         return processDirectoryPathPattern(getNdkToolRoot(), "bin");
       }
+    }
+
+    Path getPlatformToolchainLibPath() {
+      return processDirectoryPathPattern(getNdkToolRoot(), "{toolchain_target}/lib64");
+    }
+
+    Path getPlatformToolchainBinPath() {
+      return processDirectoryPathPattern(getNdkToolRoot(), "{toolchain_target}/bin");
     }
 
     private Path getGccToolchainBinPath() {
