@@ -638,6 +638,9 @@ class BuckTool(object):
             "-Dfile.encoding=UTF-8",
             "-XX:SoftRefLRUPolicyMSPerMB=0",
             "-XX:+UseG1GC",
+            # Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+            # https://stackoverflow.com/a/16535804/5208808
+            "-XX:-MaxFDLimit",
         ]
         command.extend(
             self._get_java_args(self._get_buck_version_uid(), extra_default_options)
@@ -878,6 +881,9 @@ class BuckTool(object):
                 ),
                 "-XX:+UseG1GC",
                 "-XX:MaxHeapFreeRatio=40",
+                # Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+                # https://stackoverflow.com/a/16535804/5208808
+                "-XX:-MaxFDLimit",
             ]
 
             command.extend(extra_default_options)

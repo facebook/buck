@@ -55,6 +55,9 @@ public class UploaderLauncher {
 
     String[] args = {
       JavaRuntimeUtils.getBucksJavaBinCommand(),
+      // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+      // https://stackoverflow.com/a/16535804/5208808
+      "-XX:-MaxFDLimit",
       "-cp",
       buckClasspath,
       UPLOADER_MAIN_CLASS,

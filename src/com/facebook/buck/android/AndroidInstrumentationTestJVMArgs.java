@@ -101,13 +101,17 @@ abstract class AndroidInstrumentationTestJVMArgs {
       ImmutableList.Builder<String> args,
       Supplier<Path> classpathArgfile) {
     if (!shouldUseClasspathArgfile()) {
-      // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
+      // NOTE(agallagher): These probably don't belong here, but buck integration tests need
       // to find the test runner classes, so propagate these down via the relevant properties.
       args.add(
           String.format(
               "-D%s=%s",
               FileClassPathRunner.TESTRUNNER_CLASSES_PROPERTY, getTestRunnerClasspath()));
     }
+
+    // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+    // https://stackoverflow.com/a/16535804/5208808
+    args.add("-XX:-MaxFDLimit");
 
     if (getDeviceSerial().isPresent()) {
       args.add(String.format("-Dbuck.device.id=%s", getDeviceSerial().get()));
@@ -200,15 +204,14 @@ abstract class AndroidInstrumentationTestJVMArgs {
 
   /** Writes an argfile for the classpath to a file, which is supported in Java 9+. */
   public void writeClasspathArgfile(ProjectFilesystem filesystem, Path argfile) throws IOException {
-    StringBuilder builder = new StringBuilder();
-    builder.append("-classpath");
-    builder.append(System.lineSeparator());
-    builder.append('"');
-    builder.append(escapePathForArgfile(getClasspathContents(filesystem)));
-    builder.append('"');
-    builder.append(System.lineSeparator());
-
-    filesystem.writeContentsToPath(builder.toString(), argfile);
+    filesystem.writeContentsToPath(
+        "-classpath"
+            + System.lineSeparator()
+            + '"'
+            + escapePathForArgfile(getClasspathContents(filesystem))
+            + '"'
+            + System.lineSeparator(),
+        argfile);
   }
 
   private String escapePathForArgfile(String path) {
