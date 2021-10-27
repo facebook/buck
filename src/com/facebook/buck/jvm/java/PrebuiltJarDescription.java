@@ -110,9 +110,7 @@ public class PrebuiltJarDescription
     // becomes a performance issue in practice, then we will explore reducing the dependencies of
     // the GWT module.
     SourcePath input;
-    if (arg.getGwtJar().isPresent()) {
-      input = arg.getGwtJar().get();
-    } else if (arg.getSourceJar().isPresent()) {
+    if (arg.getSourceJar().isPresent()) {
       input = arg.getSourceJar().get();
     } else {
       input = arg.getBinaryJar();
@@ -178,8 +176,6 @@ public class PrebuiltJarDescription
     SourcePath getBinaryJar();
 
     Optional<SourcePath> getSourceJar();
-
-    Optional<SourcePath> getGwtJar();
 
     Optional<String> getJavadocUrl();
 
