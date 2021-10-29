@@ -1,0 +1,1 @@
+#define BOSSMACRO 1

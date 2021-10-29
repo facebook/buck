@@ -1,0 +1,14 @@
+apple_test(
+    name = "Test",
+    info_plist = "Test.plist",
+    srcs = ["test.m"],
+    deps = [":Lib"],
+)
+
+apple_library(
+    name = "Lib",
+    headers = ["private_hdr.h"],
+    modular = True,
+    reexport_all_header_dependencies = False,
+    tests = [":Test"],
+)

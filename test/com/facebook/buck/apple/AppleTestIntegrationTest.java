@@ -1169,4 +1169,16 @@ public class AppleTestIntegrationTest {
     assertTrue(Files.isSymbolicLink(link.getPath()));
     assertTrue(Files.isSameFile(target, Files.readSymbolicLink(link.getPath())));
   }
+
+  @Test
+  public void testPrivateHeadersOfModularLibraryVisible() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_of_modular_lib", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build", "--config", "cxx.default_platform=macosx-x86_64", "//:Test");
+    result.assertSuccess();
+  }
 }

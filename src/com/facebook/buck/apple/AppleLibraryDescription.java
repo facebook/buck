@@ -1104,15 +1104,25 @@ public class AppleLibraryDescription
                 buildTarget, cellRoots, graphBuilder, cxxPlatform)
             ::convert);
 
+    ImmutableSet.Builder<Flavor> headerFlavors = ImmutableSet.builder();
+    headerFlavors.add(platformEntry.getKey());
+    if (visibility.getValue() == HeaderVisibility.PUBLIC) {
+      headerFlavors.add(
+          CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
+          HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor());
+    } else {
+      // Test targets need the private headers of libraries that they are testing, which may be
+      // modular.
+      headerFlavors.add(
+          CxxLibraryDescription.Type.HEADERS.getFlavor(), HeaderMode.HEADER_MAP_ONLY.getFlavor());
+    }
+
     HeaderSymlinkTree symlinkTree =
         (HeaderSymlinkTree)
             graphBuilder.requireRule(
                 baseTarget
                     .withoutFlavors(LIBRARY_TYPE.getFlavors())
-                    .withAppendedFlavors(
-                        CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
-                        platformEntry.getKey(),
-                        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor()));
+                    .withAppendedFlavors(headerFlavors.build()));
     cxxPreprocessorInputBuilder.addIncludes(
         CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
     CxxPreprocessorInput cxxPreprocessorInput = cxxPreprocessorInputBuilder.build();
