@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.starlark.eventhandler.ConsoleEventHandler;
 import com.facebook.buck.core.starlark.eventhandler.EventKind;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.edenfs.EdenMount;
 import com.facebook.buck.edenfs.EdenThriftGlobber;
@@ -59,6 +60,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
   private final TypeCoercerFactory typeCoercerFactory;
   private final ParserPythonInterpreterProvider pythonInterpreterProvider;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
+
+  private static final Logger LOG = Logger.get(DefaultProjectBuildFileParserFactory.class);
 
   public DefaultProjectBuildFileParserFactory(
       TypeCoercerFactory typeCoercerFactory,
@@ -289,17 +292,20 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     }
   }
 
-  private static void throwIfEdenNoFallback(SkylarkGlobHandler skylarkGlobHandler, String reason) {
+  private static void throwIfEdenNoFallbackOrLog(
+      SkylarkGlobHandler skylarkGlobHandler, String reason) {
     if (skylarkGlobHandler == SkylarkGlobHandler.EDEN_THRIFT_NO_FALLBACK) {
       throw new RuntimeException("eden is not available: " + reason + ", and fallback is disabled");
     }
+
+    LOG.info("eden globber not used: " + reason + ", falling back to Watchman");
   }
 
   private static GlobberFactory edenThriftGlobberFactory(
       SkylarkGlobHandler skylarkGlobHandler, ProjectBuildFileParserOptions buildFileParserOptions) {
     Optional<EdenClientResourcePool> edenClient = buildFileParserOptions.getEdenClient();
     if (!edenClient.isPresent()) {
-      throwIfEdenNoFallback(skylarkGlobHandler, "no eden");
+      throwIfEdenNoFallbackOrLog(skylarkGlobHandler, "no eden");
       return watchmanGlobberFactory(buildFileParserOptions);
     }
 
@@ -307,7 +313,7 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
         EdenMount.createEdenMountForProjectRoot(
             buildFileParserOptions.getProjectRoot(), edenClient.get());
     if (!mountPoint.isPresent()) {
-      throwIfEdenNoFallback(skylarkGlobHandler, "no mount point");
+      throwIfEdenNoFallbackOrLog(skylarkGlobHandler, "no mount point");
       return watchmanGlobberFactory(buildFileParserOptions);
     }
 
