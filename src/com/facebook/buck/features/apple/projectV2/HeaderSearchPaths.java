@@ -60,7 +60,6 @@ import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
 import com.facebook.buck.cxx.CxxPreprocessAndCompile;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
@@ -107,7 +106,6 @@ class HeaderSearchPaths {
   private final Cells cells;
   private final Cell projectCell;
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform cxxPlatform;
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final XCodeDescriptions xcodeDescriptions;
   private final TargetGraph targetGraph;
@@ -133,7 +131,6 @@ class HeaderSearchPaths {
       Cells cells,
       Cell projectCell,
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform cxxPlatform,
       UnresolvedCxxPlatform unresolvedCxxPlatform,
       RuleKeyConfiguration ruleKeyConfiguration,
       XCodeDescriptions xcodeDescriptions,
@@ -148,7 +145,6 @@ class HeaderSearchPaths {
     this.cells = cells;
     this.projectCell = projectCell;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.cxxPlatform = cxxPlatform;
     this.unresolvedCxxPlatform = unresolvedCxxPlatform;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.xcodeDescriptions = xcodeDescriptions;
@@ -782,7 +778,13 @@ class HeaderSearchPaths {
 
   private Flavor getDefaultPlatformFlavor(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
-    return targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
+    return targetNode
+        .getConstructorArg()
+        .getDefaultPlatform()
+        .orElse(
+            unresolvedCxxPlatform
+                .resolve(actionGraphBuilder, targetNode.getBuildTarget().getTargetConfiguration())
+                .getFlavor());
   }
 
   private ImmutableSortedMap<Path, SourcePath> getPublicCxxHeaders(
@@ -818,7 +820,7 @@ class HeaderSearchPaths {
       ActionGraphBuilder graphBuilder = actionGraphBuilder;
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
-      String platform = cxxPlatform.getFlavor().toString();
+      String platform = getDefaultPlatformFlavor(targetNode).toString();
       ImmutableList<SourceSortedSet> platformHeaders =
           arg.getExportedPlatformHeaders().getMatchingValues(platform);
 
@@ -907,7 +909,7 @@ class HeaderSearchPaths {
       ActionGraphBuilder graphBuilder = actionGraphBuilder;
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
-      String platform = cxxPlatform.getFlavor().toString();
+      String platform = getDefaultPlatformFlavor(targetNode).toString();
       ImmutableList<SourceSortedSet> platformHeaders =
           arg.getPlatformHeaders().getMatchingValues(platform);
 
@@ -1129,8 +1131,7 @@ class HeaderSearchPaths {
     // update this "if" statement. If, long-term, we move towards using modules for all Objective-C
     // code, the merged header map will no longer work at all.
     if (Utils.targetNodeContainsSwift(targetNode, appleConfig)) {
-      Flavor defaultPlatformFlavor =
-          targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
+      Flavor defaultPlatformFlavor = getDefaultPlatformFlavor(targetNode);
 
       visitRecursiveHeaderSymlinkTrees(
           targetNode,
@@ -1179,8 +1180,7 @@ class HeaderSearchPaths {
   private ImmutableSet<Path> collectRecursiveSwiftIncludePaths(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-    Flavor defaultPlatformFlavor =
-        targetNode.getConstructorArg().getDefaultPlatform().orElse(cxxPlatform.getFlavor());
+    Flavor defaultPlatformFlavor = getDefaultPlatformFlavor(targetNode);
 
     visitRecursiveHeaderSymlinkTrees(
         targetNode,
@@ -1300,7 +1300,8 @@ class HeaderSearchPaths {
           pathRelativizer.outputDirToRootRelative(
               HalideCompile.headerOutputPath(
                       buildTarget.withFlavors(
-                          HalideLibraryDescription.HALIDE_COMPILE_FLAVOR, cxxPlatform.getFlavor()),
+                          HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
+                          getDefaultPlatformFlavor(targetNode)),
                       projectFilesystem,
                       halideNode.getConstructorArg().getFunctionName())
                   .getParent()));

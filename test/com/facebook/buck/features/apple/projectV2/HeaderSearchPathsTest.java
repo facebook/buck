@@ -33,7 +33,6 @@ import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -70,8 +69,6 @@ public class HeaderSearchPathsTest {
     SourcePathResolverAdapter defaultPathResolver =
         AppleProjectHelper.defaultSourcePathResolverAdapter(actionGraphBuilder);
 
-    CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
-
     ProjectSourcePathResolver projectSourcePathResolver =
         new ProjectSourcePathResolver(
             cells.getRootCell(), defaultPathResolver, targetGraph, actionGraphBuilder);
@@ -93,7 +90,6 @@ public class HeaderSearchPathsTest {
             cells,
             projectCell,
             cxxBuckConfig,
-            cxxPlatform,
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             TestRuleKeyConfigurationFactory.create(),
             xcodeDescriptions,

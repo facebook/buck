@@ -52,7 +52,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
 import com.facebook.buck.features.filegroup.FilegroupBuilder;
@@ -124,7 +123,6 @@ public class XcodeNativeTargetGeneratorTest {
     SourcePathResolverAdapter defaultPathResolver =
         AppleProjectHelper.defaultSourcePathResolverAdapter(actionGraphBuilder);
 
-    CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
     ImmutableSet<Flavor> appleCxxFlavors = ImmutableSet.of();
 
     ProjectSourcePathResolver projectSourcePathResolver =
@@ -150,7 +148,6 @@ public class XcodeNativeTargetGeneratorTest {
             cells,
             projectCell,
             cxxBuckConfig,
-            cxxPlatform,
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             TestRuleKeyConfigurationFactory.create(),
             xcodeDescriptions,
@@ -192,7 +189,6 @@ public class XcodeNativeTargetGeneratorTest {
             defaultPathResolver,
             projectSourcePathResolver,
             ProjectGeneratorOptions.builder().build(),
-            CxxPlatformUtils.DEFAULT_PLATFORM,
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             appleCxxFlavors,
             actionGraphBuilder,

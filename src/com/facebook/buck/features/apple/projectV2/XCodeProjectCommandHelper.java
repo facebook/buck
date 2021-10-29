@@ -51,10 +51,8 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
-import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -576,9 +574,6 @@ public class XCodeProjectCommandHelper {
                   inputTarget.getTargetConfiguration(),
                   CxxPlatformsProvider.class);
 
-      CxxPlatform defaultCxxPlatform =
-          LegacyToolchainProvider.getLegacyTotallyUnsafe(
-              cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform());
       Cell workspaceCell = cells.getCell(inputTarget.getCell());
 
       UnresolvedCxxPlatform unresolvedCxxPlatform =
@@ -613,7 +608,6 @@ public class XCodeProjectCommandHelper {
               focusedTargetMatcher,
               excludedTargetMatcher,
               !appleConfig.getXcodeDisableParallelizeBuild(),
-              defaultCxxPlatform,
               unresolvedCxxPlatform,
               appleCxxFlavors,
               buckConfig.getView(ParserConfig.class).getBuildFileName().getName(),

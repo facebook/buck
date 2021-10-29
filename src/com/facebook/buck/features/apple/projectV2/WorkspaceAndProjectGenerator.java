@@ -46,7 +46,6 @@ import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
@@ -98,7 +97,6 @@ public class WorkspaceAndProjectGenerator {
   private final FocusedTargetMatcher excludedTargetMatcher;
   private final ProjectGeneratorOptions projectGeneratorOptions;
   private final boolean parallelizeBuild;
-  private final CxxPlatform defaultCxxPlatform;
   private final ImmutableSet<Flavor> appleCxxFlavors;
 
   private final Map<String, SchemeGenerator> schemeGenerators = new HashMap<>();
@@ -148,7 +146,6 @@ public class WorkspaceAndProjectGenerator {
       FocusedTargetMatcher focusedTargetMatcher,
       FocusedTargetMatcher excludedTargetMatcher,
       boolean parallelizeBuild,
-      CxxPlatform defaultCxxPlatform,
       UnresolvedCxxPlatform unresolvedCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       String buildFileName,
@@ -172,7 +169,6 @@ public class WorkspaceAndProjectGenerator {
     this.workspaceBuildTarget = workspaceBuildTarget;
     this.projectGeneratorOptions = projectGeneratorOptions;
     this.parallelizeBuild = parallelizeBuild;
-    this.defaultCxxPlatform = defaultCxxPlatform;
     this.unresolvedCxxPlatform = unresolvedCxxPlatform;
     this.appleCxxFlavors = appleCxxFlavors;
     this.buildFileName = buildFileName;
@@ -487,7 +483,6 @@ public class WorkspaceAndProjectGenerator {
             workspaceArguments.getSrcTarget().get(),
             targetsInRequiredProjects,
             excludedTargetMatcher,
-            defaultCxxPlatform,
             unresolvedCxxPlatform,
             appleCxxFlavors,
             actionGraphBuilder,
@@ -833,7 +828,12 @@ public class WorkspaceAndProjectGenerator {
                   modularNode
                       .getConstructorArg()
                       .getDefaultPlatform()
-                      .orElse(defaultCxxPlatform.getFlavor());
+                      .orElse(
+                          unresolvedCxxPlatform
+                              .resolve(
+                                  actionGraphBuilder,
+                                  modularNode.getBuildTarget().getTargetConfiguration())
+                              .getFlavor());
               return NodeHelper.getModularMapTarget(
                   modularNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, defaultPlatformFlavor);
             })

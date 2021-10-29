@@ -151,7 +151,6 @@ public class XcodeNativeTargetGenerator {
 
   private final String buildFileName;
   private final ProjectGeneratorOptions options;
-  private final CxxPlatform defaultCxxPlatform;
 
   private final ActionGraphBuilder actionGraphBuilder;
   private final SourcePathResolverAdapter defaultPathResolver;
@@ -190,7 +189,6 @@ public class XcodeNativeTargetGenerator {
       SourcePathResolverAdapter defaultPathResolver,
       ProjectSourcePathResolver projectSourcePathResolver,
       ProjectGeneratorOptions options,
-      CxxPlatform defaultCxxPlatform,
       UnresolvedCxxPlatform unresolvedCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       ActionGraphBuilder actionGraphBuilder,
@@ -210,7 +208,6 @@ public class XcodeNativeTargetGenerator {
     this.projectFilesystem = projectFilesystem;
     this.buildFileName = buildFileName;
     this.options = options;
-    this.defaultCxxPlatform = defaultCxxPlatform;
     this.unresolvedCxxPlatform = unresolvedCxxPlatform;
     this.appleCxxFlavors = appleCxxFlavors;
     this.actionGraphBuilder = actionGraphBuilder;
@@ -504,14 +501,20 @@ public class XcodeNativeTargetGenerator {
       // This assumes that there's a 'default' variant of the rule to generate
       // headers from.
       if (HalideLibraryDescription.isPlatformSupported(
-          halideTargetNode.getConstructorArg(), defaultCxxPlatform)) {
+          halideTargetNode.getConstructorArg(),
+          unresolvedCxxPlatform.resolve(
+              actionGraphBuilder, targetNode.getBuildTarget().getTargetConfiguration()))) {
 
         // Run the compiler once at project time to generate the header
         // file needed for compilation if the Halide target is for the default
         // platform.
         requiredBuildTargetsBuilder.add(
             buildTarget.withFlavors(
-                HalideLibraryDescription.HALIDE_COMPILE_FLAVOR, defaultCxxPlatform.getFlavor()));
+                HalideLibraryDescription.HALIDE_COMPILE_FLAVOR,
+                unresolvedCxxPlatform
+                    .resolve(
+                        actionGraphBuilder, targetNode.getBuildTarget().getTargetConfiguration())
+                    .getFlavor()));
       }
     } else if (description instanceof AbstractGenruleDescription) {
       TargetNode<AbstractGenruleDescription.CommonArg> genruleNode =

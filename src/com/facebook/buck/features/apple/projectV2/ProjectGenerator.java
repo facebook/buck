@@ -44,7 +44,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ProjectGenerationEvent;
@@ -93,7 +92,6 @@ public class ProjectGenerator {
 
   private final String buildFileName;
   private final ProjectGeneratorOptions options;
-  private final CxxPlatform defaultCxxPlatform;
 
   private final ActionGraphBuilder actionGraphBuilder;
   private final SourcePathResolverAdapter defaultPathResolver;
@@ -136,7 +134,6 @@ public class ProjectGenerator {
       BuildTarget workspaceTarget,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       FocusedTargetMatcher excludedTargetMatcher,
-      CxxPlatform defaultCxxPlatform,
       UnresolvedCxxPlatform unresolvedCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       ActionGraphBuilder actionGraphBuilder,
@@ -160,7 +157,6 @@ public class ProjectGenerator {
     this.options = options;
     this.workspaceTarget = workspaceTarget;
     this.targetsInRequiredProjects = targetsInRequiredProjects;
-    this.defaultCxxPlatform = defaultCxxPlatform;
     this.unresolvedCxxPlatform = unresolvedCxxPlatform;
     this.appleCxxFlavors = appleCxxFlavors;
     this.actionGraphBuilder = actionGraphBuilder;
@@ -258,7 +254,6 @@ public class ProjectGenerator {
               cells,
               projectCell,
               cxxBuckConfig,
-              defaultCxxPlatform,
               unresolvedCxxPlatform,
               ruleKeyConfiguration,
               xcodeDescriptions,
@@ -300,7 +295,6 @@ public class ProjectGenerator {
               defaultPathResolver,
               projectSourcePathResolver,
               options,
-              defaultCxxPlatform,
               unresolvedCxxPlatform,
               appleCxxFlavors,
               actionGraphBuilder,
