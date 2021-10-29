@@ -38,10 +38,8 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
@@ -59,7 +57,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.UncheckedExecutionException;
@@ -162,26 +159,7 @@ public class ProjectGenerator {
     this.actionGraphBuilder = actionGraphBuilder;
     this.buildContext = buildContext;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
-    this.defaultPathResolver =
-        new SourcePathResolverAdapter(
-            new AbstractSourcePathResolver() {
-              @Override
-              protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
-                  DefaultBuildTargetSourcePath targetSourcePath) {
-                throw new UnsupportedOperationException();
-              }
-
-              @Override
-              public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
-                throw new UnsupportedOperationException();
-              }
-
-              @Override
-              protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
-                  BuildTargetSourcePath sourcePath) {
-                throw new UnsupportedOperationException();
-              }
-            });
+    this.defaultPathResolver = actionGraphBuilder.getSourcePathResolver();
     this.buckEventBus = buckEventBus;
 
     this.projectSourcePathResolver =

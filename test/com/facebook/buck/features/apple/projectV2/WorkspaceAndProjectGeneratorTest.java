@@ -62,6 +62,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.FakeActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -97,6 +98,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -267,7 +269,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -304,7 +306,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -342,7 +344,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -570,7 +572,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -662,7 +664,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -731,7 +733,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -787,7 +789,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -859,7 +861,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -941,7 +943,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -1001,7 +1003,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -1065,7 +1067,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -1152,7 +1154,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             appleFlavors,
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
@@ -1234,7 +1236,7 @@ public class WorkspaceAndProjectGeneratorTest {
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
             ImmutableSet.of(),
             "BUCK",
-            null,
+            new FakeActionGraphBuilder(new HashMap<>()),
             FakeBuildContext.NOOP_CONTEXT,
             getFakeBuckEventBus(),
             TestRuleKeyConfigurationFactory.create(),
