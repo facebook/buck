@@ -641,6 +641,8 @@ class BuckTool(object):
             # Directs the VM to refrain from setting the file descriptor limit to the default maximum.
             # https://stackoverflow.com/a/16535804/5208808
             "-XX:-MaxFDLimit",
+            # allow reflective access into jdk classes
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
         ]
         command.extend(
             self._get_java_args(self._get_buck_version_uid(), extra_default_options)
@@ -884,6 +886,8 @@ class BuckTool(object):
                 # Directs the VM to refrain from setting the file descriptor limit to the default maximum.
                 # https://stackoverflow.com/a/16535804/5208808
                 "-XX:-MaxFDLimit",
+                # allow reflective access into jdk classes
+                "--add-opens=java.base/java.lang=ALL-UNNAMED",
             ]
 
             command.extend(extra_default_options)

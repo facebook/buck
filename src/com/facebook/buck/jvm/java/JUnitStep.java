@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -156,13 +157,14 @@ public class JUnitStep extends ShellStep {
         process -> {
           Optional<Long> pid = Optional.empty();
           Platform platform = context.getPlatform();
+          Class<? extends Process> processClass = process.getClass();
           try {
             switch (platform) {
               case LINUX:
               case FREEBSD:
               case MACOS:
                 {
-                  Field field = process.getClass().getDeclaredField("pid");
+                  Field field = processClass.getDeclaredField("pid");
                   field.setAccessible(true);
                   try {
                     pid = Optional.of((long) field.getInt(process));
@@ -173,7 +175,7 @@ public class JUnitStep extends ShellStep {
                 }
               case WINDOWS:
                 {
-                  Field field = process.getClass().getDeclaredField("handle");
+                  Field field = processClass.getDeclaredField("handle");
                   field.setAccessible(true);
                   try {
                     pid = Optional.of(field.getLong(process));
@@ -186,15 +188,16 @@ public class JUnitStep extends ShellStep {
                 LOG.info("Unknown platform; unable to obtain the process id!");
                 break;
             }
-          } catch (NoSuchFieldException e) {
+          } catch (NoSuchFieldException | InaccessibleObjectException e) {
             LOG.error(e);
           }
 
           Optional<Path> jstack =
               new ExecutableFinder(context.getPlatform())
                   .getOptionalExecutable(Paths.get("jstack"), context.getEnvironment());
-          if (!pid.isPresent() || !jstack.isPresent()) {
+          if (pid.isEmpty() || jstack.isEmpty()) {
             LOG.info("Unable to print a stack trace for timed out test!");
+            context.getStdErr().println("Test has timed out!");
             return;
           }
 

@@ -322,7 +322,7 @@ public class TestRunning {
     ListenableFuture<Unit> uberFuture =
         MoreFutures.addListenableCallback(
             parallelTestStepsFuture,
-            new FutureCallback<List<TestResults>>() {
+            new FutureCallback<>() {
               @Override
               public void onSuccess(List<TestResults> parallelTestResults) {
                 LOG.debug("Parallel tests completed, running separate tests...");
