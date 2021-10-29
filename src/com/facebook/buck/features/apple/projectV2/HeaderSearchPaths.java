@@ -451,7 +451,9 @@ class HeaderSearchPaths {
             // Include system headers
             "-isystem",
             // Include vfsoverlay
-            "-ivfsoverlay")
+            "-ivfsoverlay",
+            // Include resource dir
+            "-resource-dir")
         .contains(flag);
   }
 
