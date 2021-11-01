@@ -180,9 +180,7 @@ class FlagParser {
             .orElse(ImmutableList.of()));
 
     ImmutableList.Builder<String> cFlagsBuilder = ImmutableList.builder();
-    if (com.facebook.buck.features.apple.projectV2.Utils.getShouldIndexViaBuildFlagsForTargetNode(
-            targetNode, appleConfig)
-        || indexViaCompileArgs) {
+    if (indexViaCompileArgs) {
       // We use argfiles to prevent increasing the already large xcconfig files in size
       try {
         cFlagsBuilder.add(

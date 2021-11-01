@@ -132,17 +132,4 @@ public class Utils {
     }
     return AppleDescriptions.targetNodeContainsSwiftSourceCode(targetNode);
   }
-
-  /**
-   * Determines whether indexing via build flags should be enabled for the given target node.
-   *
-   * @param targetNode The target node for the indexing via build flags check.
-   * @param appleConfig The Apple config for the project.
-   */
-  public static boolean getShouldIndexViaBuildFlagsForTargetNode(
-      TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode, AppleConfig appleConfig) {
-    // Only enable indexing with build flags if the target contains Swift
-    return appleConfig.getProjectGeneratorIndexViaBuildFlags()
-        && Utils.targetNodeContainsSwift(targetNode, appleConfig);
-  }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.features.apple.projectV2;
 
 import static com.facebook.buck.apple.AppleBundleDescription.WATCH_OS_FLAVOR;
 import static com.facebook.buck.apple.AppleDescriptions.SWIFT_COMPILE_FLAVOR;
-import static com.facebook.buck.apple.AppleDescriptions.SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR;
 import static com.facebook.buck.apple.AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR;
 import static com.facebook.buck.apple.AppleVFSOverlayBuildRule.VFS_OVERLAY_FILENAME;
 import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR;
@@ -95,7 +94,6 @@ import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -153,7 +151,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
@@ -648,115 +645,6 @@ public class ProjectGeneratorTest {
                 + " -Xcc -ivfsoverlay"
                 + projectFilesystem.resolve(vfsOverlayPath)));
     assertThat(settings.get("OTHER_CFLAGS"), containsString("-fmodule-name=lib"));
-  }
-
-  @Test
-  public void testModularLibraryMixedSourcesFlagsWithIndexViaBuildFlags()
-      throws IOException, InterruptedException {
-    ImmutableMap<String, ImmutableMap<String, String>> sections =
-        ImmutableMap.of(
-            "apple",
-            ImmutableMap.of(
-                "force_dsym_mode_in_build_with_buck",
-                "false",
-                "project_generator_index_via_build_flags",
-                "true",
-                AppleConfig.BUILD_SCRIPT,
-                AppleProjectHelper.getBuildScriptPath(projectFilesystem).toString()));
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder().setFilesystem(projectFilesystem).setSections(sections).build();
-    appleConfig = buckConfig.getView(AppleConfig.class);
-
-    BuildTarget pchTarget = BuildTargetFactory.newInstance("//foo", "pch");
-    TargetNode<?> pchNode =
-        CxxPrecompiledHeaderBuilder.createBuilder(pchTarget, projectFilesystem)
-            .setSrc(FakeSourcePath.of("Foo/Foo-Prefix.pch"))
-            .build();
-
-    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
-
-    TargetNode<?> libNode =
-        AppleLibraryBuilder.createBuilder(libTarget, projectFilesystem)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
-            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("HeaderGroup1/bar.h")))
-            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
-            .setSwiftVersion(Optional.of("3"))
-            .setModular(true)
-            .setPrefixHeader(
-                Optional.of(
-                    ExplicitBuildTargetSourcePath.of(pchTarget, Paths.get("Foo/Foo-Prefix.pch"))))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(ImmutableSet.of(libNode, pchNode), libTarget);
-
-    ProjectGenerator.Result result =
-        projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
-    PBXProject project = result.generatedProject;
-    assertNotNull(project);
-    PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
-
-    BuildTarget exportedHeadersTarget =
-        libTarget.withAppendedFlavors(
-            CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor(),
-            DEFAULT_PLATFORM.getFlavor(),
-            HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor());
-    RelPath exportedHeadersPath =
-        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), exportedHeadersTarget, "%s");
-
-    BuildTarget vfsOverlayTarget =
-        libTarget.withAppendedFlavors(
-            SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR, DEFAULT_PLATFORM.getFlavor());
-    RelPath vfsOverlayPath =
-        BuildTargetPaths.getGenPath(
-            projectFilesystem.getBuckPaths(), vfsOverlayTarget, "%s/" + VFS_OVERLAY_FILENAME);
-
-    BuildTarget generatedSwiftHeaderMapTarget =
-        libTarget.withAppendedFlavors(
-            SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR, DEFAULT_PLATFORM.getFlavor());
-    RelPath swiftHeaderMapPath =
-        BuildTargetPaths.getGenPath(
-            projectFilesystem.getBuckPaths(), generatedSwiftHeaderMapTarget, "%s.hmap");
-
-    ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
-    assertFalse(settings.containsKey("HEADER_SEARCH_PATHS"));
-    assertFalse(settings.containsKey("SWIFT_INDEX_PATHS"));
-
-    // we need to read the flags from the response files
-    Pattern responseFileRegex = Pattern.compile("@(.+\\.argfile)");
-    Matcher m = responseFileRegex.matcher(settings.get("OTHER_SWIFT_FLAGS"));
-    assertTrue(m.find());
-    RelPath swiftResponseFilePath = projectFilesystem.relativize(Paths.get(m.group(1)));
-    List<String> swiftArgs = projectFilesystem.readLines(swiftResponseFilePath.getPath());
-    assertThat(swiftArgs, hasItem("-import-underlying-module"));
-    assertThat(swiftArgs, hasItem("-ivfsoverlay" + projectFilesystem.resolve(vfsOverlayPath)));
-    assertThat(swiftArgs, hasItem("-I" + projectFilesystem.resolve(exportedHeadersPath)));
-
-    m = responseFileRegex.matcher(settings.get("OTHER_CFLAGS"));
-    assertTrue(m.find());
-    RelPath clangResponseFilePath = projectFilesystem.relativize(Paths.get(m.group(1)));
-    List<String> clangArgs = projectFilesystem.readLines(clangResponseFilePath.getPath());
-    assertEquals(clangArgs.get(0), "-include");
-    assertEquals(clangArgs.get(1), projectFilesystem.resolve("Foo/Foo-Prefix.pch").toString());
-    assertThat(clangArgs, hasItem("-I" + projectFilesystem.resolve(swiftHeaderMapPath)));
-
-    BuildTarget privateHeadersTarget =
-        libTarget.withAppendedFlavors(
-            DEFAULT_PLATFORM.getFlavor(), CxxLibraryDescription.Type.HEADERS.getFlavor());
-    BuildTarget swiftCompileTarget =
-        libTarget.withAppendedFlavors(SWIFT_COMPILE_FLAVOR, DEFAULT_PLATFORM.getFlavor());
-
-    assertEquals(
-        result.requiredBuildTargets,
-        ImmutableSet.of(
-            privateHeadersTarget,
-            generatedSwiftHeaderMapTarget,
-            vfsOverlayTarget,
-            exportedHeadersTarget,
-            privateHeadersTarget,
-            pchTarget,
-            swiftCompileTarget));
   }
 
   @Test
