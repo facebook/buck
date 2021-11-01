@@ -17,13 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.exopackage.ExopackageMode;
-import java.util.Optional;
 import java.util.Set;
 
 public interface HasExopackageArgs {
-
-  // TODO(natthu): mark this as deprecated.
-  Optional<Boolean> isExopackage();
-
   Set<ExopackageMode> getExopackageModes();
 }

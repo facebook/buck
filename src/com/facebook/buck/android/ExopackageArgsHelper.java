@@ -17,25 +17,16 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.exopackage.ExopackageMode;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.util.log.Logger;
 import java.util.EnumSet;
 
 public class ExopackageArgsHelper {
 
-  private static final Logger LOG = Logger.get(ExopackageArgsHelper.class);
-
-  static EnumSet<ExopackageMode> detectExopackageModes(
-      BuildTarget buildTarget, HasExopackageArgs exopackageArgs) {
+  static EnumSet<ExopackageMode> detectExopackageModes(HasExopackageArgs exopackageArgs) {
     EnumSet<ExopackageMode> exopackageModes = EnumSet.noneOf(ExopackageMode.class);
     if (!exopackageArgs.getExopackageModes().isEmpty()) {
       exopackageModes = EnumSet.copyOf(exopackageArgs.getExopackageModes());
-    } else if (exopackageArgs.isExopackage().orElse(false)) {
-      LOG.error(
-          "Target %s specified exopackage=True, which is deprecated. Use exopackage_modes.",
-          buildTarget);
-      exopackageModes = EnumSet.of(ExopackageMode.SECONDARY_DEX);
     }
+
     return exopackageModes;
   }
 }

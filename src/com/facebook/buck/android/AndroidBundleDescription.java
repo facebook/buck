@@ -155,8 +155,7 @@ public class AndroidBundleDescription
           "Requested target %s contains an unrecognized flavor", buildTarget);
     }
 
-    EnumSet<ExopackageMode> exopackageModes =
-        ExopackageArgsHelper.detectExopackageModes(buildTarget, args);
+    EnumSet<ExopackageMode> exopackageModes = ExopackageArgsHelper.detectExopackageModes(args);
 
     DexSplitMode dexSplitMode = createDexSplitMode(args, exopackageModes);
 
