@@ -446,7 +446,7 @@ class ManifestModel {
                         // TODO : this will need to be populated from
                         // sdk/platforms/android-19/data/res/values.attrs_manifest.xml
                         .setOnReadValidator(new MultiValueValidator(
-                                "normal", "dangerous", "signature", "signatureOrSystem"))),
+                                "normal", "dangerous", "signature", "signatureOrSystem", "signature|preinstalled"))),
 
         /**
          * Permission-tree (contained in manifest).
