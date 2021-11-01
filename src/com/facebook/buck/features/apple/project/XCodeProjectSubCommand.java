@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.apple.project;
 
-import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.cli.BuildCommandForAppleProjectGenerator;
 import com.facebook.buck.cli.BuildCommandForProjectGenerators;
@@ -237,15 +236,8 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
       ActionGraphBuilder actionGraphBuilder)
       throws Exception {
 
-    Command buildCommand;
-    AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
-
-    if (appleConfig.getProjectGeneratorReuseActionGraph()) {
-      buildCommand =
-          new BuildCommandForAppleProjectGenerator(arguments, targetGraph, actionGraphBuilder);
-    } else {
-      buildCommand = new BuildCommandForProjectGenerators(arguments);
-    }
+    Command buildCommand =
+        new BuildCommandForAppleProjectGenerator(arguments, targetGraph, actionGraphBuilder);
 
     return buildCommand.run(params);
   }

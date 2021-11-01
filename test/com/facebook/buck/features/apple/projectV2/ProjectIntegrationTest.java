@@ -469,7 +469,6 @@ public class ProjectIntegrationTest {
         createWorkspace(this, "project_with_swift_dependency_on_modular_objective_c_library");
     workspace.addBuckConfigLocalOption("cxx", "default_platform", "iphonesimulator-x86_64");
     workspace.addBuckConfigLocalOption("apple", "project_generator_index_via_compile_args", "true");
-    workspace.addBuckConfigLocalOption("apple", "project_generator_reuse_action_graph", "true");
 
     ProcessResult result = workspace.runBuckCommand("project", "//Apps:App", "--experimental");
 
