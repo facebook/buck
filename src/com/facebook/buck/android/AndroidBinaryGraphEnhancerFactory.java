@@ -160,7 +160,6 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.getDuplicateResourceWhitelist(),
         args.getResourceUnionPackage(),
         addFallbackLocales(args.getLocales()),
-        args.getLocalizedStringFileName(),
         args.getManifest(),
         args.getManifestSkeleton(),
         args.getModuleManifestSkeleton(),

@@ -155,8 +155,6 @@ public interface AndroidGraphEnhancerArgs
     return 0;
   }
 
-  Optional<String> getLocalizedStringFileName();
-
   @Value.Default
   default boolean isBuildStringSourceMap() {
     return false;
