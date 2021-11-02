@@ -67,7 +67,6 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Optional<SourcePath> pathToRDotJavaDir;
 
   private final Collection<? extends UsesResources> allPreDexRules;
-  private final Optional<String> keepResourcePattern;
 
   private static final Pattern R_DOT_JAVA_LINE_PATTERN =
       Pattern.compile("^ *public static final int(?:\\[\\])? (\\w+)=");
@@ -80,12 +79,10 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Optional<SourcePath> pathToRDotJavaDir,
-      Collection<? extends UsesResources> allPreDexRules,
-      Optional<String> keepResourcePattern) {
+      Collection<? extends UsesResources> allPreDexRules) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.pathToRDotJavaDir = pathToRDotJavaDir;
     this.allPreDexRules = allPreDexRules;
-    this.keepResourcePattern = keepResourcePattern;
   }
 
   @Override
@@ -178,10 +175,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                     projectFilesystem.copyToOutputStream(file, output);
                   } else {
                     filterRDotJava(
-                        projectFilesystem.readLines(file),
-                        output,
-                        allReferencedResources,
-                        keepResourcePattern);
+                        projectFilesystem.readLines(file), output, allReferencedResources);
                   }
                   return FileVisitResult.CONTINUE;
                 }
@@ -203,15 +197,10 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   }
 
   private static void filterRDotJava(
-      List<String> rDotJavaLines,
-      OutputStream output,
-      ImmutableSet<String> allReferencedResources,
-      Optional<String> keepResourcePattern)
+      List<String> rDotJavaLines, OutputStream output, ImmutableSet<String> allReferencedResources)
       throws IOException {
     String packageName = null;
     Matcher m;
-
-    Optional<Pattern> keepPattern = keepResourcePattern.map(Pattern::compile);
 
     for (String line : rDotJavaLines) {
       if (packageName == null) {
@@ -228,9 +217,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       // is referenced.  That is a very rare case, though, and not worth the complexity to fix.
       if (m.find()) {
         String resource = m.group(1);
-        boolean shouldWriteLine =
-            allReferencedResources.contains(packageName + "." + resource)
-                || (keepPattern.isPresent() && keepPattern.get().matcher(resource).find());
+        boolean shouldWriteLine = allReferencedResources.contains(packageName + "." + resource);
         if (!shouldWriteLine) {
           continue;
         }

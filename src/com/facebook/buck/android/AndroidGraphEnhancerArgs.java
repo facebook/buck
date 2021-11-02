@@ -128,8 +128,6 @@ public interface AndroidGraphEnhancerArgs
     return false;
   }
 
-  Optional<String> getKeepResourcePattern();
-
   Optional<String> getResourceUnionPackage();
 
   ImmutableSet<String> getLocales();

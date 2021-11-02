@@ -251,7 +251,6 @@ public class AndroidInstrumentationApkDescription
             /* buildConfigValuesFile */ Optional.empty(),
             /* xzCompressionLevel */ XzStep.DEFAULT_COMPRESSION_LEVEL,
             /* trimResourceIds */ false,
-            /* keepResourcePattern */ Optional.empty(),
             false,
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),

@@ -197,7 +197,6 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.getBuildConfigValuesFile(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         args.isTrimResourceIds(),
-        args.getKeepResourcePattern(),
         args.isIgnoreAaptProguardConfig(),
         Optional.of(args.getNativeLibraryMergeMap()),
         args.getNativeLibraryMergeGlue(),

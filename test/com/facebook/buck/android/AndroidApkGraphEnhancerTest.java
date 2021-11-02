@@ -1049,7 +1049,6 @@ public class AndroidApkGraphEnhancerTest {
         /* buildConfigValuesFiles */ Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         args.getTrimResourceIds(),
-        /* keepResourcePattern */ Optional.empty(),
         false,
         /* nativeLibraryMergeMap */ Optional.empty(),
         /* nativeLibraryMergeGlue */ Optional.empty(),

@@ -121,7 +121,6 @@ public class AndroidBinaryGraphEnhancer {
   private final AndroidPlatformTarget androidPlatformTarget;
   private final BuildRuleParams buildRuleParams;
   private final boolean trimResourceIds;
-  private final Optional<String> keepResourcePattern;
   private final CellPathResolver cellPathResolver;
   private final boolean ignoreAaptProguardConfig;
   private final Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
@@ -205,7 +204,6 @@ public class AndroidBinaryGraphEnhancer {
       Optional<SourcePath> buildConfigValuesFile,
       int xzCompressionLevel,
       boolean trimResourceIds,
-      Optional<String> keepResourcePattern,
       boolean ignoreAaptProguardConfig,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
@@ -259,7 +257,6 @@ public class AndroidBinaryGraphEnhancer {
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
     this.trimResourceIds = trimResourceIds;
-    this.keepResourcePattern = keepResourcePattern;
     this.nativeLibraryMergeCodeGenerator = nativeLibraryMergeCodeGenerator;
     this.nativeLibraryProguardConfigGenerator = nativeLibraryProguardConfigGenerator;
     this.nativeLibsEnhancer =
@@ -581,8 +578,7 @@ public class AndroidBinaryGraphEnhancer {
             projectFilesystem,
             paramsForTrimUberRDotJava,
             resourcesEnhancementResult.getRDotJavaDir(),
-            preDexedLibrariesForResourceIdFiltering,
-            keepResourcePattern);
+            preDexedLibrariesForResourceIdFiltering);
     graphBuilder.addToIndex(trimUberRDotJava);
 
     // Create rule to compile uber R.java sources.

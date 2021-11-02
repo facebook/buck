@@ -49,7 +49,6 @@ public class TrimUberRDotJavaTest {
 
   @Test
   public void testTrimming() throws IOException, InterruptedException {
-    Optional<String> keepResourcePattern = Optional.empty();
     String rDotJavaContentsAfterFiltering =
         "package com.test;\n"
             + "\n"
@@ -58,27 +57,7 @@ public class TrimUberRDotJavaTest {
             + "    public static final int my_first_resource=0x7f08005c;\n"
             + "  }\n"
             + "}\n";
-    doTrimingTest(keepResourcePattern, rDotJavaContentsAfterFiltering);
-  }
 
-  @Test
-  public void testTrimmingWithKeepPattern() throws IOException, InterruptedException {
-    Optional<String> keepResourcePattern = Optional.of("^keep_resource.*");
-    String rDotJavaContentsAfterFiltering =
-        "package com.test;\n"
-            + "\n"
-            + "public class R {\n"
-            + "  public static class string {\n"
-            + "    public static final int my_first_resource=0x7f08005c;\n"
-            + "    public static final int keep_resource=0x7f083bc2;\n"
-            + "  }\n"
-            + "}\n";
-    doTrimingTest(keepResourcePattern, rDotJavaContentsAfterFiltering);
-  }
-
-  private void doTrimingTest(
-      Optional<String> keepResourcePattern, String rDotJavaContentsAfterFiltering)
-      throws InterruptedException, IOException {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
@@ -126,8 +105,7 @@ public class TrimUberRDotJavaTest {
             filesystem,
             TestBuildRuleParams.create(),
             Optional.of(FakeSourcePath.of(filesystem, rDotJavaDir.getPath())),
-            ImmutableList.of(dexProducedFromJavaLibrary),
-            keepResourcePattern);
+            ImmutableList.of(dexProducedFromJavaLibrary));
     graphBuilder.addToIndex(trimUberRDotJava);
 
     BuildContext buildContext =

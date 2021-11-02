@@ -157,31 +157,6 @@ public class AndroidApkRDotJavaIntegrationTest {
     buildLog.assertTargetHadMatchingInputRuleKey(SIMPLE_TARGET);
   }
 
-  @Test
-  public void testResourcesTrimmingWithPattern() throws IOException {
-    // Enable trimming.
-    workspace.replaceFileContents(
-        "apps/multidex/BUCK",
-        "# ARGS_FOR_APP",
-        "keep_resource_pattern = '^app_.*', trim_resource_ids = True,  # ARGS_FOR_APP");
-    workspace.runBuckCommand("build", "//apps/multidex:disassemble_app_r_dot_java").assertSuccess();
-    // Make sure we only see what we expect.
-    verifyTrimmedRDotJava(ImmutableSet.of("app_icon", "app_name", "top_layout", "title"));
-
-    // Make a change.
-    workspace.replaceFileContents(
-        "java/com/sample/lib/Sample.java", "R.layout.top_layout", "0 /* NO RESOURCE HERE */");
-
-    // Make sure everything gets rebuilt, and we only see what we expect.
-    workspace.resetBuildLogFile();
-    workspace.runBuckCommand("build", "//apps/multidex:disassemble_app_r_dot_java").assertSuccess();
-    BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally("//apps/multidex:app#compile_uber_r_dot_java");
-    buildLog.assertTargetBuiltLocally(
-        "//apps/multidex:app#d8,dexing,rtype__primarydex,split_uber_r_dot_java_jar");
-    verifyTrimmedRDotJava(ImmutableSet.of("app_icon", "app_name", "title"));
-  }
-
   private static final Pattern SMALI_PUBLIC_CLASS_PATTERN =
       Pattern.compile("\\.class public L([\\w/$]+);");
   private static final Pattern SMALI_STATIC_FINAL_INT_PATTERN =
