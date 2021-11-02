@@ -17,6 +17,7 @@
 package com.facebook.buck.android.dex;
 
 import com.android.tools.r8.CompilationFailedException;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
@@ -36,6 +37,9 @@ import org.kohsuke.args4j.Option;
 
 /** Main entry point for executing {@link com.android.tools.r8.D8Command} calls. */
 public class D8ExecutableMain {
+  /** name suffix that identifies it as a Java class file. */
+  private static final String CLASS_NAME_SUFFIX = ".class";
+
   @Option(name = "--output-dex-file", required = true)
   private String outputDex;
 
@@ -75,6 +79,9 @@ public class D8ExecutableMain {
   @Option(name = "--weight-estimate-path")
   private String weightEstimateOutput;
 
+  @Option(name = "--class-names-path")
+  private String classNamesOutput;
+
   public static void main(String[] args) throws IOException {
     D8ExecutableMain main = new D8ExecutableMain();
     CmdLineParser parser = new CmdLineParser(main);
@@ -110,6 +117,7 @@ public class D8ExecutableMain {
     Optional<Integer> minSdkVersion =
         Optional.ofNullable(minSdkVersionString).map(Integer::parseInt);
     Optional<Path> weightEstimatePath = Optional.ofNullable(weightEstimateOutput).map(Paths::get);
+    Optional<Path> classNamesPath = Optional.ofNullable(classNamesOutput).map(Paths::get);
     Optional<String> bucketId = Optional.ofNullable(bucketIdString);
 
     try {
@@ -129,23 +137,32 @@ public class D8ExecutableMain {
         Files.write(referencedResourcesPath.get(), referencedResources);
       }
 
-      if (weightEstimatePath.isPresent()) {
+      if (weightEstimatePath.isPresent() || classNamesPath.isPresent()) {
         int totalWeightEstimate = 0;
+        ImmutableList.Builder<String> classNames = ImmutableList.builder();
         try (ZipFile zipFile = new ZipFile(Iterables.getOnlyElement(filesToDex).toFile())) {
           Enumeration<? extends ZipEntry> entries = zipFile.entries();
           while (entries.hasMoreElements()) {
             ZipEntry zipEntry = entries.nextElement();
+            String zipEntryName = zipEntry.getName();
             // Ignore non-.class files.
-            if (!zipEntry.getName().endsWith(".class")) {
+            if (!zipEntryName.endsWith(CLASS_NAME_SUFFIX)) {
               continue;
             }
 
+            classNames.add(
+                zipEntryName.substring(0, zipEntryName.length() - CLASS_NAME_SUFFIX.length()));
             totalWeightEstimate += (int) zipEntry.getSize();
           }
         }
-        Files.write(
-            weightEstimatePath.get(),
-            Collections.singletonList(Integer.toString(totalWeightEstimate)));
+        if (weightEstimatePath.isPresent()) {
+          Files.write(
+              weightEstimatePath.get(),
+              Collections.singletonList(Integer.toString(totalWeightEstimate)));
+        }
+        if (classNamesPath.isPresent()) {
+          Files.write(classNamesPath.get(), classNames.build());
+        }
       }
     } catch (CompilationFailedException e) {
       throw new IOException(e);
