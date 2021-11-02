@@ -36,7 +36,12 @@ import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
@@ -72,7 +77,7 @@ public class AppleCxxPlatformsProviderFactory
     if (toolchainSetTarget.isPresent()) {
       return Optional.of(
           AppleCxxPlatformsProvider.of(
-              createDynamicPlatforms(toolchainSetTarget.get(), appleCxxPlatforms)));
+              createDynamicPlatforms(toolchainSetTarget.get(), appleCxxPlatforms, context)));
     } else {
       return Optional.of(AppleCxxPlatformsProvider.of(createStaticPlatforms(appleCxxPlatforms)));
     }
@@ -124,7 +129,9 @@ public class AppleCxxPlatformsProviderFactory
   }
 
   private static FlavorDomain<UnresolvedAppleCxxPlatform> createDynamicPlatforms(
-      BuildTarget toolchainSetTarget, Iterable<AppleCxxPlatform> fallbackPlatforms) {
+      BuildTarget toolchainSetTarget,
+      Iterable<AppleCxxPlatform> fallbackPlatforms,
+      ToolchainCreationContext context) {
 
     ImmutableMap.Builder<Flavor, AppleCxxPlatform> fallbackPlatformBuilder = ImmutableMap.builder();
     for (AppleCxxPlatform platform : fallbackPlatforms) {
@@ -139,10 +146,37 @@ public class AppleCxxPlatformsProviderFactory
                     new ProviderBackedUnresolvedAppleCxxPlatform(
                         toolchainSetTarget,
                         flavor,
-                        fallbackPlatformMap.containsKey(flavor)
-                            ? Optional.of(fallbackPlatformMap.get(flavor))
-                            : Optional.empty()))
+                        getFallbackPlatform(context, fallbackPlatformMap, flavor)))
             .collect(ImmutableList.toImmutableList());
     return FlavorDomain.from("Apple C++ Platform", unresolvedAppleCxxPlatforms);
+  }
+
+  private static Optional<AppleCxxPlatform> getFallbackPlatform(
+      ToolchainCreationContext context,
+      Map<Flavor, AppleCxxPlatform> fallbackPlatforms,
+      Flavor flavor) {
+    if (fallbackPlatforms.containsKey(flavor)) {
+      // We need to add the buckconfig flags at this point as the logic in
+      // CxxPlatformsProviderFactory.updateCxxPlatformsWithOptionsFromBuckConfig will not apply to
+      // provider backed cxx platforms.
+      AppleCxxPlatform appleCxxPlatform = fallbackPlatforms.get(flavor);
+      BuckConfig buckConfig = context.getBuckConfig();
+      CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig, flavor);
+      DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+      CxxPlatform augmentedCxxPlatform =
+          CxxPlatforms.copyPlatformWithFlavorAndConfig(
+              appleCxxPlatform.getCxxPlatform(),
+              Platform.detect(),
+              cxxBuckConfig,
+              downwardApiConfig,
+              flavor);
+      AppleCxxPlatform.Builder platformBuilder = AppleCxxPlatform.builder();
+      platformBuilder.from(appleCxxPlatform);
+      platformBuilder.setCxxPlatform(augmentedCxxPlatform);
+
+      return Optional.of(platformBuilder.build());
+    } else {
+      return Optional.empty();
+    }
   }
 }
