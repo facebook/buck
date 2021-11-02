@@ -5,6 +5,7 @@ java_library(
     deps = ["//src/com/facebook/buck/core/filesystems:filesystems",
             "//src/com/facebook/buck/util/zip/collect:collect",
             "//third-party/java/guava:guava",
+            "//third-party/java/args4j:args4j",
             "//src/com/facebook/buck/core/exceptions:exceptions",
             "//src/com/facebook/buck/core/sourcepath/resolver/impl/utils:utils",
     ],
