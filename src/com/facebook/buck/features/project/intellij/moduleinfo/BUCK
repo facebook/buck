@@ -23,6 +23,8 @@ java_library_with_plugins(
     srcs = ["LookupTool.java"],
     deps = [
         ":moduleinfo",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-databind",
     ],
 )
 

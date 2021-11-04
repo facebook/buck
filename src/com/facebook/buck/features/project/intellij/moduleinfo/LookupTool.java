@@ -16,39 +16,42 @@
 
 package com.facebook.buck.features.project.intellij.moduleinfo;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-/** A command line tool to look up ModuleInfos given a module name */
+/** A command line tool to look up ModuleInfos given a list of module name */
 public class LookupTool {
   /** Entry point */
   public static void main(String[] args) throws IOException {
     if (args.length < 2) {
-      System.err.println("Usage: lookuptool <key> <path/to/.idea>");
+      System.err.println("Usage: lookuptool <path/to/.idea> <module name> <module name> ...");
       System.exit(1);
     }
 
-    String key = args[0];
-    Path path = Paths.get(args[1]);
+    Path ideaPath = Paths.get(args[0]);
+    List<String> modules = Arrays.asList(args).subList(1, args.length);
 
     Map<String, ModuleInfo> moduleInfoMap =
-        Maps.uniqueIndex(new ModuleInfoBinaryIndex(path).read(), ModuleInfo::getModuleName);
-    if (moduleInfoMap.containsKey(key)) {
-      System.out.println(moduleInfoMap.get(key));
-    } else {
-      printMatches(moduleInfoMap, key);
-    }
-  }
-
-  private static void printMatches(Map<String, ModuleInfo> moduleInfoMap, String key) {
-    System.out.println("Can not find an exact match. Printing similar results...");
-    for (Map.Entry<String, ModuleInfo> entry : moduleInfoMap.entrySet()) {
-      if (entry.getKey().contains(key)) {
-        System.out.println(entry.getValue());
+        Maps.uniqueIndex(new ModuleInfoBinaryIndex(ideaPath).read(), ModuleInfo::getModuleName);
+    Map<String, Map<String, Object>> outputs = new HashMap<>();
+    for (String module : modules) {
+      Map<String, Object> outputForModule = new HashMap<>();
+      if (moduleInfoMap.containsKey(module)) {
+        outputForModule.put("success", true);
+        outputForModule.put("results", moduleInfoMap.get(module));
+      } else {
+        outputForModule.put("success", false);
       }
+      outputs.put(module, outputForModule);
     }
+
+    System.out.println((new ObjectMapper()).writeValueAsString(outputs));
   }
 }
