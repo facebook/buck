@@ -27,8 +27,6 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.versions.VersionPropagator;
-import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 
 /**
  * Description of a rule that builds a {@link javax.annotation.processing.Processor} javac plugin.
@@ -48,20 +46,10 @@ public class JavaAnnotationProcessorDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       JavaAnnotationProcessorDescriptionArg args) {
-    if (!args.getProcessorClass().isPresent() && args.getProcessorClasses().isEmpty()) {
-      throw new HumanReadableException(
-          String.format("%s: must specify a processor class, none specified;", buildTarget));
-    }
+    String processorClass = args.getProcessorClass();
 
     JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
-
-    if (args.getProcessorClass().isPresent()) {
-      propsBuilder.addProcessorNames(args.getProcessorClass().get());
-    } else {
-      for (String pClass : args.getProcessorClasses()) {
-        propsBuilder.addProcessorNames(pClass);
-      }
-    }
+    propsBuilder.addProcessorNames(processorClass);
 
     for (BuildRule dep : params.getBuildDeps()) {
       if (!(dep instanceof JavaLibrary)) {
@@ -91,8 +79,6 @@ public class JavaAnnotationProcessorDescription
   @RuleArg
   interface AbstractJavaAnnotationProcessorDescriptionArg extends JavacPluginArgs {
 
-    Optional<String> getProcessorClass();
-
-    ImmutableSet<String> getProcessorClasses();
+    String getProcessorClass();
   }
 }

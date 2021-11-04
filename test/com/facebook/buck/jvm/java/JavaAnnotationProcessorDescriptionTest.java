@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
@@ -29,8 +28,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
-import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -48,7 +45,7 @@ public class JavaAnnotationProcessorDescriptionTest {
             .setIsolateClassLoader(false)
             .setDoesNotAffectAbi(true)
             .setSupportsAbiGenerationFromSource(true)
-            .setProcessorClass(Optional.of("Foo.Bar"))
+            .setProcessorClass("Foo.Bar")
             .build();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
@@ -83,49 +80,6 @@ public class JavaAnnotationProcessorDescriptionTest {
   }
 
   @Test
-  public void testProcessorClassesIsPassedToJavaAnnotationProcessor() {
-    // Given
-    JavaAnnotationProcessorDescriptionArg arg =
-        JavaAnnotationProcessorDescriptionArg.builder()
-            .setName("annotation_processor")
-            .setIsolateClassLoader(false)
-            .setDoesNotAffectAbi(true)
-            .setSupportsAbiGenerationFromSource(true)
-            .setProcessorClasses(ImmutableSet.of("Foo.Bar", "Bar.Foo"))
-            .build();
-
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
-
-    BuildRuleParams params =
-        TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
-
-    // When
-    JavaAnnotationProcessor javaAnnotationProcessorPlugin =
-        (JavaAnnotationProcessor)
-            new JavaAnnotationProcessorDescription()
-                .createBuildRule(
-                    TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
-                    buildTarget,
-                    params,
-                    arg);
-
-    // Verify
-    JavacPluginProperties props =
-        JavacPluginProperties.builder()
-            .setType(Type.ANNOTATION_PROCESSOR)
-            .setCanReuseClassLoader(true)
-            .setDoesNotAffectAbi(true)
-            .setSupportsAbiGenerationFromSource(true)
-            .addProcessorNames("Foo.Bar", "Bar.Foo")
-            .build();
-
-    assertEquals(javaAnnotationProcessorPlugin.getUnresolvedProperties(), props);
-  }
-
-  @Test
   public void testOnlyProcessorClassIsPassedToJavaAnnotationProcessor() {
     // Given
     JavaAnnotationProcessorDescriptionArg arg =
@@ -134,8 +88,7 @@ public class JavaAnnotationProcessorDescriptionTest {
             .setIsolateClassLoader(false)
             .setDoesNotAffectAbi(true)
             .setSupportsAbiGenerationFromSource(true)
-            .setProcessorClass(Optional.of("Needle.HayStack"))
-            .setProcessorClasses(ImmutableSet.of("Foo.Bar", "Bar.Foo"))
+            .setProcessorClass("Needle.HayStack")
             .build();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
@@ -171,33 +124,15 @@ public class JavaAnnotationProcessorDescriptionTest {
 
   @Test
   public void testRaisesExceptionWhenNoProcessorClassIsSpecified() {
-    // Given
-    JavaAnnotationProcessorDescriptionArg arg =
-        JavaAnnotationProcessorDescriptionArg.builder()
-            .setName("annotation_processor")
-            .setIsolateClassLoader(false)
-            .setDoesNotAffectAbi(true)
-            .setSupportsAbiGenerationFromSource(true)
-            .build();
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage(
+        "Cannot build JavaAnnotationProcessorDescriptionArg, some of required attributes are not set [processorClass]");
 
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
-
-    BuildRuleParams params =
-        TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
-
-    // Verify
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("//foo:baz: must specify a processor class, none specified;");
-
-    // When
-    new JavaAnnotationProcessorDescription()
-        .createBuildRule(
-            TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
-            buildTarget,
-            params,
-            arg);
+    JavaAnnotationProcessorDescriptionArg.builder()
+        .setName("annotation_processor")
+        .setIsolateClassLoader(false)
+        .setDoesNotAffectAbi(true)
+        .setSupportsAbiGenerationFromSource(true)
+        .build();
   }
 }

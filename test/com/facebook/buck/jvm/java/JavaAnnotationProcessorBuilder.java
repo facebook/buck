@@ -54,8 +54,8 @@ public class JavaAnnotationProcessorBuilder
     getArgForPopulating().setDoesNotAffectAbi(doesNotAffectAbi);
   }
 
-  public JavaAnnotationProcessorBuilder addProcessorClass(String processorClass) {
-    getArgForPopulating().addProcessorClasses(processorClass);
+  public JavaAnnotationProcessorBuilder setProcessorClass(String processorClass) {
+    getArgForPopulating().setProcessorClass(processorClass);
     return this;
   }
 }

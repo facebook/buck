@@ -142,7 +142,7 @@ public class JavacPluginPropertiesTest {
             .setIsolateClassLoader(false)
             .setDoesNotAffectAbi(true)
             .setSupportsAbiGenerationFromSource(true)
-            .setProcessorClass(Optional.of("Foo.Bar"))
+            .setProcessorClass("Foo.Bar")
             .addDeps(javaLibrary.getBuildTarget())
             .build();
 

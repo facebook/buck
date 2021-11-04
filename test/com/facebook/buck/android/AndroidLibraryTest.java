@@ -36,7 +36,7 @@ public class AndroidLibraryTest {
     BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
     TargetNode<?> processorNode =
         JavaAnnotationProcessorBuilder.createBuilder(processorTarget)
-            .addProcessorClass("java/processor/processor.java")
+            .setProcessorClass("java/processor/processor.java")
             .build();
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
