@@ -268,10 +268,6 @@ public abstract class JavacOptions implements AddsToRuleKey {
       for (String parameter : javaAnnotationProcessorParams.getParameters()) {
         optionsConsumer.addFlag("A" + parameter);
       }
-
-      if (javaAnnotationProcessorParams.getProcessOnly()) {
-        optionsConsumer.addFlag("proc:only");
-      }
     } else {
       // Disable automatic annotation processor lookup
       optionsConsumer.addFlag("proc:none");

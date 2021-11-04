@@ -2484,30 +2484,25 @@ private static final long serialVersionUID = 0L;
         getParametersBytes(int index);
 
     /**
-     * <code>bool processOnly = 2;</code>
-     */
-    boolean getProcessOnly();
-
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
      */
     java.util.List<com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties> 
         getPluginPropertiesList();
     /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
      */
     com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties getPluginProperties(int index);
     /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
      */
     int getPluginPropertiesCount();
     /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
      */
     java.util.List<? extends com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginPropertiesOrBuilder> 
         getPluginPropertiesOrBuilderList();
     /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
      */
     com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginPropertiesOrBuilder getPluginPropertiesOrBuilder(
         int index);
@@ -2562,15 +2557,10 @@ private static final long serialVersionUID = 0L;
               parameters_.add(s);
               break;
             }
-            case 16: {
-
-              processOnly_ = input.readBool();
-              break;
-            }
-            case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
                 pluginProperties_ = new java.util.ArrayList<com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties>();
-                mutable_bitField0_ |= 0x00000004;
+                mutable_bitField0_ |= 0x00000002;
               }
               pluginProperties_.add(
                   input.readMessage(com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.parser(), extensionRegistry));
@@ -2594,7 +2584,7 @@ private static final long serialVersionUID = 0L;
         if (((mutable_bitField0_ & 0x00000001) != 0)) {
           parameters_ = parameters_.getUnmodifiableView();
         }
-        if (((mutable_bitField0_ & 0x00000004) != 0)) {
+        if (((mutable_bitField0_ & 0x00000002) != 0)) {
           pluginProperties_ = java.util.Collections.unmodifiableList(pluginProperties_);
         }
         this.unknownFields = unknownFields.build();
@@ -2614,7 +2604,6 @@ private static final long serialVersionUID = 0L;
               com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginParams.class, com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginParams.Builder.class);
     }
 
-    private int bitField0_;
     public static final int PARAMETERS_FIELD_NUMBER = 1;
     private com.google.protobuf.LazyStringList parameters_;
     /**
@@ -2644,44 +2633,35 @@ private static final long serialVersionUID = 0L;
       return parameters_.getByteString(index);
     }
 
-    public static final int PROCESSONLY_FIELD_NUMBER = 2;
-    private boolean processOnly_;
-    /**
-     * <code>bool processOnly = 2;</code>
-     */
-    public boolean getProcessOnly() {
-      return processOnly_;
-    }
-
-    public static final int PLUGINPROPERTIES_FIELD_NUMBER = 3;
+    public static final int PLUGINPROPERTIES_FIELD_NUMBER = 2;
     private java.util.List<com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties> pluginProperties_;
     /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
      */
     public java.util.List<com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties> getPluginPropertiesList() {
       return pluginProperties_;
     }
     /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
      */
     public java.util.List<? extends com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginPropertiesOrBuilder> 
         getPluginPropertiesOrBuilderList() {
       return pluginProperties_;
     }
     /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
      */
     public int getPluginPropertiesCount() {
       return pluginProperties_.size();
     }
     /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
      */
     public com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties getPluginProperties(int index) {
       return pluginProperties_.get(index);
     }
     /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
      */
     public com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginPropertiesOrBuilder getPluginPropertiesOrBuilder(
         int index) {
@@ -2705,11 +2685,8 @@ private static final long serialVersionUID = 0L;
       for (int i = 0; i < parameters_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, parameters_.getRaw(i));
       }
-      if (processOnly_ != false) {
-        output.writeBool(2, processOnly_);
-      }
       for (int i = 0; i < pluginProperties_.size(); i++) {
-        output.writeMessage(3, pluginProperties_.get(i));
+        output.writeMessage(2, pluginProperties_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -2728,13 +2705,9 @@ private static final long serialVersionUID = 0L;
         size += dataSize;
         size += 1 * getParametersList().size();
       }
-      if (processOnly_ != false) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(2, processOnly_);
-      }
       for (int i = 0; i < pluginProperties_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, pluginProperties_.get(i));
+          .computeMessageSize(2, pluginProperties_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2753,8 +2726,6 @@ private static final long serialVersionUID = 0L;
 
       if (!getParametersList()
           .equals(other.getParametersList())) return false;
-      if (getProcessOnly()
-          != other.getProcessOnly()) return false;
       if (!getPluginPropertiesList()
           .equals(other.getPluginPropertiesList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
@@ -2772,9 +2743,6 @@ private static final long serialVersionUID = 0L;
         hash = (37 * hash) + PARAMETERS_FIELD_NUMBER;
         hash = (53 * hash) + getParametersList().hashCode();
       }
-      hash = (37 * hash) + PROCESSONLY_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-          getProcessOnly());
       if (getPluginPropertiesCount() > 0) {
         hash = (37 * hash) + PLUGINPROPERTIES_FIELD_NUMBER;
         hash = (53 * hash) + getPluginPropertiesList().hashCode();
@@ -2915,11 +2883,9 @@ private static final long serialVersionUID = 0L;
         super.clear();
         parameters_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
-        processOnly_ = false;
-
         if (pluginPropertiesBuilder_ == null) {
           pluginProperties_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000002);
         } else {
           pluginPropertiesBuilder_.clear();
         }
@@ -2950,23 +2916,20 @@ private static final long serialVersionUID = 0L;
       public com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginParams buildPartial() {
         com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginParams result = new com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginParams(this);
         int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
         if (((bitField0_ & 0x00000001) != 0)) {
           parameters_ = parameters_.getUnmodifiableView();
           bitField0_ = (bitField0_ & ~0x00000001);
         }
         result.parameters_ = parameters_;
-        result.processOnly_ = processOnly_;
         if (pluginPropertiesBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) != 0)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             pluginProperties_ = java.util.Collections.unmodifiableList(pluginProperties_);
-            bitField0_ = (bitField0_ & ~0x00000004);
+            bitField0_ = (bitField0_ & ~0x00000002);
           }
           result.pluginProperties_ = pluginProperties_;
         } else {
           result.pluginProperties_ = pluginPropertiesBuilder_.build();
         }
-        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -3025,14 +2988,11 @@ private static final long serialVersionUID = 0L;
           }
           onChanged();
         }
-        if (other.getProcessOnly() != false) {
-          setProcessOnly(other.getProcessOnly());
-        }
         if (pluginPropertiesBuilder_ == null) {
           if (!other.pluginProperties_.isEmpty()) {
             if (pluginProperties_.isEmpty()) {
               pluginProperties_ = other.pluginProperties_;
-              bitField0_ = (bitField0_ & ~0x00000004);
+              bitField0_ = (bitField0_ & ~0x00000002);
             } else {
               ensurePluginPropertiesIsMutable();
               pluginProperties_.addAll(other.pluginProperties_);
@@ -3045,7 +3005,7 @@ private static final long serialVersionUID = 0L;
               pluginPropertiesBuilder_.dispose();
               pluginPropertiesBuilder_ = null;
               pluginProperties_ = other.pluginProperties_;
-              bitField0_ = (bitField0_ & ~0x00000004);
+              bitField0_ = (bitField0_ & ~0x00000002);
               pluginPropertiesBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getPluginPropertiesFieldBuilder() : null;
@@ -3178,38 +3138,12 @@ private static final long serialVersionUID = 0L;
         return this;
       }
 
-      private boolean processOnly_ ;
-      /**
-       * <code>bool processOnly = 2;</code>
-       */
-      public boolean getProcessOnly() {
-        return processOnly_;
-      }
-      /**
-       * <code>bool processOnly = 2;</code>
-       */
-      public Builder setProcessOnly(boolean value) {
-        
-        processOnly_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>bool processOnly = 2;</code>
-       */
-      public Builder clearProcessOnly() {
-        
-        processOnly_ = false;
-        onChanged();
-        return this;
-      }
-
       private java.util.List<com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties> pluginProperties_ =
         java.util.Collections.emptyList();
       private void ensurePluginPropertiesIsMutable() {
-        if (!((bitField0_ & 0x00000004) != 0)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           pluginProperties_ = new java.util.ArrayList<com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties>(pluginProperties_);
-          bitField0_ |= 0x00000004;
+          bitField0_ |= 0x00000002;
          }
       }
 
@@ -3217,7 +3151,7 @@ private static final long serialVersionUID = 0L;
           com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties, com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.Builder, com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginPropertiesOrBuilder> pluginPropertiesBuilder_;
 
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public java.util.List<com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties> getPluginPropertiesList() {
         if (pluginPropertiesBuilder_ == null) {
@@ -3227,7 +3161,7 @@ private static final long serialVersionUID = 0L;
         }
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public int getPluginPropertiesCount() {
         if (pluginPropertiesBuilder_ == null) {
@@ -3237,7 +3171,7 @@ private static final long serialVersionUID = 0L;
         }
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties getPluginProperties(int index) {
         if (pluginPropertiesBuilder_ == null) {
@@ -3247,7 +3181,7 @@ private static final long serialVersionUID = 0L;
         }
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public Builder setPluginProperties(
           int index, com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties value) {
@@ -3264,7 +3198,7 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public Builder setPluginProperties(
           int index, com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.Builder builderForValue) {
@@ -3278,7 +3212,7 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public Builder addPluginProperties(com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties value) {
         if (pluginPropertiesBuilder_ == null) {
@@ -3294,7 +3228,7 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public Builder addPluginProperties(
           int index, com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties value) {
@@ -3311,7 +3245,7 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public Builder addPluginProperties(
           com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.Builder builderForValue) {
@@ -3325,7 +3259,7 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public Builder addPluginProperties(
           int index, com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.Builder builderForValue) {
@@ -3339,7 +3273,7 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public Builder addAllPluginProperties(
           java.lang.Iterable<? extends com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties> values) {
@@ -3354,12 +3288,12 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public Builder clearPluginProperties() {
         if (pluginPropertiesBuilder_ == null) {
           pluginProperties_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000002);
           onChanged();
         } else {
           pluginPropertiesBuilder_.clear();
@@ -3367,7 +3301,7 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public Builder removePluginProperties(int index) {
         if (pluginPropertiesBuilder_ == null) {
@@ -3380,14 +3314,14 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.Builder getPluginPropertiesBuilder(
           int index) {
         return getPluginPropertiesFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginPropertiesOrBuilder getPluginPropertiesOrBuilder(
           int index) {
@@ -3397,7 +3331,7 @@ private static final long serialVersionUID = 0L;
         }
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public java.util.List<? extends com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginPropertiesOrBuilder> 
            getPluginPropertiesOrBuilderList() {
@@ -3408,14 +3342,14 @@ private static final long serialVersionUID = 0L;
         }
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.Builder addPluginPropertiesBuilder() {
         return getPluginPropertiesFieldBuilder().addBuilder(
             com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.getDefaultInstance());
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.Builder addPluginPropertiesBuilder(
           int index) {
@@ -3423,7 +3357,7 @@ private static final long serialVersionUID = 0L;
             index, com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.getDefaultInstance());
       }
       /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 3;</code>
+       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.ResolvedJavacPluginProperties pluginProperties = 2;</code>
        */
       public java.util.List<com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.Builder> 
            getPluginPropertiesBuilderList() {
@@ -3436,7 +3370,7 @@ private static final long serialVersionUID = 0L;
           pluginPropertiesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties, com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginProperties.Builder, com.facebook.buck.javacd.model.ResolvedJavacOptions.ResolvedJavacPluginPropertiesOrBuilder>(
                   pluginProperties_,
-                  ((bitField0_ & 0x00000004) != 0),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           pluginProperties_ = null;

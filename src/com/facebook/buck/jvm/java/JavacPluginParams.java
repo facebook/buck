@@ -55,12 +55,6 @@ public abstract class JavacPluginParams implements AddsToRuleKey {
   @AddToRuleKey
   public abstract ImmutableSortedSet<String> getParameters();
 
-  @Value.Default
-  @AddToRuleKey
-  public boolean getProcessOnly() {
-    return false;
-  }
-
   public boolean isEmpty() {
     return getPluginProperties().isEmpty() && getParameters().isEmpty();
   }
@@ -78,7 +72,6 @@ public abstract class JavacPluginParams implements AddsToRuleKey {
                 .filter(properties -> !properties.getDoesNotAffectAbi())
                 .collect(ImmutableList.toImmutableList()))
         .setParameters(getParameters())
-        .setProcessOnly(getProcessOnly())
         .build(resolver, ruleCellRoot);
   }
 

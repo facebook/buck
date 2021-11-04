@@ -35,8 +35,6 @@ class JavacPluginParamsSerializer {
       JavacPluginParams javacPluginParams) {
     ResolvedJavacOptions.JavacPluginParams.Builder builder =
         ResolvedJavacOptions.JavacPluginParams.newBuilder();
-    builder.setProcessOnly(javacPluginParams.getProcessOnly());
-
     for (String param : javacPluginParams.getParameters()) {
       builder.addParameters(param);
     }
@@ -55,7 +53,6 @@ class JavacPluginParamsSerializer {
   public static JavacPluginParams deserialize(
       ResolvedJavacOptions.JavacPluginParams javacPluginParams) {
     JavacPluginParams.Builder builder = JavacPluginParams.builder();
-    builder.setProcessOnly(javacPluginParams.getProcessOnly());
     builder.setParameters(javacPluginParams.getParametersList());
     builder.setPluginProperties(toPluginProperties(javacPluginParams.getPluginPropertiesList()));
     return builder.build();

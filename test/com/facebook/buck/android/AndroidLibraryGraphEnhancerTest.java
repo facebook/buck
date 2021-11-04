@@ -181,7 +181,6 @@ public class AndroidLibraryGraphEnhancerTest {
             JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                 .setJavaAnnotationProcessorParams(
                     JavacPluginParams.builder()
-                        .setProcessOnly(true)
                         .build(
                             graphBuilder.getSourcePathResolver(), projectFilesystem.getRootPath()))
                 .setLanguageLevelOptions(
@@ -198,7 +197,6 @@ public class AndroidLibraryGraphEnhancerTest {
     assertTrue(dummyRDotJava.isPresent());
     JavacOptions javacOptions =
         ((JavacToJarStepFactory) dummyRDotJava.get().getCompileStepFactory()).getJavacOptions();
-    assertFalse(javacOptions.getJavaAnnotationProcessorParams().getProcessOnly());
     assertEquals("7", javacOptions.getLanguageLevelOptions().getSourceLevel());
   }
 

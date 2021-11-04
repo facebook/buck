@@ -64,8 +64,6 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
 
   ImmutableSet<String> getAnnotationProcessors();
 
-  Optional<Boolean> getAnnotationProcessorOnly();
-
   ImmutableList<BuildTarget> getPlugins();
 
   Optional<AbiGenerationMode> getAbiGenerationMode();
@@ -172,8 +170,6 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
     for (String processorParam : getAnnotationProcessorParams()) {
       builder.addParameters(processorParam);
     }
-    builder.setProcessOnly(getAnnotationProcessorOnly().orElse(Boolean.FALSE));
-
     return builder.build(resolver.getSourcePathResolver(), ruleCellRoot);
   }
 }

@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import org.hamcrest.Matcher;
 import org.junit.Test;
@@ -95,12 +96,14 @@ public class JavacOptionsTest {
     JavacPluginParams params =
         JavacPluginParams.builder()
             .setLegacyAnnotationProcessorNames(Collections.singleton("processor"))
-            .setProcessOnly(true)
+            .setParameters(Arrays.asList("a", "b", "c"))
             .build(new TestActionGraphBuilder().getSourcePathResolver(), filesystem.getRootPath());
 
     JavacOptions options = createStandardBuilder().setJavaAnnotationProcessorParams(params).build();
 
-    assertOptionsHasFlag(options, "proc:only");
+    assertOptionsHasFlag(options, "Aa");
+    assertOptionsHasFlag(options, "Ab");
+    assertOptionsHasFlag(options, "Ac");
   }
 
   @Test
@@ -226,7 +229,6 @@ public class JavacOptionsTest {
     JavacPluginParams params =
         JavacPluginParams.builder()
             .setLegacyAnnotationProcessorNames(Lists.newArrayList("myproc", "theirproc"))
-            .setProcessOnly(true)
             .build(new TestActionGraphBuilder().getSourcePathResolver(), filesystem.getRootPath());
 
     JavacOptions options = createStandardBuilder().setJavaAnnotationProcessorParams(params).build();

@@ -250,8 +250,7 @@ message ResolvedJavacOptions {
 
     message JavacPluginParams {
         repeated string parameters = 1;
-        bool processOnly = 2;
-        repeated ResolvedJavacPluginProperties pluginProperties = 3;
+        repeated ResolvedJavacPluginProperties pluginProperties = 2;
     }
 
     message ResolvedJavacPluginProperties {

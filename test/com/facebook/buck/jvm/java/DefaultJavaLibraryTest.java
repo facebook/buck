@@ -448,7 +448,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     scenario.getAnnotationProcessingParamsBuilder().addParameters("MyParameter");
     scenario.getAnnotationProcessingParamsBuilder().addParameters("MyKey=MyValue");
-    scenario.getAnnotationProcessingParamsBuilder().setProcessOnly(true);
 
     ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
 
@@ -457,7 +456,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertHasProcessor(parameters, "MyProcessor");
     MoreAsserts.assertContainsOne(parameters, "-s");
     MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
-    MoreAsserts.assertContainsOne(parameters, "-proc:only");
 
     assertEquals(
         "Expected '-processor MyProcessor' parameters",
