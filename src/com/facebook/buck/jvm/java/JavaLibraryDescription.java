@@ -203,7 +203,6 @@ public class JavaLibraryDescription
           projectFilesystem,
           emptyParams,
           args.getMavenCoords(),
-          args.getMavenPomTemplate(),
           summary.getMavenDeps(),
           sources,
           downwardApiConfig.isEnabledForJava());
@@ -227,12 +226,7 @@ public class JavaLibraryDescription
             buildTarget, projectFilesystem, params, args.getSrcs(), mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
-            buildTargetWithMavenFlavor,
-            projectFilesystem,
-            params,
-            args.getSrcs(),
-            mavenCoords,
-            args.getMavenPomTemplate());
+            buildTargetWithMavenFlavor, projectFilesystem, params, args.getSrcs(), mavenCoords);
       }
     }
 
@@ -282,8 +276,7 @@ public class JavaLibraryDescription
           buildTargetWithMavenFlavor,
           projectFilesystem,
           params,
-          args.getMavenCoords(),
-          args.getMavenPomTemplate());
+          args.getMavenCoords());
     }
   }
 
@@ -309,6 +302,7 @@ public class JavaLibraryDescription
 
   public interface CoreArg
       extends JvmLibraryArg, HasDeclaredDeps, HasProvidedDeps, HasSrcs, HasTests {
+
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getResources();
 
@@ -320,8 +314,6 @@ public class JavaLibraryDescription
     Optional<SourcePath> getManifestFile();
 
     Optional<String> getMavenCoords();
-
-    Optional<SourcePath> getMavenPomTemplate();
 
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getExportedDeps();

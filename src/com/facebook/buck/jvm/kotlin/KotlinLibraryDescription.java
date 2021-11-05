@@ -131,8 +131,7 @@ public class KotlinLibraryDescription
             projectFilesystem,
             Objects.requireNonNull(paramsWithMavenFlavor),
             args.getSrcs(),
-            mavenCoords,
-            args.getMavenPomTemplate());
+            mavenCoords);
       }
     }
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
@@ -183,8 +182,7 @@ public class KotlinLibraryDescription
           buildTargetWithMavenFlavor,
           projectFilesystem,
           Objects.requireNonNull(paramsWithMavenFlavor),
-          args.getMavenCoords(),
-          args.getMavenPomTemplate());
+          args.getMavenCoords());
     }
   }
 

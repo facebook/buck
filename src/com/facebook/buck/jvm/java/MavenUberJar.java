@@ -57,7 +57,6 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements MavenPublishable {
 
   private final Optional<String> mavenCoords;
-  private final Optional<SourcePath> mavenPomTemplate;
   private final TraversedDeps traversedDeps;
 
   private MavenUberJar(
@@ -65,12 +64,10 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      Optional<String> mavenCoords,
-      Optional<SourcePath> mavenPomTemplate) {
+      Optional<String> mavenCoords) {
     super(buildTarget, projectFilesystem, params);
     this.traversedDeps = traversedDeps;
     this.mavenCoords = mavenCoords;
-    this.mavenPomTemplate = mavenPomTemplate;
   }
 
   private static BuildRuleParams adjustParams(BuildRuleParams params, TraversedDeps traversedDeps) {
@@ -91,16 +88,14 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      Optional<String> mavenCoords,
-      Optional<SourcePath> mavenPomTemplate) {
+      Optional<String> mavenCoords) {
     TraversedDeps traversedDeps = TraversedDeps.traverse(ImmutableSet.of(rootRule));
     return new MavenUberJar(
         traversedDeps,
         buildTarget,
         projectFilesystem,
         adjustParams(params, traversedDeps),
-        mavenCoords,
-        mavenPomTemplate);
+        mavenCoords);
   }
 
   @Override
@@ -150,11 +145,6 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Optional<SourcePath> getPomTemplate() {
-    return mavenPomTemplate;
-  }
-
-  @Override
   public Iterable<HasMavenCoordinates> getMavenDeps() {
     return traversedDeps.mavenDeps;
   }
@@ -167,7 +157,6 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public static class SourceJar extends JavaSourceJar implements MavenPublishable {
 
     private final TraversedDeps traversedDeps;
-    private final Optional<SourcePath> mavenPomTemplate;
 
     public SourceJar(
         BuildTarget buildTarget,
@@ -175,11 +164,9 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         BuildRuleParams params,
         ImmutableSortedSet<SourcePath> srcs,
         Optional<String> mavenCoords,
-        Optional<SourcePath> mavenPomTemplate,
         TraversedDeps traversedDeps) {
       super(buildTarget, projectFilesystem, params, srcs, mavenCoords);
       this.traversedDeps = traversedDeps;
-      this.mavenPomTemplate = mavenPomTemplate;
     }
 
     public static SourceJar create(
@@ -187,8 +174,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         ProjectFilesystem projectFilesystem,
         BuildRuleParams params,
         ImmutableSortedSet<SourcePath> topLevelSrcs,
-        Optional<String> mavenCoords,
-        Optional<SourcePath> mavenPomTemplate) {
+        Optional<String> mavenCoords) {
       // Do not package deps by default.
       TraversedDeps traversedDeps = TraversedDeps.traverse(params.getBuildDeps(), false);
 
@@ -201,18 +187,7 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
               .append(topLevelSrcs)
               .toSortedSet(Ordering.natural());
       return new SourceJar(
-          buildTarget,
-          projectFilesystem,
-          params,
-          sourcePaths,
-          mavenCoords,
-          mavenPomTemplate,
-          traversedDeps);
-    }
-
-    @Override
-    public Optional<SourcePath> getPomTemplate() {
-      return mavenPomTemplate;
+          buildTarget, projectFilesystem, params, sourcePaths, mavenCoords, traversedDeps);
     }
 
     @Override

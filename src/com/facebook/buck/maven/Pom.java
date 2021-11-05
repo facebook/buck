@@ -19,7 +19,6 @@ package com.facebook.buck.maven;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.google.common.annotations.VisibleForTesting;
@@ -78,11 +77,9 @@ public class Pom {
 
   private final Model model;
   private final MavenPublishable publishable;
-  private final SourcePathResolverAdapter pathResolver;
   private final Path path;
 
-  public Pom(SourcePathResolverAdapter pathResolver, Path path, MavenPublishable buildRule) {
-    this.pathResolver = pathResolver;
+  public Pom(Path path, MavenPublishable buildRule) {
     this.path = path;
     this.publishable = buildRule;
     this.model = constructModel();
@@ -90,11 +87,10 @@ public class Pom {
   }
 
   /** Generate POM file. */
-  public static AbsPath generatePomFile(
-      SourcePathResolverAdapter pathResolver, MavenPublishable rule) throws IOException {
+  public static AbsPath generatePomFile(MavenPublishable rule) throws IOException {
     AbsPath pom = getPomPath(rule);
     Files.deleteIfExists(pom.getPath());
-    generatePomFile(pathResolver, rule, pom);
+    generatePomFile(rule, pom);
     return pom;
   }
 
@@ -106,10 +102,9 @@ public class Pom {
   }
 
   @VisibleForTesting
-  static void generatePomFile(
-      SourcePathResolverAdapter pathResolver, MavenPublishable rule, AbsPath optionallyExistingPom)
+  static void generatePomFile(MavenPublishable rule, AbsPath optionallyExistingPom)
       throws IOException {
-    new Pom(pathResolver, optionallyExistingPom.getPath(), rule).flushToFile();
+    new Pom(optionallyExistingPom.getPath(), rule).flushToFile();
   }
 
   private void applyBuildRule() {
@@ -147,13 +142,6 @@ public class Pom {
     File file = path.toFile();
     Model model = new Model();
     model.setModelVersion(POM_MODEL_VERSION);
-
-    if (publishable.getPomTemplate().isPresent()) {
-      model =
-          constructModel(
-              pathResolver.getAbsolutePath(publishable.getPomTemplate().get()).toFile(), model);
-    }
-
     if (file.isFile()) {
       model = constructModel(file, model);
     }

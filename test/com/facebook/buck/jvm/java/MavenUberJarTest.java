@@ -76,8 +76,7 @@ public class MavenUberJarTest {
             javaTarget,
             new FakeProjectFilesystem(),
             javaLibraryBuilder.createBuildRuleParams(graphBuilder),
-            Optional.of("com.facebook.buck.jvm.java:java:jar:42"),
-            Optional.empty());
+            Optional.of("com.facebook.buck.jvm.java:java:jar:42"));
     assertThat(buildRule.getBuildDeps(), Matchers.not(Matchers.hasItem(pythonLibrary)));
   }
 
@@ -108,7 +107,6 @@ public class MavenUberJarTest {
             new FakeProjectFilesystem(),
             params,
             ImmutableSortedSet.of(FakeSourcePath.of("javaTarget")),
-            Optional.empty(),
             Optional.empty());
 
     List<BuildRule> packagedDeps = Lists.newArrayList(buildRule.getPackagedDependencies());

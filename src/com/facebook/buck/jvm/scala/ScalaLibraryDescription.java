@@ -119,12 +119,7 @@ public class ScalaLibraryDescription
             buildTarget, projectFilesystem, rawParams, args.getSrcs(), mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
-            buildTargetWithMavenFlavor,
-            projectFilesystem,
-            rawParams,
-            args.getSrcs(),
-            mavenCoords,
-            args.getMavenPomTemplate());
+            buildTargetWithMavenFlavor, projectFilesystem, rawParams, args.getSrcs(), mavenCoords);
       }
     }
 
@@ -173,8 +168,7 @@ public class ScalaLibraryDescription
           buildTargetWithMavenFlavor,
           projectFilesystem,
           rawParams,
-          args.getMavenCoords(),
-          args.getMavenPomTemplate());
+          args.getMavenCoords());
     }
   }
 

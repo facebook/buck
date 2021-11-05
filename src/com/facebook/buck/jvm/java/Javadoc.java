@@ -57,7 +57,6 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
 
   @AddToRuleKey private final ImmutableSet<SourcePath> sources;
   @AddToRuleKey private final Optional<String> mavenCoords;
-  @AddToRuleKey private final Optional<SourcePath> mavenPomTemplate;
   @AddToRuleKey private final Iterable<HasMavenCoordinates> mavenDeps;
 
   private final RelPath output;
@@ -69,14 +68,12 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Optional<String> mavenCoords,
-      Optional<SourcePath> mavenPomTemplate,
       Iterable<HasMavenCoordinates> mavenDeps,
       ImmutableSet<SourcePath> sources,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
 
     this.mavenCoords = mavenCoords.map(coord -> AetherUtil.addClassifier(coord, "javadoc"));
-    this.mavenPomTemplate = mavenPomTemplate;
     this.mavenDeps = mavenDeps;
     this.sources = sources;
     this.withDownwardApi = withDownwardApi;
@@ -209,10 +206,5 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
   @Override
   public Iterable<BuildRule> getPackagedDependencies() {
     return ImmutableSet.of(this); // I think that this is right
-  }
-
-  @Override
-  public Optional<SourcePath> getPomTemplate() {
-    return mavenPomTemplate;
   }
 }
