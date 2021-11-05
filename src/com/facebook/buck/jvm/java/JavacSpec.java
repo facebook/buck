@@ -17,15 +17,13 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Optional;
 import org.immutables.value.Value;
 
-@BuckStyleValueWithBuilder
+@BuckStyleValue
 public abstract class JavacSpec {
   public abstract Optional<SourcePath> getJavacPath();
-
-  public abstract Optional<String> getCompilerClassName();
 
   @Value.Lazy
   public JavacProvider getJavacProvider() {
@@ -41,9 +39,11 @@ public abstract class JavacSpec {
     }
   }
 
-  public static Builder builder() {
-    return new Builder();
+  public static JavacSpec of() {
+    return of(Optional.empty());
   }
 
-  public static class Builder extends ImmutableJavacSpec.Builder {}
+  public static JavacSpec of(Optional<SourcePath> javacPath) {
+    return ImmutableJavacSpec.ofImpl(javacPath);
+  }
 }

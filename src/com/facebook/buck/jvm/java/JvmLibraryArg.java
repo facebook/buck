@@ -29,7 +29,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
-import com.facebook.buck.jvm.java.JavacSpec.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -82,9 +81,7 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
     if (!hasJavacSpec()) {
       return null;
     }
-    Builder builder = JavacSpec.builder();
-    builder.setJavacPath(getJavac());
-    return builder.build();
+    return JavacSpec.of(getJavac());
   }
 
   default List<BuildRule> getPluginsOf(

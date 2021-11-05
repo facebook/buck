@@ -29,6 +29,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.Optional;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -36,14 +37,13 @@ import org.junit.Test;
 
 public class JavacSpecTest {
   private ActionGraphBuilder graphBuilder;
-  private JavacSpec.Builder specBuilder;
+  private JavacSpec spec = JavacSpec.of();
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
   public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
-    specBuilder = JavacSpec.builder();
   }
 
   @Test
@@ -60,7 +60,7 @@ public class JavacSpecTest {
     AbsPath externalPath = tmp.newExecutableFile();
 
     SourcePath javacPath = FakeSourcePath.of(externalPath);
-    specBuilder.setJavacPath(javacPath);
+    spec = JavacSpec.of(Optional.of(javacPath));
     ExternalJavac.ResolvedExternalJavac javac =
         (ExternalJavac.ResolvedExternalJavac)
             getJavac().resolve(graphBuilder.getSourcePathResolver(), tmp.getRoot());
@@ -69,6 +69,6 @@ public class JavacSpecTest {
   }
 
   private Javac getJavac() {
-    return specBuilder.build().getJavacProvider().resolve(graphBuilder);
+    return spec.getJavacProvider().resolve(graphBuilder);
   }
 }

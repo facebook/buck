@@ -75,12 +75,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   private JavaBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
-    this.javacSpecSupplier =
-        targetConfiguration ->
-            JavacSpec.builder()
-                .setJavacPath(getJavacPath(targetConfiguration))
-                .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
-                .build();
+    this.javacSpecSupplier = targetConfiguration -> JavacSpec.of(getJavacPath(targetConfiguration));
+
   }
 
   @Override
