@@ -156,11 +156,6 @@ public class JavaLibraryBuilder
     return this;
   }
 
-  public JavaLibraryBuilder setJavac(SourcePath javac) {
-    getArgForPopulating().setJavac(Optional.of(javac));
-    return this;
-  }
-
   public JavaLibraryBuilder setSourceLevel(String sourceLevel) {
     getArgForPopulating().setSource(Optional.of(sourceLevel));
     return this;

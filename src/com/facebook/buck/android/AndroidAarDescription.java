@@ -235,7 +235,7 @@ public class AndroidAarDescription
               args.getBuildConfigValues(),
               Optional.empty(),
               graphBuilder,
-              javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
+              javacFactory.create(graphBuilder, buildTarget.getTargetConfiguration()),
               toolchainProvider
                   .getByName(
                       JavacOptionsProvider.DEFAULT_NAME,
@@ -317,8 +317,7 @@ public class AndroidAarDescription
       AndroidAarDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(
-        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
   // TODO: Don't inherit from AndroidLibraryDescription if most args are ignored

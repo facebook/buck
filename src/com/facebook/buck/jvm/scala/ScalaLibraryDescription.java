@@ -190,8 +190,7 @@ public class ScalaLibraryDescription
         .addAll(scalaBuckConfig.getCompilerPlugins(buildTarget.getTargetConfiguration()));
     Optionals.addIfPresent(
         scalaBuckConfig.getScalacTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
-    javacFactory.addParseTimeDeps(
-        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
   public interface CoreArg extends JavaLibraryDescription.CoreArg {

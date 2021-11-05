@@ -310,8 +310,7 @@ public class JavaTestDescription
     targetGraphOnlyDepsBuilder.addAll(
         getUnresolvedCxxPlatform(constructorArg, buildTarget.getTargetConfiguration())
             .getParseTimeDeps(buildTarget.getTargetConfiguration()));
-    javacFactory.addParseTimeDeps(
-        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
   public interface CoreArg extends HasTestTimeout, HasDepsQuery, JavaLibraryDescription.CoreArg {

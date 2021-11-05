@@ -16,28 +16,18 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableList;
-import java.io.IOException;
-import java.util.Optional;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -109,39 +99,6 @@ public class JvmLibraryArgInterpreterTest {
           e.getMessage(),
           e.getHumanReadableErrorMessage().contains("either source and target or java_version"));
     }
-  }
-
-  @Test
-  public void javacArgIsSet() {
-    JvmLibraryArg arg =
-        ExampleJvmLibraryArg.builder()
-            .setName("foo")
-            .setJavac(FakeSourcePath.of("does-not-exist"))
-            .build();
-
-    assertEquals(Optional.of(arg.getJavac().get()), arg.getJavacSpec().getJavacPath());
-  }
-
-  @Test
-  public void returnsExternalCompilerIfJavacArgHasPath() throws IOException {
-    // newExecutableFile cannot be executed on windows.
-    Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    AbsPath externalJavac = tmp.newExecutableFile();
-    SourcePath sourcePath = FakeSourcePath.of(externalJavac.toString());
-
-    JvmLibraryArg arg = ExampleJvmLibraryArg.builder().setName("foo").setJavac(sourcePath).build();
-
-    ExternalJavac javac = (ExternalJavac) arg.getJavacSpec().getJavacProvider().resolve(ruleFinder);
-
-    assertEquals(
-        ImmutableList.of(externalJavac.toString()),
-        javac.resolve(sourcePathResolverAdapter, tmp.getRoot()).getCommandPrefix());
-  }
-
-  @Test
-  public void testNoJavacSpecIfNoJavacArg() {
-    JvmLibraryArg arg = ExampleJvmLibraryArg.builder().setName("foo").build();
-    assertNull(arg.getJavacSpec());
   }
 
   private JavacOptions createJavacOptions(JvmLibraryArg arg) {

@@ -26,7 +26,6 @@ import com.facebook.buck.util.MoreFunctions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 public final class JavacFactory {
   private final Function<TargetConfiguration, JavacProvider> javacProvider;
@@ -37,15 +36,7 @@ public final class JavacFactory {
 
   /** Returns either the default javac or one created from the provided args. */
   public Javac create(
-      SourcePathRuleFinder ruleFinder,
-      @Nullable JvmLibraryArg args,
-      TargetConfiguration toolchainTargetConfiguration) {
-    if (args != null) {
-      JavacSpec spec = args.getJavacSpec();
-      if (spec != null) {
-        return spec.getJavacProvider().resolve(ruleFinder);
-      }
-    }
+      SourcePathRuleFinder ruleFinder, TargetConfiguration toolchainTargetConfiguration) {
     return javacProvider.apply(toolchainTargetConfiguration).resolve(ruleFinder);
   }
 
@@ -68,13 +59,8 @@ public final class JavacFactory {
    */
   public void addParseTimeDeps(
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder,
-      @Nullable JvmLibraryArg args,
       TargetConfiguration toolchainTargetConfiguration) {
-    if (args == null || !args.hasJavacSpec()) {
-      javacProvider
-          .apply(toolchainTargetConfiguration)
-          .addParseTimeDeps(targetGraphOnlyDepsBuilder);
-    }
+    javacProvider.apply(toolchainTargetConfiguration).addParseTimeDeps(targetGraphOnlyDepsBuilder);
   }
 
   public ImmutableSet<BuildRule> getBuildDeps(

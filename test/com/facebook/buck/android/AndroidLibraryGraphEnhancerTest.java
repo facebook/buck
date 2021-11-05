@@ -232,7 +232,7 @@ public class AndroidLibraryGraphEnhancerTest {
             new FakeProjectFilesystem(),
             ImmutableSortedSet.of(dep, resourceRule),
             JavacFactoryHelper.createJavacFactory(javaConfig)
-                .create(graphBuilder, null, UnconfiguredTargetConfiguration.INSTANCE),
+                .create(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE),
             options,
             /* unionPackage */ Optional.empty(),
             false);

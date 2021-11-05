@@ -294,8 +294,7 @@ public class JavaLibraryDescription
       JavaLibraryDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(
-        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
 
     if (InferJava.findSupportedFlavor(buildTarget.getFlavors()).isPresent()) {
 

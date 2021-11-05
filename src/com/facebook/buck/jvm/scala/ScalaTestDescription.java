@@ -222,8 +222,7 @@ public class ScalaTestDescription
     extraDepsBuilder.add(config.getScalaLibraryTarget(buildTarget.getTargetConfiguration()));
     Optionals.addIfPresent(
         config.getScalacTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
-    javacFactory.addParseTimeDeps(
-        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
   @RuleArg

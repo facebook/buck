@@ -315,8 +315,7 @@ public class AndroidInstrumentationApkDescription
       AndroidInstrumentationApkDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(
-        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
     AndroidTools.addParseTimeDepsToAndroidTools(
         toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }

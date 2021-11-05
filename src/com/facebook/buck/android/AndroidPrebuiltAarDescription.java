@@ -242,7 +242,7 @@ public class AndroidPrebuiltAarDescription
                     Iterables.concat(javaDeps, Collections.singleton(prebuiltJar))))
             .withExtraDeps(ImmutableSortedSet.of(unzipAar));
     boolean withDownwardApi = downwardApiConfig.isEnabledForAndroid();
-    Javac javac = javacFactory.create(graphBuilder, null, buildTarget.getTargetConfiguration());
+    Javac javac = javacFactory.create(graphBuilder, buildTarget.getTargetConfiguration());
     return new AndroidPrebuiltAar(
         buildTarget,
         projectFilesystem,
@@ -279,8 +279,7 @@ public class AndroidPrebuiltAarDescription
       AndroidPrebuiltAarDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(
-        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
     AndroidTools.addParseTimeDepsToAndroidTools(
         toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
