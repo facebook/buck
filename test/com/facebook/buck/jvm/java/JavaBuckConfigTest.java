@@ -584,17 +584,12 @@ public class JavaBuckConfigTest {
                         JavaBuckConfig.PROPERTY_JAVACD_ENABLED,
                         Boolean.toString(true),
                         JavaBuckConfig.PROPERTY_JAVACD_DISABLED_FOR_WINDOWS,
-                        Boolean.toString(true),
-                        JavaBuckConfig.PROPERTY_JAVACD_ROLLOUT_PERCENTAGE,
-                        Integer.toString(100))))
+                        Boolean.toString(true))))
             .build()
             .getView(JavaBuckConfig.class);
     assertThat(javaBuckConfig.isDisabledForWindows(), is(true));
     boolean isWindows = Platform.detect() == Platform.WINDOWS;
     // enabled for everything except windows
     assertThat(javaBuckConfig.isJavaCDEnabled(), is(!isWindows));
-    JavaCDRolloutMode javaCDRolloutMode =
-        isWindows ? JavaCDRolloutMode.UNKNOWN : JavaCDRolloutMode.ENABLED;
-    assertThat(javaBuckConfig.getJavacdMode(), is(javaCDRolloutMode));
   }
 }

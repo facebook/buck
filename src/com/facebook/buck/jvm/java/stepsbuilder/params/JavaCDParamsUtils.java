@@ -32,7 +32,6 @@ public class JavaCDParamsUtils {
       javaCDParams =
           DefaultRulesJavaCDParams.of(
               javaBuckConfig.isJavaCDEnabled(),
-              javaBuckConfig.getJavacdMode(),
               javaCDBuckConfig.getJvmFlags(),
               javaCDBuckConfig.getWorkerToolSize(),
               javaCDBuckConfig.getWorkerToolMaxInstancesSize(),

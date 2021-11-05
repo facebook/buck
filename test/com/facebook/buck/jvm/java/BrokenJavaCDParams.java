@@ -21,7 +21,6 @@ import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDRolloutModeValue;
 import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
 import com.google.common.collect.ImmutableList;
 
@@ -35,10 +34,6 @@ public abstract class BrokenJavaCDParams implements RulesJavaCDParams {
   @Override
   @AddToRuleKey
   public abstract boolean hasJavaCDEnabled();
-
-  @Override
-  @AddToRuleKey
-  public abstract JavaCDRolloutModeValue getJavaCDRolloutModeValue();
 
   @Override
   @AddToRuleKey
@@ -82,15 +77,6 @@ public abstract class BrokenJavaCDParams implements RulesJavaCDParams {
 
   public static BrokenJavaCDParams of() {
     return ImmutableBrokenJavaCDParams.ofImpl(
-        false,
-        JavaCDRolloutModeValue.of(JavaCDRolloutMode.UNKNOWN),
-        ImmutableList.of(),
-        1,
-        1,
-        1,
-        1,
-        false,
-        false,
-        false);
+        false, ImmutableList.of(), 1, 1, 1, 1, false, false, false);
   }
 }

@@ -27,8 +27,6 @@ public interface RulesJavaCDParams extends AddsToRuleKey {
 
   boolean hasJavaCDEnabled();
 
-  JavaCDRolloutModeValue getJavaCDRolloutModeValue();
-
   ImmutableList<String> getStartCommandOptions();
 
   int getWorkerToolPoolSize();

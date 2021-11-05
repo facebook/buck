@@ -33,10 +33,8 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.java.JavaRuntimeUtils;
-import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,7 +46,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 
 /** A java-specific "view" of BuckConfig. */
@@ -62,7 +59,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
   public static final String PROPERTY_JAVACD_ENABLED = "javacd_enabled";
   static final String PROPERTY_JAVACD_DISABLED_FOR_WINDOWS = "javacd_disabled_for_windows";
-  static final String PROPERTY_JAVACD_ROLLOUT_PERCENTAGE = "javacd_rollout_percentage";
 
   private static final CommandTool DEFAULT_JAVA_TOOL =
       new CommandTool.Builder().addArg(JavaRuntimeUtils.getBucksJavaBinCommand()).build();
@@ -71,7 +67,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   private final BuckConfig delegate;
   private final Function<TargetConfiguration, JavacSpec> javacSpecSupplier;
-  private final Supplier<JavaCDRolloutMode> javacdMode;
 
   // Interface for reflection-based ConfigView to instantiate this class.
   public static JavaBuckConfig of(BuckConfig delegate) {
@@ -87,43 +82,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
                 .setJavacJarPath(getJavacJarPath(targetConfiguration))
                 .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
                 .build();
-    this.javacdMode =
-        Suppliers.memoize(
-            () -> {
-              if (IS_WINDOWS && isDisabledForWindows()) {
-                LOGGER.info("javacd disabled on windows");
-                return JavaCDRolloutMode.UNKNOWN;
-              }
-
-              OptionalInt javacdRolloutPercentage =
-                  delegate.getInteger(SECTION, PROPERTY_JAVACD_ROLLOUT_PERCENTAGE);
-              if (javacdRolloutPercentage.isPresent()) {
-                LOGGER.info("%s is present. Experiment is on.", PROPERTY_JAVACD_ROLLOUT_PERCENTAGE);
-
-                int rolloutPercentage = javacdRolloutPercentage.getAsInt();
-
-                Preconditions.checkArgument(
-                    rolloutPercentage >= 0 && rolloutPercentage <= 100,
-                    "%s has to be between 0 and 100",
-                    PROPERTY_JAVACD_ROLLOUT_PERCENTAGE);
-                double enabledPercentage = rolloutPercentage / 100.;
-                double disabledPercentage = 1. - enabledPercentage;
-                Map<JavaCDRolloutMode, Double> experimentValues =
-                    ImmutableMap.of(
-                        JavaCDRolloutMode.ENABLED,
-                        enabledPercentage,
-                        JavaCDRolloutMode.DISABLED,
-                        disabledPercentage);
-                LOGGER.info("JavacdMode experimentValues set to %s", experimentValues);
-
-                JavaCDRolloutMode state =
-                    RandomizedTrial.getGroupStable(
-                        PROPERTY_JAVACD_ROLLOUT_PERCENTAGE, experimentValues);
-                LOGGER.info("JavacdMode is set to %s", state);
-                return state;
-              }
-              return JavaCDRolloutMode.UNKNOWN;
-            });
   }
 
   @Override
@@ -358,10 +316,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public boolean isDisabledForWindows() {
     return getDelegate().getBooleanValue(SECTION, PROPERTY_JAVACD_DISABLED_FOR_WINDOWS, false);
-  }
-
-  public JavaCDRolloutMode getJavacdMode() {
-    return javacdMode.get();
   }
 
   public boolean isPipeliningDisabled() {
