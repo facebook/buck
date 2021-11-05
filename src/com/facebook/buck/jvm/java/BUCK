@@ -99,8 +99,6 @@ java_immutables_library(
         "ExtraClasspathProvider.java",
         "FileManagerListener.java",
         "ForwardingStandardJavaFileManager.java",
-        "JarBackedJavac.java",
-        "JarBackedJavacProvider.java",
         "JarDiffer.java",
         "JarDumper.java",
         "JarFileObject.java",

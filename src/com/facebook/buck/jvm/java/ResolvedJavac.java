@@ -61,8 +61,6 @@ public interface ResolvedJavac {
   enum Source {
     /** Shell out to the javac in the JDK */
     EXTERNAL,
-    /** Run javac in-process, loading it from a jar specified in .buckconfig. */
-    JAR,
     /** Run javac in-process, loading it from the JRE in which Buck is running. */
     JDK,
   }

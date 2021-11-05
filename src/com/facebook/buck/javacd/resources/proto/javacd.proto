@@ -296,18 +296,12 @@ message JarParameters {
 message ResolvedJavac {
     oneof javac {
         ExternalJavac externalJavac = 1;
-        JarBackedJavac jarBackedJavac = 2;
-        JSR199Javac jcr199Javac = 3;
+        JSR199Javac jsr199Javac = 2;
     }
 
     message ExternalJavac {
         string shortName = 1;
         repeated string commandPrefix = 2;
-    }
-
-    message JarBackedJavac {
-        string compilerClassName = 1;
-        repeated RelPath resolvedClasspath = 2;
     }
 
     message JSR199Javac {

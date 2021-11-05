@@ -71,10 +71,6 @@ public class ExternalJavacProvider implements JavacProvider {
       case EXTERNAL:
         Preconditions.checkState(spec.getJavacPath().isPresent());
         return new ExternalJavacProvider(spec.getJavacPath().get());
-      case JAR:
-        Preconditions.checkState(spec.getJavacJarPath().isPresent());
-        return new JarBackedJavacProvider(
-            spec.getJavacJarPath().get(), COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL);
       case JDK:
         return new ConstantJavacProvider(JdkProvidedInMemoryJavac.INSTANCE);
     }

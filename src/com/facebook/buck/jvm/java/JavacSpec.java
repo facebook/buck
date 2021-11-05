@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import java.util.Optional;
@@ -25,8 +24,6 @@ import org.immutables.value.Value;
 @BuckStyleValueWithBuilder
 public abstract class JavacSpec {
   public abstract Optional<SourcePath> getJavacPath();
-
-  public abstract Optional<SourcePath> getJavacJarPath();
 
   public abstract Optional<String> getCompilerClassName();
 
@@ -37,14 +34,8 @@ public abstract class JavacSpec {
 
   /** Returns {@link ResolvedJavac.Source} */
   public ResolvedJavac.Source getJavacSource() {
-    if (getJavacPath().isPresent() && getJavacJarPath().isPresent()) {
-      throw new HumanReadableException("Cannot set both javac and javacjar");
-    }
-
     if (getJavacPath().isPresent()) {
       return ResolvedJavac.Source.EXTERNAL;
-    } else if (getJavacJarPath().isPresent()) {
-      return ResolvedJavac.Source.JAR;
     } else {
       return ResolvedJavac.Source.JDK;
     }

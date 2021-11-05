@@ -29,20 +29,15 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.ResolvedJavac.Invocation;
-import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.MockClassLoader;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -58,7 +53,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
 import javax.tools.DiagnosticListener;
@@ -66,8 +60,6 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
-import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -270,81 +262,7 @@ public class Jsr199JavacIntegrationTest {
     }
   }
 
-  @Test
-  public void shouldUseSpecifiedJavacJar() throws Exception {
-    // TODO(T47912516): Remove or test for expected error message after we've decided how to handle
-    //                  javac JARs in Java 11.
-    Assume.assumeThat(JavaVersion.getMajorVersion(), Matchers.lessThanOrEqualTo(8));
-
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    BuildRule rule = new FakeBuildRule("//:fake");
-    graphBuilder.addToIndex(rule);
-
-    Path fakeJavacJar = Paths.get("ae036e57-77a7-4356-a79c-0f85b1a3290d", "fakeJavac.jar");
-    StepExecutionContext executionContext = TestExecutionContext.newInstance();
-    MockClassLoader mockClassLoader =
-        new MockClassLoader(
-            ClassLoader.getSystemClassLoader(),
-            ImmutableMap.of(
-                ExternalJavacProvider.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, MockJavac.class));
-    executionContext
-        .getClassLoaderCache()
-        .injectClassLoader(
-            ClassLoader.getSystemClassLoader(),
-            ImmutableList.of(fakeJavacJar.toUri().toURL()),
-            mockClassLoader);
-
-    Jsr199Javac.ResolvedJsr199Javac javac =
-        createJavac(/* withSyntaxError */ false, Optional.of(fakeJavacJar));
-
-    BuckPaths buckPaths = projectFilesystem.getBuckPaths();
-    JavacExecutionContext javacExecutionContext =
-        ImmutableJavacExecutionContext.ofImpl(
-            new JavacEventSinkToBuckEventBusBridge(
-                executionContext.getIsolatedEventBus(), executionContext.getActionId()),
-            executionContext.getStdErr(),
-            executionContext.getClassLoaderCache(),
-            executionContext.getVerbosity(),
-            ImmutableMap.of(),
-            projectFilesystem.getRootPath(),
-            executionContext.getEnvironment(),
-            executionContext.getProcessExecutor(),
-            buckPaths.getConfiguredBuckOut());
-
-    boolean caught = false;
-
-    try {
-      javac
-          .newBuildInvocation(
-              javacExecutionContext,
-              buildTargetValue,
-              CompilerOutputPathsValue.of(buckPaths, buildTarget),
-              ImmutableList.of(),
-              ImmutableList.of(),
-              ImmutableList.of(),
-              SOURCE_PATHS,
-              pathToSrcsList,
-              RelPath.get("working"),
-              false,
-              false,
-              null,
-              null,
-              AbiGenerationMode.CLASS,
-              AbiGenerationMode.CLASS,
-              null)
-          .buildClasses();
-      fail("Did not expect compilation to succeed");
-    } catch (OutOfMemoryError ex) {
-      if (ex.toString().contains("abcdef")) {
-        caught = true;
-      }
-    }
-
-    assertTrue("mock Java compiler should throw", caught);
-  }
-
-  private Jsr199Javac.ResolvedJsr199Javac createJavac(
-      boolean withSyntaxError, Optional<Path> javacJar) throws IOException {
+  private Jsr199Javac.ResolvedJsr199Javac createJavac(boolean withSyntaxError) throws IOException {
 
     Path exampleJava = tmp.newFile("Example.java").getPath();
     Files.write(
@@ -357,21 +275,11 @@ public class Jsr199JavacIntegrationTest {
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());
 
-    Optional<SourcePath> jar = javacJar.map(p -> PathSourcePath.of(new FakeProjectFilesystem(), p));
     SourcePathResolverAdapter sourcePathResolver =
         new TestActionGraphBuilder().getSourcePathResolver();
-    if (jar.isPresent()) {
-      return new JarBackedJavac(
-              ExternalJavacProvider.COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL, ImmutableSet.of(jar.get()))
-          .resolve(sourcePathResolver, projectFilesystem.getRootPath());
-    }
 
     return JdkProvidedInMemoryJavac.INSTANCE.resolve(
         sourcePathResolver, projectFilesystem.getRootPath());
-  }
-
-  private Jsr199Javac.ResolvedJsr199Javac createJavac(boolean withSyntaxError) throws IOException {
-    return createJavac(withSyntaxError, Optional.empty());
   }
 
   /**

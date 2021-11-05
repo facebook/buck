@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -25,13 +24,10 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -40,10 +36,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
-import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
@@ -130,17 +123,6 @@ public class JvmLibraryArgInterpreterTest {
   }
 
   @Test
-  public void testJavacJarArgIsSet() {
-    JvmLibraryArg arg =
-        ExampleJvmLibraryArg.builder()
-            .setName("foo")
-            .setJavacJar(FakeSourcePath.of("does-not-exist"))
-            .build();
-
-    assertEquals(arg.getJavacJar(), arg.getJavacSpec().getJavacJarPath());
-  }
-
-  @Test
   public void returnsExternalCompilerIfJavacArgHasPath() throws IOException {
     // newExecutableFile cannot be executed on windows.
     Assume.assumeThat(Platform.detect(), not(Platform.WINDOWS));
@@ -154,24 +136,6 @@ public class JvmLibraryArgInterpreterTest {
     assertEquals(
         ImmutableList.of(externalJavac.toString()),
         javac.resolve(sourcePathResolverAdapter, tmp.getRoot()).getCommandPrefix());
-  }
-
-  @Test
-  public void returnsJarBackedJavacWhenCompilerArgIsPrebuiltJar() {
-    Path javacJarPath = Paths.get("langtools").resolve("javac.jar");
-    BuildTarget target = BuildTargetFactory.newInstance("//langtools:javac");
-    PrebuiltJarBuilder.createBuilder(target).setBinaryJar(javacJarPath).build(graphBuilder);
-    SourcePath sourcePath = DefaultBuildTargetSourcePath.of(target);
-
-    JvmLibraryArg arg =
-        ExampleJvmLibraryArg.builder().setName("foo").setJavacJar(sourcePath).build();
-
-    JarBackedJavac javac =
-        (JarBackedJavac) arg.getJavacSpec().getJavacProvider().resolve(ruleFinder);
-
-    ImmutableList<SourcePath> inputs =
-        BuildableSupport.deriveInputs(javac).collect(ImmutableList.toImmutableList());
-    assertThat(inputs, Matchers.hasItem(DefaultBuildTargetSourcePath.of(target)));
   }
 
   @Test

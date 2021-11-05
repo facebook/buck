@@ -576,7 +576,7 @@ public class JavaCDIntegrationTest {
             com.facebook.buck.javacd.model.AbsPath.newBuilder().setPath(baseDirectory).build())
         .setResolvedJavac(
             ResolvedJavac.newBuilder()
-                .setJcr199Javac(ResolvedJavac.JSR199Javac.getDefaultInstance())
+                .setJsr199Javac(ResolvedJavac.JSR199Javac.getDefaultInstance())
                 .build())
         .setResolvedJavacOptions(
             ResolvedJavacOptions.newBuilder()

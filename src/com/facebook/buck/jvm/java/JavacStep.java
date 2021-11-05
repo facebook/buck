@@ -236,7 +236,7 @@ public class JavacStep extends IsolatedStep {
     } else if (invokingRule.isSourceOnlyAbi()) {
       return "source_only_abi";
     } else if (state.getLibraryJarParameters().isPresent()) {
-      name = "javac_jar";
+      name = "javac";
     } else {
       name = getResolvedJavac().getShortName();
     }

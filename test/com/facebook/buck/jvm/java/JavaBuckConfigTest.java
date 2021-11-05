@@ -268,24 +268,6 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void whenJavacJarDoesNotExistThenHumanReadableExceptionIsThrown() throws IOException {
-    String invalidPath = temporaryFolder.getRoot() + "DoesNotExist";
-    Reader reader =
-        new StringReader(
-            Joiner.on('\n')
-                .join("[tools]", "    javac_jar = " + invalidPath.replace("\\", "\\\\")));
-    JavaBuckConfig config = createWithDefaultFilesystem(reader);
-    try {
-      config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacJarPath();
-      fail("Should throw exception as javac file does not exist.");
-    } catch (HumanReadableException e) {
-      assertEquals(
-          "Overridden tools:javac_jar path not found: " + invalidPath,
-          e.getHumanReadableErrorMessage());
-    }
-  }
-
-  @Test
   public void shouldSetJavaTargetAndSourceVersionFromConfig() throws IOException {
     String sourceLevel = "source-level";
     String targetLevel = "target-level";
@@ -439,25 +421,6 @@ public class JavaBuckConfigTest {
         config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
         is(ResolvedJavac.Source.EXTERNAL));
     assertFalse(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
-  }
-
-  @Test
-  public void trackClassUsageByDefaultForJavacFromJar() throws IOException {
-    JavaBuckConfig config =
-        FakeBuckConfig.builder()
-            .setFilesystem(defaultFilesystem)
-            .setSections(
-                ImmutableMap.of(
-                    "tools",
-                    ImmutableMap.of("javac_jar", temporaryFolder.newExecutableFile().toString())))
-            .build()
-            .getView(JavaBuckConfig.class);
-
-    assumeThat(
-        config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
-        is(ResolvedJavac.Source.JAR));
-
-    assertTrue(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test

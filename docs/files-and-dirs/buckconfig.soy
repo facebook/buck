@@ -5250,18 +5250,7 @@ buck = .
   {param description}
     The <code>javac</code> option is a path to a program that acts like Java javac.
     When set, buck uses this program instead of the system Java compiler.
-    When neither this nor {call buckconfig.tools_javac_jar /} is set, Buck defaults
-    to using the system compiler in-memory.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'tools' /}
-  {param name: 'javac_jar' /}
-  {param description}
-    When this option is set to a JAR file, Buck loads the referenced compiler in-memory.
-    When neither this nor {call buckconfig.tools_javac /} is set, Buck defaults
-    to using the system compiler in-memory.
+    If this is not set, Buck defaults to using the system compiler in-memory.
   {/param}
 {/call}
 

@@ -18,16 +18,12 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
 import static com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.SerializationUtil.createNotSupportedException;
 
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.java.ExternalJavac;
-import com.facebook.buck.jvm.java.JarBackedJavac;
 import com.facebook.buck.jvm.java.JdkProvidedInMemoryJavac;
 import com.facebook.buck.jvm.java.Jsr199Javac;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.protobuf.ProtocolStringList;
-import java.util.List;
 
 /** {@link ResolvedJavac} to protobuf serializer */
 public class ResolvedJavacSerializer {
@@ -39,15 +35,13 @@ public class ResolvedJavacSerializer {
    * com.facebook.buck.javacd.model.ResolvedJavac}.
    */
   public static com.facebook.buck.javacd.model.ResolvedJavac serialize(ResolvedJavac javac) {
-    com.facebook.buck.javacd.model.ResolvedJavac.Builder builder =
-        com.facebook.buck.javacd.model.ResolvedJavac.newBuilder();
+    var builder = com.facebook.buck.javacd.model.ResolvedJavac.newBuilder();
 
     boolean done = false;
 
     if (javac instanceof ExternalJavac.ResolvedExternalJavac) {
-      ExternalJavac.ResolvedExternalJavac externalJavac =
-          (ExternalJavac.ResolvedExternalJavac) javac;
-      com.facebook.buck.javacd.model.ResolvedJavac.ExternalJavac.Builder externalJavacBuilder =
+      var externalJavac = (ExternalJavac.ResolvedExternalJavac) javac;
+      var externalJavacBuilder =
           com.facebook.buck.javacd.model.ResolvedJavac.ExternalJavac.newBuilder();
 
       externalJavacBuilder.setShortName(externalJavac.getShortName());
@@ -59,24 +53,8 @@ public class ResolvedJavacSerializer {
       done = true;
     }
 
-    if (!done && javac instanceof JarBackedJavac.ResolvedJarBackedJavac) {
-
-      JarBackedJavac.ResolvedJarBackedJavac jarBackedJavac =
-          (JarBackedJavac.ResolvedJarBackedJavac) javac;
-
-      com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.Builder jarBackedJavacBuilder =
-          com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.newBuilder();
-      jarBackedJavacBuilder.setCompilerClassName(jarBackedJavac.getCompilerClassName());
-      for (RelPath classpath : jarBackedJavac.getClasspath()) {
-        jarBackedJavacBuilder.addResolvedClasspath(RelPathSerializer.serialize(classpath));
-      }
-
-      builder.setJarBackedJavac(jarBackedJavacBuilder.build());
-      done = true;
-    }
-
     if (!done && javac instanceof Jsr199Javac.ResolvedJsr199Javac) {
-      builder.setJcr199Javac(
+      builder.setJsr199Javac(
           com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.getDefaultInstance());
       done = true;
     }
@@ -94,30 +72,16 @@ public class ResolvedJavacSerializer {
    * ResolvedJavac}.
    */
   public static ResolvedJavac deserialize(com.facebook.buck.javacd.model.ResolvedJavac javac) {
-    com.facebook.buck.javacd.model.ResolvedJavac.JavacCase javacCase = javac.getJavacCase();
+    var javacCase = javac.getJavacCase();
     switch (javacCase) {
       case EXTERNALJAVAC:
-        com.facebook.buck.javacd.model.ResolvedJavac.ExternalJavac externalJavac =
-            javac.getExternalJavac();
+        var externalJavac = javac.getExternalJavac();
         String shortName = externalJavac.getShortName();
         ImmutableList<String> commandPrefix = toImmutableList(externalJavac.getCommandPrefixList());
 
         return new ExternalJavac.ResolvedExternalJavac(shortName, commandPrefix);
 
-      case JARBACKEDJAVAC:
-        com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac jarBackedJavac =
-            javac.getJarBackedJavac();
-        String compilerClassName = jarBackedJavac.getCompilerClassName();
-        List<com.facebook.buck.javacd.model.RelPath> resolvedClasspathList =
-            jarBackedJavac.getResolvedClasspathList();
-        ImmutableSortedSet<RelPath> classpath =
-            resolvedClasspathList.stream()
-                .map(RelPathSerializer::deserialize)
-                .collect(ImmutableSortedSet.toImmutableSortedSet(RelPath.comparator()));
-
-        return new JarBackedJavac.ResolvedJarBackedJavac(classpath, compilerClassName);
-
-      case JCR199JAVAC:
+      case JSR199JAVAC:
         return JdkProvidedInMemoryJavac.createJsr199Javac();
 
       case JAVAC_NOT_SET:

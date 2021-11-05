@@ -161,11 +161,6 @@ public class JavaLibraryBuilder
     return this;
   }
 
-  public JavaLibraryBuilder setJavacJar(SourcePath javacJar) {
-    getArgForPopulating().setJavacJar(Optional.of(javacJar));
-    return this;
-  }
-
   public JavaLibraryBuilder setSourceLevel(String sourceLevel) {
     getArgForPopulating().setSource(Optional.of(sourceLevel));
     return this;

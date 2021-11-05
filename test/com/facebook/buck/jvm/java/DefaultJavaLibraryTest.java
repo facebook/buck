@@ -1512,45 +1512,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertTrue(javac.getResolvedJavac() instanceof Jsr199Javac.ResolvedJsr199Javac);
   }
 
-  @Test
-  public void testWhenJavacJarIsProvidedAJavacInMemoryStepIsAdded() {
-    BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    BuildTarget javacTarget = BuildTargetFactory.newInstance("//langtools:javac");
-    TargetNode<?> javacNode =
-        PrebuiltJarBuilder.createBuilder(javacTarget)
-            .setBinaryJar(Paths.get("java/src/com/libone/JavacJar.jar"))
-            .build();
-    TargetNode<?> ruleNode =
-        createJavaLibraryBuilder(libraryOneTarget)
-            .addSrc(Paths.get("java/src/com/libone/Bar.java"))
-            .setJavacJar(DefaultBuildTargetSourcePath.of(javacTarget))
-            .build();
-
-    TargetGraph targetGraph = TargetGraphFactory.newInstance(javacNode, ruleNode);
-    graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolverAdapter sourcePathResolver = graphBuilder.getSourcePathResolver();
-
-    BuildRule javac = graphBuilder.requireRule(javacTarget);
-    BuildRule rule = graphBuilder.requireRule(libraryOneTarget);
-
-    DefaultJavaLibrary buildable = (DefaultJavaLibrary) rule;
-    ImmutableList<Step> steps =
-        buildable.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
-            new FakeBuildableContext());
-    assertEquals(24, steps.size());
-    JavacStep javacStep = getJavacStep(steps);
-    assertTrue(javacStep.getResolvedJavac() instanceof Jsr199Javac.ResolvedJsr199Javac);
-    JarBackedJavac.ResolvedJarBackedJavac jsrJavac =
-        ((JarBackedJavac.ResolvedJarBackedJavac) javacStep.getResolvedJavac());
-    SourcePath sourcePathToOutput = javac.getSourcePathToOutput();
-    ProjectFilesystem filesystem = sourcePathResolver.getFilesystem(sourcePathToOutput);
-    assertEquals(
-        jsrJavac.getClasspath(),
-        ImmutableSet.of(
-            filesystem.relativize(sourcePathResolver.getAbsolutePath(sourcePathToOutput))));
-  }
-
   // Utilities
   private JavaLibrary getJavaLibrary(BuildRule rule) {
     return (JavaLibrary) rule;

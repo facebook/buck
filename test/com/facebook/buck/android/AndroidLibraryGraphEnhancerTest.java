@@ -217,7 +217,7 @@ public class AndroidLibraryGraphEnhancerTest {
     graphBuilder.addToIndex(dep);
     JavaBuckConfig javaConfig =
         FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of("tools", ImmutableMap.of("javac_jar", "//:javac_dep")))
+            .setSections(ImmutableMap.of("tools", ImmutableMap.of("javac", "//:javac_dep")))
             .build()
             .getView(JavaBuckConfig.class);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");

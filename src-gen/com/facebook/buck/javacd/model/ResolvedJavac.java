@@ -59,22 +59,8 @@ private static final long serialVersionUID = 0L;
             break;
           }
           case 18: {
-            com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.Builder subBuilder = null;
-            if (javacCase_ == 2) {
-              subBuilder = ((com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) javac_).toBuilder();
-            }
-            javac_ =
-                input.readMessage(com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.parser(), extensionRegistry);
-            if (subBuilder != null) {
-              subBuilder.mergeFrom((com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) javac_);
-              javac_ = subBuilder.buildPartial();
-            }
-            javacCase_ = 2;
-            break;
-          }
-          case 26: {
             com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.Builder subBuilder = null;
-            if (javacCase_ == 3) {
+            if (javacCase_ == 2) {
               subBuilder = ((com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_).toBuilder();
             }
             javac_ =
@@ -83,7 +69,7 @@ private static final long serialVersionUID = 0L;
               subBuilder.mergeFrom((com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_);
               javac_ = subBuilder.buildPartial();
             }
-            javacCase_ = 3;
+            javacCase_ = 2;
             break;
           }
           default: {
@@ -861,927 +847,6 @@ private static final long serialVersionUID = 0L;
 
   }
 
-  public interface JarBackedJavacOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:javacd.api.v1.ResolvedJavac.JarBackedJavac)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>string compilerClassName = 1;</code>
-     */
-    java.lang.String getCompilerClassName();
-    /**
-     * <code>string compilerClassName = 1;</code>
-     */
-    com.google.protobuf.ByteString
-        getCompilerClassNameBytes();
-
-    /**
-     * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-     */
-    java.util.List<com.facebook.buck.javacd.model.RelPath> 
-        getResolvedClasspathList();
-    /**
-     * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-     */
-    com.facebook.buck.javacd.model.RelPath getResolvedClasspath(int index);
-    /**
-     * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-     */
-    int getResolvedClasspathCount();
-    /**
-     * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-     */
-    java.util.List<? extends com.facebook.buck.javacd.model.RelPathOrBuilder> 
-        getResolvedClasspathOrBuilderList();
-    /**
-     * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-     */
-    com.facebook.buck.javacd.model.RelPathOrBuilder getResolvedClasspathOrBuilder(
-        int index);
-  }
-  /**
-   * Protobuf type {@code javacd.api.v1.ResolvedJavac.JarBackedJavac}
-   */
-  public  static final class JarBackedJavac extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:javacd.api.v1.ResolvedJavac.JarBackedJavac)
-      JarBackedJavacOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use JarBackedJavac.newBuilder() to construct.
-    private JarBackedJavac(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private JarBackedJavac() {
-      compilerClassName_ = "";
-      resolvedClasspath_ = java.util.Collections.emptyList();
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private JarBackedJavac(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              java.lang.String s = input.readStringRequireUtf8();
-
-              compilerClassName_ = s;
-              break;
-            }
-            case 18: {
-              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-                resolvedClasspath_ = new java.util.ArrayList<com.facebook.buck.javacd.model.RelPath>();
-                mutable_bitField0_ |= 0x00000002;
-              }
-              resolvedClasspath_.add(
-                  input.readMessage(com.facebook.buck.javacd.model.RelPath.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000002) != 0)) {
-          resolvedClasspath_ = java.util.Collections.unmodifiableList(resolvedClasspath_);
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return com.facebook.buck.javacd.model.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavac_JarBackedJavac_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return com.facebook.buck.javacd.model.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavac_JarBackedJavac_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.class, com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int COMPILERCLASSNAME_FIELD_NUMBER = 1;
-    private volatile java.lang.Object compilerClassName_;
-    /**
-     * <code>string compilerClassName = 1;</code>
-     */
-    public java.lang.String getCompilerClassName() {
-      java.lang.Object ref = compilerClassName_;
-      if (ref instanceof java.lang.String) {
-        return (java.lang.String) ref;
-      } else {
-        com.google.protobuf.ByteString bs = 
-            (com.google.protobuf.ByteString) ref;
-        java.lang.String s = bs.toStringUtf8();
-        compilerClassName_ = s;
-        return s;
-      }
-    }
-    /**
-     * <code>string compilerClassName = 1;</code>
-     */
-    public com.google.protobuf.ByteString
-        getCompilerClassNameBytes() {
-      java.lang.Object ref = compilerClassName_;
-      if (ref instanceof java.lang.String) {
-        com.google.protobuf.ByteString b = 
-            com.google.protobuf.ByteString.copyFromUtf8(
-                (java.lang.String) ref);
-        compilerClassName_ = b;
-        return b;
-      } else {
-        return (com.google.protobuf.ByteString) ref;
-      }
-    }
-
-    public static final int RESOLVEDCLASSPATH_FIELD_NUMBER = 2;
-    private java.util.List<com.facebook.buck.javacd.model.RelPath> resolvedClasspath_;
-    /**
-     * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-     */
-    public java.util.List<com.facebook.buck.javacd.model.RelPath> getResolvedClasspathList() {
-      return resolvedClasspath_;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-     */
-    public java.util.List<? extends com.facebook.buck.javacd.model.RelPathOrBuilder> 
-        getResolvedClasspathOrBuilderList() {
-      return resolvedClasspath_;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-     */
-    public int getResolvedClasspathCount() {
-      return resolvedClasspath_.size();
-    }
-    /**
-     * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPath getResolvedClasspath(int index) {
-      return resolvedClasspath_.get(index);
-    }
-    /**
-     * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-     */
-    public com.facebook.buck.javacd.model.RelPathOrBuilder getResolvedClasspathOrBuilder(
-        int index) {
-      return resolvedClasspath_.get(index);
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (!getCompilerClassNameBytes().isEmpty()) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, compilerClassName_);
-      }
-      for (int i = 0; i < resolvedClasspath_.size(); i++) {
-        output.writeMessage(2, resolvedClasspath_.get(i));
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (!getCompilerClassNameBytes().isEmpty()) {
-        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, compilerClassName_);
-      }
-      for (int i = 0; i < resolvedClasspath_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, resolvedClasspath_.get(i));
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac)) {
-        return super.equals(obj);
-      }
-      com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac other = (com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) obj;
-
-      if (!getCompilerClassName()
-          .equals(other.getCompilerClassName())) return false;
-      if (!getResolvedClasspathList()
-          .equals(other.getResolvedClasspathList())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
-      return true;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + COMPILERCLASSNAME_FIELD_NUMBER;
-      hash = (53 * hash) + getCompilerClassName().hashCode();
-      if (getResolvedClasspathCount() > 0) {
-        hash = (37 * hash) + RESOLVEDCLASSPATH_FIELD_NUMBER;
-        hash = (53 * hash) + getResolvedClasspathList().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code javacd.api.v1.ResolvedJavac.JarBackedJavac}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:javacd.api.v1.ResolvedJavac.JarBackedJavac)
-        com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavacOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return com.facebook.buck.javacd.model.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavac_JarBackedJavac_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return com.facebook.buck.javacd.model.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavac_JarBackedJavac_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.class, com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.Builder.class);
-      }
-
-      // Construct using com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-          getResolvedClasspathFieldBuilder();
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        compilerClassName_ = "";
-
-        if (resolvedClasspathBuilder_ == null) {
-          resolvedClasspath_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
-        } else {
-          resolvedClasspathBuilder_.clear();
-        }
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return com.facebook.buck.javacd.model.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavac_JarBackedJavac_descriptor;
-      }
-
-      @java.lang.Override
-      public com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac getDefaultInstanceForType() {
-        return com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac build() {
-        com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac buildPartial() {
-        com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac result = new com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        result.compilerClassName_ = compilerClassName_;
-        if (resolvedClasspathBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) != 0)) {
-            resolvedClasspath_ = java.util.Collections.unmodifiableList(resolvedClasspath_);
-            bitField0_ = (bitField0_ & ~0x00000002);
-          }
-          result.resolvedClasspath_ = resolvedClasspath_;
-        } else {
-          result.resolvedClasspath_ = resolvedClasspathBuilder_.build();
-        }
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) {
-          return mergeFrom((com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac other) {
-        if (other == com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.getDefaultInstance()) return this;
-        if (!other.getCompilerClassName().isEmpty()) {
-          compilerClassName_ = other.compilerClassName_;
-          onChanged();
-        }
-        if (resolvedClasspathBuilder_ == null) {
-          if (!other.resolvedClasspath_.isEmpty()) {
-            if (resolvedClasspath_.isEmpty()) {
-              resolvedClasspath_ = other.resolvedClasspath_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-            } else {
-              ensureResolvedClasspathIsMutable();
-              resolvedClasspath_.addAll(other.resolvedClasspath_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.resolvedClasspath_.isEmpty()) {
-            if (resolvedClasspathBuilder_.isEmpty()) {
-              resolvedClasspathBuilder_.dispose();
-              resolvedClasspathBuilder_ = null;
-              resolvedClasspath_ = other.resolvedClasspath_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-              resolvedClasspathBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getResolvedClasspathFieldBuilder() : null;
-            } else {
-              resolvedClasspathBuilder_.addAllMessages(other.resolvedClasspath_);
-            }
-          }
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private java.lang.Object compilerClassName_ = "";
-      /**
-       * <code>string compilerClassName = 1;</code>
-       */
-      public java.lang.String getCompilerClassName() {
-        java.lang.Object ref = compilerClassName_;
-        if (!(ref instanceof java.lang.String)) {
-          com.google.protobuf.ByteString bs =
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          compilerClassName_ = s;
-          return s;
-        } else {
-          return (java.lang.String) ref;
-        }
-      }
-      /**
-       * <code>string compilerClassName = 1;</code>
-       */
-      public com.google.protobuf.ByteString
-          getCompilerClassNameBytes() {
-        java.lang.Object ref = compilerClassName_;
-        if (ref instanceof String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          compilerClassName_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-      /**
-       * <code>string compilerClassName = 1;</code>
-       */
-      public Builder setCompilerClassName(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  
-        compilerClassName_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string compilerClassName = 1;</code>
-       */
-      public Builder clearCompilerClassName() {
-        
-        compilerClassName_ = getDefaultInstance().getCompilerClassName();
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>string compilerClassName = 1;</code>
-       */
-      public Builder setCompilerClassNameBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        
-        compilerClassName_ = value;
-        onChanged();
-        return this;
-      }
-
-      private java.util.List<com.facebook.buck.javacd.model.RelPath> resolvedClasspath_ =
-        java.util.Collections.emptyList();
-      private void ensureResolvedClasspathIsMutable() {
-        if (!((bitField0_ & 0x00000002) != 0)) {
-          resolvedClasspath_ = new java.util.ArrayList<com.facebook.buck.javacd.model.RelPath>(resolvedClasspath_);
-          bitField0_ |= 0x00000002;
-         }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> resolvedClasspathBuilder_;
-
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public java.util.List<com.facebook.buck.javacd.model.RelPath> getResolvedClasspathList() {
-        if (resolvedClasspathBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(resolvedClasspath_);
-        } else {
-          return resolvedClasspathBuilder_.getMessageList();
-        }
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public int getResolvedClasspathCount() {
-        if (resolvedClasspathBuilder_ == null) {
-          return resolvedClasspath_.size();
-        } else {
-          return resolvedClasspathBuilder_.getCount();
-        }
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public com.facebook.buck.javacd.model.RelPath getResolvedClasspath(int index) {
-        if (resolvedClasspathBuilder_ == null) {
-          return resolvedClasspath_.get(index);
-        } else {
-          return resolvedClasspathBuilder_.getMessage(index);
-        }
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public Builder setResolvedClasspath(
-          int index, com.facebook.buck.javacd.model.RelPath value) {
-        if (resolvedClasspathBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureResolvedClasspathIsMutable();
-          resolvedClasspath_.set(index, value);
-          onChanged();
-        } else {
-          resolvedClasspathBuilder_.setMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public Builder setResolvedClasspath(
-          int index, com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
-        if (resolvedClasspathBuilder_ == null) {
-          ensureResolvedClasspathIsMutable();
-          resolvedClasspath_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          resolvedClasspathBuilder_.setMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public Builder addResolvedClasspath(com.facebook.buck.javacd.model.RelPath value) {
-        if (resolvedClasspathBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureResolvedClasspathIsMutable();
-          resolvedClasspath_.add(value);
-          onChanged();
-        } else {
-          resolvedClasspathBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public Builder addResolvedClasspath(
-          int index, com.facebook.buck.javacd.model.RelPath value) {
-        if (resolvedClasspathBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureResolvedClasspathIsMutable();
-          resolvedClasspath_.add(index, value);
-          onChanged();
-        } else {
-          resolvedClasspathBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public Builder addResolvedClasspath(
-          com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
-        if (resolvedClasspathBuilder_ == null) {
-          ensureResolvedClasspathIsMutable();
-          resolvedClasspath_.add(builderForValue.build());
-          onChanged();
-        } else {
-          resolvedClasspathBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public Builder addResolvedClasspath(
-          int index, com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
-        if (resolvedClasspathBuilder_ == null) {
-          ensureResolvedClasspathIsMutable();
-          resolvedClasspath_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          resolvedClasspathBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public Builder addAllResolvedClasspath(
-          java.lang.Iterable<? extends com.facebook.buck.javacd.model.RelPath> values) {
-        if (resolvedClasspathBuilder_ == null) {
-          ensureResolvedClasspathIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, resolvedClasspath_);
-          onChanged();
-        } else {
-          resolvedClasspathBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public Builder clearResolvedClasspath() {
-        if (resolvedClasspathBuilder_ == null) {
-          resolvedClasspath_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
-          onChanged();
-        } else {
-          resolvedClasspathBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public Builder removeResolvedClasspath(int index) {
-        if (resolvedClasspathBuilder_ == null) {
-          ensureResolvedClasspathIsMutable();
-          resolvedClasspath_.remove(index);
-          onChanged();
-        } else {
-          resolvedClasspathBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public com.facebook.buck.javacd.model.RelPath.Builder getResolvedClasspathBuilder(
-          int index) {
-        return getResolvedClasspathFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public com.facebook.buck.javacd.model.RelPathOrBuilder getResolvedClasspathOrBuilder(
-          int index) {
-        if (resolvedClasspathBuilder_ == null) {
-          return resolvedClasspath_.get(index);  } else {
-          return resolvedClasspathBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public java.util.List<? extends com.facebook.buck.javacd.model.RelPathOrBuilder> 
-           getResolvedClasspathOrBuilderList() {
-        if (resolvedClasspathBuilder_ != null) {
-          return resolvedClasspathBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(resolvedClasspath_);
-        }
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public com.facebook.buck.javacd.model.RelPath.Builder addResolvedClasspathBuilder() {
-        return getResolvedClasspathFieldBuilder().addBuilder(
-            com.facebook.buck.javacd.model.RelPath.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public com.facebook.buck.javacd.model.RelPath.Builder addResolvedClasspathBuilder(
-          int index) {
-        return getResolvedClasspathFieldBuilder().addBuilder(
-            index, com.facebook.buck.javacd.model.RelPath.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .javacd.api.v1.RelPath resolvedClasspath = 2;</code>
-       */
-      public java.util.List<com.facebook.buck.javacd.model.RelPath.Builder> 
-           getResolvedClasspathBuilderList() {
-        return getResolvedClasspathFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> 
-          getResolvedClasspathFieldBuilder() {
-        if (resolvedClasspathBuilder_ == null) {
-          resolvedClasspathBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder>(
-                  resolvedClasspath_,
-                  ((bitField0_ & 0x00000002) != 0),
-                  getParentForChildren(),
-                  isClean());
-          resolvedClasspath_ = null;
-        }
-        return resolvedClasspathBuilder_;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:javacd.api.v1.ResolvedJavac.JarBackedJavac)
-    }
-
-    // @@protoc_insertion_point(class_scope:javacd.api.v1.ResolvedJavac.JarBackedJavac)
-    private static final com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac();
-    }
-
-    public static com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    private static final com.google.protobuf.Parser<JarBackedJavac>
-        PARSER = new com.google.protobuf.AbstractParser<JarBackedJavac>() {
-      @java.lang.Override
-      public JarBackedJavac parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new JarBackedJavac(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<JarBackedJavac> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<JarBackedJavac> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
   public interface JSR199JavacOrBuilder extends
       // @@protoc_insertion_point(interface_extends:javacd.api.v1.ResolvedJavac.JSR199Javac)
       com.google.protobuf.MessageOrBuilder {
@@ -2198,8 +1263,7 @@ private static final long serialVersionUID = 0L;
   public enum JavacCase
       implements com.google.protobuf.Internal.EnumLite {
     EXTERNALJAVAC(1),
-    JARBACKEDJAVAC(2),
-    JCR199JAVAC(3),
+    JSR199JAVAC(2),
     JAVAC_NOT_SET(0);
     private final int value;
     private JavacCase(int value) {
@@ -2216,8 +1280,7 @@ private static final long serialVersionUID = 0L;
     public static JavacCase forNumber(int value) {
       switch (value) {
         case 1: return EXTERNALJAVAC;
-        case 2: return JARBACKEDJAVAC;
-        case 3: return JCR199JAVAC;
+        case 2: return JSR199JAVAC;
         case 0: return JAVAC_NOT_SET;
         default: return null;
       }
@@ -2259,53 +1322,27 @@ private static final long serialVersionUID = 0L;
     return com.facebook.buck.javacd.model.ResolvedJavac.ExternalJavac.getDefaultInstance();
   }
 
-  public static final int JARBACKEDJAVAC_FIELD_NUMBER = 2;
+  public static final int JSR199JAVAC_FIELD_NUMBER = 2;
   /**
-   * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
+   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
    */
-  public boolean hasJarBackedJavac() {
+  public boolean hasJsr199Javac() {
     return javacCase_ == 2;
   }
   /**
-   * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
+   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
    */
-  public com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac getJarBackedJavac() {
+  public com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac getJsr199Javac() {
     if (javacCase_ == 2) {
-       return (com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) javac_;
-    }
-    return com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.getDefaultInstance();
-  }
-  /**
-   * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
-   */
-  public com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavacOrBuilder getJarBackedJavacOrBuilder() {
-    if (javacCase_ == 2) {
-       return (com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) javac_;
-    }
-    return com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.getDefaultInstance();
-  }
-
-  public static final int JCR199JAVAC_FIELD_NUMBER = 3;
-  /**
-   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
-   */
-  public boolean hasJcr199Javac() {
-    return javacCase_ == 3;
-  }
-  /**
-   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
-   */
-  public com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac getJcr199Javac() {
-    if (javacCase_ == 3) {
        return (com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_;
     }
     return com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.getDefaultInstance();
   }
   /**
-   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
+   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
    */
-  public com.facebook.buck.javacd.model.ResolvedJavac.JSR199JavacOrBuilder getJcr199JavacOrBuilder() {
-    if (javacCase_ == 3) {
+  public com.facebook.buck.javacd.model.ResolvedJavac.JSR199JavacOrBuilder getJsr199JavacOrBuilder() {
+    if (javacCase_ == 2) {
        return (com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_;
     }
     return com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.getDefaultInstance();
@@ -2329,10 +1366,7 @@ private static final long serialVersionUID = 0L;
       output.writeMessage(1, (com.facebook.buck.javacd.model.ResolvedJavac.ExternalJavac) javac_);
     }
     if (javacCase_ == 2) {
-      output.writeMessage(2, (com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) javac_);
-    }
-    if (javacCase_ == 3) {
-      output.writeMessage(3, (com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_);
+      output.writeMessage(2, (com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_);
     }
     unknownFields.writeTo(output);
   }
@@ -2349,11 +1383,7 @@ private static final long serialVersionUID = 0L;
     }
     if (javacCase_ == 2) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(2, (com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) javac_);
-    }
-    if (javacCase_ == 3) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(3, (com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_);
+        .computeMessageSize(2, (com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -2377,12 +1407,8 @@ private static final long serialVersionUID = 0L;
             .equals(other.getExternalJavac())) return false;
         break;
       case 2:
-        if (!getJarBackedJavac()
-            .equals(other.getJarBackedJavac())) return false;
-        break;
-      case 3:
-        if (!getJcr199Javac()
-            .equals(other.getJcr199Javac())) return false;
+        if (!getJsr199Javac()
+            .equals(other.getJsr199Javac())) return false;
         break;
       case 0:
       default:
@@ -2404,12 +1430,8 @@ private static final long serialVersionUID = 0L;
         hash = (53 * hash) + getExternalJavac().hashCode();
         break;
       case 2:
-        hash = (37 * hash) + JARBACKEDJAVAC_FIELD_NUMBER;
-        hash = (53 * hash) + getJarBackedJavac().hashCode();
-        break;
-      case 3:
-        hash = (37 * hash) + JCR199JAVAC_FIELD_NUMBER;
-        hash = (53 * hash) + getJcr199Javac().hashCode();
+        hash = (37 * hash) + JSR199JAVAC_FIELD_NUMBER;
+        hash = (53 * hash) + getJsr199Javac().hashCode();
         break;
       case 0:
       default:
@@ -2583,17 +1605,10 @@ private static final long serialVersionUID = 0L;
         }
       }
       if (javacCase_ == 2) {
-        if (jarBackedJavacBuilder_ == null) {
+        if (jsr199JavacBuilder_ == null) {
           result.javac_ = javac_;
         } else {
-          result.javac_ = jarBackedJavacBuilder_.build();
-        }
-      }
-      if (javacCase_ == 3) {
-        if (jcr199JavacBuilder_ == null) {
-          result.javac_ = javac_;
-        } else {
-          result.javac_ = jcr199JavacBuilder_.build();
+          result.javac_ = jsr199JavacBuilder_.build();
         }
       }
       result.javacCase_ = javacCase_;
@@ -2650,12 +1665,8 @@ private static final long serialVersionUID = 0L;
           mergeExternalJavac(other.getExternalJavac());
           break;
         }
-        case JARBACKEDJAVAC: {
-          mergeJarBackedJavac(other.getJarBackedJavac());
-          break;
-        }
-        case JCR199JAVAC: {
-          mergeJcr199Javac(other.getJcr199Javac());
+        case JSR199JAVAC: {
+          mergeJsr199Javac(other.getJsr199Javac());
           break;
         }
         case JAVAC_NOT_SET: {
@@ -2843,201 +1854,65 @@ private static final long serialVersionUID = 0L;
     }
 
     private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac, com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.Builder, com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavacOrBuilder> jarBackedJavacBuilder_;
+        com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac, com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.Builder, com.facebook.buck.javacd.model.ResolvedJavac.JSR199JavacOrBuilder> jsr199JavacBuilder_;
     /**
-     * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
+     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
      */
-    public boolean hasJarBackedJavac() {
+    public boolean hasJsr199Javac() {
       return javacCase_ == 2;
     }
     /**
-     * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
+     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
      */
-    public com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac getJarBackedJavac() {
-      if (jarBackedJavacBuilder_ == null) {
+    public com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac getJsr199Javac() {
+      if (jsr199JavacBuilder_ == null) {
         if (javacCase_ == 2) {
-          return (com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) javac_;
-        }
-        return com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.getDefaultInstance();
-      } else {
-        if (javacCase_ == 2) {
-          return jarBackedJavacBuilder_.getMessage();
-        }
-        return com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.getDefaultInstance();
-      }
-    }
-    /**
-     * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
-     */
-    public Builder setJarBackedJavac(com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac value) {
-      if (jarBackedJavacBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        javac_ = value;
-        onChanged();
-      } else {
-        jarBackedJavacBuilder_.setMessage(value);
-      }
-      javacCase_ = 2;
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
-     */
-    public Builder setJarBackedJavac(
-        com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.Builder builderForValue) {
-      if (jarBackedJavacBuilder_ == null) {
-        javac_ = builderForValue.build();
-        onChanged();
-      } else {
-        jarBackedJavacBuilder_.setMessage(builderForValue.build());
-      }
-      javacCase_ = 2;
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
-     */
-    public Builder mergeJarBackedJavac(com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac value) {
-      if (jarBackedJavacBuilder_ == null) {
-        if (javacCase_ == 2 &&
-            javac_ != com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.getDefaultInstance()) {
-          javac_ = com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.newBuilder((com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) javac_)
-              .mergeFrom(value).buildPartial();
-        } else {
-          javac_ = value;
-        }
-        onChanged();
-      } else {
-        if (javacCase_ == 2) {
-          jarBackedJavacBuilder_.mergeFrom(value);
-        }
-        jarBackedJavacBuilder_.setMessage(value);
-      }
-      javacCase_ = 2;
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
-     */
-    public Builder clearJarBackedJavac() {
-      if (jarBackedJavacBuilder_ == null) {
-        if (javacCase_ == 2) {
-          javacCase_ = 0;
-          javac_ = null;
-          onChanged();
-        }
-      } else {
-        if (javacCase_ == 2) {
-          javacCase_ = 0;
-          javac_ = null;
-        }
-        jarBackedJavacBuilder_.clear();
-      }
-      return this;
-    }
-    /**
-     * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
-     */
-    public com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.Builder getJarBackedJavacBuilder() {
-      return getJarBackedJavacFieldBuilder().getBuilder();
-    }
-    /**
-     * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
-     */
-    public com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavacOrBuilder getJarBackedJavacOrBuilder() {
-      if ((javacCase_ == 2) && (jarBackedJavacBuilder_ != null)) {
-        return jarBackedJavacBuilder_.getMessageOrBuilder();
-      } else {
-        if (javacCase_ == 2) {
-          return (com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) javac_;
-        }
-        return com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.getDefaultInstance();
-      }
-    }
-    /**
-     * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
-     */
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac, com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.Builder, com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavacOrBuilder> 
-        getJarBackedJavacFieldBuilder() {
-      if (jarBackedJavacBuilder_ == null) {
-        if (!(javacCase_ == 2)) {
-          javac_ = com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.getDefaultInstance();
-        }
-        jarBackedJavacBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-            com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac, com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac.Builder, com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavacOrBuilder>(
-                (com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac) javac_,
-                getParentForChildren(),
-                isClean());
-        javac_ = null;
-      }
-      javacCase_ = 2;
-      onChanged();;
-      return jarBackedJavacBuilder_;
-    }
-
-    private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac, com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.Builder, com.facebook.buck.javacd.model.ResolvedJavac.JSR199JavacOrBuilder> jcr199JavacBuilder_;
-    /**
-     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
-     */
-    public boolean hasJcr199Javac() {
-      return javacCase_ == 3;
-    }
-    /**
-     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
-     */
-    public com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac getJcr199Javac() {
-      if (jcr199JavacBuilder_ == null) {
-        if (javacCase_ == 3) {
           return (com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_;
         }
         return com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.getDefaultInstance();
       } else {
-        if (javacCase_ == 3) {
-          return jcr199JavacBuilder_.getMessage();
+        if (javacCase_ == 2) {
+          return jsr199JavacBuilder_.getMessage();
         }
         return com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.getDefaultInstance();
       }
     }
     /**
-     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
+     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
      */
-    public Builder setJcr199Javac(com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac value) {
-      if (jcr199JavacBuilder_ == null) {
+    public Builder setJsr199Javac(com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac value) {
+      if (jsr199JavacBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
         }
         javac_ = value;
         onChanged();
       } else {
-        jcr199JavacBuilder_.setMessage(value);
+        jsr199JavacBuilder_.setMessage(value);
       }
-      javacCase_ = 3;
+      javacCase_ = 2;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
+     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
      */
-    public Builder setJcr199Javac(
+    public Builder setJsr199Javac(
         com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.Builder builderForValue) {
-      if (jcr199JavacBuilder_ == null) {
+      if (jsr199JavacBuilder_ == null) {
         javac_ = builderForValue.build();
         onChanged();
       } else {
-        jcr199JavacBuilder_.setMessage(builderForValue.build());
+        jsr199JavacBuilder_.setMessage(builderForValue.build());
       }
-      javacCase_ = 3;
+      javacCase_ = 2;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
+     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
      */
-    public Builder mergeJcr199Javac(com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac value) {
-      if (jcr199JavacBuilder_ == null) {
-        if (javacCase_ == 3 &&
+    public Builder mergeJsr199Javac(com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac value) {
+      if (jsr199JavacBuilder_ == null) {
+        if (javacCase_ == 2 &&
             javac_ != com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.getDefaultInstance()) {
           javac_ = com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.newBuilder((com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_)
               .mergeFrom(value).buildPartial();
@@ -3046,72 +1921,72 @@ private static final long serialVersionUID = 0L;
         }
         onChanged();
       } else {
-        if (javacCase_ == 3) {
-          jcr199JavacBuilder_.mergeFrom(value);
+        if (javacCase_ == 2) {
+          jsr199JavacBuilder_.mergeFrom(value);
         }
-        jcr199JavacBuilder_.setMessage(value);
+        jsr199JavacBuilder_.setMessage(value);
       }
-      javacCase_ = 3;
+      javacCase_ = 2;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
+     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
      */
-    public Builder clearJcr199Javac() {
-      if (jcr199JavacBuilder_ == null) {
-        if (javacCase_ == 3) {
+    public Builder clearJsr199Javac() {
+      if (jsr199JavacBuilder_ == null) {
+        if (javacCase_ == 2) {
           javacCase_ = 0;
           javac_ = null;
           onChanged();
         }
       } else {
-        if (javacCase_ == 3) {
+        if (javacCase_ == 2) {
           javacCase_ = 0;
           javac_ = null;
         }
-        jcr199JavacBuilder_.clear();
+        jsr199JavacBuilder_.clear();
       }
       return this;
     }
     /**
-     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
+     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
      */
-    public com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.Builder getJcr199JavacBuilder() {
-      return getJcr199JavacFieldBuilder().getBuilder();
+    public com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.Builder getJsr199JavacBuilder() {
+      return getJsr199JavacFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
+     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
      */
-    public com.facebook.buck.javacd.model.ResolvedJavac.JSR199JavacOrBuilder getJcr199JavacOrBuilder() {
-      if ((javacCase_ == 3) && (jcr199JavacBuilder_ != null)) {
-        return jcr199JavacBuilder_.getMessageOrBuilder();
+    public com.facebook.buck.javacd.model.ResolvedJavac.JSR199JavacOrBuilder getJsr199JavacOrBuilder() {
+      if ((javacCase_ == 2) && (jsr199JavacBuilder_ != null)) {
+        return jsr199JavacBuilder_.getMessageOrBuilder();
       } else {
-        if (javacCase_ == 3) {
+        if (javacCase_ == 2) {
           return (com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_;
         }
         return com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.getDefaultInstance();
       }
     }
     /**
-     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
+     * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac, com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.Builder, com.facebook.buck.javacd.model.ResolvedJavac.JSR199JavacOrBuilder> 
-        getJcr199JavacFieldBuilder() {
-      if (jcr199JavacBuilder_ == null) {
-        if (!(javacCase_ == 3)) {
+        getJsr199JavacFieldBuilder() {
+      if (jsr199JavacBuilder_ == null) {
+        if (!(javacCase_ == 2)) {
           javac_ = com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.getDefaultInstance();
         }
-        jcr199JavacBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+        jsr199JavacBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
             com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac, com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.Builder, com.facebook.buck.javacd.model.ResolvedJavac.JSR199JavacOrBuilder>(
                 (com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac) javac_,
                 getParentForChildren(),
                 isClean());
         javac_ = null;
       }
-      javacCase_ = 3;
+      javacCase_ = 2;
       onChanged();;
-      return jcr199JavacBuilder_;
+      return jsr199JavacBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

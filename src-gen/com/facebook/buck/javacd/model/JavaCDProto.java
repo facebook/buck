@@ -162,11 +162,6 @@ public final class JavaCDProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_javacd_api_v1_ResolvedJavac_ExternalJavac_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_javacd_api_v1_ResolvedJavac_JarBackedJavac_descriptor;
-  static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_javacd_api_v1_ResolvedJavac_JarBackedJavac_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_javacd_api_v1_ResolvedJavac_JSR199Javac_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -383,45 +378,40 @@ public final class JavaCDProto {
       "her\022\020\n\010patterns\030\001 \003(\t\"y\n\010LogLevel\022\013\n\007UNK" +
       "NOWN\020\000\022\007\n\003OFF\020\001\022\n\n\006SEVERE\020\002\022\013\n\007WARNING\020\003" +
       "\022\010\n\004INFO\020\004\022\n\n\006CONFIG\020\005\022\010\n\004FINE\020\006\022\t\n\005FINE" +
-      "R\020\007\022\n\n\006FINEST\020\010\022\007\n\003ALL\020\t\"\217\003\n\rResolvedJav" +
+      "R\020\007\022\n\n\006FINEST\020\010\022\007\n\003ALL\020\t\"\350\001\n\rResolvedJav" +
       "ac\022C\n\rexternalJavac\030\001 \001(\0132*.javacd.api.v" +
-      "1.ResolvedJavac.ExternalJavacH\000\022E\n\016jarBa" +
-      "ckedJavac\030\002 \001(\0132+.javacd.api.v1.Resolved" +
-      "Javac.JarBackedJavacH\000\022?\n\013jcr199Javac\030\003 " +
-      "\001(\0132(.javacd.api.v1.ResolvedJavac.JSR199" +
-      "JavacH\000\0329\n\rExternalJavac\022\021\n\tshortName\030\001 " +
-      "\001(\t\022\025\n\rcommandPrefix\030\002 \003(\t\032^\n\016JarBackedJ" +
-      "avac\022\031\n\021compilerClassName\030\001 \001(\t\0221\n\021resol" +
-      "vedClasspath\030\002 \003(\0132\026.javacd.api.v1.RelPa" +
-      "th\032\r\n\013JSR199JavacB\007\n\005javac\"\337\006\n\030UnusedDep" +
-      "endenciesParams\022S\n\004deps\030\001 \003(\0132E.javacd.a" +
-      "pi.v1.UnusedDependenciesParams.Dependenc" +
-      "yAndExportedDepsPath\022[\n\014providedDeps\030\002 \003" +
-      "(\0132E.javacd.api.v1.UnusedDependenciesPar" +
-      "ams.DependencyAndExportedDepsPath\022\'\n\007dep" +
-      "File\030\003 \003(\0132\026.javacd.api.v1.RelPath\022b\n\030un" +
-      "usedDependenciesAction\030\004 \001(\0162@.javacd.ap" +
-      "i.v1.UnusedDependenciesParams.UnusedDepe" +
-      "ndenciesAction\022\024\n\014exportedDeps\030\005 \003(\t\022\025\n\r" +
-      "buildozerPath\030\006 \001(\t\022\031\n\021onlyPrintCommands" +
-      "\030\007 \001(\010\022\034\n\024doUltralightChecking\030\010 \001(\010\032\315\001\n" +
-      "\035DependencyAndExportedDepsPath\022O\n\ndepend" +
-      "ency\030\001 \001(\0132;.javacd.api.v1.UnusedDepende" +
-      "nciesParams.BuildTargetAndPaths\022[\n\014expor" +
-      "tedDeps\030\002 \003(\0132E.javacd.api.v1.UnusedDepe" +
-      "ndenciesParams.DependencyAndExportedDeps" +
-      "Path\032\204\001\n\023BuildTargetAndPaths\022\027\n\017buildTar" +
-      "getName\030\001 \001(\t\022+\n\013fullJarPath\030\002 \001(\0132\026.jav" +
-      "acd.api.v1.RelPath\022\'\n\007abiPath\030\003 \001(\0132\026.ja" +
-      "vacd.api.v1.RelPath\"G\n\030UnusedDependencie" +
-      "sAction\022\013\n\007UNKNOWN\020\000\022\010\n\004FAIL\020\001\022\010\n\004WARN\020\002" +
-      "\022\n\n\006IGNORE\020\003\"\027\n\007RelPath\022\014\n\004path\030\001 \001(\t\"\027\n" +
-      "\007AbsPath\022\014\n\004path\030\001 \001(\t\"\024\n\004Path\022\014\n\004path\030\001" +
-      " \001(\t*f\n\021AbiGenerationMode\022\013\n\007UNKNOWN\020\000\022\t" +
-      "\n\005CLASS\020\001\022\n\n\006SOURCE\020\002\022\034\n\030MIGRATING_TO_SO" +
-      "URCE_ONLY\020\003\022\017\n\013SOURCE_ONLY\020\004B/\n\036com.face" +
-      "book.buck.javacd.modelB\013JavaCDProtoP\001b\006p" +
-      "roto3"
+      "1.ResolvedJavac.ExternalJavacH\000\022?\n\013jsr19" +
+      "9Javac\030\002 \001(\0132(.javacd.api.v1.ResolvedJav" +
+      "ac.JSR199JavacH\000\0329\n\rExternalJavac\022\021\n\tsho" +
+      "rtName\030\001 \001(\t\022\025\n\rcommandPrefix\030\002 \003(\t\032\r\n\013J" +
+      "SR199JavacB\007\n\005javac\"\337\006\n\030UnusedDependenci" +
+      "esParams\022S\n\004deps\030\001 \003(\0132E.javacd.api.v1.U" +
+      "nusedDependenciesParams.DependencyAndExp" +
+      "ortedDepsPath\022[\n\014providedDeps\030\002 \003(\0132E.ja" +
+      "vacd.api.v1.UnusedDependenciesParams.Dep" +
+      "endencyAndExportedDepsPath\022\'\n\007depFile\030\003 " +
+      "\003(\0132\026.javacd.api.v1.RelPath\022b\n\030unusedDep" +
+      "endenciesAction\030\004 \001(\0162@.javacd.api.v1.Un" +
+      "usedDependenciesParams.UnusedDependencie" +
+      "sAction\022\024\n\014exportedDeps\030\005 \003(\t\022\025\n\rbuildoz" +
+      "erPath\030\006 \001(\t\022\031\n\021onlyPrintCommands\030\007 \001(\010\022" +
+      "\034\n\024doUltralightChecking\030\010 \001(\010\032\315\001\n\035Depend" +
+      "encyAndExportedDepsPath\022O\n\ndependency\030\001 " +
+      "\001(\0132;.javacd.api.v1.UnusedDependenciesPa" +
+      "rams.BuildTargetAndPaths\022[\n\014exportedDeps" +
+      "\030\002 \003(\0132E.javacd.api.v1.UnusedDependencie" +
+      "sParams.DependencyAndExportedDepsPath\032\204\001" +
+      "\n\023BuildTargetAndPaths\022\027\n\017buildTargetName" +
+      "\030\001 \001(\t\022+\n\013fullJarPath\030\002 \001(\0132\026.javacd.api" +
+      ".v1.RelPath\022\'\n\007abiPath\030\003 \001(\0132\026.javacd.ap" +
+      "i.v1.RelPath\"G\n\030UnusedDependenciesAction" +
+      "\022\013\n\007UNKNOWN\020\000\022\010\n\004FAIL\020\001\022\010\n\004WARN\020\002\022\n\n\006IGN" +
+      "ORE\020\003\"\027\n\007RelPath\022\014\n\004path\030\001 \001(\t\"\027\n\007AbsPat" +
+      "h\022\014\n\004path\030\001 \001(\t\"\024\n\004Path\022\014\n\004path\030\001 \001(\t*f\n" +
+      "\021AbiGenerationMode\022\013\n\007UNKNOWN\020\000\022\t\n\005CLASS" +
+      "\020\001\022\n\n\006SOURCE\020\002\022\034\n\030MIGRATING_TO_SOURCE_ON" +
+      "LY\020\003\022\017\n\013SOURCE_ONLY\020\004B/\n\036com.facebook.bu" +
+      "ck.javacd.modelB\013JavaCDProtoP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -602,21 +592,15 @@ public final class JavaCDProto {
     internal_static_javacd_api_v1_ResolvedJavac_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_ResolvedJavac_descriptor,
-        new java.lang.String[] { "ExternalJavac", "JarBackedJavac", "Jcr199Javac", "Javac", });
+        new java.lang.String[] { "ExternalJavac", "Jsr199Javac", "Javac", });
     internal_static_javacd_api_v1_ResolvedJavac_ExternalJavac_descriptor =
       internal_static_javacd_api_v1_ResolvedJavac_descriptor.getNestedTypes().get(0);
     internal_static_javacd_api_v1_ResolvedJavac_ExternalJavac_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_ResolvedJavac_ExternalJavac_descriptor,
         new java.lang.String[] { "ShortName", "CommandPrefix", });
-    internal_static_javacd_api_v1_ResolvedJavac_JarBackedJavac_descriptor =
-      internal_static_javacd_api_v1_ResolvedJavac_descriptor.getNestedTypes().get(1);
-    internal_static_javacd_api_v1_ResolvedJavac_JarBackedJavac_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_javacd_api_v1_ResolvedJavac_JarBackedJavac_descriptor,
-        new java.lang.String[] { "CompilerClassName", "ResolvedClasspath", });
     internal_static_javacd_api_v1_ResolvedJavac_JSR199Javac_descriptor =
-      internal_static_javacd_api_v1_ResolvedJavac_descriptor.getNestedTypes().get(2);
+      internal_static_javacd_api_v1_ResolvedJavac_descriptor.getNestedTypes().get(1);
     internal_static_javacd_api_v1_ResolvedJavac_JSR199Javac_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_ResolvedJavac_JSR199Javac_descriptor,

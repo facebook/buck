@@ -79,7 +79,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         targetConfiguration ->
             JavacSpec.builder()
                 .setJavacPath(getJavacPath(targetConfiguration))
-                .setJavacJarPath(getJavacJarPath(targetConfiguration))
                 .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
                 .build();
   }
@@ -185,7 +184,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     }
 
     ResolvedJavac.Source javacSource = getJavacSpec(targetConfiguration).getJavacSource();
-    return (javacSource == ResolvedJavac.Source.JAR || javacSource == ResolvedJavac.Source.JDK);
+    return javacSource == ResolvedJavac.Source.JDK;
   }
 
   public boolean shouldDesugarInterfaceMethods() {
@@ -214,10 +213,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       }
     }
     return sourcePath;
-  }
-
-  private Optional<SourcePath> getJavacJarPath(TargetConfiguration targetConfiguration) {
-    return delegate.getSourcePath("tools", "javac_jar", targetConfiguration);
   }
 
   private Optional<Tool> getToolForExecutable(String executableName) {

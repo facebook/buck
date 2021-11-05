@@ -23,30 +23,17 @@ public interface ResolvedJavacOrBuilder extends
   com.facebook.buck.javacd.model.ResolvedJavac.ExternalJavacOrBuilder getExternalJavacOrBuilder();
 
   /**
-   * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
+   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
    */
-  boolean hasJarBackedJavac();
+  boolean hasJsr199Javac();
   /**
-   * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
+   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
    */
-  com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavac getJarBackedJavac();
+  com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac getJsr199Javac();
   /**
-   * <code>.javacd.api.v1.ResolvedJavac.JarBackedJavac jarBackedJavac = 2;</code>
+   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jsr199Javac = 2;</code>
    */
-  com.facebook.buck.javacd.model.ResolvedJavac.JarBackedJavacOrBuilder getJarBackedJavacOrBuilder();
-
-  /**
-   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
-   */
-  boolean hasJcr199Javac();
-  /**
-   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
-   */
-  com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac getJcr199Javac();
-  /**
-   * <code>.javacd.api.v1.ResolvedJavac.JSR199Javac jcr199Javac = 3;</code>
-   */
-  com.facebook.buck.javacd.model.ResolvedJavac.JSR199JavacOrBuilder getJcr199JavacOrBuilder();
+  com.facebook.buck.javacd.model.ResolvedJavac.JSR199JavacOrBuilder getJsr199JavacOrBuilder();
 
   public com.facebook.buck.javacd.model.ResolvedJavac.JavacCase getJavacCase();
 }

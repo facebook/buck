@@ -51,8 +51,6 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
 
   Optional<SourcePath> getJavac();
 
-  Optional<SourcePath> getJavacJar();
-
   ImmutableList<String> getExtraArguments();
 
   ImmutableSet<Pattern> getRemoveClasses();
@@ -74,19 +72,8 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
 
   Optional<Boolean> getNeverMarkAsUnusedDependency();
 
-  /** Verifies some preconditions on the arguments. */
-  @Value.Check
-  default void verify() {
-    boolean javacJarIsSet = getJavacJar().isPresent();
-    boolean javacIsSet = getJavac().isPresent();
-
-    if (javacIsSet && javacJarIsSet) {
-      throw new HumanReadableException("Can only set one of javac/javac_jar.");
-    }
-  }
-
   default boolean hasJavacSpec() {
-    return getJavac().isPresent() || getJavacJar().isPresent();
+    return getJavac().isPresent();
   }
 
   @Value.Derived
@@ -95,11 +82,8 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
     if (!hasJavacSpec()) {
       return null;
     }
-
     Builder builder = JavacSpec.builder();
     builder.setJavacPath(getJavac());
-    builder.setJavacJarPath(getJavacJar());
-
     return builder.build();
   }
 
