@@ -76,7 +76,6 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   private JavaBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
     this.javacSpecSupplier = targetConfiguration -> JavacSpec.of(getJavacPath(targetConfiguration));
-
   }
 
   @Override
