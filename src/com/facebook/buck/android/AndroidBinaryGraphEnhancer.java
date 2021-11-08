@@ -315,7 +315,8 @@ public class AndroidBinaryGraphEnhancer {
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
     this.javacFactory = javacFactory;
-    this.javac = javacFactory.create(graphBuilder, originalBuildTarget.getTargetConfiguration());
+    this.javac =
+        javacFactory.create(graphBuilder, null, originalBuildTarget.getTargetConfiguration());
     this.androidNativeTargetConfigurationMatcher = androidNativeTargetConfigurationMatcher;
     this.rDotJavaWeightFactor = rDotJavaWeightFactor;
     this.secondaryDexWeightLimit = secondaryDexWeightLimit;

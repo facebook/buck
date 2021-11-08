@@ -237,7 +237,8 @@ public class AndroidLibraryDescription
             buildTarget.getTargetConfiguration())
         .addTargetDeps(
             buildTarget.getTargetConfiguration(), extraDepsBuilder, targetGraphOnlyDepsBuilder);
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
 
     if (InferJava.findSupportedFlavor(buildTarget.getFlavors()).isPresent()) {
       unresolvedInferPlatform

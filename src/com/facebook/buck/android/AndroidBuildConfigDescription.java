@@ -102,7 +102,7 @@ public class AndroidBuildConfigDescription
         args.getValues(),
         args.getValuesFile(),
         /* useConstantExpressions */ false,
-        javacFactory.create(graphBuilder, buildTarget.getTargetConfiguration()),
+        javacFactory.create(graphBuilder, null, buildTarget.getTargetConfiguration()),
         context
             .getToolchainProvider()
             .getByName(
@@ -198,7 +198,8 @@ public class AndroidBuildConfigDescription
       AndroidBuildConfigDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
   }
 
   @RuleArg

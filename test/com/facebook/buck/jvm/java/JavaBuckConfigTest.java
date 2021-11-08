@@ -329,7 +329,7 @@ public class JavaBuckConfigTest {
 
     Javac javac =
         JavacFactoryHelper.createJavacFactory(javaConfig)
-            .create(null, UnconfiguredTargetConfiguration.INSTANCE);
+            .create(null, null, UnconfiguredTargetConfiguration.INSTANCE);
     assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
   }
 
@@ -353,7 +353,7 @@ public class JavaBuckConfigTest {
     assertEquals(
         javac,
         JavacFactoryHelper.createJavacFactory(javaConfig)
-            .create(ruleFinder, UnconfiguredTargetConfiguration.INSTANCE)
+            .create(ruleFinder, null, UnconfiguredTargetConfiguration.INSTANCE)
             .resolve(ruleFinder.getSourcePathResolver(), defaultFilesystem.getRootPath())
             .getShortName());
   }

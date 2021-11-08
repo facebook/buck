@@ -124,6 +124,6 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       BuildRuleResolver resolver,
       @Nullable JvmLibraryArg arg,
       TargetConfiguration toolchainTargetConfiguration) {
-    return javacFactory.create(resolver, toolchainTargetConfiguration);
+    return javacFactory.create(resolver, arg, toolchainTargetConfiguration);
   }
 }

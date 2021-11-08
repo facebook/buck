@@ -25,6 +25,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
@@ -35,6 +36,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** JVM library rule constructor arg */
@@ -45,6 +47,8 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
   Optional<String> getTarget();
 
   Optional<String> getJavaVersion();
+
+  Optional<SourcePath> getJavac();
 
   ImmutableList<String> getExtraArguments();
 
@@ -66,6 +70,19 @@ public interface JvmLibraryArg extends BuildRuleArg, MaybeRequiredForSourceOnlyA
   Optional<UnusedDependenciesParams.UnusedDependenciesAction> getOnUnusedDependencies();
 
   Optional<Boolean> getNeverMarkAsUnusedDependency();
+
+  default boolean hasJavacSpec() {
+    return getJavac().isPresent();
+  }
+
+  @Value.Derived
+  @Nullable
+  default JavacSpec getJavacSpec() {
+    if (!hasJavacSpec()) {
+      return null;
+    }
+    return JavacSpec.of(getJavac());
+  }
 
   default List<BuildRule> getPluginsOf(
       BuildRuleResolver resolver, final JavacPluginProperties.Type type) {

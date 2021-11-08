@@ -176,7 +176,7 @@ public class JavaBinaryDescription
                                   .build()),
                           javacFactory.getBuildDeps(
                               graphBuilder, binaryBuildTarget.getTargetConfiguration())))),
-              javacFactory.create(graphBuilder, binaryBuildTarget.getTargetConfiguration()),
+              javacFactory.create(graphBuilder, null, binaryBuildTarget.getTargetConfiguration()),
               toolchainProvider
                   .getByName(
                       JavacOptionsProvider.DEFAULT_NAME,
@@ -225,7 +225,8 @@ public class JavaBinaryDescription
     targetGraphOnlyDepsBuilder.addAll(
         getCxxPlatform(constructorArg, buildTarget.getTargetConfiguration())
             .getParseTimeDeps(buildTarget.getTargetConfiguration()));
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
   }
 
   @RuleArg

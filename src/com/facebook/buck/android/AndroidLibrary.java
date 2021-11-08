@@ -264,7 +264,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               libraryTarget,
               projectFilesystem,
               ImmutableSortedSet.copyOf(Iterables.concat(deps.getDeps(), deps.getProvidedDeps())),
-              javacFactory.create(graphBuilder, buildTarget.getTargetConfiguration()),
+              javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
               rDotJavacOptions,
               args.getResourceUnionPackage(),
               downwardApiConfig.isEnabledForAndroid());

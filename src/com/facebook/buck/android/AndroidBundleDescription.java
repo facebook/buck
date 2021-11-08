@@ -252,7 +252,8 @@ public class AndroidBundleDescription
       AbstractAndroidBundleDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
 
     Optionals.addIfPresent(
         proGuardConfig.getProguardTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
