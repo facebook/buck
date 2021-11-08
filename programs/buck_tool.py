@@ -503,24 +503,6 @@ class BuckTool(object):
         env.pop("BUCK_WRAPPER_UUID", None)
         return env
 
-    def _handle_isolation_args(self, args):
-        try:
-            pos = args.index("--isolation_prefix")
-            # Allow for the argument to --isolation_prefix
-            if (pos + 1) < len(args):
-                new_args = args[:pos] + args[pos + 2 :]
-                new_args.append("--config")
-                new_args.append(
-                    "buck.base_buck_out_dir={0}".format(
-                        self._buck_project.get_buck_out_relative_dir()
-                    )
-                )
-                return new_args
-            else:
-                return args  # buck will error out on unrecognized option
-        except ValueError:
-            return args
-
     def _handle_buck_fix_args(self, argv, post_run_files):
         additional_args = ["--command-args-file", post_run_files.command_args_file]
         insert_idx = 1
