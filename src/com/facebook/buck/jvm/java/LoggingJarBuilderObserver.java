@@ -46,13 +46,6 @@ public class LoggingJarBuilderObserver implements JarBuilder.Observer {
         entrySupplier.getEntryOwner());
   }
 
-  @Override
-  public void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier) {
-    String entryName = entrySupplier.getEntry().getName();
-    entryName = JarBuilder.pathToClassName(entryName);
-    eventSink.reportEvent(Level.FINE, "%s is excluded from the Jar", entryName);
-  }
-
   private Level determineSeverity(ZipEntry entry) {
     return entry.isDirectory() ? Level.FINE : duplicatesLogLevel;
   }

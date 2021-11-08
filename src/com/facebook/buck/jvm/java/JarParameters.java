@@ -36,11 +36,6 @@ public abstract class JarParameters {
     return false;
   }
 
-  @Value.Default
-  public boolean getDisallowAllDuplicates() {
-    return false;
-  }
-
   public abstract RelPath getJarPath();
 
   @Value.Default

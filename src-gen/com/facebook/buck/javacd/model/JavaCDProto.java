@@ -362,56 +362,56 @@ public final class JavaCDProto {
       "javacd.api.v1.ResolvedJavacOptions.Resol" +
       "vedJavacPluginProperties.PathParamsEntry" +
       "\032I\n\017PathParamsEntry\022\013\n\003key\030\001 \001(\t\022%\n\005valu" +
-      "e\030\002 \001(\0132\026.javacd.api.v1.RelPath:\0028\001\"\362\004\n\r" +
+      "e\030\002 \001(\0132\026.javacd.api.v1.RelPath:\0028\001\"\323\004\n\r" +
       "JarParameters\022\023\n\013hashEntries\030\001 \001(\010\022\026\n\016me" +
-      "rgeManifests\030\002 \001(\010\022\035\n\025disallowAllDuplica" +
-      "tes\030\003 \001(\010\022\'\n\007jarPath\030\004 \001(\0132\026.javacd.api." +
-      "v1.RelPath\022W\n\024removeEntryPredicate\030\005 \001(\013" +
-      "29.javacd.api.v1.JarParameters.RemoveCla" +
-      "ssesPatternsMatcher\022,\n\014entriesToJar\030\006 \003(" +
-      "\0132\026.javacd.api.v1.RelPath\0224\n\024overrideEnt" +
-      "riesToJar\030\007 \003(\0132\026.javacd.api.v1.RelPath\022" +
-      "\021\n\tmainClass\030\010 \001(\t\022,\n\014manifestFile\030\t \001(\013" +
-      "2\026.javacd.api.v1.RelPath\022A\n\022duplicatesLo" +
-      "gLevel\030\n \001(\0162%.javacd.api.v1.JarParamete" +
-      "rs.LogLevel\0320\n\034RemoveClassesPatternsMatc" +
-      "her\022\020\n\010patterns\030\001 \003(\t\"y\n\010LogLevel\022\013\n\007UNK" +
-      "NOWN\020\000\022\007\n\003OFF\020\001\022\n\n\006SEVERE\020\002\022\013\n\007WARNING\020\003" +
-      "\022\010\n\004INFO\020\004\022\n\n\006CONFIG\020\005\022\010\n\004FINE\020\006\022\t\n\005FINE" +
-      "R\020\007\022\n\n\006FINEST\020\010\022\007\n\003ALL\020\t\"\350\001\n\rResolvedJav" +
-      "ac\022C\n\rexternalJavac\030\001 \001(\0132*.javacd.api.v" +
-      "1.ResolvedJavac.ExternalJavacH\000\022?\n\013jsr19" +
-      "9Javac\030\002 \001(\0132(.javacd.api.v1.ResolvedJav" +
-      "ac.JSR199JavacH\000\0329\n\rExternalJavac\022\021\n\tsho" +
-      "rtName\030\001 \001(\t\022\025\n\rcommandPrefix\030\002 \003(\t\032\r\n\013J" +
-      "SR199JavacB\007\n\005javac\"\337\006\n\030UnusedDependenci" +
-      "esParams\022S\n\004deps\030\001 \003(\0132E.javacd.api.v1.U" +
-      "nusedDependenciesParams.DependencyAndExp" +
-      "ortedDepsPath\022[\n\014providedDeps\030\002 \003(\0132E.ja" +
-      "vacd.api.v1.UnusedDependenciesParams.Dep" +
-      "endencyAndExportedDepsPath\022\'\n\007depFile\030\003 " +
-      "\003(\0132\026.javacd.api.v1.RelPath\022b\n\030unusedDep" +
-      "endenciesAction\030\004 \001(\0162@.javacd.api.v1.Un" +
-      "usedDependenciesParams.UnusedDependencie" +
-      "sAction\022\024\n\014exportedDeps\030\005 \003(\t\022\025\n\rbuildoz" +
-      "erPath\030\006 \001(\t\022\031\n\021onlyPrintCommands\030\007 \001(\010\022" +
-      "\034\n\024doUltralightChecking\030\010 \001(\010\032\315\001\n\035Depend" +
-      "encyAndExportedDepsPath\022O\n\ndependency\030\001 " +
-      "\001(\0132;.javacd.api.v1.UnusedDependenciesPa" +
-      "rams.BuildTargetAndPaths\022[\n\014exportedDeps" +
-      "\030\002 \003(\0132E.javacd.api.v1.UnusedDependencie" +
-      "sParams.DependencyAndExportedDepsPath\032\204\001" +
-      "\n\023BuildTargetAndPaths\022\027\n\017buildTargetName" +
-      "\030\001 \001(\t\022+\n\013fullJarPath\030\002 \001(\0132\026.javacd.api" +
-      ".v1.RelPath\022\'\n\007abiPath\030\003 \001(\0132\026.javacd.ap" +
-      "i.v1.RelPath\"G\n\030UnusedDependenciesAction" +
-      "\022\013\n\007UNKNOWN\020\000\022\010\n\004FAIL\020\001\022\010\n\004WARN\020\002\022\n\n\006IGN" +
-      "ORE\020\003\"\027\n\007RelPath\022\014\n\004path\030\001 \001(\t\"\027\n\007AbsPat" +
-      "h\022\014\n\004path\030\001 \001(\t\"\024\n\004Path\022\014\n\004path\030\001 \001(\t*f\n" +
-      "\021AbiGenerationMode\022\013\n\007UNKNOWN\020\000\022\t\n\005CLASS" +
-      "\020\001\022\n\n\006SOURCE\020\002\022\034\n\030MIGRATING_TO_SOURCE_ON" +
-      "LY\020\003\022\017\n\013SOURCE_ONLY\020\004B/\n\036com.facebook.bu" +
-      "ck.javacd.modelB\013JavaCDProtoP\001b\006proto3"
+      "rgeManifests\030\002 \001(\010\022\'\n\007jarPath\030\003 \001(\0132\026.ja" +
+      "vacd.api.v1.RelPath\022W\n\024removeEntryPredic" +
+      "ate\030\004 \001(\01329.javacd.api.v1.JarParameters." +
+      "RemoveClassesPatternsMatcher\022,\n\014entriesT" +
+      "oJar\030\005 \003(\0132\026.javacd.api.v1.RelPath\0224\n\024ov" +
+      "errideEntriesToJar\030\006 \003(\0132\026.javacd.api.v1" +
+      ".RelPath\022\021\n\tmainClass\030\007 \001(\t\022,\n\014manifestF" +
+      "ile\030\010 \001(\0132\026.javacd.api.v1.RelPath\022A\n\022dup" +
+      "licatesLogLevel\030\t \001(\0162%.javacd.api.v1.Ja" +
+      "rParameters.LogLevel\0320\n\034RemoveClassesPat" +
+      "ternsMatcher\022\020\n\010patterns\030\001 \003(\t\"y\n\010LogLev" +
+      "el\022\013\n\007UNKNOWN\020\000\022\007\n\003OFF\020\001\022\n\n\006SEVERE\020\002\022\013\n\007" +
+      "WARNING\020\003\022\010\n\004INFO\020\004\022\n\n\006CONFIG\020\005\022\010\n\004FINE\020" +
+      "\006\022\t\n\005FINER\020\007\022\n\n\006FINEST\020\010\022\007\n\003ALL\020\t\"\350\001\n\rRe" +
+      "solvedJavac\022C\n\rexternalJavac\030\001 \001(\0132*.jav" +
+      "acd.api.v1.ResolvedJavac.ExternalJavacH\000" +
+      "\022?\n\013jsr199Javac\030\002 \001(\0132(.javacd.api.v1.Re" +
+      "solvedJavac.JSR199JavacH\000\0329\n\rExternalJav" +
+      "ac\022\021\n\tshortName\030\001 \001(\t\022\025\n\rcommandPrefix\030\002" +
+      " \003(\t\032\r\n\013JSR199JavacB\007\n\005javac\"\337\006\n\030UnusedD" +
+      "ependenciesParams\022S\n\004deps\030\001 \003(\0132E.javacd" +
+      ".api.v1.UnusedDependenciesParams.Depende" +
+      "ncyAndExportedDepsPath\022[\n\014providedDeps\030\002" +
+      " \003(\0132E.javacd.api.v1.UnusedDependenciesP" +
+      "arams.DependencyAndExportedDepsPath\022\'\n\007d" +
+      "epFile\030\003 \003(\0132\026.javacd.api.v1.RelPath\022b\n\030" +
+      "unusedDependenciesAction\030\004 \001(\0162@.javacd." +
+      "api.v1.UnusedDependenciesParams.UnusedDe" +
+      "pendenciesAction\022\024\n\014exportedDeps\030\005 \003(\t\022\025" +
+      "\n\rbuildozerPath\030\006 \001(\t\022\031\n\021onlyPrintComman" +
+      "ds\030\007 \001(\010\022\034\n\024doUltralightChecking\030\010 \001(\010\032\315" +
+      "\001\n\035DependencyAndExportedDepsPath\022O\n\ndepe" +
+      "ndency\030\001 \001(\0132;.javacd.api.v1.UnusedDepen" +
+      "denciesParams.BuildTargetAndPaths\022[\n\014exp" +
+      "ortedDeps\030\002 \003(\0132E.javacd.api.v1.UnusedDe" +
+      "pendenciesParams.DependencyAndExportedDe" +
+      "psPath\032\204\001\n\023BuildTargetAndPaths\022\027\n\017buildT" +
+      "argetName\030\001 \001(\t\022+\n\013fullJarPath\030\002 \001(\0132\026.j" +
+      "avacd.api.v1.RelPath\022\'\n\007abiPath\030\003 \001(\0132\026." +
+      "javacd.api.v1.RelPath\"G\n\030UnusedDependenc" +
+      "iesAction\022\013\n\007UNKNOWN\020\000\022\010\n\004FAIL\020\001\022\010\n\004WARN" +
+      "\020\002\022\n\n\006IGNORE\020\003\"\027\n\007RelPath\022\014\n\004path\030\001 \001(\t\"" +
+      "\027\n\007AbsPath\022\014\n\004path\030\001 \001(\t\"\024\n\004Path\022\014\n\004path" +
+      "\030\001 \001(\t*f\n\021AbiGenerationMode\022\013\n\007UNKNOWN\020\000" +
+      "\022\t\n\005CLASS\020\001\022\n\n\006SOURCE\020\002\022\034\n\030MIGRATING_TO_" +
+      "SOURCE_ONLY\020\003\022\017\n\013SOURCE_ONLY\020\004B/\n\036com.fa" +
+      "cebook.buck.javacd.modelB\013JavaCDProtoP\001b" +
+      "\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -580,7 +580,7 @@ public final class JavaCDProto {
     internal_static_javacd_api_v1_JarParameters_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_JarParameters_descriptor,
-        new java.lang.String[] { "HashEntries", "MergeManifests", "DisallowAllDuplicates", "JarPath", "RemoveEntryPredicate", "EntriesToJar", "OverrideEntriesToJar", "MainClass", "ManifestFile", "DuplicatesLogLevel", });
+        new java.lang.String[] { "HashEntries", "MergeManifests", "JarPath", "RemoveEntryPredicate", "EntriesToJar", "OverrideEntriesToJar", "MainClass", "ManifestFile", "DuplicatesLogLevel", });
     internal_static_javacd_api_v1_JarParameters_RemoveClassesPatternsMatcher_descriptor =
       internal_static_javacd_api_v1_JarParameters_descriptor.getNestedTypes().get(0);
     internal_static_javacd_api_v1_JarParameters_RemoveClassesPatternsMatcher_fieldAccessorTable = new

@@ -49,18 +49,10 @@ import javax.annotation.Nullable;
 public class JarBuilder {
 
   public interface Observer {
-    Observer IGNORING =
-        new Observer() {
-          @Override
-          public void onDuplicateEntry(String jarFile, JarEntrySupplier entrySupplier) {}
 
-          @Override
-          public void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier) {}
-        };
+    Observer IGNORING = (jarFile, entrySupplier) -> {};
 
     void onDuplicateEntry(String jarFile, JarEntrySupplier entrySupplier);
-
-    void onEntryOmitted(String jarFile, JarEntrySupplier entrySupplier);
   }
 
   private Observer observer = Observer.IGNORING;
@@ -68,7 +60,6 @@ public class JarBuilder {
   @Nullable private String mainClass;
   @Nullable private Path manifestFile;
   private boolean shouldMergeManifests;
-  private boolean shouldDisallowAllDuplicates;
   private boolean shouldHashEntries;
   private Predicate<? super CustomZipEntry> removeEntryPredicate = entry -> false;
   private final List<JarEntryContainer> sourceContainers = new ArrayList<>();
@@ -130,11 +121,6 @@ public class JarBuilder {
 
   public JarBuilder setShouldMergeManifests(boolean shouldMergeManifests) {
     this.shouldMergeManifests = shouldMergeManifests;
-    return this;
-  }
-
-  public JarBuilder setShouldDisallowAllDuplicates(boolean shouldDisallowAllDuplicates) {
-    this.shouldDisallowAllDuplicates = shouldDisallowAllDuplicates;
     return this;
   }
 
@@ -375,11 +361,11 @@ public class JarBuilder {
   }
 
   private boolean isDuplicateAllowed(String name) {
-    return isService(name)
-        || (!shouldDisallowAllDuplicates && !name.endsWith(".class") && !name.endsWith("/"));
+    return isService(name) || (!name.endsWith(".class") && !name.endsWith("/"));
   }
 
   private static class SingletonJarEntryContainer implements JarEntryContainer {
+
     private final JarEntrySupplier supplier;
 
     @Nullable private Manifest manifest;

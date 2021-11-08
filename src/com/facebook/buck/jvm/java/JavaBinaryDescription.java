@@ -145,7 +145,6 @@ public class JavaBinaryDescription
             args.getMainClass().orElse(null),
             args.getManifestFile().orElse(null),
             args.getMergeManifests().orElse(true),
-            args.getDisallowAllDuplicates().orElse(false),
             args.getMetaInfDirectory().orElse(null),
             args.getBlacklist(),
             transitiveClasspathDeps,
@@ -211,7 +210,9 @@ public class JavaBinaryDescription
                     : r instanceof CalculateAbi ? Optional.of(r.getBuildDeps()) : Optional.empty());
     return NativeLinkables.getTransitiveSharedLibraries(
         graphBuilder,
-        Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
+        roots.values().stream()
+            .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+            .collect(ImmutableList.toImmutableList()),
         true);
   }
 
@@ -237,8 +238,6 @@ public class JavaBinaryDescription
     Optional<SourcePath> getManifestFile();
 
     Optional<Boolean> getMergeManifests();
-
-    Optional<Boolean> getDisallowAllDuplicates();
 
     Optional<Path> getMetaInfDirectory();
 

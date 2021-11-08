@@ -58,12 +58,7 @@ private static final long serialVersionUID = 0L;
             mergeManifests_ = input.readBool();
             break;
           }
-          case 24: {
-
-            disallowAllDuplicates_ = input.readBool();
-            break;
-          }
-          case 34: {
+          case 26: {
             com.facebook.buck.javacd.model.RelPath.Builder subBuilder = null;
             if (jarPath_ != null) {
               subBuilder = jarPath_.toBuilder();
@@ -76,7 +71,7 @@ private static final long serialVersionUID = 0L;
 
             break;
           }
-          case 42: {
+          case 34: {
             com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher.Builder subBuilder = null;
             if (removeEntryPredicate_ != null) {
               subBuilder = removeEntryPredicate_.toBuilder();
@@ -89,31 +84,31 @@ private static final long serialVersionUID = 0L;
 
             break;
           }
-          case 50: {
-            if (!((mutable_bitField0_ & 0x00000020) != 0)) {
+          case 42: {
+            if (!((mutable_bitField0_ & 0x00000010) != 0)) {
               entriesToJar_ = new java.util.ArrayList<com.facebook.buck.javacd.model.RelPath>();
-              mutable_bitField0_ |= 0x00000020;
+              mutable_bitField0_ |= 0x00000010;
             }
             entriesToJar_.add(
                 input.readMessage(com.facebook.buck.javacd.model.RelPath.parser(), extensionRegistry));
             break;
           }
-          case 58: {
-            if (!((mutable_bitField0_ & 0x00000040) != 0)) {
+          case 50: {
+            if (!((mutable_bitField0_ & 0x00000020) != 0)) {
               overrideEntriesToJar_ = new java.util.ArrayList<com.facebook.buck.javacd.model.RelPath>();
-              mutable_bitField0_ |= 0x00000040;
+              mutable_bitField0_ |= 0x00000020;
             }
             overrideEntriesToJar_.add(
                 input.readMessage(com.facebook.buck.javacd.model.RelPath.parser(), extensionRegistry));
             break;
           }
-          case 66: {
+          case 58: {
             java.lang.String s = input.readStringRequireUtf8();
 
             mainClass_ = s;
             break;
           }
-          case 74: {
+          case 66: {
             com.facebook.buck.javacd.model.RelPath.Builder subBuilder = null;
             if (manifestFile_ != null) {
               subBuilder = manifestFile_.toBuilder();
@@ -126,7 +121,7 @@ private static final long serialVersionUID = 0L;
 
             break;
           }
-          case 80: {
+          case 72: {
             int rawValue = input.readEnum();
 
             duplicatesLogLevel_ = rawValue;
@@ -147,10 +142,10 @@ private static final long serialVersionUID = 0L;
       throw new com.google.protobuf.InvalidProtocolBufferException(
           e).setUnfinishedMessage(this);
     } finally {
-      if (((mutable_bitField0_ & 0x00000020) != 0)) {
+      if (((mutable_bitField0_ & 0x00000010) != 0)) {
         entriesToJar_ = java.util.Collections.unmodifiableList(entriesToJar_);
       }
-      if (((mutable_bitField0_ & 0x00000040) != 0)) {
+      if (((mutable_bitField0_ & 0x00000020) != 0)) {
         overrideEntriesToJar_ = java.util.Collections.unmodifiableList(overrideEntriesToJar_);
       }
       this.unknownFields = unknownFields.build();
@@ -962,131 +957,122 @@ private static final long serialVersionUID = 0L;
     return mergeManifests_;
   }
 
-  public static final int DISALLOWALLDUPLICATES_FIELD_NUMBER = 3;
-  private boolean disallowAllDuplicates_;
-  /**
-   * <code>bool disallowAllDuplicates = 3;</code>
-   */
-  public boolean getDisallowAllDuplicates() {
-    return disallowAllDuplicates_;
-  }
-
-  public static final int JARPATH_FIELD_NUMBER = 4;
+  public static final int JARPATH_FIELD_NUMBER = 3;
   private com.facebook.buck.javacd.model.RelPath jarPath_;
   /**
-   * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+   * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
    */
   public boolean hasJarPath() {
     return jarPath_ != null;
   }
   /**
-   * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+   * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
    */
   public com.facebook.buck.javacd.model.RelPath getJarPath() {
     return jarPath_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : jarPath_;
   }
   /**
-   * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+   * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
    */
   public com.facebook.buck.javacd.model.RelPathOrBuilder getJarPathOrBuilder() {
     return getJarPath();
   }
 
-  public static final int REMOVEENTRYPREDICATE_FIELD_NUMBER = 5;
+  public static final int REMOVEENTRYPREDICATE_FIELD_NUMBER = 4;
   private com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate_;
   /**
-   * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+   * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
    */
   public boolean hasRemoveEntryPredicate() {
     return removeEntryPredicate_ != null;
   }
   /**
-   * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+   * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
    */
   public com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher getRemoveEntryPredicate() {
     return removeEntryPredicate_ == null ? com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher.getDefaultInstance() : removeEntryPredicate_;
   }
   /**
-   * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+   * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
    */
   public com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcherOrBuilder getRemoveEntryPredicateOrBuilder() {
     return getRemoveEntryPredicate();
   }
 
-  public static final int ENTRIESTOJAR_FIELD_NUMBER = 6;
+  public static final int ENTRIESTOJAR_FIELD_NUMBER = 5;
   private java.util.List<com.facebook.buck.javacd.model.RelPath> entriesToJar_;
   /**
-   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
    */
   public java.util.List<com.facebook.buck.javacd.model.RelPath> getEntriesToJarList() {
     return entriesToJar_;
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
    */
   public java.util.List<? extends com.facebook.buck.javacd.model.RelPathOrBuilder> 
       getEntriesToJarOrBuilderList() {
     return entriesToJar_;
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
    */
   public int getEntriesToJarCount() {
     return entriesToJar_.size();
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
    */
   public com.facebook.buck.javacd.model.RelPath getEntriesToJar(int index) {
     return entriesToJar_.get(index);
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
    */
   public com.facebook.buck.javacd.model.RelPathOrBuilder getEntriesToJarOrBuilder(
       int index) {
     return entriesToJar_.get(index);
   }
 
-  public static final int OVERRIDEENTRIESTOJAR_FIELD_NUMBER = 7;
+  public static final int OVERRIDEENTRIESTOJAR_FIELD_NUMBER = 6;
   private java.util.List<com.facebook.buck.javacd.model.RelPath> overrideEntriesToJar_;
   /**
-   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
    */
   public java.util.List<com.facebook.buck.javacd.model.RelPath> getOverrideEntriesToJarList() {
     return overrideEntriesToJar_;
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
    */
   public java.util.List<? extends com.facebook.buck.javacd.model.RelPathOrBuilder> 
       getOverrideEntriesToJarOrBuilderList() {
     return overrideEntriesToJar_;
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
    */
   public int getOverrideEntriesToJarCount() {
     return overrideEntriesToJar_.size();
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
    */
   public com.facebook.buck.javacd.model.RelPath getOverrideEntriesToJar(int index) {
     return overrideEntriesToJar_.get(index);
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
    */
   public com.facebook.buck.javacd.model.RelPathOrBuilder getOverrideEntriesToJarOrBuilder(
       int index) {
     return overrideEntriesToJar_.get(index);
   }
 
-  public static final int MAINCLASS_FIELD_NUMBER = 8;
+  public static final int MAINCLASS_FIELD_NUMBER = 7;
   private volatile java.lang.Object mainClass_;
   /**
-   * <code>string mainClass = 8;</code>
+   * <code>string mainClass = 7;</code>
    */
   public java.lang.String getMainClass() {
     java.lang.Object ref = mainClass_;
@@ -1101,7 +1087,7 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <code>string mainClass = 8;</code>
+   * <code>string mainClass = 7;</code>
    */
   public com.google.protobuf.ByteString
       getMainClassBytes() {
@@ -1117,37 +1103,37 @@ private static final long serialVersionUID = 0L;
     }
   }
 
-  public static final int MANIFESTFILE_FIELD_NUMBER = 9;
+  public static final int MANIFESTFILE_FIELD_NUMBER = 8;
   private com.facebook.buck.javacd.model.RelPath manifestFile_;
   /**
-   * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+   * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
    */
   public boolean hasManifestFile() {
     return manifestFile_ != null;
   }
   /**
-   * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+   * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
    */
   public com.facebook.buck.javacd.model.RelPath getManifestFile() {
     return manifestFile_ == null ? com.facebook.buck.javacd.model.RelPath.getDefaultInstance() : manifestFile_;
   }
   /**
-   * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+   * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
    */
   public com.facebook.buck.javacd.model.RelPathOrBuilder getManifestFileOrBuilder() {
     return getManifestFile();
   }
 
-  public static final int DUPLICATESLOGLEVEL_FIELD_NUMBER = 10;
+  public static final int DUPLICATESLOGLEVEL_FIELD_NUMBER = 9;
   private int duplicatesLogLevel_;
   /**
-   * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 10;</code>
+   * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 9;</code>
    */
   public int getDuplicatesLogLevelValue() {
     return duplicatesLogLevel_;
   }
   /**
-   * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 10;</code>
+   * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 9;</code>
    */
   public com.facebook.buck.javacd.model.JarParameters.LogLevel getDuplicatesLogLevel() {
     @SuppressWarnings("deprecation")
@@ -1175,29 +1161,26 @@ private static final long serialVersionUID = 0L;
     if (mergeManifests_ != false) {
       output.writeBool(2, mergeManifests_);
     }
-    if (disallowAllDuplicates_ != false) {
-      output.writeBool(3, disallowAllDuplicates_);
-    }
     if (jarPath_ != null) {
-      output.writeMessage(4, getJarPath());
+      output.writeMessage(3, getJarPath());
     }
     if (removeEntryPredicate_ != null) {
-      output.writeMessage(5, getRemoveEntryPredicate());
+      output.writeMessage(4, getRemoveEntryPredicate());
     }
     for (int i = 0; i < entriesToJar_.size(); i++) {
-      output.writeMessage(6, entriesToJar_.get(i));
+      output.writeMessage(5, entriesToJar_.get(i));
     }
     for (int i = 0; i < overrideEntriesToJar_.size(); i++) {
-      output.writeMessage(7, overrideEntriesToJar_.get(i));
+      output.writeMessage(6, overrideEntriesToJar_.get(i));
     }
     if (!getMainClassBytes().isEmpty()) {
-      com.google.protobuf.GeneratedMessageV3.writeString(output, 8, mainClass_);
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 7, mainClass_);
     }
     if (manifestFile_ != null) {
-      output.writeMessage(9, getManifestFile());
+      output.writeMessage(8, getManifestFile());
     }
     if (duplicatesLogLevel_ != com.facebook.buck.javacd.model.JarParameters.LogLevel.UNKNOWN.getNumber()) {
-      output.writeEnum(10, duplicatesLogLevel_);
+      output.writeEnum(9, duplicatesLogLevel_);
     }
     unknownFields.writeTo(output);
   }
@@ -1216,36 +1199,32 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeBoolSize(2, mergeManifests_);
     }
-    if (disallowAllDuplicates_ != false) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeBoolSize(3, disallowAllDuplicates_);
-    }
     if (jarPath_ != null) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(4, getJarPath());
+        .computeMessageSize(3, getJarPath());
     }
     if (removeEntryPredicate_ != null) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(5, getRemoveEntryPredicate());
+        .computeMessageSize(4, getRemoveEntryPredicate());
     }
     for (int i = 0; i < entriesToJar_.size(); i++) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(6, entriesToJar_.get(i));
+        .computeMessageSize(5, entriesToJar_.get(i));
     }
     for (int i = 0; i < overrideEntriesToJar_.size(); i++) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(7, overrideEntriesToJar_.get(i));
+        .computeMessageSize(6, overrideEntriesToJar_.get(i));
     }
     if (!getMainClassBytes().isEmpty()) {
-      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(8, mainClass_);
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(7, mainClass_);
     }
     if (manifestFile_ != null) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(9, getManifestFile());
+        .computeMessageSize(8, getManifestFile());
     }
     if (duplicatesLogLevel_ != com.facebook.buck.javacd.model.JarParameters.LogLevel.UNKNOWN.getNumber()) {
       size += com.google.protobuf.CodedOutputStream
-        .computeEnumSize(10, duplicatesLogLevel_);
+        .computeEnumSize(9, duplicatesLogLevel_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -1266,8 +1245,6 @@ private static final long serialVersionUID = 0L;
         != other.getHashEntries()) return false;
     if (getMergeManifests()
         != other.getMergeManifests()) return false;
-    if (getDisallowAllDuplicates()
-        != other.getDisallowAllDuplicates()) return false;
     if (hasJarPath() != other.hasJarPath()) return false;
     if (hasJarPath()) {
       if (!getJarPath()
@@ -1307,9 +1284,6 @@ private static final long serialVersionUID = 0L;
     hash = (37 * hash) + MERGEMANIFESTS_FIELD_NUMBER;
     hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
         getMergeManifests());
-    hash = (37 * hash) + DISALLOWALLDUPLICATES_FIELD_NUMBER;
-    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-        getDisallowAllDuplicates());
     if (hasJarPath()) {
       hash = (37 * hash) + JARPATH_FIELD_NUMBER;
       hash = (53 * hash) + getJarPath().hashCode();
@@ -1473,8 +1447,6 @@ private static final long serialVersionUID = 0L;
 
       mergeManifests_ = false;
 
-      disallowAllDuplicates_ = false;
-
       if (jarPathBuilder_ == null) {
         jarPath_ = null;
       } else {
@@ -1489,13 +1461,13 @@ private static final long serialVersionUID = 0L;
       }
       if (entriesToJarBuilder_ == null) {
         entriesToJar_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000010);
       } else {
         entriesToJarBuilder_.clear();
       }
       if (overrideEntriesToJarBuilder_ == null) {
         overrideEntriesToJar_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000020);
       } else {
         overrideEntriesToJarBuilder_.clear();
       }
@@ -1539,7 +1511,6 @@ private static final long serialVersionUID = 0L;
       int to_bitField0_ = 0;
       result.hashEntries_ = hashEntries_;
       result.mergeManifests_ = mergeManifests_;
-      result.disallowAllDuplicates_ = disallowAllDuplicates_;
       if (jarPathBuilder_ == null) {
         result.jarPath_ = jarPath_;
       } else {
@@ -1551,18 +1522,18 @@ private static final long serialVersionUID = 0L;
         result.removeEntryPredicate_ = removeEntryPredicateBuilder_.build();
       }
       if (entriesToJarBuilder_ == null) {
-        if (((bitField0_ & 0x00000020) != 0)) {
+        if (((bitField0_ & 0x00000010) != 0)) {
           entriesToJar_ = java.util.Collections.unmodifiableList(entriesToJar_);
-          bitField0_ = (bitField0_ & ~0x00000020);
+          bitField0_ = (bitField0_ & ~0x00000010);
         }
         result.entriesToJar_ = entriesToJar_;
       } else {
         result.entriesToJar_ = entriesToJarBuilder_.build();
       }
       if (overrideEntriesToJarBuilder_ == null) {
-        if (((bitField0_ & 0x00000040) != 0)) {
+        if (((bitField0_ & 0x00000020) != 0)) {
           overrideEntriesToJar_ = java.util.Collections.unmodifiableList(overrideEntriesToJar_);
-          bitField0_ = (bitField0_ & ~0x00000040);
+          bitField0_ = (bitField0_ & ~0x00000020);
         }
         result.overrideEntriesToJar_ = overrideEntriesToJar_;
       } else {
@@ -1630,9 +1601,6 @@ private static final long serialVersionUID = 0L;
       if (other.getMergeManifests() != false) {
         setMergeManifests(other.getMergeManifests());
       }
-      if (other.getDisallowAllDuplicates() != false) {
-        setDisallowAllDuplicates(other.getDisallowAllDuplicates());
-      }
       if (other.hasJarPath()) {
         mergeJarPath(other.getJarPath());
       }
@@ -1643,7 +1611,7 @@ private static final long serialVersionUID = 0L;
         if (!other.entriesToJar_.isEmpty()) {
           if (entriesToJar_.isEmpty()) {
             entriesToJar_ = other.entriesToJar_;
-            bitField0_ = (bitField0_ & ~0x00000020);
+            bitField0_ = (bitField0_ & ~0x00000010);
           } else {
             ensureEntriesToJarIsMutable();
             entriesToJar_.addAll(other.entriesToJar_);
@@ -1656,7 +1624,7 @@ private static final long serialVersionUID = 0L;
             entriesToJarBuilder_.dispose();
             entriesToJarBuilder_ = null;
             entriesToJar_ = other.entriesToJar_;
-            bitField0_ = (bitField0_ & ~0x00000020);
+            bitField0_ = (bitField0_ & ~0x00000010);
             entriesToJarBuilder_ = 
               com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                  getEntriesToJarFieldBuilder() : null;
@@ -1669,7 +1637,7 @@ private static final long serialVersionUID = 0L;
         if (!other.overrideEntriesToJar_.isEmpty()) {
           if (overrideEntriesToJar_.isEmpty()) {
             overrideEntriesToJar_ = other.overrideEntriesToJar_;
-            bitField0_ = (bitField0_ & ~0x00000040);
+            bitField0_ = (bitField0_ & ~0x00000020);
           } else {
             ensureOverrideEntriesToJarIsMutable();
             overrideEntriesToJar_.addAll(other.overrideEntriesToJar_);
@@ -1682,7 +1650,7 @@ private static final long serialVersionUID = 0L;
             overrideEntriesToJarBuilder_.dispose();
             overrideEntriesToJarBuilder_ = null;
             overrideEntriesToJar_ = other.overrideEntriesToJar_;
-            bitField0_ = (bitField0_ & ~0x00000040);
+            bitField0_ = (bitField0_ & ~0x00000020);
             overrideEntriesToJarBuilder_ = 
               com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                  getOverrideEntriesToJarFieldBuilder() : null;
@@ -1783,43 +1751,17 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private boolean disallowAllDuplicates_ ;
-    /**
-     * <code>bool disallowAllDuplicates = 3;</code>
-     */
-    public boolean getDisallowAllDuplicates() {
-      return disallowAllDuplicates_;
-    }
-    /**
-     * <code>bool disallowAllDuplicates = 3;</code>
-     */
-    public Builder setDisallowAllDuplicates(boolean value) {
-      
-      disallowAllDuplicates_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>bool disallowAllDuplicates = 3;</code>
-     */
-    public Builder clearDisallowAllDuplicates() {
-      
-      disallowAllDuplicates_ = false;
-      onChanged();
-      return this;
-    }
-
     private com.facebook.buck.javacd.model.RelPath jarPath_;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> jarPathBuilder_;
     /**
-     * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+     * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
      */
     public boolean hasJarPath() {
       return jarPathBuilder_ != null || jarPath_ != null;
     }
     /**
-     * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+     * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
      */
     public com.facebook.buck.javacd.model.RelPath getJarPath() {
       if (jarPathBuilder_ == null) {
@@ -1829,7 +1771,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+     * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
      */
     public Builder setJarPath(com.facebook.buck.javacd.model.RelPath value) {
       if (jarPathBuilder_ == null) {
@@ -1845,7 +1787,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+     * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
      */
     public Builder setJarPath(
         com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
@@ -1859,7 +1801,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+     * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
      */
     public Builder mergeJarPath(com.facebook.buck.javacd.model.RelPath value) {
       if (jarPathBuilder_ == null) {
@@ -1877,7 +1819,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+     * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
      */
     public Builder clearJarPath() {
       if (jarPathBuilder_ == null) {
@@ -1891,7 +1833,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+     * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
      */
     public com.facebook.buck.javacd.model.RelPath.Builder getJarPathBuilder() {
       
@@ -1899,7 +1841,7 @@ private static final long serialVersionUID = 0L;
       return getJarPathFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+     * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
      */
     public com.facebook.buck.javacd.model.RelPathOrBuilder getJarPathOrBuilder() {
       if (jarPathBuilder_ != null) {
@@ -1910,7 +1852,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.RelPath jarPath = 4;</code>
+     * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> 
@@ -1930,13 +1872,13 @@ private static final long serialVersionUID = 0L;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher, com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher.Builder, com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcherOrBuilder> removeEntryPredicateBuilder_;
     /**
-     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
      */
     public boolean hasRemoveEntryPredicate() {
       return removeEntryPredicateBuilder_ != null || removeEntryPredicate_ != null;
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
      */
     public com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher getRemoveEntryPredicate() {
       if (removeEntryPredicateBuilder_ == null) {
@@ -1946,7 +1888,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
      */
     public Builder setRemoveEntryPredicate(com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher value) {
       if (removeEntryPredicateBuilder_ == null) {
@@ -1962,7 +1904,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
      */
     public Builder setRemoveEntryPredicate(
         com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher.Builder builderForValue) {
@@ -1976,7 +1918,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
      */
     public Builder mergeRemoveEntryPredicate(com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher value) {
       if (removeEntryPredicateBuilder_ == null) {
@@ -1994,7 +1936,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
      */
     public Builder clearRemoveEntryPredicate() {
       if (removeEntryPredicateBuilder_ == null) {
@@ -2008,7 +1950,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
      */
     public com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher.Builder getRemoveEntryPredicateBuilder() {
       
@@ -2016,7 +1958,7 @@ private static final long serialVersionUID = 0L;
       return getRemoveEntryPredicateFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
      */
     public com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcherOrBuilder getRemoveEntryPredicateOrBuilder() {
       if (removeEntryPredicateBuilder_ != null) {
@@ -2027,7 +1969,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 5;</code>
+     * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher, com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher.Builder, com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcherOrBuilder> 
@@ -2046,9 +1988,9 @@ private static final long serialVersionUID = 0L;
     private java.util.List<com.facebook.buck.javacd.model.RelPath> entriesToJar_ =
       java.util.Collections.emptyList();
     private void ensureEntriesToJarIsMutable() {
-      if (!((bitField0_ & 0x00000020) != 0)) {
+      if (!((bitField0_ & 0x00000010) != 0)) {
         entriesToJar_ = new java.util.ArrayList<com.facebook.buck.javacd.model.RelPath>(entriesToJar_);
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000010;
        }
     }
 
@@ -2056,7 +1998,7 @@ private static final long serialVersionUID = 0L;
         com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> entriesToJarBuilder_;
 
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public java.util.List<com.facebook.buck.javacd.model.RelPath> getEntriesToJarList() {
       if (entriesToJarBuilder_ == null) {
@@ -2066,7 +2008,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public int getEntriesToJarCount() {
       if (entriesToJarBuilder_ == null) {
@@ -2076,7 +2018,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public com.facebook.buck.javacd.model.RelPath getEntriesToJar(int index) {
       if (entriesToJarBuilder_ == null) {
@@ -2086,7 +2028,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public Builder setEntriesToJar(
         int index, com.facebook.buck.javacd.model.RelPath value) {
@@ -2103,7 +2045,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public Builder setEntriesToJar(
         int index, com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
@@ -2117,7 +2059,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public Builder addEntriesToJar(com.facebook.buck.javacd.model.RelPath value) {
       if (entriesToJarBuilder_ == null) {
@@ -2133,7 +2075,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public Builder addEntriesToJar(
         int index, com.facebook.buck.javacd.model.RelPath value) {
@@ -2150,7 +2092,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public Builder addEntriesToJar(
         com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
@@ -2164,7 +2106,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public Builder addEntriesToJar(
         int index, com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
@@ -2178,7 +2120,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public Builder addAllEntriesToJar(
         java.lang.Iterable<? extends com.facebook.buck.javacd.model.RelPath> values) {
@@ -2193,12 +2135,12 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public Builder clearEntriesToJar() {
       if (entriesToJarBuilder_ == null) {
         entriesToJar_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000010);
         onChanged();
       } else {
         entriesToJarBuilder_.clear();
@@ -2206,7 +2148,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public Builder removeEntriesToJar(int index) {
       if (entriesToJarBuilder_ == null) {
@@ -2219,14 +2161,14 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public com.facebook.buck.javacd.model.RelPath.Builder getEntriesToJarBuilder(
         int index) {
       return getEntriesToJarFieldBuilder().getBuilder(index);
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public com.facebook.buck.javacd.model.RelPathOrBuilder getEntriesToJarOrBuilder(
         int index) {
@@ -2236,7 +2178,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public java.util.List<? extends com.facebook.buck.javacd.model.RelPathOrBuilder> 
          getEntriesToJarOrBuilderList() {
@@ -2247,14 +2189,14 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public com.facebook.buck.javacd.model.RelPath.Builder addEntriesToJarBuilder() {
       return getEntriesToJarFieldBuilder().addBuilder(
           com.facebook.buck.javacd.model.RelPath.getDefaultInstance());
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public com.facebook.buck.javacd.model.RelPath.Builder addEntriesToJarBuilder(
         int index) {
@@ -2262,7 +2204,7 @@ private static final long serialVersionUID = 0L;
           index, com.facebook.buck.javacd.model.RelPath.getDefaultInstance());
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 6;</code>
+     * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
      */
     public java.util.List<com.facebook.buck.javacd.model.RelPath.Builder> 
          getEntriesToJarBuilderList() {
@@ -2275,7 +2217,7 @@ private static final long serialVersionUID = 0L;
         entriesToJarBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
             com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder>(
                 entriesToJar_,
-                ((bitField0_ & 0x00000020) != 0),
+                ((bitField0_ & 0x00000010) != 0),
                 getParentForChildren(),
                 isClean());
         entriesToJar_ = null;
@@ -2286,9 +2228,9 @@ private static final long serialVersionUID = 0L;
     private java.util.List<com.facebook.buck.javacd.model.RelPath> overrideEntriesToJar_ =
       java.util.Collections.emptyList();
     private void ensureOverrideEntriesToJarIsMutable() {
-      if (!((bitField0_ & 0x00000040) != 0)) {
+      if (!((bitField0_ & 0x00000020) != 0)) {
         overrideEntriesToJar_ = new java.util.ArrayList<com.facebook.buck.javacd.model.RelPath>(overrideEntriesToJar_);
-        bitField0_ |= 0x00000040;
+        bitField0_ |= 0x00000020;
        }
     }
 
@@ -2296,7 +2238,7 @@ private static final long serialVersionUID = 0L;
         com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> overrideEntriesToJarBuilder_;
 
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public java.util.List<com.facebook.buck.javacd.model.RelPath> getOverrideEntriesToJarList() {
       if (overrideEntriesToJarBuilder_ == null) {
@@ -2306,7 +2248,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public int getOverrideEntriesToJarCount() {
       if (overrideEntriesToJarBuilder_ == null) {
@@ -2316,7 +2258,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public com.facebook.buck.javacd.model.RelPath getOverrideEntriesToJar(int index) {
       if (overrideEntriesToJarBuilder_ == null) {
@@ -2326,7 +2268,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public Builder setOverrideEntriesToJar(
         int index, com.facebook.buck.javacd.model.RelPath value) {
@@ -2343,7 +2285,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public Builder setOverrideEntriesToJar(
         int index, com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
@@ -2357,7 +2299,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public Builder addOverrideEntriesToJar(com.facebook.buck.javacd.model.RelPath value) {
       if (overrideEntriesToJarBuilder_ == null) {
@@ -2373,7 +2315,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public Builder addOverrideEntriesToJar(
         int index, com.facebook.buck.javacd.model.RelPath value) {
@@ -2390,7 +2332,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public Builder addOverrideEntriesToJar(
         com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
@@ -2404,7 +2346,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public Builder addOverrideEntriesToJar(
         int index, com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
@@ -2418,7 +2360,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public Builder addAllOverrideEntriesToJar(
         java.lang.Iterable<? extends com.facebook.buck.javacd.model.RelPath> values) {
@@ -2433,12 +2375,12 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public Builder clearOverrideEntriesToJar() {
       if (overrideEntriesToJarBuilder_ == null) {
         overrideEntriesToJar_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000020);
         onChanged();
       } else {
         overrideEntriesToJarBuilder_.clear();
@@ -2446,7 +2388,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public Builder removeOverrideEntriesToJar(int index) {
       if (overrideEntriesToJarBuilder_ == null) {
@@ -2459,14 +2401,14 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public com.facebook.buck.javacd.model.RelPath.Builder getOverrideEntriesToJarBuilder(
         int index) {
       return getOverrideEntriesToJarFieldBuilder().getBuilder(index);
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public com.facebook.buck.javacd.model.RelPathOrBuilder getOverrideEntriesToJarOrBuilder(
         int index) {
@@ -2476,7 +2418,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public java.util.List<? extends com.facebook.buck.javacd.model.RelPathOrBuilder> 
          getOverrideEntriesToJarOrBuilderList() {
@@ -2487,14 +2429,14 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public com.facebook.buck.javacd.model.RelPath.Builder addOverrideEntriesToJarBuilder() {
       return getOverrideEntriesToJarFieldBuilder().addBuilder(
           com.facebook.buck.javacd.model.RelPath.getDefaultInstance());
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public com.facebook.buck.javacd.model.RelPath.Builder addOverrideEntriesToJarBuilder(
         int index) {
@@ -2502,7 +2444,7 @@ private static final long serialVersionUID = 0L;
           index, com.facebook.buck.javacd.model.RelPath.getDefaultInstance());
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 7;</code>
+     * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
      */
     public java.util.List<com.facebook.buck.javacd.model.RelPath.Builder> 
          getOverrideEntriesToJarBuilderList() {
@@ -2515,7 +2457,7 @@ private static final long serialVersionUID = 0L;
         overrideEntriesToJarBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
             com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder>(
                 overrideEntriesToJar_,
-                ((bitField0_ & 0x00000040) != 0),
+                ((bitField0_ & 0x00000020) != 0),
                 getParentForChildren(),
                 isClean());
         overrideEntriesToJar_ = null;
@@ -2525,7 +2467,7 @@ private static final long serialVersionUID = 0L;
 
     private java.lang.Object mainClass_ = "";
     /**
-     * <code>string mainClass = 8;</code>
+     * <code>string mainClass = 7;</code>
      */
     public java.lang.String getMainClass() {
       java.lang.Object ref = mainClass_;
@@ -2540,7 +2482,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string mainClass = 8;</code>
+     * <code>string mainClass = 7;</code>
      */
     public com.google.protobuf.ByteString
         getMainClassBytes() {
@@ -2556,7 +2498,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>string mainClass = 8;</code>
+     * <code>string mainClass = 7;</code>
      */
     public Builder setMainClass(
         java.lang.String value) {
@@ -2569,7 +2511,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string mainClass = 8;</code>
+     * <code>string mainClass = 7;</code>
      */
     public Builder clearMainClass() {
       
@@ -2578,7 +2520,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>string mainClass = 8;</code>
+     * <code>string mainClass = 7;</code>
      */
     public Builder setMainClassBytes(
         com.google.protobuf.ByteString value) {
@@ -2596,13 +2538,13 @@ private static final long serialVersionUID = 0L;
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> manifestFileBuilder_;
     /**
-     * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+     * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
      */
     public boolean hasManifestFile() {
       return manifestFileBuilder_ != null || manifestFile_ != null;
     }
     /**
-     * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+     * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
      */
     public com.facebook.buck.javacd.model.RelPath getManifestFile() {
       if (manifestFileBuilder_ == null) {
@@ -2612,7 +2554,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+     * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
      */
     public Builder setManifestFile(com.facebook.buck.javacd.model.RelPath value) {
       if (manifestFileBuilder_ == null) {
@@ -2628,7 +2570,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+     * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
      */
     public Builder setManifestFile(
         com.facebook.buck.javacd.model.RelPath.Builder builderForValue) {
@@ -2642,7 +2584,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+     * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
      */
     public Builder mergeManifestFile(com.facebook.buck.javacd.model.RelPath value) {
       if (manifestFileBuilder_ == null) {
@@ -2660,7 +2602,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+     * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
      */
     public Builder clearManifestFile() {
       if (manifestFileBuilder_ == null) {
@@ -2674,7 +2616,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+     * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
      */
     public com.facebook.buck.javacd.model.RelPath.Builder getManifestFileBuilder() {
       
@@ -2682,7 +2624,7 @@ private static final long serialVersionUID = 0L;
       return getManifestFileFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+     * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
      */
     public com.facebook.buck.javacd.model.RelPathOrBuilder getManifestFileOrBuilder() {
       if (manifestFileBuilder_ != null) {
@@ -2693,7 +2635,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>.javacd.api.v1.RelPath manifestFile = 9;</code>
+     * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
         com.facebook.buck.javacd.model.RelPath, com.facebook.buck.javacd.model.RelPath.Builder, com.facebook.buck.javacd.model.RelPathOrBuilder> 
@@ -2711,13 +2653,13 @@ private static final long serialVersionUID = 0L;
 
     private int duplicatesLogLevel_ = 0;
     /**
-     * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 10;</code>
+     * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 9;</code>
      */
     public int getDuplicatesLogLevelValue() {
       return duplicatesLogLevel_;
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 10;</code>
+     * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 9;</code>
      */
     public Builder setDuplicatesLogLevelValue(int value) {
       duplicatesLogLevel_ = value;
@@ -2725,7 +2667,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 10;</code>
+     * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 9;</code>
      */
     public com.facebook.buck.javacd.model.JarParameters.LogLevel getDuplicatesLogLevel() {
       @SuppressWarnings("deprecation")
@@ -2733,7 +2675,7 @@ private static final long serialVersionUID = 0L;
       return result == null ? com.facebook.buck.javacd.model.JarParameters.LogLevel.UNRECOGNIZED : result;
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 10;</code>
+     * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 9;</code>
      */
     public Builder setDuplicatesLogLevel(com.facebook.buck.javacd.model.JarParameters.LogLevel value) {
       if (value == null) {
@@ -2745,7 +2687,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 10;</code>
+     * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 9;</code>
      */
     public Builder clearDuplicatesLogLevel() {
       

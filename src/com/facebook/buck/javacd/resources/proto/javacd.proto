@@ -266,14 +266,13 @@ message ResolvedJavacOptions {
 message JarParameters {
     bool hashEntries = 1;
     bool mergeManifests = 2;
-    bool disallowAllDuplicates = 3;
-    RelPath jarPath = 4;
-    RemoveClassesPatternsMatcher removeEntryPredicate = 5;
-    repeated RelPath entriesToJar = 6;
-    repeated RelPath overrideEntriesToJar = 7;
-    string mainClass = 8;
-    RelPath manifestFile = 9;
-    LogLevel duplicatesLogLevel = 10;
+    RelPath jarPath = 3;
+    RemoveClassesPatternsMatcher removeEntryPredicate = 4;
+    repeated RelPath entriesToJar = 5;
+    repeated RelPath overrideEntriesToJar = 6;
+    string mainClass = 7;
+    RelPath manifestFile = 8;
+    LogLevel duplicatesLogLevel = 9;
 
     enum LogLevel {
         UNKNOWN = 0;

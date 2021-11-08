@@ -65,7 +65,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.util.List;
@@ -197,7 +196,10 @@ public class JavaTestDescription
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
             buildTarget, cellRoots.getCellNameResolver(), graphBuilder, MACRO_EXPANDERS);
-    List<Arg> vmArgs = Lists.transform(args.getVmArgs(), macrosConverter::convert);
+    List<Arg> vmArgs =
+        args.getVmArgs().stream()
+            .map(macrosConverter::convert)
+            .collect(ImmutableList.toImmutableList());
 
     Function<TargetConfiguration, JavaOptions> javaRuntimeConfig =
         javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
@@ -238,7 +240,6 @@ public class JavaTestDescription
               testRunner.getMainClass(),
               args.getManifestFile().orElse(null),
               true,
-              false,
               null,
               ImmutableSet.of(),
               transitiveClasspathDeps,
@@ -278,12 +279,12 @@ public class JavaTestDescription
         cxxLibraryEnhancement.nativeLibsEnvironment,
         cxxLibraryEnhancement.requiredPaths,
         args.getTestRuleTimeoutMs()
-            .map(Optional::of)
-            .orElse(
-                javaBuckConfig
-                    .getDelegate()
-                    .getView(TestBuckConfig.class)
-                    .getDefaultTestRuleTimeoutMs()),
+            .or(
+                () ->
+                    javaBuckConfig
+                        .getDelegate()
+                        .getView(TestBuckConfig.class)
+                        .getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
         args.getRunTestSeparately(),

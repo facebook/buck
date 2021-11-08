@@ -73,7 +73,6 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey @Nullable private final SourcePath manifestFile;
   private final boolean mergeManifests;
-  private final boolean disallowAllDuplicates;
 
   @Nullable @AddToRuleKey private final SourcePath metaInfDirectory;
 
@@ -97,7 +96,6 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Nullable String mainClass,
       @Nullable SourcePath manifestFile,
       boolean mergeManifests,
-      boolean disallowAllDuplicates,
       @Nullable Path metaInfDirectory,
       ImmutableSet<Pattern> blocklist,
       ImmutableSet<JavaLibrary> transitiveClasspathDeps,
@@ -109,7 +107,6 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
-    this.disallowAllDuplicates = disallowAllDuplicates;
     this.metaInfDirectory =
         metaInfDirectory != null
             ? PathSourcePath.of(getProjectFilesystem(), metaInfDirectory)
@@ -177,7 +174,6 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .setMainClass(Optional.ofNullable(mainClass))
                 .setManifestFile(Optional.ofNullable(manifestPath))
                 .setMergeManifests(mergeManifests)
-                .setDisallowAllDuplicates(disallowAllDuplicates)
                 .setDuplicatesLogLevel(duplicatesLogLevel)
                 .setRemoveEntryPredicate(
                     entry ->

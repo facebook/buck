@@ -40,7 +40,6 @@ public class JarParametersSerializer {
 
     builder.setHashEntries(jarParameters.getHashEntries());
     builder.setMergeManifests(jarParameters.getMergeManifests());
-    builder.setDisallowAllDuplicates(jarParameters.getDisallowAllDuplicates());
     builder.setJarPath(RelPathSerializer.serialize(jarParameters.getJarPath()));
     Predicate<Object> removeEntryPredicate = jarParameters.getRemoveEntryPredicate();
     Preconditions.checkState(removeEntryPredicate instanceof RemoveClassesPatternsMatcher);
@@ -76,7 +75,6 @@ public class JarParametersSerializer {
 
     builder.setHashEntries(jarParameters.getHashEntries());
     builder.setMergeManifests(jarParameters.getMergeManifests());
-    builder.setDisallowAllDuplicates(jarParameters.getDisallowAllDuplicates());
     builder.setJarPath(RelPathSerializer.deserialize(jarParameters.getJarPath()));
     builder.setRemoveEntryPredicate(
         RemoveClassesPatternsMatcherSerializer.deserialize(

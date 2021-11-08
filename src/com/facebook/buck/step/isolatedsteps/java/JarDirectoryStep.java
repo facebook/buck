@@ -86,7 +86,6 @@ public class JarDirectoryStep extends IsolatedStep {
             .setManifestFile(
                 parameters.getManifestFile().map(root::resolve).map(AbsPath::getPath).orElse(null))
             .setShouldMergeManifests(parameters.getMergeManifests())
-            .setShouldDisallowAllDuplicates(parameters.getDisallowAllDuplicates())
             .setShouldHashEntries(parameters.getHashEntries())
             .setRemoveEntryPredicate(parameters.getRemoveEntryPredicate())
             .createJarFile(root.resolve(parameters.getJarPath()).getPath());
