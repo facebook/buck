@@ -1,0 +1,6 @@
+[apple]
+  iphoneos_target_sdk_version = 9.0
+  iphonesimulator_target_sdk_version = 9.0
+
+[cxx]
+  default_platform = iphonesimulator-x86_64

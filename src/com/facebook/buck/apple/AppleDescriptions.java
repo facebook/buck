@@ -130,6 +130,7 @@ public class AppleDescriptions {
       InternalFlavor.of("apple-swift-underlying-module");
   public static final Flavor SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR =
       InternalFlavor.of("apple-swift-underlying-vfs-overlay");
+  public static final Flavor DWARF_AND_DSYM = InternalFlavor.of("dwarf-and-dsym");
 
   public static final Flavor INCLUDE_FRAMEWORKS_FLAVOR = InternalFlavor.of("include-frameworks");
   public static final Flavor NO_INCLUDE_FRAMEWORKS_FLAVOR =
@@ -793,6 +794,7 @@ public class AppleDescriptions {
       Optional<ImmutableList<String>> ibtoolFlags,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
+      Optional<Boolean> skipCopyingSwiftStdlib,
       boolean cacheStrips,
       boolean useEntitlementsWhenAdhocCodeSigning,
       Predicate<BuildTarget> filter,
@@ -1389,6 +1391,7 @@ public class AppleDescriptions {
         codesignAdhocIdentity,
         codesignTimeout,
         copySwiftStdlibToFrameworks,
+        skipCopyingSwiftStdlib,
         sliceAppPackageSwiftRuntime,
         sliceAppBundleSwiftRuntime,
         withDownwardApi,

@@ -1978,6 +1978,58 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void swiftStdLibIsCopiedInBundle() throws IOException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_swift_stdlibs", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    RelPath outputPath =
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(),
+            target
+                .withAppendedFlavors(AppleDescriptions.DWARF_AND_DSYM)
+                .withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s");
+    Path appPath = outputPath.resolve(target.getShortName() + ".app");
+
+    Path libswiftCorePath = workspace.getPath(appPath.resolve("Frameworks/libswiftCore.dylib"));
+    assertTrue(Files.exists(libswiftCorePath));
+  }
+
+  @Test
+  public void swiftStdLibIsNotCopiedInBundle() throws IOException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_without_swift_stdlibs", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    RelPath outputPath =
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(),
+            target
+                .withAppendedFlavors(AppleDescriptions.DWARF_AND_DSYM)
+                .withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s");
+    Path appPath = outputPath.resolve(target.getShortName() + ".app");
+    assertFalse(Files.exists(workspace.getPath(appPath.resolve("Frameworks"))));
+  }
+
+  @Test
   public void coreDataModelIsIncludedInBundle() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

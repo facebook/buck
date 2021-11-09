@@ -143,6 +143,7 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final Optional<String> codesignIdentitySubjectName;
 
   @AddToRuleKey private final boolean copySwiftStdlibToFrameworks;
+  @AddToRuleKey private final Optional<Boolean> skipCopyingSwiftStdlib;
 
   @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
   @AddToRuleKey private final boolean sliceAppBundleSwiftRuntime;
@@ -204,6 +205,7 @@ public class AppleBundle extends AbstractBuildRule
       Optional<String> codesignIdentity,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
+      Optional<Boolean> skipCopyingSwiftStdlib,
       boolean sliceAppPackageSwiftRuntime,
       boolean sliceAppBundleSwiftRuntime,
       boolean withDownwardApi,
@@ -264,6 +266,7 @@ public class AppleBundle extends AbstractBuildRule
 
     this.codesignTimeout = codesignTimeout;
     this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
+    this.skipCopyingSwiftStdlib = skipCopyingSwiftStdlib;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
 
     this.sliceAppPackageSwiftRuntime = sliceAppPackageSwiftRuntime;
@@ -1084,7 +1087,8 @@ public class AppleBundle extends AbstractBuildRule
     // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
     // are copied over).
     boolean shouldCopySwiftStdlib =
-        !extension.equals(AppleBundleExtension.APPEX.fileExtension)
+        !skipCopyingSwiftStdlib.orElse(false)
+            && !extension.equals(AppleBundleExtension.APPEX.fileExtension)
             && (!extension.equals(AppleBundleExtension.FRAMEWORK.fileExtension)
                 || copySwiftStdlibToFrameworks);
 
