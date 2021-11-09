@@ -64,7 +64,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
             "mode",
             "slb_server_pool"));
     ignoreFieldsForDaemonRestartBuilder.put(
-        "client", ImmutableSet.of("id", "session_id", "skip-action-graph-cache"));
+        "client", ImmutableSet.of("id", "session_id", "skip-action-graph-cache", "test_name"));
     ignoreFieldsForDaemonRestartBuilder.put("doctor", ImmutableSet.of("slb_server_pool"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "intellij",
