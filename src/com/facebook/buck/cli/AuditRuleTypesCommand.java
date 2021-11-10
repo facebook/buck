@@ -75,7 +75,7 @@ public class AuditRuleTypesCommand extends AbstractCommand {
 
   private void collectAndDumpBuildRuleSpecsInformation(
       Console console, KnownNativeRuleTypes knownNativeRuleTypes, boolean generateJsonOutput)
-      throws IOException {
+      throws IOException, IllegalStateException {
     Set<Class<? extends Enum<?>>> encounteredEnums =
         new TreeSet<>(Comparator.comparing(Class::toString));
     // Rules should be sorted by name.
@@ -106,12 +106,17 @@ public class AuditRuleTypesCommand extends AbstractCommand {
 
     for (Class<? extends Enum<?>> e : encounteredEnums) {
       var coercer = enumCoercer(e);
-      enums.put(
-          coercer.getSkylarkName(),
-          Arrays.stream(e.getEnumConstants())
-              .map(Enum::name)
-              .map(String::toLowerCase)
-              .collect(ImmutableList.toImmutableList()));
+      var old =
+          enums.put(
+              coercer.getSkylarkName(),
+              Arrays.stream(e.getEnumConstants())
+                  .map(Enum::name)
+                  .map(String::toLowerCase)
+                  .collect(ImmutableList.toImmutableList()));
+      if (old != null) {
+        throw new IllegalStateException(
+            "Duplicate enum name: " + coercer.getSkylarkName() + ", used by " + e.toString());
+      }
     }
 
     // This should be in the order we are creating it here.
