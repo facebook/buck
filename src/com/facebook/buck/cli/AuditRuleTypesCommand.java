@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.EnumTypeCoercer;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.facebook.buck.rules.coercer.TypeCoercer;
@@ -67,6 +68,11 @@ public class AuditRuleTypesCommand extends AbstractCommand {
     return ExitCode.SUCCESS;
   }
 
+  @SuppressWarnings("unchecked")
+  private <E extends Enum<E>> EnumTypeCoercer<?> enumCoercer(Class<?> rawClass) {
+    return new EnumTypeCoercer<>((Class<E>) rawClass);
+  }
+
   private void collectAndDumpBuildRuleSpecsInformation(
       Console console, KnownNativeRuleTypes knownNativeRuleTypes, boolean generateJsonOutput)
       throws IOException {
@@ -99,8 +105,9 @@ public class AuditRuleTypesCommand extends AbstractCommand {
     Map<String, List<String>> enums = new TreeMap<>();
 
     for (Class<? extends Enum<?>> e : encounteredEnums) {
+      var coercer = enumCoercer(e);
       enums.put(
-          e.getSimpleName(),
+          coercer.getSkylarkName(),
           Arrays.stream(e.getEnumConstants())
               .map(Enum::name)
               .map(String::toLowerCase)
