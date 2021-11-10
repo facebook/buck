@@ -69,7 +69,6 @@ import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -369,14 +368,13 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     OutputLabel outputLabel = targetWithOutputs.getOutputLabel();
     ImmutableMap<String, ImmutableSet<String>> outputLabelToOutputs =
         constructorArg.getOuts().get();
-    return Iterables.getOnlyElement(
-        outputLabelToOutputs.entrySet().stream()
-            .filter(e -> OutputLabel.of(e.getKey()).equals(outputLabel))
-            .flatMap(
-                e ->
-                    e.getValue().stream()
-                        .map(out -> getGenPathForOutput(buildTarget, filesystem, out)))
-            .collect(ImmutableSet.toImmutableSet()));
+    return outputLabelToOutputs.entrySet().stream()
+        .filter(e -> OutputLabel.of(e.getKey()).equals(outputLabel))
+        .flatMap(
+            e ->
+                e.getValue().stream().map(out -> getGenPathForOutput(buildTarget, filesystem, out)))
+        .findFirst()
+        .orElse(Optional.empty());
   }
 
   /** Calculate the output path for a JavaBinary based on its build target */
