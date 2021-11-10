@@ -35,10 +35,14 @@ public class EnumTypeCoercer<E extends Enum<E>> extends LeafUnconfiguredOnlyCoer
 
   public String getSkylarkName() {
     String simpleName = enumClass.getSimpleName();
-    if (enumClass.isMemberClass() && simpleName.equals("Type")) {
+    if (enumClass.isMemberClass()
+        && (simpleName.equals("Type")
+            || simpleName.equals("Mode")
+            || simpleName.equals("PackageStyle"))) {
       // Name will be something like com.facebook.buck.cxx.CxxSource$Type
+      // Convert that to CxxSourceType
       String s = enumClass.getName();
-      return s.substring(enumClass.getPackageName().length() + 1, s.length() - "$Type".length());
+      return s.substring(enumClass.getPackageName().length() + 1).replace("$", "");
     } else {
       return simpleName;
     }
