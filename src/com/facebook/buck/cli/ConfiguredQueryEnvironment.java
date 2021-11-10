@@ -73,7 +73,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -260,14 +262,28 @@ public class ConfiguredQueryEnvironment
     TargetNode<?> node = maybeNode.get();
     BuildTarget buildTarget = queryBuildTarget.getBuildTarget();
     Cell cell = cells.getCell(buildTarget.getCell());
+    ProjectFilesystem filesystem = cell.getFilesystem();
+
     return node.getInputs().stream()
+        .flatMap(
+            path -> {
+              try {
+                return filesystem.asView()
+                    .getFilesUnderPath(
+                        path.toPath(filesystem.getFileSystem()),
+                        EnumSet.noneOf(FileVisitOption.class))
+                    .stream();
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            })
         .map(
             path ->
                 PathSourcePath.of(
-                    cell.getFilesystem(),
+                    filesystem,
                     MorePaths.relativize(
                         cells.getRootCell().getFilesystem().getRootPath(),
-                        cell.getFilesystem().resolve(path))))
+                        AbsPath.of(filesystem.resolve(path)))))
         .map(QueryFileTarget::of)
         .collect(ImmutableSet.toImmutableSet());
   }

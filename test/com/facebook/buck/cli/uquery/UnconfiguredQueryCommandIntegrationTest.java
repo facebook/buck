@@ -382,7 +382,7 @@ public class UnconfiguredQueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("uquery", "inputs(//:foo)");
-    assertOutputMatchesPaths("res", result);
+    assertOutputMatchesPaths("res/file1.xml", result);
   }
 
   @Test

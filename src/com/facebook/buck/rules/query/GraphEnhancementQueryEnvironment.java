@@ -52,6 +52,9 @@ import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -153,6 +156,18 @@ public class GraphEnhancementQueryEnvironment
   public Set<ConfiguredQueryTarget> getInputs(ConfiguredQueryTarget target) {
     TargetNode<?> node = getNode(target);
     return node.getInputs().stream()
+        .flatMap(
+            path -> {
+              try {
+                return node.getFilesystem().asView()
+                    .getFilesUnderPath(
+                        path.toPath(node.getFilesystem().getFileSystem()),
+                        EnumSet.noneOf(FileVisitOption.class))
+                    .stream();
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            })
         .map(path -> PathSourcePath.of(node.getFilesystem(), path))
         .map(QueryFileTarget::of)
         .collect(Collectors.toSet());

@@ -63,6 +63,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
+import java.io.IOException;
+import java.nio.file.FileVisitOption;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -252,6 +255,18 @@ public class UnconfiguredQueryEnvironment
     ProjectFilesystem filesystem = cell.getFilesystem();
 
     return targetGraph.getInputPathsForNode(node).stream()
+        .flatMap(
+            path -> {
+              try {
+                return filesystem.asView()
+                    .getFilesUnderPath(
+                        path.toPath(filesystem.getFileSystem()),
+                        EnumSet.noneOf(FileVisitOption.class))
+                    .stream();
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            })
         .map(frp -> QueryFileTarget.of(PathSourcePath.of(filesystem, frp)))
         .collect(ImmutableSet.toImmutableSet());
   }
