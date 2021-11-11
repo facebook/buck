@@ -367,20 +367,21 @@ public class CxxLinkableEnhancer {
               .getLd()
               .resolve(graphBuilder, target.getTargetConfiguration())
               .getSharedLibFlag());
+
+      if (soname.isPresent()) {
+        argsBuilder.addAll(
+            StringArg.from(
+                cxxPlatform
+                    .getLd()
+                    .resolve(graphBuilder, target.getTargetConfiguration())
+                    .soname(soname.get())));
+      }
     } else if (linkType == Linker.LinkType.MACH_O_BUNDLE) {
       argsBuilder.add(StringArg.of("-bundle"));
       // It's possible to build a Mach-O bundle without a bundle loader (logic tests, for example).
       if (bundleLoader.isPresent()) {
         argsBuilder.add(StringArg.of("-bundle_loader"), SourcePathArg.of(bundleLoader.get()));
       }
-    }
-    if (soname.isPresent()) {
-      argsBuilder.addAll(
-          StringArg.from(
-              cxxPlatform
-                  .getLd()
-                  .resolve(graphBuilder, target.getTargetConfiguration())
-                  .soname(soname.get())));
     }
 
     // Add all arguments from our dependencies.
