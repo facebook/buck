@@ -161,19 +161,19 @@ if __name__ == "__main__":
             # Encountered positional argument before encountering "-c" or "-m".
             # This means that the argument is a script path.
             module_call = "runpy.run_path({script!r})".format(script=opt)
-            program_args = argv[opt_idx:]
+            program_args = argv[opt_idx + 1:]
             break
         elif opt == "-":
             raise RuntimeError("The interpreter wrapper doesn't support reading from stdin.")
         elif opt == "-c":
             module_call = argv[opt_idx + 1]
-            program_args = argv[opt_idx + 1:]
+            program_args = argv[opt_idx + 2:]
             break
         elif opt == "-m":
             module_call = "runpy._run_module_as_main({main_module!r}, False)".format(
                 main_module=argv[opt_idx + 1]
             )
-            program_args = sys.argv[opt_idx + 1:]
+            program_args = argv[opt_idx + 2:]
             break
         else:
             interpreter_opts.append(opt)
