@@ -80,7 +80,6 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             withDownwardApi,
             javaCDParams),
         ruleFinder,
-        Optional.empty(),
         ImmutableSortedSet.of(androidBuildConfig),
         /* exportedDeps */ ImmutableSortedSet.of(),
         /* providedDeps */ ImmutableSortedSet.of(),

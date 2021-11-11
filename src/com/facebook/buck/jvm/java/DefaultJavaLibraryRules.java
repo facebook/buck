@@ -65,7 +65,6 @@ public abstract class DefaultJavaLibraryRules {
         ProjectFilesystem projectFilesystem,
         JarBuildStepsFactory<?> jarBuildStepsFactory,
         SourcePathRuleFinder ruleFinder,
-        Optional<SourcePath> proguardConfig,
         SortedSet<BuildRule> firstOrderPackageableDeps,
         ImmutableSortedSet<BuildRule> fullJarExportedDeps,
         ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
@@ -443,7 +442,6 @@ public abstract class DefaultJavaLibraryRules {
             projectFilesystem,
             getJarBuildStepsFactory(),
             actionGraphBuilder,
-            getProguardConfig(),
             javaLibraryDeps.getDeps(),
             javaLibraryDeps.getExportedDeps(),
             javaLibraryDeps.getProvidedDeps(),
@@ -489,7 +487,6 @@ public abstract class DefaultJavaLibraryRules {
                 projectFilesystem,
                 getJarBuildStepsFactory(),
                 actionGraphBuilder,
-                getProguardConfig(),
                 javaLibraryDeps.getDeps(),
                 javaLibraryDeps.getExportedDeps(),
                 javaLibraryDeps.getProvidedDeps(),
@@ -800,7 +797,6 @@ public abstract class DefaultJavaLibraryRules {
         setSrcs(args.getSrcs())
             .setResources(args.getResources())
             .setResourcesRoot(args.getResourcesRoot())
-            .setProguardConfig(args.getProguardConfig())
             .setDeps(
                 JavaLibraryDeps.newInstance(
                     args,

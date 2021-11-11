@@ -85,6 +85,11 @@ public class AndroidLibraryBuilder
         .build();
   }
 
+  public AndroidLibraryBuilder setProguardConfig(SourcePath proguardConfig) {
+    getArgForPopulating().setProguardConfig(Optional.of(proguardConfig));
+    return this;
+  }
+
   public AndroidLibraryBuilder addPluginTarget(BuildTarget pluginRule) {
     getArgForPopulating().addPlugins(pluginRule);
     return this;

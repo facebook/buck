@@ -59,7 +59,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
@@ -120,7 +119,7 @@ public class AndroidPackageableCollectorTest {
     BuildTarget libraryRuleTarget =
         BuildTargetFactory.newInstance("//java/src/com/facebook:example");
     TargetNode<?> library =
-        JavaLibraryBuilder.createBuilder(libraryRuleTarget)
+        AndroidLibraryBuilder.createBuilder(libraryRuleTarget)
             .setProguardConfig(FakeSourcePath.of("debug.pro"))
             .addSrc(Paths.get("Example.java"))
             .addDep(guavaTarget)

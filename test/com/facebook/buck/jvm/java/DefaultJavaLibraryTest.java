@@ -1589,7 +1589,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
           return JavaLibraryBuilder.createBuilder(target, testJavaBuckConfig)
               .addSrc(Paths.get("MyClass.java"))
-              .setProguardConfig(FakeSourcePath.of("MyProguardConfig"))
               .build(graphBuilder);
         }
       };

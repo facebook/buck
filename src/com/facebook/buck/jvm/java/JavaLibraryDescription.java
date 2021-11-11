@@ -307,8 +307,6 @@ public class JavaLibraryDescription
     @Value.NaturalOrder
     ImmutableSortedSet<SourcePath> getResources();
 
-    Optional<SourcePath> getProguardConfig();
-
     @Hint(isInput = false)
     Optional<Path> getResourcesRoot();
 

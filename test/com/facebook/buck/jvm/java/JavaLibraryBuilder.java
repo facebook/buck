@@ -151,11 +151,6 @@ public class JavaLibraryBuilder
     return addSrc(DefaultBuildTargetSourcePath.of(target));
   }
 
-  public JavaLibraryBuilder setProguardConfig(SourcePath proguardConfig) {
-    getArgForPopulating().setProguardConfig(Optional.of(proguardConfig));
-    return this;
-  }
-
   public JavaLibraryBuilder setJavac(SourcePath javac) {
     getArgForPopulating().setJavac(Optional.of(javac));
     return this;

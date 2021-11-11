@@ -99,7 +99,6 @@ public class DefaultJavaLibrary
   private final Optional<String> mavenCoords;
   @Nullable private final BuildTarget abiJar;
   @Nullable private final BuildTarget sourceOnlyAbiJar;
-  private final Optional<SourcePath> proguardConfig;
   private final boolean requiredForSourceOnlyAbi;
 
   // It's very important that these deps are non-ABI rules, even if compiling against ABIs is turned
@@ -165,7 +164,6 @@ public class DefaultJavaLibrary
       ProjectFilesystem projectFilesystem,
       JarBuildStepsFactory<?> jarBuildStepsFactory,
       SourcePathRuleFinder ruleFinder,
-      Optional<SourcePath> proguardConfig,
       SortedSet<BuildRule> firstOrderPackageableDeps,
       ImmutableSortedSet<BuildRule> fullJarExportedDeps,
       ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
@@ -219,7 +217,6 @@ public class DefaultJavaLibrary
     // Exports should have been copied over to declared before invoking this constructor
     Preconditions.checkState(missingExports.isEmpty());
 
-    this.proguardConfig = proguardConfig;
     this.firstOrderPackageableDeps = firstOrderPackageableDeps;
     this.fullJarExportedDeps = fullJarExportedDeps;
     this.fullJarProvidedDeps = fullJarProvidedDeps;
@@ -464,8 +461,6 @@ public class DefaultJavaLibrary
     if (output != null) {
       collector.addClasspathEntry(this, output);
     }
-    proguardConfig.ifPresent(
-        sourcePath -> collector.addProguardConfig(getBuildTarget(), sourcePath));
   }
 
   @Override
