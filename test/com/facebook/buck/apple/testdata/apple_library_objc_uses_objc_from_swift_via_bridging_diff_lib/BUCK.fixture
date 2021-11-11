@@ -14,6 +14,9 @@ apple_library(
 apple_library(
     name = "Bar",
     srcs = ["Bar.m"],
+    include_directories = [
+        ".",
+    ],
     frameworks = [
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],

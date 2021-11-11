@@ -537,11 +537,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBoolean(APPLE_SECTION, "use_flavored_cxx_sections").orElse(false);
   }
 
-  /** @return whether to add the cell path to the `-iquote` path for all compilations. */
-  public boolean addCellPathToIquotePath() {
-    return delegate.getBoolean(APPLE_SECTION, "add_cell_path_to_iquote_path").orElse(true);
-  }
-
   public boolean shouldWorkAroundDsymutilLTOStackOverflowBug() {
     return delegate.getBooleanValue(
         APPLE_SECTION, "work_around_dsymutil_lto_stack_overflow_bug", false);

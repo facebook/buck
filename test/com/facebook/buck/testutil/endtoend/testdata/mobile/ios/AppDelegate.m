@@ -10,7 +10,7 @@
 #import "AppViewController.h"
 
 #import "common/hello.h"
-#import "ios/lib/CapitalizeUtil.h"
+#import "lib/CapitalizeUtil.h"
 
 @interface AppDelegate ()
 
