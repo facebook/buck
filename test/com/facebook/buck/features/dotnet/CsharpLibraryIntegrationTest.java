@@ -82,7 +82,7 @@ public class CsharpLibraryIntegrationTest {
 
   private static final ImmutableList<String> CSC_DIRS =
       ImmutableList.of(
-          "C:/tools/toolchains/vs2017_15.5/BuildTools/MSBuild/15.0/Bin/Roslyn",
+          "C:/tools/toolchains/vs2017_15.9/BuildTools/MSBuild/15.0/Bin/Roslyn",
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Professional\\MSBuild\\15.0\\Bin\\Roslyn");
   private static final String CSC_EXE = "csc.exe";
 

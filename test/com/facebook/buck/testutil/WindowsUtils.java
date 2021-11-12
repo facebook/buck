@@ -27,7 +27,7 @@ import java.util.Optional;
 public class WindowsUtils extends PlatformUtils {
 
   private static final String[] VS_TOOLCHAIN_DIRS =
-      new String[] {"C:/tools/toolchains/vs2017_15.5"};
+      new String[] {"C:/tools/toolchains/vs2017_15.9"};
 
   private static final String BUCK_EXE =
       FileSystems.getDefault().getPath("bin", "buck").toAbsolutePath().toString();

@@ -24,7 +24,7 @@ import java.util.Optional;
 public class WindowsClangUtils extends PlatformUtils {
 
   private static final String[] VS_TOOLCHAIN_DIRS =
-      new String[] {"C:/tools/toolchains/vs2017_15.5", "C:/tools/toolchains/LLVM"};
+      new String[] {"C:/tools/toolchains/vs2017_15.9", "C:/tools/toolchains/LLVM"};
 
   private static final String BUCK_EXE =
       FileSystems.getDefault().getPath("bin", "buck").toAbsolutePath().toString();
