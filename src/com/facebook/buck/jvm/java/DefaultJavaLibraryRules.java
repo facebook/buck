@@ -287,7 +287,8 @@ public abstract class DefaultJavaLibraryRules {
   private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("^(1\\.)*(?<version>\\d)$");
 
   private boolean isDesugarRequired() {
-    String rawJavaSourceLevel = getJavacOptions().getLanguageLevelOptions().getSourceLevel();
+    String rawJavaSourceLevel =
+        getJavacOptions().getLanguageLevelOptions().getSourceLevelValue().getVersion();
     String rawKotlinSourceLevel =
         Optional.ofNullable(getArgs()).flatMap(JvmLibraryArg::getTarget).orElse(null);
     Integer javaSourceLevel = extractSourceLevel(rawJavaSourceLevel);

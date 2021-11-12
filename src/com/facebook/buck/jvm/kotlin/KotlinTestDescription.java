@@ -38,6 +38,7 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
@@ -149,8 +150,10 @@ public class KotlinTestDescription
     DefaultJavaLibrary testsLibrary =
         graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
 
+    JavacLanguageLevelOptions.JavaVersion targetLevelValue =
+        javacOptions.getLanguageLevelOptions().getTargetLevelValue();
     Function<TargetConfiguration, JavaOptions> javaRuntimeConfig =
-        javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
+        targetLevelValue == JavacLanguageLevelOptions.JavaVersion.VERSION_11
             ? java11OptionsForTests
             : javaOptionsForTests;
     JavaOptions javaOptions = javaRuntimeConfig.apply(buildTarget.getTargetConfiguration());
@@ -173,19 +176,19 @@ public class KotlinTestDescription
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
-        javacOptions.getLanguageLevelOptions().getTargetLevel(),
+        targetLevelValue.getVersion(),
         javaOptions.getJavaRuntime(),
         javaOptions.getJavaRuntimeVersion(),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),
         ImmutableMap.of(), /* nativeLibsEnvironment */
         ImmutableSet.of(), /* nativeLibsRequiredPaths */
         args.getTestRuleTimeoutMs()
-            .map(Optional::of)
-            .orElse(
-                javaBuckConfig
-                    .getDelegate()
-                    .getView(TestBuckConfig.class)
-                    .getDefaultTestRuleTimeoutMs()),
+            .or(
+                () ->
+                    javaBuckConfig
+                        .getDelegate()
+                        .getView(TestBuckConfig.class)
+                        .getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
         args.getRunTestSeparately(),

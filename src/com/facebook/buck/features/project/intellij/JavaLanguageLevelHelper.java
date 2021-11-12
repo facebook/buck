@@ -36,8 +36,8 @@ public final class JavaLanguageLevelHelper {
     if (arg.getSource().isPresent()) {
       JavacLanguageLevelOptions languageLevelOptions =
           projectConfig.getJavaBuckConfig().getJavacLanguageLevelOptions();
-      String defaultSourceLevel = languageLevelOptions.getSourceLevel();
-      String defaultTargetLevel = languageLevelOptions.getTargetLevel();
+      String defaultSourceLevel = languageLevelOptions.getSourceLevelValue().getVersion();
+      String defaultTargetLevel = languageLevelOptions.getTargetLevelValue().getVersion();
       boolean languageLevelsAreDifferent =
           !defaultSourceLevel.equals(arg.getSource().orElse(defaultSourceLevel))
               || !defaultTargetLevel.equals(arg.getTarget().orElse(defaultTargetLevel));

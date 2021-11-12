@@ -62,7 +62,9 @@ public abstract class ResolvedJavacOptions {
 
     JavacLanguageLevelOptions languageLevelOptions = javacOptions.getLanguageLevelOptions();
     ImmutableList<PathSourcePath> bootclasspath =
-        javacOptions.getSourceToBootclasspath().get(languageLevelOptions.getSourceLevel());
+        javacOptions
+            .getSourceToBootclasspath()
+            .get(languageLevelOptions.getSourceLevelValue().getVersion());
     Optional<List<RelPath>> bootclasspathList = Optional.empty();
     if (bootclasspath != null) {
       bootclasspathList =

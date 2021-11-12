@@ -184,7 +184,11 @@ public class IjProjectWriter {
       return languageLevelFromConfig.get();
     } else {
       String languageLevel =
-          projectConfig.getJavaBuckConfig().getJavacLanguageLevelOptions().getSourceLevel();
+          projectConfig
+              .getJavaBuckConfig()
+              .getJavacLanguageLevelOptions()
+              .getSourceLevelValue()
+              .getVersion();
       return JavaLanguageLevelHelper.convertLanguageLevelToIjFormat(languageLevel);
     }
   }

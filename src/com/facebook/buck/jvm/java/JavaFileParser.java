@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.jvm.java.JavacLanguageLevelOptions.JavaVersion;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -77,19 +78,19 @@ public class JavaFileParser {
   private final int jlsLevel;
   private final String javaVersion;
 
-  private static final ImmutableMap<String, String> javaVersionMap =
-      ImmutableMap.<String, String>builder()
-          .put("1", JavaCore.VERSION_1_1)
-          .put("2", JavaCore.VERSION_1_2)
-          .put("3", JavaCore.VERSION_1_3)
-          .put("4", JavaCore.VERSION_1_4)
-          .put("5", JavaCore.VERSION_1_5)
-          .put("6", JavaCore.VERSION_1_6)
-          .put("7", JavaCore.VERSION_1_7)
-          .put("8", JavaCore.VERSION_1_8)
-          .put("9", JavaCore.VERSION_9)
-          .put("10", JavaCore.VERSION_10)
-          .put("11", JavaCore.VERSION_11)
+  private static final ImmutableMap<JavaVersion, String> javaVersionMap =
+      ImmutableMap.<JavaVersion, String>builder()
+          .put(JavaVersion.VERSION_1_1, JavaCore.VERSION_1_1)
+          .put(JavaVersion.VERSION_1_2, JavaCore.VERSION_1_2)
+          .put(JavaVersion.VERSION_1_3, JavaCore.VERSION_1_3)
+          .put(JavaVersion.VERSION_1_4, JavaCore.VERSION_1_4)
+          .put(JavaVersion.VERSION_5, JavaCore.VERSION_1_5)
+          .put(JavaVersion.VERSION_6, JavaCore.VERSION_1_6)
+          .put(JavaVersion.VERSION_7, JavaCore.VERSION_1_7)
+          .put(JavaVersion.VERSION_8, JavaCore.VERSION_1_8)
+          .put(JavaVersion.VERSION_9, JavaCore.VERSION_9)
+          .put(JavaVersion.VERSION_10, JavaCore.VERSION_10)
+          .put(JavaVersion.VERSION_11, JavaCore.VERSION_11)
           .build();
 
   /**
@@ -459,7 +460,7 @@ public class JavaFileParser {
   }
 
   public static JavaFileParser createJavaFileParser(JavacLanguageLevelOptions options) {
-    String javaVersion = Objects.requireNonNull(javaVersionMap.get(options.getSourceLevel()));
+    String javaVersion = Objects.requireNonNull(javaVersionMap.get(options.getSourceLevelValue()));
     return new JavaFileParser(AST.JLS8, javaVersion);
   }
 
@@ -937,6 +938,7 @@ public class JavaFileParser {
   }
 
   public static class JavaFileFeatures {
+
     public final ImmutableSortedSet<String> providedSymbols;
     public final ImmutableSortedSet<String> requiredSymbols;
 

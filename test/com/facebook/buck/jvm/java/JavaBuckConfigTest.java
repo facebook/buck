@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
@@ -268,7 +269,7 @@ public class JavaBuckConfigTest {
   }
 
   @Test
-  public void shouldSetJavaTargetAndSourceVersionFromConfig() throws IOException {
+  public void shouldThrowIfJavaTargetOrSourceVersionFromConfigAreNotFloatType() throws IOException {
     String sourceLevel = "source-level";
     String targetLevel = "target-level";
 
@@ -277,10 +278,40 @@ public class JavaBuckConfigTest {
 
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    JavacLanguageLevelOptions options = config.getJavacLanguageLevelOptions();
+    assertThrows(
+        "Malformed value for source_level in [java]: source-level; expecting a floating point number.",
+        HumanReadableException.class,
+        () -> config.getJavacLanguageLevelOptions());
+  }
 
-    assertEquals(sourceLevel, options.getSourceLevel());
-    assertEquals(targetLevel, options.getTargetLevel());
+  @Test
+  public void verifyJavaVersions() throws IOException {
+    for (String version :
+        new String[] {
+          "1.1", "1.2", "1.3", "1.4", "1.5", "5", "5.0", "1.6", "6", "6.0", "1.7", "7", "7.0", "8",
+          "8.0", "9", "9.0", "10", "10.0", "11", "11.0", "11.000"
+        }) {
+      String localConfig =
+          String.format("[java]\nsource_level = %s\ntarget_level = %s", version, version);
+
+      JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
+      JavacLanguageLevelOptions.JavaVersion sourceLevelValue =
+          config.getJavacLanguageLevelOptions().getSourceLevelValue();
+
+      String expectedVersion = version;
+      if (version.contains(".")) {
+        if (version.startsWith("1.")) {
+          int majorVersion = Integer.parseInt(version.substring("1.".length()));
+          if (majorVersion >= 5) {
+            expectedVersion = Integer.toString(majorVersion);
+          }
+        } else {
+          int majorVersion = Integer.parseInt(version.substring(0, version.indexOf(".")));
+          expectedVersion = Integer.toString(majorVersion);
+        }
+      }
+      assertThat(sourceLevelValue.getVersion(), equalTo(expectedVersion));
+    }
   }
 
   @Test
@@ -310,6 +341,12 @@ public class JavaBuckConfigTest {
             .setLanguageLevelOptions(
                 JavacLanguageLevelOptions.builder().setSourceLevel("6").build())
             .build();
+    JavacOptions jse_1_7 =
+        JavacOptions.builder(options)
+            .setLanguageLevelOptions(
+                JavacLanguageLevelOptions.builder().setSourceLevel("1.7").build())
+            .build();
+
     JavacOptions jse7 =
         JavacOptions.builder(options)
             .setLanguageLevelOptions(
@@ -318,6 +355,7 @@ public class JavaBuckConfigTest {
 
     assertOptionKeyAbsent(jse5, "bootclasspath");
     assertOptionsContains(jse6, "bootclasspath", "one.jar");
+    assertOptionsContains(jse_1_7, "bootclasspath", "two.jar");
     assertOptionsContains(jse7, "bootclasspath", "two.jar");
   }
 

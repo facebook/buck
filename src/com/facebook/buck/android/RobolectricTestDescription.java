@@ -53,6 +53,7 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.JavacPluginParams;
@@ -422,8 +423,10 @@ public class RobolectricTestDescription
                 .buildLibrary());
     params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary));
 
+    JavacLanguageLevelOptions.JavaVersion targetLevelValue =
+        javacOptions.getLanguageLevelOptions().getTargetLevelValue();
     Function<TargetConfiguration, JavaOptions> javaRuntimeConfig =
-        javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
+        targetLevelValue == JavacLanguageLevelOptions.JavaVersion.VERSION_11
             ? java11OptionsForTests
             : javaOptionsForTests;
     JavaOptions javaOptions = javaRuntimeConfig.apply(buildTarget.getTargetConfiguration());
@@ -437,19 +440,19 @@ public class RobolectricTestDescription
         args.getLabels(),
         args.getContacts(),
         TestType.JUNIT,
-        javacOptions.getLanguageLevelOptions().getTargetLevel(),
+        targetLevelValue.getVersion(),
         vmArgs,
         cxxLibraryEnhancement.nativeLibsEnvironment,
         cxxLibraryEnhancement.requiredPaths,
         binaryResources,
         unitTestOptions,
         args.getTestRuleTimeoutMs()
-            .map(Optional::of)
-            .orElse(
-                javaBuckConfig
-                    .getDelegate()
-                    .getView(TestBuckConfig.class)
-                    .getDefaultTestRuleTimeoutMs()),
+            .or(
+                () ->
+                    javaBuckConfig
+                        .getDelegate()
+                        .getView(TestBuckConfig.class)
+                        .getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
         args.getRunTestSeparately(),

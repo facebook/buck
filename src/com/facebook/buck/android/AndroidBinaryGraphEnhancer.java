@@ -428,8 +428,8 @@ public class AndroidBinaryGraphEnhancer {
               .setJavacOptions(
                   javacOptions.withLanguageLevelOptions(
                       JavacLanguageLevelOptions.builder()
-                          .setSourceLevel("7")
-                          .setTargetLevel("7")
+                          .setSourceLevel(JavacLanguageLevelOptions.TARGETED_JAVA_VERSION)
+                          .setTargetLevel(JavacLanguageLevelOptions.TARGETED_JAVA_VERSION)
                           .build()))
               .setSrcs(
                   ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
@@ -599,8 +599,8 @@ public class AndroidBinaryGraphEnhancer {
             .setJavacOptions(
                 javacOptions.withLanguageLevelOptions(
                     JavacLanguageLevelOptions.builder()
-                        .setSourceLevel("7")
-                        .setTargetLevel("7")
+                        .setSourceLevel(JavacLanguageLevelOptions.TARGETED_JAVA_VERSION)
+                        .setTargetLevel(JavacLanguageLevelOptions.TARGETED_JAVA_VERSION)
                         .build()))
             .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
             .setSourceOnlyAbisAllowed(false)

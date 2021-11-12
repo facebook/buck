@@ -39,6 +39,7 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
@@ -147,8 +148,10 @@ public class GroovyTestDescription
             graphBuilder,
             JavaTestDescription.MACRO_EXPANDERS);
 
+    JavacLanguageLevelOptions.JavaVersion targetLevelValue =
+        javacOptions.getLanguageLevelOptions().getTargetLevelValue();
     Function<TargetConfiguration, JavaOptions> javaRuntimeConfig =
-        javacOptions.getLanguageLevelOptions().getTargetLevel().equals("11")
+        targetLevelValue == JavacLanguageLevelOptions.JavaVersion.VERSION_11
             ? java11OptionsForTests
             : javaOptionsForTests;
     JavaOptions javaOptions = javaRuntimeConfig.apply(buildTarget.getTargetConfiguration());
@@ -162,19 +165,19 @@ public class GroovyTestDescription
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
-        javacOptions.getLanguageLevelOptions().getTargetLevel(),
+        targetLevelValue.getVersion(),
         javaOptions.getJavaRuntime(),
         javaOptions.getJavaRuntimeVersion(),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),
         /* nativeLibsEnvironment */ ImmutableMap.of(),
         /* nativeLibsRequiredPaths */ ImmutableSet.of(),
         args.getTestRuleTimeoutMs()
-            .map(Optional::of)
-            .orElse(
-                groovyBuckConfig
-                    .getDelegate()
-                    .getView(TestBuckConfig.class)
-                    .getDefaultTestRuleTimeoutMs()),
+            .or(
+                () ->
+                    groovyBuckConfig
+                        .getDelegate()
+                        .getView(TestBuckConfig.class)
+                        .getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
         args.getRunTestSeparately(),
@@ -202,6 +205,7 @@ public class GroovyTestDescription
   @RuleArg
   interface AbstractGroovyTestDescriptionArg
       extends GroovyLibraryDescription.CoreArg, JavaTestDescription.CoreArg {
+
     @Override
     default GroovyTestDescriptionArg withDepsQuery(Query query) {
       if (getDepsQuery().equals(Optional.of(query))) {

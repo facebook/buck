@@ -197,7 +197,9 @@ public class AndroidLibraryGraphEnhancerTest {
     assertTrue(dummyRDotJava.isPresent());
     JavacOptions javacOptions =
         ((JavacToJarStepFactory) dummyRDotJava.get().getCompileStepFactory()).getJavacOptions();
-    assertEquals("7", javacOptions.getLanguageLevelOptions().getSourceLevel());
+    assertEquals(
+        JavacLanguageLevelOptions.JavaVersion.VERSION_7,
+        javacOptions.getLanguageLevelOptions().getSourceLevelValue());
   }
 
   @Test

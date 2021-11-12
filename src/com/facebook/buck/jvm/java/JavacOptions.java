@@ -162,7 +162,8 @@ public abstract class JavacOptions implements AddsToRuleKey {
    */
   public ImmutableList<SourcePath> getSourceLevelBootclasspath() {
     ImmutableList<PathSourcePath> bootclasspath =
-        getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevel());
+        getSourceToBootclasspath()
+            .get(getLanguageLevelOptions().getSourceLevelValue().getVersion());
 
     if (bootclasspath != null) {
       return ImmutableList.copyOf(bootclasspath); // upcast to ImmutableList<SourcePath>
@@ -174,7 +175,8 @@ public abstract class JavacOptions implements AddsToRuleKey {
   public void appendOptionsTo(
       OptionsConsumer optionsConsumer, SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     ImmutableList<PathSourcePath> bootclasspath =
-        getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevel());
+        getSourceToBootclasspath()
+            .get(getLanguageLevelOptions().getSourceLevelValue().getVersion());
     Optional<List<RelPath>> bootclasspathList = Optional.empty();
     if (bootclasspath != null) {
       bootclasspathList =
@@ -228,9 +230,10 @@ public abstract class JavacOptions implements AddsToRuleKey {
       List<String> extraArguments) {
 
     // Add some standard options.
-    String sourceLevel = languageLevelOptions.getSourceLevel();
+    String sourceLevel = languageLevelOptions.getSourceLevelValue().getVersion();
+    String targetLevel = languageLevelOptions.getTargetLevelValue().getVersion();
     optionsConsumer.addOptionValue("source", sourceLevel);
-    optionsConsumer.addOptionValue("target", languageLevelOptions.getTargetLevel());
+    optionsConsumer.addOptionValue("target", targetLevel);
 
     // Set the sourcepath to stop us reading source files out of jars by mistake.
     optionsConsumer.addOptionValue("sourcepath", "");

@@ -109,8 +109,14 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   public JavacLanguageLevelOptions getJavacLanguageLevelOptions() {
     JavacLanguageLevelOptions.Builder builder = JavacLanguageLevelOptions.builder();
-    delegate.getValue(SECTION, "source_level").map(builder::setSourceLevel);
-    delegate.getValue(SECTION, "target_level").map(builder::setTargetLevel);
+    delegate
+        .getFloat(SECTION, "source_level")
+        .map(f -> f >= 5 ? Integer.toString(f.intValue()) : f.toString())
+        .map(builder::setSourceLevel);
+    delegate
+        .getFloat(SECTION, "target_level")
+        .map(f -> f >= 5 ? Integer.toString(f.intValue()) : f.toString())
+        .map(builder::setTargetLevel);
     return builder.build();
   }
 
