@@ -46,6 +46,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         ":resources",
+        "//src/com/facebook/buck/io/filesystem/impl:utils",
         "//third-party/java/args4j:args4j",
         "//third-party/java/guava:guava",
     ],

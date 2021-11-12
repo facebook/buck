@@ -16,10 +16,11 @@
 
 package com.facebook.buck.android.resources;
 
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.kohsuke.args4j.CmdLineException;
@@ -35,8 +36,8 @@ public class MergeAssetsExecutableMain {
   @Option(name = "--base-apk", usage = "path to existing APK containing resources")
   private String baseApk = null;
 
-  @Option(name = "--assets", required = true, usage = "path to list of assets")
-  private String pathToAssetsList;
+  @Option(name = "--assets-dirs", required = true, usage = "directory containing assets")
+  private String assetsDirs;
 
   public static void main(String[] args) throws IOException {
     MergeAssetsExecutableMain main = new MergeAssetsExecutableMain();
@@ -53,14 +54,15 @@ public class MergeAssetsExecutableMain {
   }
 
   private void run() throws IOException {
-    ImmutableMap<Path, Path> assets =
-        Files.readAllLines(Paths.get(pathToAssetsList)).stream()
-            .map(p -> p.split(" "))
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    pair -> Paths.get(pair[0]), pair -> Paths.get(pair[1])));
+    ImmutableSet<RelPath> dirs =
+        Files.readAllLines(Paths.get(assetsDirs)).stream()
+            .map(RelPath::get)
+            .collect(ImmutableSet.toImmutableSet());
 
     MergeAssetsUtils.mergeAssets(
-        Paths.get(outputApk), Optional.ofNullable(baseApk).map(Paths::get), assets);
+        Paths.get(outputApk),
+        Optional.ofNullable(baseApk).map(Paths::get),
+        AbsPath.of(Paths.get(".").normalize().toAbsolutePath()),
+        dirs);
   }
 }

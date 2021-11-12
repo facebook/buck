@@ -16,6 +16,10 @@
 
 package com.facebook.buck.android.resources;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -24,8 +28,11 @@ import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -49,7 +56,9 @@ public class MergeAssetsUtils {
    * that APK.
    */
   public static void mergeAssets(
-      Path outputApk, Optional<Path> baseApk, ImmutableMap<Path, Path> assets) throws IOException {
+      Path outputApk, Optional<Path> baseApk, AbsPath root, ImmutableSet<RelPath> assetsDirectories)
+      throws IOException {
+    ImmutableMap<Path, Path> assets = getAllAssets(root, assetsDirectories);
     try (ResourcesZipBuilder output = new ResourcesZipBuilder(outputApk)) {
       if (baseApk.isPresent()) {
         try (ZipFile base = new ZipFile(baseApk.get().toFile())) {
@@ -96,5 +105,35 @@ public class MergeAssetsUtils {
         }
       }
     }
+  }
+
+  private static ImmutableMap<Path, Path> getAllAssets(
+      AbsPath root, ImmutableSet<RelPath> assetsDirectories) throws IOException {
+    ImmutableMap.Builder<Path, Path> assets = ImmutableMap.builder();
+
+    for (RelPath assetDirectory : assetsDirectories) {
+      AbsPath absolutePath = ProjectFilesystemUtils.getAbsPathForRelativePath(root, assetDirectory);
+
+      ProjectFilesystemUtils.walkFileTree(
+          root,
+          assetDirectory.getPath(),
+          ImmutableSet.of(),
+          new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
+              Preconditions.checkState(
+                  !Files.getFileExtension(file.toString()).equals("gz"),
+                  "BUCK doesn't support adding .gz files to assets (%s).",
+                  file);
+              Path normalized = file.normalize();
+              assets.put(absolutePath.getPath().relativize(normalized), normalized);
+              return super.visitFile(file, attrs);
+            }
+          },
+          ProjectFilesystemUtils.getEmptyIgnoreFilter());
+    }
+
+    return assets.build();
   }
 }
