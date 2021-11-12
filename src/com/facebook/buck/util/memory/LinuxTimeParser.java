@@ -37,12 +37,8 @@ public class LinuxTimeParser {
         String line = sc.nextLine();
         String[] parts = line.split(" ");
         if (parts.length == 2) {
-          switch (parts[0]) {
-            case "rss":
-              maxRss = Integer.parseInt(parts[1]);
-              break;
-            default:
-              break;
+          if ("rss".equals(parts[0])) {
+            maxRss = Integer.parseInt(parts[1]);
           }
         }
       }
