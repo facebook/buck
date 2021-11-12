@@ -22,6 +22,7 @@ buck_module(
         "//src/com/facebook/buck/command/config:config",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/jvm/java/version:version",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
         "//src/com/facebook/buck/core/model/graph:graph",

@@ -41,6 +41,7 @@ import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -198,8 +199,7 @@ public class AndroidLibraryGraphEnhancerTest {
     JavacOptions javacOptions =
         ((JavacToJarStepFactory) dummyRDotJava.get().getCompileStepFactory()).getJavacOptions();
     assertEquals(
-        JavacLanguageLevelOptions.JavaVersion.VERSION_7,
-        javacOptions.getLanguageLevelOptions().getSourceLevelValue());
+        JavaVersion.VERSION_7, javacOptions.getLanguageLevelOptions().getSourceLevelValue());
   }
 
   @Test

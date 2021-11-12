@@ -6,7 +6,7 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/jvm/java/version:version",
+        "//src/com/facebook/buck/jvm/java/version/utils:utils",
         "//src/com/facebook/buck/util:util",
     ],
 )

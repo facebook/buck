@@ -35,7 +35,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEvents;
 import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
@@ -701,7 +701,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
             ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
                 .filter(ModernBuildRuleRemoteExecutionHelper::isValidJVMArgument)
                 .collect(Collectors.joining(" ")))
-        .put("BUCK_JAVA_VERSION", String.valueOf(JavaVersion.getMajorVersion()))
+        .put("BUCK_JAVA_VERSION", String.valueOf(JavaVersionUtils.getMajorVersion()))
         .put("BUCK_PLUGIN_ROOT", relativePluginRoot)
         .put("BASE_BUCK_OUT_DIR", BASE_BUCK_OUT_DIR)
         .put("BUCK_PLUGIN_RESOURCES", relativePluginResources)

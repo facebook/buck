@@ -28,8 +28,10 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -83,7 +85,7 @@ public abstract class JavacOptions implements AddsToRuleKey {
   }
 
   @AddToRuleKey
-  public abstract List<String> getExtraArguments();
+  public abstract ImmutableList<String> getExtraArguments();
 
   // TODO(cjhopman): This should use SourcePaths
   @AddToRuleKey
@@ -92,7 +94,8 @@ public abstract class JavacOptions implements AddsToRuleKey {
   // TODO(cjhopman): This should be resolved to the appropriate source.
   // TODO(cjhopman): Should this be added to the rulekey?
   @CustomFieldBehavior({DefaultFieldInputs.class, DefaultFieldSerialization.class})
-  protected abstract Map<String, ImmutableList<PathSourcePath>> getSourceToBootclasspath();
+  protected abstract ImmutableMap<JavaVersion, ImmutableList<PathSourcePath>>
+      getSourceToBootclasspath();
 
   @AddToRuleKey
   protected boolean isDebug() {
@@ -162,29 +165,26 @@ public abstract class JavacOptions implements AddsToRuleKey {
    */
   public ImmutableList<SourcePath> getSourceLevelBootclasspath() {
     ImmutableList<PathSourcePath> bootclasspath =
-        getSourceToBootclasspath()
-            .get(getLanguageLevelOptions().getSourceLevelValue().getVersion());
+        getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevelValue());
 
     if (bootclasspath != null) {
       return ImmutableList.copyOf(bootclasspath); // upcast to ImmutableList<SourcePath>
-    } else {
-      return ImmutableList.of();
     }
+    return ImmutableList.of();
   }
 
   public void appendOptionsTo(
       OptionsConsumer optionsConsumer, SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     ImmutableList<PathSourcePath> bootclasspath =
-        getSourceToBootclasspath()
-            .get(getLanguageLevelOptions().getSourceLevelValue().getVersion());
-    Optional<List<RelPath>> bootclasspathList = Optional.empty();
+        getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevelValue());
+    Optional<ImmutableList<RelPath>> bootclasspathList = Optional.empty();
     if (bootclasspath != null) {
       bootclasspathList =
           Optional.of(
               bootclasspath.stream()
                   .map(resolver::getAbsolutePath)
                   .map(ruleCellRoot::relativize)
-                  .collect(Collectors.toList()));
+                  .collect(ImmutableList.toImmutableList()));
     }
 
     appendOptionsTo(
@@ -311,7 +311,7 @@ public abstract class JavacOptions implements AddsToRuleKey {
 
   @Nullable
   private static String getBootclasspathString(
-      Optional<String> bootclasspathOptional, Optional<List<RelPath>> bootclasspathList) {
+      Optional<String> bootclasspathOptional, Optional<ImmutableList<RelPath>> bootclasspathList) {
     return bootclasspathOptional.orElseGet(
         () ->
             bootclasspathList

@@ -30,7 +30,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -76,7 +76,7 @@ public class JavaTestIntegrationTest {
 
     String lookFor;
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    if (JavaVersion.getMajorVersion() <= 8) {
+    if (JavaVersionUtils.getMajorVersion() <= 8) {
       // Javac emits different errors on Windows !?!
       if (Platform.detect() == Platform.WINDOWS) {
         // Note: javac puts wrong line ending

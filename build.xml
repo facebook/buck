@@ -417,7 +417,7 @@
         <include name="com/facebook/buck/jvm/java/plugin/api/*.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/api/*.java" />
         <include name="com/facebook/buck/jvm/java/lang/model/*.java" />
-        <include name="com/facebook/buck/jvm/java/version/JavaVersion.java" />
+        <include name="com/facebook/buck/jvm/java/version/utils/JavaVersionUtils.java" />
       </javac-params>
     </compiler>
     <jar destfile="${bootstrapper.jar}">

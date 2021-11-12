@@ -40,6 +40,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -269,7 +270,7 @@ public class JavacOptionsTest {
             .setLanguageLevelOptions(
                 JavacLanguageLevelOptions.builder().setSourceLevel("5").build())
             .putSourceToBootclasspath(
-                "5",
+                JavaVersion.VERSION_5,
                 ImmutableList.of(
                     FakeSourcePath.of("some-magic.jar"), FakeSourcePath.of("also.jar")))
             .build();
@@ -287,7 +288,8 @@ public class JavacOptionsTest {
             .setLanguageLevelOptions(
                 JavacLanguageLevelOptions.builder().setSourceLevel("5").build())
             .putSourceToBootclasspath(
-                "5", ImmutableList.of(FakeSourcePath.of("not-the-right-path.jar")))
+                JavaVersion.VERSION_5,
+                ImmutableList.of(FakeSourcePath.of("not-the-right-path.jar")))
             .build();
 
     assertOptionsHasKeyValue(options, "bootclasspath", expectedBootClasspath);
@@ -301,7 +303,7 @@ public class JavacOptionsTest {
             .setLanguageLevelOptions(
                 JavacLanguageLevelOptions.builder().setSourceLevel("6").build())
             .putSourceToBootclasspath(
-                "5",
+                JavaVersion.VERSION_5,
                 ImmutableList.of(
                     FakeSourcePath.of("some-magic.jar"), FakeSourcePath.of("also.jar")))
             .build();
@@ -316,7 +318,7 @@ public class JavacOptionsTest {
             .setLanguageLevelOptions(
                 JavacLanguageLevelOptions.builder().setSourceLevel("5").build())
             .putSourceToBootclasspath(
-                "5",
+                JavaVersion.VERSION_5,
                 ImmutableList.of(
                     FakeSourcePath.of("some-magic.jar"), FakeSourcePath.of("also.jar")))
             .build();

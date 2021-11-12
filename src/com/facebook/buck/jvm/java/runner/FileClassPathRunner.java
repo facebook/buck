@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.runner;
 
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -89,7 +89,7 @@ public class FileClassPathRunner {
   }
 
   private static boolean shouldPopulateClassLoader() {
-    return JavaVersion.getMajorVersion() <= 8
+    return JavaVersionUtils.getMajorVersion() <= 8
         || System.getProperty(CLASSPATH_FILE_PROPERTY) != null;
   }
 
@@ -105,7 +105,7 @@ public class FileClassPathRunner {
   }
 
   private static ClassLoader getClassLoaderForTests(URL[] classpath) {
-    if (JavaVersion.getMajorVersion() <= 8) {
+    if (JavaVersionUtils.getMajorVersion() <= 8) {
       URLClassLoader urlClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
       try {
         Method addURL = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
@@ -117,7 +117,7 @@ public class FileClassPathRunner {
         throw new RuntimeException(
             String.format(
                 "Couldn't add classpath URLs to (URLClassLoader) ClassLoader.getSystemClassLoader() on java version %d",
-                JavaVersion.getMajorVersion()),
+                JavaVersionUtils.getMajorVersion()),
             e);
       }
       return urlClassLoader;

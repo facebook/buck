@@ -47,7 +47,7 @@ import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
@@ -196,7 +196,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.labels = ImmutableSet.copyOf(labels);
     this.contacts = ImmutableSet.copyOf(contacts);
     this.testType = testType;
-    this.targetJavaVersion = JavaVersion.getMajorVersionFromString(targetLevel);
+    this.targetJavaVersion = JavaVersionUtils.getMajorVersionFromString(targetLevel);
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.testCaseTimeoutMs = testCaseTimeoutMs;
     this.env = env;

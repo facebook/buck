@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.google.common.base.Joiner;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
@@ -110,7 +110,7 @@ public class TreeBackedTreesTest extends CompilerTreeApiParameterizedTest {
     Tree tTree = trees.getTree(tElement);
     TreePath tPath = trees.getPath(tElement);
 
-    if (JavaVersion.getMajorVersion() < 11) {
+    if (JavaVersionUtils.getMajorVersion() < 11) {
       assertNull(tTree); // Odd behavior by javac, but we'll match it
     }
     assertSame(tElement, trees.getElement(tPath));

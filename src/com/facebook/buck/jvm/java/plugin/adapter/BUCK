@@ -23,7 +23,7 @@ java_library(
         "//test/com/facebook/buck/jvm/java/tracing:tracing",
     ],
     deps = [
-        "//src/com/facebook/buck/jvm/java/version:version",
+        "//src/com/facebook/buck/jvm/java/version/utils:utils",
         # This module is loaded as a plugin into the compiler itself; don't take dependencies on Buck
         # internals or large libraries like Guava
         "//src/com/facebook/buck/jvm/java/lang/model:model",

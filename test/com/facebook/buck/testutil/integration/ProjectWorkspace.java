@@ -64,7 +64,7 @@ import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.logd.client.FileOutputStreamFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
@@ -598,7 +598,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
           testConsole.getTextWrittenToStdOut(),
           testConsole.getTextWrittenToStdErr() + errorMessage.toString());
     } finally {
-      if (JavaVersion.getMajorVersion() < 9) {
+      if (JavaVersionUtils.getMajorVersion() < 9) {
         // javac has a global cache of zip/jar file content listings. It determines the validity of
         // a given cache entry based on the modification time of the zip file in question. In normal
         // usage, this is fine. However, in tests, we often will do a build, change something, and

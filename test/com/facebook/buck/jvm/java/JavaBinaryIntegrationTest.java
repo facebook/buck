@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -205,7 +205,7 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
         workspace.runBuckBuild("//:wrapper_01").assertExitCode(null, ExitCode.FATAL_IO);
     // Should show the rule that failed.
     assertThat(result.getStderr(), containsString("//:simple-lib"));
-    if (JavaVersion.getMajorVersion() <= 8) {
+    if (JavaVersionUtils.getMajorVersion() <= 8) {
       // Should show the jar we were operating on.
       assertThat(result.getStderr(), containsString(libJar));
       // Should show the original exception.

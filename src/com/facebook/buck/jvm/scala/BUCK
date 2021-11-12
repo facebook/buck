@@ -16,6 +16,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/toolchain:toolchain",
+        "//src/com/facebook/buck/jvm/java/version:version",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
         "//src/com/facebook/buck/downwardapi/config:config",

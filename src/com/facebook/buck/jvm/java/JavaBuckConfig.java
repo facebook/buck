@@ -25,10 +25,12 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.environment.Platform;
@@ -41,10 +43,12 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Level;
 
@@ -64,6 +68,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       new CommandTool.Builder().addArg(JavaRuntimeUtils.getBucksJavaBinCommand()).build();
 
   static final JavaOptions DEFAULT_JAVA_OPTIONS = JavaOptions.of(DEFAULT_JAVA_TOOL);
+  private static final String BOOTCLASSPATH_PREFIX = "bootclasspath-";
 
   private final BuckConfig delegate;
   private final Function<TargetConfiguration, JavacSpec> javacSpecSupplier;
@@ -137,25 +142,38 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     spoolMode.ifPresent(builder::setSpoolMode);
 
     ImmutableMap<String, String> allEntries = delegate.getEntriesForSection(SECTION);
-    ImmutableMap.Builder<String, ImmutableList<PathSourcePath>> bootclasspaths =
+    ImmutableMap.Builder<JavaVersion, ImmutableList<PathSourcePath>> sourceToBootclasspathBuilder =
         ImmutableMap.builder();
+    Set<JavaVersion> versionsSeen = new HashSet<>();
+    ProjectFilesystem filesystem = delegate.getFilesystem();
     for (Map.Entry<String, String> entry : allEntries.entrySet()) {
       String key = entry.getKey();
-      if (key.startsWith("bootclasspath-")) {
-        String[] values = entry.getValue().split(File.pathSeparator);
-        ImmutableList.Builder<PathSourcePath> pathsBuilder =
-            ImmutableList.builderWithExpectedSize(values.length);
-        for (String value : values) {
-          Preconditions.checkState(value != null);
-          pathsBuilder.add(PathSourcePath.of(delegate.getFilesystem(), Paths.get(value)));
-        }
-
-        bootclasspaths.put(key.substring("bootclasspath-".length()), pathsBuilder.build());
+      if (!key.startsWith(BOOTCLASSPATH_PREFIX)) {
+        continue;
       }
+
+      String version = key.substring(BOOTCLASSPATH_PREFIX.length());
+      JavaVersion javaVersion = JavaVersion.toJavaLanguageVersion(version);
+      if (!versionsSeen.contains(javaVersion)) {
+        versionsSeen.add(javaVersion);
+      } else {
+        LOGGER.warn("Multiple entries with same java version: " + javaVersion);
+        continue;
+      }
+
+      String[] values = entry.getValue().split(File.pathSeparator);
+      ImmutableList.Builder<PathSourcePath> pathsBuilder =
+          ImmutableList.builderWithExpectedSize(values.length);
+      for (String value : values) {
+        Preconditions.checkState(value != null);
+        pathsBuilder.add(PathSourcePath.of(filesystem, Paths.get(value)));
+      }
+
+      sourceToBootclasspathBuilder.put(javaVersion, pathsBuilder.build());
     }
 
     return builder
-        .putAllSourceToBootclasspath(bootclasspaths.build())
+        .putAllSourceToBootclasspath(sourceToBootclasspathBuilder.build())
         .addAllExtraArguments(extraArguments)
         .build();
   }

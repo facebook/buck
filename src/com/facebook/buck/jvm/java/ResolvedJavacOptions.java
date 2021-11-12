@@ -28,7 +28,6 @@ import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /** Resolved JavacOptions used in {@link JavacPipelineState} */
 @BuckStyleValue
@@ -36,7 +35,7 @@ public abstract class ResolvedJavacOptions {
 
   public abstract Optional<String> getBootclasspath();
 
-  public abstract Optional<List<RelPath>> getBootclasspathList();
+  public abstract Optional<ImmutableList<RelPath>> getBootclasspathList();
 
   public abstract JavacLanguageLevelOptions getLanguageLevelOptions();
 
@@ -62,17 +61,15 @@ public abstract class ResolvedJavacOptions {
 
     JavacLanguageLevelOptions languageLevelOptions = javacOptions.getLanguageLevelOptions();
     ImmutableList<PathSourcePath> bootclasspath =
-        javacOptions
-            .getSourceToBootclasspath()
-            .get(languageLevelOptions.getSourceLevelValue().getVersion());
-    Optional<List<RelPath>> bootclasspathList = Optional.empty();
+        javacOptions.getSourceToBootclasspath().get(languageLevelOptions.getSourceLevelValue());
+    Optional<ImmutableList<RelPath>> bootclasspathList = Optional.empty();
     if (bootclasspath != null) {
       bootclasspathList =
           Optional.of(
               bootclasspath.stream()
                   .map(resolver::getAbsolutePath)
                   .map(ruleCellRoot::relativize)
-                  .collect(Collectors.toList()));
+                  .collect(ImmutableList.toImmutableList()));
     }
 
     JavacPluginParams javaAnnotationProcessorParams =
@@ -96,7 +93,7 @@ public abstract class ResolvedJavacOptions {
   /** Creates {@link ResolvedJavacOptions} */
   public static ResolvedJavacOptions of(
       Optional<String> bootclasspath,
-      Optional<List<RelPath>> bootclasspathList,
+      Optional<ImmutableList<RelPath>> bootclasspathList,
       JavacLanguageLevelOptions languageLevelOptions,
       boolean debug,
       boolean verbose,
@@ -130,11 +127,10 @@ public abstract class ResolvedJavacOptions {
   /** Validates classpath */
   public void validateClasspath(Function<String, Boolean> classpathChecker) throws IOException {
     Optional<String> bootclasspath = getBootclasspath();
-    if (!bootclasspath.isPresent()) {
+    if (bootclasspath.isEmpty()) {
       return;
     }
     String bootClasspath = bootclasspath.get();
-
     try {
       if (!classpathChecker.apply(bootClasspath)) {
         throw new IOException(

@@ -47,6 +47,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolve
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.javacd.model.AbiGenerationMode;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
@@ -286,31 +287,35 @@ public class JavaBuckConfigTest {
 
   @Test
   public void verifyJavaVersions() throws IOException {
-    for (String version :
-        new String[] {
-          "1.1", "1.2", "1.3", "1.4", "1.5", "5", "5.0", "1.6", "6", "6.0", "1.7", "7", "7.0", "8",
-          "8.0", "9", "9.0", "10", "10.0", "11", "11.0", "11.000"
-        }) {
-      String localConfig =
-          String.format("[java]\nsource_level = %s\ntarget_level = %s", version, version);
 
-      JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
-      JavacLanguageLevelOptions.JavaVersion sourceLevelValue =
-          config.getJavacLanguageLevelOptions().getSourceLevelValue();
+    var javaVersions =
+        ImmutableMap.<JavaVersion, ImmutableList<String>>builder()
+            .put(JavaVersion.VERSION_1_1, ImmutableList.of("1.1"))
+            .put(JavaVersion.VERSION_1_2, ImmutableList.of("1.2"))
+            .put(JavaVersion.VERSION_1_3, ImmutableList.of("1.3"))
+            .put(JavaVersion.VERSION_1_4, ImmutableList.of("1.4"))
+            .put(JavaVersion.VERSION_5, ImmutableList.of("1.5", "5", "5.0"))
+            .put(JavaVersion.VERSION_6, ImmutableList.of("1.6", "6", "6.0"))
+            .put(JavaVersion.VERSION_7, ImmutableList.of("1.7", "7", "7.0"))
+            .put(JavaVersion.VERSION_8, ImmutableList.of("8", "8.0"))
+            .put(JavaVersion.VERSION_9, ImmutableList.of("9", "9.0"))
+            .put(JavaVersion.VERSION_10, ImmutableList.of("10", "10.0"))
+            .put(JavaVersion.VERSION_11, ImmutableList.of("11", "11.0", "11.0000"))
+            .build();
 
-      String expectedVersion = version;
-      if (version.contains(".")) {
-        if (version.startsWith("1.")) {
-          int majorVersion = Integer.parseInt(version.substring("1.".length()));
-          if (majorVersion >= 5) {
-            expectedVersion = Integer.toString(majorVersion);
-          }
-        } else {
-          int majorVersion = Integer.parseInt(version.substring(0, version.indexOf(".")));
-          expectedVersion = Integer.toString(majorVersion);
-        }
+    for (var e : javaVersions.entrySet()) {
+      JavaVersion expectedVersion = e.getKey();
+      for (String version : e.getValue()) {
+        String localConfig =
+            String.format("[java]\nsource_level = %s\ntarget_level = %s", version, version);
+
+        JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
+        JavaVersion sourceLevelValue = config.getJavacLanguageLevelOptions().getSourceLevelValue();
+        JavaVersion targetLevelValue = config.getJavacLanguageLevelOptions().getTargetLevelValue();
+
+        assertThat(sourceLevelValue, equalTo(targetLevelValue));
+        assertThat(targetLevelValue, equalTo(expectedVersion));
       }
-      assertThat(sourceLevelValue.getVersion(), equalTo(expectedVersion));
     }
   }
 

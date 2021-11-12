@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.lang.model;
 
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.util.liteinfersupport.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -48,7 +48,7 @@ public final class MoreElements {
 
   static {
     try {
-      if (JavaVersion.getMajorVersion() >= 9) {
+      if (JavaVersionUtils.getMajorVersion() >= 9) {
         getAllPackageElementsMethod =
             Elements.class.getMethod("getAllPackageElements", CharSequence.class);
       }
@@ -63,7 +63,7 @@ public final class MoreElements {
   @Nullable
   public static PackageElement getPackageElementEvenIfEmpty(
       Elements elements, CharSequence packageName) {
-    if (JavaVersion.getMajorVersion() <= 8) {
+    if (JavaVersionUtils.getMajorVersion() <= 8) {
       // In Java 8 and earlier, {@link
       // javax.lang.model.util.Elements#getPackageElement(CharSequence)} returns
       // packages even if they have no members.

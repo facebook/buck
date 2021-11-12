@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.jvm.java.JavacLanguageLevelOptions.JavaVersion;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;

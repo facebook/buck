@@ -42,7 +42,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -564,7 +564,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     // exceptions from other exceptions originating from javac itself. So we end up with different
     // exit codes depending on Buck's Java version.
     ExitCode expectedExitCode =
-        (JavaVersion.getMajorVersion() <= 8) ? ExitCode.BUILD_ERROR : ExitCode.FATAL_GENERIC;
+        (JavaVersionUtils.getMajorVersion() <= 8) ? ExitCode.BUILD_ERROR : ExitCode.FATAL_GENERIC;
     buildResult.assertExitCode("MyPlugin won't let you build this", expectedExitCode);
   }
 

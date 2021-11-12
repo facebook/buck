@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.javax;
 
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.tools.JavaCompiler;
@@ -31,7 +31,7 @@ public class SynchronizedToolProvider {
   private static Method getPlatformClassLoaderMethod;
 
   static {
-    if (JavaVersion.getMajorVersion() >= 9) {
+    if (JavaVersionUtils.getMajorVersion() >= 9) {
       try {
         getPlatformClassLoaderMethod = ClassLoader.class.getMethod("getPlatformClassLoader");
       } catch (NoSuchMethodException e) {
@@ -49,7 +49,7 @@ public class SynchronizedToolProvider {
   }
 
   public static ClassLoader getSystemToolClassLoader() {
-    if (JavaVersion.getMajorVersion() >= 9) {
+    if (JavaVersionUtils.getMajorVersion() >= 9) {
       // The compiler classes are loaded using the platform class loader in Java 9+.
       try {
         return (ClassLoader) getPlatformClassLoaderMethod.invoke(null);

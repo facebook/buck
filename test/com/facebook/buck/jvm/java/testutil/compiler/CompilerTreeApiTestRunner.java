@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.testutil.compiler;
 
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
 import java.net.URL;
@@ -46,7 +46,7 @@ public class CompilerTreeApiTestRunner extends BlockJUnit4ClassRunner {
   }
 
   public static Class<?> reloadFromCompilerClassLoader(Class<?> clazz) throws InitializationError {
-    if (JavaVersion.getMajorVersion() >= 9) {
+    if (JavaVersionUtils.getMajorVersion() >= 9) {
       return clazz;
     }
     try {
@@ -64,7 +64,7 @@ public class CompilerTreeApiTestRunner extends BlockJUnit4ClassRunner {
     private static URL[] getSystemClassLoaderUrls() {
       // Note: This only works on Java 8 and earlier, as in Java 9+, the system class loader is no
       // longer a URLClassLoader.
-      Preconditions.checkState(JavaVersion.getMajorVersion() < 9);
+      Preconditions.checkState(JavaVersionUtils.getMajorVersion() < 9);
       URLClassLoader systemClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
       return systemClassLoader.getURLs();
     }

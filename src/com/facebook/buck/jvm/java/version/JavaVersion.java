@@ -16,27 +16,45 @@
 
 package com.facebook.buck.jvm.java.version;
 
-import java.util.Objects;
+/** Enum that represents java version. */
+public enum JavaVersion {
+  VERSION_1_1("1.1"),
+  VERSION_1_2("1.2"),
+  VERSION_1_3("1.3"),
+  VERSION_1_4("1.4"),
+  VERSION_5("5"),
+  VERSION_6("6"),
+  VERSION_7("7"),
+  VERSION_8("8"),
+  VERSION_9("9"),
+  VERSION_10("10"),
+  VERSION_11("11");
 
-/** Utility class for retrieving Java version information. */
-public class JavaVersion {
-  private static int majorVersion = 0;
+  private final String version;
 
-  /**
-   * Returns the major version of the current JVM instance (e.g. 8 for Java 1.8, and 10 for Java
-   * 10.0).
-   */
-  public static int getMajorVersion() {
-    if (majorVersion == 0) {
-      majorVersion =
-          getMajorVersionFromString(Objects.requireNonNull(System.getProperty("java.version")));
-    }
-    return majorVersion;
+  JavaVersion(String version) {
+    this.version = version;
   }
 
-  /** Returns the major version from a Java version string (e.g. 8 for "1.8", and 10 for "10.0"). */
-  public static int getMajorVersionFromString(String version) {
-    String[] versionParts = Objects.requireNonNull(version).split("\\.");
-    return Integer.parseInt((versionParts[0].equals("1")) ? versionParts[1] : versionParts[0]);
+  public String getVersion() {
+    return version;
+  }
+
+  /** Converts string java version into enum value of type {@link JavaVersion} */
+  public static JavaVersion toJavaLanguageVersion(String version) {
+    String versionString = version;
+    double versionDouble = Double.parseDouble(version);
+    if (versionDouble >= 1.5 && versionDouble <= 1.8) {
+      versionString = Integer.toString(((int) (versionDouble * 10)) - 10);
+    } else if (versionDouble % 1 == 0) { // if double doesn't have decimal part
+      versionString = Integer.toString((int) versionDouble);
+    }
+
+    for (JavaVersion javaVersion : values()) {
+      if (versionString.equals(javaVersion.getVersion())) {
+        return javaVersion;
+      }
+    }
+    throw new IllegalArgumentException("Can't find java version for string: " + version);
   }
 }

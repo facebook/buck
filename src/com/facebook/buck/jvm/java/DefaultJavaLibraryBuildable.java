@@ -56,7 +56,7 @@ import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.CompilerOutp
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.jvm.java.stepsbuilder.params.RulesJavaCDParams;
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
@@ -82,7 +82,7 @@ import javax.annotation.Nullable;
 /** Buildable for DefaultJavaLibrary. */
 class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineState> {
 
-  @AddToRuleKey private final int buckJavaVersion = JavaVersion.getMajorVersion();
+  @AddToRuleKey private final int buckJavaVersion = JavaVersionUtils.getMajorVersion();
   @AddToRuleKey private final JarBuildStepsFactory<?> jarBuildStepsFactory;
   @AddToRuleKey private final UnusedDependenciesAction unusedDependenciesAction;
   @AddToRuleKey private final Optional<NonHashableSourcePathContainer> sourceAbiOutput;

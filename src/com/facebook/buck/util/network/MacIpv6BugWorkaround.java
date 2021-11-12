@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.network;
 
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.util.environment.Platform;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -30,7 +30,7 @@ import java.net.NetworkInterface;
  */
 public class MacIpv6BugWorkaround {
   public static void apply() {
-    if (Platform.detect() != Platform.MACOS || JavaVersion.getMajorVersion() >= 11) {
+    if (Platform.detect() != Platform.MACOS || JavaVersionUtils.getMajorVersion() >= 11) {
       return;
     }
 

@@ -12,7 +12,7 @@ java_library(
         "//test/com/facebook/buck/jvm/java/runner:runner",
     ],
     deps = [
-        "//src/com/facebook/buck/jvm/java/version:version",
+        "//src/com/facebook/buck/jvm/java/version/utils:utils",
         # DO NOT add any deps here.
     ],
 )

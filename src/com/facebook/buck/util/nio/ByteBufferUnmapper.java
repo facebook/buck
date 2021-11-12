@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.nio;
 
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.util.Scope;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -25,7 +25,7 @@ import java.nio.ByteBuffer;
 /** Class to unmap ByteBuffer on any Java version. Supports try with resources. */
 public class ByteBufferUnmapper implements Scope {
   private static final Unmapper unmapper =
-      JavaVersion.getMajorVersion() < 9 ? new UnmapperBeforeJava9() : new UnmapperAfterJava9();
+      JavaVersionUtils.getMajorVersion() < 9 ? new UnmapperBeforeJava9() : new UnmapperAfterJava9();
 
   private final ByteBuffer buffer;
 

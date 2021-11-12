@@ -24,7 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -52,7 +52,7 @@ public class RobolectricTestRuleIntegrationTest {
   public void setUp() {
     // TODO(T47912516): Remove once we can upgrade our Robolectric libraries and run this on Java
     //                  11.
-    Assume.assumeThat(JavaVersion.getMajorVersion(), Matchers.lessThanOrEqualTo(8));
+    Assume.assumeThat(JavaVersionUtils.getMajorVersion(), Matchers.lessThanOrEqualTo(8));
   }
 
   @Test

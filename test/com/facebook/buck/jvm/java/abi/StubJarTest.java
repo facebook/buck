@@ -35,7 +35,7 @@ import com.facebook.buck.jvm.java.JarDumper;
 import com.facebook.buck.jvm.java.JavacEventSinkToBuckEventBusBridge;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
 import com.facebook.buck.jvm.java.testutil.compiler.TestCompiler;
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.jvm.kotlin.testutil.compiler.KotlinTestCompiler;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
@@ -6083,7 +6083,7 @@ public class StubJarTest {
     expectedManifest.setEntryAttribute(
         "com/example/buck/A.class",
         "Murmur3-128-Digest",
-        JavaVersion.getMajorVersion() >= 11
+        JavaVersionUtils.getMajorVersion() >= 11
             ? "a52865fe9a9d028824cc5f50b3bc2f77"
             : "6ddaf37b8a78b7ae705f31d1512c13c6");
 
@@ -6971,7 +6971,7 @@ public class StubJarTest {
       for (String line : lines) {
         Matcher m = javaVersionSpecificPattern.matcher(line);
         if (m.matches()) {
-          if (Integer.parseInt(m.group(1)) == JavaVersion.getMajorVersion()) {
+          if (Integer.parseInt(m.group(1)) == JavaVersionUtils.getMajorVersion()) {
             String s = line.substring(line.indexOf(':') + 1);
             result.add(s);
           }
@@ -7108,11 +7108,11 @@ public class StubJarTest {
                   }));
           assertTrue(
               "unsupported Java version",
-              JavaVersion.getMajorVersion() == 8 || JavaVersion.getMajorVersion() == 11);
+              JavaVersionUtils.getMajorVersion() == 8 || JavaVersionUtils.getMajorVersion() == 11);
           StubGenerator generator =
               new StubGenerator(
                   SourceVersionUtils.getSourceVersionFromTarget(
-                      String.valueOf(JavaVersion.getMajorVersion())),
+                      String.valueOf(JavaVersionUtils.getMajorVersion())),
                   testCompiler.getElements(),
                   testCompiler.getTypes(),
                   testCompiler.getMessager(),

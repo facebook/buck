@@ -53,7 +53,6 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.JavacFactory;
-import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.JavacPluginParams;
@@ -61,6 +60,7 @@ import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
@@ -423,12 +423,9 @@ public class RobolectricTestDescription
                 .buildLibrary());
     params = params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary));
 
-    JavacLanguageLevelOptions.JavaVersion targetLevelValue =
-        javacOptions.getLanguageLevelOptions().getTargetLevelValue();
+    JavaVersion targetLevelValue = javacOptions.getLanguageLevelOptions().getTargetLevelValue();
     Function<TargetConfiguration, JavaOptions> javaRuntimeConfig =
-        targetLevelValue == JavacLanguageLevelOptions.JavaVersion.VERSION_11
-            ? java11OptionsForTests
-            : javaOptionsForTests;
+        targetLevelValue == JavaVersion.VERSION_11 ? java11OptionsForTests : javaOptionsForTests;
     JavaOptions javaOptions = javaRuntimeConfig.apply(buildTarget.getTargetConfiguration());
 
     return new RobolectricTest(

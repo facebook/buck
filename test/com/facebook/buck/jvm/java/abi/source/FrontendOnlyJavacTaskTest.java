@@ -27,7 +27,7 @@ import com.facebook.buck.jvm.java.plugin.adapter.BuckJavacTask;
 import com.facebook.buck.jvm.java.plugin.adapter.TestTaskListener;
 import com.facebook.buck.jvm.java.plugin.adapter.TestTaskListenerAdapter;
 import com.facebook.buck.jvm.java.testutil.compiler.CompilerTreeApiParameterized;
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -104,7 +104,7 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
 
     Iterable<? extends Element> actualElements = testCompiler.enter();
 
-    if (JavaVersion.getMajorVersion() <= 8) {
+    if (JavaVersionUtils.getMajorVersion() <= 8) {
       assertThat(
           actualElements,
           Matchers.containsInAnyOrder(
@@ -250,7 +250,7 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
       "COMPILATION finished",
     };
     String[] javacEvents =
-        (JavaVersion.getMajorVersion() >= 9) ? javacEventsJava9 : javacEventsJava8;
+        (JavaVersionUtils.getMajorVersion() >= 9) ? javacEventsJava9 : javacEventsJava8;
 
     String[] treesEventsJava8 = {
       "PARSE started", "PARSE finished", "ENTER started", "ENTER finished",
@@ -264,7 +264,7 @@ public class FrontendOnlyJavacTaskTest extends CompilerTreeApiParameterizedTest 
       "COMPILATION finished",
     };
     String[] treesEvents =
-        (JavaVersion.getMajorVersion() >= 9) ? treesEventsJava9 : treesEventsJava8;
+        (JavaVersionUtils.getMajorVersion() >= 9) ? treesEventsJava9 : treesEventsJava8;
 
     assertThat(events, Matchers.contains(testingJavac() ? javacEvents : treesEvents));
   }

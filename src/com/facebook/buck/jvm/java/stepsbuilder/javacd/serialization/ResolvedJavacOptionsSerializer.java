@@ -19,9 +19,8 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.java.ResolvedJavacOptions;
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /** {@link ResolvedJavacOptions} to protobuf serializer */
 public class ResolvedJavacOptionsSerializer {
@@ -34,8 +33,7 @@ public class ResolvedJavacOptionsSerializer {
    */
   public static com.facebook.buck.javacd.model.ResolvedJavacOptions serialize(
       ResolvedJavacOptions options) {
-    com.facebook.buck.javacd.model.ResolvedJavacOptions.Builder builder =
-        com.facebook.buck.javacd.model.ResolvedJavacOptions.newBuilder();
+    var builder = com.facebook.buck.javacd.model.ResolvedJavacOptions.newBuilder();
 
     Optional<String> bootclasspath = options.getBootclasspath();
     bootclasspath.ifPresent(builder::setBootclasspath);
@@ -44,7 +42,7 @@ public class ResolvedJavacOptionsSerializer {
     builder.setJavaAnnotationProcessorParamsPresent(
         options.isJavaAnnotationProcessorParamsPresent());
 
-    Optional<List<RelPath>> bootclasspathList = options.getBootclasspathList();
+    Optional<ImmutableList<RelPath>> bootclasspathList = options.getBootclasspathList();
     bootclasspathList.ifPresent(
         list ->
             list.stream().map(RelPathSerializer::serialize).forEach(builder::addBootclasspathList));
@@ -77,15 +75,14 @@ public class ResolvedJavacOptionsSerializer {
    */
   public static ResolvedJavacOptions deserialize(
       com.facebook.buck.javacd.model.ResolvedJavacOptions options) {
-    List<com.facebook.buck.javacd.model.RelPath> bootclasspathListList =
-        options.getBootclasspathListList();
-    Optional<List<RelPath>> bootclasspathList =
+    var bootclasspathListList = options.getBootclasspathListList();
+    Optional<ImmutableList<RelPath>> bootclasspathList =
         bootclasspathListList.isEmpty()
             ? Optional.empty()
             : Optional.of(
                 bootclasspathListList.stream()
                     .map(RelPathSerializer::deserialize)
-                    .collect(Collectors.toList()));
+                    .collect(ImmutableList.toImmutableList()));
 
     return ResolvedJavacOptions.of(
         toOptionalString(options.getBootclasspath()),

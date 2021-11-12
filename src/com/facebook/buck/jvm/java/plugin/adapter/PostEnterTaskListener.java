@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.plugin.adapter;
 
-import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskEvent;
@@ -122,7 +122,7 @@ public class PostEnterTaskListener implements TaskListener {
     // the last set of ENTER events happen right *before* the ANNOTATION_PROCESSING finished event,
     // so we have to rely on the ANNOTATION_PROCESSING finished event itself.
     if ((e.getKind() == TaskEvent.Kind.ENTER && !annotationProcessing && pendingEnterCalls == 0)
-        || (JavaVersion.getMajorVersion() >= 9
+        || (JavaVersionUtils.getMajorVersion() >= 9
             && e.getKind() == TaskEvent.Kind.ANNOTATION_PROCESSING)) {
       Set<Element> unmodifiableTopLevelElements = Collections.unmodifiableSet(topLevelElements);
       callback.accept(unmodifiableTopLevelElements);
