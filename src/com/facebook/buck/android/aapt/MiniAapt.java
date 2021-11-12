@@ -19,6 +19,10 @@ package com.facebook.buck.android.aapt;
 import com.facebook.buck.android.aapt.RDotTxtEntry.CustomDrawableType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.IdType;
 import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.xml.XmlDomParserWithLineNumbers;
 import com.google.common.annotations.VisibleForTesting;
@@ -143,6 +147,21 @@ public class MiniAapt {
 
   public RDotTxtResourceCollector getResourceCollector() {
     return resourceCollector;
+  }
+
+  /** Recursively gets all resources files under a given directory */
+  public static ImmutableMap<Path, Path> getAllResourceFiles(
+      AbsPath root, RelPath resourceDirectory) throws IOException {
+    return ProjectFilesystemUtils.getFilesUnderPath(
+            root,
+            resourceDirectory.getPath(),
+            ProjectFilesystemUtils.getDefaultVisitOptions(),
+            ProjectFilesystemUtils.getEmptyIgnoreFilter())
+        .stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                path -> MorePaths.relativize(resourceDirectory.getPath(), path),
+                path -> ProjectFilesystemUtils.getPathForRelativePath(root, path)));
   }
 
   public ImmutableSet<RDotTxtEntry> processAllFiles(ImmutableMap<Path, Path> files)

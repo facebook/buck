@@ -65,6 +65,7 @@ java_library(
     ],
     deps = [
         ":r_dot_txt",
+        "//src/com/facebook/buck/io/filesystem/impl:utils",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/xml:xml",
         "//src/com/facebook/buck/util/string:string",

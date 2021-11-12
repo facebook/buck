@@ -16,9 +16,10 @@
 
 package com.facebook.buck.android.aapt;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -38,7 +39,7 @@ import org.kohsuke.args4j.Option;
 public class MiniAaptExecutableMain {
 
   @Option(name = "--resource-paths", required = true)
-  private String resourcePathsList;
+  private String resourcePathsDir;
 
   @Option(name = "--dep-symbol-paths", required = true)
   private String depSymbolsPathsList;
@@ -61,12 +62,9 @@ public class MiniAaptExecutableMain {
   }
 
   private void run() throws IOException {
-    ImmutableMap.Builder<Path, Path> resourcePaths = ImmutableMap.builder();
-    for (String line : Files.readAllLines(Paths.get(resourcePathsList))) {
-      String[] parts = line.split(" ");
-      Preconditions.checkState(parts.length == 2);
-      resourcePaths.put(Paths.get(parts[0]), Paths.get(parts[1]));
-    }
+    AbsPath root = AbsPath.of(Paths.get(".").normalize().toAbsolutePath());
+    RelPath resourceDirectory = RelPath.get(resourcePathsDir);
+    ImmutableMap<Path, Path> resourcePaths = MiniAapt.getAllResourceFiles(root, resourceDirectory);
 
     ImmutableSet<Path> depSymbolsFilePaths =
         Files.readAllLines(Paths.get(depSymbolsPathsList)).stream()
@@ -76,7 +74,7 @@ public class MiniAaptExecutableMain {
 
     MiniAapt miniAapt = new MiniAapt(depSymbolsFilePaths);
     try {
-      references = miniAapt.processAllFiles(resourcePaths.build());
+      references = miniAapt.processAllFiles(resourcePaths);
     } catch (MiniAapt.ResourceParseException | XPathExpressionException e) {
       throw new RuntimeException(e);
     }

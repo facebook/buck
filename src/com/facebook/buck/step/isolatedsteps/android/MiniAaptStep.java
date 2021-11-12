@@ -19,10 +19,8 @@ package com.facebook.buck.step.isolatedsteps.android;
 import com.facebook.buck.android.aapt.MiniAapt;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -71,7 +69,8 @@ public class MiniAaptStep extends IsolatedStep {
                             context.getRuleCellRoot(), path))
                 .collect(ImmutableSet.toImmutableSet()));
     try {
-      ImmutableMap<Path, Path> files = getAllResourceFiles(context.getRuleCellRoot(), resDirectory);
+      ImmutableMap<Path, Path> files =
+          MiniAapt.getAllResourceFiles(context.getRuleCellRoot(), resDirectory);
       references = miniAapt.processAllFiles(files);
     } catch (MiniAapt.ResourceParseException | XPathExpressionException e) {
       context.logError(e, "Error parsing resources to generate resource IDs for %s.", resDirectory);
@@ -102,20 +101,6 @@ public class MiniAaptStep extends IsolatedStep {
     }
 
     return StepExecutionResults.SUCCESS;
-  }
-
-  private static ImmutableMap<Path, Path> getAllResourceFiles(
-      AbsPath root, RelPath resourceDirectory) throws IOException {
-    return ProjectFilesystemUtils.getFilesUnderPath(
-            root,
-            resourceDirectory.getPath(),
-            ProjectFilesystemUtils.getDefaultVisitOptions(),
-            ProjectFilesystemUtils.getEmptyIgnoreFilter())
-        .stream()
-        .collect(
-            ImmutableMap.toImmutableMap(
-                path -> MorePaths.relativize(resourceDirectory.getPath(), path),
-                path -> ProjectFilesystemUtils.getPathForRelativePath(root, path)));
   }
 
   @Override
