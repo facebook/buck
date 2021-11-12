@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.AndroidLibraryDescription.CoreArg;
+import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
@@ -50,8 +51,7 @@ import java.util.Optional;
 import java.util.SortedSet;
 import javax.annotation.Nullable;
 
-/** android_library() rule */
-public class AndroidLibrary extends DefaultJavaLibrary {
+public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
 
   public static Builder builder(
       BuildTarget buildTarget,
@@ -116,6 +116,7 @@ public class AndroidLibrary extends DefaultJavaLibrary {
         projectFilesystem,
         jarBuildStepsFactory,
         ruleFinder,
+        proguardConfig,
         fullJarDeclaredDeps,
         fullJarExportedDeps,
         fullJarProvidedDeps,
@@ -135,7 +136,6 @@ public class AndroidLibrary extends DefaultJavaLibrary {
         javaCDParams);
     this.manifestFile = manifestFile;
     this.type = jvmLanguage.map(this::evalType).orElseGet(super::getType);
-    this.proguardConfig = proguardConfig;
   }
 
   /**
@@ -144,7 +144,6 @@ public class AndroidLibrary extends DefaultJavaLibrary {
    */
   private final Optional<SourcePath> manifestFile;
 
-  private final Optional<SourcePath> proguardConfig;
   private final String type;
 
   public Optional<SourcePath> getManifestFile() {
@@ -164,9 +163,8 @@ public class AndroidLibrary extends DefaultJavaLibrary {
   public void addToCollector(
       ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector) {
     super.addToCollector(graphBuilder, collector);
-    BuildTarget buildTarget = getBuildTarget();
-    manifestFile.ifPresent(sourcePath -> collector.addManifestPiece(buildTarget, sourcePath));
-    proguardConfig.ifPresent(sourcePath -> collector.addProguardConfig(buildTarget, sourcePath));
+    manifestFile.ifPresent(
+        sourcePath -> collector.addManifestPiece(this.getBuildTarget(), sourcePath));
   }
 
   public static class Builder {
@@ -205,12 +203,12 @@ public class AndroidLibrary extends DefaultJavaLibrary {
               downwardApiConfig,
               args,
               cellPathResolver);
-
       delegateBuilder.setConstructor(
           (target,
               filesystem,
               jarBuildStepsFactory,
               ruleFinder,
+              proguardConfig,
               firstOrderPackageableDeps,
               fullJarExportedDeps,
               fullJarProvidedDeps,
@@ -233,7 +231,7 @@ public class AndroidLibrary extends DefaultJavaLibrary {
                   filesystem,
                   jarBuildStepsFactory,
                   ruleFinder,
-                  args.getProguardConfig(),
+                  proguardConfig,
                   firstOrderPackageableDeps,
                   fullJarExportedDeps,
                   fullJarProvidedDeps,

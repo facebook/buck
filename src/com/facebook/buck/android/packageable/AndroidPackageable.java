@@ -59,8 +59,7 @@ public interface AndroidPackageable {
    * add Java classes, an ndk_library will add native libraries, and android_resource will add
    * resource directories.
    *
-   * @param graphBuilder The {@link ActionGraphBuilder} that provides methods to interact with the
-   *     ActionGraph.
+   * @param graphBuilder
    * @param collector The {@link AndroidPackageableCollector} that will receive the content.
    */
   void addToCollector(ActionGraphBuilder graphBuilder, AndroidPackageableCollector collector);

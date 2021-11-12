@@ -256,12 +256,9 @@ public class AndroidLibraryDescription
           AndroidKotlinCoreArg,
           HasDepsQuery,
           HasProvidedDepsQuery {
-
     Optional<SourcePath> getManifest();
 
     Optional<String> getResourceUnionPackage();
-
-    Optional<SourcePath> getProguardConfig();
   }
 
   @RuleArg

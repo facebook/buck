@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -40,8 +41,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-/** Android prebuilt aar rule */
-public class AndroidPrebuiltAar extends AndroidLibrary implements HasAndroidResourceDeps {
+public class AndroidPrebuiltAar extends AndroidLibrary
+    implements HasAndroidResourceDeps, HasRuntimeDeps {
 
   private final UnzipAar unzipAar;
   private final SourcePath nativeLibsDirectory;
