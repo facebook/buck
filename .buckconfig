@@ -73,7 +73,6 @@
       **/.#*, \
       **/*~, \
       **/4913, \
-      **/*.linted, \
       **/*.iml
 
     ; Forbid symlinks for source files so Buck does not have to dump its
