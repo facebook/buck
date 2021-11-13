@@ -239,7 +239,6 @@ public class JavaTestDescription
               javaRuntimeConfig.apply(buildTarget.getTargetConfiguration()).getJavaRuntime(),
               testRunner.getMainClass(),
               args.getManifestFile().orElse(null),
-              true,
               null,
               ImmutableSet.of(),
               transitiveClasspathDeps,

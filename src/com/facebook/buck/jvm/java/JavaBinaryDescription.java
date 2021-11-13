@@ -144,7 +144,6 @@ public class JavaBinaryDescription
             javaOptions.apply(buildTarget.getTargetConfiguration()).getJavaRuntime(),
             args.getMainClass().orElse(null),
             args.getManifestFile().orElse(null),
-            args.getMergeManifests().orElse(true),
             args.getMetaInfDirectory().orElse(null),
             args.getBlacklist(),
             transitiveClasspathDeps,
@@ -236,8 +235,6 @@ public class JavaBinaryDescription
     Optional<String> getMainClass();
 
     Optional<SourcePath> getManifestFile();
-
-    Optional<Boolean> getMergeManifests();
 
     Optional<Path> getMetaInfDirectory();
 

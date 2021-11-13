@@ -90,7 +90,6 @@ public class JavaBinaryTest {
                 JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntime(),
                 "com.facebook.base.Main",
                 null,
-                true,
                 null,
                 /* blocklist */ ImmutableSet.of(),
                 ImmutableSet.of(),

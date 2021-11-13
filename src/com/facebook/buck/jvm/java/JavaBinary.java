@@ -70,11 +70,8 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Tool javaRuntimeLauncher;
 
   @AddToRuleKey @Nullable private final String mainClass;
-
   @AddToRuleKey @Nullable private final SourcePath manifestFile;
-  private final boolean mergeManifests;
-
-  @Nullable @AddToRuleKey private final SourcePath metaInfDirectory;
+  @AddToRuleKey @Nullable private final SourcePath metaInfDirectory;
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
@@ -95,7 +92,6 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Tool javaRuntimeLauncher,
       @Nullable String mainClass,
       @Nullable SourcePath manifestFile,
-      boolean mergeManifests,
       @Nullable Path metaInfDirectory,
       ImmutableSet<Pattern> blocklist,
       ImmutableSet<JavaLibrary> transitiveClasspathDeps,
@@ -106,7 +102,6 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
-    this.mergeManifests = mergeManifests;
     this.metaInfDirectory =
         metaInfDirectory != null
             ? PathSourcePath.of(getProjectFilesystem(), metaInfDirectory)
@@ -173,7 +168,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .setOverrideEntriesToJar(overrideIncludePaths)
                 .setMainClass(Optional.ofNullable(mainClass))
                 .setManifestFile(Optional.ofNullable(manifestPath))
-                .setMergeManifests(mergeManifests)
+                .setMergeManifests(true)
                 .setDuplicatesLogLevel(duplicatesLogLevel)
                 .setRemoveEntryPredicate(
                     entry ->
