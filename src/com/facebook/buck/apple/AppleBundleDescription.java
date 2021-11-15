@@ -242,7 +242,7 @@ public class AppleBundleDescription
         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
         downwardApiConfig.isEnabledForApple(),
         minOSVersion,
-        appleConfig.getIncrementalBundlingEnabled(),
+        args.getIncrementalBundlingEnabled().orElse(appleConfig.getIncrementalBundlingEnabled()),
         appleConfig.getCodeSignTypeOverride(),
         appleConfig.getBundleInputBasedRulekeyEnabled(),
         appleConfig.getIncrementalHashCacheEnabled(),

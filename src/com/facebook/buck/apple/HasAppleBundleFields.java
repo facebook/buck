@@ -35,6 +35,8 @@ public interface HasAppleBundleFields {
 
   Optional<Boolean> getTrySkipCodeSigning();
 
+  Optional<Boolean> getIncrementalBundlingEnabled();
+
   ImmutableMap<String, String> getInfoPlistSubstitutions();
 
   @Value.Default

@@ -407,7 +407,8 @@ public class AppleTestDescription
                         swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
                         downwardApiConfig.isEnabledForApple(),
                         args.getTargetSdkVersion(),
-                        appleConfig.getIncrementalBundlingEnabled(),
+                        args.getIncrementalBundlingEnabled()
+                            .orElse(appleConfig.getIncrementalBundlingEnabled()),
                         appleConfig.getCodeSignTypeOverride(),
                         appleConfig.getBundleInputBasedRulekeyEnabled(),
                         appleConfig.getIncrementalHashCacheEnabled(),
