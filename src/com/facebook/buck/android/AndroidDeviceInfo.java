@@ -62,14 +62,22 @@ public interface AndroidDeviceInfo {
 
   String getAbi();
 
+  String getBuildFingerprint();
+
   DensityClass getDensity();
 
   String getDpi();
 
   String getSdk();
 
-  static AndroidDeviceInfo of(String locale, String abi, String dotsPerInch, String sdk) {
+  static AndroidDeviceInfo of(
+      String locale, String abi, String buildFingerprint, String dotsPerInch, String sdk) {
     return ImmutableAndroidDeviceInfo.ofImpl(
-        locale, abi, DensityClass.forPhysicalDensity(dotsPerInch), dotsPerInch, sdk);
+        locale,
+        abi,
+        buildFingerprint,
+        DensityClass.forPhysicalDensity(dotsPerInch),
+        dotsPerInch,
+        sdk);
   }
 }

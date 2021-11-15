@@ -311,9 +311,10 @@ public class AdbHelper implements AndroidDevicesHelper {
             try {
               String locale = getDeviceLocale(device);
               String abi = device.getProperty("ro.product.cpu.abi");
+              String buildFingerprint = device.getProperty("ro.build.fingerprint");
               String dpi = getDeviceDpi(device);
               String sdk = device.getProperty("ro.build.version.sdk");
-              deviceInfos.add(AndroidDeviceInfo.of(locale, abi, dpi, sdk));
+              deviceInfos.add(AndroidDeviceInfo.of(locale, abi, buildFingerprint, dpi, sdk));
             } catch (Exception e) {
               // Don't log.
             }
@@ -336,6 +337,7 @@ public class AdbHelper implements AndroidDevicesHelper {
 
     map.put("install_device_locales", toCommaList(infos, i -> i.getLocale()));
     map.put("install_device_abis", toCommaList(infos, i -> i.getAbi()));
+    map.put("install_device_build_fingerprint", toCommaList(infos, i -> i.getBuildFingerprint()));
     map.put("install_device_densities", toCommaList(infos, i -> i.getDensity().toString()));
     map.put("install_device_dpi", toCommaList(infos, i -> i.getDpi()));
     map.put("install_device_sdk", toCommaList(infos, i -> i.getSdk()));
