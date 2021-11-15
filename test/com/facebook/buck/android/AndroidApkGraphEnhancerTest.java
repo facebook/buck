@@ -271,6 +271,7 @@ public class AndroidApkGraphEnhancerTest {
                 .setResourceCompressionMode(ResourcesFilter.ResourceCompressionMode.DISABLED)
                 .setShouldPredex(true)
                 .setExopackageMode(EnumSet.noneOf(ExopackageMode.class))
+                .setMinSdk(Optional.of(27))
                 .build());
 
     BuildTarget aaptPackageResourcesTarget =
@@ -316,17 +317,22 @@ public class AndroidApkGraphEnhancerTest {
     // dep2 should have no desugar dependencies
     DexProducedFromJavaLibrary javaDep2DexRule =
         (DexProducedFromJavaLibrary)
-            graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep2#d8"));
+            graphBuilder.getRule(
+                BuildTargetFactory.newInstance("//java/com/example:dep2#d8,min-api-27"));
     assertNotNull(javaDep2DexRule);
     assertThat(javaDep2DexRule.getDesugarDeps(), empty());
     assertThat(
         javaDep2DexRule.getBuildDeps(),
         allOf(not(hasItem(javaDep2Abi)), not(hasItem(javaDep1Abi))));
 
+    Optional<Integer> minSdk = javaDep2DexRule.getBuildable().getMinSdk();
+    assertEquals(minSdk, Optional.of(27));
+
     // dep1 should have only dep1 abi dependency
     DexProducedFromJavaLibrary javaDep1DexRule =
         (DexProducedFromJavaLibrary)
-            graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:dep1#d8"));
+            graphBuilder.getRule(
+                BuildTargetFactory.newInstance("//java/com/example:dep1#d8,min-api-27"));
     assertNotNull(javaDep1DexRule);
     assertThat(javaDep1DexRule.getDesugarDeps(), empty());
     assertThat(
@@ -336,7 +342,8 @@ public class AndroidApkGraphEnhancerTest {
     // lib should have both dep1 and dep2 abi dependencies
     DexProducedFromJavaLibrary javaLibDexRule =
         (DexProducedFromJavaLibrary)
-            graphBuilder.getRule(BuildTargetFactory.newInstance("//java/com/example:lib#d8"));
+            graphBuilder.getRule(
+                BuildTargetFactory.newInstance("//java/com/example:lib#d8,min-api-27"));
     assertNotNull(javaLibDexRule);
     assertThat(javaLibDexRule.getDesugarDeps(), empty());
     assertThat(
@@ -997,10 +1004,17 @@ public class AndroidApkGraphEnhancerTest {
     EnumSet<ExopackageMode> getExopackageMode() {
       return EnumSet.of(ExopackageMode.SECONDARY_DEX);
     }
+
+    @Value.Default
+    Optional<Integer> getMinSdk() {
+      return Optional.empty();
+    }
   }
 
   private AndroidBinaryGraphEnhancer createGraphEnhancer(TestGraphEnhancerArgs args) {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    ManifestEntries manifestEntries =
+        ManifestEntries.builder().setMinSdkVersion(args.getMinSdk()).build();
     return new AndroidBinaryGraphEnhancer(
         args.getToolchainProvider(),
         TestCellPathResolver.get(projectFilesystem),
@@ -1057,7 +1071,7 @@ public class AndroidApkGraphEnhancerTest {
         RelinkerMode.DISABLED,
         ImmutableList.of(),
         MoreExecutors.newDirectExecutorService(),
-        /* manifestEntries */ ManifestEntries.empty(),
+        manifestEntries,
         CxxPlatformUtils.DEFAULT_CONFIG,
         new APKModuleGraph(TargetGraph.EMPTY, args.getTarget(), Optional.empty()),
         Optional.empty(),

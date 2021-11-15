@@ -232,7 +232,7 @@ public class AndroidBinaryGraphEnhancer {
     this.downwardApiConfig = downwardApiConfig;
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
-    this.minSdkVersion = Optional.empty();
+    this.minSdkVersion = manifestEntries.getMinSdkVersion();
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
     this.projectFilesystem = projectFilesystem;
     this.toolchainProvider = toolchainProvider;
