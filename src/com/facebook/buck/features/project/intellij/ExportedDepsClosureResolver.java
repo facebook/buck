@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.android.AndroidPrebuiltAarDescriptionArg;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -63,6 +64,12 @@ public class ExportedDepsClosureResolver {
               .build();
     } else if (targetNode.getConstructorArg() instanceof PrebuiltJarDescriptionArg) {
       PrebuiltJarDescriptionArg arg = (PrebuiltJarDescriptionArg) targetNode.getConstructorArg();
+      exportedDeps = arg.getDeps();
+    } else if (targetNode.getConstructorArg() instanceof AndroidPrebuiltAarDescriptionArg) {
+      // This could do the same filtering as in AndroidPrebuiltAarDescription#createBuildRule, but
+      // the savings are minimal since most AAR deps are JAR, AAR, or JavaLibrary targets anyway.
+      AndroidPrebuiltAarDescriptionArg arg =
+          (AndroidPrebuiltAarDescriptionArg) targetNode.getConstructorArg();
       exportedDeps = arg.getDeps();
     }
 
