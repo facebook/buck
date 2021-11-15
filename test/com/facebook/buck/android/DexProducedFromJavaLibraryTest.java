@@ -39,6 +39,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -96,7 +97,8 @@ public class DexProducedFromJavaLibraryTest {
             javaBarRule,
             1,
             ImmutableSortedSet.of(javaLibRule.getSourcePathToOutput()),
-            false);
+            false,
+            Optional.of(27));
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
     D8Step d8Step = null;
     for (Step step : steps) {
@@ -105,6 +107,7 @@ public class DexProducedFromJavaLibraryTest {
         break;
       }
     }
+
     assertNotNull(d8Step);
     assertThat(
         d8Step.classpathFiles,
@@ -117,6 +120,7 @@ public class DexProducedFromJavaLibraryTest {
     assertThat(
         d8Step.getIsolatedStepDescription(null),
         Matchers.allOf(
+            Matchers.containsString("--min-api 27"),
             Matchers.containsString("--no-desugaring"),
             Matchers.containsString("--intermediate"),
             Matchers.containsString("--force-jumbo"),

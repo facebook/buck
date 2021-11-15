@@ -99,7 +99,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
       JavaLibrary javaLibrary,
       int weightFactor,
       ImmutableSortedSet<SourcePath> desugarDeps,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Optional<Integer> minSdkVersion) {
     super(
         buildTarget,
         projectFilesystem,
@@ -110,7 +111,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
             desugarDeps,
             androidPlatformTarget,
             javaLibrary,
-            withDownwardApi));
+            withDownwardApi,
+            minSdkVersion));
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.javaLibraryBuildTarget = javaLibrary.getBuildTarget();
   }
@@ -130,7 +132,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         javaLibrary,
         1,
         ImmutableSortedSet.of(),
-        withDownwardApi);
+        withDownwardApi,
+        Optional.empty());
   }
 
   /** Impl class */
@@ -151,6 +154,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     @AddToRuleKey private final OutputPath metadataClassnamesToHashes;
     @AddToRuleKey private final OutputPath metadataReferencedResources;
     @AddToRuleKey private final boolean withDownwardApi;
+    @AddToRuleKey private final Optional<Integer> minSdkVersion;
 
     Impl(
         ProjectFilesystem projectFilesystem,
@@ -158,7 +162,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         ImmutableSortedSet<SourcePath> desugarDeps,
         AndroidPlatformTarget androidPlatformTarget,
         JavaLibrary javaLibrary,
-        boolean withDownwardApi) {
+        boolean withDownwardApi,
+        Optional<Integer> minSdkVersion) {
       this.weightFactor = weightFactor;
       this.desugarDeps = desugarDeps;
       this.androidPlatformTarget = androidPlatformTarget;
@@ -168,6 +173,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
 
       this.outputDex = new OutputPath(projectFilesystem.getPath("dex.jar"));
       this.withDownwardApi = withDownwardApi;
+      this.minSdkVersion = minSdkVersion;
       Path metadataDir = projectFilesystem.getPath(DEX_RULE_METADATA);
       this.metadataWeight = new OutputPath(metadataDir.resolve(WEIGHT_ESTIMATE.toString()));
       this.metadataClassnamesToHashes =
@@ -217,7 +223,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
                 Optional.empty(),
                 getAbsolutePaths(desugarDeps, sourcePathResolverAdapter),
                 Optional.empty(),
-                Optional.empty() /* minSdkVersion */);
+                minSdkVersion);
         steps.add(dx);
 
         // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making
@@ -281,6 +287,11 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
           .filter(Objects::nonNull)
           .map(sourcePath -> sourcePathResolverAdapter.getAbsolutePath(sourcePath).getPath())
           .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
+    }
+
+    @VisibleForTesting
+    Optional<Integer> getMinSdk() {
+      return minSdkVersion;
     }
   }
 

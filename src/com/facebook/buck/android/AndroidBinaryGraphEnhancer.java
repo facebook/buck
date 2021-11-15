@@ -155,6 +155,7 @@ public class AndroidBinaryGraphEnhancer {
   private final int rDotJavaWeightFactor;
   private final int secondaryDexWeightLimit;
   private final ImmutableSet<String> resourcePackagesToExclude;
+  private final Optional<Integer> minSdkVersion;
 
   AndroidBinaryGraphEnhancer(
       ToolchainProvider toolchainProvider,
@@ -231,6 +232,7 @@ public class AndroidBinaryGraphEnhancer {
     this.downwardApiConfig = downwardApiConfig;
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
+    this.minSdkVersion = Optional.empty();
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
     this.projectFilesystem = projectFilesystem;
     this.toolchainProvider = toolchainProvider;
@@ -673,19 +675,28 @@ public class AndroidBinaryGraphEnhancer {
               : rDotJavaWeightFactor;
       DexProducedFromJavaLibrary dexJar =
           new DexProducedFromJavaLibrary(
-              splitJarTarget.withAppendedFlavors(dexFlavor, rtypeFlavor, D8_FLAVOR),
+              createD8Target(splitJarTarget.withAppendedFlavors(dexFlavor, rtypeFlavor)),
               projectFilesystem,
               graphBuilder,
               androidPlatformTarget,
               prebuiltJar,
               weightFactor,
               ImmutableSortedSet.of(),
-              downwardApiConfig.isEnabledForAndroid());
+              downwardApiConfig.isEnabledForAndroid(),
+              minSdkVersion);
       graphBuilder.addToIndex(dexJar);
       builder.add(dexJar);
     }
 
     return builder.build();
+  }
+
+  private BuildTarget createD8Target(BuildTarget target) {
+    if (minSdkVersion.isPresent()) {
+      return target.withAppendedFlavors(
+          D8_FLAVOR, InternalFlavor.of("min-api-" + minSdkVersion.get()));
+    }
+    return target.withAppendedFlavors(D8_FLAVOR);
   }
 
   private NativeLibraryProguardGenerator createNativeLibraryProguardGenerator(
@@ -971,7 +982,7 @@ public class AndroidBinaryGraphEnhancer {
 
       BuildRule preDexRule =
           graphBuilder.computeIfAbsent(
-              javaLibrary.getBuildTarget().withAppendedFlavors(D8_FLAVOR),
+              createD8Target(javaLibrary.getBuildTarget()),
               preDexTarget -> {
                 ImmutableSortedSet<SourcePath> desugarDeps =
                     javaLibrary.isDesugarEnabled() && javaLibrary.isInterfaceMethodsDesugarEnabled()
@@ -986,7 +997,8 @@ public class AndroidBinaryGraphEnhancer {
                     javaLibrary,
                     1,
                     desugarDeps,
-                    downwardApiConfig.isEnabledForAndroid());
+                    downwardApiConfig.isEnabledForAndroid(),
+                    minSdkVersion);
               });
       preDexDeps.add((DexProducedFromJavaLibrary) preDexRule);
     }
