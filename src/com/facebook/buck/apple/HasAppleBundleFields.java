@@ -33,6 +33,8 @@ public interface HasAppleBundleFields {
 
   Optional<Boolean> getSkipCopyingSwiftStdlib();
 
+  Optional<Boolean> getTrySkipCodeSigning();
+
   ImmutableMap<String, String> getInfoPlistSubstitutions();
 
   @Value.Default

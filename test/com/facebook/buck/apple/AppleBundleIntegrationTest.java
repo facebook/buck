@@ -513,6 +513,71 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void simpleApplicationBundleWithTrySkipCodeSigningOnIPhone() throws Exception {
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_with_codesigning", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "try_skip_code_signing", "true");
+
+    BuildTarget target =
+        workspace.newBuildTarget("//:DemoAppWithAppleResource#iphoneos-arm64,no-debug");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(),
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve("DemoAppWithAppleResource.app"));
+    Path codesignedResourcePath = appPath.resolve("BinaryToBeCodesigned");
+    assertTrue(Files.exists(codesignedResourcePath));
+    assertTrue(checkCodeSigning(codesignedResourcePath));
+
+    Path nonCodesignedResourcePath = appPath.resolve("OtherBinary");
+    assertTrue(Files.exists(nonCodesignedResourcePath));
+    assertFalse(checkCodeSigning(nonCodesignedResourcePath));
+  }
+
+  @Test
+  public void simpleApplicationBundleWithTrySkipCodeSigningOnSimulator()
+      throws IOException, InterruptedException {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_swift_stdlibs", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("apple", "try_skip_code_signing", "true");
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    RelPath outputPath =
+        BuildTargetPaths.getGenPath(
+            filesystem.getBuckPaths(),
+            target
+                .withAppendedFlavors(AppleDescriptions.DWARF_AND_DSYM)
+                .withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s");
+    Path appPath = outputPath.resolve(target.getShortName() + ".app.dSYM");
+    System.out.println("$$$" + appPath.toString());
+
+    assertTrue(Files.exists(workspace.getPath(appPath)));
+
+    Optional<String> maybeSignatureOutput =
+        workspace.runCommand("codesign", "-d", "-v", appPath.toString()).getStderr();
+    assertTrue(maybeSignatureOutput.isPresent());
+    assertThat(maybeSignatureOutput.get(), containsString("code object is not signed at all"));
+    assertThat(maybeSignatureOutput.get(), not(containsString("Signature=adhoc")));
+  }
+
+  @Test
   public void simpleApplicationBundleWithEmbeddedFrameworks() throws Exception {
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 

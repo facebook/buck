@@ -169,6 +169,7 @@ public class AppleBundle extends AbstractBuildRule
   @AddToRuleKey private final AppleCodeSignType codeSignType;
 
   @AddToRuleKey private final boolean dryRunCodeSigning;
+  @AddToRuleKey private final boolean trySkipCodeSigning;
 
   @AddToRuleKey private final Optional<SourcePath> maybeCodeSignIdentityFingerprintFile;
 
@@ -211,6 +212,7 @@ public class AppleBundle extends AbstractBuildRule
       boolean withDownwardApi,
       Optional<SourcePath> maybeEntitlementsFile,
       boolean dryRunCodeSigning,
+      Optional<Boolean> trySkipCodeSigning,
       Optional<SourcePath> maybeCodeSignIdentityFingerprintFile,
       SourcePath processedResourcesDir,
       Optional<SourcePath> nonProcessedResourcesContentHashesFileSourcePath,
@@ -245,6 +247,7 @@ public class AppleBundle extends AbstractBuildRule
     this.codesignFlags = codesignFlags;
     this.codesignIdentitySubjectName = codesignIdentity;
     this.dryRunCodeSigning = dryRunCodeSigning;
+    this.trySkipCodeSigning = trySkipCodeSigning.orElse(false);
     this.maybeCodeSignIdentityFingerprintFile = maybeCodeSignIdentityFingerprintFile;
     this.processedResourcesDir = processedResourcesDir;
 
@@ -435,7 +438,10 @@ public class AppleBundle extends AbstractBuildRule
           codeSignOnCopyPaths);
     }
 
-    if (codeSignType != AppleCodeSignType.SKIP) {
+    boolean shouldSkipCodeSigning =
+        (trySkipCodeSigning && ApplePlatform.isSimulator(platform.getName()))
+            || codeSignType == AppleCodeSignType.SKIP;
+    if (!shouldSkipCodeSigning) {
       Supplier<CodeSignIdentity> codeSignIdentitySupplier =
           appendStepsToSelectCodeSignIdentity(context, stepsBuilder);
 

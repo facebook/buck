@@ -535,6 +535,7 @@ public class AppleLibraryDescription
         appleConfig.getVerifyDsym(),
         appleConfig.getDwarfdumpFailsDsymVerification(),
         appleConfig.useDryRunCodeSigning(),
+        Optional.empty(),
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),
         appleConfig.assetCatalogValidation(),

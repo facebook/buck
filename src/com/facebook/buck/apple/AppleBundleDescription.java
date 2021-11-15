@@ -223,6 +223,7 @@ public class AppleBundleDescription
         appleConfig.getVerifyDsym(),
         appleConfig.getDwarfdumpFailsDsymVerification(),
         appleConfig.useDryRunCodeSigning(),
+        args.getTrySkipCodeSigning(),
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),
         appleConfig.assetCatalogValidation(),

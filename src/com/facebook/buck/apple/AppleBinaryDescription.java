@@ -413,6 +413,7 @@ public class AppleBinaryDescription
         appleConfig.getVerifyDsym(),
         appleConfig.getDwarfdumpFailsDsymVerification(),
         appleConfig.useDryRunCodeSigning(),
+        Optional.empty(),
         appleConfig.cacheBundlesAndPackages(),
         appleConfig.shouldVerifyBundleResources(),
         appleConfig.assetCatalogValidation(),
