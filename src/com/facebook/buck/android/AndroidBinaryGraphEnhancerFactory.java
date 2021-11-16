@@ -141,7 +141,6 @@ public class AndroidBinaryGraphEnhancerFactory {
             .setJavaRuntimeLauncher(javaOptions.getJavaRuntime())
             .setProguardConfigPath(args.getProguardConfig())
             .setShouldProguard(shouldProguard)
-            .setMinSdkVersion(args.getManifestEntries().getMinSdkVersion())
             .build();
 
     return new AndroidBinaryGraphEnhancer(

@@ -143,8 +143,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     Optional<SourcePath> getProguardConfigPath();
 
     boolean getShouldProguard();
-
-    Optional<Integer> getMinSdkVersion();
   }
 
   NonPreDexedDexBuildable(
@@ -164,7 +162,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       boolean desugarInterfaceMethods,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      Optional<Integer> minSdkVersion) {
     super(buildTarget, filesystem);
     this.androidPlatformTarget = androidPlatformTarget;
     this.additionalJarsForProguardAndDesugar = additionalJarsForProguardAndDesugar;
@@ -188,7 +187,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     this.skipProguard = args.getSkipProguard();
     this.xzCompressionLevel = xzCompressionLevel;
     this.shouldSplitDex = shouldSplitDex;
-    this.minSdkVersion = args.getMinSdkVersion();
+    this.minSdkVersion = minSdkVersion;
 
     this.buildDepsSupplier =
         MoreSuppliers.memoize(

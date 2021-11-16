@@ -999,7 +999,8 @@ public class AndroidBinaryGraphEnhancer {
             projectFilesystem,
             originalBuildTarget.withFlavors(NON_PREDEXED_DEX_BUILDABLE_FLAVOR),
             desugarInterfaceMethods,
-            withDownwardApi);
+            withDownwardApi,
+            minSdkVersion);
     graphBuilder.addToIndex(nonPreDexedDexBuildable);
 
     if (nonPreDexedDexBuildableArgs.getShouldProguard()) {
