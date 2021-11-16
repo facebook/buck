@@ -102,10 +102,6 @@ public class AndroidBinaryGraphEnhancer {
       InternalFlavor.of("compile_uber_r_dot_java");
   private static final Flavor SPLIT_UBER_R_DOT_JAVA_JAR_FLAVOR =
       InternalFlavor.of("split_uber_r_dot_java_jar");
-  private static final Flavor GENERATE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
-      InternalFlavor.of("generate_native_lib_merge_map_generated_code");
-  private static final Flavor COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
-      InternalFlavor.of("compile_native_lib_merge_map_generated_code");
   static final Flavor NATIVE_LIBRARY_PROGUARD_FLAVOR =
       InternalFlavor.of("generate_proguard_config_from_native_libs");
   static final Flavor UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR =
@@ -390,64 +386,17 @@ public class AndroidBinaryGraphEnhancer {
       graphBuilder.addToIndex(unstrippedNativeLibraries);
     }
 
-    Optional<ImmutableSortedMap<String, NativeLibraryMergeEnhancer.SonameMergeData>>
-        sonameMergeMap = nativeLibsEnhancementResult.getSonameMergeMap();
-    if (sonameMergeMap.isPresent() && nativeLibraryMergeCodeGenerator.isPresent()) {
-      BuildRule generatorRule = graphBuilder.getRule(nativeLibraryMergeCodeGenerator.get());
-
-      GenerateCodeForMergedLibraryMap generateCodeForMergedLibraryMap =
-          new GenerateCodeForMergedLibraryMap(
-              originalBuildTarget.withAppendedFlavors(
-                  GENERATE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR),
-              projectFilesystem,
-              buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(generatorRule)),
-              sonameMergeMap.get(),
-              nativeLibsEnhancementResult.getSharedObjectTargets().get(),
-              generatorRule,
-              downwardApiConfig.isEnabledForAndroid());
-      graphBuilder.addToIndex(generateCodeForMergedLibraryMap);
-
-      BuildRuleParams paramsForCompileGenCode =
-          buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(generateCodeForMergedLibraryMap));
-      DefaultJavaLibrary compileMergedNativeLibMapGenCode =
-          DefaultJavaLibrary.rulesBuilder(
-                  originalBuildTarget.withAppendedFlavors(
-                      COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR),
-                  projectFilesystem,
-                  toolchainProvider,
-                  paramsForCompileGenCode,
-                  graphBuilder,
-                  new JavaConfiguredCompilerFactory(
-                      javaBuckConfig, downwardApiConfig, javacFactory),
-                  javaBuckConfig,
-                  javaCDBuckConfig,
-                  downwardApiConfig,
-                  null,
-                  cellPathResolver)
-              // Kind of a hack: override language level to 7 to allow string switch.
-              // This can be removed once no one who uses this feature sets the level
-              // to 6 in their .buckconfig.
-              .setJavacOptions(
-                  javacOptions.withLanguageLevelOptions(
-                      JavacLanguageLevelOptions.builder()
-                          .setSourceLevel(JavacLanguageLevelOptions.TARGETED_JAVA_VERSION)
-                          .setTargetLevel(JavacLanguageLevelOptions.TARGETED_JAVA_VERSION)
-                          .build()))
-              .setSrcs(
-                  ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
-              .setSourceOnlyAbisAllowed(false)
-              .setDeps(
-                  new JavaLibraryDeps.Builder(graphBuilder)
-                      .addAllDepTargets(
-                          paramsForCompileGenCode.getDeclaredDeps().get().stream()
-                              .map(BuildRule::getBuildTarget)
-                              .collect(Collectors.toList()))
-                      .build())
-              .build()
-              .buildLibrary();
-      graphBuilder.addToIndex(compileMergedNativeLibMapGenCode);
-      additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
-    }
+    nativeLibsEnhancer.addNativeMergeMapGenCode(
+        nativeLibsEnhancementResult,
+        nativeLibraryMergeCodeGenerator,
+        projectFilesystem,
+        buildRuleParams,
+        downwardApiConfig,
+        additionalJavaLibrariesBuilder,
+        javacOptions,
+        javaBuckConfig,
+        javaCDBuckConfig,
+        javacFactory);
 
     AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
         resourcesEnhancementResult =

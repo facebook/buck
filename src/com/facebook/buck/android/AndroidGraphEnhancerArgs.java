@@ -28,16 +28,14 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 public interface AndroidGraphEnhancerArgs
-    extends HasDuplicateAndroidResourceTypes, HasApplicationModuleBlacklist {
+    extends HasDuplicateAndroidResourceTypes, HasApplicationModuleBlacklist, HasNativeMergeMapArgs {
   Optional<SourcePath> getManifest();
 
   Optional<SourcePath> getManifestSkeleton();
@@ -173,14 +171,6 @@ public interface AndroidGraphEnhancerArgs
   default String getDexTool() {
     return "d8";
   }
-
-  Map<String, List<Pattern>> getNativeLibraryMergeMap();
-
-  Optional<BuildTarget> getNativeLibraryMergeGlue();
-
-  Optional<BuildTarget> getNativeLibraryMergeCodeGenerator();
-
-  Optional<ImmutableSortedSet<String>> getNativeLibraryMergeLocalizedSymbols();
 
   Optional<BuildTarget> getNativeLibraryProguardConfigGenerator();
 

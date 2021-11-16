@@ -115,6 +115,7 @@ RULES_SRCS = [
     "HasAndroidResourceDeps.java",
     "HasDuplicateAndroidResourceTypes.java",
     "HasExopackageArgs.java",
+    "HasNativeMergeMapArgs.java",
     "IdentityResourcesProvider.java",
     "MergeAndroidResourcesStep.java",
     "MergeAssets.java",
@@ -444,7 +445,7 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/util/xml:xml",
-        "//third-party/java/args4j:args4j"
+        "//third-party/java/args4j:args4j",
     ],
 )
 

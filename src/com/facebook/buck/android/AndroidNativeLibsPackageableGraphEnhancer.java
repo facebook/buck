@@ -32,6 +32,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -42,6 +43,14 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaCDBuckConfig;
+import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
+import com.facebook.buck.jvm.java.JavaLibraryDeps;
+import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -63,10 +72,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class AndroidNativeLibsPackageableGraphEnhancer {
 
   private static final String COPY_NATIVE_LIBS = "copy_native_libs";
+  static final Flavor GENERATE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
+      InternalFlavor.of("generate_native_lib_merge_map_generated_code");
+  static final Flavor COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR =
+      InternalFlavor.of("compile_native_lib_merge_map_generated_code");
 
   private final ToolchainProvider toolchainProvider;
   private final ProjectFilesystem projectFilesystem;
@@ -416,6 +430,81 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         Optional.ofNullable(sonameMapping),
         Optional.ofNullable(sharedObjectTargets),
         nativeLibrariesForPrimaryApk);
+  }
+
+  public ImmutableSet<BuildRule> addNativeMergeMapGenCode(
+      AndroidNativeLibsGraphEnhancementResult nativeLibsEnhancementResult,
+      Optional<BuildTarget> nativeLibraryMergeCodeGenerator,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams originalBuildRuleParams,
+      DownwardApiConfig downwardApiConfig,
+      ImmutableList.Builder<BuildRule> additionalJavaLibrariesBuilder,
+      JavacOptions javacOptions,
+      JavaBuckConfig javaBuckConfig,
+      JavaCDBuckConfig javaCDBuckConfig,
+      JavacFactory javacFactory) {
+    ImmutableSet.Builder<BuildRule> addedDeps = new ImmutableSet.Builder<>();
+    Optional<ImmutableSortedMap<String, NativeLibraryMergeEnhancer.SonameMergeData>>
+        sonameMergeMap = nativeLibsEnhancementResult.getSonameMergeMap();
+    if (sonameMergeMap.isPresent() && nativeLibraryMergeCodeGenerator.isPresent()) {
+      BuildRule generatorRule = graphBuilder.getRule(nativeLibraryMergeCodeGenerator.get());
+
+      GenerateCodeForMergedLibraryMap generateCodeForMergedLibraryMap =
+          new GenerateCodeForMergedLibraryMap(
+              originalBuildTarget.withAppendedFlavors(
+                  GENERATE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR),
+              projectFilesystem,
+              originalBuildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(generatorRule)),
+              sonameMergeMap.get(),
+              nativeLibsEnhancementResult.getSharedObjectTargets().get(),
+              generatorRule,
+              downwardApiConfig.isEnabledForAndroid());
+      addedDeps.add(graphBuilder.addToIndex(generateCodeForMergedLibraryMap));
+
+      BuildRuleParams paramsForCompileGenCode =
+          originalBuildRuleParams.withDeclaredDeps(
+              ImmutableSortedSet.of(generateCodeForMergedLibraryMap));
+
+      DefaultJavaLibrary compileMergedNativeLibMapGenCode =
+          DefaultJavaLibrary.rulesBuilder(
+                  originalBuildTarget.withAppendedFlavors(
+                      COMPILE_NATIVE_LIB_MERGE_MAP_GENERATED_CODE_FLAVOR),
+                  projectFilesystem,
+                  toolchainProvider,
+                  paramsForCompileGenCode,
+                  graphBuilder,
+                  new JavaConfiguredCompilerFactory(
+                      javaBuckConfig, downwardApiConfig, javacFactory),
+                  javaBuckConfig,
+                  javaCDBuckConfig,
+                  downwardApiConfig,
+                  null,
+                  cellPathResolver)
+              // Kind of a hack: override language level to 7 to allow string switch.
+              // This can be removed once no one who uses this feature sets the level
+              // to 6 in their .buckconfig.
+              .setJavacOptions(
+                  javacOptions.withLanguageLevelOptions(
+                      JavacLanguageLevelOptions.builder()
+                          .setSourceLevel(JavacLanguageLevelOptions.TARGETED_JAVA_VERSION)
+                          .setTargetLevel(JavacLanguageLevelOptions.TARGETED_JAVA_VERSION)
+                          .build()))
+              .setSrcs(
+                  ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
+              .setSourceOnlyAbisAllowed(false)
+              .setDeps(
+                  new JavaLibraryDeps.Builder(graphBuilder)
+                      .addAllDepTargets(
+                          paramsForCompileGenCode.getDeclaredDeps().get().stream()
+                              .map(BuildRule::getBuildTarget)
+                              .collect(Collectors.toList()))
+                      .build())
+              .build()
+              .buildLibrary();
+      addedDeps.add(graphBuilder.addToIndex(compileMergedNativeLibMapGenCode));
+      additionalJavaLibrariesBuilder.add(compileMergedNativeLibMapGenCode);
+    }
+    return addedDeps.build();
   }
 
   private NativeLinkableEnhancementResult expandLinkableGroups(

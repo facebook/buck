@@ -47,6 +47,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParamsUtils;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.query.Query;
@@ -132,6 +133,7 @@ public class AndroidAarDescription
     ImmutableSortedSet.Builder<BuildRule> aarExtraDepsBuilder =
         new ImmutableSortedSet.Builder<BuildRule>(Ordering.natural())
             .addAll(originalBuildRuleParams.getExtraDeps().get());
+    ImmutableList.Builder<BuildRule> additionalJavaLibrariesBuilder = ImmutableList.builder();
 
     /* android_manifest */
     BuildTarget androidManifestTarget =
@@ -225,6 +227,13 @@ public class AndroidAarDescription
               + "BuildConfig class in the final .aar or do not specify build config values.",
           buildTarget);
     }
+    JavacOptions javacOptions =
+        toolchainProvider
+            .getByName(
+                JavacOptionsProvider.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                JavacOptionsProvider.class)
+            .getJavacOptions();
     if (args.getIncludeBuildConfigClass()) {
       ImmutableSortedSet<JavaLibrary> buildConfigRules =
           AndroidBinaryGraphEnhancer.addBuildConfigDeps(
@@ -236,12 +245,7 @@ public class AndroidAarDescription
               Optional.empty(),
               graphBuilder,
               javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
-              toolchainProvider
-                  .getByName(
-                      JavacOptionsProvider.DEFAULT_NAME,
-                      buildTarget.getTargetConfiguration(),
-                      JavacOptionsProvider.class)
-                  .getJavacOptions(),
+              javacOptions,
               packageableCollection,
               downwardApiConfig.isEnabledForAndroid(),
               javaBuckConfig
@@ -268,15 +272,19 @@ public class AndroidAarDescription
             ImmutableSet.of(),
             cxxBuckConfig,
             downwardApiConfig,
-            /* nativeLibraryMergeMap */ Optional.empty(),
-            /* nativeLibraryMergeGlue */ Optional.empty(),
-            Optional.empty(),
+            Optional.of(args.getNativeLibraryMergeMap()),
+            args.getNativeLibraryMergeGlue(),
+            args.getNativeLibraryMergeLocalizedSymbols(),
             args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
             args.getRelinkerWhitelist(),
             apkModuleGraph,
             new NoopAndroidNativeTargetConfigurationMatcher());
+    AndroidNativeLibsPackageableGraphEnhancer.AndroidNativeLibsGraphEnhancementResult
+        nativeLibsEnhancementResult = packageableGraphEnhancer.enhance(packageableCollection);
+
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =
-        packageableGraphEnhancer.enhance(packageableCollection).getCopyNativeLibraries();
+        nativeLibsEnhancementResult.getCopyNativeLibraries();
+
     Optional<CopyNativeLibraries> rootModuleCopyNativeLibraries =
         nativeLibrariesOptional.map(
             input -> {
@@ -290,12 +298,28 @@ public class AndroidAarDescription
               aarExtraDepsBuilder.add(copyNativeLibraries);
               return copyNativeLibraries;
             });
+
+    // Native library merging java code gen:
+    aarExtraDepsBuilder.addAll(
+        packageableGraphEnhancer.addNativeMergeMapGenCode(
+            nativeLibsEnhancementResult,
+            args.getNativeLibraryMergeCodeGenerator(),
+            projectFilesystem,
+            originalBuildRuleParams,
+            downwardApiConfig,
+            additionalJavaLibrariesBuilder,
+            javacOptions,
+            javaBuckConfig,
+            javaCDBuckConfig,
+            javacFactory));
+
     Optional<SourcePath> assembledNativeLibsDir =
         rootModuleCopyNativeLibraries.map(CopyNativeLibraries::getSourcePathToNativeLibsDir);
     Optional<SourcePath> assembledNativeLibsAssetsDir =
         rootModuleCopyNativeLibraries.map(CopyNativeLibraries::getSourcePathToNativeLibsAssetsDir);
     BuildRuleParams androidAarParams =
         originalBuildRuleParams.withExtraDeps(aarExtraDepsBuilder.build());
+
     return new AndroidAar(
         buildTarget,
         projectFilesystem,
@@ -307,7 +331,12 @@ public class AndroidAarDescription
         assembledNativeLibsDir,
         assembledNativeLibsAssetsDir,
         args.getRemoveClasses(),
-        classpathToIncludeInAar.build());
+        classpathToIncludeInAar
+            .addAll(
+                additionalJavaLibrariesBuilder.build().stream()
+                    .map(BuildRule::getSourcePathToOutput)
+                    .collect(ImmutableList.toImmutableList()))
+            .build());
   }
 
   @Override
@@ -323,7 +352,8 @@ public class AndroidAarDescription
 
   // TODO: Don't inherit from AndroidLibraryDescription if most args are ignored
   @RuleArg
-  interface AbstractAndroidAarDescriptionArg extends AndroidLibraryDescription.CoreArg {
+  interface AbstractAndroidAarDescriptionArg
+      extends AndroidLibraryDescription.CoreArg, HasNativeMergeMapArgs {
 
     SourcePath getManifestSkeleton();
 
