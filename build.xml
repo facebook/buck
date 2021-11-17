@@ -78,6 +78,8 @@
 
   <property name="devbuild" value="0" />
 
+  <property name="kotlinx-metadata-jvm-version" value="0.3.0"/>
+
   <condition property="eclipse.jdt.core.prefs.file"
     value="org.eclipse.jdt.core.prefs"
     else="org.eclipse.jdt.core.prefs-dev"
@@ -207,7 +209,7 @@
     <include name="jopt-simple/jopt-simple-4.6.jar" />
     <include name="json-simple/json-simple-1.1.1.jar" />
     <include name="kotlin/kotlin-stdlib.jar" />
-    <include name="kotlinx-metadata-jvm/kotlinx-metadata-jvm-0.3.0.jar" />
+    <include name="kotlinx-metadata-jvm/kotlinx-metadata-jvm-${kotlinx-metadata-jvm-version}.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
     <include name="nuprocess/nuprocess-2.0.1.jar" />
