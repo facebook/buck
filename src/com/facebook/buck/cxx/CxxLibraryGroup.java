@@ -207,6 +207,17 @@ public class CxxLibraryGroup extends NoopBuildRule
         || supportedPlatformsRegex.get().matcher(cxxPlatform.getFlavor().toString()).find();
   }
 
+  public Iterable<CxxPreprocessorDep> getDirectCxxDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
+    return RichStream.from(exportedDeps.get(ruleResolver, cxxPlatform))
+        .concat(RichStream.from(deps.get(ruleResolver, cxxPlatform)))
+        .filter(CxxPreprocessorDep.class)
+        .toImmutableList();
+  }
+
   @Override
   public ImmutableMap<CxxResourceName, SourcePath> getCxxResources() {
     return resources;

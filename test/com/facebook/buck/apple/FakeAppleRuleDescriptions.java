@@ -307,9 +307,10 @@ public class FakeAppleRuleDescriptions {
       createSwiftLibraryDescription(DEFAULT_BUCK_CONFIG);
 
   /** A fake apple_library description with an iOS platform for use in tests. */
-  public static final AppleLibraryDescription LIBRARY_DESCRIPTION = createAppleLibraryDescription();
+  public static final AppleLibraryDescription LIBRARY_DESCRIPTION =
+      createAppleLibraryDescription(DEFAULT_BUCK_CONFIG);
 
-  private static AppleLibraryDescription createAppleLibraryDescription() {
+  public static AppleLibraryDescription createAppleLibraryDescription(BuckConfig buckConfig) {
     ToolchainProvider toolchainProvider =
         createTestToolchainProvider(
             DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN, DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN);
@@ -321,12 +322,12 @@ public class FakeAppleRuleDescriptions {
         new CxxLibraryFactory(
             toolchainProvider,
             CxxPlatformUtils.DEFAULT_CONFIG,
-            InferConfig.of(DEFAULT_BUCK_CONFIG),
+            InferConfig.of(buckConfig),
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(
             toolchainProvider,
-            DEFAULT_BUCK_CONFIG.getFilesystem(),
+            buckConfig.getFilesystem(),
             CxxPlatformUtils.DEFAULT_CONFIG,
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
     XCodeDescriptions xcodeDescriptions =
@@ -336,9 +337,9 @@ public class FakeAppleRuleDescriptions {
         toolchainProvider,
         xcodeDescriptions,
         SWIFT_LIBRARY_DESCRIPTION,
-        DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
-        new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
-        new SwiftBuckConfig(DEFAULT_BUCK_CONFIG),
+        buckConfig.getView(AppleConfig.class),
+        new CxxBuckConfig(buckConfig),
+        new SwiftBuckConfig(buckConfig),
         CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
         cxxLibraryImplicitFlavors,
         cxxLibraryFlavored,

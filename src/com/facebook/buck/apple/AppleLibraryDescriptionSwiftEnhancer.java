@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxLibraryGroup;
+import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxToolFlags;
@@ -190,14 +191,30 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       CxxPlatform platform,
-      AppleNativeTargetDescriptionArg arg) {
+      AppleNativeTargetDescriptionArg arg,
+      SwiftBuckConfig swiftBuckConfig) {
     CxxLibraryGroup lib = (CxxLibraryGroup) graphBuilder.requireRule(target.withFlavors());
-    ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
-        TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
-            platform, lib, false, graphBuilder);
 
     ImmutableSet.Builder<CxxPreprocessorInput> builder = ImmutableSet.builder();
-    builder.addAll(transitiveMap.values());
+
+    // If Swift's private dependencies are enabled, we start calculating Preprocessor Inputs
+    // from all direct dependencies which include "exported_deps" and "deps".
+    // Otherwise, with the legacy behaviour, only "exported_deps" and its transitive dependencies
+    // will go into PP inputs set.
+    if (swiftBuckConfig.getAllowPrivateSwiftDeps()) {
+      for (CxxPreprocessorDep directDep : lib.getDirectCxxDeps(platform, graphBuilder)) {
+        ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
+            TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
+                platform, directDep, true, graphBuilder);
+        builder.addAll(transitiveMap.values());
+      }
+    } else {
+      ImmutableMap<BuildTarget, CxxPreprocessorInput> transitiveMap =
+          TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
+              platform, lib, false, graphBuilder);
+
+      builder.addAll(transitiveMap.values());
+    }
 
     if (arg.isModular()) {
       Optional<CxxPreprocessorInput> underlyingModule =

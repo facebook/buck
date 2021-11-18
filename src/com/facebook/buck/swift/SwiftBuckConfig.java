@@ -41,6 +41,7 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String USE_DEBUG_PREFIX_MAP = "use_debug_prefix_map";
   public static final String PREFIX_SERIALIZED_DEBUG_INFO = "prefix_serialized_debug_info";
   public static final String ADD_XCTEST_IMPORT_PATHS = "add_xctest_import_paths";
+  public static final String ALLOW_PRIVATE_SWIFT_DEPS = "allow_private_swift_deps";
   private final BuckConfig delegate;
 
   @Override
@@ -183,5 +184,14 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getAddXctestImportPaths() {
     return delegate.getBooleanValue(SECTION_NAME, ADD_XCTEST_IMPORT_PATHS, true);
+  }
+
+  /**
+   * If true, both "exported_deps" and "deps" will be used as preprocessor inputs which will allow
+   * apple_libraries with Swift to contain private deps, not exported to consumers. Otherwise, only
+   * targets from "exported_deps" will be passed to the Swift compiler.
+   */
+  public boolean getAllowPrivateSwiftDeps() {
+    return delegate.getBooleanValue(SECTION_NAME, ALLOW_PRIVATE_SWIFT_DEPS, false);
   }
 }

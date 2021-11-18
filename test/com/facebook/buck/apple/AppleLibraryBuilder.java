@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -52,6 +53,10 @@ public class AppleLibraryBuilder
     super(FakeAppleRuleDescriptions.LIBRARY_DESCRIPTION, target, projectFilesystem);
   }
 
+  protected AppleLibraryBuilder(BuildTarget target, BuckConfig buckConfig) {
+    super(FakeAppleRuleDescriptions.createAppleLibraryDescription(buckConfig), target);
+  }
+
   public static AppleLibraryBuilder createBuilder(BuildTarget target) {
     return new AppleLibraryBuilder(target);
   }
@@ -59,6 +64,10 @@ public class AppleLibraryBuilder
   public static AppleLibraryBuilder createBuilder(
       BuildTarget target, ProjectFilesystem projectFilesystem) {
     return new AppleLibraryBuilder(target, projectFilesystem);
+  }
+
+  public static AppleLibraryBuilder createBuilder(BuildTarget target, BuckConfig buckConfig) {
+    return new AppleLibraryBuilder(target, buckConfig);
   }
 
   public AppleLibraryBuilder setModular(boolean modular) {
@@ -129,6 +138,12 @@ public class AppleLibraryBuilder
 
   public AppleLibraryBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
     getArgForPopulating().setSrcs(srcs);
+    return this;
+  }
+
+  public AppleLibraryBuilder setReexportAllHeaderDependencies(
+      Boolean ReexportAllHeaderDependencies) {
+    getArgForPopulating().setReexportAllHeaderDependencies(ReexportAllHeaderDependencies);
     return this;
   }
 

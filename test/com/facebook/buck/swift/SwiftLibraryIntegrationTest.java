@@ -22,6 +22,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.apple.AppleDescriptions;
+import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -33,15 +35,20 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLink;
@@ -59,7 +66,11 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.util.function.BiFunction;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -344,6 +355,114 @@ public class SwiftLibraryIntegrationTest {
         ImmutableList.copyOf(compileStep.getDescription(null).split(" "));
 
     assertThat(compilerCommand, Matchers.hasItem("-prefix-serialized-debug-info"));
+  }
+
+  @Test
+  public void testRulesExportedFromDepsBecomeFirstOrderDeps() {
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                "[swift]",
+                "allow_private_swift_deps = True",
+                "[apple]",
+                "use_swift_delegate = False")
+            .build();
+
+    BuildTarget privateDepLibTarget = BuildTargetFactory.newInstance("//swift:private_dep");
+    TargetNode<?> privateDepNode =
+        AppleLibraryBuilder.createBuilder(privateDepLibTarget, buckConfig)
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("private_dep.swift"))))
+            .setReexportAllHeaderDependencies(false)
+            .build();
+
+    BuildTarget exportedDepLibTarget = BuildTargetFactory.newInstance("//swift:exported_dep");
+    TargetNode<?> exportedDepLibNode =
+        AppleLibraryBuilder.createBuilder(exportedDepLibTarget, buckConfig)
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("exported_dep.swift"))))
+            .setReexportAllHeaderDependencies(false)
+            .build();
+
+    BuildTarget directDepLibTarget = BuildTargetFactory.newInstance("//swift:direct_dep");
+    TargetNode<?> directDepLibNode =
+        AppleLibraryBuilder.createBuilder(directDepLibTarget, buckConfig)
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("direct_dep.swift"))))
+            .setDeps(ImmutableSortedSet.of(privateDepLibTarget))
+            .setExportedDeps(ImmutableSortedSet.of(exportedDepLibTarget))
+            .setReexportAllHeaderDependencies(false)
+            .build();
+
+    BuildTarget rootLibTarget = BuildTargetFactory.newInstance("//swift:root_lib");
+    TargetNode<?> rootLibNode =
+        AppleLibraryBuilder.createBuilder(rootLibTarget, buckConfig)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("root_lib.swift"))))
+            .setDeps(ImmutableSortedSet.of(directDepLibTarget))
+            .setReexportAllHeaderDependencies(false)
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            ImmutableSet.of(privateDepNode, exportedDepLibNode, directDepLibNode, rootLibNode));
+
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+
+    BiFunction<BuildTarget, Flavor, BuildRule> requireRule =
+        (target, flavor) -> {
+          return graphBuilder.requireRule(
+              target.withFlavors(
+                  flavor, FakeAppleRuleDescriptions.DEFAULT_MACOSX_X86_64_PLATFORM.getFlavor()));
+        };
+
+    BuildRule rootLibRule =
+        requireRule.apply(rootLibNode.getBuildTarget(), AppleDescriptions.SWIFT_COMPILE_FLAVOR);
+
+    BuildRule directDepHeaderRule =
+        requireRule.apply(
+            directDepLibNode.getBuildTarget(),
+            AppleDescriptions.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR);
+
+    BuildRule exportedDepHeaderRule =
+        requireRule.apply(
+            exportedDepLibNode.getBuildTarget(),
+            AppleDescriptions.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR);
+
+    BuildRule directDepCompileRule =
+        requireRule.apply(
+            directDepLibNode.getBuildTarget(), AppleDescriptions.SWIFT_COMPILE_FLAVOR);
+
+    BuildRule exportedDepCompileRule =
+        requireRule.apply(
+            exportedDepLibNode.getBuildTarget(), AppleDescriptions.SWIFT_COMPILE_FLAVOR);
+
+    assertThat(
+        rootLibRule.getBuildDeps(),
+        Matchers.containsInAnyOrder(
+            directDepHeaderRule,
+            exportedDepHeaderRule,
+            directDepCompileRule,
+            exportedDepCompileRule));
+
+    Path directDepOutputPath =
+        graphBuilder
+            .getSourcePathResolver()
+            .getIdeallyRelativePath(directDepCompileRule.getSourcePathToOutput());
+    Path exportedDepOutputPath =
+        graphBuilder
+            .getSourcePathResolver()
+            .getIdeallyRelativePath(exportedDepCompileRule.getSourcePathToOutput());
+
+    ImmutableList<String> compilerArgs =
+        ((SwiftCompile) rootLibRule).constructCompilerArgs(graphBuilder.getSourcePathResolver());
+
+    assertThat(
+        compilerArgs,
+        Matchers.containsInRelativeOrder(
+            "-I", directDepOutputPath.toString(),
+            "-I", exportedDepOutputPath.toString()));
   }
 
   private SwiftLibraryDescriptionArg createDummySwiftArg() {

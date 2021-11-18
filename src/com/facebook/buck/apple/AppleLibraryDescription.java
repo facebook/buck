@@ -397,7 +397,7 @@ public class AppleLibraryDescription
                         () ->
                             AppleLibraryDescriptionSwiftEnhancer
                                 .getPreprocessorInputsForAppleLibrary(
-                                    buildTarget, graphBuilder, cxxPlatform, args));
+                                    buildTarget, graphBuilder, cxxPlatform, args, swiftBuckConfig));
 
             if (type.getValue().equals(Type.SWIFT_COMPILE)) {
               return Optional.of(
