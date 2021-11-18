@@ -34,12 +34,14 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Charsets;
@@ -56,6 +58,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 /**
@@ -160,6 +163,11 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
           getProjectFilesystem().getBuckPaths(), getBuildTarget(), format);
     }
 
+    private RelPath getArgfilePath() {
+      String format = String.format("%%s/%s_symbols.argfile", getSymbolsType());
+      return BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), format);
+    }
+
     @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext context, BuildableContext buildableContext) {
@@ -176,6 +184,13 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
 
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(),
+                  getProjectFilesystem(),
+                  getArgfilePath().getParent())));
+
       // Parse the output from running `nm` and write all symbols to the symbol file.
       steps.add(
           new IsolatedStep() {
@@ -184,6 +199,14 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                 AbsPath.of(getProjectFilesystem().resolve(output.getPath()));
             private final ImmutableMap<String, String> env =
                 nm.getEnvironment(context.getSourcePathResolver());
+            private final AbsPath argFilePath = getProjectFilesystem().resolve(getArgfilePath());
+
+            private final ImmutableList<String> inputsArgs =
+                StreamSupport.stream(inputs.spliterator(), false)
+                    .map(context.getSourcePathResolver()::getAbsolutePath)
+                    .map(Object::toString)
+                    .collect(ImmutableList.toImmutableList());
+
             private final ImmutableList<String> cmd =
                 ImmutableList.<String>builder()
                     .addAll(nm.getCommandPrefix(context.getSourcePathResolver()))
@@ -193,11 +216,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                     // Generate output in a portable output format.
                     .add("-P")
                     .addAll(getAdditionalCommandArgs())
-                    .addAll(
-                        StreamSupport.stream(inputs.spliterator(), false)
-                            .map(context.getSourcePathResolver()::getAbsolutePath)
-                            .map(Object::toString)
-                            .iterator())
+                    .add("@" + argFilePath.toString())
                     .build();
 
             @Override
@@ -214,6 +233,12 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
             @Override
             public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
                 throws IOException, InterruptedException {
+              MostFiles.writeLinesToFile(
+                  inputsArgs.stream()
+                      .map(Escaper.ARGFILE_ESCAPER::apply)
+                      .collect(Collectors.toList()),
+                  argFilePath);
+
               Pattern pattern = Pattern.compile("^\\S+: (?<name>\\S+) .*");
 
               ProcessExecutor executor = context.getProcessExecutor();
