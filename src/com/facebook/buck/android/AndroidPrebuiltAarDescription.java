@@ -58,10 +58,10 @@ import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /**
@@ -143,29 +143,13 @@ public class AndroidPrebuiltAarDescription
         buildTarget);
     UnzipAar unzipAar = (UnzipAar) unzipAarRule;
 
-    Iterable<BuildRule> javaDeps;
-    if (javaBuckConfig.shouldDesugarInterfaceMethodsInPrebuiltJars()) {
-      javaDeps =
-          graphBuilder.getAllRules(args.getDeps()).stream()
-              .filter(JavaLibrary.class::isInstance)
-              .map(
-                  buildRule -> {
-                    if (buildRule instanceof AndroidPrebuiltAar) {
-                      return ((AndroidPrebuiltAar) buildRule).getPrebuiltJar();
-                    } else {
-                      return buildRule;
-                    }
-                  })
-              .collect(Collectors.toList());
-    } else {
-      javaDeps =
-          Iterables.concat(
-              Iterables.filter(graphBuilder.getAllRules(args.getDeps()), PrebuiltJar.class),
-              Iterables.transform(
-                  Iterables.filter(
-                      graphBuilder.getAllRules(args.getDeps()), AndroidPrebuiltAar.class),
-                  AndroidPrebuiltAar::getPrebuiltJar));
-    }
+    Iterable<BuildRule> javaDeps =
+        Iterables.concat(
+            Iterables.filter(graphBuilder.getAllRules(args.getDeps()), PrebuiltJar.class),
+            Iterables.transform(
+                Iterables.filter(
+                    graphBuilder.getAllRules(args.getDeps()), AndroidPrebuiltAar.class),
+                AndroidPrebuiltAar::getPrebuiltJar));
 
     if (flavors.contains(AAR_PREBUILT_JAR_FLAVOR)) {
       SourcePath prebuiltJarSourcePath =
@@ -183,10 +167,29 @@ public class AndroidPrebuiltAarDescription
           AAR_PREBUILT_JAR_FLAVOR,
           flavors);
 
+      // For Java 8 interface desugaring, we need to include JavaLibrary dependencies we otherwise
+      // filter out so that we can include their transitive dependencies. Only the PrebuiltJar needs
+      // these, though, since it's the only part to get desugared.
+      ImmutableSortedSet<BuildRule> desugarDeps;
+      if (javaBuckConfig.shouldDesugarInterfaceMethodsInPrebuiltJars()) {
+        desugarDeps =
+            graphBuilder.getAllRules(args.getDeps()).stream()
+                .filter(JavaLibrary.class::isInstance)
+                .map(
+                    buildRule -> {
+                      if (buildRule instanceof AndroidPrebuiltAar) {
+                        return ((AndroidPrebuiltAar) buildRule).getPrebuiltJar();
+                      } else {
+                        return buildRule;
+                      }
+                    })
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+      } else {
+        desugarDeps = ImmutableSortedSet.copyOf(javaDeps);
+      }
+
       BuildRuleParams buildRuleParams =
-          params
-              .withDeclaredDeps(ImmutableSortedSet.copyOf(javaDeps))
-              .withExtraDeps(ImmutableSortedSet.of(unzipAar));
+          params.withDeclaredDeps(desugarDeps).withExtraDeps(ImmutableSortedSet.of(unzipAar));
       return new PrebuiltJar(
           buildTarget,
           projectFilesystem,
