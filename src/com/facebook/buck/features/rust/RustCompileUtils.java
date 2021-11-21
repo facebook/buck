@@ -82,6 +82,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -111,7 +112,7 @@ public class RustCompileUtils {
       CrateType crateType,
       Optional<String> edition,
       LinkableDepType depType,
-      ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
+      ImmutableSortedMap<SourcePath, String> mappedSources,
       String rootModule,
       boolean forceRlib,
       boolean preferStatic,
@@ -245,7 +246,7 @@ public class RustCompileUtils {
       Optional<String> edition,
       LinkableDepType depType,
       boolean rpath,
-      ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
+      ImmutableSortedMap<SourcePath, String> mappedSources,
       String rootModule,
       boolean forceRlib,
       boolean preferStatic,
@@ -641,7 +642,7 @@ public class RustCompileUtils {
 
     CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
 
-    Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
+    Pair<String, ImmutableSortedMap<SourcePath, String>> rootModuleAndSources =
         getRootModuleAndSources(
             projectFilesystem,
             buildTarget,
@@ -829,16 +830,15 @@ public class RustCompileUtils {
       SourcePathResolverAdapter resolver,
       String crate,
       ImmutableSet<String> defaults,
-      Stream<Path> sources) {
+      Stream<String> sources) {
     String crateName = String.format("%s.rs", crate);
     ImmutableList<String> res =
         sources
             .filter(
                 src -> {
-                  String name = src.getFileName().toString();
+                  String name = Paths.get(src).getFileName().toString();
                   return defaults.contains(name) || name.equals(crateName);
                 })
-            .map(src -> src.toString())
             .collect(ImmutableList.toImmutableList());
 
     if (res.size() == 1) {
@@ -854,7 +854,7 @@ public class RustCompileUtils {
    * module is what's passed to rustc as the input source file, and may not exist until the
    * symlinking phase happens.
    */
-  static Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> getRootModuleAndSources(
+  static Pair<String, ImmutableSortedMap<SourcePath, String>> getRootModuleAndSources(
       ProjectFilesystem projectFilesystem,
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
@@ -865,55 +865,64 @@ public class RustCompileUtils {
       ImmutableSortedSet<SourcePath> srcs,
       ImmutableSortedMap<SourcePath, String> mappedSrcs) {
 
-    ImmutableSortedMap.Builder<SourcePath, Optional<String>> fixedBuilder =
-        ImmutableSortedMap.naturalOrder();
+    ImmutableSortedMap.Builder<SourcePath, String> fixedBuilder = ImmutableSortedMap.naturalOrder();
+
+    Path buildTargetPath =
+        target.getCellRelativeBasePath().getPath().toPath(projectFilesystem.getFileSystem());
+
+    SourcePathResolverAdapter resolver = graphBuilder.getSourcePathResolver();
 
     srcs.stream()
         .map(
             src ->
                 CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform.getFlavor(), src))
-        .forEach(src -> fixedBuilder.put(src, Optional.empty()));
+        .forEach(
+            src -> {
+              SourcePath srcPath =
+                  CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform.getFlavor(), src);
+              Path candidatePath = resolver.getCellUnsafeRelPath(src).getPath();
+
+              // These are files with no user-defined virtual path, they are either
+              // generated (ie with a genrule) or references files in the source
+              // tree
+
+              // If the path references files in the source tree
+              if (candidatePath.startsWith(buildTargetPath)) {
+                // We relativize them to reduce path amplification - mostly for
+                // windows's sake
+                fixedBuilder.put(srcPath, buildTargetPath.relativize(candidatePath).toString());
+              } else {
+
+                // These are generated files, since these are generated paths with hashes, they are
+                // rewritable.
+                fixedBuilder.put(
+                    srcPath, resolver.getAbsolutePath(srcPath).getPath().getFileName().toString());
+              }
+            });
     mappedSrcs
         .entrySet()
         .forEach(
-            ent ->
-                fixedBuilder.put(
-                    CxxGenruleDescription.fixupSourcePath(
-                        graphBuilder, cxxPlatform.getFlavor(), ent.getKey()),
-                    Optional.of(ent.getValue())));
+            ent -> {
+              SourcePath sourcePath =
+                  CxxGenruleDescription.fixupSourcePath(
+                      graphBuilder, cxxPlatform.getFlavor(), ent.getKey());
+              Path virtualPath = Paths.get(ent.getValue()).normalize();
+              // These are rs files with user-defined virtual path, usually these are
+              // the from mapped_srcs
+              // Ban remappings that contain paths that go outside the base path
+              if (virtualPath.startsWith("..")) {
+                throw new HumanReadableException(
+                    "Mapped sources must be forward paths ie. no ../ ");
+              }
+              fixedBuilder.put(sourcePath, virtualPath.toString());
+            });
 
-    ImmutableSortedMap<SourcePath, Optional<String>> fixed = fixedBuilder.build();
-
-    SourcePathResolverAdapter resolver = graphBuilder.getSourcePathResolver();
-    Stream<Path> filenames =
-        Stream.concat(
-            srcs.stream()
-                .map(
-                    src ->
-                        CxxGenruleDescription.fixupSourcePath(
-                            graphBuilder, cxxPlatform.getFlavor(), src))
-                .map(sp -> resolver.getCellUnsafeRelPath(sp).getPath()),
-            mappedSrcs.values().stream()
-                .map(
-                    path ->
-                        target
-                            .getCellRelativeBasePath()
-                            .getPath()
-                            .toPath(projectFilesystem.getFileSystem())
-                            .resolve(path)));
+    ImmutableSortedMap<SourcePath, String> fixed = fixedBuilder.build();
 
     Optional<String> rootModule =
         crateRoot
-            .map(
-                name ->
-                    target
-                        .getCellRelativeBasePath()
-                        .getPath()
-                        .toPath(projectFilesystem.getFileSystem())
-                        .resolve(name)
-                        .toString())
             .map(Optional::of)
-            .orElseGet(() -> getCrateRoot(resolver, crate, defaultRoots, filenames));
+            .orElseGet(() -> getCrateRoot(resolver, crate, defaultRoots, fixed.values().stream()));
 
     return new Pair<>(
         rootModule.orElseThrow(

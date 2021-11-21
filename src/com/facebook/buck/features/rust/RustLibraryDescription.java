@@ -115,7 +115,7 @@ public class RustLibraryDescription
       RustLibraryDescriptionArg args,
       Iterable<BuildRule> deps,
       ImmutableMap<String, BuildTarget> depsAliases) {
-    Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
+    Pair<String, ImmutableSortedMap<SourcePath, String>> rootModuleAndSources =
         RustCompileUtils.getRootModuleAndSources(
             projectFilesystem,
             buildTarget,
