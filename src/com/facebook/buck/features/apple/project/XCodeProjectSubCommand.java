@@ -75,6 +75,15 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
   private String modulesToExclude = null;
 
   @Option(
+      name = "--exclude-from-build",
+      usage =
+          "Space separated list of build target full qualified names or regexes that should NOT "
+              + "be built as part of the project command."
+              + "For example, //Libs/CommonLibs:BaseLib //Libs/ImportantLib:...")
+  @Nullable
+  private String modulesToExcludeFromBuild = null;
+
+  @Option(
       name = "--read-only",
       usage =
           "If true, generate project files read-only. Defaults to '"
@@ -201,6 +210,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
                   shouldMergeTargets,
                   modulesToFocusOn,
                   modulesToExclude,
+                  modulesToExcludeFromBuild,
                   getProjectSchemes(params.getBuckConfig()),
                   projectGeneratorParameters.isDryRun(),
                   getReadOnly(params.getBuckConfig()),

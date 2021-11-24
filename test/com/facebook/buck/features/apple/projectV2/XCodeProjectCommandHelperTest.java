@@ -509,6 +509,7 @@ public class XCodeProjectCommandHelperTest {
         ImmutableSet.of(),
         FocusedTargetMatcher.noFocus(),
         FocusedTargetMatcher.noExclude(),
+        FocusedTargetMatcher.noExclude(),
         Optional.empty(),
         new FakeActionGraphBuilder(new HashMap<>()));
   }

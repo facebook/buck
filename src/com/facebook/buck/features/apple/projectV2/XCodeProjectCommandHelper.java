@@ -146,6 +146,7 @@ public class XCodeProjectCommandHelper {
 
   private final FocusedTargetMatcher focusedTargetMatcher;
   private final FocusedTargetMatcher excludedTargetMatcher;
+  private final FocusedTargetMatcher excludedFromBuildTargetMatcher;
   private final ActionGraphProvider actionGraphProvider;
 
   public XCodeProjectCommandHelper(
@@ -174,6 +175,7 @@ public class XCodeProjectCommandHelper {
       boolean shouldMergeTargets,
       String focus,
       String exclude,
+      String excludeFromBuild,
       boolean createProjectSchemes,
       boolean dryRun,
       boolean readOnly,
@@ -224,6 +226,9 @@ public class XCodeProjectCommandHelper {
         new FocusedTargetMatcher(focus, true, cells.getRootCell().getCellNameResolver());
     this.excludedTargetMatcher =
         new FocusedTargetMatcher(exclude, false, cells.getRootCell().getCellNameResolver());
+    this.excludedFromBuildTargetMatcher =
+        new FocusedTargetMatcher(
+            excludeFromBuild, false, cells.getRootCell().getCellNameResolver());
     this.actionGraphProvider = actionGraphProvider;
   }
 
@@ -435,6 +440,7 @@ public class XCodeProjectCommandHelper {
             appleCxxFlavors,
             focusedTargetMatcher,
             excludedTargetMatcher,
+            excludedFromBuildTargetMatcher,
             sharedLibraryToBundle,
             actionGraphBuilder);
     ImmutableSet<BuildTarget> requiredBuildTargets =
@@ -510,6 +516,7 @@ public class XCodeProjectCommandHelper {
       ImmutableSet<Flavor> appleCxxFlavors,
       FocusedTargetMatcher focusedTargetMatcher, // @audited(chatatap)]
       FocusedTargetMatcher excludedTargetMatcher,
+      FocusedTargetMatcher excludedFromBuildTargetMatcher,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle,
       ActionGraphBuilder actionGraphBuilder)
       throws IOException, InterruptedException {
@@ -607,6 +614,7 @@ public class XCodeProjectCommandHelper {
               options,
               focusedTargetMatcher,
               excludedTargetMatcher,
+              excludedFromBuildTargetMatcher,
               !appleConfig.getXcodeDisableParallelizeBuild(),
               unresolvedCxxPlatform,
               appleCxxFlavors,

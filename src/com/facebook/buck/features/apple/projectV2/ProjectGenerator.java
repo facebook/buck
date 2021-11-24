@@ -107,6 +107,7 @@ public class ProjectGenerator {
   private final RuleKeyConfiguration ruleKeyConfiguration;
 
   private final ProjectExcludeResolver projectExcludeResolver;
+  private final ProjectExcludeResolver projectExcludeFromBuildResolver;
 
   /**
    * Mapping from an apple_library target to the associated apple_bundle which names it as its
@@ -131,6 +132,7 @@ public class ProjectGenerator {
       BuildTarget workspaceTarget,
       ImmutableSet<BuildTarget> targetsInRequiredProjects,
       FocusedTargetMatcher excludedTargetMatcher,
+      FocusedTargetMatcher excludedFromBuildTargetMatcher,
       UnresolvedCxxPlatform unresolvedCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
       ActionGraphBuilder actionGraphBuilder,
@@ -179,6 +181,9 @@ public class ProjectGenerator {
     this.projectExcludeResolver =
         new ProjectExcludeResolver(
             targetGraph, appleConfig.getProjectExcludeLabels(), excludedTargetMatcher);
+    this.projectExcludeFromBuildResolver =
+        new ProjectExcludeResolver(
+            targetGraph, appleConfig.getProjectExcludeLabels(), excludedFromBuildTargetMatcher);
   }
 
   /** The output from generating an Xcode project. */
@@ -364,7 +369,10 @@ public class ProjectGenerator {
           generationResultsBuilder.build();
 
       for (XcodeNativeTargetGenerator.Result result : generationResults) {
-        requiredBuildTargetsBuilder.addAll(result.requiredBuildTargets);
+        requiredBuildTargetsBuilder.addAll(
+            result.requiredBuildTargets.stream()
+                .filter(buildTarget -> !projectExcludeFromBuildResolver.excludeTarget(buildTarget))
+                .collect(Collectors.toSet()));
         xcconfigPathsBuilder.addAll(result.xcconfigPaths);
         targetConfigNamesBuilder.addAll(result.targetConfigNames);
 

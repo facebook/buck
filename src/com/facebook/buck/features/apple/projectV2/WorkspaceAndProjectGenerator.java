@@ -95,6 +95,7 @@ public class WorkspaceAndProjectGenerator {
   private final BuildTarget workspaceBuildTarget;
   private final FocusedTargetMatcher focusedTargetMatcher; // @audited (chatatap)
   private final FocusedTargetMatcher excludedTargetMatcher;
+  private final FocusedTargetMatcher excludedFromBuildTargetMatcher;
   private final ProjectGeneratorOptions projectGeneratorOptions;
   private final boolean parallelizeBuild;
   private final ImmutableSet<Flavor> appleCxxFlavors;
@@ -145,6 +146,7 @@ public class WorkspaceAndProjectGenerator {
       ProjectGeneratorOptions projectGeneratorOptions,
       FocusedTargetMatcher focusedTargetMatcher,
       FocusedTargetMatcher excludedTargetMatcher,
+      FocusedTargetMatcher excludedFromBuildTargetMatcher,
       boolean parallelizeBuild,
       UnresolvedCxxPlatform unresolvedCxxPlatform,
       ImmutableSet<Flavor> appleCxxFlavors,
@@ -183,6 +185,7 @@ public class WorkspaceAndProjectGenerator {
 
     this.focusedTargetMatcher = focusedTargetMatcher;
     this.excludedTargetMatcher = excludedTargetMatcher;
+    this.excludedFromBuildTargetMatcher = excludedFromBuildTargetMatcher;
 
     // Add the workspace target to the focused target matcher.
     workspaceArguments
@@ -483,6 +486,7 @@ public class WorkspaceAndProjectGenerator {
             workspaceArguments.getSrcTarget().get(),
             targetsInRequiredProjects,
             excludedTargetMatcher,
+            excludedFromBuildTargetMatcher,
             unresolvedCxxPlatform,
             appleCxxFlavors,
             actionGraphBuilder,
