@@ -31,6 +31,8 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -61,6 +63,8 @@ public class FakeBuckConfig {
     @Nullable private ProjectFilesystem filesystem = null;
     private ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();
     private RawConfig sections = RawConfig.of();
+    private ImmutableMap<Path, RawConfig> configsMap = ImmutableMap.of();
+    private Optional<RawConfig> rawOverrides = Optional.empty();
     private Architecture architecture = Architecture.detect();
     private Platform platform = Platform.detect();
     private final int numThreads = -1;
@@ -92,6 +96,12 @@ public class FakeBuckConfig {
       return this;
     }
 
+    public Builder setSections(RawConfig sections, Path sourcePath) {
+      this.sections = sections;
+      this.configsMap = ImmutableMap.of(sourcePath, sections);
+      return this;
+    }
+
     public Builder setSections(ImmutableMap<String, ImmutableMap<String, String>> sections) {
       this.sections = RawConfig.of(sections);
       return this;
@@ -99,6 +109,11 @@ public class FakeBuckConfig {
 
     public Builder setSections(String... iniFileLines) {
       sections = ConfigBuilder.rawFromLines(iniFileLines);
+      return this;
+    }
+
+    public Builder setOverrides(RawConfig overrides) {
+      this.rawOverrides = Optional.of(overrides);
       return this;
     }
 
@@ -112,7 +127,10 @@ public class FakeBuckConfig {
       ProjectFilesystem filesystem =
           this.filesystem != null ? this.filesystem : new FakeProjectFilesystem();
 
-      Config config = new Config(sections);
+      Config config =
+          new Config(sections, configsMap)
+              .overrideWith(new Config(rawOverrides.orElseGet(RawConfig::of)));
+
       CellPathResolver cellPathResolver =
           DefaultCellPathResolver.create(filesystem.getRootPath(), config);
       UnconfiguredBuildTargetViewFactory buildTargetFactory =
