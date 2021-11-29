@@ -1205,7 +1205,8 @@ public class AppleLibraryDescription
   private static boolean isDylibTarget(BuildTarget buildTarget) {
     FlavorSet flavors = buildTarget.getFlavors();
     if (AppleLibraryDescription.LIBRARY_TYPE.getFlavor(flavors).isPresent()) {
-      return flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR);
+      return flavors.contains(CxxDescriptionEnhancer.SHARED_FLAVOR)
+          || flavors.contains(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR);
     }
 
     return false;
