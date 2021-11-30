@@ -57,6 +57,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.EventBusEventConsole;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -777,10 +778,13 @@ public class TestCommand extends BuildCommand {
                       .getShouldDeleteTemporaries(),
                   cellPathResolver);
 
+          ExternalTestRunnerProvider externalRunnerProvider =
+              new ExternalTestRunnerProvider(new EventBusEventConsole(params.getBuckEventBus()));
+
           TestBuckConfig testBuckConfig = params.getBuckConfig().getView(TestBuckConfig.class);
           // Once all of the rules are built, then run the tests.
           Optional<ImmutableList<String>> externalTestRunner =
-              testBuckConfig.getExternalTestRunner();
+              externalRunnerProvider.getExternalTestRunner(params.getBuckConfig(), testRules);
           if (externalTestRunner.isPresent()) {
             return runTestsExternal(
                 params,
