@@ -21,8 +21,19 @@ import java.util.logging.Level;
 /** Event console which prints to stderr. To be used in tests. */
 public class TestEventConsole extends EventConsole {
 
+  private String lastPrintedMessage;
+
   @Override
   public void println(Level level, String message) {
-    System.err.println(level + " " + message);
+    this.lastPrintedMessage = level + " " + message;
+    System.err.println(this.lastPrintedMessage);
+  }
+
+  public String getLastPrintedMessage() {
+    return this.lastPrintedMessage;
+  }
+
+  public void clearMessages() {
+    this.lastPrintedMessage = null;
   }
 }
