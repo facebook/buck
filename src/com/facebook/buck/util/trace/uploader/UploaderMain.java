@@ -147,7 +147,7 @@ public final class UploaderMain {
           "%nFailed to upload trace; %s%n%s", e.getMessage(), Throwables.getStackTraceAsString(e));
       return ERROR_EXIT_CODE;
     } finally {
-      closeTempFile(logWriter, tempFile);
+      closeTempFile(tempFile);
       logWriter.format("Elapsed time: %d millis", timer.elapsed(TimeUnit.MILLISECONDS));
     }
   }
@@ -196,16 +196,9 @@ public final class UploaderMain {
     }
   }
 
-  private void closeTempFile(ThrowingPrintWriter logWriter, NamedTemporaryFile tempFile)
-      throws IOException {
+  private void closeTempFile(NamedTemporaryFile tempFile) {
     if (tempFile != null) {
-      try {
-        tempFile.close();
-      } catch (IOException e) {
-        logWriter.format(
-            "Failed to clean up temp file: %s%n%s",
-            e.getMessage(), Throwables.getStackTraceAsString(e));
-      }
+      tempFile.close();
     }
   }
 

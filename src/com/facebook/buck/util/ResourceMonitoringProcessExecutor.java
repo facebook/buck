@@ -132,22 +132,15 @@ public class ResourceMonitoringProcessExecutor extends DelegateProcessExecutor {
     // unfortunately LaunchedProcesses can be closed anywhere from zero to two times depending on
     // code paths, so it's safest to dispose of it here.
     var rmlProcess = (ResourceMonitoringLaunchedProcess) process;
-    var reportFile = rmlProcess.timeFile;
-    var reportPath = reportFile.get();
-    try {
-      var contents = Files.readString(reportPath);
-      var usage = new LinuxTimeParser().parse(contents);
-      return Optional.of(usage);
-    } catch (IOException e) {
-      LOG.error(e, "Failed to read resource usage from time report file: %s", reportPath);
-      return Optional.empty();
-    } finally {
-      if (Files.exists(reportPath)) {
-        try {
-          reportFile.close();
-        } catch (IOException e) {
-          LOG.error(e, "Cannot delete time report file: %s", reportPath);
-        }
+    try (var reportFile = rmlProcess.timeFile) {
+      var reportPath = reportFile.get();
+      try {
+        var contents = Files.readString(reportPath);
+        var usage = new LinuxTimeParser().parse(contents);
+        return Optional.of(usage);
+      } catch (IOException e) {
+        LOG.warn(e, "Failed to read resource usage from time report file: %s", reportPath);
+        return Optional.empty();
       }
     }
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.core.util.log.Logger;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,6 +26,8 @@ import java.util.function.Supplier;
 
 /** Creates a temporary file that is deleted when this object is closed. */
 public class NamedTemporaryFile implements Closeable, Supplier<Path> {
+  private static final Logger LOG = Logger.get(NamedTemporaryFile.class);
+
   private final Path tempPath;
 
   public NamedTemporaryFile(String prefix, String suffix, FileAttribute<?>... attrs)
@@ -38,7 +41,13 @@ public class NamedTemporaryFile implements Closeable, Supplier<Path> {
   }
 
   @Override
-  public void close() throws IOException {
-    Files.delete(tempPath);
+  public synchronized void close() {
+    if (Files.exists(tempPath)) {
+      try {
+        Files.delete(tempPath);
+      } catch (IOException e) {
+        LOG.warn(e, "Cannot delete time file: %s", tempPath);
+      }
+    }
   }
 }

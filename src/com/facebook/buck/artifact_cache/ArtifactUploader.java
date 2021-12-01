@@ -59,6 +59,7 @@ import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStr
  * store that to the ArtifactCache.
  */
 public class ArtifactUploader {
+
   private static final Logger LOG = Logger.get(ArtifactUploader.class);
 
   /** As method name says */
@@ -125,33 +126,10 @@ public class ArtifactUploader {
           }
 
           private void onCompletion() {
-            try {
-              // The archive file may have been borrowed when storing to the cache so only close it
-              // if
-              // it still exists.
-              if (Files.exists(archive.get())) {
-                archive.close();
-              }
-            } catch (IOException e) {
-              new ErrorLogger(
-                      new ErrorLogger.LogImpl() {
-                        @Override
-                        public void logUserVisible(String message) {}
-
-                        @Override
-                        public void logUserVisibleInternalError(String message) {}
-
-                        @Override
-                        public void logVerbose(Throwable e) {
-                          LOG.debug(
-                              e,
-                              "When deleting temporary archive %s for upload of %s.",
-                              archive.get(),
-                              buildRule.getBuildTarget());
-                        }
-                      },
-                      new HumanReadableExceptionAugmentor(ImmutableMap.of()))
-                  .logException(e);
+            // The archive file may have been borrowed when storing to the cache so only close it
+            // if it still exists.
+            if (Files.exists(archive.get())) {
+              archive.close();
             }
           }
         });
