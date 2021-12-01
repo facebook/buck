@@ -16,24 +16,20 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -44,14 +40,17 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
+import com.facebook.buck.rules.modern.Buildable;
+import com.facebook.buck.rules.modern.ModernBuildRule;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
@@ -77,32 +76,17 @@ import java.util.stream.Stream;
 // them within this things own getBuildSteps, others by passing information into the generated
 // template and then creating them when invoked. It looks like it's creating multiple symlinks for
 // everything that appears in resources. Why does it do that? And where are they going?
-public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class ShBinary extends ModernBuildRule<ShBinary.Impl>
     implements BinaryBuildRule, HasRuntimeDeps {
 
   private static final Logger LOG = Logger.get(ShBinary.class);
 
-  private static final Path TEMPLATE =
+  private static final String ROOT_CELL_LINK_NAME = "__default__";
+  private static final String STEP_CATEGORY = "sh_binary";
+  private static final Path TEMPLATE_PATH =
       Paths.get(
           System.getProperty(
               "buck.path_to_sh_binary_template", "src/com/facebook/buck/shell/sh_binary_template"));
-
-  private static final String RUNTIME_RESOURCES_DIR = "runtime_resources";
-
-  private static final String ROOT_CELL_LINK_NAME = "__default__";
-
-  private static final String STEP_CATEGORY = "sh_binary";
-
-  @AddToRuleKey private final SourcePath main;
-  @AddToRuleKey private final ImmutableSet<SourcePath> resources;
-
-  private final CellNameResolver cellNameResolver;
-  private final NewCellPathResolver cellPathResolver;
-
-  /** The path where the output will be written. */
-  private final RelPath output;
-
-  private final RelPath runtimeResourcesDir;
 
   /**
    * Pattern to match incorrectly generated `CELL_NAME` section in sh binary. The pattern we are
@@ -119,158 +103,58 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
    * }</pre>
    */
   @VisibleForTesting
-  static final Pattern cellErrorMatcher =
+  static final Pattern CELL_ERROR_MATCHER =
       Pattern.compile(
           "CELLS_NAMES\\=\\((((\\s)*?\"(\\w|[-_])*?\")*?(\\s)*?header ((\\s)*?\"(\\w|[-_])*?\")*?)*?\\s*\\)");
 
   protected ShBinary(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellPathResolver cellPathResolver,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       SourcePath main,
       ImmutableSet<SourcePath> resources) {
-    super(buildTarget, projectFilesystem, params);
-    this.main = main;
-    this.resources = resources;
-    this.cellNameResolver = cellRoots.getCellNameResolver();
-    this.cellPathResolver = cellRoots.getNewCellPathResolver();
-
-    this.output =
-        BuildTargetPaths.getGenPath(
-            getProjectFilesystem().getBuckPaths(),
+    super(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        new Impl(
+            main,
+            deriveResourceMap(ruleFinder.getSourcePathResolver(), resources),
             buildTarget,
-            String.format("__%%s__/%s.sh", buildTarget.getShortNameAndFlavorPostfix()));
-
-    this.runtimeResourcesDir =
-        BuildTargetPaths.getGenPath(
-            getProjectFilesystem().getBuckPaths(),
-            this.getBuildTarget(),
-            "__%s__/" + RUNTIME_RESOURCES_DIR);
+            cellPathResolver.getCurrentCellName(),
+            StringTemplateStep.readTemplateAsString(TEMPLATE_PATH)));
   }
 
-  @Override
-  public ImmutableList<Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(output.getPath());
-
-    ImmutableList.Builder<String> cellsPathsStringsBuilder = new ImmutableList.Builder<String>();
-    ImmutableList.Builder<String> cellsNamesBuilder = new ImmutableList.Builder<String>();
-
-    ProjectFilesystem projectFilesystem = getProjectFilesystem();
-
-    // TODO(cjhopman): Is this supposed to be to the root cell?
-    // Create symlink to our own cell.
-    CanonicalCellName thisCellCanonicalName = cellNameResolver.getName(Optional.empty());
-    AbsPath rootPath = cellPathResolver.getCellPath(thisCellCanonicalName);
-    RelPath relativePath = projectFilesystem.getRootPath().relativize(rootPath);
-    cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
-    cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ROOT_CELL_LINK_NAME));
-
-    // Create symlink to the cells.
-    for (Map.Entry<Optional<String>, CanonicalCellName> alias :
-        cellNameResolver.getKnownCells().entrySet()) {
-      if (!alias.getKey().isPresent()) {
-        continue;
+  private static ImmutableMap<SourcePath, Optional<String>> deriveResourceMap(
+      SourcePathResolverAdapter sourcePathResolver, ImmutableSet<SourcePath> resources) {
+    ImmutableMap.Builder<SourcePath, Optional<String>> resourceMapBuilder =
+        ImmutableMap.builderWithExpectedSize(resources.size());
+    for (SourcePath sourcePath : resources) {
+      Optional<BuildTarget> buildTarget = getBuildTarget(sourcePath);
+      if (buildTarget.isPresent()) {
+        resourceMapBuilder.put(
+            sourcePath,
+            Optional.of(sourcePathResolver.getSourcePathName(buildTarget.get(), sourcePath)));
+      } else {
+        resourceMapBuilder.put(sourcePath, Optional.empty());
       }
-      AbsPath cellPath = cellPathResolver.getCellPath(alias.getValue());
-      relativePath = projectFilesystem.getRootPath().relativize(cellPath);
-      cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
-
-      String cellName = Escaper.BASH_ESCAPER.apply(alias.getKey().get());
-      cellsNamesBuilder.add(cellName);
     }
-
-    // Generate an .sh file that builds up an environment and invokes the user's script.
-    // This generated .sh file will be returned by getExecutableCommand().
-    // This script can be cached and used on machines other than the one where it was
-    // created. That means it can't contain any absolute filepaths.
-
-    ImmutableList.Builder<String> resourceStringsBuilder = new ImmutableList.Builder<String>();
-    ImmutableSortedSet<AbsPath> resourcesPaths =
-        context.getSourcePathResolver().getAllAbsolutePaths(resources);
-
-    for (AbsPath resourcePath : resourcesPaths) {
-      // TODO(cjhopman) This is probably wrong. Shouldn't the resource appear under every cell
-      // alias?
-
-      // Get the path relative to its cell.
-      RelPath relativeResourcePath =
-          cellPathResolver.getCellPath(getBuildTarget().getCell()).relativize(resourcePath);
-      // Get the path when referenced in the symlink created for the cell in the output folder.
-      RelPath linkedResourcePath = RelPath.get(ROOT_CELL_LINK_NAME).resolve(relativeResourcePath);
-      resourceStringsBuilder.add(Escaper.BASH_ESCAPER.apply(linkedResourcePath.toString()));
-    }
-
-    ImmutableList<String> resourceStrings = resourceStringsBuilder.build();
-    RelPath pathToProjectRoot =
-        output.getParent().relativize(projectFilesystem.getBuckPaths().getProjectRootDir());
-
-    // Configure the template output.
-    String escapedProjectRoot = Escaper.escapeAsBashString(pathToProjectRoot);
-    ImmutableMap.Builder<String, Object> valuesBuilder = ImmutableMap.builder();
-    valuesBuilder.put("path_to_project_root_file", escapedProjectRoot);
-    valuesBuilder.put(
-        "script_to_run",
-        Escaper.escapeAsBashString(context.getSourcePathResolver().getCellUnsafeRelPath(main)));
-    valuesBuilder.put("resources", resourceStrings);
-    valuesBuilder.put("cell_names", cellsNamesBuilder.build());
-    valuesBuilder.put("cell_paths", cellsPathsStringsBuilder.build());
-
-    // TODO(cjhopman): Why is this so similar to the resource path construction above? What's the
-    // difference and why?
-    Path defaultRuntimeResourcesPath =
-        runtimeResourcesDir
-            .resolve(ROOT_CELL_LINK_NAME)
-            .resolve(
-                getBuildTarget()
-                    .getCellRelativeBasePath()
-                    .getPath()
-                    .toPath(runtimeResourcesDir.getFileSystem()));
-
-    String defaultRuntimeResources = Escaper.escapeAsBashString(defaultRuntimeResourcesPath);
-
-    valuesBuilder.put("default_runtime_resources", defaultRuntimeResources);
-
-    return new ImmutableList.Builder<Step>()
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
-        .add(
-            getSymlinkStep(
-                context.getSourcePathResolver(),
-                getProjectFilesystem(),
-                context.getBuildCellRootPath().getPath()))
-        .add(
-            new StringTemplateStep(
-                TEMPLATE,
-                output.getPath(),
-                valuesBuilder.build(),
-                expanded -> {
-                  Matcher matcher = cellErrorMatcher.matcher(expanded);
-                  if (matcher.find()) {
-                    String matched = matcher.group();
-                    LOG.error(
-                        "ShBinary template CELL_NAMES expanded to: `%s`, but given `%s`",
-                        matched, cellsNamesBuilder.build());
-                  }
-                }))
-        .add(new MakeExecutableStep(getProjectFilesystem(), output))
-        .build();
+    return resourceMapBuilder.build();
   }
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+    return getSourcePath(getBuildable().output);
   }
 
   @Override
   public Tool getExecutableCommand(OutputLabel outputLabel) {
+    Impl buildable = getBuildable();
     return new CommandTool.Builder()
-        .addArg(SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), output)))
-        .addInput(main)
-        .addInputs(resources)
+        .addArg(SourcePathArg.of(getSourcePathToOutput()))
+        .addInput(buildable.main)
+        .addInputs(buildable.resources.keySet())
         .build();
   }
 
@@ -278,88 +162,10 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   // for this rule to be usable.
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return Stream.concat(resources.stream(), Stream.of(main))
+    return Stream.concat(getBuildable().resources.keySet().stream(), Stream.of(getBuildable().main))
         .map(buildRuleResolver::filterBuildRuleInputs)
         .flatMap(ImmutableSet::stream)
         .map(BuildRule::getBuildTarget);
-  }
-
-  private Step getSymlinkStep(
-      SourcePathResolverAdapter resolver,
-      ProjectFilesystem projectFilesystem,
-      Path buildCellRootPath) {
-    ImmutableList<String> conflicts = searchForLinkConflicts(resolver);
-    if (conflicts.isEmpty()) {
-      return new SymlinkTreeStep(
-          STEP_CATEGORY,
-          projectFilesystem,
-          buildCellRootPath,
-          resources.stream()
-              .collect(
-                  ImmutableMap.toImmutableMap(
-                      input -> getSymlinkPath(resolver, input),
-                      input -> resolver.getAbsolutePath(input).getPath())));
-    }
-    return new AbstractExecutionStep(STEP_CATEGORY + "_link_conflicts") {
-      @Override
-      public StepExecutionResult execute(StepExecutionContext context) {
-        for (String conflict : conflicts) {
-          context.getBuckEventBus().post(ConsoleEvent.create(Level.SEVERE, conflict));
-        }
-        return StepExecutionResults.ERROR;
-      }
-    };
-  }
-
-  private Path getSymlinkPath(SourcePathResolverAdapter resolver, SourcePath input) {
-    Path runtimeLinkPath = runtimeResourcesDir.resolve(deriveLinkPath(resolver, input));
-
-    return getProjectFilesystem().resolve(runtimeLinkPath);
-  }
-
-  private ImmutableList<String> searchForLinkConflicts(SourcePathResolverAdapter resolver) {
-    Map<Path, Path> linkPaths = new HashMap<>();
-    ImmutableList.Builder<String> conflicts = ImmutableList.builder();
-    for (SourcePath sourcePath : resources) {
-      Path linkPath = deriveLinkPath(resolver, sourcePath);
-      if (!linkPaths.containsKey(linkPath)) {
-        linkPaths.put(linkPath, resolver.getCellUnsafeRelPath(sourcePath).getPath());
-      } else {
-        conflicts.add(
-            String.format(
-                "Duplicate resource link path '%s' (Resolves to both '%s' and '%s')",
-                linkPath, sourcePath, linkPaths.get(linkPath)));
-      }
-    }
-    return conflicts.build();
-  }
-
-  private Path deriveLinkPath(SourcePathResolverAdapter resolver, SourcePath sourcePath) {
-    if (sourcePath instanceof DefaultBuildTargetSourcePath) {
-      BuildTarget target = ((DefaultBuildTargetSourcePath) sourcePath).getTarget();
-
-      if (!target.getCell().equals(this.getBuildTarget().getCell())) {
-        throw new RuntimeException(
-            String.format(
-                "cross-cell resources are not implemented: %s in sh_binary %s",
-                sourcePath, this.getBuildTarget()));
-      }
-
-      // Tack on the target's base path and the source path name of the resource
-      return Paths.get(ROOT_CELL_LINK_NAME)
-          .resolve(
-              target
-                  .getCellRelativeBasePath()
-                  .getPath()
-                  .toPathDefaultFileSystem()
-                  .resolve(resolver.getSourcePathName(target, sourcePath)));
-    } else if (sourcePath instanceof PathSourcePath) {
-      return Paths.get(ROOT_CELL_LINK_NAME)
-          .resolve(resolver.getCellUnsafeRelPath(sourcePath).getPath());
-    } else {
-      throw new RuntimeException(
-          "unknown source path: " + sourcePath + "for sh_binary " + this.getBuildTarget());
-    }
   }
 
   @Override
@@ -367,5 +173,262 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // Caching for ShBinary rules is broken, as the runtime resources symlinks
     // currently don't get created if the script is retrieved from the cache.
     return false;
+  }
+
+  /** Internal Buildable for {@link ShBinary} rule. */
+  static class Impl implements Buildable {
+
+    @AddToRuleKey private final BuildTarget buildTarget;
+    @AddToRuleKey private final SourcePath main;
+    @AddToRuleKey private final ImmutableMap<SourcePath, Optional<String>> resources;
+    @AddToRuleKey private final OutputPath output;
+    @AddToRuleKey private final OutputPath runtimeResourcesDir;
+    @AddToRuleKey private final Optional<String> currentCellName;
+    @AddToRuleKey private final String template;
+
+    protected Impl(
+        SourcePath main,
+        ImmutableMap<SourcePath, Optional<String>> resources,
+        BuildTarget buildTarget,
+        CanonicalCellName currentCanonicalCellName,
+        String template) {
+      this.buildTarget = buildTarget;
+      this.main = main;
+      this.resources = resources;
+      this.output = new OutputPath(buildTarget.getShortName() + ".sh");
+      this.runtimeResourcesDir = new OutputPath("runtime_resources");
+      this.currentCellName = currentCanonicalCellName.getLegacyName();
+      this.template = template;
+    }
+
+    @Override
+    public ImmutableList<Step> getBuildSteps(
+        BuildContext buildContext,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        BuildCellRelativePathFactory buildCellPathFactory) {
+      CellPathResolver cellPathResolver = buildContext.getCellPathResolver();
+      NewCellPathResolver newCellPathResolver =
+          buildContext.getCellPathResolver().getNewCellPathResolver();
+
+      ImmutableList.Builder<String> cellsPathsStringsBuilder = new ImmutableList.Builder<>();
+      ImmutableList.Builder<String> cellsNamesBuilder = new ImmutableList.Builder<>();
+      // TODO(cjhopman): Is this supposed to be to the root cell?
+      // Create symlink to our own cell.
+      CanonicalCellName thisCellCanonicalName = CanonicalCellName.of(currentCellName);
+      AbsPath rootPath = newCellPathResolver.getCellPath(thisCellCanonicalName);
+      RelPath relativePath = filesystem.getRootPath().relativize(rootPath);
+      cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
+      cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ROOT_CELL_LINK_NAME));
+
+      // Create symlink to the cells.
+      for (Map.Entry<Optional<String>, CanonicalCellName> alias :
+          cellPathResolver.getCellNameResolver().getKnownCells().entrySet()) {
+        if (alias.getKey().isEmpty()) {
+          continue;
+        }
+        AbsPath cellPath = newCellPathResolver.getCellPath(alias.getValue());
+        relativePath = filesystem.getRootPath().relativize(cellPath);
+        cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
+
+        String cellName = Escaper.BASH_ESCAPER.apply(alias.getKey().get());
+        cellsNamesBuilder.add(cellName);
+      }
+
+      // Generate an .sh file that builds up an environment and invokes the user's script.
+      // This generated .sh file will be returned by getExecutableCommand().
+      // This script can be cached and used on machines other than the one where it was
+      // created. That means it can't contain any absolute filepaths.
+
+      SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
+      ImmutableList.Builder<String> resourceStringsBuilder = new ImmutableList.Builder<>();
+      ImmutableSortedSet<AbsPath> resourcesPaths =
+          sourcePathResolver.getAllAbsolutePaths(resources.keySet());
+
+      for (AbsPath resourcePath : resourcesPaths) {
+        // TODO(cjhopman) This is probably wrong. Shouldn't the resource appear under every cell
+        // alias?
+
+        // Get the path relative to its cell.
+        RelPath relativeResourcePath =
+            newCellPathResolver.getCellPath(buildTarget.getCell()).relativize(resourcePath);
+        // Get the path when referenced in the symlink created for the cell in the output folder.
+        RelPath linkedResourcePath = RelPath.get(ROOT_CELL_LINK_NAME).resolve(relativeResourcePath);
+        resourceStringsBuilder.add(Escaper.BASH_ESCAPER.apply(linkedResourcePath.toString()));
+      }
+
+      ImmutableList<String> resourceStrings = resourceStringsBuilder.build();
+      RelPath resolvedOutputPath = outputPathResolver.resolvePath(output);
+      RelPath pathToProjectRoot =
+          resolvedOutputPath.getParent().relativize(filesystem.getBuckPaths().getProjectRootDir());
+
+      // Configure the template output.
+      String escapedProjectRoot = Escaper.escapeAsBashString(pathToProjectRoot);
+      ImmutableMap.Builder<String, Object> valuesBuilder = ImmutableMap.builder();
+      valuesBuilder.put("path_to_project_root_file", escapedProjectRoot);
+      valuesBuilder.put(
+          "script_to_run",
+          Escaper.escapeAsBashString(sourcePathResolver.getRelativePath(filesystem, main)));
+      valuesBuilder.put("resources", resourceStrings);
+      valuesBuilder.put("cell_names", cellsNamesBuilder.build());
+      valuesBuilder.put("cell_paths", cellsPathsStringsBuilder.build());
+
+      // TODO(cjhopman): Why is this so similar to the resource path construction above? What's the
+      // difference and why?
+      RelPath runtimeRelPath = outputPathResolver.resolvePath(runtimeResourcesDir);
+      Path defaultRuntimeResourcesPath =
+          runtimeRelPath
+              .resolve(ROOT_CELL_LINK_NAME)
+              .resolve(
+                  buildTarget
+                      .getCellRelativeBasePath()
+                      .getPath()
+                      .toPath(runtimeRelPath.getFileSystem()));
+
+      String defaultRuntimeResources = Escaper.escapeAsBashString(defaultRuntimeResourcesPath);
+
+      valuesBuilder.put("default_runtime_resources", defaultRuntimeResources);
+
+      return ImmutableList.of(
+          getSymlinkStep(
+              sourcePathResolver,
+              filesystem,
+              outputPathResolver,
+              buildContext.getBuildCellRootPath().getPath()),
+          new StringTemplateStep(
+              template,
+              TEMPLATE_PATH,
+              resolvedOutputPath.getPath(),
+              valuesBuilder.build(),
+              expanded -> {
+                Matcher matcher = CELL_ERROR_MATCHER.matcher(expanded);
+                if (matcher.find()) {
+                  String matched = matcher.group();
+                  LOG.error(
+                      "ShBinary template CELL_NAMES expanded to: `%s`, but given `%s`",
+                      matched, cellsNamesBuilder.build());
+                }
+              }),
+          new MakeExecutableStep(filesystem, resolvedOutputPath));
+    }
+
+    private Step getSymlinkStep(
+        SourcePathResolverAdapter resolver,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        Path buildCellRootPath) {
+      ImmutableList<String> conflicts = searchForLinkConflicts(resolver, filesystem);
+      if (conflicts.isEmpty()) {
+        return new SymlinkTreeStep(
+            STEP_CATEGORY,
+            filesystem,
+            buildCellRootPath,
+            resources.entrySet().stream()
+                .collect(
+                    ImmutableMap.toImmutableMap(
+                        entry ->
+                            getSymlinkPath(
+                                resolver,
+                                filesystem,
+                                outputPathResolver,
+                                entry.getKey(),
+                                entry.getValue()),
+                        entry -> resolver.getAbsolutePath(entry.getKey()).getPath())));
+      }
+      return new AbstractExecutionStep(STEP_CATEGORY + "_link_conflicts") {
+        @Override
+        public StepExecutionResult execute(StepExecutionContext context) {
+          for (String conflict : conflicts) {
+            context.getBuckEventBus().post(ConsoleEvent.create(Level.SEVERE, conflict));
+          }
+          return StepExecutionResults.ERROR;
+        }
+      };
+    }
+
+    private Path getSymlinkPath(
+        SourcePathResolverAdapter resolver,
+        ProjectFilesystem filesystem,
+        OutputPathResolver outputPathResolver,
+        SourcePath input,
+        Optional<String> sourcePathName) {
+      Path runtimeLinkPath =
+          outputPathResolver
+              .resolvePath(runtimeResourcesDir)
+              .resolve(deriveLinkPath(resolver, filesystem, input, sourcePathName));
+      return filesystem.resolve(runtimeLinkPath);
+    }
+
+    private ImmutableList<String> searchForLinkConflicts(
+        SourcePathResolverAdapter resolver, ProjectFilesystem filesystem) {
+      Map<Path, Path> linkPaths = new HashMap<>();
+      ImmutableList.Builder<String> conflicts = ImmutableList.builder();
+      for (Map.Entry<SourcePath, Optional<String>> sourcePathEntry : resources.entrySet()) {
+        SourcePath sourcePath = sourcePathEntry.getKey();
+        Optional<String> sourcePathName = sourcePathEntry.getValue();
+        Path linkPath = deriveLinkPath(resolver, filesystem, sourcePath, sourcePathName);
+        if (!linkPaths.containsKey(linkPath)) {
+          linkPaths.put(linkPath, resolver.getRelativePath(filesystem, sourcePath).getPath());
+        } else {
+          conflicts.add(
+              String.format(
+                  "Duplicate resource link path '%s' (Resolves to both '%s' and '%s')",
+                  linkPath, sourcePath, linkPaths.get(linkPath)));
+        }
+      }
+      return conflicts.build();
+    }
+
+    private Path deriveLinkPath(
+        SourcePathResolverAdapter resolver,
+        ProjectFilesystem filesystem,
+        SourcePath sourcePath,
+        Optional<String> sourcePathName) {
+
+      Optional<BuildTarget> targetOptional = getBuildTarget(sourcePath);
+      if (targetOptional.isPresent()) {
+        BuildTarget target = targetOptional.get();
+        if (!target.getCell().equals(buildTarget.getCell())) {
+          throw new RuntimeException(
+              String.format(
+                  "cross-cell resources are not implemented: %s in sh_binary %s",
+                  sourcePath, buildTarget));
+        }
+
+        // Tack on the target's base path and the source path name of the resource
+        return Paths.get(ROOT_CELL_LINK_NAME)
+            .resolve(
+                target
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPathDefaultFileSystem()
+                    .resolve(
+                        sourcePathName.orElseGet(
+                            () -> resolver.getSourcePathName(target, sourcePath))));
+      }
+
+      if (sourcePath instanceof PathSourcePath) {
+        return Paths.get(ROOT_CELL_LINK_NAME)
+            .resolve(resolver.getRelativePath(filesystem, sourcePath).getPath());
+      }
+
+      throw new RuntimeException(
+          "unknown source path: "
+              + sourcePath
+              + "for sh_binary "
+              + buildTarget
+              + " class: "
+              + sourcePath.getClass());
+    }
+  }
+
+  private static Optional<BuildTarget> getBuildTarget(SourcePath sourcePath) {
+    if (sourcePath instanceof ExplicitBuildTargetSourcePath) {
+      return Optional.of(((ExplicitBuildTargetSourcePath) sourcePath).getTarget());
+    }
+    if (sourcePath instanceof DefaultBuildTargetSourcePath) {
+      return Optional.of(((DefaultBuildTargetSourcePath) sourcePath).getTarget());
+    }
+    return Optional.empty();
   }
 }

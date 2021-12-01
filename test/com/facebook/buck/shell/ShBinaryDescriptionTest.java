@@ -67,7 +67,7 @@ public class ShBinaryDescriptionTest {
   @Test
   public void verifyCellErrorMatcher() {
     assertTrue(
-        ShBinary.cellErrorMatcher
+        ShBinary.CELL_ERROR_MATCHER
             .matcher(
                 "cd \"$BUCK_TMP_ROOT\"\n"
                     + "  # Create symlink to the cells in the folder containing this script.\n"
@@ -81,7 +81,7 @@ public class ShBinaryDescriptionTest {
             .find());
 
     assertTrue(
-        ShBinary.cellErrorMatcher
+        ShBinary.CELL_ERROR_MATCHER
             .matcher(
                 "cd \"$BUCK_TMP_ROOT\"\n"
                     + "  # Create symlink to the cells in the folder containing this script.\n"
@@ -95,7 +95,7 @@ public class ShBinaryDescriptionTest {
             .find());
 
     assertTrue(
-        ShBinary.cellErrorMatcher
+        ShBinary.CELL_ERROR_MATCHER
             .matcher(
                 "cd \"$BUCK_TMP_ROOT\"\n"
                     + "  # Create symlink to the cells in the folder containing this script.\n"
@@ -109,7 +109,7 @@ public class ShBinaryDescriptionTest {
             .find());
 
     assertFalse(
-        ShBinary.cellErrorMatcher
+        ShBinary.CELL_ERROR_MATCHER
             .matcher(
                 "cd \"$BUCK_TMP_ROOT\"\n"
                     + "  CELLS_NOT_NAMES=(\n"
@@ -122,7 +122,7 @@ public class ShBinaryDescriptionTest {
             .find());
 
     assertFalse(
-        ShBinary.cellErrorMatcher
+        ShBinary.CELL_ERROR_MATCHER
             .matcher(
                 "cd \"$BUCK_TMP_ROOT\"\n"
                     + "  CELLS_NAMES=(\n"
@@ -134,7 +134,7 @@ public class ShBinaryDescriptionTest {
             .find());
 
     assertFalse(
-        ShBinary.cellErrorMatcher
+        ShBinary.CELL_ERROR_MATCHER
             .matcher(
                 "cd \"$BUCK_TMP_ROOT\"\n"
                     + "  CELLS_NAMES=(\n"

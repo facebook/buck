@@ -17,6 +17,12 @@
 package com.facebook.buck.shell;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -98,7 +104,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -192,7 +197,7 @@ public class GenruleTest {
             .withBuildCellRootPath(filesystem.getRootPath());
     assertThat(
         pathResolver.filterInputsToCompareToOutput(genrule.getBuildable().srcs.getPaths()),
-        Matchers.containsInAnyOrder(
+        containsInAnyOrder(
             filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"),
             filesystem.getPath("src/com/facebook/katana/AndroidManifest.xml")));
 
@@ -416,10 +421,10 @@ public class GenruleTest {
     Step step = steps.get(9);
     assertTrue(step instanceof WorkerShellStep);
     WorkerShellStep workerShellStep = (WorkerShellStep) step;
-    assertThat(workerShellStep.getShortName(), Matchers.equalTo("worker"));
+    assertThat(workerShellStep.getShortName(), equalTo("worker"));
     assertThat(
         workerShellStep.getEnvironmentVariables(),
-        Matchers.hasEntry(
+        hasEntry(
             "OUT",
             filesystem
                 .resolve(
@@ -487,7 +492,7 @@ public class GenruleTest {
             .setOut("output.txt")
             .build(graphBuilder);
 
-    assertThat(genrule.getBuildDeps(), Matchers.hasItems(shBinaryRule, workerToolRule));
+    assertThat(genrule.getBuildDeps(), hasItems(shBinaryRule, workerToolRule));
   }
 
   private StepExecutionContext newEmptyExecutionContext(Platform platform) {
@@ -610,14 +615,14 @@ public class GenruleTest {
       throws IOException {
     Path scriptFilePath = genruleStep.getScriptFilePath(context);
     String actualContents = genruleStep.getScriptFileContents(context);
-    assertThat(actualContents, Matchers.equalTo(expectedScriptFileContents));
+    assertThat(actualContents, equalTo(expectedScriptFileContents));
     ImmutableList<String> expectedCommand =
         ImmutableList.<String>builder()
             .addAll(expectedCommandPrefix)
             .add(scriptFilePath.toString())
             .build();
     ImmutableList<String> actualCommand = genruleStep.getShellCommand(context);
-    assertThat(actualCommand, Matchers.equalTo(expectedCommand));
+    assertThat(actualCommand, equalTo(expectedCommand));
   }
 
   @Test
@@ -736,8 +741,8 @@ public class GenruleTest {
             ruleFinder);
     RuleKey unchangedRuleKey = ruleKeyFactory.build(rule);
     RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);
-    assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
-    assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
+    assertThat(unchangedRuleKey, not(equalTo(originalRuleKey)));
+    assertThat(unchangedInputBasedRuleKey, equalTo(originalInputRuleKey));
 
     // Make a change to the dep's output, which *should* affect the input-based rule key.
     graphBuilder = new TestActionGraphBuilder();
@@ -757,7 +762,7 @@ public class GenruleTest {
                 filesystem, FileHashCacheMode.DEFAULT, false),
             ruleFinder);
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);
-    assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
+    assertThat(changedInputBasedRuleKey, not(equalTo(originalInputRuleKey)));
   }
 
   @Test
@@ -785,17 +790,11 @@ public class GenruleTest {
     filesystem.writeContentsToPath(
         "something", pathResolver.getCellUnsafeRelPath(dep.getSourcePathToOutput()));
     BuildRule rule = ruleBuilder.build(graphBuilder);
-    DefaultRuleKeyFactory defaultRuleKeyFactory =
-        new TestDefaultRuleKeyFactory(
-            StackedFileHashCache.createDefaultHashCaches(
-                filesystem, FileHashCacheMode.DEFAULT, false),
-            ruleFinder);
     InputBasedRuleKeyFactory inputBasedRuleKeyFactory =
         new TestInputBasedRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(
                 filesystem, FileHashCacheMode.DEFAULT, false),
             ruleFinder);
-    RuleKey originalRuleKey = defaultRuleKeyFactory.build(rule);
     RuleKey originalInputRuleKey = inputBasedRuleKeyFactory.build(rule);
 
     // Change the dep's resource list, which will change its normal rule key, but since we're
@@ -814,20 +813,13 @@ public class GenruleTest {
     rule = ruleBuilder.build(graphBuilder);
     ruleFinder = graphBuilder;
     pathResolver = ruleFinder.getSourcePathResolver();
-    defaultRuleKeyFactory =
-        new TestDefaultRuleKeyFactory(
-            StackedFileHashCache.createDefaultHashCaches(
-                filesystem, FileHashCacheMode.DEFAULT, false),
-            ruleFinder);
     inputBasedRuleKeyFactory =
         new TestInputBasedRuleKeyFactory(
             StackedFileHashCache.createDefaultHashCaches(
                 filesystem, FileHashCacheMode.DEFAULT, false),
             ruleFinder);
-    RuleKey unchangedRuleKey = defaultRuleKeyFactory.build(rule);
     RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);
-    assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
-    assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
+    assertThat(unchangedInputBasedRuleKey, equalTo(originalInputRuleKey));
 
     // Make a change to the dep's output, which *should* affect the input-based rule key.
     graphBuilder = new TestActionGraphBuilder();
@@ -845,7 +837,7 @@ public class GenruleTest {
                 filesystem, FileHashCacheMode.DEFAULT, false),
             ruleFinder);
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);
-    assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
+    assertThat(changedInputBasedRuleKey, not(equalTo(originalInputRuleKey)));
   }
 
   @Test
@@ -910,8 +902,8 @@ public class GenruleTest {
             ruleFinder);
     RuleKey unchangedRuleKey = defaultRuleKeyFactory.build(rule);
     RuleKey unchangedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);
-    assertThat(unchangedRuleKey, Matchers.not(Matchers.equalTo(originalRuleKey)));
-    assertThat(unchangedInputBasedRuleKey, Matchers.equalTo(originalInputRuleKey));
+    assertThat(unchangedRuleKey, not(equalTo(originalRuleKey)));
+    assertThat(unchangedInputBasedRuleKey, equalTo(originalInputRuleKey));
 
     // Make a change to the dep's output, which *should* affect the input-based rule key.
     graphBuilder = new TestActionGraphBuilder();
@@ -929,7 +921,7 @@ public class GenruleTest {
                 filesystem, FileHashCacheMode.DEFAULT, false),
             ruleFinder);
     RuleKey changedInputBasedRuleKey = inputBasedRuleKeyFactory.build(rule);
-    assertThat(changedInputBasedRuleKey, Matchers.not(Matchers.equalTo(originalInputRuleKey)));
+    assertThat(changedInputBasedRuleKey, not(equalTo(originalInputRuleKey)));
   }
 
   @Test
@@ -1062,7 +1054,7 @@ public class GenruleTest {
     ImmutableSet<Path> actual =
         convertSourcePathsToPaths(
             sourcePathResolver, genrule.getSourcePathToOutput(OutputLabel.defaultLabel()));
-    assertThat(actual, Matchers.contains(getExpectedPath(fakeFileSystem, target, "output3")));
+    assertThat(actual, contains(getExpectedPath(fakeFileSystem, target, "output3")));
   }
 
   @Test
@@ -1088,7 +1080,7 @@ public class GenruleTest {
             sourcePathResolver, genrule.getSourcePathToOutput(OutputLabel.of("label1")));
     assertThat(
         actual,
-        Matchers.containsInAnyOrder(
+        containsInAnyOrder(
             getExpectedPath(fakeFileSystem, target, "output1a"),
             getExpectedPath(fakeFileSystem, target, "output1b")));
   }
@@ -1111,7 +1103,7 @@ public class GenruleTest {
     ImmutableSet<OutputLabel> actual = genrule.getOutputLabels();
     assertThat(
         actual,
-        Matchers.containsInAnyOrder(
+        containsInAnyOrder(
             OutputLabel.of("label1"), OutputLabel.of("label2"), OutputLabel.defaultLabel()));
   }
 
@@ -1125,7 +1117,7 @@ public class GenruleTest {
             .build(new TestActionGraphBuilder(), new FakeProjectFilesystem());
 
     ImmutableSet<OutputLabel> actual = genrule.getOutputLabels();
-    assertThat(actual, Matchers.containsInAnyOrder(OutputLabel.defaultLabel()));
+    assertThat(actual, containsInAnyOrder(OutputLabel.defaultLabel()));
   }
 
   private Path getExpectedPath(ProjectFilesystem filesystem, BuildTarget target, String path) {

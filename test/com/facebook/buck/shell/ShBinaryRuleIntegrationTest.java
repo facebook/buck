@@ -23,7 +23,13 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
+import com.facebook.buck.rules.modern.OutputPath;
+import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -75,11 +81,14 @@ public class ShBinaryRuleIntegrationTest {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:example_sh", "-v", "2");
     buildResult.assertSuccess();
 
+    // Get the filesystem and the buildTarget
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:example_sh");
+
     // Make sure the sh_binary output is executable to begin with.
-    Path outputPath =
-        workspace
-            .getGenPath(BuildTargetFactory.newInstance("//:example_sh"), "__%s__")
-            .resolve("example_sh.sh");
+    // workspace.
+    OutputPathResolver outputPathResolver = new DefaultOutputPathResolver(filesystem, buildTarget);
+    RelPath outputPath = outputPathResolver.resolvePath(new OutputPath("example_sh.sh"));
     Path output = workspace.getPath(outputPath);
     assertTrue("Output file should be written to '" + outputPath + "'.", Files.exists(output));
     assertTrue("Output file must be executable.", Files.isExecutable(output));

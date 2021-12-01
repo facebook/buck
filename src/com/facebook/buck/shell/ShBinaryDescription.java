@@ -44,7 +44,7 @@ public class ShBinaryDescription implements DescriptionWithTargetGraph<ShBinaryD
         buildTarget,
         context.getCellPathResolver(),
         context.getProjectFilesystem(),
-        params,
+        context.getActionGraphBuilder(),
         args.getMain(),
         args.getResources());
   }
