@@ -6,14 +6,18 @@ kotlin_library(
     ]),
     annotation_processing_tool = "kapt",
     plugins = [
-        "//com/example/ap/javaap:ap",
-        "//com/example/ap/kotlinap_kapt:ap",
+        "//com/example/ap/kotlinap_ksp:ap",
     ],
+    kotlin_compiler_plugins = {
+        "//com/example/ap/libs:kotlin-symbol-processing-api.jar": {},
+        "//com/example/ap/libs:kotlin-symbol-processing-cmdline.jar": {},
+    },
     visibility = [
         "PUBLIC",
     ],
     deps = [
         "//com/example/ap/javaannotation:annotation-lib",
         "//com/example/ap/kotlinannotation:annotation-lib",
+        "//com/example/ap/libs:kotlin-symbol-processing-api.jar",
     ],
 )

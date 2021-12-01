@@ -4,7 +4,7 @@ class AKotlinClass {
     fun foo() {
         JavaClassWithJavaAnnotation_()
         KotlinClassWithJavaAnnotation_()
-        JavaClassWithKotlinAnnotation_()
-        KotlinClassWithKotlinAnnotation_()
+        JavaClassWithKotlinAnnotation_kaptgen()
+        KotlinClassWithKotlinAnnotation_kaptgen()
     }
 }

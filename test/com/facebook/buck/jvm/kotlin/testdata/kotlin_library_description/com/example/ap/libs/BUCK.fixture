@@ -22,6 +22,18 @@ prebuilt_jar(
     visibility = ["PUBLIC"],
 )
 
+prebuilt_jar(
+    name = "kotlin-symbol-processing-api.jar",
+    binary_jar = "symbol-processing-api-1.5.31-1.0.1.jar",
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_jar(
+    name = "kotlin-symbol-processing-cmdline.jar",
+    binary_jar = "symbol-processing-cmdline-1.5.31-1.0.1.jar",
+    visibility = ["PUBLIC"],
+)
+
 java_annotation_processor(
     name = "google_auto_service",
     processor_class = "com.google.auto.service.processor.AutoServiceProcessor",

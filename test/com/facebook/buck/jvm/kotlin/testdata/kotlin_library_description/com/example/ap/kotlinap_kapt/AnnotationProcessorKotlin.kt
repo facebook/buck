@@ -1,4 +1,4 @@
-package com.example.ap.kotlinap
+package com.example.ap.kotlinap_kapt
 
 import com.google.auto.service.AutoService
 import java.io.File
@@ -22,18 +22,18 @@ class AnnotationProcessorKotlin : AbstractProcessor() {
     }
 
     override fun process(annotations: MutableSet<out TypeElement>, roundEnv: RoundEnvironment): Boolean {
-        roundEnv.getElementsAnnotatedWith(KotlinAnnotation::class.java)
-                .forEach {
-                    val className = it.simpleName.toString()
-                    val pkg = processingEnv.elementUtils.getPackageOf(it).toString()
-                    generateClass(className, pkg)
-                }
-        return true
+      roundEnv.getElementsAnnotatedWith(KotlinAnnotation::class.java).forEach {
+
+          val className = it.simpleName.toString()
+          val pkg = processingEnv.elementUtils.getPackageOf(it).toString()
+          generateClass(className, pkg)
+        }
+      return true
     }
 
     private fun generateClass(name: String, pkg: String) {
         val genDir = processingEnv.options["kapt.kotlin.generated"]
-        val fileName = "${name}_"
+        val fileName = "${name}_kaptgen"
         val file = FileSpec
                 .builder(pkg, fileName)
                 .addType(TypeSpec

@@ -12,7 +12,7 @@ kotlin_library(
     ],
     annotation_processing_tool = "kapt",
     plugins = [
-        "//com/example/ap/kotlinap:ap",
+        "//com/example/ap/kotlinap_kapt:ap",
     ],
     deps = [
         "//com/example/ap/kotlinannotation:annotation-lib",

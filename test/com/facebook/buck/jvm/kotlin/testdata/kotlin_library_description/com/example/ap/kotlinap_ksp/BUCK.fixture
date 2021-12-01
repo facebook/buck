@@ -1,0 +1,33 @@
+java_annotation_processor(
+    name = "ap",
+    processor_class = "KSP:com.example.ap.kotlinap_ksp.AnnotationProcessorKotlinKspProvider",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":ap-lib",
+    ],
+)
+
+kotlin_library(
+    name = "ap-lib",
+    srcs = [
+        "AnnotationProcessorKotlinKsp.kt",
+    ],
+    resources = glob([
+        "resources/**",
+    ]),
+    resources_root = "resources",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "buck//third-party/java/guava:guava",
+        "//com/example/ap/kotlinannotation:annotation-lib",
+        "//com/example/ap/javaannotation:annotation-lib",
+        "//com/example/ap/libs:kotlin-symbol-processing-api.jar",
+        "//com/example/ap/libs:kotlin-symbol-processing-cmdline.jar",
+        "//com/example/ap/libs:kotlinpoet.jar",
+        "//com/example/ap/throwingkotlinap:ap-lib",
+    ],
+)
