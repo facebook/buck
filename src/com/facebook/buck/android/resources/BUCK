@@ -50,6 +50,7 @@ java_library(
         "//third-party/java/args4j:args4j",
         "//third-party/java/guava:guava",
     ],
+    java_version = "11",
 )
 
 java_binary(

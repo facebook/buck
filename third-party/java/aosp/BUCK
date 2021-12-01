@@ -1,15 +1,13 @@
 java_library(
     name = "aosp",
     srcs = glob(["src/**/*.java"]),
-    extra_arguments = select({
-        "//tools/build/config:java_11": [
+    extra_arguments = [
             "--add-exports",
             "java.base/sun.security.pkcs=ALL-UNNAMED",
             "--add-exports",
             "java.base/sun.security.x509=ALL-UNNAMED",
-        ],
-        "DEFAULT": [],
-    }),
+    ],
+    java_version = "11",
     licenses = [
         "LICENSE",
         "NOTICE",
