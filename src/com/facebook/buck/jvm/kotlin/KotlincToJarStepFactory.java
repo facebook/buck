@@ -412,10 +412,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
                 javaAnnotationProcessorParams.getPluginProperties().stream()
                     .filter(
                         prop ->
-                            !prop.getProcessorNames()
-                                .asList()
-                                .get(0)
-                                .startsWith(KSP_PROCESSOR_NAME_PREFIX))
+                            prop.getProcessorNames().isEmpty()
+                                || !prop.getProcessorNames()
+                                    .asList()
+                                    .get(0)
+                                    .startsWith(KSP_PROCESSOR_NAME_PREFIX))
                     .collect(Collectors.toList()));
 
     // No annotation processors for KAPT
@@ -576,6 +577,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
             ? ImmutableList.of()
             : ImmutableList.copyOf(
                 annotationProcessorParams.getPluginProperties().stream()
+                    .filter(prop -> !prop.getProcessorNames().isEmpty())
                     .filter(
                         prop ->
                             prop.getProcessorNames()
