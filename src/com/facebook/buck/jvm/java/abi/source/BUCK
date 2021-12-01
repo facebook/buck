@@ -1,11 +1,6 @@
 java_library(
     name = "source",
-    srcs = glob(["*.java"]) + select({
-        "//tools/build/config:java_11": glob(["java11/*.java"]),
-        # We use conditional compilation to support building against both Java 8 and 11, despite
-        # breaking interface changes in the JDK.
-        "DEFAULT": glob(["java8/*.java"]),
-    }),
+    srcs = glob(["*.java"]) + glob(["java11/*.java"]),
     provided_deps = [
         # Tools.jar is the compiler itself, and will already be present at runtime;
         # we compile against a stub.

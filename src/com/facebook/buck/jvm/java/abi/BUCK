@@ -5,12 +5,7 @@ java_library(
         exclude = [
             "ApiStubber.java",
         ],
-    ) + select({
-        "//tools/build/config:java_11": glob(["java11/*.java"]),
-        # We use conditional compilation to support building against both Java 8 and 11, despite
-        # breaking interface changes in the JDK.
-        "DEFAULT": glob(["java8/*.java"]),
-    }),
+    ) +  glob(["java11/*.java"]),
     tests = [
         "//test/com/facebook/buck/jvm/java/abi:abi",
     ],

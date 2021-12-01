@@ -13,9 +13,6 @@
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/testdata" type="java-test-resource" relativeOutputPath="com/facebook/buck/cli/testdata" />
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/config/testdata" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/dx/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/java11" isTestSource="false" packagePrefix="com.facebook.buck.jvm.java.abi" />
-      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/source/java11" isTestSource="false" packagePrefix="com.facebook.buck.jvm.java.abi.source" />
-      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/plugin/adapter/java11" isTestSource="false" packagePrefix="com.facebook.buck.jvm.java.plugin.adapter" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/android/annotations/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/aosp/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/core/util/immutables/resources" type="java-resource" />

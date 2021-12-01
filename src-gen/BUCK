@@ -8,12 +8,8 @@ java_library(
         "//third-party/java/slf4j:slf4j",
         "//third-party/java/slf4j:slf4j-api",
         "//third-party/java/fbthrift:fbthrift",
-    ] + select({
-        # Thrift generated .java files depend on javax.annotation.Generated, which has been removed
-        # from the JCL in Java 11. Add it back via this third party library.
-        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
-        "DEFAULT": [],
-    }),
+        "//third-party/java/jakarta.annotation-api:jakarta.annotation-api"
+    ],
     exported_deps = [
         "//third-party/java/thrift:libthrift",
     ],
@@ -25,12 +21,7 @@ java_library(
         ["**/remoteexecution/proto/**/*.java"],
     ),
     visibility = ["PUBLIC"],
-    deps = select({
-        # protobuf generated .java files depend on javax.annotation.Generated, which has been removed
-        # from the JCL in Java 11. Add it back via this third party library.
-        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
-        "DEFAULT": [],
-    }),
+    deps =["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
     exported_deps = [
         "//third-party/java/protobuf:protobuf",
         "//third-party/java/remote-apis:remote-apis",
@@ -41,12 +32,7 @@ java_library(
     name = "logd-protobuf",
     srcs = glob(["**/logd/proto/**/*.java"]),
     visibility = ["PUBLIC"],
-    deps = select({
-        # protobuf generated .java files depend on javax.annotation.Generated, which has been removed
-        # from the JCL in Java 11. Add it back via this third party library.
-        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
-        "DEFAULT": [],
-    }),
+    deps = ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
     exported_deps = [
         "//third-party/java/protobuf:protobuf",
         "//third-party/java/remote-apis:remote-apis",
@@ -60,12 +46,7 @@ java_library(
         "//src/com/facebook/buck/...",
         "//test/com/facebook/buck/...",
     ],
-    deps = select({
-        # protobuf generated .java files depend on javax.annotation.Generated, which has been removed
-        # from the JCL in Java 11. Add it back via this third party library.
-        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
-        "DEFAULT": [],
-    }),
+    deps = ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
     exported_deps = [
         "//third-party/java/gson:gson",
         "//third-party/java/protobuf:protobuf",
@@ -79,12 +60,7 @@ java_library(
         "//src/com/facebook/buck/...",
         "//test/com/facebook/buck/...",
     ],
-    deps = select({
-        # protobuf generated .java files depend on javax.annotation.Generated, which has been removed
-        # from the JCL in Java 11. Add it back via this third party library.
-        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
-        "DEFAULT": [],
-    }),
+    deps =["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
     exported_deps = [
         "//third-party/java/protobuf:protobuf",
     ],
@@ -97,12 +73,7 @@ java_library(
         "//src/com/facebook/buck/...",
         "//test/com/facebook/buck/...",
     ],
-    deps = select({
-        # protobuf generated .java files depend on javax.annotation.Generated, which has been removed
-        # from the JCL in Java 11. Add it back via this third party library.
-        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
-        "DEFAULT": [],
-    }),
+    deps = ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
     exported_deps = [
         "//third-party/java/protobuf:protobuf",
     ],
@@ -115,12 +86,7 @@ java_library(
         "//src/com/facebook/buck/...",
         "//test/com/facebook/buck/...",
     ],
-    deps = select({
-        # protobuf generated .java files depend on javax.annotation.Generated, which has been removed
-        # from the JCL in Java 11. Add it back via this third party library.
-        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
-        "DEFAULT": [],
-    }),
+    deps = ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
     exported_deps = [
         "//third-party/java/protobuf:protobuf",
     ],
