@@ -12,7 +12,6 @@ java_library(
     ],
     deps = [
         "//third-party/java/asm:asm",
-        "//third-party/java/jsr:jsr305",
         "//third-party/java/kotlinx-metadata-jvm:kotlinx-metadata-jvm",
     ],
     exported_deps = [

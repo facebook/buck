@@ -7,9 +7,6 @@ java_library(
         "//starlark:starlark-annot-processor",
     ],
     visibility = ["PUBLIC"],
-    deps = [
-        "//third-party/java/guava:guava",
-    ],
     exported_deps = [
         "//starlark:bazel",
     ],

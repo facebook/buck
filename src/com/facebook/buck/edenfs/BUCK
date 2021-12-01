@@ -6,7 +6,6 @@ java_library(
     ],
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/io/unixsocket:unixsocket",
@@ -14,7 +13,6 @@ java_library(
         "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/skylark/io/impl:impl",
-        "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/timing:timing",

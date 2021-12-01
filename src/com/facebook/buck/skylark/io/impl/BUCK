@@ -3,13 +3,9 @@ java_library(
     srcs = glob(["*.java"]),
     visibility = ["PUBLIC"],
     deps = [
-        "//src/com/facebook/buck/io:io",
-        "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/skylark/io:io",
         "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/environment:platform",
-        "//starlark:bazel",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],

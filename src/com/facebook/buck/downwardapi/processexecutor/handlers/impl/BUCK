@@ -9,7 +9,6 @@ java_library(
         "//src/com/facebook/buck/downwardapi/processexecutor/context:context",
         "//src/com/facebook/buck/downwardapi/processexecutor/handlers:handlers",
         "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/event/chrome_trace:chrome_trace",
         "//third-party/java/guava:guava",
     ],
     exported_deps = [

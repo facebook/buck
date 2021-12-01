@@ -32,6 +32,5 @@ java_immutables_library(
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/util/concurrent:concurrent",
-        "//src/com/facebook/buck/util/config:config",
     ],
 )
