@@ -61,7 +61,7 @@ public class ProGuardObfuscateStepTest {
         AndroidPlatformTarget.of(
             "android",
             Paths.get(""),
-            Collections.emptyList(),
+            ImmutableList.of(),
             () -> new SimpleTool(""),
             new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),

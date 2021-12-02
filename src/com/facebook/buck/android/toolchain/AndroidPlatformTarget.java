@@ -26,8 +26,8 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
 
@@ -58,7 +58,7 @@ public abstract class AndroidPlatformTarget implements Toolchain, AddsToRuleKey 
   public abstract Path getAndroidJar();
 
   /** @return bootclasspath entries as {@link AbsPath}s */
-  public abstract List<AbsPath> getBootclasspathEntries();
+  public abstract ImmutableList<AbsPath> getBootclasspathEntries();
 
   public abstract Supplier<Tool> getAaptExecutable();
 
@@ -92,7 +92,7 @@ public abstract class AndroidPlatformTarget implements Toolchain, AddsToRuleKey 
   public static AndroidPlatformTarget of(
       String platformName,
       Path androidJar,
-      List<AbsPath> bootclasspathEntries,
+      ImmutableList<AbsPath> bootclasspathEntries,
       Supplier<Tool> aaptExecutable,
       ToolProvider aapt2ToolProvider,
       Path adbExecutable,

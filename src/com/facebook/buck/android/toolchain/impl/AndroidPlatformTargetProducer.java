@@ -31,19 +31,18 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class AndroidPlatformTargetProducer {
 
@@ -109,6 +108,7 @@ public class AndroidPlatformTargetProducer {
   }
 
   private interface Factory {
+
     AndroidPlatformTarget newInstance(
         ProjectFilesystem filesystem,
         AndroidBuildToolsLocation androidBuildToolsLocation,
@@ -162,14 +162,14 @@ public class AndroidPlatformTargetProducer {
       }
     }
 
-    LinkedList<AbsPath> bootclasspathEntries =
-        additionalJarPaths.stream()
-            .map(filesystem::resolve)
-            .map(AbsPath::of)
-            .collect(Collectors.toCollection(LinkedList::new));
-
+    ImmutableList.Builder<AbsPath> bootclasspathEntriesBuilder =
+        ImmutableList.builderWithExpectedSize(1 + additionalJarPaths.size());
     // Make sure android.jar is at the front of the bootclasspath.
-    bootclasspathEntries.addFirst(androidJar);
+    bootclasspathEntriesBuilder.add(androidJar);
+    additionalJarPaths.stream()
+        .map(filesystem::resolve)
+        .map(AbsPath::of)
+        .forEach(bootclasspathEntriesBuilder::add);
 
     // This is the directory under the Android SDK directory that contains the dx script, jack,
     // jill, and binaries.
@@ -188,7 +188,7 @@ public class AndroidPlatformTargetProducer {
     return AndroidPlatformTarget.of(
         name,
         androidJar.getPath(),
-        bootclasspathEntries,
+        bootclasspathEntriesBuilder.build(),
         aaptOverride.orElse(
             () ->
                 VersionedTool.of(
@@ -311,6 +311,7 @@ public class AndroidPlatformTargetProducer {
   }
 
   private static class AndroidWithoutGoogleApisFactory implements Factory {
+
     @Override
     public AndroidPlatformTarget newInstance(
         ProjectFilesystem filesystem,

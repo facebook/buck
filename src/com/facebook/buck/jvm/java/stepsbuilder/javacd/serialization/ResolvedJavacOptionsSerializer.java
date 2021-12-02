@@ -42,10 +42,10 @@ public class ResolvedJavacOptionsSerializer {
     builder.setJavaAnnotationProcessorParamsPresent(
         options.isJavaAnnotationProcessorParamsPresent());
 
-    Optional<ImmutableList<RelPath>> bootclasspathList = options.getBootclasspathList();
-    bootclasspathList.ifPresent(
-        list ->
-            list.stream().map(RelPathSerializer::serialize).forEach(builder::addBootclasspathList));
+    ImmutableList<RelPath> bootclasspathList = options.getBootclasspathList();
+    bootclasspathList.stream()
+        .map(RelPathSerializer::serialize)
+        .forEach(builder::addBootclasspathList);
 
     builder.setLanguageLevelOptions(
         JavacLanguageLevelOptionsSerializer.serialize(options.getLanguageLevelOptions()));
@@ -76,13 +76,10 @@ public class ResolvedJavacOptionsSerializer {
   public static ResolvedJavacOptions deserialize(
       com.facebook.buck.javacd.model.ResolvedJavacOptions options) {
     var bootclasspathListList = options.getBootclasspathListList();
-    Optional<ImmutableList<RelPath>> bootclasspathList =
-        bootclasspathListList.isEmpty()
-            ? Optional.empty()
-            : Optional.of(
-                bootclasspathListList.stream()
-                    .map(RelPathSerializer::deserialize)
-                    .collect(ImmutableList.toImmutableList()));
+    ImmutableList<RelPath> bootclasspathList =
+        bootclasspathListList.stream()
+            .map(RelPathSerializer::deserialize)
+            .collect(ImmutableList.toImmutableList());
 
     return ResolvedJavacOptions.of(
         toOptionalString(options.getBootclasspath()),

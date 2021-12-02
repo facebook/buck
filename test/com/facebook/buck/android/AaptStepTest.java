@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import org.junit.Test;
 
 /** Test generation of command line flags based on creation parameters */
@@ -78,7 +77,7 @@ public class AaptStepTest {
         AndroidPlatformTarget.of(
             "android",
             basePath.resolve("mock_android.jar").getPath(),
-            /* bootclasspathEntries= */ Collections.emptyList(),
+            /* bootclasspathEntries= */ ImmutableList.of(),
             () -> new SimpleTool("mock_aapt_bin"),
             /* aapt2ToolProvider= */ new ConstantToolProvider(new SimpleTool("")),
             /* adbExecutable= */ Paths.get(""),

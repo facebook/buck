@@ -177,14 +177,15 @@ public abstract class JavacOptions implements AddsToRuleKey {
       OptionsConsumer optionsConsumer, SourcePathResolverAdapter resolver, AbsPath ruleCellRoot) {
     ImmutableList<PathSourcePath> bootclasspath =
         getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevelValue());
-    Optional<ImmutableList<RelPath>> bootclasspathList = Optional.empty();
+    ImmutableList<RelPath> bootclasspathList;
     if (bootclasspath != null) {
       bootclasspathList =
-          Optional.of(
-              bootclasspath.stream()
-                  .map(resolver::getAbsolutePath)
-                  .map(ruleCellRoot::relativize)
-                  .collect(ImmutableList.toImmutableList()));
+          bootclasspath.stream()
+              .map(resolver::getAbsolutePath)
+              .map(ruleCellRoot::relativize)
+              .collect(ImmutableList.toImmutableList());
+    } else {
+      bootclasspathList = ImmutableList.of();
     }
 
     appendOptionsTo(
@@ -221,7 +222,7 @@ public abstract class JavacOptions implements AddsToRuleKey {
   private static void appendOptionsTo(
       AbsPath ruleCellRoot,
       OptionsConsumer optionsConsumer,
-      @Nullable String bootclasspathString,
+      Optional<String> bootclasspathString,
       JavacLanguageLevelOptions languageLevelOptions,
       boolean isDebug,
       boolean isVerbose,
@@ -247,9 +248,8 @@ public abstract class JavacOptions implements AddsToRuleKey {
     }
 
     // Override the bootclasspath if Buck is building Java code for Android.
-    if (bootclasspathString != null) {
-      optionsConsumer.addOptionValue("bootclasspath", bootclasspathString);
-    }
+    bootclasspathString.ifPresent(
+        bootclasspath -> optionsConsumer.addOptionValue("bootclasspath", bootclasspath));
 
     ImmutableList.Builder<ResolvedJavacPluginProperties> allPluginsBuilder =
         ImmutableList.builder();
@@ -309,18 +309,21 @@ public abstract class JavacOptions implements AddsToRuleKey {
     optionsConsumer.addExtras(extraArguments);
   }
 
-  @Nullable
-  private static String getBootclasspathString(
-      Optional<String> bootclasspathOptional, Optional<ImmutableList<RelPath>> bootclasspathList) {
-    return bootclasspathOptional.orElseGet(
-        () ->
-            bootclasspathList
-                .map(
-                    relPaths ->
-                        relPaths.stream()
-                            .map(RelPath::toString)
-                            .collect(Collectors.joining(File.pathSeparator)))
-                .orElse(null));
+  private static Optional<String> getBootclasspathString(
+      Optional<String> bootclasspathOptional, ImmutableList<RelPath> bootclasspathList) {
+
+    if (bootclasspathOptional.isPresent()) {
+      return bootclasspathOptional;
+    }
+
+    if (bootclasspathList.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+        bootclasspathList.stream()
+            .map(Object::toString)
+            .collect(Collectors.joining(File.pathSeparator)));
   }
 
   static JavacOptions.Builder builderForUseInJavaBuckConfig() {

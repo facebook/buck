@@ -35,7 +35,7 @@ public abstract class ResolvedJavacOptions {
 
   public abstract Optional<String> getBootclasspath();
 
-  public abstract Optional<ImmutableList<RelPath>> getBootclasspathList();
+  public abstract ImmutableList<RelPath> getBootclasspathList();
 
   public abstract JavacLanguageLevelOptions getLanguageLevelOptions();
 
@@ -62,14 +62,15 @@ public abstract class ResolvedJavacOptions {
     JavacLanguageLevelOptions languageLevelOptions = javacOptions.getLanguageLevelOptions();
     ImmutableList<PathSourcePath> bootclasspath =
         javacOptions.getSourceToBootclasspath().get(languageLevelOptions.getSourceLevelValue());
-    Optional<ImmutableList<RelPath>> bootclasspathList = Optional.empty();
+    ImmutableList<RelPath> bootclasspathList;
     if (bootclasspath != null) {
       bootclasspathList =
-          Optional.of(
-              bootclasspath.stream()
-                  .map(resolver::getAbsolutePath)
-                  .map(ruleCellRoot::relativize)
-                  .collect(ImmutableList.toImmutableList()));
+          bootclasspath.stream()
+              .map(resolver::getAbsolutePath)
+              .map(ruleCellRoot::relativize)
+              .collect(ImmutableList.toImmutableList());
+    } else {
+      bootclasspathList = ImmutableList.of();
     }
 
     JavacPluginParams javaAnnotationProcessorParams =
@@ -93,7 +94,7 @@ public abstract class ResolvedJavacOptions {
   /** Creates {@link ResolvedJavacOptions} */
   public static ResolvedJavacOptions of(
       Optional<String> bootclasspath,
-      Optional<ImmutableList<RelPath>> bootclasspathList,
+      ImmutableList<RelPath> bootclasspathList,
       JavacLanguageLevelOptions languageLevelOptions,
       boolean debug,
       boolean verbose,

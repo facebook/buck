@@ -19,8 +19,8 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
-import java.util.Collections;
 
 public class AndroidTestUtils {
 
@@ -41,7 +41,7 @@ public class AndroidTestUtils {
     return AndroidPlatformTarget.of(
         "android",
         /* androidJar= */ Paths.get(""),
-        /* bootclasspathEntries= */ Collections.emptyList(),
+        /* bootclasspathEntries= */ ImmutableList.of(),
         /* aaptExecutable= */ () -> new SimpleTool(""),
         /* aapt2ToolProvider= */ new ConstantToolProvider(new SimpleTool("")),
         /* adbExecutable= */ Paths.get(""),

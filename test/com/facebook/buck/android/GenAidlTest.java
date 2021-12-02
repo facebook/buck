@@ -54,11 +54,11 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,7 +90,7 @@ public class GenAidlTest {
         AndroidPlatformTarget.of(
             "android",
             Paths.get(""),
-            Collections.emptyList(),
+            ImmutableList.of(),
             () -> new SimpleTool(""),
             new ConstantToolProvider(new SimpleTool("")),
             Paths.get(""),

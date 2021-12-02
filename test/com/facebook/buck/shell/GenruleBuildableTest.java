@@ -66,7 +66,6 @@ import com.google.common.collect.Iterables;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -207,7 +206,7 @@ public class GenruleBuildableTest {
         AndroidPlatformTarget.of(
             "android",
             filesystem.getPath(""),
-            Collections.emptyList(),
+            ImmutableList.of(),
             () -> new SimpleTool("aapt"),
             new ConstantToolProvider(new SimpleTool("aapt2")),
             filesystem.getPath(""),
