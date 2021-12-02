@@ -54,6 +54,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeExecutableStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.util.Escaper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -295,6 +296,7 @@ public class ShBinary extends ModernBuildRule<ShBinary.Impl>
               filesystem,
               outputPathResolver,
               buildContext.getBuildCellRootPath().getPath()),
+          MkdirIsolatedStep.of(resolvedOutputPath.getParent()),
           new StringTemplateStep(
               template,
               TEMPLATE_PATH,
