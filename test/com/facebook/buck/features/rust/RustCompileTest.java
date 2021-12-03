@@ -289,7 +289,7 @@ public class RustCompileTest {
           srcs.stream()
               .collect(
                   ImmutableSortedMap.toImmutableSortedMap(
-                      Comparator.naturalOrder(), src -> src, src -> "random")),
+                      Comparator.naturalOrder(), src -> src, src -> Optional.empty())),
           rootModule,
           RustBuckConfig.RemapSrcPaths.NO,
           Optional.empty(),
@@ -308,12 +308,7 @@ public class RustCompileTest {
               ImmutableSet.of("main.rs", "lib.rs"),
               srcs.stream()
                   .map(
-                      sp ->
-                          ruleFinder
-                              .getSourcePathResolver()
-                              .getCellUnsafeRelPath(sp)
-                              .getPath()
-                              .toString()));
+                      sp -> ruleFinder.getSourcePathResolver().getCellUnsafeRelPath(sp).getPath()));
 
       if (!root.isPresent()) {
         throw new HumanReadableException("No crate root source identified");

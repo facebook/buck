@@ -54,7 +54,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 
 /** Generate a rustc command line with all appropriate dependencies in place. */
@@ -91,12 +90,11 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ImmutableList<Arg> depArgs,
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedMap<String, Arg> environment,
-      ImmutableSortedMap<SourcePath, String> mappedSources,
+      ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       String rootModule,
       RemapSrcPaths remapSrcPaths,
       Optional<String> xcrunSdkPath,
       boolean withDownwardApi) {
-
     super(
         buildTarget,
         projectFilesystem,
@@ -130,7 +128,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ImmutableList<Arg> depArgs,
       ImmutableList<Arg> linkerArgs,
       ImmutableSortedMap<String, Arg> environment,
-      ImmutableSortedMap<SourcePath, String> mappedSources,
+      ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       String rootModule,
       RemapSrcPaths remapSrcPaths,
       Optional<String> xcrunSdkPath,
@@ -186,7 +184,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
     @AddToRuleKey private final String rootModule;
     @AddToRuleKey private final OutputPath output;
 
-    @AddToRuleKey private final ImmutableSortedMap<SourcePath, String> mappedSources;
+    @AddToRuleKey private final ImmutableSortedMap<SourcePath, Optional<String>> mappedSources;
 
     @AddToRuleKey private final RustBuckConfig.RemapSrcPaths remapSrcPaths;
 
@@ -208,7 +206,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         ImmutableSortedMap<String, Arg> environment,
         String rootModule,
         String outputName,
-        ImmutableSortedMap<SourcePath, String> mappedSources,
+        ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
         RemapSrcPaths remapSrcPaths,
         Optional<String> xcrunpath,
         boolean withDownwardApi) {
@@ -255,7 +253,20 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
               mappedSources.entrySet().stream()
                   .collect(
                       ImmutableMap.toImmutableMap(
-                          ent -> Paths.get(ent.getValue()),
+                          ent -> {
+                            Path path;
+                            if (ent.getValue().isPresent()) {
+                              path =
+                                  buildTarget
+                                      .getCellRelativeBasePath()
+                                      .getPath()
+                                      .toPath(filesystem.getFileSystem())
+                                      .resolve(ent.getValue().get());
+                            } else {
+                              path = resolver.getCellUnsafeRelPath(ent.getKey()).getPath();
+                            }
+                            return path;
+                          },
                           ent -> resolver.getAbsolutePath(ent.getKey()).getPath()))));
       steps.addAll(
           CxxPrepareForLinkStep.create(
@@ -296,7 +307,6 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
               ImmutableList<String> linkerCmd = linker.getCommandPrefix(resolver);
               ImmutableList.Builder<String> cmd = ImmutableList.builder();
               Path src = scratchDir.resolve(rootModule);
-
               cmd.addAll(compiler.getCommandPrefix(resolver));
               if (executionContext.getAnsi().isAnsiTerminal()) {
                 cmd.add("--color=always");
