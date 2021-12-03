@@ -53,7 +53,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -73,7 +72,6 @@ public class SwiftOutputFileMapTest {
   }
 
   @Test
-  @Ignore
   public void testOutputFileMapGenerationSteps() {
     assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
 
@@ -119,7 +117,6 @@ public class SwiftOutputFileMapTest {
   }
 
   @Test
-  @Ignore
   public void testOutputFileMapOutput() throws IOException {
     assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
 

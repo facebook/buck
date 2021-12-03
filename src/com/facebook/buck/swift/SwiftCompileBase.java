@@ -44,6 +44,7 @@ import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
@@ -69,8 +70,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 
 /** A build rule which compiles one or more Swift sources into a Swift module. */
@@ -89,7 +92,11 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   protected final Path outputPath;
 
   @AddToRuleKey(stringify = true)
-  private final Path objectFilePath;
+  protected final Path outputFileMapPath;
+
+  @AddToRuleKey protected final boolean incrementalBuild;
+
+  @AddToRuleKey protected final boolean incrementalImports;
 
   @AddToRuleKey(stringify = true)
   private final Path modulePath;
@@ -201,9 +208,33 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.addXCTestImportPaths = addXCTestImportPaths;
     this.headerPath = outputPath.resolve(SwiftDescriptions.toSwiftHeaderName(moduleName) + ".h");
     this.moduleName = moduleName;
-    this.objectFilePath = outputPath.resolve(moduleName + ".o");
-    this.modulePath = outputPath.resolve(moduleName + ".swiftmodule");
-    this.objectPaths = ImmutableList.of(objectFilePath);
+
+    this.incrementalBuild = swiftBuckConfig.getIncrementalBuild();
+    this.incrementalImports = swiftBuckConfig.getIncrementalImports();
+
+    if (incrementalBuild || incrementalImports) {
+      ImmutableList.Builder<Path> objectPaths = ImmutableList.builder();
+      Set<String> filenames = new HashSet<>();
+      for (SourcePath sourceFilePath : srcs) {
+        Path SourceRelPath =
+            graphBuilder.getSourcePathResolver().getIdeallyRelativePath(sourceFilePath);
+        String fileName = MorePaths.getNameWithoutExtension(SourceRelPath);
+
+        Preconditions.checkArgument(
+            !filenames.contains(fileName),
+            "SwiftCompile %s should not have source files with identical names (%s) in incremental mode",
+            this,
+            fileName);
+        filenames.add(fileName);
+        objectPaths.add(outputPath.resolve(fileName + ".o"));
+      }
+
+      this.objectPaths = objectPaths.build();
+    } else {
+      this.objectPaths = ImmutableList.of(outputPath.resolve(moduleName + ".o"));
+    }
+
+    this.outputFileMapPath = outputPath.resolve("OutputFileMap.json");
 
     RelPath scratchDir =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
@@ -214,6 +245,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
             ? Optional.of(
                 getProjectFilesystem().getRootPath().resolve(scratchDir.resolve("swiftc.argfile")))
             : Optional.empty());
+
+    this.modulePath = outputPath.resolve(moduleName + ".swiftmodule");
 
     this.shouldEmitSwiftdocs = swiftBuckConfig.getEmitSwiftdocs();
     this.swiftdocPath = outputPath.resolve(moduleName + ".swiftdoc");
@@ -274,9 +307,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     String frontendFlag = "-Xfrontend";
     ImmutableList.Builder<String> argBuilder = ImmutableList.builder();
 
-    // Driver invocations use whole module optimization by default to
-    // match the single object file output of the frontend implementation.
-    argBuilder.add("-wmo", "-target", swiftTarget.getVersionedTriple());
+    argBuilder.add("-target", swiftTarget.getVersionedTriple());
 
     if (bridgingHeader.isPresent()) {
       // Disable bridging header -> PCH compilation to mitigate an issue in Xcode 13 beta.
@@ -329,9 +360,23 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         modulePath.toString(),
         "-emit-objc-header-path",
         headerPath.toString(),
-        "-emit-object",
-        "-o",
-        objectFilePath.toString());
+        "-emit-object");
+
+    if (incrementalBuild || incrementalImports) {
+      argBuilder.add("-incremental");
+      argBuilder.add("-output-file-map", outputFileMapPath.toString());
+      // Forcing Swift's driver to instantiate only one frontend job not to mess up with BUCK
+      // processes.
+      argBuilder.add("-driver-batch-count", "1");
+      if (incrementalImports) {
+        argBuilder.add("-enable-incremental-imports");
+      }
+    } else {
+      argBuilder.add("-wmo");
+      // With "-wmo" enabled, it's guaranteed to have one and only one object file per module.
+      Path moduleObjectFile = objectPaths.stream().findFirst().get();
+      argBuilder.add("-o", moduleObjectFile.toString());
+    }
 
     if (enableCxxInterop) {
       argBuilder.add(frontendFlag, "-enable-cxx-interop");

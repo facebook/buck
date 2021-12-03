@@ -42,6 +42,8 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String PREFIX_SERIALIZED_DEBUG_INFO = "prefix_serialized_debug_info";
   public static final String ADD_XCTEST_IMPORT_PATHS = "add_xctest_import_paths";
   public static final String ALLOW_PRIVATE_SWIFT_DEPS = "allow_private_swift_deps";
+  public static final String INCREMENTAL_BUILDS = "incremental";
+  public static final String INCREMENTAL_IMPORTS = "incremental_imports";
   private final BuckConfig delegate;
 
   @Override
@@ -193,5 +195,23 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getAllowPrivateSwiftDeps() {
     return delegate.getBooleanValue(SECTION_NAME, ALLOW_PRIVATE_SWIFT_DEPS, false);
+  }
+
+  /**
+   * If true, BUCK will pass "-incremental" to the Swift compiler. It will enable intra-module
+   * incremental builds. To allow that, BUCK will emit OutputFileMap.json file and pass it to the
+   * Swift's driver.
+   */
+  public boolean getIncrementalBuild() {
+    return delegate.getBooleanValue(SECTION_NAME, INCREMENTAL_BUILDS, false);
+  }
+
+  /**
+   * If true, BUCK will pass "-enable-incremental-imports" along with "-incremental". It will enable
+   * cross module incremental imports which will allow Swift's driver to do a finer-grained
+   * depedency tracking and skip some jobs if they do not depend on changes.
+   */
+  public boolean getIncrementalImports() {
+    return delegate.getBooleanValue(SECTION_NAME, INCREMENTAL_IMPORTS, false);
   }
 }

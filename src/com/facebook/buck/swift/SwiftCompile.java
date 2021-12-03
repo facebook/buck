@@ -114,6 +114,11 @@ public class SwiftCompile extends SwiftCompileBase {
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputPath)));
+
+    if (incrementalBuild || incrementalImports) {
+      steps.add(makeOutputFileMapGenerationStep(context.getSourcePathResolver()));
+    }
+
     steps.add(makeCompileStep(context.getSourcePathResolver()));
 
     return steps.build();
@@ -134,6 +139,14 @@ public class SwiftCompile extends SwiftCompileBase {
         argfilePath,
         withDownwardApi,
         transformErrorsToAbsolutePaths);
+  }
+
+  /**
+   * Creates the step that generates an OutputFileMap file, describing output of the Swift compiler.
+   */
+  private OutputFileMapStep makeOutputFileMapGenerationStep(SourcePathResolverAdapter resolver) {
+    OutputFileMap outputFileMap = new OutputFileMap(resolver, srcs, outputPath);
+    return new OutputFileMapStep(getProjectFilesystem(), outputFileMapPath, outputFileMap);
   }
 
   @Override
