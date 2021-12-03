@@ -73,7 +73,9 @@
       **/.#*, \
       **/*~, \
       **/4913, \
-      **/*.iml
+      **/*.iml, \
+      **/.Spotlight-V100, \
+      **/.Trashes
 
     ; Forbid symlinks for source files so Buck does not have to dump its
     ; cache every time it encounters one.
