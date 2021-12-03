@@ -19,6 +19,7 @@ package com.facebook.buck.util;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.IsolatedEventBus;
+import com.facebook.buck.util.memory.LinuxPerfParser;
 import com.facebook.buck.util.memory.LinuxTimeParser;
 import com.facebook.buck.util.memory.ResourceUsage;
 import com.facebook.buck.util.timing.Clock;
@@ -60,8 +61,16 @@ public class ResourceMonitoringProcessExecutor extends DelegateProcessExecutor {
     // For this purpose, we'll create a temporary file and pass that to time, so we can read it when
     // the process completes.
     NamedTemporaryFile timeOutputFile = new NamedTemporaryFile("time", ".report");
+    NamedTemporaryFile instrCountOutputFile =
+        new NamedTemporaryFile("instruction_count", ".report");
     ImmutableList<String> timeCommand =
-        ImmutableList.<String>builderWithExpectedSize(params.getCommand().size() + 5)
+        ImmutableList.<String>builderWithExpectedSize(params.getCommand().size() + 8 + 5)
+            .add("/usr/bin/perf.real")
+            .add("stat")
+            .addAll(ImmutableList.of("-e", "instructions"))
+            .addAll(ImmutableList.of("-x", ";"))
+            .add("-o")
+            .add(instrCountOutputFile.get().toString())
             .add("/usr/bin/time")
             .add("-f")
             .add("rss %M")
@@ -72,7 +81,8 @@ public class ResourceMonitoringProcessExecutor extends DelegateProcessExecutor {
     ProcessExecutorParams childParams =
         ProcessExecutorParams.builder().from(params).setCommand(timeCommand).build();
     LaunchedProcess delegate = getDelegate().launchProcess(childParams, context);
-    return new ResourceMonitoringLaunchedProcess(delegate, timeOutputFile, params.getCommand());
+    return new ResourceMonitoringLaunchedProcess(
+        delegate, timeOutputFile, instrCountOutputFile, params.getCommand());
   }
 
   @Override
@@ -132,16 +142,18 @@ public class ResourceMonitoringProcessExecutor extends DelegateProcessExecutor {
     // unfortunately LaunchedProcesses can be closed anywhere from zero to two times depending on
     // code paths, so it's safest to dispose of it here.
     var rmlProcess = (ResourceMonitoringLaunchedProcess) process;
-    try (var reportFile = rmlProcess.timeFile) {
+    try (var reportFile = rmlProcess.timeFile;
+        var perfStatFile = rmlProcess.perfFile) {
       var reportPath = reportFile.get();
-      try {
-        var contents = Files.readString(reportPath);
-        var usage = new LinuxTimeParser().parse(contents);
-        return Optional.of(usage);
-      } catch (IOException e) {
-        LOG.warn(e, "Failed to read resource usage from time report file: %s", reportPath);
-        return Optional.empty();
-      }
+      var perfStatPath = perfStatFile.get();
+      var timeFileContents = Files.readString(reportPath);
+      var perfFileContents = Files.readString(perfStatPath);
+      var memUsage = LinuxTimeParser.parse(timeFileContents);
+      var instrUsage = LinuxPerfParser.parse(perfFileContents);
+      return Optional.of(memUsage.combineWith(instrUsage));
+    } catch (IOException e) {
+      LOG.warn(e, "Failed to read resource usage from time/perf report file");
+      return Optional.empty();
     }
   }
 
@@ -167,14 +179,17 @@ public class ResourceMonitoringProcessExecutor extends DelegateProcessExecutor {
   public static class ResourceMonitoringLaunchedProcess extends DelegateLaunchedProcess {
 
     private final NamedTemporaryFile timeFile;
+    private final NamedTemporaryFile perfFile;
     private final ImmutableList<String> originalCommand;
 
     public ResourceMonitoringLaunchedProcess(
         LaunchedProcess delegate,
         NamedTemporaryFile timeFile,
+        NamedTemporaryFile perfFile,
         ImmutableList<String> originalCommand) {
       super(delegate);
       this.timeFile = timeFile;
+      this.perfFile = perfFile;
       this.originalCommand = originalCommand;
     }
 

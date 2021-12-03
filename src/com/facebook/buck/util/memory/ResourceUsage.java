@@ -17,6 +17,7 @@
 package com.facebook.buck.util.memory;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.util.Optional;
 
 /**
  * Resource usage of a process launched by Buck, as reported by `getrusage` on systems with GNU or
@@ -24,6 +25,20 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
  */
 @BuckStyleValue
 public interface ResourceUsage {
+
   /** High water mark of the resident set size (RSS) of a process, in kilobytes (KB) */
-  long getMaxResidentSetSize();
+  Optional<Long> getMaxResidentSetSize();
+
+  /** Hardware CPU instruction counter value */
+  Optional<Long> getInstructionCount();
+
+  /**
+   * @param other other instance to pull values from
+   * @return combined usage with values from self if set, or from other if not set
+   */
+  default ResourceUsage combineWith(ResourceUsage other) {
+    return ImmutableResourceUsage.ofImpl(
+        this.getMaxResidentSetSize().or(other::getMaxResidentSetSize),
+        this.getInstructionCount().or(other::getInstructionCount));
+  }
 }

@@ -19,12 +19,12 @@ package com.facebook.buck.util.memory;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class LinuxTimeParserTest {
+public class LinuxPerfParserTest {
   @Test
   public void parsingSmokeTest() {
-    String contents = "rss 1912\navg 0\npagefaults 0";
-    LinuxTimeParser parser = new LinuxTimeParser();
+    String contents = "# comment\n\n119407423;;instructions;70771103;100.00;;";
+    LinuxPerfParser parser = new LinuxPerfParser();
     ResourceUsage rusage = parser.parse(contents);
-    Assert.assertEquals(1912, (long) rusage.getMaxResidentSetSize().get());
+    Assert.assertEquals(119407423, (long) rusage.getInstructionCount().get());
   }
 }
