@@ -51,11 +51,21 @@ public class SwiftTestIOSIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void testAppleTestToWorkWithSwift() throws Exception {
+  public void testAppleTestToWorkWithSwiftWMO() throws Exception {
+    testAppleTestToWorkWithSwiftImpl(false);
+  }
+
+  @Test
+  public void testAppleTestToWorkWithSwiftIncremental() throws Exception {
+    testAppleTestToWorkWithSwiftImpl(true);
+  }
+
+  private void testAppleTestToWorkWithSwiftImpl(boolean incremental) throws Exception {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_test", tmp);
+    workspace.addBuckConfigLocalOption("swift", "incremental", incremental ? "true" : "false");
     workspace.setUp();
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("fbxctest"),
@@ -101,11 +111,22 @@ public class SwiftTestIOSIntegrationTest {
   }
 
   @Test
-  public void testAppleTestToWorkWithSwiftBundledTestLibraries() throws Exception {
+  public void testAppleTestToWorkWithSwiftBundledTestLibrariesWMO() throws Exception {
+    testAppleTestToWorkWithSwiftBundledTestLibrariesImpl(false);
+  }
+
+  @Test
+  public void testAppleTestToWorkWithSwiftBundledTestLibrariesIncremental() throws Exception {
+    testAppleTestToWorkWithSwiftBundledTestLibrariesImpl(true);
+  }
+
+  private void testAppleTestToWorkWithSwiftBundledTestLibrariesImpl(boolean incremental)
+      throws Exception {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_test", tmp);
+    workspace.addBuckConfigLocalOption("swift", "incremental", incremental ? "true" : "false");
     workspace.setUp();
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("fbxctest"),
@@ -159,11 +180,22 @@ public class SwiftTestIOSIntegrationTest {
   }
 
   @Test
-  public void testSwiftInHostAndTestBundleWithBundledLibraries() throws Exception {
+  public void testSwiftInHostAndTestBundleWithBundledLibrariesWMO() throws Exception {
+    testSwiftInHostAndTestBundleWithBundledLibrariesImpl(false);
+  }
+
+  @Test
+  public void testSwiftInHostAndTestBundleWithBundledLibrariesIncrementla() throws Exception {
+    testSwiftInHostAndTestBundleWithBundledLibrariesImpl(true);
+  }
+
+  private void testSwiftInHostAndTestBundleWithBundledLibrariesImpl(boolean incremental)
+      throws Exception {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_test_with_host", tmp);
+    workspace.addBuckConfigLocalOption("swift", "incremental", incremental ? "true" : "false");
     workspace.setUp();
     workspace.copyRecursively(
         TestDataHelper.getTestDataDirectory(AppleTestBuilder.class).resolve("fbxctest"),

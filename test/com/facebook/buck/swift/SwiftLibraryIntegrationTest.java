@@ -48,6 +48,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -97,17 +98,36 @@ public class SwiftLibraryIntegrationTest {
   }
 
   @Test
-  public void testSwiftCompileAndLinkArgs() throws NoSuchBuildTargetException {
+  public void testSwiftCompileAndLinkArgsWithWMO() throws NoSuchBuildTargetException {
+    testSwiftCompileAndLinkArgsImpl(false);
+  }
+
+  @Test
+  public void testSwiftCompileAndLinkArgsIncrementally() throws NoSuchBuildTargetException {
+    testSwiftCompileAndLinkArgsImpl(true);
+  }
+
+  private void testSwiftCompileAndLinkArgsImpl(boolean incremental)
+      throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
     BuildTarget swiftCompileTarget =
         buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();
 
-    SwiftLibraryDescriptionArg args = createDummySwiftArg();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections("[swift]", incremental ? "incremental = True" : "incremental = False")
+            .build();
+
+    SwiftLibraryDescription swiftLibraryDescription =
+        FakeAppleRuleDescriptions.createSwiftLibraryDescription(buckConfig);
+
+    SwiftLibraryDescriptionArg args =
+        createDummySwiftArg(ImmutableSortedSet.of(FakeSourcePath.of("file.swift")));
     SwiftCompile buildRule =
         (SwiftCompile)
-            FakeAppleRuleDescriptions.SWIFT_LIBRARY_DESCRIPTION.createBuildRule(
+            swiftLibraryDescription.createBuildRule(
                 TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
                 swiftCompileTarget,
                 params,
@@ -136,7 +156,9 @@ public class SwiftLibraryIntegrationTest {
     ExplicitBuildTargetSourcePath fileListSourcePath =
         ExplicitBuildTargetSourcePath.of(
             swiftCompileTarget,
-            pathResolver.getCellUnsafeRelPath(buildRule.getSourcePathToOutput()).resolve("bar.o"));
+            pathResolver
+                .getCellUnsafeRelPath(buildRule.getSourcePathToOutput())
+                .resolve(incremental ? "file.o" : "bar.o"));
     assertThat(fileListArg.getPath(), Matchers.equalTo(fileListSourcePath));
 
     TargetGraph targetGraph =
@@ -358,6 +380,80 @@ public class SwiftLibraryIntegrationTest {
   }
 
   @Test
+  public void testIncrementalBuildArgsAreIncludedInCompilerCommand() {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
+    BuildTarget swiftCompileTarget =
+        buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder().setSections("[swift]", "incremental = True").build();
+
+    SwiftLibraryDescription swiftLibraryDescription =
+        FakeAppleRuleDescriptions.createSwiftLibraryDescription(buckConfig);
+
+    SwiftCompile buildRule =
+        (SwiftCompile)
+            swiftLibraryDescription.createBuildRule(
+                TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
+                swiftCompileTarget,
+                TestBuildRuleParams.create(),
+                createDummySwiftArg());
+
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
+    ImmutableList<Step> steps = buildRule.getBuildSteps(buildContext, new FakeBuildableContext());
+    SwiftCompileStep compileStep = (SwiftCompileStep) steps.get(2);
+    ImmutableList<String> compilerCommand =
+        ImmutableList.copyOf(compileStep.getDescription(null).split(" "));
+
+    assertThat(
+        compilerCommand,
+        Matchers.hasItems("-incremental", "-output-file-map", "-driver-batch-count", "1"));
+    assertThat(compilerCommand, not(Matchers.hasItem("-enable-incremental-imports")));
+  }
+
+  @Test
+  public void testIncrementalImportsArgsAreIncludedInCompilerCommand() {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
+    BuildTarget swiftCompileTarget =
+        buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder().setSections("[swift]", "incremental_imports = True").build();
+
+    SwiftLibraryDescription swiftLibraryDescription =
+        FakeAppleRuleDescriptions.createSwiftLibraryDescription(buckConfig);
+
+    SwiftCompile buildRule =
+        (SwiftCompile)
+            swiftLibraryDescription.createBuildRule(
+                TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
+                swiftCompileTarget,
+                TestBuildRuleParams.create(),
+                createDummySwiftArg());
+
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
+    ImmutableList<Step> steps = buildRule.getBuildSteps(buildContext, new FakeBuildableContext());
+    SwiftCompileStep compileStep = (SwiftCompileStep) steps.get(2);
+    ImmutableList<String> compilerCommand =
+        ImmutableList.copyOf(compileStep.getDescription(null).split(" "));
+
+    assertThat(
+        compilerCommand,
+        Matchers.hasItems(
+            "-incremental",
+            "-output-file-map",
+            "-driver-batch-count",
+            "1",
+            "-enable-incremental-imports"));
+  }
+
+  @Test
   public void testRulesExportedFromDepsBecomeFirstOrderDeps() {
     assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
 
@@ -466,6 +562,10 @@ public class SwiftLibraryIntegrationTest {
   }
 
   private SwiftLibraryDescriptionArg createDummySwiftArg() {
-    return SwiftLibraryDescriptionArg.builder().setName("dummy").build();
+    return createDummySwiftArg(ImmutableSortedSet.of());
+  }
+
+  private SwiftLibraryDescriptionArg createDummySwiftArg(ImmutableSortedSet<SourcePath> srcs) {
+    return SwiftLibraryDescriptionArg.builder().setName("dummy").setSrcs(srcs).build();
   }
 }

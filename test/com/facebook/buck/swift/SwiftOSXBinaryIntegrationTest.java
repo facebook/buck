@@ -37,10 +37,21 @@ public class SwiftOSXBinaryIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void swiftHelloWorldRunsAndPrintsMessageOnOSX() throws IOException {
+  public void swiftHelloWorldRunsAndPrintsMessageOnOSXWMO() throws IOException {
+    swiftHelloWorldRunsAndPrintsMessageOnOSXImpl(false);
+  }
+
+  @Test
+  public void swiftHelloWorldRunsAndPrintsMessageOnOSXIncremental() throws IOException {
+    swiftHelloWorldRunsAndPrintsMessageOnOSXImpl(true);
+  }
+
+  private void swiftHelloWorldRunsAndPrintsMessageOnOSXImpl(boolean incremental)
+      throws IOException {
     assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "helloworld", tmp);
+    workspace.addBuckConfigLocalOption("swift", "incremental", incremental ? "true" : "false");
     workspace.setUp();
 
     ProcessResult runResult = workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
@@ -49,10 +60,21 @@ public class SwiftOSXBinaryIntegrationTest {
   }
 
   @Test
-  public void changingSourceOfSwiftLibraryDepRelinksBinary() throws IOException {
+  public void changingSourceOfSwiftLibraryDepRelinksBinaryWMO() throws IOException {
+    changingSourceOfSwiftLibraryDepRelinksBinaryImpl(false);
+  }
+
+  @Test
+  public void changingSourceOfSwiftLibraryDepRelinksBinaryIncremental() throws IOException {
+    changingSourceOfSwiftLibraryDepRelinksBinaryImpl(true);
+  }
+
+  private void changingSourceOfSwiftLibraryDepRelinksBinaryImpl(boolean incremental)
+      throws IOException {
     assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "helloworld", tmp);
+    workspace.addBuckConfigLocalOption("swift", "incremental", incremental ? "true" : "false");
     workspace.setUp();
 
     ProcessResult runResult = workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
@@ -67,10 +89,20 @@ public class SwiftOSXBinaryIntegrationTest {
   }
 
   @Test
-  public void objcMixedSwiftRunsAndPrintsMessageOnOSX() throws IOException {
+  public void objcMixedSwiftRunsAndPrintsMessageOnOSXWMO() throws IOException {
+    objcMixedSwiftRunsAndPrintsMessageOnOSXImpl(false);
+  }
+
+  @Test
+  public void objcMixedSwiftRunsAndPrintsMessageOnOSXIncremental() throws IOException {
+    objcMixedSwiftRunsAndPrintsMessageOnOSXImpl(true);
+  }
+
+  private void objcMixedSwiftRunsAndPrintsMessageOnOSXImpl(boolean incremental) throws IOException {
     assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "objc_mix_swift", tmp);
+    workspace.addBuckConfigLocalOption("swift", "incremental", incremental ? "true" : "false");
     workspace.setUp();
     workspace.addBuckConfigLocalOption("swift", "version", "4");
 
@@ -80,10 +112,21 @@ public class SwiftOSXBinaryIntegrationTest {
   }
 
   @Test
-  public void swiftCallingObjCRunsAndPrintsMessageOnOSX() throws IOException {
+  public void swiftCallingObjCRunsAndPrintsMessageOnOSXWMO() throws IOException {
+    swiftCallingObjCRunsAndPrintsMessageOnOSXImpl(false);
+  }
+
+  @Test
+  public void swiftCallingObjCRunsAndPrintsMessageOnOSXIncremental() throws IOException {
+    swiftCallingObjCRunsAndPrintsMessageOnOSXImpl(true);
+  }
+
+  private void swiftCallingObjCRunsAndPrintsMessageOnOSXImpl(boolean incremental)
+      throws IOException {
     assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "swift_calls_objc", tmp);
+    workspace.addBuckConfigLocalOption("swift", "incremental", incremental ? "true" : "false");
     workspace.setUp();
 
     ProcessResult runResult = workspace.runBuckCommand("run", ":SwiftCallsObjC#macosx-x86_64");

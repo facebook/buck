@@ -457,6 +457,16 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testBuildAppleLibraryThatHasSwiftIncrementallyBuildsForAppleTVOS() throws Exception {
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.APPLETVOS));
+
+    UserFlavor tvosFlavor = UserFlavor.of("appletvos-arm64", "buck boilerplate");
+    testBuildAppleLibraryThatHasSwiftWithLocalConfig(
+        tvosFlavor, ImmutableMap.of("swift", ImmutableMap.of("incremental", "true")));
+  }
+
+  @Test
   public void testAppleLibraryBuildsSomethingUsingAppleCxxPlatform() throws IOException {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
@@ -1153,12 +1163,32 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testBuildAppleLibraryThatHasSwiftIncrementally() throws Exception {
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    testBuildAppleLibraryThatHasSwiftWithLocalConfig(
+        ImmutableMap.of("swift", ImmutableMap.of("incremental", "true")));
+  }
+
+  @Test
   public void testBuildAppleLibraryThatHasSwiftBuildsOnWatchOSSimulator() throws Exception {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
 
     UserFlavor watchosSimFlavor = UserFlavor.of("watchsimulator-i386", "buck boilerplate");
     testBuildAppleLibraryThatHasSwiftWithLocalConfig(watchosSimFlavor, ImmutableMap.of());
+  }
+
+  @Test
+  public void testBuildAppleLibraryThatHasSwiftIncrementallyBuildsOnWatchOSSimulator()
+      throws Exception {
+    Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.WATCHOS));
+
+    UserFlavor watchosSimFlavor = UserFlavor.of("watchsimulator-i386", "buck boilerplate");
+    testBuildAppleLibraryThatHasSwiftWithLocalConfig(
+        watchosSimFlavor, ImmutableMap.of("swift", ImmutableMap.of("incremental", "true")));
   }
 
   private void testBuildAppleLibraryThatHasSwiftWithLocalConfig(
@@ -1208,8 +1238,22 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void
+      testBuildAppleLibraryWhereObjcUsesSwiftAcrossDifferentLibrariesWithSwiftBuiltIncrementally()
+          throws Exception {
+    testDylibSwiftScenario("apple_library_objc_uses_swift_diff_lib", "Bar", "Foo", true);
+  }
+
+  @Test
   public void testBuildAppleLibraryWhereSwiftUsesObjCAcrossDifferentLibraries() throws Exception {
     testDylibSwiftScenario("apple_library_swift_uses_objc_diff_lib", "Bar");
+  }
+
+  @Test
+  public void
+      testBuildAppleLibraryWhereSwiftUsesObjCAcrossDifferentLibrariesWithSwiftBuiltIncrementally()
+          throws Exception {
+    testDylibSwiftScenario("apple_library_swift_uses_objc_diff_lib", "Bar", true);
   }
 
   @Test
@@ -1220,6 +1264,12 @@ public class AppleLibraryIntegrationTest {
   @Test
   public void testBuildAppleLibraryWhereObjCUsesSwiftWithinSameLib() throws Exception {
     testDylibSwiftScenario("apple_library_objc_uses_swift_same_lib", "Mixed");
+  }
+
+  @Test
+  public void testBuildAppleLibraryWhereObjCUsesSwiftWithinSameLibWithSwiftBuiltIncrementally()
+      throws Exception {
+    testDylibSwiftScenario("apple_library_objc_uses_swift_same_lib", "Mixed", true);
   }
 
   @Test
@@ -1239,12 +1289,27 @@ public class AppleLibraryIntegrationTest {
   public void testDylibSwiftScenario(
       String scenario, String dylibTargetName, String swiftRuntimeDylibTargetName)
       throws Exception {
+    testDylibSwiftScenario(scenario, dylibTargetName, swiftRuntimeDylibTargetName, false);
+  }
+
+  public void testDylibSwiftScenario(String scenario, String dylibTargetName, boolean incremental)
+      throws Exception {
+    testDylibSwiftScenario(scenario, dylibTargetName, dylibTargetName, incremental);
+  }
+
+  public void testDylibSwiftScenario(
+      String scenario,
+      String dylibTargetName,
+      String swiftRuntimeDylibTargetName,
+      boolean incremental)
+      throws Exception {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
     workspace.setUp();
+    workspace.addBuckConfigLocalOption("swift", "incremental", incremental ? "true" : "false");
     workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
     BuildTarget dylibTarget =
         workspace
