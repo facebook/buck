@@ -634,7 +634,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
         .add(KSP_PLUGIN_ID + "classOutputDir=" + rootPath.resolve(classesOutput))
         .add(KSP_PLUGIN_ID + "kotlinOutputDir=" + rootPath.resolve(kspKotlinOutput))
         .add(KSP_PLUGIN_ID + "javaOutputDir=" + rootPath.resolve(kspJavaOutput))
-        .add(KSP_PLUGIN_ID + "resourceOutputDir=" + rootPath.resolve(kspResOutput))
+        .add(KSP_PLUGIN_ID + "resourceOutputDir=" + rootPath.resolve(classesOutput))
         .add(KSP_PLUGIN_ID + "cachesDir=" + rootPath.resolve(kspCachesOutput))
         .add(KSP_PLUGIN_ID + "kspOutputDir=" + rootPath.resolve(kspOutput));
 
