@@ -612,7 +612,6 @@ public class AppleTestDescription
                         collectedResources.getResourceVariantFiles(),
                         collectedResources.getNamedResourceVariantFiles(),
                         ImmutableList.of(),
-                        false,
                         appleCxxPlatform.getIbtool(),
                         false,
                         buildTarget,

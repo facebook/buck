@@ -58,7 +58,6 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
       SourcePathRuleFinder ruleFinder,
       SourcePath infoPlistPath,
       Optional<SourcePath> maybeAssetCatalogPlistSourcePath,
-      boolean isLegacyWatchApp,
       Optional<String> maybeProductName,
       String extension,
       AppleCxxPlatform appleCxxPlatform,
@@ -72,7 +71,6 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
             buildTarget,
             infoPlistPath,
             maybeAssetCatalogPlistSourcePath,
-            isLegacyWatchApp,
             getBinaryName(buildTarget, maybeProductName),
             extension,
             appleCxxPlatform,
@@ -96,7 +94,6 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
     @AddToRuleKey private final OutputPath output;
     @AddToRuleKey private final SourcePath sourcePath;
     @AddToRuleKey private final Optional<SourcePath> maybeAssetCatalogPlistSourcePath;
-    @AddToRuleKey private final Boolean isLegacyWatchApp;
     @AddToRuleKey private final String binaryName;
     @AddToRuleKey private final String extension;
     @AddToRuleKey private final ApplePlatform platform;
@@ -112,7 +109,6 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
         BuildTarget buildTarget,
         SourcePath sourcePath,
         Optional<SourcePath> maybeAssetCatalogPlistSourcePath,
-        boolean isLegacyWatchApp,
         String binaryName,
         String extension,
         AppleCxxPlatform appleCxxPlatform,
@@ -122,7 +118,6 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
       this.output = new OutputPath("Info.plist");
       this.sourcePath = sourcePath;
       this.maybeAssetCatalogPlistSourcePath = maybeAssetCatalogPlistSourcePath;
-      this.isLegacyWatchApp = isLegacyWatchApp;
       this.binaryName = binaryName;
       this.extension = extension;
       AppleSdk sdk = appleCxxPlatform.getAppleSdk();
@@ -196,14 +191,10 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
           keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("iPhoneSimulator")));
           break;
         case WATCH_DEVICE:
-          if (!isLegacyWatchApp) {
-            keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchOS")));
-          }
+          keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchOS")));
           break;
         case WATCH_SIMULATOR:
-          if (!isLegacyWatchApp) {
-            keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchSimulator")));
-          }
+          keys.put("CFBundleSupportedPlatforms", new NSArray(new NSString("WatchSimulator")));
           break;
         case TV_DEVICE:
         case TV_SIMULATOR:
@@ -266,7 +257,6 @@ public class AppleInfoPlist extends ModernBuildRule<AppleInfoPlist.Impl> {
           keys.put("LSRequiresIPhoneOS", new NSNumber(false));
         }
       } else if (!platform.getType().isWatch()
-          && !isLegacyWatchApp
           && platform.getType() != ApplePlatformType.MAC_CATALYST) {
         keys.put("LSRequiresIPhoneOS", new NSNumber(true));
       }

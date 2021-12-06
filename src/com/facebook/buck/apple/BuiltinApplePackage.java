@@ -147,10 +147,6 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
     // 2. Copy the unmodified WatchKit stub binary for WatchOS2 apps to WatchKitSupport2/WK
     // We can't use the copy of the binary in the bundle because that has already been re-signed
     // with our own identity.
-    //
-    // For WatchOS1 support: same as above, except:
-    // 1. No "Symbols" directory needed.
-    // 2. WatchKitSupport instead of WatchKitSupport2.
     for (BuildRule rule : bundle.getBuildDeps()) {
       if (rule instanceof AppleBundle) {
         AppleBundle appleBundle = (AppleBundle) rule;
@@ -174,49 +170,9 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
                       .getIdeallyRelativePath(
                           Objects.requireNonNull(binary.getSourcePathToOutput())),
                   watchKitSupportDir.resolve("WK")));
-        } else {
-          Optional<CopyFile> legacyWatchStub = getLegacyWatchStubFromDeps(appleBundle);
-          if (legacyWatchStub.isPresent()) {
-            Path watchKitSupportDir = temp.resolve("WatchKitSupport");
-            commands.add(
-                MkdirStep.of(
-                    BuildCellRelativePath.fromCellRelativePath(
-                        context.getBuildCellRootPath(),
-                        getProjectFilesystem(),
-                        watchKitSupportDir)));
-            commands.add(
-                CopyStep.forFile(
-                    context
-                        .getSourcePathResolver()
-                        .getIdeallyRelativePath(
-                            Objects.requireNonNull(legacyWatchStub.get().getSourcePathToOutput())),
-                    watchKitSupportDir.resolve("WK")));
-          }
         }
       }
     }
-  }
-
-  /**
-   * Get the stub binary rule from a legacy Apple Watch Extension build rule.
-   *
-   * @return the WatchOS 1 stub binary if appleBundle represents a legacy Watch Extension.
-   *     Otherwise, return absent.
-   */
-  private Optional<CopyFile> getLegacyWatchStubFromDeps(AppleBundle appleBundle) {
-    for (BuildRule rule : appleBundle.getBuildDeps()) {
-      if (rule instanceof AppleBundle
-          && rule.getBuildTarget()
-              .getFlavors()
-              .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR)) {
-        AppleBundle legacyWatchApp = (AppleBundle) rule;
-        BuildRule legacyWatchStub = legacyWatchApp.getBinaryBuildRule();
-        if (legacyWatchStub instanceof CopyFile) {
-          return Optional.of((CopyFile) legacyWatchStub);
-        }
-      }
-    }
-    return Optional.empty();
   }
 
   @Override

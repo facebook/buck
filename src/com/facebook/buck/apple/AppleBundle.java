@@ -112,8 +112,6 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final boolean hasBinary;
 
-  @AddToRuleKey private final Boolean isLegacyWatchApp;
-
   @AddToRuleKey private final Optional<BuildTarget> appleDsymBuildTarget;
 
   @AddToRuleKey private final Optional<SourcePath> appleDsymSourcePath;
@@ -227,7 +225,6 @@ public class AppleBundle extends AbstractBuildRule
     this.binary = binary;
     this.withDownwardApi = withDownwardApi;
     this.maybeEntitlementsFile = maybeEntitlementsFile;
-    this.isLegacyWatchApp = AppleBundleSupport.isLegacyWatchApp(extension, binary);
     this.appleDsym = appleDsym;
     this.appleDsymBuildTarget = appleDsym.map(AppleDsym::getBuildTarget);
     this.appleDsymSourcePath = appleDsym.map(AppleDsym::getSourcePathToOutput);
@@ -326,10 +323,6 @@ public class AppleBundle extends AbstractBuildRule
 
   public Optional<AppleDsym> getAppleDsym() {
     return appleDsym;
-  }
-
-  public boolean getIsLegacyWatchApp() {
-    return isLegacyWatchApp;
   }
 
   @Override

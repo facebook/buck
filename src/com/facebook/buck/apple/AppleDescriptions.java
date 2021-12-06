@@ -544,12 +544,6 @@ public class AppleDescriptions {
         assetCatalogValidation);
 
     BuildTarget assetCatalogBuildTarget = buildTarget.withAppendedFlavors(AppleAssetCatalog.FLAVOR);
-    if (buildTarget.getFlavors().contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR)) {
-      // If the target is a legacy watch target, we need to provide the watchos platform to
-      // the AppleAssetCatalog for it to generate assets in a format that's for watchos.
-      applePlatform = ApplePlatform.WATCHOS;
-      targetSDKVersion = "1.0";
-    }
     return Optional.of(
         new AppleAssetCatalog(
             assetCatalogBuildTarget,
@@ -1054,8 +1048,6 @@ public class AppleDescriptions {
               xcodeDescriptions, targetGraph, binaryTarget, graphBuilder.getSourcePathResolver()));
     }
 
-    BuildRule unwrappedBinary = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule);
-
     BuildTarget infoPlistBuildTarget =
         stripBundleSpecificFlavors(buildTarget).withAppendedFlavors(AppleInfoPlist.FLAVOR);
     AppleInfoPlist infoPlist =
@@ -1069,12 +1061,13 @@ public class AppleDescriptions {
                         graphBuilder,
                         infoPlistSourcePath,
                         assetCatalog.map(AppleAssetCatalog::getSourcePathToPlist),
-                        unwrappedBinary,
                         productName,
                         unwrappedExtension,
                         appleCxxPlatform,
                         infoPlistSubstitutions,
                         minimumOSVersion));
+
+    BuildRule unwrappedBinary = getBinaryFromBuildRuleWithBinary(flavoredBinaryRule);
 
     Optional<SourcePath> maybeEntitlements =
         entitlementsSourcePath(
@@ -1244,7 +1237,7 @@ public class AppleDescriptions {
       }
 
       if (AppleBundleSupport.isWatchKitStubNeeded(
-          unwrappedExtension, unwrappedBinary, appleCxxPlatform.getAppleSdk().getApplePlatform())) {
+          unwrappedBinary, appleCxxPlatform.getAppleSdk().getApplePlatform())) {
         final boolean codeSignOnCopy = false;
         final boolean ignoreIfMissing = false;
         bundlePartsReadyToCopy.add(
@@ -1316,7 +1309,6 @@ public class AppleDescriptions {
                         collectedResources.getResourceVariantFiles(),
                         collectedResources.getNamedResourceVariantFiles(),
                         ibtoolFlagsUnwrapped,
-                        AppleBundleSupport.isLegacyWatchApp(unwrappedExtension, unwrappedBinary),
                         appleCxxPlatform.getIbtool(),
                         ibtoolModuleFlag.orElse(false),
                         buildTarget,
@@ -1919,8 +1911,6 @@ public class AppleDescriptions {
                         || platformName.equals(ApplePlatform.WATCHSIMULATOR.getName()))
                     && appleBundle.getExtension().equals(AppleBundleExtension.APP.fileExtension)) {
                   destination = AppleBundleDestination.WATCHAPP;
-                } else if (appleBundle.getIsLegacyWatchApp()) {
-                  destination = AppleBundleDestination.RESOURCES;
                 } else if (doNotEmbedHostAppInTestBundle
                     && testHostInfo.isPresent()
                     && testHostInfo
@@ -2093,7 +2083,6 @@ public class AppleDescriptions {
       SourcePathRuleFinder ruleFinder,
       SourcePath unprocessedInfoPlistPath,
       Optional<SourcePath> maybeAssetCatalogPlistPath,
-      BuildRule binary,
       Optional<String> maybeProductName,
       String extension,
       AppleCxxPlatform appleCxxPlatform,
@@ -2105,7 +2094,6 @@ public class AppleDescriptions {
         ruleFinder,
         unprocessedInfoPlistPath,
         maybeAssetCatalogPlistPath,
-        AppleBundleSupport.isLegacyWatchApp(extension, binary),
         maybeProductName,
         extension,
         appleCxxPlatform,

@@ -24,18 +24,7 @@ import com.facebook.buck.file.CopyFile;
 public class AppleBundleSupport {
   private AppleBundleSupport() {}
 
-  /** Returns whether binary is a legacy watchOS application */
-  public static boolean isLegacyWatchApp(String extension, BuildRule binary) {
-    return extension.equals(AppleBundleExtension.APP.fileExtension)
-        && binary
-            .getBuildTarget()
-            .getFlavors()
-            .contains(AppleBinaryDescription.LEGACY_WATCH_FLAVOR);
-  }
-
-  public static boolean isWatchKitStubNeeded(
-      String extension, BuildRule binary, ApplePlatform platform) {
-    return (isLegacyWatchApp(extension, binary) || platform.getName().contains("watch"))
-        && binary instanceof CopyFile;
+  public static boolean isWatchKitStubNeeded(BuildRule binary, ApplePlatform platform) {
+    return platform.getName().contains("watch") && binary instanceof CopyFile;
   }
 }

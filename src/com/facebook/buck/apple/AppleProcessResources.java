@@ -84,7 +84,6 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
       ImmutableSet<SourcePath> variantFiles,
       ImmutableMap<String, ImmutableSet<SourcePath>> namedVariantFiles,
       ImmutableList<String> ibtoolFlags,
-      boolean isLegacyWatchApp,
       Tool ibtool,
       boolean ibtoolModuleFlag,
       BuildTarget bundleBuildTarget,
@@ -102,7 +101,6 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
             variantFiles,
             namedVariantFiles,
             ibtoolFlags,
-            isLegacyWatchApp,
             ibtool,
             ibtoolModuleFlag,
             bundleBuildTarget,
@@ -158,7 +156,6 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
     @AddToRuleKey private final Optional<OutputPath> contentHashesOutput;
     @AddToRuleKey private final ImmutableMap<String, ImmutableSet<SourcePath>> namedVariantFiles;
     @AddToRuleKey private final ImmutableList<String> ibtoolFlags;
-    @AddToRuleKey private final boolean isLegacyWatchApp;
     @AddToRuleKey private final Tool ibtool;
     @AddToRuleKey private final boolean ibtoolModuleFlag;
     @AddToRuleKey private final BuildTarget bundleBuildTarget;
@@ -172,7 +169,6 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
         ImmutableSet<SourcePath> variantFiles,
         ImmutableMap<String, ImmutableSet<SourcePath>> namedVariantFiles,
         ImmutableList<String> ibtoolFlags,
-        boolean isLegacyWatchApp,
         Tool ibtool,
         boolean ibtoolModuleFlag,
         BuildTarget bundleBuildTarget,
@@ -185,7 +181,6 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
       this.variantFiles = variantFiles;
       this.namedVariantFiles = namedVariantFiles;
       this.ibtoolFlags = ibtoolFlags;
-      this.isLegacyWatchApp = isLegacyWatchApp;
       this.ibtool = ibtool;
       this.ibtoolModuleFlag = ibtoolModuleFlag;
       this.bundleBuildTarget = bundleBuildTarget;
@@ -412,7 +407,7 @@ public class AppleProcessResources extends ModernBuildRule<AppleProcessResources
       ImmutableList<String> modifiedFlags =
           ImmutableList.<String>builder().addAll(BASE_IBTOOL_FLAGS).addAll(ibtoolFlags).build();
 
-      if (platform.getName().contains("watch") || isLegacyWatchApp) {
+      if (platform.getName().contains("watch")) {
         LOG.debug(
             "Compiling storyboard %s to storyboardc %s and linking", sourcePath, destinationPath);
 

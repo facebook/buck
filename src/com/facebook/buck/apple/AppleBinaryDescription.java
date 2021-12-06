@@ -95,7 +95,6 @@ public class AppleBinaryDescription
   public static final Flavor APP_FLAVOR = InternalFlavor.of("app");
   public static final Sets.SetView<Flavor> NON_DELEGATE_FLAVORS =
       Sets.union(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors(), ImmutableSet.of(APP_FLAVOR));
-  public static final Flavor LEGACY_WATCH_FLAVOR = InternalFlavor.of("legacy_watch");
 
   @SuppressWarnings("PMD") // PMD doesn't understand method references
   private static final Set<Flavor> SUPPORTED_FLAVORS =
@@ -630,8 +629,7 @@ public class AppleBinaryDescription
 
     return (flavors.contains(AppleBundleDescription.WATCH_OS_FLAVOR)
         || flavors.contains(AppleBundleDescription.WATCH_OS_64_32_FLAVOR)
-        || flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_FLAVOR)
-        || flavors.contains(LEGACY_WATCH_FLAVOR));
+        || flavors.contains(AppleBundleDescription.WATCH_SIMULATOR_FLAVOR));
   }
 
   private Optional<SourcePath> getWatchKitStubBinaryPath(
