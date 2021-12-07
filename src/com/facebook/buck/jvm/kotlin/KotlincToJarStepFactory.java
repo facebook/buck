@@ -70,6 +70,7 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -408,16 +409,13 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     ImmutableList<ResolvedJavacPluginProperties> kaptAnnotationProcessors =
         javaAnnotationProcessorParams.isEmpty()
             ? ImmutableList.of()
-            : ImmutableList.copyOf(
-                javaAnnotationProcessorParams.getPluginProperties().stream()
-                    .filter(
-                        prop ->
-                            prop.getProcessorNames().isEmpty()
-                                || !prop.getProcessorNames()
-                                    .asList()
-                                    .get(0)
-                                    .startsWith(KSP_PROCESSOR_NAME_PREFIX))
-                    .collect(Collectors.toList()));
+            : javaAnnotationProcessorParams.getPluginProperties().stream()
+                .filter(
+                    prop ->
+                        prop.getProcessorNames().isEmpty()
+                            || !Iterables.getFirst(prop.getProcessorNames(), "")
+                                .startsWith(KSP_PROCESSOR_NAME_PREFIX))
+                .collect(ImmutableList.toImmutableList());
 
     // No annotation processors for KAPT
     if (kaptAnnotationProcessors.isEmpty()) {
@@ -575,16 +573,13 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     ImmutableList<ResolvedJavacPluginProperties> kspAnnotationProcessors =
         annotationProcessorParams.isEmpty()
             ? ImmutableList.of()
-            : ImmutableList.copyOf(
-                annotationProcessorParams.getPluginProperties().stream()
-                    .filter(prop -> !prop.getProcessorNames().isEmpty())
-                    .filter(
-                        prop ->
-                            prop.getProcessorNames()
-                                .asList()
-                                .get(0)
-                                .startsWith(KSP_PROCESSOR_NAME_PREFIX))
-                    .collect(Collectors.toList()));
+            : annotationProcessorParams.getPluginProperties().stream()
+                .filter(prop -> !prop.getProcessorNames().isEmpty())
+                .filter(
+                    prop ->
+                        Iterables.getFirst(prop.getProcessorNames(), "")
+                            .startsWith(KSP_PROCESSOR_NAME_PREFIX))
+                .collect(ImmutableList.toImmutableList());
 
     if (kspAnnotationProcessors.isEmpty()) {
       return;
