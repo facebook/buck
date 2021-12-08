@@ -17,8 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import com.facebook.buck.util.liteinfersupport.Nullable;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.ExecutableType;
@@ -45,9 +43,9 @@ class StandaloneExecutableType extends StandaloneTypeMirror implements Executabl
       List<? extends AnnotationMirror> annotations) {
     super(TypeKind.EXECUTABLE, annotations);
     this.returnType = returnType;
-    this.typeVariables = Collections.unmodifiableList(new ArrayList<>(typeVariables));
-    this.parameterTypes = Collections.unmodifiableList(new ArrayList<>(parameterTypes));
-    this.thrownTypes = Collections.unmodifiableList(new ArrayList<>(thrownTypes));
+    this.typeVariables = List.copyOf(typeVariables);
+    this.parameterTypes = List.copyOf(parameterTypes);
+    this.thrownTypes = List.copyOf(thrownTypes);
   }
 
   @Override

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.lang.model.element.AnnotationMirror;
@@ -58,7 +57,7 @@ class StandaloneDeclaredType extends StandaloneTypeMirror implements DeclaredTyp
       List<? extends AnnotationMirror> annotations) {
     super(TypeKind.DECLARED, annotations);
     this.typeElement = typeElement;
-    this.typeArguments = Collections.unmodifiableList(new ArrayList<>(typeArguments));
+    this.typeArguments = List.copyOf(typeArguments);
     this.enclosingType = enclosingType;
   }
 

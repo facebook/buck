@@ -113,7 +113,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
     pipelineFinished = SettableFuture.create();
     Futures.addCallback(
         pipelineFinished,
-        new FutureCallback<PipelineFinishedEvent>() {
+        new FutureCallback<>() {
           @Override
           public void onSuccess(PipelineFinishedEvent resultEvent) {}
 
@@ -167,12 +167,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
         workerToolExecutor = borrowedWorkerTool.get();
       }
 
-      try {
-        actionIdToResultEventMap = startExecution(workerToolExecutor);
-      } catch (ExecutionException e) {
-        return JavaCDWorkerStepUtils.createFailStepExecutionResult(
-            launchJavaCDCommand, actionId, e);
-      }
+      actionIdToResultEventMap = startExecution(workerToolExecutor);
     } else {
       startNextPipeliningCommand(actionId, workerToolExecutor);
     }
@@ -202,7 +197,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
   }
 
   private ImmutableMap<ActionId, SettableFuture<ResultEvent>> startExecution(
-      WorkerToolExecutor workerToolExecutor) throws IOException, ExecutionException {
+      WorkerToolExecutor workerToolExecutor) throws IOException {
     Preconditions.checkNotNull(workerToolExecutor);
 
     Preconditions.checkArgument(
@@ -258,7 +253,7 @@ class JavaCDPipeliningWorkerToolStep extends AbstractIsolatedExecutionStep
       SettableFuture<ResultEvent> resultEventSettableFuture = futures.get(i);
       Futures.addCallback(
           resultEventSettableFuture,
-          new FutureCallback<ResultEvent>() {
+          new FutureCallback<>() {
             @Override
             public void onSuccess(ResultEvent resultEvent) {}
 

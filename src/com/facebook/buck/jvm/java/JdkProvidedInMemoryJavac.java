@@ -25,7 +25,7 @@ import javax.tools.JavaCompiler;
 
 public class JdkProvidedInMemoryJavac extends Jsr199Javac {
 
-  public static JdkProvidedInMemoryJavac INSTANCE = new JdkProvidedInMemoryJavac();
+  public static final JdkProvidedInMemoryJavac INSTANCE = new JdkProvidedInMemoryJavac();
 
   private JdkProvidedInMemoryJavac() {}
 

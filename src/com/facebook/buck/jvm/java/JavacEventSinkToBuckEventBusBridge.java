@@ -45,7 +45,7 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
   private final LoadingCache<String, BuckTracingEventBusBridge> buckTracingBridgeCache =
       CacheBuilder.newBuilder()
           .build(
-              new CacheLoader<String, BuckTracingEventBusBridge>() {
+              new CacheLoader<>() {
                 @Override
                 public BuckTracingEventBusBridge load(String target) {
                   return new BuckTracingEventBusBridge(eventBus, actionId, target);

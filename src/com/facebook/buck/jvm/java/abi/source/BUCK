@@ -1,6 +1,6 @@
 java_library(
     name = "source",
-    srcs = glob(["*.java"]) + glob(["java11/*.java"]),
+    srcs = glob(["*.java"]),
     provided_deps = [
         # Tools.jar is the compiler itself, and will already be present at runtime;
         # we compile against a stub.

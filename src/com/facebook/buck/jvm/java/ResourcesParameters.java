@@ -115,8 +115,7 @@ public abstract class ResourcesParameters implements AddsToRuleKey {
               BuildTargetPaths.getScratchPath(filesystem, underlyingTarget, "%s").getParent();
           Optional<RelPath> outputPath =
               MorePaths.stripPrefix(relativePathToResource, genOutputParent)
-                  .map(Optional::of)
-                  .orElse(MorePaths.stripPrefix(relativePathToResource, scratchOutputParent));
+                  .or(() -> MorePaths.stripPrefix(relativePathToResource, scratchOutputParent));
           Preconditions.checkState(
               outputPath.isPresent(),
               "%s is used as a resource but does not output to a default output directory",

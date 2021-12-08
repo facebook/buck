@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacFactory;
 
 final class ScalaLibraryBuilder {
@@ -41,7 +42,7 @@ final class ScalaLibraryBuilder {
       JavaBuckConfig javaBuckConfig,
       JavaCDBuckConfig javaCDBuckConfig,
       DownwardApiConfig downwardApiConfig,
-      ScalaLibraryDescription.CoreArg args,
+      JavaLibraryDescription.CoreArg args,
       JavacFactory javacFactory,
       CellPathResolver cellPathResolver) {
     return new DefaultJavaLibraryRules.Builder(

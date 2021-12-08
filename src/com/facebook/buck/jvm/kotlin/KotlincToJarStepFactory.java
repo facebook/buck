@@ -63,7 +63,6 @@ import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -88,6 +87,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** Factory that creates Kotlin related compile build steps. */
@@ -278,7 +278,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       String kotlinPluginGeneratedFullPath =
           rootPath.resolve(kotlincPluginGeneratedOutput).toString();
 
-      ImmutableList.Builder<String> annotationProcessingOptionsBuilder = ImmutableList.builder();
+      Builder<String> annotationProcessingOptionsBuilder = ImmutableList.builder();
       Builder<IsolatedStep> postKotlinCompilationSteps = ImmutableList.builder();
 
       JavacPluginParams annotationProcessorParams = javacOptions.getJavaAnnotationProcessorParams();
@@ -322,7 +322,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
           annotationProcessorParams,
           sourceBuilderWithKspOutputs);
 
-      ImmutableList.Builder<String> extraArguments =
+      Builder<String> extraArguments =
           ImmutableList.<String>builder()
               .add(friendPathsArg)
               .addAll(
@@ -622,7 +622,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
 
     final String KSP_PLUGIN_ID = "plugin:com.google.devtools.ksp.symbol-processing:";
 
-    ImmutableList.Builder<String> kspPluginOptionsBuilder = ImmutableList.builder();
+    Builder<String> kspPluginOptionsBuilder = ImmutableList.builder();
     kspPluginOptionsBuilder
         .add(KSP_PLUGIN_ID + "apclasspath=" + kspProcessorsClasspath)
         .add(KSP_PLUGIN_ID + "projectBaseDir=" + rootPath.resolve(projectBaseDir))
@@ -640,7 +640,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     allClasspath = allClasspath.replace(',', '-');
     kspPluginOptionsBuilder.add(KSP_PLUGIN_ID + "apoption=" + "cp=" + allClasspath);
 
-    ImmutableList.Builder<String> kspTriggerBuilder = ImmutableList.builder();
+    Builder<String> kspTriggerBuilder = ImmutableList.builder();
     kspTriggerBuilder
         .addAll(getKspPluginsArgs(resolver, kotlinPluginGeneratedOutFullPath))
         .add(PLUGIN, Joiner.on(",").join(kspPluginOptionsBuilder.build()));
@@ -884,9 +884,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       SourcePathResolverAdapter sourcePathResolverAdapter,
       String outputDir,
       Predicate<String> filter) {
-    ImmutableList.Builder<String> pluginArgs = ImmutableList.builder();
+    Builder<String> pluginArgs = ImmutableList.builder();
     for (SourcePath pluginPath : kotlinCompilerPlugins.keySet()) {
-      if (!filter.apply(pluginPath.toString())) {
+      if (!filter.test(pluginPath.toString())) {
         continue;
       }
       // Add plugin basic string, e.g. "-Xplugins=<pluginPath>"
@@ -897,7 +897,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       ImmutableMap<String, String> pluginOptions = kotlinCompilerPlugins.get(pluginPath);
 
       if (pluginOptions != null && !pluginOptions.isEmpty()) {
-        ImmutableList.Builder<String> pluginOptionStrings = ImmutableList.builder();
+        Builder<String> pluginOptionStrings = ImmutableList.builder();
 
         for (String pluginOptionKey : pluginOptions.keySet()) {
           String pluginOptionValue = pluginOptions.get(pluginOptionKey);

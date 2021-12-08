@@ -188,7 +188,7 @@ class PipeliningJavaCommandExecutor {
 
     Optional<String> errorMessageOptional =
         waitForFuture(libraryActionId, waitForTheNextCommandFuture);
-    if (!errorMessageOptional.isPresent()) {
+    if (errorMessageOptional.isEmpty()) {
       return true;
     }
 

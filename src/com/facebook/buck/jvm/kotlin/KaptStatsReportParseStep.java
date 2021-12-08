@@ -65,9 +65,9 @@ public class KaptStatsReportParseStep extends IsolatedStep {
       Pattern.compile(
           "General\\: totalTime: (\\d+) ms, initialAnalysis: (\\d+) ms, stubs: (\\d+) ms, annotationProcessing: (\\d+) ms(.*)");
 
-  Path pathToReportFile;
-  BuildTargetValue invokingRule;
-  BuckEventBus eventBus;
+  final Path pathToReportFile;
+  final BuildTargetValue invokingRule;
+  final BuckEventBus eventBus;
 
   public KaptStatsReportParseStep(
       Path pathToReportFile, BuildTargetValue invokingRule, BuckEventBus eventBus) {
@@ -78,7 +78,7 @@ public class KaptStatsReportParseStep extends IsolatedStep {
 
   @Override
   public StepExecutionResult executeIsolatedStep(IsolatedExecutionContext context)
-      throws IOException, InterruptedException {
+      throws IOException {
     List<String> lines = Files.readAllLines(pathToReportFile);
 
     LOG.debug(
@@ -132,11 +132,8 @@ public class KaptStatsReportParseStep extends IsolatedStep {
         roundTimesList.add(Long.parseLong(roundTimeStr));
       }
 
-      AnnotationProcessorPerfStats annotationProcessorPerfStats =
-          new AnnotationProcessorPerfStats(
-              processorName, Long.parseLong(initTime), Long.parseLong(totalTime), roundTimesList);
-
-      return annotationProcessorPerfStats;
+      return new AnnotationProcessorPerfStats(
+          processorName, Long.parseLong(initTime), Long.parseLong(totalTime), roundTimesList);
     }
 
     return null;
@@ -154,16 +151,13 @@ public class KaptStatsReportParseStep extends IsolatedStep {
       String annotationProcessing = matcher.group(4);
       String extraData = matcher.group(5);
 
-      KotlinPluginPerfStats kotlinPluginPerfStats =
-          new KotlinPluginPerfStats(
-              "KAPT",
-              Long.parseLong(totalTime),
-              Long.parseLong(initialAnalysis),
-              Long.parseLong(stubs),
-              Long.parseLong(annotationProcessing),
-              extraData);
-
-      return kotlinPluginPerfStats;
+      return new KotlinPluginPerfStats(
+          "KAPT",
+          Long.parseLong(totalTime),
+          Long.parseLong(initialAnalysis),
+          Long.parseLong(stubs),
+          Long.parseLong(annotationProcessing),
+          extraData);
     }
 
     return null;

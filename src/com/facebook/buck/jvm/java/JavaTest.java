@@ -397,7 +397,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList.Builder<String> vmArgsBuilder,
       @SuppressWarnings("unused") SourcePathResolverAdapter pathResolver,
       Optional<TargetDevice> targetDevice) {
-    if (!targetDevice.isPresent()) {
+    if (targetDevice.isEmpty()) {
       return;
     }
 

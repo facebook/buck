@@ -485,8 +485,7 @@
         <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
         <include name="com/facebook/buck/util/liteinfersupport/PropagatesNullable.java" />
         <include name="com/facebook/buck/jvm/java/abi/source/*.java" />
-        <include name="com/facebook/buck/jvm/java/abi/source/java11/*.java" />
-        <include name="com/facebook/buck/jvm/java/plugin/adapter/**/*.java" />
+        <include name="com/facebook/buck/jvm/java/plugin/adapter/*.java" />
       </javac-params>
     </compiler>
     <jar destfile="${javac-plugin.jar}">

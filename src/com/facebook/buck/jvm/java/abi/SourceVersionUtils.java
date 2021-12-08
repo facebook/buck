@@ -26,9 +26,8 @@ public class SourceVersionUtils {
   public static int sourceVersionToClassFileVersion(SourceVersion version) {
     switch (version) {
       case RELEASE_0:
-        return Opcodes.V1_1; // JVMS8 4.1: 1.0 and 1.1 both support version 45.3 (Opcodes.V1_1)
       case RELEASE_1:
-        return Opcodes.V1_1;
+        return Opcodes.V1_1; // JVMS8 4.1: 1.0 and 1.1 both support version 45.3 (Opcodes.V1_1)
       case RELEASE_2:
         return Opcodes.V1_2;
       case RELEASE_3:

@@ -76,8 +76,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       // If the the absolute path does not reside under any cell root, we exclude it
       ProjectFilesystemUtils.getPathRelativeToProjectRoot(
               rootPath, configuredBuckOut, jarAbsolutePath)
-          .map(Optional::of)
-          .orElseGet(() -> getCrossCellPath(jarAbsolutePath, rootPath, cellToPathMappings))
+          .or(() -> getCrossCellPath(jarAbsolutePath, rootPath, cellToPathMappings))
           .ifPresent(
               projectPath ->
                   builder.put(projectPath, ImmutableSortedMap.copyOf(jarClassesEntry.getValue())));

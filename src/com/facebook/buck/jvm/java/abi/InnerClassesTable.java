@@ -186,7 +186,7 @@ public class InnerClassesTable {
     }
 
     ElementScanner8<Void, Void> elementScanner =
-        new ElementScanner8<Void, Void>() {
+        new ElementScanner8<>() {
           @Override
           public Void visitPackage(PackageElement e, Void aVoid) {
             addTypeReferences(e.getAnnotationMirrors());

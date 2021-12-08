@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.java.abi.source;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.lang.model.type.IntersectionType;
 import javax.lang.model.type.TypeKind;
@@ -34,7 +32,7 @@ class StandaloneIntersectionType extends StandaloneTypeMirror implements Interse
   public StandaloneIntersectionType(List<? extends TypeMirror> bounds) {
     super(TypeKind.INTERSECTION);
 
-    this.bounds = Collections.unmodifiableList(new ArrayList<>(bounds));
+    this.bounds = List.copyOf(bounds);
   }
 
   @Override

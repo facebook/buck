@@ -19,5 +19,4 @@ package com.facebook.buck.jvm.java;
 public enum ForkMode {
   NONE,
   PER_TEST,
-  ;
 }

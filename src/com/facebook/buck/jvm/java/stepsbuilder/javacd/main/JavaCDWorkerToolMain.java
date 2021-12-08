@@ -307,7 +307,7 @@ public class JavaCDWorkerToolMain {
   private static void addWorkAdvanceCallback(ListenableFuture<Unit> future) {
     Futures.addCallback(
         future,
-        new FutureCallback<Unit>() {
+        new FutureCallback<>() {
           @Override
           public void onSuccess(Unit explosion) {
             HANG_MONITOR.getHangMonitor().workAdvance();

@@ -125,7 +125,7 @@ abstract class DefaultJavaLibraryClasspaths {
     HasJavaAbi hasJavaAbi = (HasJavaAbi) compileTimeFullDep;
     Optional<BuildTarget> abiJarTarget = hasJavaAbi.getSourceOnlyAbiJar();
 
-    if (!abiJarTarget.isPresent()) {
+    if (abiJarTarget.isEmpty()) {
       abiJarTarget = hasJavaAbi.getAbiJar();
     }
 

@@ -152,7 +152,7 @@ public abstract class ClasspathTraversal {
           rootPath,
           directory,
           ImmutableSet.of(FileVisitOption.FOLLOW_LINKS),
-          new SimpleFileVisitor<Path>() {
+          new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
                 throws IOException {

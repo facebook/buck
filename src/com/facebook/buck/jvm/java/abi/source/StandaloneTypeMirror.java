@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java.abi.source;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.lang.model.element.AnnotationMirror;
@@ -41,9 +40,6 @@ import javax.lang.model.type.WildcardType;
  * implementation. Subclasses may require {@link javax.lang.model.element.Element}s and/or {@link
  * javax.lang.model.type.TypeMirror}s, but do not depend on any particular implementation of them
  * (beyond the spec).
- *
- * <p>NOTE: A Java8 copy of this file exists in ../java8/StandaloneTypeMirror.java. Please make sure
- * to update the other copy when modifying this file.
  */
 abstract class StandaloneTypeMirror implements TypeMirror {
   private final TypeKind kind;
@@ -55,7 +51,7 @@ abstract class StandaloneTypeMirror implements TypeMirror {
 
   protected StandaloneTypeMirror(TypeKind kind, List<? extends AnnotationMirror> annotations) {
     this.kind = kind;
-    this.annotations = Collections.unmodifiableList(new ArrayList<>(annotations));
+    this.annotations = List.copyOf(annotations);
   }
 
   @Override

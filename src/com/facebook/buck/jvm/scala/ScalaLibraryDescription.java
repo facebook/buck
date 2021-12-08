@@ -46,7 +46,6 @@ import com.facebook.buck.jvm.java.MavenUberJar;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
@@ -188,12 +187,6 @@ public class ScalaLibraryDescription
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
   }
 
-  public interface CoreArg extends JavaLibraryDescription.CoreArg {
-
-    @Override
-    ImmutableList<String> getExtraArguments();
-  }
-
   @RuleArg
-  interface AbstractScalaLibraryDescriptionArg extends CoreArg {}
+  interface AbstractScalaLibraryDescriptionArg extends JavaLibraryDescription.CoreArg {}
 }

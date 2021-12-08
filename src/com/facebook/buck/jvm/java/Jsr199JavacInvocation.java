@@ -246,7 +246,7 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       // abi is ready when compiler task finished
       Futures.addCallback(
           compilerResult,
-          new FutureCallback<Integer>() {
+          new FutureCallback<>() {
             @Override
             public void onSuccess(@Nullable Integer exitCode) {
               abiResult.set(exitCode);

@@ -24,9 +24,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -212,11 +212,7 @@ public class JavaInMemoryFileManager extends ForwardingJavaFileManager<StandardJ
   }
 
   private String encodeURL(String path) {
-    try {
-      return URLEncoder.encode(path, "UTF-8").replace("%2F", "/");
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    return URLEncoder.encode(path, StandardCharsets.UTF_8).replace("%2F", "/");
   }
 
   private URI getUriPath(String relativePath) {

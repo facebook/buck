@@ -157,8 +157,8 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
 
   private Object loadCompilerShim(IsolatedExecutionContext context) throws IOException {
     ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
-    classLoaderCache.addRef();
-    try {
+    try (classLoaderCache) {
+      classLoaderCache.addRef();
       ClassLoader classLoader =
           classLoaderCache.getClassLoaderForClassPath(
               SynchronizedToolProvider.getSystemToolClassLoader(),
@@ -176,8 +176,6 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
       return classLoader.loadClass(COMPILER_CLASS).newInstance();
     } catch (Exception ex) {
       throw new RuntimeException(ex);
-    } finally {
-      classLoaderCache.close();
     }
   }
 

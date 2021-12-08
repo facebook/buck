@@ -86,7 +86,7 @@ public class TreeBackedAnnotatedConstruct implements ArtificialAnnotatedConstruc
           String.format(
               "Exception when trying to get annotation %s from element %s.  "
                   + "These types are not available: %s",
-              annotationType.getSimpleName(), this.toString(), problematicTypes),
+              annotationType.getSimpleName(), this, problematicTypes),
           e);
     }
   }

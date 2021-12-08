@@ -51,7 +51,7 @@ class SignatureFactory {
    * Adapts a SignatureVisitor to the ElementVisitor contract, so we can drive it from an Element.
    */
   private final ElementVisitor<Void, SignatureVisitor> elementVisitorAdapter =
-      new SimpleElementVisitor8<Void, SignatureVisitor>() {
+      new SimpleElementVisitor8<>() {
         @Override
         protected Void defaultAction(Element e, SignatureVisitor signatureVisitor) {
           throw new IllegalArgumentException(
@@ -132,7 +132,7 @@ class SignatureFactory {
    * Adapts a SignatureVisitor to the TypeVisitor contract, so we can drive it from a TypeMirror.
    */
   private final TypeVisitor<Void, SignatureVisitor> typeVisitorAdapter =
-      new SimpleTypeVisitor8<Void, SignatureVisitor>() {
+      new SimpleTypeVisitor8<>() {
         @Override
         protected Void defaultAction(TypeMirror e, SignatureVisitor signatureVisitor) {
           throw new IllegalArgumentException(

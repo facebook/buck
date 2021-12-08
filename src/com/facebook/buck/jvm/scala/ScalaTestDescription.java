@@ -38,6 +38,7 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaCDBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
@@ -228,7 +229,7 @@ public class ScalaTestDescription
 
   @RuleArg
   interface AbstractScalaTestDescriptionArg
-      extends ScalaLibraryDescription.CoreArg, JavaTestDescription.CoreArg {
+      extends JavaLibraryDescription.CoreArg, JavaTestDescription.CoreArg {
     @Override
     default ScalaTestDescriptionArg withDepsQuery(Query query) {
       if (getDepsQuery().equals(Optional.of(query))) {

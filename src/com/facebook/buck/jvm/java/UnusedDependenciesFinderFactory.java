@@ -126,7 +126,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
 
   private SourcePath getAbiPath(ActionGraphBuilder actionGraphBuilder, HasJavaAbi rule) {
     Optional<BuildTarget> abiJarTarget = getAbiJarTarget(rule);
-    if (!abiJarTarget.isPresent()) {
+    if (abiJarTarget.isEmpty()) {
       return null;
     }
 
@@ -136,7 +136,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
 
   private Optional<BuildTarget> getAbiJarTarget(HasJavaAbi dependency) {
     Optional<BuildTarget> abiJarTarget = dependency.getSourceOnlyAbiJar();
-    if (!abiJarTarget.isPresent()) {
+    if (abiJarTarget.isEmpty()) {
       abiJarTarget = dependency.getAbiJar();
     }
     return abiJarTarget;
