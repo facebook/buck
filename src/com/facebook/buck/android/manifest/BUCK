@@ -21,6 +21,9 @@ java_library(
 java_binary(
     name = "generate_manifest_binary",
     main_class = "com.facebook.buck.android.manifest.GenerateManifestExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":manifest",
     ],

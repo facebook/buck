@@ -33,6 +33,9 @@ java_library(
 java_binary(
     name = "generate_build_config_binary",
     main_class = "com.facebook.buck.android.build_config.GenerateBuildConfigExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":build_config",
         ":executable",

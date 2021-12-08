@@ -16,6 +16,9 @@ java_library(
 java_binary(
     name = "apk_builder_binary",
     main_class = "com.facebook.buck.android.apk.ApkBuilderExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":apk",
     ],

@@ -429,6 +429,9 @@ MANIFEST_UTILS_SRCS = [
 java_binary(
     name = "manifest_utils_binary",
     main_class = "com.facebook.buck.android.AndroidManifestReaderExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":manifest_utils",
     ],

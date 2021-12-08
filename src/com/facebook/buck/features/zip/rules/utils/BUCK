@@ -18,4 +18,5 @@ java_binary(
     deps = [
         ":utils",
     ],
+    visibility = [ "PUBLIC" ]
 )

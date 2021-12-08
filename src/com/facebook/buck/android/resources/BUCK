@@ -35,6 +35,9 @@ java_library(
 java_binary(
     name = "merge_android_resources_binary",
     main_class = "com.facebook.buck.android.resources.MergeAndroidResourcesExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":merge_android_resources",
     ],
@@ -56,6 +59,9 @@ java_library(
 java_binary(
     name = "merge_assets_binary",
     main_class = "com.facebook.buck.android.resources.MergeAssetsExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":merge_assets",
     ],

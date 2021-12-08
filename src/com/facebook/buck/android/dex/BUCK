@@ -14,6 +14,9 @@ java_library(
 java_binary(
     name = "run_d8_binary",
     main_class = "com.facebook.buck.android.dex.D8ExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":dex",
     ],

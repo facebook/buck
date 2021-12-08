@@ -78,6 +78,9 @@ java_library(
 java_binary(
     name = "mini_aapt_binary",
     main_class = "com.facebook.buck.android.aapt.MiniAaptExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":mini_aapt",
     ],
