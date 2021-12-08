@@ -26,6 +26,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -47,6 +48,7 @@ import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -186,6 +188,9 @@ public class ShBinary extends ModernBuildRule<ShBinary.Impl>
     @AddToRuleKey private final OutputPath runtimeResourcesDir;
     @AddToRuleKey private final Optional<String> currentCellName;
     @AddToRuleKey private final String template;
+
+    @CustomFieldBehavior(RemoteExecutionEnabled.class)
+    private final boolean remoteExecutionEnabled = false;
 
     protected Impl(
         SourcePath main,
