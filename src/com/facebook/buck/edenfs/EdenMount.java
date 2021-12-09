@@ -25,6 +25,7 @@ import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.Glob;
 import com.facebook.eden.thrift.GlobParams;
 import com.facebook.eden.thrift.SHA1Result;
+import com.facebook.eden.thrift.SyncBehavior;
 import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -96,6 +97,16 @@ public class EdenMount {
     return prefix;
   }
 
+  /**
+   * Obtain the SyncBehavior for EdenFS queries
+   *
+   * <p>This returns a no-sync behavior as Buck previously syncs the working copy by sending
+   * synchronizing queries to Watchman (via sync+query) queries.
+   */
+  private static SyncBehavior getSyncBehavior() {
+    return SyncBehavior.builder().setSyncTimeoutSeconds(0).build();
+  }
+
   /** @param entry is a path that is relative to {@link #getProjectRoot()}. */
   public Sha1HashCode getSha1(ForwardRelPath entry) throws EdenError, IOException, TException {
     try (EdenClientResource client = pool.openClient()) {
@@ -104,7 +115,8 @@ public class EdenMount {
               .getEdenClient()
               .getSHA1(
                   mountPoint.toString().getBytes(StandardCharsets.UTF_8),
-                  ImmutableList.of(normalizePathArg(entry)));
+                  ImmutableList.of(normalizePathArg(entry)),
+                  getSyncBehavior());
       SHA1Result result = Iterables.getOnlyElement(results);
       if (result.getSetField() == SHA1Result.SHA1) {
         return Sha1HashCode.fromBytes(result.getSha1());
@@ -183,6 +195,7 @@ public class EdenMount {
               .setGlobs(normalizedInclude)
               .setPrefetchFiles(false)
               .setWantDtype(true)
+              .setSync(getSyncBehavior())
               .build();
 
       // TODO(nga): print a warning if this is slow
@@ -240,6 +253,7 @@ public class EdenMount {
             .setGlobs(normalizedExclude)
             .setPrefetchFiles(false)
             .setPrefetchMetadata(false)
+            .setSync(getSyncBehavior())
             .build();
     Glob excludeGlob = edenClient.getEdenClient().globFiles(excludeGlobParams);
     return excludeGlob.getMatchingFiles().stream()

@@ -31,6 +31,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.eden.thrift.SHA1Result;
+import com.facebook.eden.thrift.SyncBehavior;
 import com.facebook.thrift.TException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -62,8 +63,8 @@ public class EdenMountTest {
     expect(
             thriftClient.getSHA1(
                 DeepMatcher.deepMatch("/home/mbolin/src/buck".getBytes(StandardCharsets.UTF_8)),
-                DeepMatcher.deepMatch(
-                    ImmutableList.of("LICENSE".getBytes(StandardCharsets.UTF_8)))))
+                DeepMatcher.deepMatch(ImmutableList.of("LICENSE".getBytes(StandardCharsets.UTF_8))),
+                DeepMatcher.deepMatch(SyncBehavior.builder().setSyncTimeoutSeconds(0).build())))
         .andReturn(ImmutableList.of(sha1Result));
     replay(thriftClient);
 

@@ -23,6 +23,7 @@ import com.facebook.eden.thrift.Glob;
 import com.facebook.eden.thrift.GlobParams;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.SHA1Result;
+import com.facebook.eden.thrift.SyncBehavior;
 import com.facebook.thrift.TException;
 import com.facebook.thrift.transport.TTransportException;
 import com.google.common.annotations.VisibleForTesting;
@@ -92,9 +93,9 @@ final class ReconnectingEdenClient implements EdenClientResource {
     }
 
     @Override
-    public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths)
+    public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths, SyncBehavior sync)
         throws IOException, TException, EdenError {
-      return withRetry(() -> getConnectedClient().getSHA1(mountPoint, paths));
+      return withRetry(() -> getConnectedClient().getSHA1(mountPoint, paths, sync));
     }
 
     @Override

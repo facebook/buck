@@ -21,6 +21,7 @@ import com.facebook.eden.thrift.Glob;
 import com.facebook.eden.thrift.GlobParams;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.SHA1Result;
+import com.facebook.eden.thrift.SyncBehavior;
 import com.facebook.thrift.TException;
 import java.io.IOException;
 import java.util.List;
@@ -33,7 +34,7 @@ import java.util.List;
  */
 public interface EdenClient {
 
-  List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths)
+  List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths, SyncBehavior sync)
       throws IOException, TException, EdenError;
 
   Glob globFiles(GlobParams params) throws EdenError, IOException, TException;

@@ -20,12 +20,13 @@ import com.facebook.eden.thrift.Glob;
 import com.facebook.eden.thrift.GlobParams;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.SHA1Result;
+import com.facebook.eden.thrift.SyncBehavior;
 import java.util.List;
 
 public class TestEdenClient implements EdenClient {
 
   @Override
-  public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths) {
+  public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths, SyncBehavior sync) {
     throw new RuntimeException("not implemented");
   }
 

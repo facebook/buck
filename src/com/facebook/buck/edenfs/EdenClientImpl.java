@@ -22,6 +22,7 @@ import com.facebook.eden.thrift.Glob;
 import com.facebook.eden.thrift.GlobParams;
 import com.facebook.eden.thrift.MountInfo;
 import com.facebook.eden.thrift.SHA1Result;
+import com.facebook.eden.thrift.SyncBehavior;
 import com.facebook.thrift.TException;
 import java.io.IOException;
 import java.util.List;
@@ -35,9 +36,9 @@ public class EdenClientImpl implements EdenClient {
   }
 
   @Override
-  public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths)
+  public List<SHA1Result> getSHA1(byte[] mountPoint, List<byte[]> paths, SyncBehavior sync)
       throws IOException, TException, EdenError {
-    return client.getSHA1(mountPoint, paths);
+    return client.getSHA1(mountPoint, paths, sync);
   }
 
   @Override
