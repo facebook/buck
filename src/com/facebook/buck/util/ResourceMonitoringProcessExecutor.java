@@ -67,7 +67,7 @@ public class ResourceMonitoringProcessExecutor extends DelegateProcessExecutor {
         ImmutableList.<String>builderWithExpectedSize(params.getCommand().size() + 8 + 5)
             .add("/usr/bin/perf.real")
             .add("stat")
-            .addAll(ImmutableList.of("-e", "instructions"))
+            .addAll(ImmutableList.of("-e", "instructions:uP"))
             .addAll(ImmutableList.of("-x", ";"))
             .add("-o")
             .add(instrCountOutputFile.get().toString())

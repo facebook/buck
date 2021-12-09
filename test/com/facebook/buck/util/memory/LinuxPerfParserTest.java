@@ -22,9 +22,15 @@ import org.junit.Test;
 public class LinuxPerfParserTest {
   @Test
   public void parsingSmokeTest() {
-    String contents = "# comment\n\n119407423;;instructions;70771103;100.00;;";
-    LinuxPerfParser parser = new LinuxPerfParser();
-    ResourceUsage rusage = parser.parse(contents);
+    String contents = "# comment\n\n119407423;;instructions:uP;70771103;100.00;;";
+    ResourceUsage rusage = LinuxPerfParser.parse(contents);
     Assert.assertEquals(119407423, (long) rusage.getInstructionCount().get());
+  }
+
+  @Test
+  public void parsingNoExceptionsTest() {
+    String contents = "<not an number>;;instructions:uP;;;;";
+    ResourceUsage rusage = LinuxPerfParser.parse(contents); // no exception thrown
+    Assert.assertEquals(0, (long) rusage.getInstructionCount().get());
   }
 }

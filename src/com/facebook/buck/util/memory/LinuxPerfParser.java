@@ -40,8 +40,15 @@ public class LinuxPerfParser {
           continue;
         }
         String[] parts = line.split(";");
-        if ("instructions".equals(parts[2])) {
-          instructionCount = Long.parseLong(parts[0]);
+        if ("instructions:uP".equals(parts[2])) {
+          try {
+            instructionCount = Long.parseLong(parts[0]);
+          } catch (NumberFormatException e) {
+            // Some of these may be expected, e.g. platforms without hardware counters will
+            // return <not supported> or <not counted>, but regardless, just pass and let
+            // instructionCount be set to 0
+            instructionCount = 0;
+          }
         }
       }
 

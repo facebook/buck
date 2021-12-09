@@ -28,6 +28,8 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.immutables.value.Value;
 
 @BuckStyleValue
@@ -158,6 +160,12 @@ public abstract class ResourcesConfig implements ConfigView<BuckConfig> {
   public boolean shouldRecordProcessResourceUsage() {
     // TODO(swgillespie) Implementing process resource recording on non-Linux platforms
     if (Platform.detect() != Platform.LINUX) {
+      return false;
+    }
+
+    // Check to ensure the binaries we need are present
+    Path binPath = Path.of("/", "usr", "bin");
+    if (!Files.exists(binPath.resolve("time")) || !Files.exists(binPath.resolve("perf.real"))) {
       return false;
     }
 
