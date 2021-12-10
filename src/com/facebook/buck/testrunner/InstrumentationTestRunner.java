@@ -48,6 +48,7 @@ public class InstrumentationTestRunner {
   private final boolean attemptUninstallApkUnderTest;
   private final boolean attemptUninstallInstrumentationApk;
   private final Map<String, String> extraInstrumentationArguments;
+  private final Map<String, String> extraFilesToPull;
   private final boolean debug;
   private final boolean codeCoverage;
   private final boolean autoRunOnConnectedDevice;
@@ -73,7 +74,8 @@ public class InstrumentationTestRunner {
       boolean codeCoverage,
       String codeCoverageOutputFile,
       boolean autoRunOnConnectedDevice,
-      Map<String, String> extraInstrumentationArguments) {
+      Map<String, String> extraInstrumentationArguments,
+      Map<String, String> extraFilesToPull) {
     this.adbExecutablePath = adbExecutablePath;
     this.deviceSerial = deviceSerial;
     this.packageName = packageName;
@@ -88,6 +90,7 @@ public class InstrumentationTestRunner {
     this.attemptUninstallInstrumentationApk = attemptUninstallInstrumentationApk;
     this.codeCoverageOutputFile = codeCoverageOutputFile;
     this.extraInstrumentationArguments = extraInstrumentationArguments;
+    this.extraFilesToPull = extraFilesToPull;
     this.autoRunOnConnectedDevice = autoRunOnConnectedDevice;
     this.debug = debug;
     this.codeCoverage = codeCoverage;
@@ -110,6 +113,7 @@ public class InstrumentationTestRunner {
     boolean codeCoverage = false;
     boolean autoRunOnConnectedDevice = false;
     Map<String, String> extraInstrumentationArguments = new HashMap<String, String>();
+    Map<String, String> extraFilesToPull = new HashMap<String, String>();
 
     for (int i = 0; i < args.length; i++) {
       switch (args[i]) {
@@ -175,6 +179,17 @@ public class InstrumentationTestRunner {
           }
           extraInstrumentationArguments.put(extraArguments[0], extraArguments[1]);
           break;
+        case "--extra-file-to-pull":
+          {
+            String raw = args[++i];
+            String[] parts = raw.split("=", 2);
+            if (parts.length != 2) {
+              System.err.printf("Not a valid file to pull: %s\n", raw);
+              System.exit(1);
+            }
+            extraFilesToPull.put(parts[0], parts[1]);
+            break;
+          }
       }
     }
 
@@ -227,7 +242,8 @@ public class InstrumentationTestRunner {
         codeCoverage,
         codeCoverageOutputFile,
         autoRunOnConnectedDevice,
-        extraInstrumentationArguments);
+        extraInstrumentationArguments,
+        extraFilesToPull);
   }
 
   public void run() throws Throwable {
@@ -312,6 +328,10 @@ public class InstrumentationTestRunner {
       if (this.codeCoverageOutputFile != null) {
         device.pullFile(
             "/data/data/" + this.packageName + "/files/coverage.ec", this.codeCoverageOutputFile);
+      }
+      for (Map.Entry<String, String> entry : this.extraFilesToPull.entrySet()) {
+        String devicePath = entry.getKey().replaceAll("$PACKAGE_NAME", this.packageName);
+        device.pullFile(devicePath, entry.getValue());
       }
     } finally {
       if (this.attemptUninstallInstrumentationApk) {
