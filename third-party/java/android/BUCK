@@ -1,3 +1,4 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 version = "25.3.0"
 
 prebuilt_jar(
@@ -11,7 +12,7 @@ prebuilt_jar(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "tools-sdk-common",
     visibility = [
         "PUBLIC",

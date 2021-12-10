@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
 
 MINI_AAPT_SOURCES = ["MiniAapt.java", "MiniAaptExecutableMain.java"]
 
@@ -55,7 +55,7 @@ java_immutables_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "mini_aapt",
     srcs = ["MiniAapt.java", "MiniAaptExecutableMain.java"],
     visibility = [

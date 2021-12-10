@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins", "buck_java_library")
 
 TYPES_SRCS = [
     "Version.java",
@@ -16,7 +16,7 @@ TRANSLATOR_SRCS = [
     "TargetTranslator.java",
 ]
 
-java_library(
+buck_java_library(
     name = "translator",
     srcs = TRANSLATOR_SRCS,
     visibility = ["PUBLIC"],

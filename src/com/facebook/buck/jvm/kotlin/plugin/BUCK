@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 kotlin_library(
     name = "plugin",
     srcs = [
@@ -18,7 +20,7 @@ kotlin_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "plugin-loader",
     srcs = ["PluginLoader.java"],
     visibility = [

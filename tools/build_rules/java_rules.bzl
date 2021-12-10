@@ -38,6 +38,13 @@ def _maybe_add_java_version(**kwargs):
         kwargs["java_version"] = "11"    
     return kwargs
 
+def buck_java_library(name, **kwargs):
+    kwargs_with_java_version = _maybe_add_java_version(**kwargs)
+    return native.java_library(
+        name = name,
+        **kwargs_with_java_version
+    )
+
 def java_immutables_library(name, **kwargs):
     kwargs_with_java_version = _maybe_add_java_version(**kwargs)
     return native.java_library(

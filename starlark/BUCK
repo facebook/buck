@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test", "buck_java_library")
 
-java_library(
+buck_java_library(
     name = "starlark-annot",
     srcs = glob([
         "src/main/java/net/starlark/java/annot/*.java",
@@ -18,7 +18,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "starlark-annot-processor-lib",
     srcs = glob([
         "src/main/java/net/starlark/java/annot/processor/*.java",
@@ -48,7 +48,7 @@ java_annotation_processor(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "bazel",
     srcs = glob(
         [

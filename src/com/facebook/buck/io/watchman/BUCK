@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
 
 TRANSPORT_SRCS = ["Transport.java"]
 
@@ -9,7 +9,7 @@ WATCHMAN_SRCS = glob(
     exclude = TRANSPORT_SRCS + CAPABILITY_SRCS,
 )
 
-java_library(
+buck_java_library(
     name = "transport",
     srcs = TRANSPORT_SRCS,
     visibility = [
@@ -20,7 +20,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "capability",
     srcs = CAPABILITY_SRCS,
     visibility = ["PUBLIC"],

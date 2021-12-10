@@ -1,9 +1,8 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
+buck_java_library(
     name = "json",
     srcs = glob(["*.java"]),
-    tests = [
-        "//test/com/facebook/buck/parser/cache/json:json",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/util/json:json",

@@ -1,10 +1,11 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 java_binary(
     name = "generator",
     main_class = "com.facebook.buck.tools.documentation.generator.Main",
     deps = [":main"],
 )
 
-java_library(
+buck_java_library(
     name = "main",
     srcs = [
         "CliArgs.java",

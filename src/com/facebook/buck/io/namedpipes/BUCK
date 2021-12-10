@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 INTERFACES = [
     "NamedPipe.java",
     "NamedPipeReader.java",
@@ -6,14 +8,14 @@ INTERFACES = [
     "PipeNotConnectedException.java",
 ]
 
-java_library(
+buck_java_library(
     name = "interfaces",
     srcs = glob(INTERFACES),
     visibility = ["PUBLIC"],
     deps = ["//src/com/facebook/buck/util/types:types"],
 )
 
-java_library(
+buck_java_library(
     name = "namedpipes",
     srcs = glob(
         ["**/*.java"],

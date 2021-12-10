@@ -1,4 +1,5 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+buck_java_library(
     name = "abi",
     srcs = glob(
         ["*.java"],
@@ -45,7 +46,7 @@ java_binary(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "lib-api-stubber",
     srcs = ["ApiStubber.java"],
     deps = [

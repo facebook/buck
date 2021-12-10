@@ -1,8 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 UTILS_SRCS = [
     "ProjectFilesystemUtils.java",
 ]
 
-java_library(
+buck_java_library(
     name = "impl",
     srcs = glob(
         ["*.java"],
@@ -36,7 +38,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "utils",
     srcs = UTILS_SRCS,
     tests = [

@@ -1,7 +1,9 @@
 load(
     "//tools/build_rules:java_rules.bzl",
     "java_immutables_library",
+    "buck_java_library",
 )
+
 
 TYPES = [
     "OutputPath.java",
@@ -31,7 +33,7 @@ java_immutables_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "modern",
     srcs = glob(
         [

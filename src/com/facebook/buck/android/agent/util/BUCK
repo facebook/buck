@@ -1,7 +1,8 @@
 load("//tools/build_rules:file_alias.bzl", "file_alias")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 
 # Code shared between the agent and the host.
-java_library(
+buck_java_library(
     name = "util",
     srcs = glob(["*.java"]),
     source = "6",

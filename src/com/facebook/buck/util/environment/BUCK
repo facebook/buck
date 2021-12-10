@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
 
 PLATFORM_SRCS = [
     "Architecture.java",
@@ -6,7 +6,7 @@ PLATFORM_SRCS = [
     "PlatformType.java",
 ]
 
-java_library(
+buck_java_library(
     name = "platform",
     srcs = PLATFORM_SRCS,
     # This target is pulled in by testrunner, which needs to compile against Java 8.

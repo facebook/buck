@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
 
 java_immutables_library(
     name = "dalvik_stats_tool",
@@ -61,7 +61,7 @@ java_binary(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "dalvik",
     srcs = [
         "CanaryFactory.java",
@@ -93,7 +93,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "steps",
     srcs = [
         "EstimateDexWeightStep.java",

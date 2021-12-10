@@ -6,6 +6,7 @@ load(
     "//tools/build_rules:java_rules.bzl",
     "java_immutables_library",
     "java_library_with_plugins",
+    "buck_java_library",
 )
 
 BUCK_CONFIG_SRCS = [
@@ -323,7 +324,7 @@ SPLIT_DEX_SRCS = [
     "DexStore.java",
 ]
 
-java_library(
+buck_java_library(
     name = "split_dex",
     srcs = SPLIT_DEX_SRCS,
     tests = [

@@ -1,9 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 prebuilt_jar(
     name = "prebuilt",
     binary_jar = "aapt2-proto-0.4.0.jar",
 )
 
-java_library(
+buck_java_library(
     name = "aapt2-proto",
     srcs = [],
     visibility = ["PUBLIC"],

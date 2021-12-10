@@ -1,3 +1,4 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 java_binary(
     name = "api_jar",
     visibility = [
@@ -10,7 +11,7 @@ java_binary(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "api",
     srcs = glob(["*.java"]),
     visibility = [

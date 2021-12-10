@@ -1,4 +1,6 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
+buck_java_library(
     name = "logd",
     srcs = glob(["**/*.java"]),
     tests = [
@@ -29,7 +31,7 @@ java_binary(
     deps = [":logd"],
 )
 
-java_library(
+buck_java_library(
     name = "log4j2-config",
     resources = glob(["resources/**/*.xml"]),
     resources_root = "resources/",

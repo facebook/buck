@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins", "buck_java_library")
 
 java_library_with_plugins(
     name = "file",
@@ -60,7 +60,7 @@ java_library_with_plugins(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "rules",
     srcs = [
         "CopyFile.java",

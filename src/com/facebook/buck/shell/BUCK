@@ -2,6 +2,7 @@ load(
     "//tools/build_rules:java_rules.bzl",
     "java_immutables_library",
     "java_library_with_plugins",
+    "buck_java_library",
 )
 
 java_library_with_plugins(
@@ -92,7 +93,7 @@ java_library_with_plugins(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "steps",
     srcs = [
         "AbstractGenruleStep.java",
@@ -191,7 +192,7 @@ java_immutables_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "worker_tool",
     srcs = [
         "ProvidesWorkerTool.java",

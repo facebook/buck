@@ -1,9 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 prebuilt_jar(
     name = "prebuilt",
     binary_jar = "bundletool-1.8.0.jar",
 )
 
-java_library(
+buck_java_library(
     name = "bundletool",
     srcs = [],
     visibility = ["PUBLIC"],

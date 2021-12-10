@@ -1,4 +1,6 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
+buck_java_library(
     name = "base",
     srcs = [
         "BaseRunner.java",
@@ -21,7 +23,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "junit",
     srcs = [
         "BuckBlockJUnit4ClassRunner.java",
@@ -55,7 +57,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "instrumentation",
     srcs = [
         "BuckXmlTestRunListener.java",
@@ -74,7 +76,7 @@ java_library(
     deps = ["//third-party/java/android:ddmlib"],
 )
 
-java_library(
+buck_java_library(
     name = "testng",
     srcs = [
         "TestNGMain.java",

@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
 
 java_immutables_library(
     name = "concurrent",
@@ -15,7 +15,7 @@ java_immutables_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "concurrent_for_junit_runner",
     srcs = ["MostExecutors.java"],
     # This target is pulled in by testrunner, which needs to compile against Java 8.

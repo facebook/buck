@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
 
 CONFIG_SRCS = [
     "MachineReadableLogConfig.java",
@@ -70,7 +70,7 @@ java_immutables_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "config",
     srcs = CONFIG_SRCS,
     visibility = ["PUBLIC"],

@@ -1,4 +1,6 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
+buck_java_library(
     name = "appendablelogrecord",
     srcs = glob(["*java"]),
     # This target is pulled in by testrunner, which needs to compile against Java 8.

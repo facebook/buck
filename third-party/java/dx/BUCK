@@ -1,6 +1,7 @@
 load("//tools/build_rules:file_alias.bzl", "file_alias")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 
-java_library(
+buck_java_library(
     name = "dx",
     srcs = glob(["src/**/*.java"]),
     licenses = [

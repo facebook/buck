@@ -1,3 +1,4 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 java_annotation_processor(
     name = "processor",
     isolate_class_loader = True,
@@ -10,7 +11,7 @@ java_annotation_processor(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "immutables",
     visibility = [
         "PUBLIC",

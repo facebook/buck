@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
 
 java_immutables_library(
     name = "worker_job_params",
@@ -10,7 +10,7 @@ java_immutables_library(
     visibility = ["PUBLIC"],
 )
 
-java_library(
+buck_java_library(
     name = "worker_pool_factory",
     srcs = [
         "WorkerProcessPoolFactory.java",
@@ -33,7 +33,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "worker_pool",
     srcs = [
         "WorkerProcess.java",

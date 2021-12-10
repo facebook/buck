@@ -1,18 +1,18 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 # Includes stripped-down versions of types that Infer recognizes, so that we can use Infer on
 # code that must be very light on dependencies.
-java_library(
+buck_java_library(
     name = "liteinfersupport",
     srcs = glob(["*.java"]),
     required_for_source_only_abi = True,
     visibility = [
         "//src/com/facebook/buck/jvm/java:fat-jar-main",
-        "//src/com/facebook/buck/jvm/java:java",
         "//src/com/facebook/buck/jvm/java/abi/source:source",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/lang/model:model",
         "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
-        "//src/com/facebook/buck/jvm/java/plugin/adapter/java11:adapter_java11",
-        "//src/com/facebook/buck/jvm/java/plugin/adapter/java8:adapter_java8",
+        "//src/com/facebook/buck/jvm/java/plugin/adapter/java11/...",
         "//src/com/facebook/buck/jvm/java/plugin/api:api",
     ],
     deps = [

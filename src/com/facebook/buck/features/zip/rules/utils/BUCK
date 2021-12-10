@@ -1,5 +1,5 @@
-
-java_library(
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+buck_java_library(
     name = "utils",
     srcs = glob(["*.java"]),
     deps = ["//src/com/facebook/buck/core/filesystems:filesystems",

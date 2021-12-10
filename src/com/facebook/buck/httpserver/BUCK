@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 CACHE_HANDLER_SRCS = [
     "ArtifactCacheHandler.java",
 ]
@@ -6,12 +8,9 @@ UTIL_SRCS = [
     "Responses.java",
 ]
 
-java_library(
+buck_java_library(
     name = "cache_handler",
     srcs = CACHE_HANDLER_SRCS,
-    tests = [
-        "//test/com/facebook/buck/httpserver:httpserver_cache_integration_test",
-    ],
     deps = [
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/artifact_cache:binary_protocol",
@@ -27,7 +26,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "httpserver",
     srcs = glob(
         ["*.java"],
@@ -74,7 +73,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "util",
     srcs = UTIL_SRCS,
     tests = [

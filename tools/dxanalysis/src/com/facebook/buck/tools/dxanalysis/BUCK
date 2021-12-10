@@ -1,3 +1,4 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 java_binary(
     name = "dxanalysis",
     main_class = "com.facebook.buck.tools.dxanalysis.DxAnalysisMain",
@@ -9,7 +10,7 @@ java_binary(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "lib",
     srcs = glob(["*.java"]),
     deps = [

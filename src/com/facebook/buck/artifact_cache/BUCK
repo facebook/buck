@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
 
 PUBLIC_API_SOURCES = [
     "AbstractArtifactCacheEventFactory.java",
@@ -190,7 +190,7 @@ java_binary(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "lib-generate-hybrid-payloads",
     srcs = GENERATOR_SOURCE,
     visibility = ["PUBLIC"],

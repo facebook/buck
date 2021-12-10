@@ -1,4 +1,5 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+buck_java_library(
     name = "type",
     srcs = glob(["*.java"]),
     # This target gets pulled in by ideabuck, which can't move to Java 11 yet, so explicitly target 8.

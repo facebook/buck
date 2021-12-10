@@ -1,10 +1,10 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
 
 TYPES_SRCS = [
     "SourcePath.java",
 ]
 
-java_library(
+buck_java_library(
     name = "types",
     srcs = TYPES_SRCS,
     visibility = ["PUBLIC"],

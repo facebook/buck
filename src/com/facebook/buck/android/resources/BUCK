@@ -1,7 +1,9 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
 MERGE_ANDROID_RESOURCES_SRCS = ["MergeAndroidResources.java", "MergeAndroidResourcesExecutableMain.java"]
 MERGE_ASSETS_SRCS = ["MergeAssetsUtils.java", "MergeAssetsExecutableMain.java"]
 
-java_library(
+buck_java_library(
     name = "resources",
     srcs = glob(["*.java"], exclude = MERGE_ANDROID_RESOURCES_SRCS + MERGE_ASSETS_SRCS),
     visibility = ["PUBLIC"],
@@ -18,7 +20,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "merge_android_resources",
     srcs = MERGE_ANDROID_RESOURCES_SRCS,
     visibility = ["PUBLIC"],
@@ -43,7 +45,7 @@ java_binary(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "merge_assets",
     srcs = MERGE_ASSETS_SRCS,
     visibility = ["PUBLIC"],
