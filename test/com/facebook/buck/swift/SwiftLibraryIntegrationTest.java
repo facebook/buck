@@ -410,7 +410,8 @@ public class SwiftLibraryIntegrationTest {
 
     assertThat(
         compilerCommand,
-        Matchers.hasItems("-incremental", "-output-file-map", "-driver-batch-count", "1"));
+        Matchers.hasItems(
+            "-incremental", "-output-file-map", "-enable-batch-mode", "-driver-batch-count", "1"));
     assertThat(compilerCommand, not(Matchers.hasItem("-enable-incremental-imports")));
   }
 
@@ -448,6 +449,7 @@ public class SwiftLibraryIntegrationTest {
         Matchers.hasItems(
             "-incremental",
             "-output-file-map",
+            "-enable-batch-mode",
             "-driver-batch-count",
             "1",
             "-enable-incremental-imports"));

@@ -365,6 +365,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     if (incrementalBuild || incrementalImports) {
       argBuilder.add("-incremental");
       argBuilder.add("-output-file-map", outputFileMapPath.toString());
+      argBuilder.add("-enable-batch-mode");
       // Forcing Swift's driver to instantiate only one frontend job not to mess up with BUCK
       // processes.
       argBuilder.add("-driver-batch-count", "1");
