@@ -1,14 +1,17 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 buck_java_library(
     name = "events",
-    srcs = [
+    srcs =  [
         "ExternalTestRunEvent.java",
+        "ExternalTestRunnerSelectionEvent.java",
         "ExternalTestSpecCalculationEvent.java",
     ],
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/event/listener:listener",
+        "//test/com/facebook/buck/cli:cli",
         "//test/com/facebook/buck/event:event",
+        "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/event/listener:listener",
         "//test/com/facebook/buck/test/external:external",
     ],

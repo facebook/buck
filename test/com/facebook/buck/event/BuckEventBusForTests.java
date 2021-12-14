@@ -17,6 +17,7 @@
 package com.facebook.buck.event;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.test.external.ExternalTestRunnerSelectionEvent;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.annotations.VisibleForTesting;
@@ -80,6 +81,8 @@ public class BuckEventBusForTests {
     private final List<ConsoleEvent> consoleEvents = new ArrayList<>();
     private final List<StepEvent> stepEvents = new ArrayList<>();
     private final List<SimplePerfEvent> simplePerfEvents = new ArrayList<>();
+    private final List<ExternalTestRunnerSelectionEvent> externalRunnerSelectionEvents =
+        new ArrayList<>();
 
     @Subscribe
     public void consoleEvent(ConsoleEvent event) {
@@ -96,6 +99,11 @@ public class BuckEventBusForTests {
       simplePerfEvents.add(event);
     }
 
+    @Subscribe
+    public void externalRunnerSelectionEvent(ExternalTestRunnerSelectionEvent event) {
+      externalRunnerSelectionEvents.add(event);
+    }
+
     public List<String> getConsoleEventLogMessages() {
       return toLogMessages(consoleEvents);
     }
@@ -106,6 +114,10 @@ public class BuckEventBusForTests {
 
     public List<String> getSimplePerfEvents() {
       return toLogMessages(simplePerfEvents);
+    }
+
+    public List<ExternalTestRunnerSelectionEvent> getExternalRunnerSelectionEvents() {
+      return externalRunnerSelectionEvents;
     }
 
     private List<String> toLogMessages(List<? extends AbstractBuckEvent> events) {

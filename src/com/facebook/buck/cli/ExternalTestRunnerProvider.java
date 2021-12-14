@@ -18,18 +18,23 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.test.rule.TestRule;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.EventBusEventConsole;
 import com.facebook.buck.event.console.EventConsole;
 import com.facebook.buck.test.config.TestBuckConfig;
+import com.facebook.buck.test.external.ExternalTestRunnerSelectionEvent;
 import com.facebook.buck.util.config.RawConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /** Encapsulates the logic to obtain an External Test Runner from BuckConfig */
 public class ExternalTestRunnerProvider {
 
+  private final BuckEventBus eventBus;
   private final EventConsole console;
 
   protected static final String EXTERNAL_RUNNER_OVERRIDDEN_IN_ALLOWED_PATH =
@@ -42,8 +47,13 @@ public class ExternalTestRunnerProvider {
           + " Please get in touch to discuss your use case (https://fburl.com/tpx-rollout)" // MOE:strip_line
       ;
 
-  public ExternalTestRunnerProvider(EventConsole console) {
+  public ExternalTestRunnerProvider(BuckEventBus eventBus) {
+    this(eventBus, new EventBusEventConsole(eventBus));
+  }
+
+  public ExternalTestRunnerProvider(BuckEventBus eventBus, EventConsole console) {
     this.console = console;
+    this.eventBus = eventBus;
   }
 
   /**
@@ -60,9 +70,12 @@ public class ExternalTestRunnerProvider {
 
     Optional<ImmutableList<String>> allowedPathsPrefixes =
         buckConfig.getOptionalListWithoutComments("test", "path_prefixes_to_use_external_runner");
+    Optional<ImmutableList<String>> externalTestRunner =
+        buckConfig.getView(TestBuckConfig.class).getExternalTestRunner();
+
     if (allowedPathsPrefixes.isEmpty()) {
       // path_prefixes_to_use_external_runner is empty. So we continue with default behaviour
-      return buckConfig.getView(TestBuckConfig.class).getExternalTestRunner();
+      return externalTestRunner;
     }
 
     boolean allTargetsWithinAllowedPrefixes =
@@ -73,16 +86,16 @@ public class ExternalTestRunnerProvider {
       if (userOverriddenExternalRunner) {
         console.warn(
             String.format(EXTERNAL_RUNNER_OVERRIDDEN_IN_ALLOWED_PATH, allowedPathsPrefixes.get()));
+        postOverrideEvent(testRules, allTargetsWithinAllowedPrefixes, externalTestRunner);
       }
-      return buckConfig.getView(TestBuckConfig.class).getExternalTestRunner();
+      return externalTestRunner;
     } else {
-      Optional<ImmutableList<String>> externalTestRunner =
-          buckConfig.getView(TestBuckConfig.class).getExternalTestRunner();
       if (externalTestRunner.isPresent() && userOverriddenExternalRunner) {
         // User has explicitly set an external test runner on a path they that shouldn't be using
         // external runners
         console.warn(
             String.format(EXTERNAL_RUNNER_IN_UNSUPPORTED_PATH, allowedPathsPrefixes.get()));
+        postOverrideEvent(testRules, allTargetsWithinAllowedPrefixes, externalTestRunner);
         return externalTestRunner;
       } else {
         // At least one of the targets on a path where external test runners are not supported.
@@ -124,5 +137,16 @@ public class ExternalTestRunnerProvider {
     Optional<String> finalValueOfExternalRunner = buckConfig.getValue("test", "external_runner");
 
     return !projectExternalRunner.equals(finalValueOfExternalRunner);
+  }
+
+  private void postOverrideEvent(
+      Iterable<TestRule> testRules,
+      boolean allTargetsWithinAllowedPrefixes,
+      Optional<ImmutableList<String>> customRunner) {
+    eventBus.post(
+        ExternalTestRunnerSelectionEvent.externalTestRunnerOverridden(
+            Iterables.transform(testRules, r -> r.getFullyQualifiedName()),
+            allTargetsWithinAllowedPrefixes,
+            customRunner.map(r -> r.stream().collect(Collectors.joining(" ")))));
   }
 }
