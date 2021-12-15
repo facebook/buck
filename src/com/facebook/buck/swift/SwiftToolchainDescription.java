@@ -22,10 +22,12 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.toolchain.tool.impl.RemoteExecutionEnabledTool;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.rules.args.Arg;
@@ -50,9 +52,6 @@ public class SwiftToolchainDescription
       SwiftToolchainDescriptionArg args) {
     Verify.verify(!buildTarget.isFlavored());
     ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
-    CommandTool.Builder swiftcBuilder =
-        new CommandTool.Builder(Tools.resolveTool(args.getSwiftc(), actionGraphBuilder));
-    Tool swiftc = swiftcBuilder.build();
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
@@ -68,7 +67,7 @@ public class SwiftToolchainDescription
             .collect(ImmutableList.toImmutableList());
 
     Optional<Tool> swiftStdlibTool =
-        args.getSwiftStdlibTool().map(path -> Tools.resolveTool(path, actionGraphBuilder));
+        args.getSwiftStdlibTool().map(path -> resolveTool(path, actionGraphBuilder));
     if (swiftStdlibTool.isPresent() && !args.getSwiftStdlibToolFlags().isEmpty()) {
       CommandTool.Builder swiftStdlibToolBuilder = new CommandTool.Builder(swiftStdlibTool.get());
       args.getSwiftStdlibToolFlags()
@@ -78,7 +77,7 @@ public class SwiftToolchainDescription
     return new SwiftToolchainBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
-        swiftc,
+        resolveTool(args.getSwiftc(), actionGraphBuilder),
         swiftFlags,
         swiftStdlibTool,
         args.getRuntimePathsForBundling().stream()
@@ -92,6 +91,11 @@ public class SwiftToolchainDescription
             .collect(ImmutableList.toImmutableList()),
         args.getRuntimeRunPaths().stream().map(Paths::get).collect(ImmutableList.toImmutableList()),
         args.getPrefixSerializedDebugInfo());
+  }
+
+  private Tool resolveTool(SourcePath sourcePath, BuildRuleResolver resolver) {
+    return RemoteExecutionEnabledTool.getEnabledOnLinuxHost(
+        Tools.resolveTool(sourcePath, resolver));
   }
 
   @Override
