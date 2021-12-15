@@ -8,6 +8,7 @@ import os
 import site
 import sys
 import uuid
+import time
 
 from pkg_resources import (
     DistributionNotFound,
@@ -25,6 +26,7 @@ from .pex_info import PexInfo
 from .tracer import TRACER
 from .util import CacheHelper, DistributionHelper
 
+MAX_MOVE_RETRY_COUNT = 5
 
 class PEXEnvironment(Environment):
   @classmethod
@@ -48,14 +50,26 @@ class PEXEnvironment(Environment):
           safe_rmtree(explode_tmp)
           raise
       TRACER.log('Renaming %s to %s' % (explode_tmp, explode_dir))
-      try:
-        os.rename(explode_tmp, explode_dir)
-      except OSError as e:
-        if os.path.exists(explode_dir):
-          TRACER.log('Seems like another process created %s' % explode_dir)
-          safe_rmtree(explode_tmp)
-        else:
-          raise e
+      # We are retrying here due to a few possible things that can
+      # go wrong:
+      # 1) Another process beat us to it and created it
+      # 2) We actually fail to move it due to some locks on Windows
+      #    (possibly anti-virus or indexer locking the tmp folder),
+      for retry in range(MAX_MOVE_RETRY_COUNT):
+        try:
+          if os.path.exists(explode_dir):
+            safe_rmtree(explode_tmp)
+          else:
+            os.rename(explode_tmp, explode_dir)
+        except OSError:
+          if retry < MAX_MOVE_RETRY_COUNT - 1:
+            delay = 2 ** retry
+            TRACER.log('Renaming failed, retrying in %s seconds...' % str(delay))
+            time.sleep(delay)
+            continue
+          else:
+            raise
+        break
     return explode_dir
 
   @classmethod
