@@ -31,11 +31,13 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.toolchain.tool.impl.RemoteExecutionEnabledTool;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
 import com.facebook.buck.core.util.immutables.RuleArg;
@@ -100,7 +102,7 @@ public class AppleToolchainDescription
     // offending path in https://reviews.llvm.org/D48899, and
     // https://reviews.llvm.org/D45172 mentioned that there is much
     // more stack space available when single threaded.
-    Tool dsymutil = Tools.resolveTool(args.getDsymutil(), actionGraphBuilder);
+    Tool dsymutil = resolveTool(args.getDsymutil(), actionGraphBuilder);
     if (args.getWorkAroundDsymutilLtoStackOverflowBug().orElse(false)) {
       dsymutil = new CommandTool.Builder(dsymutil).addArg("-num-threads=1").build();
     }
@@ -140,26 +142,26 @@ public class AppleToolchainDescription
 
     Optional<Tool> dwarfdumpTool =
         args.getDwarfdump()
-            .map(dwarfdumpSrcPath -> Tools.resolveTool(dwarfdumpSrcPath, actionGraphBuilder));
+            .map(dwarfdumpSrcPath -> resolveTool(dwarfdumpSrcPath, actionGraphBuilder));
 
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatform.builder()
             .setMinVersion(args.getMinVersion())
             .setBuildVersion(args.getBuildVersion())
-            .setActool(Tools.resolveTool(args.getActool(), actionGraphBuilder))
-            .setLibtool(Tools.resolveTool(args.getLibtool(), actionGraphBuilder))
-            .setIbtool(Tools.resolveTool(args.getIbtool(), actionGraphBuilder))
-            .setMomc(Tools.resolveTool(args.getMomc(), actionGraphBuilder))
+            .setActool(resolveMacOnlyTool(args.getActool(), actionGraphBuilder))
+            .setLibtool(resolveTool(args.getLibtool(), actionGraphBuilder))
+            .setIbtool(resolveMacOnlyTool(args.getIbtool(), actionGraphBuilder))
+            .setMomc(resolveMacOnlyTool(args.getMomc(), actionGraphBuilder))
             .setCopySceneKitAssets(
                 args.getCopySceneKitAssets()
-                    .map(path -> Tools.resolveTool(path, actionGraphBuilder)))
-            .setXctest(Tools.resolveTool(args.getXctest(), actionGraphBuilder))
+                    .map(path -> resolveMacOnlyTool(path, actionGraphBuilder)))
+            .setXctest(resolveMacOnlyTool(args.getXctest(), actionGraphBuilder))
             .setDsymutil(dsymutil)
             .setDwarfdump(dwarfdumpTool)
-            .setLipo(Tools.resolveTool(args.getLipo(), actionGraphBuilder))
-            .setLldb(Tools.resolveTool(args.getLldb(), actionGraphBuilder))
-            .setCodesignProvider(ToolProviders.getToolProvider(args.getCodesign()))
-            .setCodesignAllocate(Tools.resolveTool(args.getCodesignAllocate(), actionGraphBuilder))
+            .setLipo(resolveTool(args.getLipo(), actionGraphBuilder))
+            .setLldb(resolveTool(args.getLldb(), actionGraphBuilder))
+            .setCodesignProvider(ToolProviders.getToolProvider(args.getCodesign(), false))
+            .setCodesignAllocate(resolveMacOnlyTool(args.getCodesignAllocate(), actionGraphBuilder))
             .setCxxPlatform(
                 getCxxPlatform(
                     (ProvidesCxxPlatform) cxxToolchainRule,
@@ -178,6 +180,15 @@ public class AppleToolchainDescription
 
     return new AppleToolchainBuildRule(
         buildTarget, context.getProjectFilesystem(), appleCxxPlatform);
+  }
+
+  private Tool resolveTool(SourcePath path, BuildRuleResolver resolver) {
+    return RemoteExecutionEnabledTool.getEnabledOnLinuxHost(Tools.resolveTool(path, resolver));
+  }
+
+  private Tool resolveMacOnlyTool(SourcePath path, BuildRuleResolver resolver) {
+    // These tools will trigger MacDo execution so do not make sense to run remotely
+    return new RemoteExecutionEnabledTool(Tools.resolveTool(path, resolver), false);
   }
 
   @Override
