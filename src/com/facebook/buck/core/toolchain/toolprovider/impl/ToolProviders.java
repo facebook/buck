@@ -27,6 +27,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
+import com.facebook.buck.core.toolchain.tool.impl.RemoteExecutionEnabledTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
@@ -40,8 +41,14 @@ public class ToolProviders {
    * references a {@link BinaryBuildRule} and use that's executable command.
    */
   public static ToolProvider getToolProvider(SourcePath sourcePath) {
+    return getToolProvider(sourcePath, true);
+  }
+
+  public static ToolProvider getToolProvider(
+      SourcePath sourcePath, boolean remoteExecutionEnabled) {
     if (sourcePath instanceof PathSourcePath) {
-      return new ConstantToolProvider(new HashedFileTool(sourcePath));
+      return new ConstantToolProvider(
+          new RemoteExecutionEnabledTool(new HashedFileTool(sourcePath), remoteExecutionEnabled));
     }
 
     Preconditions.checkArgument(
@@ -55,7 +62,8 @@ public class ToolProviders {
       public Tool resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
         BuildRule rule = resolver.getRule(target);
         Verify.verify(rule instanceof BinaryBuildRule);
-        return ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel());
+        Tool tool = ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel());
+        return new RemoteExecutionEnabledTool(tool, remoteExecutionEnabled);
       }
 
       @Override
