@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -52,6 +53,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -128,7 +130,7 @@ public class CxxToolchainDescription
             Optional.empty());
     cxxPlatform.setAs(
         new CompilerProvider(
-            ToolProviders.getToolProvider(args.getAssembler()),
+            getToolProvider(args.getAssembler()),
             args.getAssemblerType(),
             ToolType.AS,
             preferDependencyTree));
@@ -139,9 +141,7 @@ public class CxxToolchainDescription
 
     cxxPlatform.setAspp(
         new PreprocessorProvider(
-            ToolProviders.getToolProvider(args.getAssembler()),
-            args.getAssemblerType(),
-            ToolType.ASPP));
+            getToolProvider(args.getAssembler()), args.getAssemblerType(), ToolType.ASPP));
     cxxPlatform.setAsppflags(
         args.getAssemblerPreprocessorFlags().stream()
             .map(macrosConverter::convert)
@@ -149,7 +149,7 @@ public class CxxToolchainDescription
 
     cxxPlatform.setCc(
         new CompilerProvider(
-            ToolProviders.getToolProvider(args.getCCompiler()),
+            getToolProvider(args.getCCompiler()),
             args.getCCompilerType(),
             ToolType.CC,
             preferDependencyTree));
@@ -160,7 +160,7 @@ public class CxxToolchainDescription
 
     cxxPlatform.setCxx(
         new CompilerProvider(
-            ToolProviders.getToolProvider(args.getCxxCompiler()),
+            getToolProvider(args.getCxxCompiler()),
             args.getCxxCompilerType(),
             ToolType.CXX,
             preferDependencyTree));
@@ -171,9 +171,7 @@ public class CxxToolchainDescription
 
     cxxPlatform.setCpp(
         new PreprocessorProvider(
-            ToolProviders.getToolProvider(args.getCCompiler()),
-            args.getCCompilerType(),
-            ToolType.CPP));
+            getToolProvider(args.getCCompiler()), args.getCCompilerType(), ToolType.CPP));
     cxxPlatform.setCppflags(
         args.getCPreprocessorFlags().stream()
             .map(macrosConverter::convert)
@@ -181,9 +179,7 @@ public class CxxToolchainDescription
 
     cxxPlatform.setCxxpp(
         new PreprocessorProvider(
-            ToolProviders.getToolProvider(args.getCxxCompiler()),
-            args.getCxxCompilerType(),
-            ToolType.CXXPP));
+            getToolProvider(args.getCxxCompiler()), args.getCxxCompilerType(), ToolType.CXXPP));
     cxxPlatform.setCxxppflags(
         args.getCxxPreprocessorFlags().stream()
             .map(macrosConverter::convert)
@@ -195,12 +191,10 @@ public class CxxToolchainDescription
             compiler -> {
               cxxPlatform.setAsmpp(
                   new PreprocessorProvider(
-                      ToolProviders.getToolProvider(compiler),
-                      args.getAsmCompilerType(),
-                      ToolType.ASMPP));
+                      getToolProvider(compiler), args.getAsmCompilerType(), ToolType.ASMPP));
               cxxPlatform.setAsm(
                   new CompilerProvider(
-                      ToolProviders.getToolProvider(compiler),
+                      getToolProvider(compiler),
                       args.getAsmCompilerType(),
                       ToolType.ASM,
                       preferDependencyTree));
@@ -220,12 +214,10 @@ public class CxxToolchainDescription
             compiler -> {
               cxxPlatform.setCudapp(
                   new PreprocessorProvider(
-                      ToolProviders.getToolProvider(compiler),
-                      args.getCudaCompilerType(),
-                      ToolType.CUDAPP));
+                      getToolProvider(compiler), args.getCudaCompilerType(), ToolType.CUDAPP));
               cxxPlatform.setCuda(
                   new CompilerProvider(
-                      ToolProviders.getToolProvider(compiler),
+                      getToolProvider(compiler),
                       args.getCudaCompilerType(),
                       ToolType.CUDA,
                       preferDependencyTree));
@@ -245,12 +237,10 @@ public class CxxToolchainDescription
             compiler -> {
               cxxPlatform.setHippp(
                   new PreprocessorProvider(
-                      ToolProviders.getToolProvider(compiler),
-                      args.getHipCompilerType(),
-                      ToolType.HIPPP));
+                      getToolProvider(compiler), args.getHipCompilerType(), ToolType.HIPPP));
               cxxPlatform.setHip(
                   new CompilerProvider(
-                      ToolProviders.getToolProvider(compiler),
+                      getToolProvider(compiler),
                       args.getHipCompilerType(),
                       ToolType.HIP,
                       preferDependencyTree));
@@ -268,7 +258,7 @@ public class CxxToolchainDescription
     cxxPlatform.setLd(
         new DefaultLinkerProvider(
             linkerType,
-            ToolProviders.getToolProvider(args.getLinker()),
+            getToolProvider(args.getLinker()),
             args.getCacheLinks(),
             cxxBuckConfig.shouldUploadToCache(),
             cxxBuckConfig.getFocusedDebuggingEnabled(),
@@ -294,8 +284,7 @@ public class CxxToolchainDescription
     }
 
     cxxPlatform.setAr(
-        ArchiverProvider.from(
-            ToolProviders.getToolProvider(args.getArchiver()), args.getArchiverType()));
+        ArchiverProvider.from(getToolProvider(args.getArchiver()), args.getArchiverType()));
     cxxPlatform.setArflags(
         args.getArchiverFlags().stream()
             .map(macrosConverter::convert)
@@ -303,7 +292,7 @@ public class CxxToolchainDescription
     cxxPlatform.setArchiveContents(args.getArchiveContents());
     cxxPlatform.setRequiresArchives(args.getRequiresArchives());
 
-    cxxPlatform.setStrip(ToolProviders.getToolProvider(args.getStrip()));
+    cxxPlatform.setStrip(getToolProvider(args.getStrip()));
     args.getStripDebugFlags()
         .ifPresent(
             flags ->
@@ -353,7 +342,7 @@ public class CxxToolchainDescription
 
     cxxPlatform.setSymbolNameTool(
         new PosixNmSymbolNameTool(
-            ToolProviders.getToolProvider(args.getNm()), downwardApiConfig.isEnabledForCxx()));
+            getToolProvider(args.getNm()), downwardApiConfig.isEnabledForCxx()));
 
     // User-configured cxx platforms are required to handle path sanitization themselves.
     cxxPlatform.setCompilerDebugPathSanitizer(
@@ -381,7 +370,7 @@ public class CxxToolchainDescription
     } else {
       cxxPlatform.setSharedLibraryInterfaceParams(
           ElfSharedLibraryInterfaceParams.of(
-              ToolProviders.getToolProvider(args.getObjcopyForSharedLibraryInterface()),
+              getToolProvider(args.getObjcopyForSharedLibraryInterface()),
               args.getSharedLibraryInterfaceFlags(),
               sharedLibraryInterfaceType == Type.DEFINED_ONLY,
               args.getObjcopyRecalculatesLayout()));
@@ -396,6 +385,11 @@ public class CxxToolchainDescription
     cxxPlatform.setHeadersAsRawHeadersMode(args.getHeadersAsRawHeadersMode());
 
     return new CxxToolchainBuildRule(buildTarget, context, cxxPlatform);
+  }
+
+  private ToolProvider getToolProvider(SourcePath path) {
+    // Only enable RE for tools that will execute on Linux
+    return ToolProviders.getToolProvider(path, Platform.detect() == Platform.LINUX);
   }
 
   @Override
