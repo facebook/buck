@@ -96,6 +96,7 @@ public class InstrumentationTestRunner {
     this.codeCoverage = codeCoverage;
   }
 
+  @SuppressWarnings("PMD.BlacklistedSystemGetenv")
   public static InstrumentationTestRunner fromArgs(String... args) {
     File outputDirectory = null;
     String adbExecutablePath = null;
@@ -218,7 +219,22 @@ public class InstrumentationTestRunner {
       System.exit(1);
     }
 
-    String deviceSerial = System.getProperty("buck.device.id");
+    String buckdeviceSerial = System.getProperty("buck.device.id");
+    String androidSerial = System.getenv("ANDROID_SERIAL");
+    String deviceSerial = null;
+
+    if (buckdeviceSerial != null) {
+      deviceSerial = buckdeviceSerial;
+    } else if (androidSerial != null) {
+      deviceSerial = androidSerial;
+    }
+
+    if (deviceSerial != null) {
+      // If a device serial was set, we use that instead of trying to auto connect.
+      // This behavior is in line with other android tools.
+      autoRunOnConnectedDevice = false;
+    }
+
     if (deviceSerial == null && !autoRunOnConnectedDevice) {
       System.err.println(
           "Must pass buck.device.id system property, as this run is not configured to auto-connect to device.");
