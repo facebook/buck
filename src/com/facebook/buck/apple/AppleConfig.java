@@ -111,10 +111,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String DO_NOT_EMBED_HOST_APP_IN_TEST_BUNDLE =
       "do_not_embed_host_app_in_test_bundle";
 
-  // TODO(T82004478): This is a temporary flag, remove after successful deployment
-  private static final String ENABLE_ALL_WATCH_SIMULATOR_FLAVORS =
-      "enable_all_watch_simulator_flavors";
-
   private static final String PROJECT_GENERATOR_SWIFT_LABELS = "project_generator_swift_labels";
   private static final String PROJECT_GENERATOR_INDEX_VIA_COMPILE_ARGS =
       "project_generator_index_via_compile_args";
@@ -652,10 +648,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getDoNotEmbedHostAppInTestBundle() {
     return delegate.getBooleanValue(APPLE_SECTION, DO_NOT_EMBED_HOST_APP_IN_TEST_BUNDLE, false);
-  }
-
-  public boolean getEnableAllWatchSimulatorFlavors() {
-    return delegate.getBooleanValue(APPLE_SECTION, ENABLE_ALL_WATCH_SIMULATOR_FLAVORS, false);
   }
 
   public ImmutableList<String> getProjectGeneratorSwiftLabels() {

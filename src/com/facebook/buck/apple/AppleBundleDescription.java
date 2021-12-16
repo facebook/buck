@@ -316,16 +316,10 @@ public class AppleBundleDescription
     String platformName = cxxPlatform.getFlavor().getName();
     Flavor[] actualWatchFlavors;
     if (ApplePlatform.isSimulator(platformName)) {
-      // TODO(T82004478): Remove the else branch when the temporal flag is
-      // removed.
-      if (appleConfig.getEnableAllWatchSimulatorFlavors()) {
-        actualWatchFlavors =
-            new Flavor[] {
-              WATCH_SIMULATOR_FLAVOR, WATCH_SIMULATOR_X86_64_FLAVOR, WATCH_SIMULATOR_ARM64_FLAVOR
-            };
-      } else {
-        actualWatchFlavors = new Flavor[] {WATCH_SIMULATOR_FLAVOR};
-      }
+      actualWatchFlavors =
+          new Flavor[] {
+            WATCH_SIMULATOR_FLAVOR, WATCH_SIMULATOR_X86_64_FLAVOR, WATCH_SIMULATOR_ARM64_FLAVOR
+          };
     } else if (platformName.startsWith(ApplePlatform.IPHONEOS.getName())
         || platformName.startsWith(ApplePlatform.WATCHOS.getName())) {
       actualWatchFlavors = new Flavor[] {WATCH_OS_FLAVOR, WATCH_OS_64_32_FLAVOR};
