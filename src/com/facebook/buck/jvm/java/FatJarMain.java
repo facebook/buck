@@ -77,10 +77,26 @@ public class FatJarMain {
     cmd.add(Paths.get(javaHome, "bin", "java").toString());
     // Pass through any VM arguments to the child process
     cmd.addAll(getJVMArguments());
+    // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
+    // https://stackoverflow.com/a/16535804/5208808
+    cmd.add("-XX:-MaxFDLimit");
     cmd.add("-jar");
     // Lookup our current JAR context.
     cmd.add(jar.toString());
     Collections.addAll(cmd, args);
+
+    /* On Windows, we need to escape the arguments we hand off to `CreateProcess`.  See
+     * http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
+     * for more details.
+     */
+    if (isWindowsOs(getOsPlatform())) {
+      List<String> escapedCommand = new ArrayList<String>(cmd.size());
+      for (String c : cmd) {
+        escapedCommand.add(WindowsCreateProcessEscape.quote(c));
+      }
+      return escapedCommand;
+    }
+
     return cmd;
   }
 

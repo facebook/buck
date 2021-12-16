@@ -115,6 +115,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/jvm/java:fat_jar_utils",
         "//src/com/facebook/buck/util/function:function",
         "//third-party/java/guava:guava",
         "//src/com/facebook/buck/core/util/log:log",

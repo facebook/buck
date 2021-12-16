@@ -1,29 +1,20 @@
-// This is free and unencumbered software released into the public domain.
-//
-// Anyone is free to copy, modify, publish, use, compile, sell, or
-// distribute this software, either in source code form or as a compiled
-// binary, for any purpose, commercial or non-commercial, and by any
-// means.
-//
-// In jurisdictions that recognize copyright laws, the author or authors
-// of this software dedicate any and all copyright interest in the
-// software to the public domain. We make this dedication for the benefit
-// of the public at large and to the detriment of our heirs and
-// successors. We intend this dedication to be an overt act of
-// relinquishment in perpetuity of all present and future rights to this
-// software under copyright law.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-// IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-// OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-// ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-// OTHER DEALINGS IN THE SOFTWARE.
-//
-// For more information, please refer to <http://unlicense.org/>
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-package com.facebook.buck.util;
+package com.facebook.buck.jvm.java;
 
 /**
  * Helps quote arguments when launching a process on Windows.
@@ -31,7 +22,7 @@ package com.facebook.buck.util;
  * <p>Unix's process spawning syscall accepts an array of arguments, but Windows' equivalent accepts
  * a single string and splits the strings according to some different rules.
  */
-class WindowsCreateProcessEscape {
+public class WindowsCreateProcessEscape {
   private WindowsCreateProcessEscape() {}
 
   /** Same as {@link #quote(String)} except appends to a {@code StringBuilder}. */
@@ -75,8 +66,8 @@ class WindowsCreateProcessEscape {
 
   /**
    * Given a string X, this function returns a string that, when passed through the Windows
-   * implementation of Java's {@link Runtime#exec(String[])} or {@link java.lang.ProcessBuilder},
-   * will appear to the spawned process as X.
+   * implementation of Java's {@link Runtime#exec(String[])} or {@link ProcessBuilder}, will appear
+   * to the spawned process as X.
    *
    * @param arg The argument to quote.
    * @return The quote version of 'arg'.

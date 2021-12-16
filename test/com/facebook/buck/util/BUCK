@@ -99,6 +99,7 @@ java_test(
         "//src/com/facebook/buck/jvm/java:rules",
         "//src/com/facebook/buck/jvm/java:steps",
         "//src/com/facebook/buck/jvm/java:support",
+        "//src/com/facebook/buck/jvm/java:fat_jar_utils",
         "//src/com/facebook/buck/jvm/java/abi/source/api:api",
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",

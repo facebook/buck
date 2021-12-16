@@ -17,6 +17,7 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.core.filesystems.PathWrapper;
+import com.facebook.buck.jvm.java.WindowsCreateProcessEscape;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;

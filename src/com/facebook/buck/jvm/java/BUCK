@@ -6,6 +6,18 @@ load(
 )
 
 buck_java_library(
+    name = "fat_jar_utils",
+    srcs = [
+        "WindowsCreateProcessEscape.java",
+    ],
+    # Maximum compatibility
+    source = "6",
+    target = "6",
+    visibility = [ "//test/com/facebook/buck/util:util",
+                   "//src/com/facebook/buck/util:util" ]
+)
+
+buck_java_library(
     name = "fat-jar-main",
     srcs = [
         "FatJar.java",
@@ -19,6 +31,7 @@ buck_java_library(
         # compile them into fat JARs, so it's important that they don't bring along any additional
         # dependencies.
         "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
+        ":fat_jar_utils"
     ],
 )
 
@@ -296,6 +309,7 @@ java_library_with_plugins(
     resources = [
         "FatJar.java",
         "FatJarMain.java",
+        "WindowsCreateProcessEscape.java",
         "//src/com/facebook/buck/util/liteinfersupport:Nullable.java",
     ],
     tests = [

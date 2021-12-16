@@ -18,6 +18,7 @@ package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.jvm.java.WindowsCreateProcessEscape;
 import org.junit.Test;
 
 public class WindowsCreateProcessEscapeTest {
