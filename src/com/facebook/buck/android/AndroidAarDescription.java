@@ -61,6 +61,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -348,6 +349,17 @@ public class AndroidAarDescription
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javacFactory.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
+
+    // TODO(cjhopman): we could filter this by the abis that this binary supports.
+    toolchainProvider
+        .getByNameIfPresent(
+            NdkCxxPlatformsProvider.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            NdkCxxPlatformsProvider.class)
+        .map(NdkCxxPlatformsProvider::getNdkCxxPlatforms).map(Map::values)
+        .orElse(ImmutableList.of()).stream()
+        .map(platform -> platform.getParseTimeDeps(buildTarget.getTargetConfiguration()))
+        .forEach(extraDepsBuilder::addAll);
   }
 
   // TODO: Don't inherit from AndroidLibraryDescription if most args are ignored
