@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -442,7 +443,7 @@ public class BuckArgsMethodsTest {
     args.add("build");
     args.add("foo");
 
-    BuckArgsMethods.handleIsolationArgs(args);
+    BuckArgsMethods.handleIsolationArgs(args, true, Optional.empty());
     assertEquals(
         ImmutableList.of("build", "foo", "--config", "buck.base_buck_out_dir=foodir"), args);
 
@@ -452,7 +453,42 @@ public class BuckArgsMethodsTest {
     args.add("--isolation_prefix");
     args.add("bar");
 
-    BuckArgsMethods.handleIsolationArgs(args);
+    BuckArgsMethods.handleIsolationArgs(args, true, Optional.empty());
+    assertEquals(
+        ImmutableList.of("build", "foo", "--config", "buck.base_buck_out_dir=foodir"), args);
+
+    args = new ArrayList<>();
+    args.add("build");
+    args.add("foo");
+    args.add("--isolation_prefix");
+    args.add("bar");
+    args.add("--reuse-current-config");
+
+    BuckArgsMethods.handleIsolationArgs(args, true, Optional.empty());
+    // won't skip adding base_buck_out_dir because there is no matching preexisting buck-out
+    assertEquals(
+        ImmutableList.of(
+            "build", "foo", "--reuse-current-config", "--config", "buck.base_buck_out_dir=foodir"),
+        args);
+
+    args = new ArrayList<>();
+    args.add("build");
+    args.add("foo");
+    args.add("--isolation_prefix");
+    args.add("bar");
+    args.add("--reuse-current-config");
+
+    BuckArgsMethods.handleIsolationArgs(args, true, Optional.of("foodir"));
+    assertEquals(ImmutableList.of("build", "foo", "--reuse-current-config"), args);
+
+    args = new ArrayList<>();
+    args.add("build");
+    args.add("foo");
+    args.add("--isolation_prefix");
+    args.add("bar");
+    args.add("--reuse-current-config");
+
+    BuckArgsMethods.handleIsolationArgs(args, false, Optional.empty());
     assertEquals(
         ImmutableList.of("build", "foo", "--config", "buck.base_buck_out_dir=foodir"), args);
   }

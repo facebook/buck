@@ -628,7 +628,12 @@ public final class MainRunner {
             BuckArgsMethods.getPythonInterpreter(clientEnvironment),
             unexpandedCommandLineArgs,
             rootCellMapping,
-            clientEnvironment);
+            clientEnvironment,
+            buckGlobalStateLifecycleManager.hasStoredBuckGlobalState(),
+            buckGlobalStateLifecycleManager
+                .getCells()
+                .map(Cells::getBuckConfig)
+                .flatMap(buckConfig -> buckConfig.getValue("buck", "base_buck_out_dir")));
 
     // Filter out things like --command-args-file from the arguments lists that we log
     ImmutableList<String> filteredUnexpandedArgsForLogging =

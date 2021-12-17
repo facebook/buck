@@ -251,7 +251,8 @@ public class BuckArgsMethods {
   }
 
   @VisibleForTesting
-  protected static void handleIsolationArgs(List<String> args) {
+  protected static void handleIsolationArgs(
+      List<String> args, boolean hasStoredBuckGlobalState, Optional<String> baseBuckOutDir) {
     int isolationPrefixIndex = args.indexOf("--isolation_prefix");
 
     if (isolationPrefixIndex == -1) {
@@ -262,6 +263,28 @@ public class BuckArgsMethods {
       // Allow for the argument to --isolation_prefix
       args.remove(isolationPrefixIndex + 1);
       args.remove(isolationPrefixIndex);
+
+      String reuseCurrentConfig = "--reuse-current-config";
+
+      if (args.contains(reuseCurrentConfig)) {
+        if (hasStoredBuckGlobalState) {
+          // if we are reusing current configs and has an existing live Buck daemon,
+          // do not add the `buck.base_buck_out_dir` config if it already exists. This
+          // allows us to safely use `--isolation_prefix` with `--reuse-current-config`.
+          boolean isMatchingBuckout =
+              baseBuckOutDir
+                  .map(dir -> dir.equals(System.getProperty("buck.base_buck_out_dir")))
+                  .orElse(false);
+          if (isMatchingBuckout) {
+            return;
+          }
+        } else {
+          // If we're starting a fresh daemon, `--reuse-current-config` won't take effect.
+          // Removing the flag here to prevent it conflicting with the subsequently added
+          // config.
+          args.remove(reuseCurrentConfig);
+        }
+      }
 
       args.add("--config");
       args.add(
@@ -291,7 +314,9 @@ public class BuckArgsMethods {
       String pythonInterpreter,
       ImmutableList<String> argsv,
       ImmutableMap<CellName, AbsPath> rootCellMapping,
-      ImmutableMap<String, String> clientEnvironment) {
+      ImmutableMap<String, String> clientEnvironment,
+      boolean hasStoredBuckGlobalState,
+      Optional<String> baseBuckOutDir) {
     ImmutableList<String> fileExpandedArgs =
         expandAtFiles(pythonInterpreter, argsv, rootCellMapping);
     int passThroughPosition = fileExpandedArgs.indexOf(PASS_THROUGH_DELIMITER);
@@ -310,7 +335,7 @@ public class BuckArgsMethods {
 
     addArgsFromEnv(args, clientEnvironment);
     adjustHelpArgs(args);
-    handleIsolationArgs(args);
+    handleIsolationArgs(args, hasStoredBuckGlobalState, baseBuckOutDir);
 
     return ImmutableList.<String>builderWithExpectedSize(args.size() + passThroughArgs.size())
         .addAll(args)
