@@ -231,6 +231,7 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
             Paths.get(""),
             Paths.get(""),
             Paths.get(""),
+            Paths.get(""),
             Paths.get(""));
 
     ExtraClasspathProvider extraClasspathProvider =

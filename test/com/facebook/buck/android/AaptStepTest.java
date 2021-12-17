@@ -84,6 +84,7 @@ public class AaptStepTest {
             /* aidlExecutable= */ Paths.get(""),
             /* zipalignToolProvider= */ new ConstantToolProvider(new SimpleTool("")),
             /* dxExecutable= */ Paths.get(""),
+            /* d8Executable= */ Paths.get(""),
             /* androidFrameworkIdlFile= */ Paths.get(""),
             /* proguardJar= */ Paths.get(""),
             /* proguardConfig= */ Paths.get(""),

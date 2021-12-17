@@ -48,6 +48,8 @@ public abstract class GenruleAndroidTools implements AddsToRuleKey {
 
   public abstract Path getAndroidPathToDx();
 
+  public abstract Path getAndroidPathToD8();
+
   public abstract Tool getZipalignTool();
 
   public abstract Tool getAaptTool();
@@ -72,6 +74,7 @@ public abstract class GenruleAndroidTools implements AddsToRuleKey {
     AndroidPlatformTarget androidPlatformTarget = tools.getAndroidPlatformTarget();
     Path androidSdk = tools.getAndroidSdkLocation().getSdkRootPath();
     Path androidDx = androidPlatformTarget.getDxExecutable();
+    Path androidD8 = androidPlatformTarget.getD8Executable();
     Tool androidAapt = androidPlatformTarget.getAaptExecutable().get();
     ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
     TargetConfiguration targetConfiguration = target.getTargetConfiguration();
@@ -81,6 +84,7 @@ public abstract class GenruleAndroidTools implements AddsToRuleKey {
     return ImmutableGenruleAndroidTools.ofImpl(
         androidSdk,
         androidDx,
+        androidD8,
         androidZipalign,
         androidAapt,
         androidAapt2,

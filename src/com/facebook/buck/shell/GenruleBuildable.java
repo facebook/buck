@@ -791,6 +791,7 @@ public class GenruleBuildable implements Buildable {
         tools -> {
           environmentVariablesBuilder.put("ANDROID_HOME", tools.getAndroidSdkLocation().toString());
           environmentVariablesBuilder.put("DX", tools.getAndroidPathToDx().toString());
+          environmentVariablesBuilder.put("D8", tools.getAndroidPathToD8().toString());
           environmentVariablesBuilder.put(
               "ZIPALIGN", String.join(" ", tools.getZipalignTool().getCommandPrefix(pathResolver)));
           environmentVariablesBuilder.put(

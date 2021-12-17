@@ -213,6 +213,7 @@ public class GenruleBuildableTest {
             filesystem.getPath(""),
             new ConstantToolProvider(new SimpleTool("zipalign")),
             filesystem.getPath("."),
+            filesystem.getPath("."),
             filesystem.getPath(""),
             filesystem.getPath(""),
             filesystem.getPath(""),

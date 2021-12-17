@@ -48,6 +48,7 @@ public class AndroidTestUtils {
         /* aidlExecutable= */ Paths.get(""),
         /* zipalignToolProvider= */ new ConstantToolProvider(new SimpleTool("")),
         /* dxExecutable= */ Paths.get("/usr/bin/dx"),
+        /* d8Executable= */ Paths.get("/usr/bin/d8"),
         /* androidFrameworkIdlFile= */ Paths.get(""),
         /* proguardJar= */ Paths.get(""),
         /* proguardConfig= */ Paths.get(""),

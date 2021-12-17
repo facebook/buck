@@ -224,6 +224,9 @@ public class AndroidPlatformTargetProducer {
         buildToolsDir
             .resolve(Platform.detect() == Platform.WINDOWS ? "dx.bat" : "dx")
             .toAbsolutePath(),
+        buildToolsDir
+            .resolve(Platform.detect() == Platform.WINDOWS ? "d8.bat" : "d8")
+            .toAbsolutePath(),
         androidFrameworkIdlFile,
         proguardJar,
         proguardConfig,

@@ -72,6 +72,8 @@ public abstract class AndroidPlatformTarget implements Toolchain, AddsToRuleKey 
 
   public abstract Path getDxExecutable();
 
+  public abstract Path getD8Executable();
+
   public abstract Path getAndroidFrameworkIdlFile();
 
   public abstract Path getProguardJar();
@@ -99,6 +101,7 @@ public abstract class AndroidPlatformTarget implements Toolchain, AddsToRuleKey 
       Path aidlExecutable,
       ToolProvider zipalignToolProvider,
       Path dxExecutable,
+      Path d8Executable,
       Path androidFrameworkIdlFile,
       Path proguardJar,
       Path proguardConfig,
@@ -113,6 +116,7 @@ public abstract class AndroidPlatformTarget implements Toolchain, AddsToRuleKey 
         aidlExecutable,
         zipalignToolProvider,
         dxExecutable,
+        d8Executable,
         androidFrameworkIdlFile,
         proguardJar,
         proguardConfig,
