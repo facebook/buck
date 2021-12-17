@@ -62,6 +62,9 @@ public class MergeAndroidResourcesExecutableMain {
   @Option(name = "--union-package")
   private String unionPackageString;
 
+  @Option(name = "--referenced-resources-lists")
+  private String referencedResourcesLists;
+
   public static void main(String[] args) throws IOException {
     MergeAndroidResourcesExecutableMain main = new MergeAndroidResourcesExecutableMain();
     CmdLineParser parser = new CmdLineParser(main);
@@ -115,6 +118,14 @@ public class MergeAndroidResourcesExecutableMain {
 
     Path outputDir = Paths.get(outputDirString);
 
+    ImmutableList.Builder<String> referencedResources = ImmutableList.builder();
+    if (referencedResourcesLists != null) {
+      for (String referencedResourcesList :
+          Files.readAllLines(Paths.get(referencedResourcesLists))) {
+        referencedResources.addAll(Files.readAllLines(Paths.get(referencedResourcesList)));
+      }
+    }
+
     try {
       MergeAndroidResources.mergeAndroidResources(
           uberRDotTxt,
@@ -125,7 +136,8 @@ public class MergeAndroidResourcesExecutableMain {
           duplicateResourceAllowlistPath,
           unionPackage,
           overrideSymbols,
-          outputDir);
+          outputDir,
+          referencedResources.build());
     } catch (MergeAndroidResources.DuplicateResourceException e) {
       throw new RuntimeException(e);
     }

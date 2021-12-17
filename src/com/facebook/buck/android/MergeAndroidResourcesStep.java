@@ -171,7 +171,8 @@ public class MergeAndroidResourcesStep implements Step {
           duplicateResourceWhitelistPath,
           unionPackage,
           overrideSymbolsPath,
-          outputDir);
+          outputDir,
+          ImmutableList.of());
 
       return StepExecutionResults.SUCCESS;
     } catch (MergeAndroidResources.DuplicateResourceException e) {

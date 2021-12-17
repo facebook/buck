@@ -70,7 +70,8 @@ public class MergeAndroidResources {
       Optional<Path> duplicateResourceWhitelistPath,
       Optional<String> unionPackage,
       ImmutableList<Path> overrideSymbolsPath,
-      Path outputDir)
+      Path outputDir,
+      ImmutableList<String> referencedResources)
       throws DuplicateResourceException, IOException {
     // In order to convert a symbols file to R.java, all resources of the same type are grouped
     // into a static class of that name. The static class contains static values that correspond
@@ -141,6 +142,8 @@ public class MergeAndroidResources {
         }
       }
     }
+
+    rDotJavaPackageToResources = trimResources(rDotJavaPackageToResources, referencedResources);
 
     writePerPackageRDotJava(outputDir, rDotJavaPackageToResources, forceFinalResourceIds);
     Set<String> emptyPackages =
@@ -393,6 +396,26 @@ public class MergeAndroidResources {
     }
 
     return rDotJavaPackageToSymbolsFiles;
+  }
+
+  private static SortedSetMultimap<String, RDotTxtEntry> trimResources(
+      SortedSetMultimap<String, RDotTxtEntry> rDotJavaPackageToSymbolsFiles,
+      ImmutableList<String> referencedResources) {
+    if (referencedResources.isEmpty()) {
+      return rDotJavaPackageToSymbolsFiles;
+    }
+
+    SortedSetMultimap<String, RDotTxtEntry> trimmedRDotJavaPackageToSymbolFiles =
+        TreeMultimap.create();
+    for (Entry<String, RDotTxtEntry> entry : rDotJavaPackageToSymbolsFiles.entries()) {
+      String packageName = entry.getKey();
+      String resourceName = entry.getValue().name;
+      if (referencedResources.contains(packageName + "." + resourceName)) {
+        trimmedRDotJavaPackageToSymbolFiles.put(entry.getKey(), entry.getValue());
+      }
+    }
+
+    return trimmedRDotJavaPackageToSymbolFiles;
   }
 
   private static boolean duplicateIsWhitelisted(RDotTxtEntry resource, Set<String> whitelist) {
