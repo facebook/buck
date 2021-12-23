@@ -1436,7 +1436,7 @@ jobs:
           command: choco install ant --version=1.9.7
           shell: cmd.exe
       - run:
-          name: Install OpenJDK8
+          name: Install OpenJDK11
           command: choco install adoptopenjdk11
           shell: cmd.exe
       - run:
