@@ -1465,8 +1465,8 @@ jobs:
           command: choco install ant --version=1.9.7
           shell: cmd.exe
       - run:
-          name: Install OpenJDK8
-          command: choco install adoptopenjdk8
+          name: Install OpenJDK11
+          command: choco install adoptopenjdk11
           shell: cmd.exe
       - run:
           # on Windows, python3 is installed as python but buck expect the name python3
