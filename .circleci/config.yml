@@ -103,7 +103,7 @@ install_golang: &install_golang
     go version
 
 install_python: &install_python
-  name: Install Python 3.6.2
+  name: Install Python 3.9.4
   command: |
     if [ "${PLATFORM}" == "macos" ]; then
       brew install pyenv
@@ -116,15 +116,15 @@ install_python: &install_python
     pyenv versions
     export PATH="$(pyenv root)/shims:${PATH}"
     python_version=`python --version` || python_version="Python Not Found"
-    # Skip installation if Python 3.6.2 restored frm cache.
-    if [ "${python_version}" != "Python 3.6.2" ]; then
+    # Skip installation if Python 3.9.4 restored frm cache.
+    if [ "${python_version}" != "Python 3.9.4" ]; then
       # In the case that pyenv is upgraded to a new version, the cached python
       # is broken and should be uninstalled.
-      pyenv uninstall -f 3.6.2
-      pyenv install -s 3.6.2
-      pyenv global 3.6.2 system
+      pyenv uninstall -f 3.9.4
+      pyenv install -s 3.9.4
+      pyenv global 3.9.4 system
     else
-      echo "Python3.6.2 restored from cache, skip installation."
+      echo "Python3.9.4 restored from cache, skip installation."
     fi
     python --version
 
@@ -1436,8 +1436,8 @@ jobs:
           command: choco install ant --version=1.9.7
           shell: cmd.exe
       - run:
-          name: Install OpenJDK8
-          command: choco install adoptopenjdk8
+          name: Install OpenJDK11
+          command: choco install adoptopenjdk11
           shell: cmd.exe
       - run:
           # on Windows, python3 is installed as python but buck expect the name python3
@@ -1465,8 +1465,8 @@ jobs:
           command: choco install ant --version=1.9.7
           shell: cmd.exe
       - run:
-          name: Install OpenJDK8
-          command: choco install adoptopenjdk8
+          name: Install OpenJDK11
+          command: choco install adoptopenjdk11
           shell: cmd.exe
       - run:
           # on Windows, python3 is installed as python but buck expect the name python3
