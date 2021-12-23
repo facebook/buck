@@ -1437,7 +1437,7 @@ jobs:
           shell: cmd.exe
       - run:
           name: Install OpenJDK8
-          command: choco install adoptopenjdk8
+          command: choco install adoptopenjdk11
           shell: cmd.exe
       - run:
           # on Windows, python3 is installed as python but buck expect the name python3
