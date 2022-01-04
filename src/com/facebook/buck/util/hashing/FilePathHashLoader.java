@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.hashing;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.FastPaths;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.collect.ImmutableSet;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -44,6 +46,7 @@ public class FilePathHashLoader implements FileHashLoader {
   private final Path defaultCellRoot;
   private final ImmutableSet<Path> assumeModifiedFiles;
   private final boolean allowSymlinks;
+  private static final Logger LOG = Logger.get(FilePathHashLoader.class);
 
   public FilePathHashLoader(
       Path defaultCellRoot, ImmutableSet<Path> assumeModifiedFiles, boolean allowSymlinks)
@@ -70,6 +73,15 @@ public class FilePathHashLoader implements FileHashLoader {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             files.add(file);
+            return FileVisitResult.CONTINUE;
+          }
+
+          @Override
+          public FileVisitResult visitFileFailed(Path file, IOException exc) {
+            // For filepath only hashing, we can accept filepaths that don't exist.
+            // This allows sparse profile to not have to include all source files.
+            files.add(file);
+            LOG.warn(file + " does not exist. Target hashing will assume this is not a symlink.");
             return FileVisitResult.CONTINUE;
           }
         });
@@ -103,6 +115,10 @@ public class FilePathHashLoader implements FileHashLoader {
     if (!allowSymlinks) {
       return resolvedPath;
     }
-    return resolvedPath.toRealPath();
+    try {
+      return resolvedPath.toRealPath();
+    } catch (NoSuchFileException e) {
+      return resolvedPath.toAbsolutePath().normalize();
+    }
   }
 }
