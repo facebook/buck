@@ -19,6 +19,7 @@ package com.facebook.buck.swift;
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -37,6 +38,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   private final Tool swiftc;
   private final ImmutableList<Arg> swiftFlags;
   private final Optional<Tool> swiftStdlibTool;
+  private final Optional<SourcePath> platformPath;
   private final ImmutableList<Path> runtimePathsForBundling;
   private final ImmutableList<Path> runtimePathsForLinking;
   private final ImmutableList<Path> staticRuntimePaths;
@@ -49,6 +51,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
       Tool swiftc,
       ImmutableList<Arg> swiftFlags,
       Optional<Tool> swiftStdlibTool,
+      Optional<SourcePath> platformPath,
       ImmutableList<Path> runtimePathsForBundling,
       ImmutableList<Path> runtimePathsForLinking,
       ImmutableList<Path> staticRuntimePaths,
@@ -58,6 +61,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
     this.swiftc = swiftc;
     this.swiftFlags = swiftFlags;
     this.swiftStdlibTool = swiftStdlibTool;
+    this.platformPath = platformPath;
     this.runtimePathsForBundling = runtimePathsForBundling;
     this.runtimePathsForLinking = runtimePathsForLinking;
     this.staticRuntimePaths = staticRuntimePaths;
@@ -71,6 +75,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
         .setSwiftc(swiftc)
         .setSwiftFlags(swiftFlags)
         .setSwiftStdlibTool(swiftStdlibTool)
+        .setPlatformPath(this.platformPath)
         .setSwiftTarget(swiftTarget)
         .setSwiftRuntimePathsForBundling(runtimePathsForBundling)
         .setSwiftRuntimePathsForLinking(runtimePathsForLinking)

@@ -86,6 +86,7 @@ public class SwiftToolchainDescription
         resolveTool(args.getSwiftc(), actionGraphBuilder),
         swiftFlagsBuilder.build(),
         swiftStdlibTool,
+        args.getPlatformPath(),
         args.getRuntimePathsForBundling().stream()
             .map(Paths::get)
             .collect(ImmutableList.toImmutableList()),
@@ -151,5 +152,11 @@ public class SwiftToolchainDescription
      * targeted platform.
      */
     Optional<SourcePath> getSdkPath();
+
+    /**
+     * TODO: make this non-optional once the targets have been updated. The path to the platform
+     * dir.
+     */
+    Optional<SourcePath> getPlatformPath();
   }
 }

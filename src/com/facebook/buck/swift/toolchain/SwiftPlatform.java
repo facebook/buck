@@ -17,6 +17,7 @@
 package com.facebook.buck.swift.toolchain;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.rules.args.Arg;
@@ -34,6 +35,14 @@ public interface SwiftPlatform {
   Tool getSwiftc();
 
   Optional<Tool> getSwiftStdlibTool();
+
+  /**
+   * TODO: make this non-optional once always set.
+   *
+   * @return the path to the toolchains platform dir. This is used for adding compile and link
+   *     search paths.
+   */
+  Optional<SourcePath> getPlatformPath();
 
   /**
    * @return A set of directories which contain the Swift runtime as dynamic libraries. On macOS,
