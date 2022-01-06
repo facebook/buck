@@ -31,6 +31,8 @@ import com.facebook.buck.core.toolchain.tool.impl.RemoteExecutionEnabledTool;
 import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
@@ -61,10 +63,14 @@ public class SwiftToolchainDescription
             ImmutableList.of(LocationMacroExpander.INSTANCE),
             Optional.empty());
 
-    ImmutableList<Arg> swiftFlags =
-        args.getSwiftcFlags().stream()
-            .map(macrosConverter::convert)
-            .collect(ImmutableList.toImmutableList());
+    ImmutableList.Builder<Arg> swiftFlagsBuilder = ImmutableList.builder();
+    args.getSdkPath().ifPresent(sdkPath -> {
+      swiftFlagsBuilder.add(StringArg.of("-sdk"));
+      swiftFlagsBuilder.add(SourcePathArg.of(sdkPath));
+    });
+    for (StringWithMacros flag : args.getSwiftcFlags()) {
+      swiftFlagsBuilder.add(macrosConverter.convert(flag));
+    }
 
     Optional<Tool> swiftStdlibTool =
         args.getSwiftStdlibTool().map(path -> resolveTool(path, actionGraphBuilder));
@@ -78,7 +84,7 @@ public class SwiftToolchainDescription
         buildTarget,
         context.getProjectFilesystem(),
         resolveTool(args.getSwiftc(), actionGraphBuilder),
-        swiftFlags,
+        swiftFlagsBuilder.build(),
         swiftStdlibTool,
         args.getRuntimePathsForBundling().stream()
             .map(Paths::get)
@@ -139,5 +145,11 @@ public class SwiftToolchainDescription
     default boolean getPrefixSerializedDebugInfo() {
       return false;
     }
+
+    /**
+     * TODO: make this non-optional once the targets have been updated. The path to the SDK for the
+     * targeted platform.
+     */
+    Optional<SourcePath> getSdkPath();
   }
 }
