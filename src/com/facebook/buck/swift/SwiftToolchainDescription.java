@@ -64,10 +64,12 @@ public class SwiftToolchainDescription
             Optional.empty());
 
     ImmutableList.Builder<Arg> swiftFlagsBuilder = ImmutableList.builder();
-    args.getSdkPath().ifPresent(sdkPath -> {
-      swiftFlagsBuilder.add(StringArg.of("-sdk"));
-      swiftFlagsBuilder.add(SourcePathArg.of(sdkPath));
-    });
+    args.getSdkPath()
+        .ifPresent(
+            sdkPath -> {
+              swiftFlagsBuilder.add(StringArg.of("-sdk"));
+              swiftFlagsBuilder.add(SourcePathArg.of(sdkPath));
+            });
     for (StringWithMacros flag : args.getSwiftcFlags()) {
       swiftFlagsBuilder.add(macrosConverter.convert(flag));
     }
