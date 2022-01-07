@@ -62,7 +62,7 @@ public class LicenseCheckTest {
             // The newline character doesn't match "\w", "\\n" so do a non-greedy match until the
             // next part of the copyright.
             "^/\\\\*.*?"
-                + "\\\\* Copyright (\\(c\\)|20\\d\\d-present) Facebook, Inc\\..*?"
+                + "\\\\* Copyright (\\(c\\)|20\\d\\d-present) (Facebook|Meta Platforms), Inc\\..*?"
                 + "\\\\* Licensed under the Apache License, Version 2.0 \\(the \"License\"\\);.*?",
             Pattern.MULTILINE | Pattern.DOTALL);
 
