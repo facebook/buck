@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,13 @@ public interface SwiftPlatform {
    *     search paths.
    */
   Optional<SourcePath> getPlatformPath();
+
+  /**
+   * TODO: make this non-optional once always set.
+   *
+   * @return the path to the target SDK.
+   */
+  Optional<SourcePath> getSdkPath();
 
   /**
    * @return A set of directories which contain the Swift runtime as dynamic libraries. On macOS,

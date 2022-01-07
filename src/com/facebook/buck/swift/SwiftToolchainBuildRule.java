@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   private final ImmutableList<Arg> swiftFlags;
   private final Optional<Tool> swiftStdlibTool;
   private final Optional<SourcePath> platformPath;
+  private final Optional<SourcePath> sdkPath;
   private final ImmutableList<Path> runtimePathsForBundling;
   private final ImmutableList<Path> runtimePathsForLinking;
   private final ImmutableList<Path> staticRuntimePaths;
@@ -52,6 +53,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
       ImmutableList<Arg> swiftFlags,
       Optional<Tool> swiftStdlibTool,
       Optional<SourcePath> platformPath,
+      Optional<SourcePath> sdkPath,
       ImmutableList<Path> runtimePathsForBundling,
       ImmutableList<Path> runtimePathsForLinking,
       ImmutableList<Path> staticRuntimePaths,
@@ -62,6 +64,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
     this.swiftFlags = swiftFlags;
     this.swiftStdlibTool = swiftStdlibTool;
     this.platformPath = platformPath;
+    this.sdkPath = sdkPath;
     this.runtimePathsForBundling = runtimePathsForBundling;
     this.runtimePathsForLinking = runtimePathsForLinking;
     this.staticRuntimePaths = staticRuntimePaths;
@@ -75,7 +78,8 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
         .setSwiftc(swiftc)
         .setSwiftFlags(swiftFlags)
         .setSwiftStdlibTool(swiftStdlibTool)
-        .setPlatformPath(this.platformPath)
+        .setPlatformPath(platformPath)
+        .setSdkPath(sdkPath)
         .setSwiftTarget(swiftTarget)
         .setSwiftRuntimePathsForBundling(runtimePathsForBundling)
         .setSwiftRuntimePathsForLinking(runtimePathsForLinking)
