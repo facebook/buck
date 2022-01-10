@@ -160,7 +160,7 @@ public class HaskellGhciDescription
     }.start();
 
     HaskellGhciOmnibusSpec spec = builder.build();
-    LOG.verbose("%s: built omnibus spec %s", spec);
+    LOG.verbose("%s: built omnibus spec %s", baseTarget, spec);
     return spec;
   }
 
