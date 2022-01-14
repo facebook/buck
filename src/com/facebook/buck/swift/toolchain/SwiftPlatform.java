@@ -37,19 +37,13 @@ public interface SwiftPlatform {
   Optional<Tool> getSwiftStdlibTool();
 
   /**
-   * TODO: make this non-optional once always set.
-   *
    * @return the path to the toolchains platform dir. This is used for adding compile and link
    *     search paths.
    */
-  Optional<SourcePath> getPlatformPath();
+  SourcePath getPlatformPath();
 
-  /**
-   * TODO: make this non-optional once always set.
-   *
-   * @return the path to the target SDK.
-   */
-  Optional<SourcePath> getSdkPath();
+  /** @return the path to the target SDK. */
+  SourcePath getSdkPath();
 
   /**
    * @return A set of directories which contain the Swift runtime as dynamic libraries. On macOS,

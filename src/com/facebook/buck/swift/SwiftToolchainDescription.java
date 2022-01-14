@@ -64,12 +64,8 @@ public class SwiftToolchainDescription
             Optional.empty());
 
     ImmutableList.Builder<Arg> swiftFlagsBuilder = ImmutableList.builder();
-    args.getSdkPath()
-        .ifPresent(
-            sdkPath -> {
-              swiftFlagsBuilder.add(StringArg.of("-sdk"));
-              swiftFlagsBuilder.add(SourcePathArg.of(sdkPath));
-            });
+    swiftFlagsBuilder.add(StringArg.of("-sdk"));
+    swiftFlagsBuilder.add(SourcePathArg.of(args.getSdkPath()));
     for (StringWithMacros flag : args.getSwiftcFlags()) {
       swiftFlagsBuilder.add(macrosConverter.convert(flag));
     }
@@ -150,16 +146,10 @@ public class SwiftToolchainDescription
       return false;
     }
 
-    /**
-     * TODO: make this non-optional once the targets have been updated. The path to the SDK for the
-     * targeted platform.
-     */
-    Optional<SourcePath> getSdkPath();
+    /** The path to the SDK for the targeted platform. */
+    SourcePath getSdkPath();
 
-    /**
-     * TODO: make this non-optional once the targets have been updated. The path to the platform
-     * dir.
-     */
-    Optional<SourcePath> getPlatformPath();
+    /** The path to the platform dir. */
+    SourcePath getPlatformPath();
   }
 }

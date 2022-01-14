@@ -38,8 +38,8 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   private final Tool swiftc;
   private final ImmutableList<Arg> swiftFlags;
   private final Optional<Tool> swiftStdlibTool;
-  private final Optional<SourcePath> platformPath;
-  private final Optional<SourcePath> sdkPath;
+  private final SourcePath platformPath;
+  private final SourcePath sdkPath;
   private final ImmutableList<Path> runtimePathsForBundling;
   private final ImmutableList<Path> runtimePathsForLinking;
   private final ImmutableList<Path> staticRuntimePaths;
@@ -52,8 +52,8 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
       Tool swiftc,
       ImmutableList<Arg> swiftFlags,
       Optional<Tool> swiftStdlibTool,
-      Optional<SourcePath> platformPath,
-      Optional<SourcePath> sdkPath,
+      SourcePath platformPath,
+      SourcePath sdkPath,
       ImmutableList<Path> runtimePathsForBundling,
       ImmutableList<Path> runtimePathsForLinking,
       ImmutableList<Path> staticRuntimePaths,
