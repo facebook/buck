@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,6 +80,14 @@ public abstract class FrameworkPath implements Comparable<FrameworkPath>, AddsTo
   public boolean isSDKROOTFrameworkPath() {
     if (getSourceTreePath().isPresent()) {
       return getSourceTreePath().get().getSourceTree() == PBXReference.SourceTree.SDKROOT;
+    }
+    return false;
+  }
+
+  /** Returns true if the framework is in the PLATFORM_DIR */
+  public boolean isPlatformDirFrameworkPath() {
+    if (getSourceTreePath().isPresent()) {
+      return getSourceTreePath().get().getSourceTree() == PBXReference.SourceTree.PLATFORM_DIR;
     }
     return false;
   }

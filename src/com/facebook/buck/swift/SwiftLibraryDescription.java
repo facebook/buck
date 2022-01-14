@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -325,6 +325,7 @@ public class SwiftLibraryDescription
               args),
           args.getEnableCxxInterop(),
           args.getBridgingHeader(),
+          getPlatformPathIfRequired(swiftPlatform.get(), args),
           preprocessor,
           cxxDeps,
           swiftPlatform.get().getDebugPrefixMap(),
@@ -505,6 +506,7 @@ public class SwiftLibraryDescription
             args),
         args.getEnableCxxInterop(),
         args.getBridgingHeader(),
+        getPlatformPathIfRequired(swiftPlatform, args),
         preprocessor,
         preprocessFlags,
         swiftPlatform.getDebugPrefixMap(),
@@ -596,6 +598,7 @@ public class SwiftLibraryDescription
             args),
         args.getEnableCxxInterop(),
         args.getBridgingHeader(),
+        getPlatformPathIfRequired(swiftPlatform, args),
         preprocessor,
         preprocessFlags,
         swiftPlatform.getDebugPrefixMap(),
@@ -604,6 +607,19 @@ public class SwiftLibraryDescription
         swiftPlatform.getPrefixSerializedDebugInfo(),
         swiftBuckConfig.getAddXctestImportPaths(),
         args.getSerializeDebuggingOptions());
+  }
+
+  private static Optional<SourcePath> getPlatformPathIfRequired(
+      SwiftPlatform swiftPlatform, SwiftLibraryDescriptionArg args) {
+    // If this library depends on any frameworks in the platform dir then we need to ensure the
+    // target providing that path is a dependency of the compile rule. This is required for eg
+    // the XCTest.swiftmodule.
+    for (FrameworkPath frameworkPath : args.getFrameworks()) {
+      if (frameworkPath.isPlatformDirFrameworkPath()) {
+        return Optional.of(swiftPlatform.getPlatformPath());
+      }
+    }
+    return Optional.empty();
   }
 
   private static String getModuleName(BuildTarget buildTarget, SwiftLibraryDescriptionArg args) {
