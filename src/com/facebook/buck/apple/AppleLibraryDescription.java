@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
@@ -89,6 +90,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCompile;
 import com.facebook.buck.swift.SwiftDescriptions;
@@ -750,6 +752,15 @@ public class AppleLibraryDescription
     AppleDescriptions.populateCxxLibraryDescriptionArg(
         graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget, addSDKVersionLinkerFlag);
 
+    ImmutableSortedSet<BuildTarget> updatedCxxDeps;
+    if (appleCxxPlatform.isPresent()) {
+      updatedCxxDeps =
+          addPlatformPathDeps(
+              extraCxxDeps, appleCxxPlatform.get().resolve(graphBuilder), args.getFrameworks());
+    } else {
+      updatedCxxDeps = extraCxxDeps;
+    }
+
     BuildRuleParams newParams;
     Optional<BuildRule> swiftCompanionBuildRule =
         swiftDelegate.flatMap(
@@ -815,12 +826,37 @@ public class AppleLibraryDescription
               linkableDepType,
               bundleLoader,
               blacklist,
-              extraCxxDeps,
+              updatedCxxDeps,
               transitiveCxxDeps,
               cxxDelegate,
               AppleCxxRelinkStrategyFactory.getConfiguredStrategy(appleConfig),
               AppleCxxDebugSymbolLinkStrategyFactory.getDebugStrategyFactory(cxxBuckConfig));
         });
+  }
+
+  private ImmutableSortedSet<BuildTarget> addPlatformPathDeps(
+      ImmutableSortedSet<BuildTarget> extraDeps,
+      AppleCxxPlatform appleCxxPlatform,
+      Iterable<FrameworkPath> frameworks) {
+    // The platform path can be provided by build targets in the case of apple_toolchain builds. We
+    // check here for any framework dependencies in $PLATFORM_DIR, and if present we add a
+    // dependency on the `platform_path` target if present to ensure the path is present at
+    // compile and link time.
+    SourcePath platformSourcePath = appleCxxPlatform.getAppleSdkPaths().getPlatformSourcePath();
+    if (!(platformSourcePath instanceof BuildTargetSourcePath)) {
+      return extraDeps;
+    }
+
+    for (FrameworkPath frameworkPath : frameworks) {
+      if (frameworkPath.isPlatformDirFrameworkPath()) {
+        ImmutableSortedSet.Builder<BuildTarget> depsBuilder = ImmutableSortedSet.naturalOrder();
+        depsBuilder.addAll(extraDeps);
+        depsBuilder.add(((BuildTargetSourcePath) platformSourcePath).getTarget());
+        return depsBuilder.build();
+      }
+    }
+
+    return extraDeps;
   }
 
   private boolean shouldAddSDKVersionLinkerFlag(BuildTarget buildTarget) {
