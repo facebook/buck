@@ -158,9 +158,9 @@ public final class BuckPsiUtils {
    * if it cannot be found.
    */
   @Nullable
-  public static BuckFunctionTrailer findTargetInPsiTree(PsiElement root, String name) {
+  public static BuckFunctionTrailer findTargetInPsiTree(PsiElement root, @Nullable String name) {
     return PsiTreeUtil.findChildrenOfType(root, BuckFunctionTrailer.class).stream()
-        .filter(buckFunctionTrailer -> name.equals(buckFunctionTrailer.getName()))
+        .filter(buckFunctionTrailer -> name != null && name.equals(buckFunctionTrailer.getName()))
         .findFirst()
         .orElse(null);
   }
