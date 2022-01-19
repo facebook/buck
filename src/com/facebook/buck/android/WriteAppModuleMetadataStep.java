@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
@@ -45,9 +46,6 @@ public class WriteAppModuleMetadataStep implements Step {
   private final Optional<ImmutableMultimap<APKModule, String>> apkModuleToNativeLibraryMap;
   private final APKModuleGraph apkModuleGraph;
   private final ProjectFilesystem filesystem;
-  private final Optional<Path> proguardFullConfigFile;
-  private final Optional<Path> proguardMappingFile;
-  private final boolean skipProguard;
   private final boolean shouldIncludeClasses;
 
   public static final String CLASS_SECTION_HEADER = "CLASSES";
@@ -58,61 +56,30 @@ public class WriteAppModuleMetadataStep implements Step {
   public static final String MODULE_INDENTATION = "  ";
   public static final String ITEM_INDENTATION = "    ";
 
-  private WriteAppModuleMetadataStep(
+  public WriteAppModuleMetadataStep(
       Path metadataOutput,
       ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
       Optional<ImmutableMultimap<APKModule, String>> apkModuleToNativeLibraryMap,
       APKModuleGraph apkModuleGraph,
       ProjectFilesystem filesystem,
-      Optional<Path> proguardFullConfigFile,
-      Optional<Path> proguardMappingFile,
-      boolean skipProguard,
       boolean shouldIncludeClasses) {
     this.metadataOutput = metadataOutput;
     this.apkModuleToJarPathMap = apkModuleToJarPathMap;
     this.apkModuleToNativeLibraryMap = apkModuleToNativeLibraryMap;
     this.apkModuleGraph = apkModuleGraph;
     this.filesystem = filesystem;
-    this.proguardFullConfigFile = proguardFullConfigFile;
-    this.proguardMappingFile = proguardMappingFile;
-    this.skipProguard = skipProguard;
     this.shouldIncludeClasses = shouldIncludeClasses;
-  }
-
-  public static WriteAppModuleMetadataStep writeModuleMetadata(
-      Path metadataOut,
-      ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
-      Optional<ImmutableMultimap<APKModule, String>> apkModuleToNativeLibraryMap,
-      APKModuleGraph apkModuleGraph,
-      ProjectFilesystem filesystem,
-      Optional<Path> proguardFullConfigFile,
-      Optional<Path> proguardMappingFile,
-      boolean skipProguard,
-      boolean shouldIncludeClasses) {
-    return new WriteAppModuleMetadataStep(
-        metadataOut,
-        apkModuleToJarPathMap,
-        apkModuleToNativeLibraryMap,
-        apkModuleGraph,
-        filesystem,
-        proguardFullConfigFile,
-        proguardMappingFile,
-        skipProguard,
-        shouldIncludeClasses);
   }
 
   @Override
   public StepExecutionResult execute(StepExecutionContext context) {
     try {
       // Get module to classes map in sorted order for build determinism and testing
-      ProguardTranslatorFactory translatorFactory =
-          ProguardTranslatorFactory.create(
-              filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard);
       TreeMultimap<APKModule, String> orderedModuleToClassesMap = null;
       if (shouldIncludeClasses) {
         ImmutableMultimap<APKModule, String> moduleToClassesMap =
             APKModuleGraph.getAPKModuleToClassesMap(
-                apkModuleToJarPathMap, translatorFactory.createObfuscationFunction(), filesystem);
+                apkModuleToJarPathMap, Functions.identity(), filesystem);
         orderedModuleToClassesMap = sortModuleToStringsMultimap(moduleToClassesMap);
       }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.AbstractMap;
-import java.util.Optional;
 import java.util.SortedSet;
 
 public class AndroidAppModularity extends AbstractBuildRule {
@@ -94,15 +93,12 @@ public class AndroidAppModularity extends AbstractBuildRule {
     }
 
     steps.add(
-        WriteAppModuleMetadataStep.writeModuleMetadata(
+        new WriteAppModuleMetadataStep(
             metadataFile.getPath(),
             additionalDexStoreToJarPathMapBuilder.build(),
             result.getModulesToSharedLibraries(),
             apkModuleGraph,
             getProjectFilesystem(),
-            Optional.empty(),
-            Optional.empty(),
-            /*skipProguard*/ true,
             shouldIncludeClasses));
 
     buildableContext.recordArtifact(metadataFile.getPath());
