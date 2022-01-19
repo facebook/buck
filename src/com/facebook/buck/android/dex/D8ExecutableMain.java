@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,9 @@ public class D8ExecutableMain {
 
   @Option(name = "--output-dex-file", required = true)
   private String outputDex;
+
+  @Option(name = "--secondary-output-dex-file")
+  private String secondaryOutputDex;
 
   @Option(name = "--files-to-dex-list", required = true)
   private String filesToDexList;
@@ -125,6 +128,7 @@ public class D8ExecutableMain {
           D8Utils.runD8Command(
               new D8Utils.D8DiagnosticsHandler(),
               Paths.get(outputDex),
+              Optional.ofNullable(secondaryOutputDex).map(Paths::get),
               filesToDex,
               getD8Options(),
               primaryDexClassNamesPath,
