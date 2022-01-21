@@ -20,7 +20,6 @@ import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -44,15 +43,11 @@ public class AndroidApkFactory {
 
   static final Flavor EXO_SYMLINK_TREE = InternalFlavor.of("exo_symlink_tree");
 
-  private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final AndroidInstallConfig androidInstallConfig;
 
   public AndroidApkFactory(
-      AndroidBuckConfig androidBuckConfig,
-      DownwardApiConfig downwardApiConfig,
-      AndroidInstallConfig androidInstallConfig) {
-    this.androidBuckConfig = androidBuckConfig;
+      DownwardApiConfig downwardApiConfig, AndroidInstallConfig androidInstallConfig) {
     this.downwardApiConfig = downwardApiConfig;
     this.androidInstallConfig = androidInstallConfig;
   }
@@ -61,7 +56,6 @@ public class AndroidApkFactory {
       ToolchainProvider toolchainProvider,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      CellPathResolver cellPathResolver,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidBinaryGraphEnhancer graphEnhancer,
@@ -121,14 +115,6 @@ public class AndroidApkFactory {
         args.getOptimizationPasses(),
         args.getProguardConfig(),
         args.isSkipProguard(),
-        RedexArgsHelper.getRedexOptions(
-            androidBuckConfig,
-            buildTarget,
-            graphBuilder,
-            cellPathResolver,
-            args.getRedex(),
-            args.getRedexExtraArgs(),
-            args.getRedexConfig()),
         args.getResourceCompression(),
         args.getCpuFilters(),
         resourceFilter,

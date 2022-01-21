@@ -76,7 +76,6 @@ public class AndroidInstrumentationApk extends AndroidApk {
         apkUnderTest.getOptimizationPasses(),
         apkUnderTest.getProguardConfig(),
         apkUnderTest.getSkipProguard(),
-        Optional.empty(), // RedexOptions
         apkUnderTest.getResourceCompressionMode(),
         apkUnderTest.getCpuFilters(),
         apkUnderTest.getResourceFilter(),

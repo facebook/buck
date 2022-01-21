@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,19 +44,16 @@ class ApkSignerStep implements Step {
   private final Path inputApkPath;
   private final Path outputApkPath;
   private final Supplier<KeystoreProperties> keystorePropertiesSupplier;
-  private final boolean isRedexBuild;
 
   public ApkSignerStep(
       ProjectFilesystem filesystem,
       Path inputApkPath,
       Path outputApkPath,
-      Supplier<KeystoreProperties> keystorePropertiesSupplier,
-      boolean isRedexBuild) {
+      Supplier<KeystoreProperties> keystorePropertiesSupplier) {
     this.filesystem = filesystem;
     this.inputApkPath = inputApkPath;
     this.outputApkPath = outputApkPath;
     this.keystorePropertiesSupplier = keystorePropertiesSupplier;
-    this.isRedexBuild = isRedexBuild;
   }
 
   @Override
@@ -78,12 +75,6 @@ class ApkSignerStep implements Step {
       File inputApk, File outputApk, ImmutableList<ApkSigner.SignerConfig> signerConfigs)
       throws ApkCreationException {
     ApkSigner.Builder apkSignerBuilder = new ApkSigner.Builder(signerConfigs);
-    // For non-redex build, apkSignerBuilder can look up minimum SDK version from
-    // AndroidManifest.xml. Redex build does not have AndroidManifest.xml, so we
-    // manually set it here.
-    if (isRedexBuild) {
-      apkSignerBuilder.setMinSdkVersion(1);
-    }
     try {
       apkSignerBuilder
           .setV1SigningEnabled(true)

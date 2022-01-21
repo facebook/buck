@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,17 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apk.KeystoreProperties;
-import com.facebook.buck.android.redex.ReDexStep;
-import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.zip.RepackZipEntriesStep;
 import com.google.common.collect.ImmutableList;
@@ -50,8 +44,6 @@ public abstract class AndroidBinaryOptimizer implements AddsToRuleKey {
   @AddToRuleKey final boolean packageAssetLibraries;
   @AddToRuleKey final boolean compressAssetLibraries;
   @AddToRuleKey final Optional<CompressionAlgorithm> assetCompressionAlgorithm;
-
-  @AddToRuleKey private final Optional<RedexOptions> redexOptions;
 
   @AddToRuleKey private final SourcePath keystorePath;
   @AddToRuleKey private final SourcePath keystorePropertiesPath;
@@ -77,7 +69,6 @@ public abstract class AndroidBinaryOptimizer implements AddsToRuleKey {
       AndroidSdkLocation androidSdkLocation,
       SourcePath keystorePath,
       SourcePath keystorePropertiesPath,
-      Optional<RedexOptions> redexOptions,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       Optional<CompressionAlgorithm> assetCompressionAlgorithm,
@@ -90,7 +81,6 @@ public abstract class AndroidBinaryOptimizer implements AddsToRuleKey {
     this.androidSdkLocation = androidSdkLocation;
     this.keystorePath = keystorePath;
     this.keystorePropertiesPath = keystorePropertiesPath;
-    this.redexOptions = redexOptions;
     this.isCompressResources = isCompressResources;
     this.packageAssetLibraries = packageAssetLibraries;
     this.compressAssetLibraries = compressAssetLibraries;
@@ -109,20 +99,18 @@ public abstract class AndroidBinaryOptimizer implements AddsToRuleKey {
     Path signedApkPath =
         AndroidBinaryPathUtility.getSignedApkPath(filesystem, buildTarget, binaryType);
 
-    Path apkToRedexAndAlign;
+    Path apkToAlign;
     // Optionally, compress the resources file in the .apk.
     if (isCompressResources) {
       Path compressedApkPath =
           AndroidBinaryPathUtility.getCompressedResourcesApkPath(
               filesystem, buildTarget, binaryType);
-      apkToRedexAndAlign = compressedApkPath;
+      apkToAlign = compressedApkPath;
       steps.add(createRepackZipEntriesStep(signedApkPath, compressedApkPath));
     } else {
-      apkToRedexAndAlign = signedApkPath;
+      apkToAlign = signedApkPath;
     }
 
-    boolean applyRedex = redexOptions.isPresent();
-    Path apkToAlign = apkToRedexAndAlign;
     Path v2SignedApkPath =
         AndroidBinaryPathUtility.getFinalApkPath(filesystem, buildTarget, binaryType);
 
@@ -130,22 +118,8 @@ public abstract class AndroidBinaryOptimizer implements AddsToRuleKey {
     Supplier<KeystoreProperties> keystoreProperties =
         getKeystorePropertiesSupplier(resolver, pathToKeystore);
 
-    if (applyRedex) {
-      RelPath redexedApk =
-          AndroidBinaryPathUtility.getRedexedApkPath(filesystem, buildTarget, binaryType);
-      apkToAlign = redexedApk.getPath();
-      steps.addAll(
-          createRedexSteps(
-              context,
-              buildableContext,
-              resolver,
-              keystoreProperties,
-              apkToRedexAndAlign,
-              redexedApk.getPath()));
-    }
-
     getBinaryTypeSpecificBuildSteps(
-        steps, apkToAlign, v2SignedApkPath, keystoreProperties, context, applyRedex);
+        steps, apkToAlign, v2SignedApkPath, keystoreProperties, context);
     buildableContext.recordArtifact(v2SignedApkPath);
     return steps.build();
   }
@@ -154,38 +128,6 @@ public abstract class AndroidBinaryOptimizer implements AddsToRuleKey {
       Path signedApkPath, Path compressedApkPath) {
     return new RepackZipEntriesStep(
         filesystem, signedApkPath, compressedApkPath, ImmutableSet.of("resources.arsc"));
-  }
-
-  private Iterable<Step> createRedexSteps(
-      BuildContext context,
-      BuildableContext buildableContext,
-      SourcePathResolverAdapter resolver,
-      Supplier<KeystoreProperties> keystoreProperties,
-      Path apkToRedexAndAlign,
-      Path redexedApk) {
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    Path proguardConfigDir =
-        AndroidBinaryPathUtility.getProguardTextFilesPath(filesystem, buildTarget).getPath();
-    steps.add(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, redexedApk.getParent())));
-    ImmutableList<Step> redexSteps =
-        ReDexStep.createSteps(
-            filesystem,
-            ProjectFilesystemUtils.relativize(
-                filesystem.getRootPath(), context.getBuildCellRootPath()),
-            androidSdkLocation,
-            resolver,
-            redexOptions.get(),
-            apkToRedexAndAlign,
-            redexedApk,
-            keystoreProperties,
-            proguardConfigDir,
-            buildableContext,
-            withDownwardApi);
-    steps.addAll(redexSteps);
-    return steps.build();
   }
 
   private Supplier<KeystoreProperties> getKeystorePropertiesSupplier(
@@ -208,6 +150,5 @@ public abstract class AndroidBinaryOptimizer implements AddsToRuleKey {
       Path apkToAlign,
       Path finalApkPath,
       Supplier<KeystoreProperties> keystoreProperties,
-      BuildContext context,
-      boolean applyRedex);
+      BuildContext context);
 }

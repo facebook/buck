@@ -18,10 +18,8 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.exopackage.ExopackageMode;
-import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -37,12 +35,9 @@ import java.util.Optional;
 
 public class AndroidBundleFactory {
 
-  private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
 
-  public AndroidBundleFactory(
-      AndroidBuckConfig androidBuckConfig, DownwardApiConfig downwardApiConfig) {
-    this.androidBuckConfig = androidBuckConfig;
+  public AndroidBundleFactory(DownwardApiConfig downwardApiConfig) {
     this.downwardApiConfig = downwardApiConfig;
   }
 
@@ -50,7 +45,6 @@ public class AndroidBundleFactory {
       ToolchainProvider toolchainProvider,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      CellPathResolver cellPathResolver,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AndroidBinaryGraphEnhancer graphEnhancer,
@@ -70,16 +64,6 @@ public class AndroidBundleFactory {
 
     AndroidApkFilesInfo filesInfo =
         new AndroidApkFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
-
-    Optional<RedexOptions> redexOptions =
-        RedexArgsHelper.getRedexOptions(
-            androidBuckConfig,
-            buildTarget,
-            graphBuilder,
-            cellPathResolver,
-            args.getRedex(),
-            args.getRedexExtraArgs(),
-            args.getRedexConfig());
 
     AndroidSdkLocation androidSdkLocation =
         toolchainProvider.getByName(
@@ -126,31 +110,6 @@ public class AndroidBundleFactory {
             ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
             args.getBundleConfigFile(),
             downwardApiConfig.isEnabledForAndroid());
-    if (redexOptions.isPresent()) {
-      // TODO: T90423891
-      // This is created as a flavor because we are going to do an in place replacement of APKs.
-      // Specifically our post processing steps will need the output in apk form - and there is not
-      // currently a way to get redex's configuration/command line outside of BUCK.
-      // Once we can get all of the {@link RedexOptions} outside of BUCK this should be a
-      // postprocessor
-      CreateReDexedApkFromAAB rule =
-          new CreateReDexedApkFromAAB(
-              buildRule,
-              buildTarget.withFlavors(AndroidBinaryGraphEnhancer.EXTRACT_AND_REDEX_AAB),
-              params,
-              graphBuilder,
-              redexOptions.get(),
-              projectFilesystem,
-              androidSdkLocation,
-              androidPlatformTarget
-                  .getAapt2ToolProvider()
-                  .resolve(graphBuilder, buildRule.getBuildTarget().getTargetConfiguration()),
-              ((Keystore) keystore).getPathToStore(),
-              ((Keystore) keystore).getPathToPropertiesFile(),
-              downwardApiConfig.isEnabledForAndroid(),
-              result.getAndroidManifestPath());
-      graphBuilder.addToIndex(rule);
-    }
     return buildRule;
   }
 }

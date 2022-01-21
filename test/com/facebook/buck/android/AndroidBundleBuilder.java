@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,9 +73,7 @@ public class AndroidBundleBuilder
             CxxPlatformUtils.DEFAULT_EXTERNAL_ACTIONS_CONFIG,
             createToolchainProviderForAndroidBundle(),
             new AndroidBinaryGraphEnhancerFactory(),
-            new AndroidBundleFactory(
-                new AndroidBuckConfig(buckConfig, Platform.detect()),
-                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG)),
+            new AndroidBundleFactory(CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG)),
         target,
         new FakeProjectFilesystem(),
         createToolchainProviderForAndroidBundle());

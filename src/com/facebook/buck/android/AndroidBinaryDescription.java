@@ -56,7 +56,6 @@ import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
-import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.versions.VersionRoot;
@@ -210,7 +209,6 @@ public class AndroidBinaryDescription
             toolchainProvider,
             projectFilesystem,
             graphBuilder,
-            cellRoots,
             buildTarget,
             params,
             graphEnhancer,
@@ -272,11 +270,6 @@ public class AndroidBinaryDescription
     TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();
     Optionals.addIfPresent(proGuardConfig.getProguardTarget(targetConfiguration), extraDepsBuilder);
 
-    if (constructorArg.getRedex()) {
-      // If specified, this option may point to either a BuildTarget or a file.
-      Optional<BuildTarget> redexTarget = androidBuckConfig.getRedexTarget(targetConfiguration);
-      redexTarget.ifPresent(extraDepsBuilder::add);
-    }
     // TODO(cjhopman): we could filter this by the abis that this binary supports.
     toolchainProvider
         .getByNameIfPresent(
@@ -349,15 +342,6 @@ public class AndroidBinaryDescription
     }
 
     abstract Optional<CompressionAlgorithm> getAssetCompressionAlgorithm();
-
-    @Value.Default
-    boolean getRedex() {
-      return false;
-    }
-
-    abstract Optional<SourcePath> getRedexConfig();
-
-    abstract ImmutableList<StringWithMacros> getRedexExtraArgs();
 
     @Hint(splitConfiguration = true)
     @Override

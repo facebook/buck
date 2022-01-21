@@ -189,7 +189,6 @@ public class AndroidBundle extends AbstractBuildRule
             androidSdkLocation,
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
-            Optional.empty(), /* redexOptions */
             packageAssetLibraries,
             compressAssetLibraries,
             assetCompressionAlgorithm,

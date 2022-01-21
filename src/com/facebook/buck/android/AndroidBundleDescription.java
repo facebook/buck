@@ -52,11 +52,9 @@ import com.facebook.buck.jvm.java.JavaCDBuckConfig;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
-import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.step.fs.XzStep;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.EnumSet;
@@ -201,7 +199,6 @@ public class AndroidBundleDescription
             toolchainProvider,
             projectFilesystem,
             graphBuilder,
-            cellRoots,
             buildTarget,
             params,
             graphEnhancer,
@@ -257,13 +254,6 @@ public class AndroidBundleDescription
 
     Optionals.addIfPresent(
         proGuardConfig.getProguardTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
-
-    if (constructorArg.getRedex()) {
-      // If specified, this option may point to either a BuildTarget or a file.
-      Optional<BuildTarget> redexTarget =
-          androidBuckConfig.getRedexTarget(buildTarget.getTargetConfiguration());
-      redexTarget.ifPresent(extraDepsBuilder::add);
-    }
   }
 
   @RuleArg
@@ -324,15 +314,6 @@ public class AndroidBundleDescription
     }
 
     abstract Optional<CompressionAlgorithm> getAssetCompressionAlgorithm();
-
-    @Value.Default
-    boolean getRedex() {
-      return false;
-    }
-
-    abstract Optional<SourcePath> getRedexConfig();
-
-    abstract ImmutableList<StringWithMacros> getRedexExtraArgs();
 
     @Override
     @Value.Default

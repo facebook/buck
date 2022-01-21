@@ -24,7 +24,6 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
-import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
@@ -138,7 +137,6 @@ public class AndroidApk extends AbstractBuildRule
       int proguardOptimizationPasses,
       Optional<SourcePath> proguardConfig,
       boolean skipProguard,
-      Optional<RedexOptions> redexOptions,
       ResourceCompressionMode resourceCompressionMode,
       Set<TargetCpuType> cpuFilters,
       ResourceFilter resourceFilter,
@@ -230,7 +228,6 @@ public class AndroidApk extends AbstractBuildRule
             androidSdkLocation,
             keystore.getPathToStore(),
             keystore.getPathToPropertiesFile(),
-            redexOptions,
             packageAssetLibraries,
             compressAssetLibraries,
             assetCompressionAlgorithm,

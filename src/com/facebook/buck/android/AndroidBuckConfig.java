@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
@@ -74,9 +73,6 @@ public class AndroidBuckConfig {
           NdkSearchOrderEntry.NDK_HOME_ENV,
           NdkSearchOrderEntry.NDK_REPOSITORY_CONFIG,
           NdkSearchOrderEntry.NDK_DIRECTORY_CONFIG);
-
-  private static final String ANDROID_SECTION = "android";
-  private static final String REDEX = "redex";
 
   public static final ImmutableSet<String> VALID_ABI_KEYS =
       ImmutableSet.of("arm", "armv7", "arm64", "x86", "x86_64");
@@ -312,25 +308,6 @@ public class AndroidBuckConfig {
    */
   public Optional<ToolProvider> getZipalignOverride() {
     return getToolProvider("zipalign");
-  }
-
-  public Optional<BuildTarget> getRedexTarget(TargetConfiguration targetConfiguration) {
-    return delegate.getMaybeBuildTarget(ANDROID_SECTION, REDEX, targetConfiguration);
-  }
-
-  public Tool getRedexTool(
-      BuildRuleResolver buildRuleResolver, TargetConfiguration targetConfiguration) {
-    Optional<Tool> redexBinary =
-        delegate
-            .getView(ToolConfig.class)
-            .getTool(ANDROID_SECTION, REDEX, buildRuleResolver, targetConfiguration);
-    if (!redexBinary.isPresent()) {
-      throw new HumanReadableException(
-          "Requested running ReDex but the path to the tool"
-              + "has not been specified in the %s.%s .buckconfig section.",
-          ANDROID_SECTION, REDEX);
-    }
-    return redexBinary.get();
   }
 
   private Optional<ToolProvider> getToolProvider(String tool) {

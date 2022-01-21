@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,7 +93,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             buildBuckConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
-            new AndroidApkFactory(androidBuckConfig, downwardApiConfig, androidInstallConfig)),
+            new AndroidApkFactory(downwardApiConfig, androidInstallConfig)),
         new AndroidBuildConfigDescription(
             toolchainProvider, downwardApiConfig, javaConfig, javaCDBuckConfig),
         new AndroidBundleDescription(
@@ -106,7 +106,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             buildBuckConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
-            new AndroidBundleFactory(androidBuckConfig, downwardApiConfig)),
+            new AndroidBundleFactory(downwardApiConfig)),
         new AndroidInstrumentationApkDescription(
             javaConfig,
             javaCDBuckConfig,

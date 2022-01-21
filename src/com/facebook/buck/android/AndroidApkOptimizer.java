@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static com.facebook.buck.android.BinaryType.APK;
 
 import com.facebook.buck.android.apk.KeystoreProperties;
-import com.facebook.buck.android.redex.RedexOptions;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -44,7 +43,6 @@ public class AndroidApkOptimizer extends AndroidBinaryOptimizer {
       AndroidSdkLocation androidSdkLocation,
       SourcePath keystorePath,
       SourcePath keystorePropertiesPath,
-      Optional<RedexOptions> redexOptions,
       boolean packageAssetLibraries,
       boolean compressAssetLibraries,
       Optional<CompressionAlgorithm> assetCompressionAlgorithm,
@@ -57,7 +55,6 @@ public class AndroidApkOptimizer extends AndroidBinaryOptimizer {
         androidSdkLocation,
         keystorePath,
         keystorePropertiesPath,
-        redexOptions,
         packageAssetLibraries,
         compressAssetLibraries,
         assetCompressionAlgorithm,
@@ -73,8 +70,7 @@ public class AndroidApkOptimizer extends AndroidBinaryOptimizer {
       Path apkToAlign,
       Path finalApkPath,
       Supplier<KeystoreProperties> keystoreProperties,
-      BuildContext context,
-      boolean applyRedex) {
+      BuildContext context) {
     Path zipalignedApkPath =
         AndroidBinaryPathUtility.getZipalignedApkPath(filesystem, buildTarget, binaryType);
     steps.add(
@@ -86,8 +82,6 @@ public class AndroidApkOptimizer extends AndroidBinaryOptimizer {
             RelPath.of(zipalignedApkPath),
             withDownwardApi,
             zipalignTool.getCommandPrefix(context.getSourcePathResolver())));
-    steps.add(
-        new ApkSignerStep(
-            filesystem, zipalignedApkPath, finalApkPath, keystoreProperties, applyRedex));
+    steps.add(new ApkSignerStep(filesystem, zipalignedApkPath, finalApkPath, keystoreProperties));
   }
 }

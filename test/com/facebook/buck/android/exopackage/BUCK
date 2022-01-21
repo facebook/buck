@@ -59,7 +59,6 @@ java_test(
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android/aapt:aapt",
         "//src/com/facebook/buck/android/apkmodule:apkmodule",
-        "//src/com/facebook/buck/android/redex:options",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",

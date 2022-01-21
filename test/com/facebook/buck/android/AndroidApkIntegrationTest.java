@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -73,7 +72,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -100,7 +98,6 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
   private static final String RES_D8_TARGET = "//apps/multidex:app_with_resources_and_d8";
   private static final String RES_GROUPS_TARGET = "//apps/multidex:app_with_resources_and_groups";
   private static final String RAW_DEX_TARGET = "//apps/multidex:app-art";
-  private static final String APP_REDEX_TARGET = "//apps/sample:app_redex";
 
   @Before
   public void setUp() throws IOException {
@@ -1210,75 +1207,6 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
     assertEquals(
         removePlaceholder(workspace.getFileContents("native/proguard_gen/expected.pro")),
         removeHash(workspace.getFileContents(generatedConfig)));
-  }
-
-  @Test
-  public void testReDexIsCalledAppropriatelyFromAndroidBinary() throws IOException {
-    Path apk = workspace.buildAndReturnOutput(APP_REDEX_TARGET);
-    Path unzippedApk = unzip(apk.getParent(), apk, "app_redex");
-
-    // We use a fake ReDex binary that writes out the arguments it received as JSON so that we can
-    // verify that it was called in the right way.
-    @SuppressWarnings("unchecked")
-    Map<String, Object> userData = ObjectMappers.readValue(unzippedApk, Map.class);
-
-    String androidSdk = (String) userData.get("ANDROID_SDK");
-    assertTrue(
-        "ANDROID_SDK environment variable must be set so ReDex runs with zipalign",
-        androidSdk != null && !androidSdk.isEmpty());
-    assertEquals(workspace.getDestPath().toString(), userData.get("PWD"));
-
-    Path genPath = workspace.getGenPath(BuildTargetFactory.newInstance(APP_REDEX_TARGET), "%s");
-
-    assertTrue(userData.get("config").toString().endsWith("apps/sample/redex-config.json"));
-    assertTrue(genPath.resolve("proguard/seeds.txt").endsWith((String) userData.get("keep")));
-    assertEquals("my_alias", userData.get("keyalias"));
-    assertEquals("android", userData.get("keypass"));
-    assertEquals(
-        workspace.resolve("keystores/debug.keystore").toString(), userData.get("keystore"));
-    assertTrue(
-        workspace
-            .getGenPath(BuildTargetFactory.newInstance(APP_REDEX_TARGET), "%s__redex")
-            .resolve("app_redex.redex.apk")
-            .endsWith((String) userData.get("out")));
-    assertTrue(genPath.resolve("proguard/command-line.txt").endsWith((String) userData.get("P")));
-    assertTrue(
-        genPath.resolve("proguard/mapping.txt").endsWith((String) userData.get("proguard-map")));
-    assertTrue((Boolean) userData.get("sign"));
-    assertEquals("my_param_name={\"foo\": true}", userData.get("J"));
-    assertTrue(
-        "redex_extra_args: -j $(location ...) is not properly expanded!",
-        userData.get("j").toString().endsWith(".jar"));
-    assertTrue(
-        "redex_extra_args: -S $(location ...) is not properly expanded!",
-        userData.get("S").toString().contains("coldstart_classes=")
-            && !userData.get("S").toString().contains("location"));
-  }
-
-  @Test
-  public void testEditingRedexToolForcesRebuild() throws IOException {
-    workspace.runBuckBuild(APP_REDEX_TARGET).assertSuccess();
-    workspace.replaceFileContents("tools/redex/fake_redex.py", "main()\n", "main() \n");
-
-    workspace.resetBuildLogFile();
-    workspace.runBuckBuild(APP_REDEX_TARGET).assertSuccess();
-
-    BuckBuildLog buildLog = workspace.getBuildLog();
-
-    buildLog.assertTargetBuiltLocally(APP_REDEX_TARGET);
-  }
-
-  @Test
-  public void testEditingSecondaryDexHeadListForcesRebuild() throws IOException {
-    workspace.runBuckBuild(APP_REDEX_TARGET).assertSuccess();
-    workspace.replaceFileContents("tools/redex/secondary_dex_head.list", "", " ");
-
-    workspace.resetBuildLogFile();
-    workspace.runBuckBuild(APP_REDEX_TARGET).assertSuccess();
-
-    BuckBuildLog buildLog = workspace.getBuildLog();
-
-    buildLog.assertTargetBuiltLocally(APP_REDEX_TARGET);
   }
 
   @Test
