@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -225,27 +225,6 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
     String module = "small_with_no_resource_deps";
     zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
     zipInspector.assertFileExists("assets/" + module + "/AndroidManifest.xml");
-  }
-
-  @Test
-  public void testMultidexModularWithResources() throws IOException {
-    String target = "//apps/multidex:app_modular_resources_debug";
-    workspace.runBuckCommand("build", target).assertSuccess();
-    Path apkPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
-    ZipInspector zipInspector = new ZipInspector(apkPath);
-    zipInspector.assertFileExists("assets/feature1/feature12.dex");
-    zipInspector.assertFileExists("assets/feature1/AndroidManifest.xml");
-    zipInspector.assertFileExists("assets/feature1/resources.arsc");
-    zipInspector.assertFileExists("assets/feature1/res/layout/feature1.xml");
-    zipInspector.assertFileDoesNotExist("res/layout/feature1.xml");
-
-    zipInspector.assertFileExists("assets/feature2/AndroidManifest.xml");
-    zipInspector.assertFileExists("assets/feature2/resources.arsc");
-    zipInspector.assertFileExists("res/layout/feature2.xml");
-    zipInspector.assertFileDoesNotExist("assets/feature2/res/layout/feature2.xml");
   }
 
   @Test

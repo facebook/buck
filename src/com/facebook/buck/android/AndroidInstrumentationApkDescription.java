@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -131,7 +131,7 @@ public class AndroidInstrumentationApkDescription
         .map(BuildRule::getBuildTarget)
         .forEach(buildTargetsToExclude::add);
 
-    APKModule rootAPKModule = APKModule.of(APKModule.ROOT_APKMODULE_NAME, true);
+    APKModule rootAPKModule = APKModule.of(APKModule.ROOT_APKMODULE_NAME);
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         apkUnderTest.getAndroidPackageableCollection().getResourceDetails().get(rootAPKModule);
     ImmutableSet<BuildTarget> resourcesToExclude =

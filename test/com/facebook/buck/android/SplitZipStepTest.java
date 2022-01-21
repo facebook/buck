@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public class SplitZipStepTest {
       ImmutableSet<APKModule> requires = ImmutableSet.of();
       SplitZipStep.writeMetaList(
           writer,
-          APKModule.of(SplitZipStep.SECONDARY_DEX_ID, false),
+          APKModule.of(SplitZipStep.SECONDARY_DEX_ID),
           requires,
           ImmutableList.of(outJar),
           DexStore.JAR);
@@ -110,9 +110,9 @@ public class SplitZipStepTest {
 
     StringWriter stringWriter = new StringWriter();
     try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
-      ImmutableSet<APKModule> requires = ImmutableSet.of(APKModule.of("dependency", false));
+      ImmutableSet<APKModule> requires = ImmutableSet.of(APKModule.of("dependency"));
       SplitZipStep.writeMetaList(
-          writer, APKModule.of("module", false), requires, ImmutableList.of(outJar), DexStore.JAR);
+          writer, APKModule.of("module"), requires, ImmutableList.of(outJar), DexStore.JAR);
     }
     List<String> lines = CharStreams.readLines(new StringReader(stringWriter.toString()));
     assertEquals(3, lines.size());

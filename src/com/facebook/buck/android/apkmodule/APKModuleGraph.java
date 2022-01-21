@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,7 +83,6 @@ public class APKModuleGraph implements AddsToRuleKey {
   private final Optional<ImmutableMap<String, ImmutableList<String>>> appModuleDependencies;
 
   @AddToRuleKey private final Optional<List<BuildTarget>> blacklistedModules;
-  @AddToRuleKey private final Set<String> modulesWithResources;
   private final Optional<Set<BuildTarget>> seedTargets;
   private final Map<APKModule, Set<BuildTarget>> buildTargetsMap = new HashMap<>();
   private final Set<UndeclaredDependency> undeclaredDependencies = new HashSet<>();
@@ -145,13 +144,7 @@ public class APKModuleGraph implements AddsToRuleKey {
    * root module.
    */
   public APKModuleGraph(TargetGraph targetGraph, BuildTarget target) {
-    this(
-        Optional.empty(),
-        Optional.empty(),
-        Optional.empty(),
-        ImmutableSet.of(),
-        targetGraph,
-        target);
+    this(Optional.empty(), Optional.empty(), Optional.empty(), targetGraph, target);
   }
   /**
    * Constructor for the {@code APKModule} graph generator object
@@ -173,13 +166,11 @@ public class APKModuleGraph implements AddsToRuleKey {
       Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> seedConfigMap,
       Optional<ImmutableMap<String, ImmutableList<String>>> appModuleDependencies,
       Optional<List<BuildTarget>> blacklistedModules,
-      Set<String> modulesWithResources,
       TargetGraph targetGraph,
       BuildTarget target) {
     this.targetGraph = targetGraph;
     this.appModuleDependencies = appModuleDependencies;
     this.blacklistedModules = blacklistedModules;
-    this.modulesWithResources = modulesWithResources;
     this.target = target;
     this.seedTargets = Optional.empty();
     this.suppliedSeedConfigMap = seedConfigMap;
@@ -200,7 +191,6 @@ public class APKModuleGraph implements AddsToRuleKey {
     this.suppliedSeedConfigMap = Optional.empty();
     this.appModuleDependencies = Optional.empty();
     this.blacklistedModules = Optional.empty();
-    this.modulesWithResources = ImmutableSet.of();
   }
 
   public ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> toOutgoingEdgesMap() {
@@ -334,17 +324,6 @@ public class APKModuleGraph implements AddsToRuleKey {
   public APKModule findModuleForTarget(BuildTarget target) {
     APKModule module = targetToModuleMapSupplier.get().get(target);
     return (module == null ? rootAPKModuleSupplier.get() : module);
-  }
-
-  /**
-   * Get the Module that should contain the resources for the given target
-   *
-   * @param target target to serach for in modules
-   * @return the module that contains the target
-   */
-  public APKModule findResourceModuleForTarget(BuildTarget target) {
-    APKModule module = targetToModuleMapSupplier.get().get(target);
-    return (module == null || !module.hasResources()) ? rootAPKModuleSupplier.get() : module;
   }
 
   public Optional<List<BuildTarget>> getBlacklistedModules() {
@@ -508,7 +487,7 @@ public class APKModuleGraph implements AddsToRuleKey {
         }
       }.start();
     }
-    APKModule rootModule = APKModule.of(APKModule.ROOT_APKMODULE_NAME, true);
+    APKModule rootModule = APKModule.of(APKModule.ROOT_APKMODULE_NAME);
     buildTargetsMap.put(rootModule, ImmutableSet.copyOf(rootTargets));
     return rootModule;
   }
@@ -677,7 +656,7 @@ public class APKModuleGraph implements AddsToRuleKey {
         }
         hashedSharedModuleSet.add(moduleName);
       }
-      APKModule module = APKModule.of(moduleName, modulesWithResources.contains(moduleName));
+      APKModule module = APKModule.of(moduleName);
       combinedModuleHashToModuleMap.put(ImmutableSet.copyOf(moduleCover), module);
     }
 

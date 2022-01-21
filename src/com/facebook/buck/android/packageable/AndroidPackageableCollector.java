@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -298,7 +298,7 @@ public class AndroidPackageableCollector {
     ResourceCollector collector = getResourceCollector(owner);
     collector.addResourcesWithAssets(owner);
 
-    APKModule module = apkModuleGraph.findResourceModuleForTarget(owner);
+    APKModule module = apkModuleGraph.getRootAPKModule();
     collectionBuilder.putAssetsDirectories(module, assetsDirectory);
     return this;
   }
@@ -341,8 +341,7 @@ public class AndroidPackageableCollector {
     if (androidPackageableFilter.shouldExcludeNonNativeTarget(owner)) {
       return this;
     }
-    collectionBuilder.putAndroidManifestPieces(
-        apkModuleGraph.findResourceModuleForTarget(owner), manifest);
+    collectionBuilder.putAndroidManifestPieces(apkModuleGraph.getRootAPKModule(), manifest);
     return this;
   }
 
@@ -401,7 +400,7 @@ public class AndroidPackageableCollector {
   }
 
   private ResourceCollector getResourceCollector(BuildTarget owner) {
-    APKModule module = apkModuleGraph.findResourceModuleForTarget(owner);
+    APKModule module = apkModuleGraph.getRootAPKModule();
     ResourceCollector collector = resourceCollectors.get(module);
     if (collector == null) {
       throw new RuntimeException(

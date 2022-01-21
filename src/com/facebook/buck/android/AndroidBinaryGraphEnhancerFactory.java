@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,7 +120,6 @@ public class AndroidBinaryGraphEnhancerFactory {
               Optional.of(args.getApplicationModuleConfigs()),
               args.getApplicationModuleDependencies(),
               APKModuleGraph.extractTargetsFromQueries(args.getApplicationModuleBlacklist()),
-              args.getApplicationModulesWithResources(),
               targetGraph,
               buildTarget);
     }

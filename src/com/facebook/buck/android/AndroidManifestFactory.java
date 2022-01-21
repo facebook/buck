@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public class AndroidManifestFactory {
         projectFilesystem,
         resolver,
         skeleton,
-        APKModule.of(APKModule.ROOT_APKMODULE_NAME, true),
+        APKModule.of(APKModule.ROOT_APKMODULE_NAME),
         manifestFiles,
         ManifestEntries.empty(),
         shouldExecuteInSeparateProcess);

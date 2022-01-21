@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -321,7 +321,7 @@ public class AndroidPackageableCollectorTest {
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableList.toImmutableList());
 
-    APKModule rootModule = APKModule.of(APKModule.ROOT_APKMODULE_NAME, true);
+    APKModule rootModule = APKModule.of(APKModule.ROOT_APKMODULE_NAME);
 
     assertEquals(
         "Android resources should be topologically sorted.",
@@ -406,7 +406,7 @@ public class AndroidPackageableCollectorTest {
     AndroidPackageableCollection.ResourceDetails resourceDetails =
         androidPackageableCollection
             .getResourceDetails()
-            .get(APKModule.of(APKModule.ROOT_APKMODULE_NAME, true));
+            .get(APKModule.of(APKModule.ROOT_APKMODULE_NAME));
     assertThat(
         resourceDetails.getResourceDirectories(), Matchers.contains(resAPath, resPath, resBPath));
   }

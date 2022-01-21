@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,15 +26,12 @@ public abstract class APKModule implements Comparable<APKModule>, AddsToRuleKey 
 
   public static final String ROOT_APKMODULE_NAME = "dex";
 
-  public static APKModule of(String name, boolean hasResources) {
-    return ImmutableAPKModule.ofImpl(name, hasResources);
+  public static APKModule of(String name) {
+    return ImmutableAPKModule.ofImpl(name);
   }
 
   @AddToRuleKey
   public abstract String getName();
-
-  @AddToRuleKey
-  public abstract boolean hasResources();
 
   @Value.Derived
   public boolean isRootModule() {
