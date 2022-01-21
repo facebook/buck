@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,6 @@ import java.util.function.Supplier;
 
 public class AndroidApkFactory {
 
-  private static final Flavor ANDROID_MODULARITY_VERIFICATION_FLAVOR =
-      InternalFlavor.of("modularity_verification");
   static final Flavor EXO_SYMLINK_TREE = InternalFlavor.of("exo_symlink_tree");
 
   private final AndroidBuckConfig androidBuckConfig;
@@ -99,22 +97,6 @@ public class AndroidApkFactory {
               result.getAndroidManifestPath());
       graphBuilder.addToIndex(androidApkExopackageSymlinkTree);
     }
-    Optional<BuildRule> moduleVerification;
-    if (args.getAndroidAppModularityResult().isPresent()) {
-      moduleVerification =
-          Optional.of(
-              new AndroidAppModularityVerification(
-                  graphBuilder,
-                  buildTarget.withFlavors(ANDROID_MODULARITY_VERIFICATION_FLAVOR),
-                  projectFilesystem,
-                  args.getAndroidAppModularityResult().get(),
-                  args.isSkipProguard(),
-                  result.getDexFilesInfo().proguardTextFilesPath,
-                  result.getPackageableCollection()));
-      graphBuilder.addToIndex(moduleVerification.get());
-    } else {
-      moduleVerification = Optional.empty();
-    }
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
@@ -163,7 +145,6 @@ public class AndroidApkFactory {
             .getZipalignToolProvider()
             .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
         args.getIsCacheable(),
-        moduleVerification,
         filesInfo.getDexFilesInfo(),
         filesInfo.getNativeFilesInfo(),
         filesInfo.getResourceFilesInfo(),

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,6 @@ import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -113,7 +112,6 @@ public class AndroidApk extends AbstractBuildRule
   private final Tool zipalignTool;
   private final boolean isCacheable;
 
-  private final Optional<BuildRule> moduleVerification;
   private final Optional<ExopackageInfo> exopackageInfo;
   private final SourcePath manifestPath;
 
@@ -155,7 +153,6 @@ public class AndroidApk extends AbstractBuildRule
       Tool javaRuntimeLauncher,
       Tool zipalignTool,
       boolean isCacheable,
-      Optional<BuildRule> moduleVerification,
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
@@ -182,7 +179,6 @@ public class AndroidApk extends AbstractBuildRule
     this.skipProguard = skipProguard;
     this.manifestEntries = manifestEntries;
     this.isCacheable = isCacheable;
-    this.moduleVerification = moduleVerification;
     this.manifestPath = enhancementResult.getAndroidManifestPath();
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
@@ -413,9 +409,7 @@ public class AndroidApk extends AbstractBuildRule
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return RichStream.from(moduleVerification)
-        .map(BuildRule::getBuildTarget)
-        .concat(HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, buildRuleResolver));
+    return HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, buildRuleResolver);
   }
 
   @Override

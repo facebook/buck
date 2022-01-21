@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasDeclaredAndExtraDeps;
-import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
@@ -48,7 +46,6 @@ import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -59,7 +56,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.stream.Stream;
 
 /**
  *
@@ -75,10 +71,7 @@ import java.util.stream.Stream;
  * </pre>
  */
 public class AndroidBundle extends AbstractBuildRule
-    implements SupportsInputBasedRuleKey,
-        HasDeclaredAndExtraDeps,
-        HasClasspathEntries,
-        HasRuntimeDeps {
+    implements SupportsInputBasedRuleKey, HasDeclaredAndExtraDeps, HasClasspathEntries {
   private final Keystore keystore;
 
   private final int optimizationPasses;
@@ -94,8 +87,6 @@ public class AndroidBundle extends AbstractBuildRule
   private final ManifestEntries manifestEntries;
   private final boolean skipProguard;
   private final boolean isCacheable;
-
-  private final Optional<BuildRule> moduleVerification;
 
   private final BuildRuleParams buildRuleParams;
 
@@ -127,7 +118,6 @@ public class AndroidBundle extends AbstractBuildRule
       ManifestEntries manifestEntries,
       Tool zipalignTool,
       boolean isCacheable,
-      Optional<BuildRule> moduleVerification,
       DexFilesInfo dexFilesInfo,
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
@@ -148,7 +138,6 @@ public class AndroidBundle extends AbstractBuildRule
     this.skipProguard = skipProguard;
     this.manifestEntries = manifestEntries;
     this.isCacheable = isCacheable;
-    this.moduleVerification = moduleVerification;
 
     if (ExopackageMode.enabledForSecondaryDexes(exopackageModes)) {
       Preconditions.checkArgument(
@@ -317,11 +306,6 @@ public class AndroidBundle extends AbstractBuildRule
   public ImmutableSet<SourcePath> getOutputClasspaths() {
     // The apk has no exported deps or classpath contributions of its own
     return ImmutableSet.of();
-  }
-
-  @Override
-  public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return RichStream.from(moduleVerification).map(BuildRule::getBuildTarget);
   }
 
   @Override

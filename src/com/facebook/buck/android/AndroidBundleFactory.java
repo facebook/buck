@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,6 @@ import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -38,9 +36,6 @@ import java.util.EnumSet;
 import java.util.Optional;
 
 public class AndroidBundleFactory {
-
-  private static final Flavor ANDROID_MODULARITY_VERIFICATION_FLAVOR =
-      InternalFlavor.of("modularity_verification");
 
   private final AndroidBuckConfig androidBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
@@ -75,23 +70,6 @@ public class AndroidBundleFactory {
 
     AndroidApkFilesInfo filesInfo =
         new AndroidApkFilesInfo(result, exopackageModes, args.isPackageAssetLibraries());
-
-    Optional<BuildRule> moduleVerification;
-    if (args.getAndroidAppModularityResult().isPresent()) {
-      moduleVerification =
-          Optional.of(
-              new AndroidAppModularityVerification(
-                  graphBuilder,
-                  buildTarget.withFlavors(ANDROID_MODULARITY_VERIFICATION_FLAVOR),
-                  projectFilesystem,
-                  args.getAndroidAppModularityResult().get(),
-                  args.isSkipProguard(),
-                  result.getDexFilesInfo().proguardTextFilesPath,
-                  result.getPackageableCollection()));
-      graphBuilder.addToIndex(moduleVerification.get());
-    } else {
-      moduleVerification = Optional.empty();
-    }
 
     Optional<RedexOptions> redexOptions =
         RedexArgsHelper.getRedexOptions(
@@ -142,7 +120,6 @@ public class AndroidBundleFactory {
                 .getZipalignToolProvider()
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
             args.getIsCacheable(),
-            moduleVerification,
             filesInfo.getDexFilesInfo(),
             filesInfo.getNativeFilesInfo(),
             filesInfo.getResourceFilesInfo(),
