@@ -59,10 +59,7 @@ public class PreDexedFilesSorterTest {
   @Before
   public void setUp() {
     moduleGraph =
-        new APKModuleGraph(
-            TargetGraph.EMPTY,
-            BuildTargetFactory.newInstance("//fakeTarget:yes"),
-            Optional.empty());
+        new APKModuleGraph(TargetGraph.EMPTY, BuildTargetFactory.newInstance("//fakeTarget:yes"));
     extraModule = APKModule.of("extra");
   }
 

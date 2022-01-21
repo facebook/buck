@@ -111,9 +111,7 @@ public class AndroidBinaryGraphEnhancerFactory {
 
     APKModuleGraph apkModuleGraph;
     if (args.getApplicationModuleConfigs().isEmpty()) {
-      apkModuleGraph =
-          new APKModuleGraph(
-              targetGraph, buildTarget, Optional.of(args.getApplicationModuleTargets()));
+      apkModuleGraph = new APKModuleGraph(targetGraph, buildTarget);
     } else {
       apkModuleGraph =
           new APKModuleGraph(

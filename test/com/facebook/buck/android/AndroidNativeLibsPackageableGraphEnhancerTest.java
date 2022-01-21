@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target);
 
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -150,7 +150,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target);
 
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -220,7 +220,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target);
 
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -265,7 +265,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target);
 
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =
@@ -348,7 +348,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 
-    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target);
 
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AndroidNativeLibsPackageableGraphEnhancer enhancer =

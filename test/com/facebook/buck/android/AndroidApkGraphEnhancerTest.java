@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -178,7 +178,7 @@ public class AndroidApkGraphEnhancerTest {
         new AndroidPackageableCollector(
                 /* collectionRoot */ apkTarget,
                 /* buildTargetsToExcludeFromDex */ ImmutableSet.of(),
-                new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
+                new APKModuleGraph(TargetGraph.EMPTY, apkTarget))
             .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
@@ -297,7 +297,7 @@ public class AndroidApkGraphEnhancerTest {
         new AndroidPackageableCollector(
                 /* collectionRoot */ apkTarget,
                 /* buildTargetsToExcludeFromDex */ ImmutableSet.of(),
-                new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
+                new APKModuleGraph(TargetGraph.EMPTY, apkTarget))
             .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
@@ -451,7 +451,7 @@ public class AndroidApkGraphEnhancerTest {
         new AndroidPackageableCollector(
                 /* collectionRoot */ apkTarget,
                 ImmutableSet.of(javaDep2BuildTarget),
-                new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
+                new APKModuleGraph(TargetGraph.EMPTY, apkTarget))
             .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
@@ -574,7 +574,7 @@ public class AndroidApkGraphEnhancerTest {
         new AndroidPackageableCollector(
                 /* collectionRoot */ apkTarget,
                 ImmutableSet.of(javaDep2BuildTarget),
-                new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
+                new APKModuleGraph(TargetGraph.EMPTY, apkTarget))
             .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
@@ -711,7 +711,7 @@ public class AndroidApkGraphEnhancerTest {
         new AndroidPackageableCollector(
                 /* collectionRoot */ apkTarget,
                 ImmutableSet.of(javaDep2BuildTarget),
-                new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
+                new APKModuleGraph(TargetGraph.EMPTY, apkTarget))
             .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaLib), FakeSourcePath.of("ignored"))
@@ -1073,7 +1073,7 @@ public class AndroidApkGraphEnhancerTest {
         MoreExecutors.newDirectExecutorService(),
         manifestEntries,
         CxxPlatformUtils.DEFAULT_CONFIG,
-        new APKModuleGraph(TargetGraph.EMPTY, args.getTarget(), Optional.empty()),
+        new APKModuleGraph(TargetGraph.EMPTY, args.getTarget()),
         Optional.empty(),
         defaultNonPredexedArgs(),
         ImmutableSortedSet::of,

@@ -424,9 +424,9 @@ android_binary(
 
 android_binary(
     name = "app_cxx_lib_dep_modular",
-    application_module_targets = [
-        "//native/cxx:lib",
-    ],
+    application_module_configs = {
+        "native.cxx.lib": ["//native/cxx:lib"],
+    },
     cpu_filters = [
         "armv7",
         "x86",
@@ -467,10 +467,10 @@ android_binary(
 
 android_binary(
     name = "app_xdso_dce_modular",
-    application_module_targets = [
-        "//native/xdsodce:top",
-        "//native/xdsodce:mid",
-    ],
+    application_module_configs = {
+        "native.xdsodce.mid": ["//native/xdsodce:mid"],
+        "native.xdsodce.top": ["//native/xdsodce:top"],
+    },
     cpu_filters = [],
     enable_relinker = True,
     keystore = "//keystores:debug",
@@ -676,27 +676,6 @@ android_binary(
 )
 
 android_binary(
-    name = "app_compress_lib_asset_modular",
-    application_module_targets = [
-        "//native/cxx:libasset",
-    ],
-    compress_asset_libraries = True,
-    cpu_filters = [
-        "x86",
-    ],
-    keystore = "//keystores:debug",
-    manifest = "AndroidManifest.xml",
-    package_asset_libraries = True,
-    deps = [
-        "//native/cxx:foo1",
-        "//native/cxx:foo2",
-        "//native/cxx:libasset",
-        "//native/cxx:libasset2",
-        "//res/com/sample/base:base",
-    ],
-)
-
-android_binary(
     name = "app_compress_lib_asset_modular_map",
     application_module_configs = {
         "native.cxx.libasset": ["//native/cxx:libasset"],
@@ -718,53 +697,10 @@ android_binary(
 )
 
 android_binary(
-    name = "app_cxx_lib_asset_no_package_modular",
-    application_module_targets = [
-        "//native/cxx:libasset",
-    ],
-    compress_asset_libraries = True,
-    cpu_filters = [
-        "x86",
-    ],
-    keystore = "//keystores:debug",
-    manifest = "AndroidManifest.xml",
-    package_asset_libraries = False,
-    deps = [
-        "//native/cxx:foo1",
-        "//native/cxx:foo2",
-        "//native/cxx:libasset",
-        "//native/cxx:libasset2",
-        "//res/com/sample/base:base",
-    ],
-)
-
-android_binary(
     name = "app_cxx_lib_asset_no_package_modular_map",
     application_module_configs = {
         "native.cxx.libasset": ["//native/cxx:libasset"],
     },
-    compress_asset_libraries = True,
-    cpu_filters = [
-        "x86",
-    ],
-    keystore = "//keystores:debug",
-    manifest = "AndroidManifest.xml",
-    package_asset_libraries = False,
-    deps = [
-        "//native/cxx:foo1",
-        "//native/cxx:foo2",
-        "//native/cxx:libasset",
-        "//native/cxx:libasset2",
-        "//res/com/sample/base:base",
-    ],
-)
-
-android_binary(
-    name = "app_cxx_lib_no_package_modular",
-    application_module_targets = [
-        "//native/cxx:foo1",
-        "//native/cxx:libasset",
-    ],
     compress_asset_libraries = True,
     cpu_filters = [
         "x86",
@@ -1009,9 +945,9 @@ android_binary(
 
 android_binary(
     name = "app_with_merged_libs_modular",
-    application_module_targets = [
-        "//native/merge:A",
-    ],
+    application_module_configs = {
+        "native.merge.A": ["//native/merge:A"],
+    },
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_code_generator = "//native/merge:codegen",

@@ -332,9 +332,9 @@ android_binary(
 
 android_binary(
     name = "app_modular_proguard_dontobfuscate",
-    application_module_targets = [
-        "//java/com/sample/small:small_with_no_resource_deps",
-    ],
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     package_type = "release",
@@ -353,9 +353,9 @@ android_binary(
 
 android_binary(
     name = "app_modular_proguard_obfuscate",
-    application_module_targets = [
-        "//java/com/sample/small:small_with_no_resource_deps",
-    ],
+    application_module_configs = {
+        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
+    },
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     package_type = "release",

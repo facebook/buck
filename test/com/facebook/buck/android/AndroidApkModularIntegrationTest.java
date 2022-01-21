@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -72,27 +71,6 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testCompressAssetLibsModular() throws IOException {
-    String target = "//apps/sample:app_compress_lib_asset_modular";
-    workspace.runBuckCommand("build", target).assertSuccess();
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileExists("assets/lib/libs.xzs");
-    zipInspector.assertFileExists("assets/lib/metadata.txt");
-    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
-    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
-    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_libasset.so");
-    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo1.so");
-    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo1.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
-  }
-
-  @Test
   public void testCompressAssetLibsModularMap() throws IOException {
     String target = "//apps/sample:app_compress_lib_asset_modular_map";
     workspace.runBuckCommand("build", target).assertSuccess();
@@ -114,30 +92,6 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testCompressAssetLibsNoPackageModular() throws IOException {
-    String target = "//apps/sample:app_cxx_lib_asset_no_package_modular";
-    workspace.runBuckCommand("build", target).assertSuccess();
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
-    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
-    zipInspector.assertFileExists("lib/x86/libnative_cxx_libasset2.so");
-    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo1.so");
-    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
-
-    zipInspector.assertFileDoesNotExist("assets/lib/libs.xzs");
-    zipInspector.assertFileDoesNotExist("assets/lib/metadata.txt");
-    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_libasset.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset2.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo1.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
-  }
-
-  @Test
   public void testCompressAssetLibsNoPackageModularMap() throws IOException {
     String target = "//apps/sample:app_cxx_lib_asset_no_package_modular_map";
     workspace.runBuckCommand("build", target).assertSuccess();
@@ -154,32 +108,6 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
 
     zipInspector.assertFileDoesNotExist("assets/lib/libs.xzs");
     zipInspector.assertFileDoesNotExist("assets/lib/metadata.txt");
-    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_libasset.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset2.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo1.so");
-    zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_foo2.so");
-  }
-
-  @Test
-  public void testCompressLibsNoPackageModular() throws IOException {
-    String target = "//apps/sample:app_cxx_lib_no_package_modular";
-    workspace.runBuckCommand("build", target).assertSuccess();
-    ZipInspector zipInspector =
-        new ZipInspector(
-            workspace.getPath(
-                BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileExists("assets/native.cxx.foo1/libs.xzs");
-    zipInspector.assertFileExists("assets/native.cxx.foo1/libs.txt");
-    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.xzs");
-    zipInspector.assertFileExists("assets/native.cxx.libasset/libs.txt");
-    zipInspector.assertFileExists("lib/x86/libnative_cxx_libasset2.so");
-    zipInspector.assertFileExists("lib/x86/libnative_cxx_foo2.so");
-
-    zipInspector.assertFileDoesNotExist("assets/lib/libs.xzs");
-    zipInspector.assertFileDoesNotExist("assets/lib/metadata.txt");
-    zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_foo1.so");
     zipInspector.assertFileDoesNotExist("lib/x86/libnative_cxx_libasset.so");
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset.so");
     zipInspector.assertFileDoesNotExist("assets/lib/x86/libnative_cxx_libasset2.so");
@@ -390,33 +318,5 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
 
     DexInspector apkInspector = new DexInspector(apkPath, "classes2.dex");
     apkInspector.assertTypeExists("Lcom/facebook/sample3/private_shared/Sample;");
-  }
-
-  @Ignore
-  @Test
-  public void testMultidexProguardModular() throws IOException {
-    String target = "//apps/multidex:app_modular_proguard_dontobfuscate";
-    workspace.runBuckCommand("build", target).assertSuccess();
-    Path apkPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
-    ZipInspector zipInspector = new ZipInspector(apkPath);
-    String module = "java.com.sample.small.small_with_no_resource_deps";
-    zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
-  }
-
-  @Ignore
-  @Test
-  public void testMultidexProguardModularWithObfuscation() throws IOException {
-    String target = "//apps/multidex:app_modular_proguard_obfuscate";
-    workspace.runBuckCommand("build", target).assertSuccess();
-    Path apkPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s.apk"));
-    ZipInspector zipInspector = new ZipInspector(apkPath);
-    String module = "java.com.sample.small.small_with_no_resource_deps";
-    zipInspector.assertFileExists("assets/" + module + "/" + module + "2.dex");
   }
 }

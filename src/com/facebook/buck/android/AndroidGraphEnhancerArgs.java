@@ -93,8 +93,6 @@ public interface AndroidGraphEnhancerArgs
     return false;
   }
 
-  Set<BuildTarget> getApplicationModuleTargets();
-
   ImmutableMap<String, ImmutableList<BuildTarget>> getApplicationModuleConfigs();
 
   Optional<ImmutableMap<String, ImmutableList<String>>> getApplicationModuleDependencies();

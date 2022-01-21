@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,8 +58,7 @@ public class AndroidApkFilesInfoTest {
   public void setUp() {
     EnumSet<ExopackageMode> exopackageModes = EnumSet.of(ExopackageMode.MODULES);
     BuildTarget apkTarget = BuildTargetFactory.newInstance("//app:app");
-    APKModuleGraph apkModuleGraph =
-        new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty());
+    APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, apkTarget);
     AndroidPackageableCollection collection =
         new AndroidPackageableCollector(apkTarget, ImmutableSet.of(), apkModuleGraph).build();
 
