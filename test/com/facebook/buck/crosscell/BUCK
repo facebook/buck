@@ -10,7 +10,6 @@ standard_java_test(
         "//src/com/facebook/buck/android:split_dex",
         "//src/com/facebook/buck/android:steps",
         "//src/com/facebook/buck/android/aapt:aapt",
-        "//src/com/facebook/buck/android/redex:options",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
