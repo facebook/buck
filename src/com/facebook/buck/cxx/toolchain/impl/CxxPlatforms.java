@@ -153,7 +153,8 @@ public class CxxPlatforms {
       Optional<ImmutableList<Arg>> stripDebugFlags,
       Optional<ImmutableList<Arg>> stripNonGlobalFlags,
       Optional<ImmutableList<Arg>> stripAllFlags,
-      Optional<HeadersAsRawHeadersMode> autoRawHeaderMode) {
+      Optional<HeadersAsRawHeadersMode> autoRawHeaderMode,
+      Optional<Boolean> detailedUntrackedHeaderMessages) {
     // TODO(beng, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
@@ -208,11 +209,13 @@ public class CxxPlatforms {
         .setUseArgFile(cxxBuckConfig.getUseArgFile())
         .setFilepathLengthLimited(cxxBuckConfig.getFilepathLengthLimited())
         .setHeadersAsRawHeadersMode(
-            Optionals.firstOf(cxxBuckConfig.getHeadersAsRawHeadersMode(), autoRawHeaderMode));
+            Optionals.firstOf(cxxBuckConfig.getHeadersAsRawHeadersMode(), autoRawHeaderMode))
+        .setDetailedUntrackedHeaderMessages(cxxBuckConfig.getDetailedUntrackedHeaderMessages());
 
     stripDebugFlags.ifPresent(builder::setStripDebugFlags);
     stripNonGlobalFlags.ifPresent(builder::setStripNonGlobalFlags);
     stripAllFlags.ifPresent(builder::setStripAllFlags);
+    detailedUntrackedHeaderMessages.ifPresent(builder::setDetailedUntrackedHeaderMessages);
     linkWithArchives.ifPresent(builder::setRequiresArchives);
     cxxBuckConfig.getRequiresArchives().ifPresent(builder::setRequiresArchives);
 
@@ -295,7 +298,8 @@ public class CxxPlatforms {
         Optional.of(defaultPlatform.getStripDebugFlags()),
         Optional.of(defaultPlatform.getStripNonGlobalFlags()),
         Optional.of(defaultPlatform.getStripAllFlags()),
-        defaultPlatform.getHeadersAsRawHeadersMode());
+        defaultPlatform.getHeadersAsRawHeadersMode(),
+        defaultPlatform.getDetailedUntrackedHeaderMessages());
   }
 
   private static ImmutableMap<String, Flavor> getHostFlavorMap() {

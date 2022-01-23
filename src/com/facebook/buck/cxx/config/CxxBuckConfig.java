@@ -663,6 +663,10 @@ public class CxxBuckConfig {
     return delegate.getEnum(cxxSection, HEADER_MODE, HeaderMode.class);
   }
 
+  public Optional<Boolean> getDetailedUntrackedHeaderMessagesSetting() {
+    return delegate.getBoolean(cxxSection, DETAILED_UNTRACKED_HEADER_MESSAGES);
+  }
+
   /** @return whether to generate more detailed untracked header messages. */
   public Boolean getDetailedUntrackedHeaderMessages() {
     return delegate.getBooleanValue(cxxSection, DETAILED_UNTRACKED_HEADER_MESSAGES, false);

@@ -539,6 +539,7 @@ public class NdkCxxPlatforms {
     CompilerProvider cxx =
         new CompilerProvider(
             cxxTool, () -> type, ToolType.CXX, config.getDetailedUntrackedHeaderMessages(), true);
+
     PreprocessorProvider cxxpp = new PreprocessorProvider(cxxTool, type, ToolType.CXXPP, true);
 
     Optional<SharedLibraryInterfaceParams.Type> sharedLibType = config.getSharedLibraryInterfaces();
@@ -620,7 +621,8 @@ public class NdkCxxPlatforms {
         .setSharedLibraryInterfaceParams(sharedLibParams)
         .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
         .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled())
-        .setFilepathLengthLimited(config.getFilepathLengthLimited());
+        .setFilepathLengthLimited(config.getFilepathLengthLimited())
+        .setDetailedUntrackedHeaderMessages(config.getDetailedUntrackedHeaderMessages());
 
     // Add the NDK root path to the white-list so that headers from the NDK won't trigger the
     // verification warnings.  Ideally, long-term, we'd model NDK libs/headers via automatically

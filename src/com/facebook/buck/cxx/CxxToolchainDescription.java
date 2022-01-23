@@ -119,7 +119,7 @@ public class CxxToolchainDescription
 
     LinkerProvider.Type linkerType = args.getLinkerType();
     // This should be the same for all the tools that use it.
-    final boolean preferDependencyTree = false;
+    final boolean preferDependencyTree = args.getDetailedUntrackedHeaderMessages();
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
@@ -383,6 +383,7 @@ public class CxxToolchainDescription
     cxxPlatform.setFilepathLengthLimited(args.getFilepathLengthLimited());
 
     cxxPlatform.setHeadersAsRawHeadersMode(args.getHeadersAsRawHeadersMode());
+    cxxPlatform.setDetailedUntrackedHeaderMessages(args.getDetailedUntrackedHeaderMessages());
 
     return new CxxToolchainBuildRule(buildTarget, context, cxxPlatform);
   }
@@ -630,6 +631,12 @@ public class CxxToolchainDescription
 
     /** Whether to use header maps. */
     boolean getUseHeaderMap();
+
+    /** Spit out more information when there are untracked headers */
+    @Value.Default
+    default boolean getDetailedUntrackedHeaderMessages() {
+      return false;
+    }
 
     /** Whether to use shorter intermediate files. */
     @Value.Default
