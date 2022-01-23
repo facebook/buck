@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -213,17 +213,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   Path getProguardInputsDir() {
     Preconditions.checkState(shouldProguard);
     return getRootGenPath().resolve("proguard_inputs");
-  }
-
-  ImmutableList<SourcePath> getAdditionalRedexInputs() {
-    // TODO(cjhopman): This is awkward. Redex should be computing this in a better way.
-    // Redex access the constructed proguard command line and then goes and opens a bunch of the
-    // files listed there.
-    return ImmutableList.<SourcePath>builder()
-        .addAll(classpathEntriesToDexSourcePaths)
-        .addAll(RichStream.from(proguardConfig).collect(Collectors.toList()))
-        .addAll(proguardConfigs)
-        .build();
   }
 
   private RelPath getRootScratchPath() {
