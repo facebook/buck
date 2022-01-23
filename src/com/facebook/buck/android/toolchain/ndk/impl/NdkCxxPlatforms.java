@@ -534,15 +534,11 @@ public class NdkCxxPlatforms {
             getCTool(toolchainPaths, compilerType.cxx, version, executableFinder));
     CompilerProvider cc =
         new CompilerProvider(
-            ccTool, () -> type, ToolType.CC, config.getUseDetailedUntrackedHeaderMessages(), true);
+            ccTool, () -> type, ToolType.CC, config.getDetailedUntrackedHeaderMessages(), true);
     PreprocessorProvider cpp = new PreprocessorProvider(ccTool, type, ToolType.CPP, true);
     CompilerProvider cxx =
         new CompilerProvider(
-            cxxTool,
-            () -> type,
-            ToolType.CXX,
-            config.getUseDetailedUntrackedHeaderMessages(),
-            true);
+            cxxTool, () -> type, ToolType.CXX, config.getDetailedUntrackedHeaderMessages(), true);
     PreprocessorProvider cxxpp = new PreprocessorProvider(cxxTool, type, ToolType.CXXPP, true);
 
     Optional<SharedLibraryInterfaceParams.Type> sharedLibType = config.getSharedLibraryInterfaces();

@@ -336,7 +336,7 @@ public class CxxBuckConfig {
               Optional.empty(),
               type,
               toolType,
-              Optional.of(getUseDetailedUntrackedHeaderMessages())));
+              Optional.of(getDetailedUntrackedHeaderMessages())));
     } else {
       return Optional.of(
           ImmutableCxxToolProviderParams.ofImpl(
@@ -346,7 +346,7 @@ public class CxxBuckConfig {
                   delegate.getPathSourcePath(delegate.getRequiredPath(cxxSection, toolType.key))),
               type,
               toolType,
-              Optional.of(getUseDetailedUntrackedHeaderMessages())));
+              Optional.of(getDetailedUntrackedHeaderMessages())));
     }
   }
 
@@ -664,7 +664,7 @@ public class CxxBuckConfig {
   }
 
   /** @return whether to generate more detailed untracked header messages. */
-  public Boolean getUseDetailedUntrackedHeaderMessages() {
+  public Boolean getDetailedUntrackedHeaderMessages() {
     return delegate.getBooleanValue(cxxSection, DETAILED_UNTRACKED_HEADER_MESSAGES, false);
   }
 

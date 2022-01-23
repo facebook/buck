@@ -248,7 +248,7 @@ public class DefaultCxxPlatforms {
             defaultCFrontendSupplier,
             cFrontendType,
             ToolType.AS,
-            cxxBuckConfig.getUseDetailedUntrackedHeaderMessages());
+            cxxBuckConfig.getDetailedUntrackedHeaderMessages());
 
     PreprocessorProvider cpp =
         new PreprocessorProvider(defaultCFrontendSupplier, cFrontendType, ToolType.CPP);
@@ -257,7 +257,7 @@ public class DefaultCxxPlatforms {
             defaultCFrontendSupplier,
             cFrontendType,
             ToolType.CC,
-            cxxBuckConfig.getUseDetailedUntrackedHeaderMessages());
+            cxxBuckConfig.getDetailedUntrackedHeaderMessages());
 
     PreprocessorProvider cxxpp =
         new PreprocessorProvider(defaultCxxFrontendSupplier, cxxFrontendType, ToolType.CXXPP);
@@ -266,7 +266,7 @@ public class DefaultCxxPlatforms {
             defaultCxxFrontendSupplier,
             cxxFrontendType,
             ToolType.CXX,
-            cxxBuckConfig.getUseDetailedUntrackedHeaderMessages());
+            cxxBuckConfig.getDetailedUntrackedHeaderMessages());
 
     return CxxPlatforms.build(
         FLAVOR,
