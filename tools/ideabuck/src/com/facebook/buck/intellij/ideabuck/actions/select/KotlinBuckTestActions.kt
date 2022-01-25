@@ -17,6 +17,7 @@
 package com.facebook.buck.intellij.ideabuck.actions.select
 
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons
+import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils
 import com.intellij.openapi.actionSystem.AnActionEvent
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtNamedFunction
@@ -38,7 +39,7 @@ class FunctionKotlinBuckTestAction(
 
   override fun getTestSelector(): String = testClass.fqName?.asString() + "#" + testFunction.name
   override fun getFullTestName(): String = testClass.name + "#" + testFunction.name
-  override fun getDisplayTestName(): String = truncateName(testFunction.name)
+  override fun getDisplayTestName(): String = BuckPsiUtils.truncateName(testFunction.name)
 }
 
 /** Implementation of {@link AbstractBuckTestAction} that runs a class/method. */

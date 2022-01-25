@@ -23,6 +23,7 @@ import com.facebook.buck.intellij.ideabuck.configurations.BuckRunnerAndConfigura
 import com.facebook.buck.intellij.ideabuck.configurations.BuckTestConfigurationType;
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.notification.BuckNotification;
+import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.google.common.base.Joiner;
 import com.intellij.execution.Executor;
 import com.intellij.execution.ExecutorRegistry;
@@ -45,14 +46,6 @@ import org.jetbrains.annotations.Nullable;
 /** Base action to use buck to run/debug a test in a class/method. */
 public abstract class AbstractBuckTestAction extends AnAction {
 
-  /** Use the same truncating strategy as the JUnit method action. */
-  protected static String truncateName(String name) {
-    if (name.length() >= 21) {
-      name = name.substring(0, 18) + "...";
-    }
-    return name;
-  }
-
   /** If true, use the debugger to run the tests. */
   protected abstract boolean isDebug();
 
@@ -68,7 +61,8 @@ public abstract class AbstractBuckTestAction extends AnAction {
       presentation.setIcon(BuckIcons.BUCK_RUN);
     }
     if (psiMethod != null) {
-      presentation.setText(verb + " '" + truncateName(psiMethod.getName()) + "()' with Buck");
+      presentation.setText(
+          verb + " '" + BuckPsiUtils.truncateName(psiMethod.getName()) + "()' with Buck");
       presentation.setEnabledAndVisible(true);
     } else if (psiClass != null) {
       presentation.setText(verb + " '" + psiClass.getName() + "' with Buck");

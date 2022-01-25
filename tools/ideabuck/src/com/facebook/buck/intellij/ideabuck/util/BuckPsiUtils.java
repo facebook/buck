@@ -359,4 +359,12 @@ public final class BuckPsiUtils {
         });
     return results;
   }
+
+  /** Use the same truncating strategy as the JUnit method action. */
+  public static String truncateName(String name) {
+    if (name.length() >= 21) {
+      name = name.substring(0, 18) + "...";
+    }
+    return name;
+  }
 }
