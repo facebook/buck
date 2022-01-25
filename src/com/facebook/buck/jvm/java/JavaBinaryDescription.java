@@ -58,6 +58,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
 public class JavaBinaryDescription
     implements DescriptionWithTargetGraph<JavaBinaryDescriptionArg>,
@@ -153,7 +154,8 @@ public class JavaBinaryDescription
             transitiveClasspathDeps,
             transitiveClasspaths,
             javaBuckConfig.shouldCacheBinaries(),
-            javaBuckConfig.getDuplicatesLogLevel());
+            javaBuckConfig.getDuplicatesLogLevel(),
+            args.getGenerateWrapper());
 
     if (nativeLibraries.isEmpty()) {
       return javaBinary;
@@ -187,7 +189,8 @@ public class JavaBinaryDescription
         javaBinary,
         nativeLibraries,
         javaRuntime,
-        downwardApiConfig.isEnabledForJava());
+        downwardApiConfig.isEnabledForJava(),
+        args.getGenerateWrapper());
   }
 
   /**
@@ -238,6 +241,11 @@ public class JavaBinaryDescription
     Optional<Path> getMetaInfDirectory();
 
     ImmutableSet<Pattern> getBlacklist();
+
+    @Value.Default
+    default boolean getGenerateWrapper() {
+      return false;
+    }
 
     Optional<Flavor> getDefaultCxxPlatform();
   }

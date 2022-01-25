@@ -92,6 +92,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final RelPath output;
   private final JavaBinary innerJarRule;
   @AddToRuleKey private final boolean withDownwardApi;
+  @AddToRuleKey private final boolean prepareWrapperScript;
 
   public JarFattener(
       BuildTarget buildTarget,
@@ -103,7 +104,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
       JavaBinary innerJarRule,
       ImmutableMap<String, SourcePath> nativeLibraries,
       Tool javaRuntimeLauncher,
-      boolean withDownwardApi) {
+      boolean withDownwardApi,
+      boolean prepareWrapperScript) {
     super(buildTarget, projectFilesystem, params);
     this.javac = javac;
     this.javacOptions = javacOptions;
@@ -112,6 +114,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.nativeLibraries = nativeLibraries;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.withDownwardApi = withDownwardApi;
+    this.prepareWrapperScript = prepareWrapperScript;
     this.output =
         BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
             .resolveRel(buildTarget.getShortName() + ".jar");
@@ -120,7 +123,6 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-
     AbsPath buildCellRootPath = context.getBuildCellRootPath();
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
 
@@ -249,7 +251,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new ByteSource() {
           @Override
           public InputStream openStream() {
-            FatJar fatJar = new FatJar(FAT_JAR_INNER_JAR, nativeLibraries);
+            FatJar fatJar = new FatJar(FAT_JAR_INNER_JAR, nativeLibraries, prepareWrapperScript);
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             try {
               fatJar.store(bytes);

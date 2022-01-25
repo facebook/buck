@@ -62,9 +62,12 @@ public class FatJar implements Serializable {
   @Nullable
   private final HashMap<String, String> nativeLibraries;
 
-  public FatJar(String innerArtifact, Map<String, String> nativeLibraries) {
+  @Nullable private final Boolean wrapperScript;
+
+  public FatJar(String innerArtifact, Map<String, String> nativeLibraries, boolean wrapperScript) {
     this.innerArtifact = innerArtifact;
     this.nativeLibraries = new HashMap<>(nativeLibraries);
+    this.wrapperScript = wrapperScript;
   }
 
   /** @return the {@link FatJar} object deserialized from the resource name via {@code loader}. */
@@ -106,5 +109,9 @@ public class FatJar implements Serializable {
             new BufferedInputStream(Objects.requireNonNull(input))) {
       Files.copy(bufferedInput, destination);
     }
+  }
+
+  boolean isWrapperScript() {
+    return wrapperScript;
   }
 }

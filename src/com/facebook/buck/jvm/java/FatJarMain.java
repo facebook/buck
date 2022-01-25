@@ -60,9 +60,13 @@ public class FatJarMain {
     // Create a temp dir to house the native libraries.
     try (ManagedTemporaryDirectory temp = new ManagedTemporaryDirectory("fatjar.")) {
 
-      // Unpack the real, inner artifact (JAR).
-      Path innerArtifact = temp.getPath().resolve("main.jar");
+      // Unpack the real, inner artifact (JAR or wrapper script).
+      boolean isWrapperScript = fatJar.isWrapperScript();
+      Path innerArtifact = temp.getPath().resolve(isWrapperScript ? "wrapper.sh" : "main.jar");
       fatJar.unpackInnerArtifactTo(classLoader, innerArtifact);
+      if (isWrapperScript) {
+        makeExecutable(innerArtifact);
+      }
 
       // Unpack all the native libraries, since the system loader will need to find these on disk.
       Path nativeLibs = temp.getPath().resolve("native_libs");
@@ -72,7 +76,7 @@ public class FatJarMain {
       // Update the appropriate environment variable with the location of our native libraries
       // and start the real main class in a new process so that it picks it up.
       ProcessBuilder builder = new ProcessBuilder();
-      builder.command(getCommand(innerArtifact, args));
+      builder.command(getCommand(isWrapperScript, innerArtifact, args));
       updateEnvironment(builder.environment(), temp.getPath());
       builder.inheritIO();
 
@@ -104,7 +108,8 @@ public class FatJarMain {
   }
 
   /** @return a command to start a new JVM process to execute the given main class. */
-  private static List<String> getCommand(Path artifact, String[] args) {
+  private static List<String> getCommand(boolean wrapperScript, Path artifact, String[] args)
+      throws IOException {
     List<String> cmd = new ArrayList<>();
 
     // Look for the Java binary given in an alternate location if given,
@@ -117,10 +122,30 @@ public class FatJarMain {
     // https://stackoverflow.com/a/16535804/5208808
     cmd.add("-XX:-MaxFDLimit");
 
-    cmd.add("-jar");
-    // Lookup our current JAR context.
-    cmd.add(artifact.toString());
+    if (wrapperScript) {
+      List<String> strings = Files.readAllLines(artifact);
+      if (strings.size() != 1) {
+        throw new IllegalStateException(
+            String.format(
+                "Expected to read only 1 line from the wrapper script: %s, but read: %s",
+                artifact, strings.size()));
+      }
+      String command = strings.iterator().next();
+      String[] wrapperCommand = command.split("\\s+");
 
+      // classpath
+      cmd.add(wrapperCommand[1]);
+      cmd.add(wrapperCommand[2]);
+      if (wrapperCommand.length > 4) {
+        // main class
+        String mainClass = wrapperCommand[3];
+        cmd.add(mainClass);
+      }
+    } else {
+      cmd.add("-jar");
+      // Lookup our current JAR context.
+      cmd.add(artifact.toString());
+    }
     // pass args to new java process
     Collections.addAll(cmd, args);
 
@@ -137,6 +162,12 @@ public class FatJarMain {
     }
 
     return cmd;
+  }
+
+  private static void makeExecutable(Path file) throws IOException {
+    if (!file.toFile().setExecutable(true, true)) {
+      throw new IOException("The file could not be made executable");
+    }
   }
 
   /**
