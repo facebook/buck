@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,9 +50,6 @@ public class ExternalJavacProvider implements JavacProvider {
 
   private final ProcessExecutor processExecutor;
   private final SourcePath javacPath;
-
-  public static final String COM_SUN_TOOLS_JAVAC_API_JAVAC_TOOL =
-      "com.sun.tools.javac.api.JavacTool";
 
   @VisibleForTesting
   ExternalJavacProvider(ProcessExecutor processExecutor, SourcePath javacPath) {

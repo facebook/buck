@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -115,11 +116,12 @@ public class JavaBinaryDescription
       JavaBinaryDescriptionArg args) {
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();
+
     ImmutableMap<String, SourcePath> nativeLibraries =
         getNativeLibraries(
             params.getBuildDeps(),
-            getCxxPlatform(args, buildTarget.getTargetConfiguration())
-                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+            getCxxPlatform(args, targetConfiguration).resolve(graphBuilder, targetConfiguration),
             graphBuilder);
     BuildTarget binaryBuildTarget = buildTarget;
 
@@ -136,12 +138,14 @@ public class JavaBinaryDescription
         JavaLibraryClasspathProvider.getClasspathDeps(params.getBuildDeps());
     ImmutableSet<SourcePath> transitiveClasspaths =
         JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
+    Tool javaRuntime = javaOptions.apply(targetConfiguration).getJavaRuntime();
+
     JavaBinary javaBinary =
         new JavaBinary(
             binaryBuildTarget,
             projectFilesystem,
             params.copyAppendingExtraDeps(transitiveClasspathDeps),
-            javaOptions.apply(buildTarget.getTargetConfiguration()).getJavaRuntime(),
+            javaRuntime,
             args.getMainClass().orElse(null),
             args.getManifestFile().orElse(null),
             args.getMetaInfDirectory().orElse(null),
@@ -151,44 +155,39 @@ public class JavaBinaryDescription
             javaBuckConfig.shouldCacheBinaries(),
             javaBuckConfig.getDuplicatesLogLevel());
 
-    // If we're packaging native libraries, construct the rule to build the fat JAR, which packages
-    // up the original binary JAR and any required native libraries.
-    BuildRule rule;
     if (nativeLibraries.isEmpty()) {
-      rule = javaBinary;
-    } else {
-      graphBuilder.addToIndex(javaBinary);
-      SourcePath innerJar = javaBinary.getSourcePathToOutput();
-      JavacFactory javacFactory = JavacFactory.getDefault(toolchainProvider);
-      rule =
-          new JarFattener(
-              buildTarget,
-              projectFilesystem,
-              params.copyAppendingExtraDeps(
-                  Suppliers.ofInstance(
-                      Iterables.concat(
-                          graphBuilder.filterBuildRuleInputs(
-                              ImmutableList.<SourcePath>builder()
-                                  .add(innerJar)
-                                  .addAll(nativeLibraries.values())
-                                  .build()),
-                          javacFactory.getBuildDeps(
-                              graphBuilder, binaryBuildTarget.getTargetConfiguration())))),
-              javacFactory.create(graphBuilder, null, binaryBuildTarget.getTargetConfiguration()),
-              toolchainProvider
-                  .getByName(
-                      JavacOptionsProvider.DEFAULT_NAME,
-                      binaryBuildTarget.getTargetConfiguration(),
-                      JavacOptionsProvider.class)
-                  .getJavacOptions(),
-              innerJar,
-              javaBinary,
-              nativeLibraries,
-              javaOptions.apply(buildTarget.getTargetConfiguration()).getJavaRuntime(),
-              downwardApiConfig.isEnabledForJava());
+      return javaBinary;
     }
 
-    return rule;
+    // If we're packaging native libraries, construct the rule to build the fat JAR, which packages
+    // up the original binary JAR and any required native libraries.
+    graphBuilder.addToIndex(javaBinary);
+    SourcePath innerJar = javaBinary.getSourcePathToOutput();
+    JavacFactory javacFactory = JavacFactory.getDefault(toolchainProvider);
+    BuildRuleParams buildRuleParams =
+        params.copyAppendingExtraDeps(
+            Suppliers.ofInstance(
+                Iterables.concat(
+                    graphBuilder.filterBuildRuleInputs(
+                        Iterables.concat(ImmutableList.of(innerJar), nativeLibraries.values())),
+                    javacFactory.getBuildDeps(graphBuilder, targetConfiguration))));
+    Javac javac = javacFactory.create(graphBuilder, null, targetConfiguration);
+    JavacOptions javacOptions =
+        toolchainProvider
+            .getByName(
+                JavacOptionsProvider.DEFAULT_NAME, targetConfiguration, JavacOptionsProvider.class)
+            .getJavacOptions();
+    return new JarFattener(
+        buildTarget,
+        projectFilesystem,
+        buildRuleParams,
+        javac,
+        javacOptions,
+        innerJar,
+        javaBinary,
+        nativeLibraries,
+        javaRuntime,
+        downwardApiConfig.isEnabledForJava());
   }
 
   /**

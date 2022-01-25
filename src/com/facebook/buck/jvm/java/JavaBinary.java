@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -118,29 +119,27 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
-    ImmutableList.Builder<Step> commands = ImmutableList.builder();
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     RelPath outputDirectory = getOutputDirectory();
     ProjectFilesystem filesystem = getProjectFilesystem();
-    Step mkdir =
+    AbsPath buildCellRootPath = context.getBuildCellRootPath();
+    steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), filesystem, outputDirectory));
-    commands.add(mkdir);
+                buildCellRootPath, filesystem, outputDirectory)));
 
-    ImmutableSortedSet<RelPath> includePaths;
     ImmutableSortedSet<RelPath> overrideIncludePaths = ImmutableSortedSet.of();
     SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
     if (metaInfDirectory != null) {
       RelPath stagingRoot = outputDirectory.resolveRel("meta_inf_staging");
       RelPath stagingTarget = stagingRoot.resolveRel("META-INF");
 
-      commands.addAll(
+      steps.addAll(
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), filesystem, stagingRoot)));
-
-      commands.add(
+                  buildCellRootPath, filesystem, stagingRoot)));
+      steps.add(
           SymlinkFileStep.of(
               filesystem,
               sourcePathResolver.getRelativePath(filesystem, metaInfDirectory).getPath(),
@@ -148,13 +147,9 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
       overrideIncludePaths =
           ImmutableSortedSet.orderedBy(RelPath.comparator()).add(stagingRoot).build();
-      includePaths =
-          ImmutableSortedSet.orderedBy(RelPath.comparator())
-              .addAll(sourcePathResolver.getAllRelativePaths(filesystem, getTransitiveClasspaths()))
-              .build();
-    } else {
-      includePaths = sourcePathResolver.getAllRelativePaths(filesystem, getTransitiveClasspaths());
     }
+    ImmutableSortedSet<RelPath> includePaths =
+        sourcePathResolver.getAllRelativePaths(filesystem, getTransitiveClasspaths());
 
     RelPath outputFile = sourcePathResolver.getRelativePath(filesystem, getSourcePathToOutput());
     RelPath manifestPath =
@@ -174,10 +169,10 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     entry ->
                         blocklistPatternsMatcher.substringMatches(((ZipEntry) entry).getName()))
                 .build());
-    commands.add(jar);
+    steps.add(jar);
 
     buildableContext.recordArtifact(outputFile.getPath());
-    return commands.build();
+    return steps.build();
   }
 
   @Override

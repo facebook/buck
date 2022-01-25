@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,8 +86,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final SourcePath innerJar;
   @AddToRuleKey private final ImmutableMap<String, SourcePath> nativeLibraries;
-  // We're just propagating the runtime launcher through `getExecutiable`, so don't add it to the
-  // rule key.
+  // We're just propagating the runtime launcher through `getExecutableCommand`, so don't add it to
+  // the rule key.
   private final Tool javaRuntimeLauncher;
   private final RelPath output;
   private final JavaBinary innerJarRule;
@@ -113,8 +113,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.withDownwardApi = withDownwardApi;
     this.output =
-        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s")
-            .resolveRel(getBuildTarget().getShortName() + ".jar");
+        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
+            .resolveRel(buildTarget.getShortName() + ".jar");
   }
 
   @Override
@@ -130,7 +130,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ProjectFilesystem filesystem = getProjectFilesystem();
     BuildTarget buildTarget = getBuildTarget();
     BuckPaths buckPaths = filesystem.getBuckPaths();
-    RelPath fatJarDir = CompilerOutputPaths.of(buildTarget, buckPaths).getClassesDir();
+    CompilerOutputPaths compilerOutputPaths = CompilerOutputPaths.of(buildTarget, buckPaths);
+    RelPath fatJarDir = compilerOutputPaths.getClassesDir();
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(buildCellRootPath, filesystem, outputDir)));
@@ -140,15 +141,16 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     for (Map.Entry<String, SourcePath> entry : nativeLibraries.entrySet()) {
       String resource = FAT_JAR_NATIVE_LIBRARY_RESOURCE_ROOT + "/" + entry.getKey();
       sonameToResourceMapBuilder.put(entry.getKey(), resource);
+      Path resourcePath = fatJarDir.resolve(resource);
       steps.add(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  buildCellRootPath, filesystem, fatJarDir.resolve(resource).getParent())));
+                  buildCellRootPath, filesystem, resourcePath.getParent())));
       steps.add(
           SymlinkFileStep.of(
               filesystem,
               sourcePathResolver.getAbsolutePath(entry.getValue()).getPath(),
-              fatJarDir.resolve(resource)));
+              resourcePath));
     }
     ImmutableMap<String, String> sonameToResourceMap = sonameToResourceMapBuilder.build();
 
@@ -180,37 +182,21 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             sourcePathResolver.getAbsolutePath(innerJar).getPath(),
             fatJarDir.resolve(FAT_JAR_INNER_JAR)));
 
-    // Build the final fat JAR from the structure we've layed out above.  We first package the
-    // fat jar resources (e.g. native libs) using the "stored" compression level, to avoid
-    // expensive compression on builds and decompression on startup.
-    RelPath zipped = outputDir.resolveRel("contents.zip");
-
-    Step zipStep =
-        ZipStep.of(
-            filesystem,
-            zipped.getPath(),
-            ImmutableSet.of(),
-            false,
-            ZipCompressionLevel.NONE,
-            fatJarDir.getPath());
-
     BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget);
 
     CompilerParameters compilerParameters =
         CompilerParameters.builder()
             .setClasspathEntries(ImmutableSortedSet.of())
             .setSourceFilePaths(javaSourceFilePaths.build())
-            .setOutputPaths(CompilerOutputPaths.of(buildTarget, buckPaths))
+            .setOutputPaths(compilerOutputPaths)
             .build();
-
-    Preconditions.checkState(compilerParameters.getOutputPaths().getClassesDir().equals(fatJarDir));
+    CompilerOutputPaths outputPaths = compilerParameters.getOutputPaths();
+    Preconditions.checkState(outputPaths.getClassesDir().equals(fatJarDir));
 
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                buildCellRootPath,
-                filesystem,
-                compilerParameters.getOutputPaths().getPathToSourcesList().getParent())));
+                buildCellRootPath, filesystem, outputPaths.getPathToSourcesList().getParent())));
 
     JavacToJarStepFactory compileStepFactory =
         new JavacToJarStepFactory(javacOptions, ExtraClasspathProvider.EMPTY, withDownwardApi);
@@ -229,7 +215,19 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         compileStepFactory.createExtraParams(sourcePathResolver, rootPath));
     steps.addAll(isolatedSteps.build());
 
-    steps.add(zipStep);
+    // Build the final fat JAR from the structure we've laid out above.  We first package the
+    // fat jar resources (e.g. native libs) using the "stored" compression level, to avoid
+    // expensive compression on builds and decompression on startup.
+    RelPath zipped = outputDir.resolveRel("contents.zip");
+    steps.add(
+        ZipStep.of(
+            filesystem,
+            zipped.getPath(),
+            ImmutableSet.of(),
+            false,
+            ZipCompressionLevel.NONE,
+            fatJarDir.getPath()));
+
     JarParameters jarParameters =
         JarParameters.builder()
             .setJarPath(output)
