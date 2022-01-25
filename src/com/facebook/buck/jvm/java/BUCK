@@ -11,8 +11,8 @@ buck_java_library(
         "WindowsCreateProcessEscape.java",
     ],
     # Maximum compatibility
-    source = "6",
-    target = "6",
+    source = "7",
+    target = "7",
     visibility = [ "//test/com/facebook/buck/util:util",
                    "//src/com/facebook/buck/util:util" ]
 )
@@ -24,8 +24,8 @@ buck_java_library(
         "FatJarMain.java",
     ],
     # Maximum compatibility
-    source = "6",
-    target = "6",
+    source = "7",
+    target = "7",
     deps = [
         # Don't add more dependencies beyond what we need for Infer! We package these sources and
         # compile them into fat JARs, so it's important that they don't bring along any additional
@@ -326,6 +326,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/core/cell/impl:impl",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/util/java:java",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/common:common",

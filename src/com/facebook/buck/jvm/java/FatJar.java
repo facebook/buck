@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
  * *************
  *
  * <p>This code can be embedded in arbitrary third-party projects! For maximum compatibility, use
- * only Java 6 constructs.
+ * only Java 7 constructs.
  *
  * <p>*************
  */
@@ -50,8 +50,8 @@ public class FatJar implements Serializable {
 
   public static final String FAT_JAR_INFO_RESOURCE = "fat_jar_info.dat";
 
-  /** The resource name for the real JAR. */
-  @Nullable private final String innerJar;
+  /** The resource name for the real JAR or wrapper script. */
+  @Nullable private final String innerArtifact;
 
   /**
    * The map of system-specific shared library names to their corresponding resource names. Note: We
@@ -62,75 +62,49 @@ public class FatJar implements Serializable {
   @Nullable
   private final HashMap<String, String> nativeLibraries;
 
-  public FatJar(String innerJar, Map<String, String> nativeLibraries) {
-    this.innerJar = innerJar;
-    this.nativeLibraries = new HashMap<String, String>(nativeLibraries);
+  public FatJar(String innerArtifact, Map<String, String> nativeLibraries) {
+    this.innerArtifact = innerArtifact;
+    this.nativeLibraries = new HashMap<>(nativeLibraries);
   }
 
   /** @return the {@link FatJar} object deserialized from the resource name via {@code loader}. */
   public static FatJar load(ClassLoader loader) throws ClassNotFoundException, IOException {
-    InputStream inputStream = loader.getResourceAsStream(FAT_JAR_INFO_RESOURCE);
-    try {
-      BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-      try {
-        ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
-        try {
-          return (FatJar) objectInputStream.readObject();
-        } finally {
-          objectInputStream.close();
-        }
-      } finally {
-        bufferedInputStream.close();
-      }
-    } finally {
-      inputStream.close();
+    try (InputStream inputStream = loader.getResourceAsStream(FAT_JAR_INFO_RESOURCE);
+        BufferedInputStream bufferedInputStream =
+            new BufferedInputStream(Objects.requireNonNull(inputStream));
+        ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream)) {
+      return (FatJar) objectInputStream.readObject();
     }
   }
 
   /** Serialize this instance as binary to {@code outputStream}. */
   public void store(OutputStream outputStream) throws IOException {
-    ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-    try {
+    try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream)) {
       // Explicitly specify a protocol version, just in case the default protocol gets updated with
       // a new version of Java. We need to ensure the serialized data can be read by older versions
       // of Java, as the fat jar stub, which references this class, is compiled against an older
       // version of Java for compatibility purposes, unlike the main Buck jar, which also references
       // this class.
       objectOutputStream.useProtocolVersion(ObjectStreamConstants.PROTOCOL_VERSION_2);
-
       objectOutputStream.writeObject(this);
-    } finally {
-      objectOutputStream.close();
     }
   }
 
-  public void unpackNativeLibrariesInto(ClassLoader loader, Path destination) throws IOException {
+  void unpackNativeLibrariesInto(ClassLoader loader, Path destination) throws IOException {
     for (Map.Entry<String, String> entry : Objects.requireNonNull(nativeLibraries).entrySet()) {
-      InputStream input = loader.getResourceAsStream(entry.getValue());
-      try {
-        BufferedInputStream bufferedInput = new BufferedInputStream(input);
-        try {
-          Files.copy(bufferedInput, destination.resolve(entry.getKey()));
-        } finally {
-          bufferedInput.close();
-        }
-      } finally {
-        input.close();
+      try (InputStream input = loader.getResourceAsStream(entry.getValue());
+          BufferedInputStream bufferedInput =
+              new BufferedInputStream(Objects.requireNonNull(input))) {
+        Files.copy(bufferedInput, destination.resolve(entry.getKey()));
       }
     }
   }
 
-  public void unpackJarTo(ClassLoader loader, Path destination) throws IOException {
-    InputStream input = loader.getResourceAsStream(Objects.requireNonNull(innerJar));
-    try {
-      BufferedInputStream bufferedInput = new BufferedInputStream(input);
-      try {
-        Files.copy(bufferedInput, destination);
-      } finally {
-        bufferedInput.close();
-      }
-    } finally {
-      input.close();
+  void unpackInnerArtifactTo(ClassLoader loader, Path destination) throws IOException {
+    try (InputStream input = loader.getResourceAsStream(Objects.requireNonNull(innerArtifact));
+        BufferedInputStream bufferedInput =
+            new BufferedInputStream(Objects.requireNonNull(input))) {
+      Files.copy(bufferedInput, destination);
     }
   }
 }

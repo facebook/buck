@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
  * *************
  *
  * <p>This code can be embedded in arbitrary third-party projects! For maximum compatibility, use
- * only Java 6 constructs.
+ * only Java 7 constructs.
  *
  * <p>*************
  */
@@ -47,14 +47,50 @@ public class FatJarMain {
   private FatJarMain() {}
 
   /**
+   * Main method for fat jar. Unpacks artifact and native libraries into a temporary folder and then
+   * launches original artifact as java process.
+   */
+  @SuppressWarnings("PMD.BlacklistedDefaultProcessMethod")
+  public static void main(String[] args) throws Exception {
+    ClassLoader classLoader = FatJarMain.class.getClassLoader();
+
+    // Load the fat jar info from it's resource.
+    FatJar fatJar = FatJar.load(classLoader);
+
+    // Create a temp dir to house the native libraries.
+    try (ManagedTemporaryDirectory temp = new ManagedTemporaryDirectory("fatjar.")) {
+
+      // Unpack the real, inner artifact (JAR).
+      Path innerArtifact = temp.getPath().resolve("main.jar");
+      fatJar.unpackInnerArtifactTo(classLoader, innerArtifact);
+
+      // Unpack all the native libraries, since the system loader will need to find these on disk.
+      Path nativeLibs = temp.getPath().resolve("native_libs");
+      Files.createDirectory(nativeLibs);
+      fatJar.unpackNativeLibrariesInto(classLoader, temp.getPath());
+
+      // Update the appropriate environment variable with the location of our native libraries
+      // and start the real main class in a new process so that it picks it up.
+      ProcessBuilder builder = new ProcessBuilder();
+      builder.command(getCommand(innerArtifact, args));
+      updateEnvironment(builder.environment(), temp.getPath());
+      builder.inheritIO();
+
+      // Wait for the inner process to finish, and propagate it's exit code, before cleaning
+      // up the native libraries.
+      System.exit(builder.start().waitFor());
+    }
+  }
+
+  /**
    * Update the library search path environment variable with the given native library directory.
    */
   private static void updateEnvironment(Map<String, String> env, Path libDir) {
     String librarySearchPathName = getLibrarySearchPathName();
     String originalLibPath = getEnvValue(librarySearchPathName);
-    String newlibPath =
+    String newLibPath =
         libDir + (originalLibPath == null ? "" : File.pathSeparator + originalLibPath);
-    env.put(librarySearchPathName, newlibPath);
+    env.put(librarySearchPathName, newLibPath);
   }
 
   private static List<String> getJVMArguments() {
@@ -63,13 +99,13 @@ public class FatJarMain {
       return runtimeMxBean.getInputArguments();
     } catch (java.lang.SecurityException e) {
       // Do not have the ManagementPermission("monitor") permission
-      return new ArrayList<String>();
+      return Collections.emptyList();
     }
   }
 
   /** @return a command to start a new JVM process to execute the given main class. */
-  private static List<String> getCommand(Path jar, String[] args) {
-    List<String> cmd = new ArrayList<String>();
+  private static List<String> getCommand(Path artifact, String[] args) {
+    List<String> cmd = new ArrayList<>();
 
     // Look for the Java binary given in an alternate location if given,
     // otherwise use the Java binary that started us
@@ -80,9 +116,12 @@ public class FatJarMain {
     // Directs the VM to refrain from setting the file descriptor limit to the default maximum.
     // https://stackoverflow.com/a/16535804/5208808
     cmd.add("-XX:-MaxFDLimit");
+
     cmd.add("-jar");
     // Lookup our current JAR context.
-    cmd.add(jar.toString());
+    cmd.add(artifact.toString());
+
+    // pass args to new java process
     Collections.addAll(cmd, args);
 
     /* On Windows, we need to escape the arguments we hand off to `CreateProcess`.  See
@@ -90,7 +129,7 @@ public class FatJarMain {
      * for more details.
      */
     if (isWindowsOs(getOsPlatform())) {
-      List<String> escapedCommand = new ArrayList<String>(cmd.size());
+      List<String> escapedCommand = new ArrayList<>(cmd.size());
       for (String c : cmd) {
         escapedCommand.add(WindowsCreateProcessEscape.quote(c));
       }
@@ -98,44 +137,6 @@ public class FatJarMain {
     }
 
     return cmd;
-  }
-
-  @SuppressWarnings("PMD.BlacklistedDefaultProcessMethod")
-  public static void main(String[] args) throws Exception {
-    Class<?> clazz = FatJarMain.class;
-    ClassLoader classLoader = clazz.getClassLoader();
-
-    // Load the fat jar info from it's resource.
-    FatJar fatJar = FatJar.load(classLoader);
-
-    ManagedTemporaryDirectory temp = new ManagedTemporaryDirectory("fatjar.");
-
-    // Create a temp dir to house the native libraries.
-    try {
-
-      // Unpack the real, inner JAR.
-      Path jar = temp.getPath().resolve("main.jar");
-      fatJar.unpackJarTo(classLoader, jar);
-
-      // Unpack all the native libraries, since the system loader will need to find these
-      // on disk.
-      Path nativeLibs = temp.getPath().resolve("nativelibs");
-      Files.createDirectory(nativeLibs);
-      fatJar.unpackNativeLibrariesInto(classLoader, temp.getPath());
-
-      // Update the appropriate environment variable with the location of our native libraries
-      // and start the real main class in a new process so that it picks it up.
-      ProcessBuilder builder = new ProcessBuilder();
-      builder.command(getCommand(jar, args));
-      updateEnvironment(builder.environment(), temp.getPath());
-      builder.inheritIO();
-
-      // Wait for the inner process to finish, and propagate it's exit code, before cleaning
-      // up the native libraries.
-      System.exit(builder.start().waitFor());
-    } finally {
-      temp.close();
-    }
   }
 
   /**
