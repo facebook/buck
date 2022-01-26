@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashSet;
@@ -161,7 +160,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         continue;
       }
 
-      String[] values = entry.getValue().split(File.pathSeparator);
+      String[] values = entry.getValue().split(":");
       ImmutableList.Builder<PathSourcePath> pathsBuilder =
           ImmutableList.builderWithExpectedSize(values.length);
       for (String value : values) {

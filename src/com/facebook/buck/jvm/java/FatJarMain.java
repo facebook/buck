@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -123,7 +124,7 @@ public class FatJarMain {
     cmd.add("-XX:-MaxFDLimit");
 
     if (wrapperScript) {
-      List<String> strings = Files.readAllLines(artifact);
+      List<String> strings = Files.readAllLines(artifact, StandardCharsets.UTF_8);
       if (strings.size() != 1) {
         throw new IllegalStateException(
             String.format(
