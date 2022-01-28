@@ -40,6 +40,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashSet;
@@ -160,7 +161,15 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         continue;
       }
 
-      String[] values = entry.getValue().split(":");
+      String bootclasspathEntry = entry.getValue();
+      String[] values = bootclasspathEntry.split(":");
+      if (IS_WINDOWS) {
+        // try to use windows file separator `;`
+        String[] parts = bootclasspathEntry.split(File.pathSeparator);
+        if (parts.length > values.length) {
+          values = parts;
+        }
+      }
       ImmutableList.Builder<PathSourcePath> pathsBuilder =
           ImmutableList.builderWithExpectedSize(values.length);
       for (String value : values) {
