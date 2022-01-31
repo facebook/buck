@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "buck_java_library")
 buck_java_library(
     name = "abi",
     srcs = glob(
@@ -38,12 +38,13 @@ buck_java_library(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "api-stubber",
     main_class = "com.facebook.buck.jvm.java.abi.ApiStubber",
     deps = [
         ":lib-api-stubber",
     ],
+    visibility = ["PUBLIC"],
 )
 
 buck_java_library(

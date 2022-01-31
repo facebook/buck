@@ -46,6 +46,12 @@ def buck_java_library(name, **kwargs):
         **kwargs
     )
 
+def buck_java_binary(name, **kwargs):
+    return native.java_binary(
+        name = name,
+        **kwargs,
+    )
+
 def buck_prebuilt_jar(name, **kwargs):
     return native.prebuilt_jar(
         name = name,
