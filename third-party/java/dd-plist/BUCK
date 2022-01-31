@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "dd-plist",
     binary_jar = "dd-plist.jar",
     licenses = [

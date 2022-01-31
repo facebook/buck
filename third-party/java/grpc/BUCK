@@ -2,8 +2,9 @@ load(
     "//tools/build_rules:file_alias.bzl",
     "file_alias",
 )
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "grpc-context",
     binary_jar = "grpc-context-1.24.0.jar",
     licenses = [
@@ -17,7 +18,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "perfmark-api",
     binary_jar = "perfmark-api-0.20.1.jar",
     licenses = [
@@ -31,7 +32,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "grpc-api",
     binary_jar = "grpc-api-1.24.0.jar",
     licenses = [
@@ -46,7 +47,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "grpc-core",
     binary_jar = "grpc-core-1.24.0.jar",
     licenses = [
@@ -66,7 +67,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "grpc-protobuf",
     binary_jar = "grpc-protobuf-1.24.0.jar",
     licenses = [
@@ -85,7 +86,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "grpc-protobuf-lite",
     binary_jar = "grpc-protobuf-lite-1.24.0.jar",
     licenses = [
@@ -101,7 +102,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "grpc-stub",
     binary_jar = "grpc-stub-1.24.0.jar",
     licenses = [
@@ -116,7 +117,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "grpc-netty-shaded",
     binary_jar = "grpc-netty-shaded-1.24.0.jar",
     licenses = [
@@ -133,7 +134,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "grpc-testing",
     binary_jar = "grpc-testing-1.24.0.jar",
     licenses = [

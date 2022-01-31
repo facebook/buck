@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "commons-logging",
     binary_jar = "commons-logging-1.2.jar",
     javadoc_url = "https://hc.apache.org/httpcomponents-client-ga/",

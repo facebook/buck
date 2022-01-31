@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_jar")
 buck_java_library(
     name = "asm",
     visibility = [
@@ -13,7 +13,7 @@ buck_java_library(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "asm-jar",
     binary_jar = "asm-9.2.jar",
     licenses = [
@@ -22,7 +22,7 @@ prebuilt_jar(
     source_jar = "asm-9.2-sources.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "asm-analysis",
     binary_jar = "asm-analysis-9.2.jar",
     licenses = [
@@ -31,7 +31,7 @@ prebuilt_jar(
     source_jar = "asm-analysis-9.2-sources.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "asm-commons",
     binary_jar = "asm-commons-9.2.jar",
     licenses = [
@@ -40,7 +40,7 @@ prebuilt_jar(
     source_jar = "asm-commons-9.2-sources.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "asm-tree",
     binary_jar = "asm-tree-9.2.jar",
     licenses = [
@@ -49,7 +49,7 @@ prebuilt_jar(
     source_jar = "asm-tree-9.2-sources.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "asm-util",
     binary_jar = "asm-util-9.2.jar",
     licenses = [

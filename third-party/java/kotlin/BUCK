@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "annotations",
     binary_jar = "annotations-13.0.jar",
     visibility = [
@@ -6,7 +8,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "kotlin-stdlib",
     binary_jar = "kotlin-stdlib.jar",
     source_jar = "kotlin-stdlib-sources.jar",
@@ -15,7 +17,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "kotlin-plugin",
     binary_jar = "kotlin-plugin.jar",
     visibility = [
@@ -23,7 +25,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "kotlin-compiler",
     binary_jar = "kotlin-compiler.jar",
     source_jar = "kotlin-compiler-sources.jar",
@@ -32,7 +34,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "trove",
     binary_jar = "trove4j.jar",
     visibility = [
@@ -40,7 +42,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "kotlin-reflect",
     binary_jar = "kotlin-reflect.jar",
     source_jar = "kotlin-reflect-sources.jar",

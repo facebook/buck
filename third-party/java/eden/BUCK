@@ -3,7 +3,9 @@
 #
 #
 # This is the Java code for talking to Eden's Thrift API.
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "eden-thrift-bindings",
     binary_jar = "eden.jar",
     visibility = [
@@ -16,7 +18,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "eden-config-thrift-bindings",
     binary_jar = "eden_config.jar",
 )

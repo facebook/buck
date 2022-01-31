@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "caliper",
     binary_jar = ":caliper_shaded",
     licenses = [
@@ -22,7 +24,7 @@ genrule(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "caliper-all",
     binary_jar = "caliper-1.0-all.jar",
     licenses = [

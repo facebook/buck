@@ -1,5 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "jetty-all",
     binary_jar = "jetty-all-9.4.9.v20180320-uber.jar",
     licenses = [

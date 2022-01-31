@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_jar")
 buck_java_library(
     name = "eclipse_jdt",
     licenses = [
@@ -17,7 +17,7 @@ buck_java_library(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "contenttype",
     binary_jar = "org.eclipse.core.contenttype_3.7.0.v20180426-1644.jar",
     licenses = [
@@ -25,7 +25,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jobs",
     binary_jar = "org.eclipse.core.jobs_3.10.0.v20180427-1454.jar",
     licenses = [
@@ -33,7 +33,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "resources",
     binary_jar = "org.eclipse.core.resources_3.13.0.v20180512-1138.jar",
     licenses = [
@@ -41,7 +41,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "runtime",
     binary_jar = "org.eclipse.core.runtime_3.14.0.v20180417-0825.jar",
     licenses = [
@@ -49,7 +49,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "equinox-common",
     binary_jar = "org.eclipse.equinox.common_3.10.0.v20180412-1130.jar",
     licenses = [
@@ -57,7 +57,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "equinox-preferences",
     binary_jar = "org.eclipse.equinox.preferences_3.7.100.v20180510-1129.jar",
     licenses = [
@@ -65,7 +65,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jdt",
     binary_jar = "org.eclipse.jdt.core_3.16.0.v20181130-1748.jar",
     licenses = [
@@ -73,7 +73,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "osgi",
     binary_jar = "org.eclipse.osgi_3.13.0.v20180409-1500.jar",
     licenses = [

@@ -46,6 +46,12 @@ def buck_java_library(name, **kwargs):
         **kwargs
     )
 
+def buck_prebuilt_jar(name, **kwargs):
+    return native.prebuilt_jar(
+        name = name,
+        **kwargs,
+    )
+
 def java_immutables_library(name, **kwargs):
     kwargs = _maybe_add_java_version(**kwargs)
     return native.java_library(

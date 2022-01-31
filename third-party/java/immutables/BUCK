@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_jar")
 java_annotation_processor(
     name = "processor",
     isolate_class_loader = True,
@@ -23,7 +23,7 @@ buck_java_library(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "value",
     binary_jar = "value-2.7.3.jar",
     licenses = [
@@ -32,7 +32,7 @@ prebuilt_jar(
     source_jar = "value-2.7.3-sources.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "builder",
     binary_jar = "builder-2.7.3.jar",
     licenses = [

@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "opencensus-api",
     binary_jar = "opencensus-api-0.24.0.jar",
     licenses = ["LICENSE"],
@@ -11,7 +13,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "opencensus-contrib-grpc-metrics",
     binary_jar = "opencensus-contrib-grpc-metrics-0.24.0.jar",
     licenses = ["LICENSE"],

@@ -1,9 +1,12 @@
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
 # We only use auto library in Starlark implementation
 visibility = [
     "//starlark/...",
 ]
 
-prebuilt_jar(
+
+buck_prebuilt_jar(
     name = "auto_common",
     binary_jar = "auto-common-0.10.jar",
     visibility = visibility,
@@ -21,13 +24,13 @@ java_annotation_processor(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "auto_value_annotations",
     binary_jar = "auto-value-annotations-1.6.3rc1.jar",
     visibility = visibility,
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "auto_value_value",
     binary_jar = "auto-value-1.6.3rc1.jar",
 )

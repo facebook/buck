@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "maven-repository-metadata",
     binary_jar = "maven-repository-metadata-3.2.5.jar",
     licenses = [
@@ -10,7 +12,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "maven-model-builder",
     binary_jar = "maven-model-builder-3.2.5.jar",
     licenses = [
@@ -28,7 +30,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "maven-model",
     binary_jar = "maven-model-3.2.5.jar",
     licenses = [
@@ -47,7 +49,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "maven-aether-provider",
     binary_jar = "maven-aether-provider-3.2.5.jar",
     licenses = [

@@ -1,7 +1,7 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_jar")
 version = "25.3.0"
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "sdklib",
     binary_jar = "sdklib-%s.jar" % version,
     source_jar = "sdklib-%s-sources.jar" % version,
@@ -27,7 +27,7 @@ buck_java_library(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "common",
     binary_jar = "common-%s.jar" % version,
     source_jar = "common-%s-sources.jar" % version,
@@ -36,20 +36,20 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "sdk-common",
     binary_jar = "sdk-common-%s.jar" % version,
     source_jar = "sdk-common-%s-sources.jar" % version,
     deps = ["//third-party/java/guava:shaded-guava-20"],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "layoutlib-api",
     binary_jar = "layoutlib-api-%s.jar" % version,
     source_jar = "layoutlib-api-%s-sources.jar" % version,
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "ddmlib",
     binary_jar = "ddmlib-%s.jar" % version,
     licenses = [

@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "httpcore",
     binary_jar = "httpcore-4.4.1.jar",
     licenses = [
@@ -6,7 +8,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "httpclient",
     binary_jar = "httpclient-4.4.1.jar",
     licenses = [

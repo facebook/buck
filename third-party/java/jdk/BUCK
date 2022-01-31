@@ -1,6 +1,8 @@
 # This is a stub jar for the Compiler Tree API
 # (http://docs.oracle.com/javase/7/docs/jdk/api/javac/tree/overview-summary.html)
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "compiler-tree-api",
     binary_jar = "stub-compiler-tree-api.jar",
     visibility = [

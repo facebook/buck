@@ -5,7 +5,9 @@
 #     //eden/fs/service:java-thrift-dependencies
 #
 # This is the Java code for using fbthrift in general.
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "fbthrift",
     binary_jar = "java-thrift-dependencies.jar",
     visibility = [

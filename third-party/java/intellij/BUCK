@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_jar")
 buck_java_library(
     name = "intellij-plugin-sdk",
     visibility = [
@@ -27,82 +27,82 @@ buck_java_library(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "android",
     binary_jar = "android.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "annotations",
     binary_jar = "annotations.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "extensions",
     binary_jar = "extensions.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "idea",
     binary_jar = "idea.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "java-api",
     binary_jar = "java-api.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "java-impl",
     binary_jar = "java-impl.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jdom",
     binary_jar = "jdom.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "platform-api",
     binary_jar = "platform-api.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "platform-impl",
     binary_jar = "platform-impl.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "platform-util-ui",
     binary_jar = "platform-util-ui.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "platform-core-ui",
     binary_jar = "platform-core-ui.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "platform-ide-util-io",
     binary_jar = "platform-ide-util-io.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "platform-concurrency",
     binary_jar = "platform-concurrency.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "serviceMessages",
     binary_jar = "serviceMessages-2019.1.4.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "util",
     binary_jar = "util.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "trove4j",
     binary_jar = "trove4j.jar",
 )

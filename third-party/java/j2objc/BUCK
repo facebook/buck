@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "j2objc-annotations",
     binary_jar = "j2objc-annotations-1.3.jar",
     licenses = [

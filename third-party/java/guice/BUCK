@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "guice",
     binary_jar = "guice-3.0.jar",
     licenses = [
@@ -18,7 +20,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "assisted-inject",
     binary_jar = "guice-assistedinject-3.0.jar",
     licenses = [
@@ -30,7 +32,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "multibindings",
     binary_jar = "guice-multibindings-3.0.jar",
     licenses = [

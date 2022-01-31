@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_jar")
 buck_java_library(
     name = "aosp",
     srcs = glob(["src/**/*.java"]),
@@ -22,7 +22,7 @@ buck_java_library(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "apksig",
     binary_jar = "apksig.jar",
     licenses = [

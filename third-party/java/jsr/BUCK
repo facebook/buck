@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "jsr305",
     binary_jar = "jsr305.jar",
     licenses = [
@@ -9,7 +11,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jsr330",
     binary_jar = "javax.inject-1.jar",
     licenses = [

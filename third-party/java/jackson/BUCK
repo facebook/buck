@@ -1,4 +1,5 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_jar")
+
 buck_java_library(
     name = "jackson",
     visibility = [
@@ -12,7 +13,7 @@ buck_java_library(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jackson-annotations",
     binary_jar = "jackson-annotations-2.9.7.jar",
     licenses = [
@@ -22,7 +23,7 @@ prebuilt_jar(
     visibility = ["PUBLIC"],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jackson-mrbean",
     binary_jar = "jackson-module-mrbean-2.9.7.jar",
     licenses = [
@@ -32,7 +33,7 @@ prebuilt_jar(
     visibility = ["PUBLIC"],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jackson-core",
     binary_jar = "jackson-core-2.9.7.jar",
     licenses = [
@@ -42,7 +43,7 @@ prebuilt_jar(
     visibility = ["PUBLIC"],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jackson-datatype-jdk8",
     binary_jar = "jackson-datatype-jdk8-2.9.7.jar",
     licenses = [
@@ -52,7 +53,7 @@ prebuilt_jar(
     visibility = ["PUBLIC"],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jackson-datatype-guava",
     binary_jar = "jackson-datatype-guava-2.9.7.jar",
     licenses = [
@@ -73,7 +74,7 @@ buck_java_library(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jackson-databind-jar",
     binary_jar = "jackson-databind-2.9.7.jar",
     licenses = [
@@ -82,7 +83,7 @@ prebuilt_jar(
     source_jar = "jackson-databind-2.9.7-sources.jar",
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jackson-module-kotlin",
     binary_jar = "jackson-module-kotlin-2.9.9.jar",
     licenses = [

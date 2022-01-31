@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "pf4j",
     binary_jar = "pf4j-2.0.0-SNAPSHOT.jar",
     licenses = [

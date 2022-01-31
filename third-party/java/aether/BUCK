@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "aether-util",
     binary_jar = "aether-util-1.0.2.v20150114.jar",
     licenses = [
@@ -15,7 +17,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "aether-connector-basic",
     binary_jar = "aether-connector-basic-1.0.2.v20150114.jar",
     licenses = [
@@ -34,7 +36,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "aether-api",
     binary_jar = "aether-api-1.0.2.v20150114.jar",
     licenses = [
@@ -47,7 +49,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "aether-transport-http",
     binary_jar = "aether-transport-http-1.0.2.v20150114.jar",
     licenses = [
@@ -68,7 +70,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "aether-transport-file",
     binary_jar = "aether-transport-file-1.0.2.v20150114.jar",
     licenses = [
@@ -86,7 +88,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "aether-spi",
     binary_jar = "aether-spi-1.0.2.v20150114.jar",
     licenses = [
@@ -103,7 +105,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "aether-impl",
     binary_jar = "aether-impl-1.0.0.v20140518.jar",
     licenses = [

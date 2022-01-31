@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "shaded-guava-20",
     binary_jar = "guava-20.0.jar",
     licenses = [
@@ -8,7 +10,7 @@ prebuilt_jar(
     visibility = ["PUBLIC"],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "guava",
     binary_jar = "guava-25.1-jre.jar",
     licenses = [
@@ -19,7 +21,7 @@ prebuilt_jar(
     deps = ["//third-party/java/j2objc:j2objc-annotations"],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "guava-testlib",
     binary_jar = "guava-testlib-25.1-jre.jar",
     licenses = [

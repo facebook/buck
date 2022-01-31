@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "ini4j",
     binary_jar = "ini4j-0.5.5-SNAPSHOT.jar",
     licenses = [

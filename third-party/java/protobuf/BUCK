@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "protobuf",
     binary_jar = "protobuf-java-3.7.0.jar",
     licenses = ["LICENSE"],
@@ -7,7 +9,7 @@ prebuilt_jar(
     deps = [],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "protobuf-util",
     binary_jar = "protobuf-java-util-3.7.0.jar",
     licenses = ["LICENSE"],

@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "zstd-jni",
     binary_jar = "zstd-jni-1.4.0-1.jar",
     licenses = [

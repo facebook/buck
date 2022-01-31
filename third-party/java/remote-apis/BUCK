@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_jar")
 genrule(
     name = "proto-gen",
     srcs = glob(["**/*.proto"]),
@@ -19,7 +19,7 @@ buck_java_library(
     deps = DEPS,
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "prebuilt",
     binary_jar = "remote-apis.jar",
     licenses = ["LICENSE"],

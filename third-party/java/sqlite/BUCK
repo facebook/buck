@@ -1,4 +1,6 @@
-prebuilt_jar(
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
     name = "sqlite",
     binary_jar = "sqlite-jdbc-3.20.0.jar",
     licenses = [

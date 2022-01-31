@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_jar")
 buck_java_library(
     name = "jacoco",
     visibility = [
@@ -11,7 +11,7 @@ buck_java_library(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "core",
     binary_jar = "org.jacoco.core-0.8.7.202105040129.jar",
     licenses = [
@@ -19,7 +19,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "report",
     binary_jar = "org.jacoco.report-0.8.7.202105040129.jar",
     licenses = [
@@ -27,7 +27,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "agent",
     binary_jar = "jacocoagent.jar",
     licenses = [

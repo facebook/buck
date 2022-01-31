@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
 java_binary(
     name = "jarjar",
     main_class = "com.tonicsystems.jarjar.Main",
@@ -9,7 +11,7 @@ java_binary(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jarjar_prebuilt",
     binary_jar = "jarjar-1.4.1.jar",
     licenses = [

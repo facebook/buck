@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_jar")
 buck_java_library(
     name = "jmh",
     visibility = [
@@ -25,7 +25,7 @@ java_annotation_processor(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jmh-core",
     binary_jar = "jmh-core-1.23.jar",
     licenses = [
@@ -37,7 +37,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "jmh-generator-annprocess",
     binary_jar = "jmh-generator-annprocess-1.23.jar",
     licenses = [
