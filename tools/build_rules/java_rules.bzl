@@ -35,21 +35,22 @@ def _add_immutables(deps_arg, **kwargs):
 
 def _maybe_add_java_version(**kwargs):
     if "source" not in kwargs and "target" not in kwargs and "java_version" not in kwargs:
-        kwargs["java_version"] = "11"    
+        kwargs["java_version"] = "11"
     return kwargs
 
+
 def buck_java_library(name, **kwargs):
-    kwargs_with_java_version = _maybe_add_java_version(**kwargs)
+    kwargs = _maybe_add_java_version(**kwargs)
     return native.java_library(
         name = name,
-        **kwargs_with_java_version
+        **kwargs
     )
 
 def java_immutables_library(name, **kwargs):
-    kwargs_with_java_version = _maybe_add_java_version(**kwargs)
+    kwargs = _maybe_add_java_version(**kwargs)
     return native.java_library(
         name = name,
-        **_add_immutables("deps", **kwargs_with_java_version)
+        **_add_immutables("deps", **kwargs)
     )
 
 def _shallow_dict_copy_without_key(table, key_to_omit):
@@ -194,8 +195,8 @@ def _add_buck_modules_annotation_processor(**kwargs):
     return kwargs
 
 def java_library_with_plugins(name, **kwargs):
-    kwargs_with_java_version = _maybe_add_java_version(**kwargs)
-    kwargs_with_immutables = _add_immutables("provided_deps", **kwargs_with_java_version)
+    kwargs = _maybe_add_java_version(**kwargs)
+    kwargs_with_immutables = _add_immutables("provided_deps", **kwargs)
     kawgs_with_plugins = _add_pf4j_plugin_framework(**kwargs_with_immutables)
     kawgs_with_buck_modules_annotation_processor = _add_buck_modules_annotation_processor(**kawgs_with_plugins)
     return native.java_library(
