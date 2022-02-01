@@ -51,7 +51,7 @@ install_python: &install_python
     python --version
 
 linux_environment: &linux_environment
-  # Use string constant for values, no environment variables 
+  # Use string constant for values, no environment variables
   PLATFORM: "linux"
   BUCKROOT: "/home/circleci/buck"
   ANDROID_SDK: "/home/circleci/android-sdk"
@@ -65,7 +65,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-1604:201903-01
+      image: ubuntu-2004:2004:202111-02
     steps:
       - checkout
       - run:
