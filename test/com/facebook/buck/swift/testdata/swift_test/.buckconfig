@@ -1,2 +1,5 @@
 [swift]
 compiler_flags = -enable-testing
+[apple]
+# TODO(T109413786): Remove once we are on Swift 5.6 (Xcode 13.3?)
+swift-stdlib-tool_replacement = swift-stdlib-tool-xcode132-fix
