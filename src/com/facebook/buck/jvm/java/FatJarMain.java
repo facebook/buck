@@ -24,11 +24,14 @@
  */
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.util.liteinfersupport.Nullable;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.net.JarURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -37,13 +40,22 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
+import java.security.CodeSource;
+import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class FatJarMain {
+
+  public static final String FAT_JAR_INNER_JAR = "inner.jar";
+  public static final String FAT_JAR_NATIVE_LIBRARIES_DIR = "nativelibs";
+  public static final String WRAPPER_SCRIPT_MARKER_FILE = "wrapper_script";
 
   private FatJarMain() {}
 
@@ -55,16 +67,13 @@ public class FatJarMain {
   public static void main(String[] args) throws Exception {
     ClassLoader classLoader = FatJarMain.class.getClassLoader();
 
-    // Load the fat jar info from it's resource.
-    FatJar fatJar = FatJar.load(classLoader);
-
     // Create a temp dir to house the native libraries.
     try (ManagedTemporaryDirectory temp = new ManagedTemporaryDirectory("fatjar.")) {
 
       // Unpack the real, inner artifact (JAR or wrapper script).
-      boolean isWrapperScript = fatJar.isWrapperScript();
+      boolean isWrapperScript = isWrapperScript();
       Path innerArtifact = temp.getPath().resolve(isWrapperScript ? "wrapper.sh" : "main.jar");
-      FatJar.unpackInnerArtifactTo(classLoader, innerArtifact);
+      unpackInnerArtifactTo(classLoader, innerArtifact);
       if (isWrapperScript) {
         makeExecutable(innerArtifact);
       }
@@ -72,7 +81,7 @@ public class FatJarMain {
       // Unpack all the native libraries, since the system loader will need to find these on disk.
       Path nativeLibs = temp.getPath().resolve("native_libs");
       Files.createDirectory(nativeLibs);
-      FatJar.unpackNativeLibrariesInto(temp.getPath());
+      unpackNativeLibrariesInto(temp.getPath());
 
       // Update the appropriate environment variable with the location of our native libraries
       // and start the real main class in a new process so that it picks it up.
@@ -84,6 +93,46 @@ public class FatJarMain {
       // Wait for the inner process to finish, and propagate it's exit code, before cleaning
       // up the native libraries.
       System.exit(builder.start().waitFor());
+    }
+  }
+
+  private static boolean isWrapperScript() throws IOException {
+    try (JarFile jar = new JarFile(getJarPath())) {
+      JarEntry entry = jar.getJarEntry(WRAPPER_SCRIPT_MARKER_FILE);
+      return entry != null;
+    }
+  }
+
+  private static void unpackNativeLibrariesInto(Path destination) throws IOException {
+    try (JarFile jar = new JarFile(getJarPath())) {
+      Enumeration<JarEntry> enumEntries = jar.entries();
+      while (enumEntries.hasMoreElements()) {
+        JarEntry jarEntry = enumEntries.nextElement();
+        String entryName = jarEntry.getName();
+        if (jarEntry.isDirectory() || !entryName.startsWith(FAT_JAR_NATIVE_LIBRARIES_DIR)) {
+          continue;
+        }
+
+        String fileName = entryName.substring(FAT_JAR_NATIVE_LIBRARIES_DIR.length() + 1);
+        Files.copy(jar.getInputStream(jarEntry), destination.resolve(fileName));
+      }
+    }
+  }
+
+  private static String getJarPath() throws IOException {
+    ProtectionDomain protectionDomain = FatJarMain.class.getProtectionDomain();
+    CodeSource codeSource = protectionDomain.getCodeSource();
+    URL jarUrl = new URL("jar:" + codeSource.getLocation().toExternalForm() + "!/");
+    URL jarFileUrl = ((JarURLConnection) jarUrl.openConnection()).getJarFileURL();
+    return jarFileUrl.getPath();
+  }
+
+  private static void unpackInnerArtifactTo(ClassLoader loader, Path destination)
+      throws IOException {
+    try (InputStream input = loader.getResourceAsStream(FAT_JAR_INNER_JAR);
+        BufferedInputStream bufferedInput =
+            new BufferedInputStream(Objects.requireNonNull(input))) {
+      Files.copy(bufferedInput, destination);
     }
   }
 
@@ -189,7 +238,6 @@ public class FatJarMain {
     }
   }
 
-  @Nullable
   // Avoid using EnvVariablesProvider to avoid extra dependencies.
   @SuppressWarnings("PMD.BlacklistedSystemGetenv")
   private static String getEnvValue(String envVariableName) {
@@ -200,7 +248,6 @@ public class FatJarMain {
     }
   }
 
-  @Nullable
   private static String findMapValueIgnoreKeyCase(String key, Map<String, String> map) {
     for (Map.Entry<String, String> entry : map.entrySet()) {
       if (entry.getKey().equalsIgnoreCase(key)) {

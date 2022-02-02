@@ -48,6 +48,7 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.ZipStep;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.step.isolatedsteps.common.TouchStep;
 import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
@@ -56,12 +57,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -73,10 +69,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasClasspathEntries, HasRuntimeDeps {
 
   public static final ImmutableList<String> FAT_JAR_SRC_RESOURCES =
-      ImmutableList.of(
-          "com/facebook/buck/jvm/java/FatJar.java",
-          "com/facebook/buck/jvm/java/WindowsCreateProcessEscape.java",
-          "com/facebook/buck/util/liteinfersupport/Nullable.java");
+      ImmutableList.of("com/facebook/buck/jvm/java/WindowsCreateProcessEscape.java");
   public static final String FAT_JAR_MAIN_SRC_RESOURCE =
       "com/facebook/buck/jvm/java/FatJarMain.java";
 
@@ -138,7 +131,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     // Map of the system-specific shared library name to it's resource name as a string.
     for (Map.Entry<String, SourcePath> entry : nativeLibraries.entrySet()) {
-      String resource = FatJar.FAT_JAR_NATIVE_LIBRARIES_DIR + "/" + entry.getKey();
+      String resource = FatJarMain.FAT_JAR_NATIVE_LIBRARIES_DIR + "/" + entry.getKey();
       Path resourcePath = fatJarDir.resolve(resource);
       steps.add(
           MkdirStep.of(
@@ -150,9 +143,6 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
               sourcePathResolver.getAbsolutePath(entry.getValue()).getPath(),
               resourcePath));
     }
-    // Grab the source path representing the fat jar info resource.
-    Path fatJarInfo = fatJarDir.resolve(FatJar.FAT_JAR_INFO_RESOURCE);
-    steps.add(writeFatJarInfo(fatJarInfo));
 
     // Build up the resource and src collections.
     ImmutableSortedSet.Builder<RelPath> javaSourceFilePaths =
@@ -173,12 +163,16 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             BuildCellRelativePath.fromCellRelativePath(
                 buildCellRootPath,
                 filesystem,
-                fatJarDir.resolve(FatJar.FAT_JAR_INNER_JAR).getParent())));
+                fatJarDir.resolve(FatJarMain.FAT_JAR_INNER_JAR).getParent())));
     steps.add(
         SymlinkFileStep.of(
             filesystem,
             sourcePathResolver.getAbsolutePath(innerJar).getPath(),
-            fatJarDir.resolve(FatJar.FAT_JAR_INNER_JAR)));
+            fatJarDir.resolve(FatJarMain.FAT_JAR_INNER_JAR)));
+
+    if (prepareWrapperScript) {
+      steps.add(new TouchStep(fatJarDir.resolve(FatJarMain.WRAPPER_SCRIPT_MARKER_FILE)));
+    }
 
     BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget);
 
@@ -238,27 +232,6 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     buildableContext.recordArtifact(output.getPath());
 
     return steps.build();
-  }
-
-  /** @return a {@link Step} that generates the fat jar info resource. */
-  private Step writeFatJarInfo(Path destination) {
-
-    ByteSource source =
-        new ByteSource() {
-          @Override
-          public InputStream openStream() {
-            FatJar fatJar = new FatJar(prepareWrapperScript);
-            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            try {
-              fatJar.store(bytes);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
-            return new ByteArrayInputStream(bytes.toByteArray());
-          }
-        };
-
-    return WriteFileIsolatedStep.of(source, destination, /* executable */ false);
   }
 
   /** @return a {@link Step} that writes the final from the resource named {@code name}. */

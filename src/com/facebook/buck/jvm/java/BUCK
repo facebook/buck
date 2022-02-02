@@ -20,17 +20,14 @@ buck_java_library(
 buck_java_library(
     name = "fat-jar-main",
     srcs = [
-        "FatJar.java",
         "FatJarMain.java",
     ],
     # Maximum compatibility
     source = "7",
     target = "7",
     deps = [
-        # Don't add more dependencies beyond what we need for Infer! We package these sources and
-        # compile them into fat JARs, so it's important that they don't bring along any additional
-        # dependencies.
-        "//src/com/facebook/buck/util/liteinfersupport:liteinfersupport",
+        # Don't add more dependencies! We package these sources and compile them into fat JARs,
+        # so it's important that they don't bring along any additional dependencies.
         ":fat_jar_utils"
     ],
 )
@@ -307,10 +304,8 @@ java_library_with_plugins(
         "ZipArchiveDependencySupplier.java",
     ],
     resources = [
-        "FatJar.java",
         "FatJarMain.java",
         "WindowsCreateProcessEscape.java",
-        "//src/com/facebook/buck/util/liteinfersupport:Nullable.java",
     ],
     tests = [
         "//test/com/facebook/buck/jvm/java:integration-slow",

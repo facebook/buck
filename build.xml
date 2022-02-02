@@ -1005,9 +1005,7 @@
         <include name="com/facebook/buck/python/run_inplace_lite.py.in"/>
         <include name="com/facebook/buck/parser/function/BuckPyFunction.stg"/>
         <include name="com/facebook/buck/shell/sh_binary_template"/>
-        <include name="com/facebook/buck/jvm/java/FatJar.java" />
         <include name="com/facebook/buck/jvm/java/FatJarMain.java" />
-        <include name="com/facebook/buck/util/liteinfersupport/Nullable.java" />
       </fileset>
     </copy>
   </target>
