@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -104,7 +104,7 @@ public class AdbHelper implements AndroidDevicesHelper {
    * The next port number to use for communicating with the agent on a device. This resets for every
    * instance of AdbHelper, but is incremented for every device on every call to adbCall().
    */
-  private final AtomicInteger nextAgentPort = new AtomicInteger(2828);
+  private final AtomicInteger nextAgentPort;
 
   private final AdbOptions options;
   private final TargetDeviceOptions deviceOptions;
@@ -127,7 +127,8 @@ public class AdbHelper implements AndroidDevicesHelper {
       boolean restartAdbOnFailure,
       boolean skipMetadataIfNoInstalls,
       boolean alwaysUseJavaAgent,
-      boolean isZstdCompressionEnabled) {
+      boolean isZstdCompressionEnabled,
+      int agentPortBase) {
     this.options = adbOptions;
     this.deviceOptions = deviceOptions;
     this.toolchainProvider = toolchainProvider;
@@ -137,6 +138,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     this.skipMetadataIfNoInstalls = skipMetadataIfNoInstalls;
     this.alwaysUseJavaAgent = alwaysUseJavaAgent;
     this.isZstdCompressionEnabled = isZstdCompressionEnabled;
+    nextAgentPort = new AtomicInteger(agentPortBase);
   }
 
   @VisibleForTesting

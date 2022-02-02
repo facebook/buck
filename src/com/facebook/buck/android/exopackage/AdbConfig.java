@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,5 +60,11 @@ public abstract class AdbConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public boolean isZstdCompressionEnabled() {
     return getDelegate().getBooleanValue("adb", "is_zstd_compression_enabled", false);
+  }
+
+  /** Which port to use to connect to exopackage agent on device. */
+  @Value.Lazy
+  public int getAgentPortBase() {
+    return getDelegate().getInteger("adb", "agent_port_base").orElse(2828);
   }
 }

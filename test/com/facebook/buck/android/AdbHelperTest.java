@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,6 +52,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class AdbHelperTest {
+  private static final int AGENT_PORT_BASE = 2828;
+
   @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
   private TestConsole testConsole;
@@ -102,7 +104,8 @@ public class AdbHelperTest {
         true,
         /* skipMetadataIfNoInstalls= */ false,
         /* alwaysUseJavaAgent */ true,
-        /* isZstdCompressionEnabled */ true);
+        /* isZstdCompressionEnabled */ true,
+        AGENT_PORT_BASE);
   }
 
   /** Verify that null is returned when no devices are present. */
@@ -567,7 +570,8 @@ public class AdbHelperTest {
         true,
         /* skipMetadataIfNoInstalls= */ false,
         /* alwaysUseJavaAgent */ true,
-        /* isZstdCompressionEnabled */ true) {
+        /* isZstdCompressionEnabled */ true,
+        AGENT_PORT_BASE) {
       @Override
       AndroidDebugBridgeFacade createAdb() {
         return facade;
@@ -598,7 +602,8 @@ public class AdbHelperTest {
         true,
         /* skipMetadataIfNoInstalls= */ false,
         /* alwaysUseJavaAgent */ false,
-        /* isZstdCompressionEnabled */ true);
+        /* isZstdCompressionEnabled */ true,
+        AGENT_PORT_BASE);
   }
 
   private static AdbOptions createAdbOptions() {

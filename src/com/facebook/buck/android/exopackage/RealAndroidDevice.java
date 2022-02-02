@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -680,6 +680,7 @@ public class RealAndroidDevice implements AndroidDevice {
 
   @Override
   public AutoCloseable createForward() throws Exception {
+    LOG.debug("Creating forward on port %d for device %s", agentPort, device);
     device.createForward(agentPort, agentPort);
     return () -> {
       try {
@@ -703,7 +704,7 @@ public class RealAndroidDevice implements AndroidDevice {
         doMultiInstall(filesType, installPaths, /* tryZstdCompressionIfPossible */ true);
         return;
       } catch (Exception e) {
-        LOG.warn(e, "doMultiInstall with zstd compression failed");
+        LOG.warn(e, "doMultiInstall with zstd compression failed for %s", filesType);
       }
     }
     try {
@@ -711,7 +712,8 @@ public class RealAndroidDevice implements AndroidDevice {
     } catch (Exception e) {
       LOG.warn(
           e,
-          "doMultiInstall without zstd compression failed, falling back to doMultiInstallViaADB");
+          "doMultiInstall without zstd compression failed for %s, falling back to doMultiInstallViaADB",
+          filesType);
       doMultiInstallViaADB(installPaths);
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ public class AndroidDevicesHelperFactory {
         adbConfig.getRestartAdbOnFailure(),
         adbConfig.getSkipInstallMetadata(),
         adbConfig.getAlwaysUseJavaAgent(),
-        adbConfig.isZstdCompressionEnabled());
+        adbConfig.isZstdCompressionEnabled(),
+        adbConfig.getAgentPortBase());
   }
 }
