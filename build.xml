@@ -223,7 +223,6 @@
     <include name="pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
     <include name="protobuf/protobuf-java-3.7.0.jar" />
     <include name="protobuf/protobuf-java-util-3.7.0.jar" />
-    <include name="protobuf/protobuf-lite-3.0.1.jar" />
     <include name="slf4j/slf4j-jdk14-1.7.5.jar" /><!-- redirect slf4j to java.util.logging -->
     <include name="stringtemplate/ST-4.0.8.jar" />
     <include name="thrift/libthrift-0.12.0.jar" />
