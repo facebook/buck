@@ -72,7 +72,6 @@ import java.util.stream.Stream;
 public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasClasspathEntries, HasRuntimeDeps {
 
-  private static final String FAT_JAR_INNER_JAR = "inner.jar";
   private static final String FAT_JAR_NATIVE_LIBRARY_RESOURCE_ROOT = "nativelibs";
   public static final ImmutableList<String> FAT_JAR_SRC_RESOURCES =
       ImmutableList.of(
@@ -177,12 +176,14 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                buildCellRootPath, filesystem, fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent())));
+                buildCellRootPath,
+                filesystem,
+                fatJarDir.resolve(FatJar.FAT_JAR_INNER_JAR).getParent())));
     steps.add(
         SymlinkFileStep.of(
             filesystem,
             sourcePathResolver.getAbsolutePath(innerJar).getPath(),
-            fatJarDir.resolve(FAT_JAR_INNER_JAR)));
+            fatJarDir.resolve(FatJar.FAT_JAR_INNER_JAR)));
 
     BuildTargetValue buildTargetValue = BuildTargetValue.of(buildTarget);
 
@@ -251,7 +252,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new ByteSource() {
           @Override
           public InputStream openStream() {
-            FatJar fatJar = new FatJar(FAT_JAR_INNER_JAR, nativeLibraries, prepareWrapperScript);
+            FatJar fatJar = new FatJar(nativeLibraries, prepareWrapperScript);
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             try {
               fatJar.store(bytes);

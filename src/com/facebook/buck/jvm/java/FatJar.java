@@ -48,10 +48,8 @@ public class FatJar implements Serializable {
    */
   private static final long serialVersionUID = 1L;
 
+  public static final String FAT_JAR_INNER_JAR = "inner.jar";
   public static final String FAT_JAR_INFO_RESOURCE = "fat_jar_info.dat";
-
-  /** The resource name for the real JAR or wrapper script. */
-  @Nullable private final String innerArtifact;
 
   /**
    * The map of system-specific shared library names to their corresponding resource names. Note: We
@@ -64,8 +62,7 @@ public class FatJar implements Serializable {
 
   @Nullable private final Boolean wrapperScript;
 
-  public FatJar(String innerArtifact, Map<String, String> nativeLibraries, boolean wrapperScript) {
-    this.innerArtifact = innerArtifact;
+  public FatJar(Map<String, String> nativeLibraries, boolean wrapperScript) {
     this.nativeLibraries = new HashMap<>(nativeLibraries);
     this.wrapperScript = wrapperScript;
   }
@@ -104,7 +101,7 @@ public class FatJar implements Serializable {
   }
 
   void unpackInnerArtifactTo(ClassLoader loader, Path destination) throws IOException {
-    try (InputStream input = loader.getResourceAsStream(Objects.requireNonNull(innerArtifact));
+    try (InputStream input = loader.getResourceAsStream(FAT_JAR_INNER_JAR);
         BufferedInputStream bufferedInput =
             new BufferedInputStream(Objects.requireNonNull(input))) {
       Files.copy(bufferedInput, destination);
