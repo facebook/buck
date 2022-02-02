@@ -69,25 +69,26 @@ public class FatJarMain {
 
     // Create a temp dir to house the native libraries.
     try (ManagedTemporaryDirectory temp = new ManagedTemporaryDirectory("fatjar.")) {
+      Path workingDirectory = temp.getPath();
 
       // Unpack the real, inner artifact (JAR or wrapper script).
       boolean isWrapperScript = isWrapperScript();
-      Path innerArtifact = temp.getPath().resolve(isWrapperScript ? "wrapper.sh" : "main.jar");
+      Path innerArtifact = workingDirectory.resolve(isWrapperScript ? "wrapper.sh" : "main.jar");
       unpackInnerArtifactTo(classLoader, innerArtifact);
       if (isWrapperScript) {
         makeExecutable(innerArtifact);
       }
 
       // Unpack all the native libraries, since the system loader will need to find these on disk.
-      Path nativeLibs = temp.getPath().resolve("native_libs");
+      Path nativeLibs = workingDirectory.resolve("native_libs");
       Files.createDirectory(nativeLibs);
-      unpackNativeLibrariesInto(temp.getPath());
+      unpackNativeLibrariesInto(nativeLibs);
 
       // Update the appropriate environment variable with the location of our native libraries
       // and start the real main class in a new process so that it picks it up.
       ProcessBuilder builder = new ProcessBuilder();
       builder.command(getCommand(isWrapperScript, innerArtifact, args));
-      updateEnvironment(builder.environment(), temp.getPath());
+      updateEnvironment(builder.environment(), nativeLibs);
       builder.inheritIO();
 
       // Wait for the inner process to finish, and propagate it's exit code, before cleaning
