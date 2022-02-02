@@ -39,7 +39,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileAttribute;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
@@ -57,6 +56,8 @@ public class FatJarMain {
   public static final String FAT_JAR_NATIVE_LIBRARIES_DIR = "nativelibs";
   public static final String WRAPPER_SCRIPT_MARKER_FILE = "wrapper_script";
 
+  private static final String DEBUG_OPTION = "--debug";
+
   private FatJarMain() {}
 
   /**
@@ -65,15 +66,24 @@ public class FatJarMain {
    */
   @SuppressWarnings("PMD.BlacklistedDefaultProcessMethod")
   public static void main(String[] args) throws Exception {
+
+    boolean debug = args.length > 0 && args[0].equals(DEBUG_OPTION);
+
     ClassLoader classLoader = FatJarMain.class.getClassLoader();
 
     // Create a temp dir to house the native libraries.
-    try (ManagedTemporaryDirectory temp = new ManagedTemporaryDirectory("fatjar.")) {
+    try (ManagedTemporaryDirectory temp = new ManagedTemporaryDirectory("fatjar.", !debug)) {
       Path workingDirectory = temp.getPath();
+      if (debug) {
+        printDebugInfo("Created a temporary directory: " + workingDirectory);
+      }
 
       // Unpack the real, inner artifact (JAR or wrapper script).
       boolean isWrapperScript = isWrapperScript();
       Path innerArtifact = workingDirectory.resolve(isWrapperScript ? "wrapper.sh" : "main.jar");
+      if (debug) {
+        printDebugInfo("Extracting inner artifact into: " + innerArtifact);
+      }
       unpackInnerArtifactTo(classLoader, innerArtifact);
       if (isWrapperScript) {
         makeExecutable(innerArtifact);
@@ -82,13 +92,17 @@ public class FatJarMain {
       // Unpack all the native libraries, since the system loader will need to find these on disk.
       Path nativeLibs = workingDirectory.resolve("native_libs");
       Files.createDirectory(nativeLibs);
-      unpackNativeLibrariesInto(nativeLibs);
+      unpackNativeLibrariesInto(nativeLibs, debug);
 
       // Update the appropriate environment variable with the location of our native libraries
       // and start the real main class in a new process so that it picks it up.
       ProcessBuilder builder = new ProcessBuilder();
-      builder.command(getCommand(isWrapperScript, innerArtifact, args));
-      updateEnvironment(builder.environment(), nativeLibs);
+      List<String> command = getCommand(isWrapperScript, innerArtifact, args);
+      if (debug) {
+        printDebugInfo("Executing command: " + command);
+      }
+      builder.command(command);
+      updateEnvironment(builder.environment(), nativeLibs, debug);
       builder.inheritIO();
 
       // Wait for the inner process to finish, and propagate it's exit code, before cleaning
@@ -104,7 +118,8 @@ public class FatJarMain {
     }
   }
 
-  private static void unpackNativeLibrariesInto(Path destination) throws IOException {
+  private static void unpackNativeLibrariesInto(Path destination, boolean debug)
+      throws IOException {
     try (JarFile jar = new JarFile(getJarPath())) {
       Enumeration<JarEntry> enumEntries = jar.entries();
       while (enumEntries.hasMoreElements()) {
@@ -115,6 +130,9 @@ public class FatJarMain {
         }
 
         String fileName = entryName.substring(FAT_JAR_NATIVE_LIBRARIES_DIR.length() + 1);
+        if (debug) {
+          printDebugInfo("Extracting native library: " + fileName);
+        }
         Files.copy(jar.getInputStream(jarEntry), destination.resolve(fileName));
       }
     }
@@ -140,11 +158,18 @@ public class FatJarMain {
   /**
    * Update the library search path environment variable with the given native library directory.
    */
-  private static void updateEnvironment(Map<String, String> env, Path libDir) {
+  private static void updateEnvironment(Map<String, String> env, Path libDir, boolean debug) {
     String librarySearchPathName = getLibrarySearchPathName();
     String originalLibPath = getEnvValue(librarySearchPathName);
     String newLibPath =
         libDir + (originalLibPath == null ? "" : File.pathSeparator + originalLibPath);
+
+    if (debug) {
+      printDebugInfo(
+          String.format(
+              "Setting/Updating env variable: '%s' with '%s' value",
+              librarySearchPathName, newLibPath));
+    }
     env.put(librarySearchPathName, newLibPath);
   }
 
@@ -266,23 +291,34 @@ public class FatJarMain {
     return osPlatform.startsWith("Windows");
   }
 
+  private static void printDebugInfo(String message) {
+    System.out.println("DEBUG: " + message);
+  }
+
   /**
    * A temporary directory that automatically cleans itself up when used via a try-resource block.
    */
   private static class ManagedTemporaryDirectory implements AutoCloseable {
 
     private final Path path;
+    private final boolean removeTempDirectory;
 
-    private ManagedTemporaryDirectory(Path path) {
+    private ManagedTemporaryDirectory(Path path, boolean removeTempDirectory) {
       this.path = path;
+      this.removeTempDirectory = removeTempDirectory;
     }
 
-    public ManagedTemporaryDirectory(String prefix, FileAttribute<?>... attrs) throws IOException {
-      this(Files.createTempDirectory(prefix, attrs));
+    public ManagedTemporaryDirectory(String prefix, boolean removeTempDirectory)
+        throws IOException {
+      this(Files.createTempDirectory(prefix), removeTempDirectory);
     }
 
     @Override
     public void close() throws IOException {
+      if (!removeTempDirectory) {
+        printDebugInfo("Skipping temp directory removal. Temp directory: " + path);
+        return;
+      }
       Files.walkFileTree(
           path,
           new SimpleFileVisitor<Path>() {
