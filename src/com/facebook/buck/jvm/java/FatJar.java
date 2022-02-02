@@ -33,11 +33,16 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamConstants;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.net.JarURLConnection;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.security.CodeSource;
+import java.security.ProtectionDomain;
+import java.util.Enumeration;
 import java.util.Objects;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /** Helper class for unpacking fat JAR resources. */
 public class FatJar implements Serializable {
@@ -50,20 +55,11 @@ public class FatJar implements Serializable {
 
   public static final String FAT_JAR_INNER_JAR = "inner.jar";
   public static final String FAT_JAR_INFO_RESOURCE = "fat_jar_info.dat";
-
-  /**
-   * The map of system-specific shared library names to their corresponding resource names. Note: We
-   * purposely use <code>HashMap</code> instead of <code>Map</code> here to ensure serializability
-   * of this class.
-   */
-  @SuppressWarnings("PMD.LooseCoupling")
-  @Nullable
-  private final HashMap<String, String> nativeLibraries;
+  public static final String FAT_JAR_NATIVE_LIBRARIES_DIR = "nativelibs";
 
   @Nullable private final Boolean wrapperScript;
 
-  public FatJar(Map<String, String> nativeLibraries, boolean wrapperScript) {
-    this.nativeLibraries = new HashMap<>(nativeLibraries);
+  public FatJar(boolean wrapperScript) {
     this.wrapperScript = wrapperScript;
   }
 
@@ -90,17 +86,31 @@ public class FatJar implements Serializable {
     }
   }
 
-  void unpackNativeLibrariesInto(ClassLoader loader, Path destination) throws IOException {
-    for (Map.Entry<String, String> entry : Objects.requireNonNull(nativeLibraries).entrySet()) {
-      try (InputStream input = loader.getResourceAsStream(entry.getValue());
-          BufferedInputStream bufferedInput =
-              new BufferedInputStream(Objects.requireNonNull(input))) {
-        Files.copy(bufferedInput, destination.resolve(entry.getKey()));
+  static void unpackNativeLibrariesInto(Path destination) throws IOException {
+    try (JarFile jar = new JarFile(getJarPath())) {
+      Enumeration<JarEntry> enumEntries = jar.entries();
+      while (enumEntries.hasMoreElements()) {
+        JarEntry jarEntry = enumEntries.nextElement();
+        String entryName = jarEntry.getName();
+        if (jarEntry.isDirectory() || !entryName.startsWith(FAT_JAR_NATIVE_LIBRARIES_DIR)) {
+          continue;
+        }
+
+        String fileName = entryName.substring(FAT_JAR_NATIVE_LIBRARIES_DIR.length() + 1);
+        Files.copy(jar.getInputStream(jarEntry), destination.resolve(fileName));
       }
     }
   }
 
-  void unpackInnerArtifactTo(ClassLoader loader, Path destination) throws IOException {
+  private static String getJarPath() throws IOException {
+    ProtectionDomain protectionDomain = FatJar.class.getProtectionDomain();
+    CodeSource codeSource = protectionDomain.getCodeSource();
+    URL jarUrl = new URL("jar:" + codeSource.getLocation().toExternalForm() + "!/");
+    URL jarFileUrl = ((JarURLConnection) jarUrl.openConnection()).getJarFileURL();
+    return jarFileUrl.getPath();
+  }
+
+  static void unpackInnerArtifactTo(ClassLoader loader, Path destination) throws IOException {
     try (InputStream input = loader.getResourceAsStream(FAT_JAR_INNER_JAR);
         BufferedInputStream bufferedInput =
             new BufferedInputStream(Objects.requireNonNull(input))) {

@@ -72,7 +72,6 @@ import java.util.stream.Stream;
 public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasClasspathEntries, HasRuntimeDeps {
 
-  private static final String FAT_JAR_NATIVE_LIBRARY_RESOURCE_ROOT = "nativelibs";
   public static final ImmutableList<String> FAT_JAR_SRC_RESOURCES =
       ImmutableList.of(
           "com/facebook/buck/jvm/java/FatJar.java",
@@ -138,10 +137,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
             BuildCellRelativePath.fromCellRelativePath(buildCellRootPath, filesystem, outputDir)));
 
     // Map of the system-specific shared library name to it's resource name as a string.
-    ImmutableMap.Builder<String, String> sonameToResourceMapBuilder = ImmutableMap.builder();
     for (Map.Entry<String, SourcePath> entry : nativeLibraries.entrySet()) {
-      String resource = FAT_JAR_NATIVE_LIBRARY_RESOURCE_ROOT + "/" + entry.getKey();
-      sonameToResourceMapBuilder.put(entry.getKey(), resource);
+      String resource = FatJar.FAT_JAR_NATIVE_LIBRARIES_DIR + "/" + entry.getKey();
       Path resourcePath = fatJarDir.resolve(resource);
       steps.add(
           MkdirStep.of(
@@ -153,11 +150,9 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
               sourcePathResolver.getAbsolutePath(entry.getValue()).getPath(),
               resourcePath));
     }
-    ImmutableMap<String, String> sonameToResourceMap = sonameToResourceMapBuilder.build();
-
     // Grab the source path representing the fat jar info resource.
     Path fatJarInfo = fatJarDir.resolve(FatJar.FAT_JAR_INFO_RESOURCE);
-    steps.add(writeFatJarInfo(fatJarInfo, sonameToResourceMap));
+    steps.add(writeFatJarInfo(fatJarInfo));
 
     // Build up the resource and src collections.
     ImmutableSortedSet.Builder<RelPath> javaSourceFilePaths =
@@ -246,13 +241,13 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   /** @return a {@link Step} that generates the fat jar info resource. */
-  private Step writeFatJarInfo(Path destination, ImmutableMap<String, String> nativeLibraries) {
+  private Step writeFatJarInfo(Path destination) {
 
     ByteSource source =
         new ByteSource() {
           @Override
           public InputStream openStream() {
-            FatJar fatJar = new FatJar(nativeLibraries, prepareWrapperScript);
+            FatJar fatJar = new FatJar(prepareWrapperScript);
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             try {
               fatJar.store(bytes);

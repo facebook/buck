@@ -64,7 +64,7 @@ public class FatJarMain {
       // Unpack the real, inner artifact (JAR or wrapper script).
       boolean isWrapperScript = fatJar.isWrapperScript();
       Path innerArtifact = temp.getPath().resolve(isWrapperScript ? "wrapper.sh" : "main.jar");
-      fatJar.unpackInnerArtifactTo(classLoader, innerArtifact);
+      FatJar.unpackInnerArtifactTo(classLoader, innerArtifact);
       if (isWrapperScript) {
         makeExecutable(innerArtifact);
       }
@@ -72,7 +72,7 @@ public class FatJarMain {
       // Unpack all the native libraries, since the system loader will need to find these on disk.
       Path nativeLibs = temp.getPath().resolve("native_libs");
       Files.createDirectory(nativeLibs);
-      fatJar.unpackNativeLibrariesInto(classLoader, temp.getPath());
+      FatJar.unpackNativeLibrariesInto(temp.getPath());
 
       // Update the appropriate environment variable with the location of our native libraries
       // and start the real main class in a new process so that it picks it up.
