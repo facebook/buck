@@ -30,6 +30,9 @@ buck_java_library(
         # so it's important that they don't bring along any additional dependencies.
         ":fat_jar_utils"
     ],
+    visibility = [
+        "PUBLIC",
+    ],    
 )
 
 java_immutables_library(
