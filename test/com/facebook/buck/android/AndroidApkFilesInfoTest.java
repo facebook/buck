@@ -113,10 +113,6 @@ public class AndroidApkFilesInfoTest {
               DexStore.JAR,
               /* linearAllocHardLimit */ 4 * 1024 * 1024,
               /* primaryDexPatterns */ ImmutableSet.of("List"),
-              /* primaryDexScenarioFile */
-              /* isPrimaryDexScenarioOverflowAllowed */
-              /* secondaryDexHeadClassesFile */ Optional.empty(),
-              /* secondaryDexTailClassesFile */
               /* allowRDotJavaInSecondaryDex */ false),
           apkModuleGraph,
           null,

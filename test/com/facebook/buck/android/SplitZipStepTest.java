@@ -154,11 +154,8 @@ public class SplitZipStepTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 /* primaryDexPatterns */ ImmutableSet.of("List"),
-                /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
-            Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            /* pathToReportDir */
             ImmutableSortedMap.of(),
             null,
             Paths.get(""));
@@ -238,9 +235,7 @@ public class SplitZipStepTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 primaryDexPatterns,
-                /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
-            Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
             /* pathToReportDir */
             ImmutableSortedMap.of(),
@@ -306,9 +301,7 @@ public class SplitZipStepTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 /* primaryDexPatterns */ ImmutableSet.of("primary"),
-                /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
-            Optional.empty(),
             /* additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
             /* pathToReportDir */
             ImmutableSortedMap.of(),

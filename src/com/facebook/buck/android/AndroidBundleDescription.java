@@ -227,7 +227,6 @@ public class AndroidBundleDescription
         args.getFieldRefCountBufferSpace(),
         args.getDexGroupLibLimit(),
         args.getPrimaryDexPatterns(),
-        args.getSecondaryDexHeadClassesFile(),
         args.isAllowRDotJavaInSecondaryDex());
   }
 
@@ -278,8 +277,6 @@ public class AndroidBundleDescription
     abstract Optional<DexStore> getDexCompression();
 
     abstract List<String> getPrimaryDexPatterns();
-
-    abstract Optional<SourcePath> getSecondaryDexHeadClassesFile();
 
     abstract Optional<SourcePath> getBundleConfigFile();
 

@@ -105,7 +105,6 @@ public class PreDexSplitDexGroupTest {
                 DexStore.JAR,
                 /* linearAllocHardLimit */ 4 * 1024 * 1024,
                 /* primaryDexPatterns */ ImmutableSet.of("Primary"),
-                /* secondaryDexHeadClassesFile */ Optional.empty(),
                 /* allowRDotJavaInSecondaryDex */ false),
             moduleGraph,
             moduleGraph.getRootAPKModule(),

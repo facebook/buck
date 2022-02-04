@@ -535,7 +535,6 @@ public class AndroidApkGraphEnhancerTest {
             DexStore.JAR,
             DexSplitMode.DEFAULT_LINEAR_ALLOC_HARD_LIMIT,
             ImmutableList.of(),
-            Optional.empty(),
             false);
 
     AndroidBinaryGraphEnhancer graphEnhancer =
@@ -671,7 +670,6 @@ public class AndroidApkGraphEnhancerTest {
             0,
             1,
             ImmutableList.of(),
-            Optional.empty(),
             false);
 
     AndroidBinaryGraphEnhancer graphEnhancer =

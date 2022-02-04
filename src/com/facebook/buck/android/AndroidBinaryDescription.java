@@ -43,7 +43,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.RuleArg;
@@ -243,7 +242,6 @@ public class AndroidBinaryDescription
         args.getFieldRefCountBufferSpace(),
         args.getDexGroupLibLimit(),
         args.getPrimaryDexPatterns(),
-        args.getSecondaryDexHeadClassesFile(),
         args.isAllowRDotJavaInSecondaryDex());
   }
 
@@ -308,8 +306,6 @@ public class AndroidBinaryDescription
     abstract Optional<DexStore> getDexCompression();
 
     abstract List<String> getPrimaryDexPatterns();
-
-    abstract Optional<SourcePath> getSecondaryDexHeadClassesFile();
 
     @Value.Default
     long getLinearAllocHardLimit() {

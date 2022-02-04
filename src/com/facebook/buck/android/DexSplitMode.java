@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,10 @@ import com.facebook.buck.android.dalvik.ZipSplitter;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collection;
-import java.util.Optional;
 
 /** Bundles together some information about whether and how we should split up dex files. */
 class DexSplitMode implements AddsToRuleKey {
@@ -39,7 +37,6 @@ class DexSplitMode implements AddsToRuleKey {
           /* fieldRefCountBufferSpace */ 0,
           /* splitDexLibLimit */ 0,
           /* primaryDexPatterns */ ImmutableSet.of(),
-          /* secondaryDexHeadClassesFile */ Optional.empty(),
           /* allowRDotJavaInSecondaryDex */ false);
 
   /**
@@ -81,18 +78,6 @@ class DexSplitMode implements AddsToRuleKey {
   @AddToRuleKey private final ImmutableSortedSet<String> primaryDexPatterns;
 
   /**
-   * File that whitelists the class files that should be in the first secondary dexes.
-   *
-   * <p>Values in this file must match JAR entries (without the .class suffix), so they should
-   * contain path separators. For example:
-   *
-   * <pre>
-   * java/util/Map$Entry
-   * </pre>
-   */
-  @AddToRuleKey private final Optional<SourcePath> secondaryDexHeadClassesFile;
-
-  /**
    * Boolean identifying whether we should allow the dex splitting to move R classes into secondary
    * dex files.
    */
@@ -102,8 +87,6 @@ class DexSplitMode implements AddsToRuleKey {
    * @param primaryDexPatterns Set of substrings that, when matched, will cause individual input
    *     class or resource files to be placed into the primary jar (and thus the primary dex
    *     output). These classes are required for correctness.
-   * @param secondaryDexHeadClassesFile Path to a file containing a list of classes that are put in
-   *     the first secondary dexes.
    * @param allowRDotJavaInSecondaryDex whether to allow R.java classes in the secondary dex files
    */
   public DexSplitMode(
@@ -115,7 +98,6 @@ class DexSplitMode implements AddsToRuleKey {
       long fieldRefCountBufferSpace,
       int dexGroupLibLimit,
       Collection<String> primaryDexPatterns,
-      Optional<SourcePath> secondaryDexHeadClassesFile,
       boolean allowRDotJavaInSecondaryDex) {
     this.shouldSplitDex = shouldSplitDex;
     this.dexSplitStrategy = dexSplitStrategy;
@@ -125,7 +107,6 @@ class DexSplitMode implements AddsToRuleKey {
     this.fieldRefCountBufferSpace = fieldRefCountBufferSpace;
     this.dexGroupLibLimit = dexGroupLibLimit;
     this.primaryDexPatterns = ImmutableSortedSet.copyOf(primaryDexPatterns);
-    this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
     this.allowRDotJavaInSecondaryDex = allowRDotJavaInSecondaryDex;
   }
 
@@ -135,7 +116,6 @@ class DexSplitMode implements AddsToRuleKey {
       DexStore dexStore,
       long linearAllocHardLimit,
       Collection<String> primaryDexPatterns,
-      Optional<SourcePath> secondaryDexHeadClassesFile,
       boolean allowRDotJavaInSecondaryDex) {
     this(
         shouldSplitDex,
@@ -146,7 +126,6 @@ class DexSplitMode implements AddsToRuleKey {
         0,
         DEFAULT_DEX_GROUP_LIB_LIMIT,
         primaryDexPatterns,
-        secondaryDexHeadClassesFile,
         allowRDotJavaInSecondaryDex);
   }
 
@@ -181,10 +160,6 @@ class DexSplitMode implements AddsToRuleKey {
 
   public ImmutableSet<String> getPrimaryDexPatterns() {
     return primaryDexPatterns;
-  }
-
-  public Optional<SourcePath> getSecondaryDexHeadClassesFile() {
-    return secondaryDexHeadClassesFile;
   }
 
   public boolean isAllowRDotJavaInSecondaryDex() {

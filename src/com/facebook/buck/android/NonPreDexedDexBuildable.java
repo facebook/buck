@@ -629,7 +629,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
       Path primaryDexPath,
       ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap,
       BuildContext buildContext) {
-    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     Supplier<Set<Path>> primaryInputsToDex;
     Optional<Path> secondaryDexDir;
     Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
@@ -737,9 +736,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
               proguardMappingFile,
               skipProguard,
               dexSplitMode,
-              dexSplitMode
-                  .getSecondaryDexHeadClassesFile()
-                  .map(sourcePath -> resolver.getAbsolutePath(sourcePath).getPath()),
               additionalDexStoreToJarPathMap,
               apkModuleMap,
               rootAPKModule,

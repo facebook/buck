@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,19 +20,14 @@ import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.jvm.java.classes.AbstractFileLike;
 import com.facebook.buck.jvm.java.classes.ClasspathTraversal;
 import com.facebook.buck.jvm.java.classes.ClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.DefaultClasspathTraverser;
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.ByteStreams;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,7 +65,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
   private final long fieldRefCountBufferSpace;
   private final DalvikStatsCache dalvikStatsCache;
   private final DexSplitStrategy dexSplitStrategy;
-  private final ImmutableSet<String> secondaryHeadSet;
   @Nullable private final ImmutableMultimap<String, APKModule> classPathToDexStore;
 
   private final MySecondaryDexHelper secondaryDexWriter;
@@ -90,7 +84,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       long methodRefCountBufferSpace,
       long fieldRefCountBufferSpace,
       Predicate<String> requiredInPrimaryZip,
-      ImmutableSet<String> secondaryHeadSet,
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
       APKModule rootAPKModule,
       DexSplitStrategy dexSplitStrategy,
@@ -105,7 +98,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         new MySecondaryDexHelper("secondary", outSecondaryDir, secondaryPattern);
     this.additionalDexWriters = new HashMap<>();
     this.requiredInPrimaryZip = requiredInPrimaryZip;
-    this.secondaryHeadSet = secondaryHeadSet;
     this.classPathToDexStore = additionalDexStoreSets.inverse();
     for (APKModule dexStore : additionalDexStoreSets.keySet()) {
       if (!dexStore.equals(rootAPKModule)) {
@@ -137,7 +129,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
       long methodRefCountBufferSpace,
       long fieldRefCountBufferSpace,
       Predicate<String> requiredInPrimaryZip,
-      ImmutableSet<String> secondaryHeadSet,
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
       APKModule rootAPKModule,
       DexSplitStrategy dexSplitStrategy,
@@ -153,7 +144,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
         methodRefCountBufferSpace,
         fieldRefCountBufferSpace,
         requiredInPrimaryZip,
-        secondaryHeadSet,
         additionalDexStoreSets,
         rootAPKModule,
         dexSplitStrategy,
@@ -168,7 +158,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     primaryOut = newZipOutput(outPrimary);
     secondaryDexWriter.reset();
 
-    ImmutableMap.Builder<String, FileLike> entriesBuilder = ImmutableMap.builder();
     List<String> additionalDexStoreEntries = new ArrayList<>();
 
     // Iterate over all of the inFiles and add all entries that match the requiredInPrimaryZip
@@ -193,8 +182,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
 
             if (requiredInPrimaryZip.test(relativePath)) {
               primaryOut.putEntry(entry);
-            } else if (secondaryHeadSet != null && secondaryHeadSet.contains(relativePath)) {
-              entriesBuilder.put(relativePath, new BufferedFileLike(entry));
             } else {
               ImmutableCollection<APKModule> containingModule = classPathToDexStore.get(classPath);
               if (!containingModule.isEmpty()) {
@@ -215,16 +202,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
             }
           }
         });
-
-    ImmutableMap<String, FileLike> entries = entriesBuilder.build();
-    if (secondaryHeadSet != null) {
-      for (String head : secondaryHeadSet) {
-        FileLike headEntry = entries.get(head);
-        if ((headEntry != null) && !primaryOut.containsEntry(headEntry)) {
-          secondaryDexWriter.getOutputToWriteTo(headEntry).putEntry(headEntry);
-        }
-      }
-    }
 
     LOG.verbose("Traversing classpath for secondary zip");
 
@@ -252,9 +229,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
                 && primaryOut.canPutEntry(entry)) {
               primaryOut.putEntry(entry);
             } else {
-              if (secondaryHeadSet != null && secondaryHeadSet.contains(relativePath)) {
-                return;
-              }
               secondaryDexWriter.getOutputToWriteTo(entry).putEntry(entry);
             }
           }
@@ -293,41 +267,6 @@ public class DalvikAwareZipSplitter implements ZipSplitter {
     @Override
     protected DalvikAwareOutputStreamHelper newZipOutput(Path file) throws IOException {
       return DalvikAwareZipSplitter.this.newZipOutput(file);
-    }
-  }
-
-  private static class BufferedFileLike extends AbstractFileLike {
-    private final Path container;
-    private final String relativePath;
-    private final byte[] contents;
-
-    public BufferedFileLike(FileLike original) throws IOException {
-      this.container = original.getContainer();
-      this.relativePath = original.getRelativePath();
-
-      try (InputStream stream = original.getInput()) {
-        contents = ByteStreams.toByteArray(stream);
-      }
-    }
-
-    @Override
-    public Path getContainer() {
-      return container;
-    }
-
-    @Override
-    public String getRelativePath() {
-      return relativePath;
-    }
-
-    @Override
-    public long getSize() {
-      return contents.length;
-    }
-
-    @Override
-    public InputStream getInput() {
-      return new ByteArrayInputStream(contents);
     }
   }
 }

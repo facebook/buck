@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package com.facebook.buck.android.dalvik;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMultimap;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -46,7 +45,6 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
       String secondaryPattern,
       Path outDexStoresDir,
       Predicate<String> requiredInPrimaryZip,
-      ImmutableSet<String> secondaryHeadSet,
       ImmutableMultimap<APKModule, String> additionalDexStoreSets,
       APKModule rootAPKModule,
       ZipSplitter.DexSplitStrategy dexSplitStrategy,
@@ -62,7 +60,6 @@ public class DalvikAwareZipSplitterFactory implements ZipSplitterFactory {
         methodRefCountBufferSpace,
         fieldRefCountBufferSpace,
         requiredInPrimaryZip,
-        secondaryHeadSet,
         additionalDexStoreSets,
         rootAPKModule,
         dexSplitStrategy,

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,7 +87,6 @@ public class SplitZipStep implements Step {
   private final DexSplitMode dexSplitMode;
   private final Path pathToReportDir;
 
-  private final Optional<Path> secondaryDexHeadClassesFile;
   private final ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap;
   private final APKModule rootAPKModule;
 
@@ -123,7 +122,6 @@ public class SplitZipStep implements Step {
       Optional<Path> proguardMappingFile,
       boolean skipProguard,
       DexSplitMode dexSplitMode,
-      Optional<Path> secondaryDexHeadClassesFile,
       ImmutableMultimap<APKModule, Path> apkModuleToJarPathMap,
       ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap,
       APKModule rootAPKModule,
@@ -140,7 +138,6 @@ public class SplitZipStep implements Step {
     this.proguardMappingFile = proguardMappingFile;
     this.skipProguard = skipProguard;
     this.dexSplitMode = dexSplitMode;
-    this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
     this.apkModuleToJarPathMap = apkModuleToJarPathMap;
     this.pathToReportDir = pathToReportDir;
     this.rootAPKModule = rootAPKModule;
@@ -161,7 +158,6 @@ public class SplitZipStep implements Step {
         ProguardTranslatorFactory.create(
             filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard);
     Predicate<String> requiredInPrimaryZip = createRequiredInPrimaryZipPredicate(translatorFactory);
-    ImmutableSet<String> secondaryHeadSet = getSecondaryHeadSet(translatorFactory);
     ImmutableMultimap<APKModule, String> additionalDexStoreClasses =
         APKModuleGraph.getAPKModuleToClassesMap(
             apkModuleToJarPathMap,
@@ -185,7 +181,6 @@ public class SplitZipStep implements Step {
                 secondaryJarPattern,
                 additionalDexStoreJarDir,
                 requiredInPrimaryZip,
-                secondaryHeadSet,
                 additionalDexStoreClasses,
                 rootAPKModule,
                 dexSplitMode.getDexSplitStrategy(),
@@ -245,29 +240,6 @@ public class SplitZipStep implements Step {
 
       return primaryDexFilter.matches(internalClassName);
     };
-  }
-
-  /**
-   * Construct a {@link Set} of internal class names that must go into the beginning of the
-   * secondary dexes.
-   *
-   * <p>
-   *
-   * @return ImmutableSet of class internal names.
-   */
-  private ImmutableSet<String> getSecondaryHeadSet(ProguardTranslatorFactory translatorFactory)
-      throws IOException {
-    ImmutableSet.Builder<String> builder = ImmutableSet.builder();
-
-    if (secondaryDexHeadClassesFile.isPresent()) {
-      filesystem.readLines(secondaryDexHeadClassesFile.get()).stream()
-          .map(String::trim)
-          .filter(SplitZipStep::isNeitherEmptyNorComment)
-          .map(translatorFactory.createObfuscationFunction())
-          .forEach(builder::add);
-    }
-
-    return builder.build();
   }
 
   @VisibleForTesting
@@ -375,10 +347,5 @@ public class SplitZipStep implements Step {
       }
       return builder.build();
     };
-  }
-
-  // Predicate that rejects blank lines and lines starting with '#'.
-  private static boolean isNeitherEmptyNorComment(String line) {
-    return !line.isEmpty() && !(line.charAt(0) == '#');
   }
 }
