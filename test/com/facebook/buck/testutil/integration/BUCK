@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test", "buck_java_library")
 
 TEST_SRCS = glob(["*Test.java"])
 
@@ -115,7 +115,7 @@ java_test(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "util",
     srcs = glob(
         ["*.java"],

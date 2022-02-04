@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_test", "buck_java_library", "buck_java_binary")
 
-java_library(
+buck_java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
@@ -17,7 +17,7 @@ standard_java_test(
     name = "shutdown",
 )
 
-java_binary(
+buck_java_binary(
     name = "shutdown_binary",
     main_class = "com.facebook.buck.util.shutdown.NonReentrantSystemExitDemo",
     deps = [
@@ -25,7 +25,7 @@ java_binary(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "shutdown_library",
     srcs = [
         "NonReentrantSystemExitDemo.java",

@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library", "buck_java_binary")
 
 MINI_AAPT_SOURCES = ["MiniAapt.java", "MiniAaptExecutableMain.java"]
 
@@ -75,7 +75,7 @@ buck_java_library(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "mini_aapt_binary",
     main_class = "com.facebook.buck.android.aapt.MiniAaptExecutableMain",
     visibility = [

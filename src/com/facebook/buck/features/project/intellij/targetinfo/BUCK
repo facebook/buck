@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins", "buck_java_binary")
 
 java_library_with_plugins(
     name = "targetinfo",
@@ -25,7 +25,7 @@ java_library_with_plugins(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "lookuptool",
     main_class = "com.facebook.buck.features.project.intellij.targetinfo.LookupTool",
     deps = [

@@ -1,4 +1,6 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
+
+buck_java_library(
     name = "cli",
     srcs = glob(["*.java"]),
     deps = [
@@ -23,7 +25,7 @@ java_library(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "cli_bin",
     main_class = "com.facebook.buck.edenfs.cli.Main",
     deps = [

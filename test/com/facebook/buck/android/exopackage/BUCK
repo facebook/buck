@@ -1,4 +1,5 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test", "buck_java_library")
+
 
 STANDARD_TEST_SRCS = [
     "*Test.java",
@@ -31,7 +32,7 @@ java_immutables_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],

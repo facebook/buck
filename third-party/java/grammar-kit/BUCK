@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar", "buck_java_binary")
 
-java_binary(
+buck_java_binary(
     name = "grammar-kit",
     main_class = "org.intellij.grammar.Main",
     visibility = [
@@ -12,7 +12,7 @@ java_binary(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "jflex",
     main_class = "jflex.Main",
     visibility = [

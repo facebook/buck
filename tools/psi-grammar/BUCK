@@ -1,3 +1,4 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
 # =========================================================
 # Lexers:
 # =========================================================
@@ -76,7 +77,7 @@ zip_file(
 )
 
 # ...it is sufficient to use in compiling the mixins.
-java_library(
+buck_java_library(
     name = "_parser_mixins",
     srcs = [":_pass1_parsers.src"] + MIXIN_SRCS,
     provided_deps = [
@@ -85,7 +86,7 @@ java_library(
 )
 
 # Then, these compiled mixins can be packaged with the parser generator...
-java_binary(
+buck_java_binary(
     name = "_custom_grammarkit",
     main_class = "org.intellij.grammar.Main",
     deps = [
@@ -111,7 +112,7 @@ zip_file(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "grammar",
     srcs = glob(["src/**/*.java"]) + [
         ":lexers.src",

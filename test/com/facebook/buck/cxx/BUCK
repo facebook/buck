@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test", "buck_java_library")
 
 BINARY_INTEGRATION_SRCS = [
     "CxxBinaryIntegrationTest.java",
@@ -322,7 +322,7 @@ java_test(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "testutil",
     srcs = UTIL_SRCS,
     visibility = ["PUBLIC"],

@@ -15,7 +15,7 @@
 """Contains build rules for Buck modules"""
 
 load("@buck_bazel_skylib//lib:collections.bzl", "collections")
-load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins", "buck_java_library", "buck_java_binary", "buck_prebuilt_jar")
 load("//tools/build_rules:module_rules_for_tests.bzl", "convert_module_deps_to_test")
 
 def buck_module(
@@ -43,7 +43,7 @@ def buck_module(
 
     jar_without_hash_name = name + "_jar_without_hash"
 
-    native.java_binary(
+    buck_java_binary(
         name = jar_without_hash_name,
         deps = [
             ":" + name,
@@ -93,14 +93,14 @@ def buck_module(
     )
 
     final_module_jar_name = name + "-module-jar"
-    native.prebuilt_jar(
+    buck_prebuilt_jar(
         name = final_module_jar_name,
         binary_jar = ":" + module_name,
     )
 
     # This target is not used directly by module rules, but by `java_test` to get access
     # to all provided dependencies of the current module.
-    native.java_library(
+    buck_java_library(
         name = name + "_module_for_test",
         exported_deps = [":" + final_module_jar_name] +
                         list(kwargs.get("provided_deps", [])) +

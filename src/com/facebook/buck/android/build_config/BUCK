@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library", "buck_java_binary")
 
 java_immutables_library(
     name = "build_config",
@@ -30,7 +30,7 @@ buck_java_library(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "generate_build_config_binary",
     main_class = "com.facebook.buck.android.build_config.GenerateBuildConfigExecutableMain",
     visibility = [

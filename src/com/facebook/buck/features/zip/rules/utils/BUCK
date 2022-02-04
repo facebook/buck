@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
 buck_java_library(
     name = "utils",
     srcs = glob(["*.java"]),
@@ -12,7 +12,7 @@ buck_java_library(
     visibility = [ "PUBLIC" ]
 )
 
-java_binary(
+buck_java_binary(
     name = "zip_binary",
     main_class = "com.facebook.buck.features.zip.rules.utils.ZipMain",
     deps = [

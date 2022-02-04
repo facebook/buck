@@ -1,3 +1,4 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
 # =========================================================
 # 'src' directory layout:
 # =========================================================
@@ -26,7 +27,7 @@ PLUGIN_SOURCE_FILES = glob(
 # grammar artifacts.  This is intentional to enforce that the
 # public API does not leak grammar implementation details.
 # ================================================================
-java_library(
+buck_java_library(
     name = "api",
     srcs = API_SOURCE_FILES,
     provided_deps = [
@@ -69,7 +70,7 @@ kotlin_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "resources",
     srcs = [],
     resources = glob(
@@ -95,7 +96,7 @@ filegroup(
     visibility = ["PUBLIC"],
 )
 
-java_binary(
+buck_java_binary(
     name = "ideabuck",
     meta_inf_directory = "resources/META-INF",
     deps = [

@@ -1,4 +1,6 @@
-java_binary(
+load("//tools/build_rules:java_rules.bzl", "buck_java_binary")
+
+buck_java_binary(
     name = "consistency_checker",
     main_class = "com.facebook.buck.tools.consistency.Main",
     deps = [

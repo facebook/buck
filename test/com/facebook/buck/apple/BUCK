@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test", "buck_java_library")
 
 APPLE_TEST_INTEGRATION_TEST_SRCS = [
     "AppleTestIntegrationTest.java",
@@ -6,7 +6,7 @@ APPLE_TEST_INTEGRATION_TEST_SRCS = [
     "AppleToolchainIntegrationTest.java",
 ]
 
-java_library(
+buck_java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],

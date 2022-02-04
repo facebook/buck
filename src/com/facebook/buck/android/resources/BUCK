@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
 
 MERGE_ANDROID_RESOURCES_SRCS = ["MergeAndroidResources.java", "MergeAndroidResourcesExecutableMain.java"]
 MERGE_ASSETS_SRCS = ["MergeAssetsUtils.java", "MergeAssetsExecutableMain.java"]
@@ -34,7 +34,7 @@ buck_java_library(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "merge_android_resources_binary",
     main_class = "com.facebook.buck.android.resources.MergeAndroidResourcesExecutableMain",
     visibility = [
@@ -58,7 +58,7 @@ buck_java_library(
     java_version = "11",
 )
 
-java_binary(
+buck_java_binary(
     name = "merge_assets_binary",
     main_class = "com.facebook.buck.android.resources.MergeAssetsExecutableMain",
     visibility = [

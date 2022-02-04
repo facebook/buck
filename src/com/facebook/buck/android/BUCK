@@ -7,6 +7,7 @@ load(
     "java_immutables_library",
     "java_library_with_plugins",
     "buck_java_library",
+    "buck_java_binary",
 )
 
 BUCK_CONFIG_SRCS = [
@@ -422,7 +423,7 @@ MANIFEST_UTILS_SRCS = [
     "DefaultAndroidManifestReader.java",
 ]
 
-java_binary(
+buck_java_binary(
     name = "manifest_utils_binary",
     main_class = "com.facebook.buck.android.AndroidManifestReaderExecutableMain",
     visibility = [

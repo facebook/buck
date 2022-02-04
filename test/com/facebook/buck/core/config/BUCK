@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_test", "buck_java_library")
 
 standard_java_test(
     name = "config",
@@ -26,7 +26,7 @@ standard_java_test(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
@@ -56,7 +56,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "FakeBuckConfig",
     srcs = ["FakeBuckConfig.java"],
     visibility = [

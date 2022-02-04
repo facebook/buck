@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
 
 buck_java_library(
     name = "clang",
@@ -42,7 +42,7 @@ buck_java_library(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "hmaptool",
     main_class = "com.facebook.buck.apple.clang.PrintHeaderMap",
     visibility = [

@@ -1,5 +1,5 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
-java_binary(
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
+buck_java_binary(
     name = "api_jar",
     visibility = [
         # This target isn't actually used anywhere by the buck build. It's here so that one can use Buck

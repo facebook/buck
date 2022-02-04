@@ -2,6 +2,7 @@ load(
     "//tools/build_rules:java_rules.bzl",
     "java_immutables_library",
     "java_test",
+    "buck_java_library"
 )
 
 java_immutables_library(
@@ -151,7 +152,7 @@ java_immutables_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "fakepackagefinder",
     srcs = [
         "FakeJavaPackageFinder.java",
@@ -183,7 +184,7 @@ java_library(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "javac-env",
     srcs = [
         "JavaCompilationConstants.java",

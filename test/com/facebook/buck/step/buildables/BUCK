@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_test", "buck_java_library", "buck_java_binary")
+
 java_test(
     name = "buildables",
     srcs = glob(
@@ -26,7 +28,7 @@ java_test(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "external_actions_bin_for_tests",
     visibility = ["//test/..."],
     deps = [
@@ -35,7 +37,7 @@ java_binary(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],

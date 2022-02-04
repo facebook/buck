@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
 
-java_binary(
+buck_java_binary(
     name = "bootstrapper",
     visibility = [
         "//programs:",

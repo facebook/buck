@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
 # Make these certs available for running tests elsewhere in repo
 filegroup(
     name = "kotlinc",
@@ -11,7 +13,7 @@ filegroup(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "annotation-processing",
     binary_jar = "libexec/lib/kotlin-annotation-processing.jar",
     visibility = [
@@ -19,7 +21,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "compiler",
     binary_jar = "libexec/lib/kotlin-compiler.jar",
     visibility = [
@@ -27,7 +29,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "reflect",
     binary_jar = "libexec/lib/kotlin-reflect.jar",
     visibility = [
@@ -35,7 +37,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "script-runtime",
     binary_jar = "libexec/lib/kotlin-script-runtime.jar",
     visibility = [
@@ -43,7 +45,7 @@ prebuilt_jar(
     ],
 )
 
-prebuilt_jar(
+buck_prebuilt_jar(
     name = "stdlib",
     binary_jar = "libexec/lib/kotlin-stdlib.jar",
     visibility = [

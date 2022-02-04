@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library", "buck_java_binary")
 
 PUBLIC_API_SOURCES = [
     "AbstractArtifactCacheEventFactory.java",
@@ -144,7 +144,7 @@ java_immutables_library(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "generate-hybrid-payloads",
     main_class = "com.facebook.buck.artifact_cache.HybridPayloadGenerator",
     deps = [

@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar", "buck_java_binary")
 
-java_binary(
+buck_java_binary(
     name = "jarjar",
     main_class = "com.tonicsystems.jarjar.Main",
     visibility = [

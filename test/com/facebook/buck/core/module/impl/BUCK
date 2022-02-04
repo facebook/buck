@@ -1,6 +1,6 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_test", "buck_java_library")
 
-java_library(
+buck_java_library(
     name = "test_extension",
     srcs = [
         "TestExtension.java",

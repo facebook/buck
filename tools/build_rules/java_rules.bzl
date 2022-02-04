@@ -192,7 +192,7 @@ def standard_java_test(
 def standard_java_benchmark(
         name,
         deps):
-    native.java_library(
+    buck_java_library(
         name = name,
         srcs = native.glob(["*Benchmark.java"]),
         plugins = ["//third-party/java/jmh:jmh-generator-annprocess-plugin"],

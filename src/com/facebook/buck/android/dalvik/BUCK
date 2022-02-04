@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_library", "buck_java_binary")
 
 java_immutables_library(
     name = "dalvik_stats_tool",
@@ -19,7 +19,7 @@ java_immutables_library(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "cli_dalvik_stats_tool",
     main_class = "com.facebook.buck.android.dalvik.DalvikStatsTool",
     deps = [

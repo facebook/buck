@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
 
 buck_java_library(
     name = "base",
@@ -97,7 +97,7 @@ buck_java_library(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "testrunner-bin",
     visibility = [
         "PUBLIC",

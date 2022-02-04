@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
 
 kotlin_library(
     name = "plugin",
@@ -28,7 +28,7 @@ buck_java_library(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "kotlinc-plugin",
     visibility = [
         "//src/com/facebook/buck/jvm/kotlin:kotlin",

@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
 
 buck_java_library(
     name = "apk",
@@ -15,7 +15,7 @@ buck_java_library(
     ],
 )
 
-java_binary(
+buck_java_binary(
     name = "apk_builder_binary",
     main_class = "com.facebook.buck.android.apk.ApkBuilderExecutableMain",
     visibility = [

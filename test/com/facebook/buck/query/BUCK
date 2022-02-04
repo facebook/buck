@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_test", "buck_java_library")
 
 DEPS = [
     "//src-gen:thrift",
@@ -115,7 +115,7 @@ DEPS = [
     "//src/com/facebook/buck/util/stream:stream",
 ]
 
-java_library(
+buck_java_library(
     name = "testutil",
     srcs = ["BaseTestQueryEnvironment.java"],
     deps = DEPS,

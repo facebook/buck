@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test", "buck_java_library")
 
 # This test is huge, so we run it by itself.
 PARSER_TEST_SRCS = [
@@ -151,7 +151,7 @@ java_test(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
@@ -469,7 +469,7 @@ java_test(
     ],
 )
 
-java_library(
+buck_java_library(
     name = "parser_benchmark_lib",
     srcs = ["ParserBenchmark.java"],
     visibility = [
