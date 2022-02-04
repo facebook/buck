@@ -12,6 +12,7 @@ prebuilt_jar(
     deps = [
         "//third-party/java/hamcrest:hamcrest-junit",
     ],
+    labels = ["lint_ignore"],
 )
 
 prebuilt_jar(
@@ -24,10 +25,12 @@ prebuilt_jar(
     visibility = [
         "PUBLIC",
     ],
+    labels = ["lint_ignore"],
 )
 
 prebuilt_jar(
     name = "junit-4-8-2",
     binary_jar = "junit-4.8.2.jar",
     visibility = ["PUBLIC"],
+    labels = ["lint_ignore"],
 )

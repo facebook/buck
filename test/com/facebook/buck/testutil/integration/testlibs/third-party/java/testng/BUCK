@@ -11,4 +11,5 @@ prebuilt_jar(
     deps = [
         "//third-party/java/hamcrest:java-hamcrest",
     ],
+    labels = ["lint_ignore"],
 )

@@ -8,4 +8,5 @@ prebuilt_jar(
     visibility = [
         "PUBLIC",
     ],
+    labels = ["lint_ignore"],
 )

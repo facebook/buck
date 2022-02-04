@@ -6,4 +6,5 @@ prebuilt_jar(
         "COPYING",
     ],
     visibility = ["PUBLIC"],
+    labels = ["lint_ignore"],
 )

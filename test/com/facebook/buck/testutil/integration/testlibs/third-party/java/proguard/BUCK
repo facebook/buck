@@ -5,6 +5,7 @@ prebuilt_jar(
     licenses = [
         "LICENSE",
     ],
+    labels = ["lint_ignore"],
 )
 
 java_binary(
@@ -14,4 +15,5 @@ java_binary(
         "PUBLIC",
     ],
     deps = [":proguard-lib"],
+    labels = ["lint_ignore"],
 )

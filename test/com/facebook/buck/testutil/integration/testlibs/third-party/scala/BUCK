@@ -7,6 +7,7 @@ prebuilt_jar(
     visibility = [
         "PUBLIC",
     ],
+    labels = ["lint_ignore"],
 )
 
 prebuilt_jar(
@@ -16,6 +17,7 @@ prebuilt_jar(
         "PUBLIC",
     ],
     deps = [":scala-library"],
+    labels = ["lint_ignore"],
 )
 
 prebuilt_jar(
@@ -25,6 +27,7 @@ prebuilt_jar(
         ":scala-library",
         ":scala-reflect",
     ],
+    labels = ["lint_ignore"],
 )
 
 java_binary(
@@ -34,4 +37,5 @@ java_binary(
         "PUBLIC",
     ],
     deps = [":scala-compiler-lib"],
+    labels = ["lint_ignore"],
 )

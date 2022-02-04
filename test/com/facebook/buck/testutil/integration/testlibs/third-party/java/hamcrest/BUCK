@@ -12,6 +12,7 @@ java_library(
         ":hamcrest-junit",
         ":java-hamcrest",
     ],
+    labels = ["lint_ignore"],
 )
 
 prebuilt_jar(
@@ -23,6 +24,7 @@ prebuilt_jar(
     visibility = [
         "PUBLIC",
     ],
+    labels = ["lint_ignore"],
 )
 
 prebuilt_jar(
@@ -37,4 +39,5 @@ prebuilt_jar(
     deps = [
         ":java-hamcrest",
     ],
+    labels = ["lint_ignore"],
 )

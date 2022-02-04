@@ -13,6 +13,7 @@ prebuilt_jar(
         ":multibindings",
         "//third-party/java/jsr:jsr330",
     ],
+    labels = ["lint_ignore"],
 )
 
 prebuilt_jar(
@@ -24,6 +25,7 @@ prebuilt_jar(
     deps = [
         "//third-party/java/aopalliance:aopalliance",
     ],
+    labels = ["lint_ignore"],
 )
 
 prebuilt_jar(
@@ -32,4 +34,5 @@ prebuilt_jar(
     licenses = [
         "COPYING",
     ],
+    labels = ["lint_ignore"],
 )
