@@ -38,9 +38,16 @@ def _maybe_add_java_version(**kwargs):
         kwargs["java_version"] = "11"
     return kwargs
 
+def _add_wrapper_label(**kwargs):
+    if "labels" not in kwargs:
+        kwargs["labels"] = []
+    kwargs["labels"] += ["wrapped_with_buck_java_rules"]
+    return kwargs
+
 
 
 def buck_java_library(name, **kwargs):
+    kwargs = _add_wrapper_label(**kwargs)
     kwargs = _maybe_add_java_version(**kwargs)
     return native.java_library(
         name = name,
@@ -48,18 +55,21 @@ def buck_java_library(name, **kwargs):
     )
 
 def buck_java_binary(name, **kwargs):
+    kwargs = _add_wrapper_label(**kwargs)
     return native.java_binary(
         name = name,
         **kwargs,
     )
 
 def buck_prebuilt_jar(name, **kwargs):
+    kwargs = _add_wrapper_label(**kwargs)
     return native.prebuilt_jar(
         name = name,
         **kwargs,
     )
 
 def java_immutables_library(name, **kwargs):
+    kwargs = _add_wrapper_label(**kwargs)
     kwargs = _maybe_add_java_version(**kwargs)
     return native.java_library(
         name = name,
@@ -110,6 +120,9 @@ def java_test(
     else:
         env = {}
 
+    kwargs = _add_wrapper_label(**kwargs)
+    kwargs["labels"] += extra_labels
+
     native.java_test(
         name = name,
         deps = deps + [
@@ -151,7 +164,6 @@ def java_test(
         ] + (vm_args or []),
         env = env,
         run_test_separately = run_test_separately,
-        labels = (labels or []) + extra_labels,
         **kwargs
     )
 
@@ -208,6 +220,7 @@ def _add_buck_modules_annotation_processor(**kwargs):
     return kwargs
 
 def java_library_with_plugins(name, **kwargs):
+    kwargs = _add_wrapper_label(**kwargs)
     kwargs = _maybe_add_java_version(**kwargs)
     kwargs_with_immutables = _add_immutables("provided_deps", **kwargs)
     kawgs_with_plugins = _add_pf4j_plugin_framework(**kwargs_with_immutables)
