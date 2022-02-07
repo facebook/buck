@@ -28,7 +28,6 @@ import com.facebook.buck.event.AnnotationProcessorGenerationStats;
 import com.facebook.buck.event.AnnotationProcessorPerfStats;
 import com.facebook.buck.event.AnnotationProcessorStatsEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.KotlinPluginStatsEvent;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.nio.file.Path;
@@ -45,7 +44,6 @@ public class KaptStatsReportParseStepTest {
 
   private KaptStatsReportParseStep step;
   private Capture<AnnotationProcessorStatsEvent> captureProcessorStatsEvent;
-  private Capture<KotlinPluginStatsEvent> captureKaptStatsEvent;
   private BuckEventBus mockEventBus;
 
   @Before
@@ -56,7 +54,6 @@ public class KaptStatsReportParseStepTest {
 
     mockEventBus = EasyMock.createMock(BuckEventBus.class);
     captureProcessorStatsEvent = EasyMock.newCapture(CaptureType.ALL);
-    captureKaptStatsEvent = EasyMock.newCapture(CaptureType.ALL);
 
     step = new KaptStatsReportParseStep(dummyPath, dummyBuildTarget, mockEventBus);
   }
@@ -262,58 +259,6 @@ public class KaptStatsReportParseStepTest {
     assertProcessorGenerationStats(processorStats, -1, newArrayList(-1L, -1L, -1L, -1L));
   }
 
-  // REMOVED IN THE NEXT DIFF
-
-  // @Test
-  // public void testGeneralKaptData() {
-  //   List<String> reportLines =
-  //       newArrayList(
-  //           "Kapt Annotation Processing performance report:",
-  //           "com.udinic.SadProcessor: total: 0 ms, init: 0 ms, 0 round(s): ",
-  //           "General: totalTime: 3825 ms, initialAnalysis: 275 ms, stubs: 29 ms,
-  // annotationProcessing: 2104 ms");
-
-  //   mockEventBus.post(capture(captureProcessorStatsEvent));
-  //   EasyMock.expectLastCall().once();
-  //   mockEventBus.post(capture(captureKaptStatsEvent));
-  //   EasyMock.expectLastCall().once();
-  //   replay(mockEventBus);
-
-  //   step.parseReport(reportLines);
-
-  //   KotlinPluginPerfStats kaptStats = captureKaptStatsEvent.getValue().getData();
-  //   assertKaptStats(kaptStats, "KAPT", 3825, 275, 29, 2104, "");
-
-  //   AnnotationProcessorPerfStats processorStats =
-  // captureProcessorStatsEvent.getValue().getData();
-  //   assertProcessorStats(processorStats, "com.udinic.SadProcessor", 0, 0, 0, newArrayList());
-  // }
-
-  // @Test
-  // public void testGeneralKaptDataWithExtraData() {
-  //   List<String> reportLines =
-  //       newArrayList(
-  //           "Kapt Annotation Processing performance report:",
-  //           "com.udinic.SadProcessor: total: 0 ms, init: 0 ms, 0 round(s): ",
-  //           "General: totalTime: 3825 ms, initialAnalysis: 275 ms, stubs: 29 ms,
-  // annotationProcessing: 2104 ms [data=good, ksp=better]");
-
-  //   mockEventBus.post(capture(captureProcessorStatsEvent));
-  //   EasyMock.expectLastCall().once();
-  //   mockEventBus.post(capture(captureKaptStatsEvent));
-  //   EasyMock.expectLastCall().once();
-  //   replay(mockEventBus);
-
-  //   step.parseReport(reportLines);
-
-  //   KotlinPluginPerfStats kaptStats = captureKaptStatsEvent.getValue().getData();
-  //   assertKaptStats(kaptStats, "KAPT", 3825, 275, 29, 2104, "[data=good, ksp=better]");
-
-  //   AnnotationProcessorPerfStats processorStats =
-  // captureProcessorStatsEvent.getValue().getData();
-  //   assertProcessorStats(processorStats, "com.udinic.SadProcessor", 0, 0, 0, newArrayList());
-  // }
-
   @Test
   public void testEmptyReport() {
     List<String> reportLines = newArrayList("Kapt Annotation Processing performance report:");
@@ -387,22 +332,4 @@ public class KaptStatsReportParseStepTest {
     assertEquals(sourcesGenerated, generationStats.getTotalSources());
     assertEquals(roundGeneratedSources, generationStats.getSourcesGenerated());
   }
-
-  // REMOVED IN THE NEXT DIFF
-
-  //  private void assertKaptStats(
-  //      KotlinPluginPerfStats kaptStats,
-  //      String name,
-  //      long totalTime,
-  //      long initialAnalysis,
-  //      long stubs,
-  //      long annotationProcessing,
-  //      String extraData) {
-  //    assertEquals(kaptStats.getName(), name);
-  //    assertEquals(kaptStats.getTotalTime(), totalTime);
-  //    assertEquals(kaptStats.getInitialAnalysis(), initialAnalysis);
-  //    assertEquals(kaptStats.getStubs(), stubs);
-  //    assertEquals(kaptStats.getAnnotationProcessing(), annotationProcessing);
-  //    assertEquals(kaptStats.getExtraData(), extraData);
-  //  }
 }
