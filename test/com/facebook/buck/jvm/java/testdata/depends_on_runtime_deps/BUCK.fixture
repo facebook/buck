@@ -28,3 +28,20 @@ java_binary(
         ":a",
     ],
 )
+
+java_library(
+    name = "c",
+    srcs = [
+        "CDependsUponD.java",
+    ],
+    runtime_deps = [
+        ":d",
+    ],
+)
+
+java_library(
+    name = "d",
+    srcs = [
+        "D.java",
+    ],
+)

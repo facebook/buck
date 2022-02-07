@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -444,6 +444,17 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     // Require runtime dep was built again.
     workspace.getBuildLog().assertTargetBuiltLocally("//:binary_b");
+  }
+
+  @Test
+  public void testBuildWithRuntimeDeps() throws IOException {
+    setUpProjectWorkspaceForScenario("depends_on_runtime_deps");
+
+    ProcessResult processResult = workspace.runBuckBuild("//:c");
+    processResult.assertSuccess();
+
+    processResult = workspace.runBuckBuild("//:c", "-c", "java.add_runtime_deps_as_deps=false");
+    processResult.assertFailure();
   }
 
   @Test

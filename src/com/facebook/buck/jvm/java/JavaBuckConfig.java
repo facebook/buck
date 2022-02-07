@@ -348,6 +348,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getBoolean(SECTION, "use_dependency_order_classpath_for_tests").orElse(false);
   }
 
+  public boolean isAddRuntimeDepsAsDeps() {
+    return delegate.getBooleanValue(SECTION, "add_runtime_deps_as_deps", true);
+  }
+
   public enum SourceAbiVerificationMode {
     /** Don't verify ABI jars. */
     OFF,

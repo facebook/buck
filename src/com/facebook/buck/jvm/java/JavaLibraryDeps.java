@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,8 @@ public abstract class JavaLibraryDeps {
       JavaLibraryDescription.CoreArg args,
       BuildRuleResolver resolver,
       TargetConfiguration targetConfiguration,
-      ConfiguredCompilerFactory compilerFactory) {
+      ConfiguredCompilerFactory compilerFactory,
+      boolean isAddRuntimeDepsAsDeps) {
     Builder builder =
         new Builder(resolver)
             .setDepTargets(args.getDeps())
@@ -48,7 +49,8 @@ public abstract class JavaLibraryDeps {
             .setProvidedDepTargets(args.getProvidedDeps())
             .setExportedProvidedDepTargets(args.getExportedProvidedDeps())
             .setSourceOnlyAbiDepTargets(args.getSourceOnlyAbiDeps())
-            .setRuntimeDepTargets(args.getRuntimeDeps());
+            .setRuntimeDepTargets(args.getRuntimeDeps())
+            .setAddRuntimeDepsAsDeps(isAddRuntimeDepsAsDeps);
     compilerFactory.getNonProvidedClasspathDeps(targetConfiguration, builder::addDepTargets);
 
     if (args instanceof HasDepsQuery) {
@@ -81,18 +83,31 @@ public abstract class JavaLibraryDeps {
   @Value.NaturalOrder
   abstract ImmutableSortedSet<BuildTarget> getRuntimeDepTargets();
 
+  @Value.Default
+  boolean isAddRuntimeDepsAsDeps() {
+    return true;
+  };
+
   abstract Optional<Query> getDepsQuery();
 
   abstract Optional<Query> getProvidedDepsQuery();
 
   @Value.Lazy
   public ImmutableSortedSet<BuildRule> getDeps() {
-    return resolve(
-        Iterables.concat(
-            getDepTargets(),
-            getExportedDepTargets(),
-            getDepsQuery().map(Query::getResolvedQuery).orElse(ImmutableSortedSet.of()),
-            getRuntimeDepTargets()));
+    if (isAddRuntimeDepsAsDeps()) {
+      return resolve(
+          Iterables.concat(
+              getDepTargets(),
+              getExportedDepTargets(),
+              getDepsQuery().map(Query::getResolvedQuery).orElse(ImmutableSortedSet.of()),
+              getRuntimeDepTargets()));
+    } else {
+      return resolve(
+          Iterables.concat(
+              getDepTargets(),
+              getExportedDepTargets(),
+              getDepsQuery().map(Query::getResolvedQuery).orElse(ImmutableSortedSet.of())));
+    }
   }
 
   @Value.Lazy

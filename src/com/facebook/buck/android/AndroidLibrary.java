@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -279,7 +279,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
                                   args,
                                   graphBuilder,
                                   buildTarget.getTargetConfiguration(),
-                                  compilerFactory))
+                                  compilerFactory,
+                                  javaBuckConfig.isAddRuntimeDepsAsDeps()))
                           .addDepTargets(dummyRDotJava.getBuildTarget())
                           .build()));
 
