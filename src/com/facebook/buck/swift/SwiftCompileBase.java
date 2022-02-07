@@ -271,18 +271,17 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         hasPrefixSerializedDebugInfo || swiftBuckConfig.getPrefixSerializedDebugInfo();
     this.serializeDebuggingOptions = serializeDebuggingOptions;
 
-    // TODO: the swiftmodule dependencies should be passed in the constructor instead of being
-    // determined from getBuildDeps().
     ImmutableSortedSet.Builder<SourcePath> swiftmoduleDepPathBuilder =
         ImmutableSortedSet.naturalOrder();
     ImmutableSet.Builder<SourcePath> swiftIncludePathBuilder = ImmutableSet.builder();
-    for (BuildRule dep : getBuildDeps()) {
+    for (BuildRule dep : cxxDeps.getDeps(graphBuilder)) {
       if (dep instanceof SwiftCompile) {
         SwiftCompile swiftCompile = (SwiftCompile) dep;
         swiftmoduleDepPathBuilder.add(swiftCompile.getSwiftModuleOutputPath());
         swiftIncludePathBuilder.add(swiftCompile.getSourcePathToOutput());
       }
     }
+
     this.swiftmoduleDeps = swiftmoduleDepPathBuilder.build();
     this.swiftIncludePaths = swiftIncludePathBuilder.build();
 
