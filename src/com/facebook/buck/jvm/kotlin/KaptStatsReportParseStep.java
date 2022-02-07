@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.AnnotationProcessorGenerationStats;
 import com.facebook.buck.event.AnnotationProcessorPerfStats;
 import com.facebook.buck.event.AnnotationProcessorStatsEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +52,10 @@ import javax.annotation.Nullable;
  * com.udinic.MetagenProcessor: total: 1650 ms, init: 39 ms, 3 round(s): 1611 ms, 0 ms, 0 ms
  * com.udinic.ComponentsProcessor: total: 11 ms, init: 11 ms, 0 round(s):
  * com.udinic.InjectorProcessor: total: 390 ms, init: 17 ms, 3 round(s): 293 ms, 47 ms, 33 ms
- * General: totalTime: 3825 ms, initialAnalysis: 275 ms, stubs: 29 ms, annotationProcessing: 2104 ms
+ * Generated files report:
+ * com.udinic.MetagenProcessor: total sources: 3, sources per round: 2, 1, 0
+ * com.udinic.ComponentsProcessor: total sources: 1, sources per round: 1, 0, 0
+ * com.udinic.InjectorProcessor: total sources: 2, sources per round: 2, 0, 0
  * </pre>
  */
 public class KaptStatsReportParseStep extends IsolatedStep {
@@ -64,6 +69,9 @@ public class KaptStatsReportParseStep extends IsolatedStep {
   private static final Pattern PATTERN_GENERAL_STATS_LINE =
       Pattern.compile(
           "General\\: totalTime: (\\d+) ms, initialAnalysis: (\\d+) ms, stubs: (\\d+) ms, annotationProcessing: (\\d+) ms(.*)");
+  private static final Pattern PATTERN_GENERATIONS_STATS =
+      Pattern.compile("([\\w.$]+)\\: total sources: ([-\\d]+), sources per round:([-\\d ,]*)");
+  private static final Pattern PATTERN_ROUND_GENERATED = Pattern.compile(" ([-\\d]+)");
 
   final Path pathToReportFile;
   final BuildTargetValue invokingRule;
@@ -92,25 +100,41 @@ public class KaptStatsReportParseStep extends IsolatedStep {
 
   @VisibleForTesting
   void parseReport(List<String> lines) {
+    HashMap<String, AnnotationProcessorPerfStats> processorStats = new HashMap<>();
+
     // Starting from the second line, the first line is the report's title.
     for (int i = 1; i < lines.size(); i++) {
       AnnotationProcessorPerfStats annotationProcessorPerfStats = parseProcessorStats(lines.get(i));
-
       if (annotationProcessorPerfStats != null) {
-        AnnotationProcessorStatsEvent statsEvent =
-            new AnnotationProcessorStatsEvent(
-                invokingRule.getFullyQualifiedName(), annotationProcessorPerfStats);
-        eventBus.post(statsEvent);
-      } else {
-        KotlinPluginPerfStats kotlinPluginPerfStats = parseKaptStats(lines.get(i));
+        processorStats.put(
+            annotationProcessorPerfStats.getProcessorName(), annotationProcessorPerfStats);
+        continue;
+      }
 
-        if (kotlinPluginPerfStats != null) {
-          KotlinPluginStatsEvent kaptStatsEvent =
-              new KotlinPluginStatsEvent(
-                  invokingRule.getFullyQualifiedName(), kotlinPluginPerfStats);
-          eventBus.post(kaptStatsEvent);
+      KotlinPluginPerfStats kotlinPluginPerfStats = parseKaptStats(lines.get(i));
+      if (kotlinPluginPerfStats != null) {
+        KotlinPluginStatsEvent kaptStatsEvent =
+            new KotlinPluginStatsEvent(invokingRule.getFullyQualifiedName(), kotlinPluginPerfStats);
+        eventBus.post(kaptStatsEvent);
+        continue;
+      }
+
+      AnnotationProcessorGenerationStats generationStats = parseGenerationStats(lines.get(i));
+      if (generationStats != null) {
+        AnnotationProcessorPerfStats statsObject =
+            processorStats.get(generationStats.getProcessorName());
+        // We expect this object to always be parsed first and exist in the map, but just in case..
+        if (statsObject != null) {
+          statsObject.setGenerationStats(generationStats);
         }
       }
+    }
+
+    for (String processorName : processorStats.keySet()) {
+      AnnotationProcessorStatsEvent statsEvent =
+          new AnnotationProcessorStatsEvent(
+              invokingRule.getFullyQualifiedName(), processorStats.get(processorName));
+      eventBus.post(statsEvent);
     }
   }
 
@@ -134,6 +158,37 @@ public class KaptStatsReportParseStep extends IsolatedStep {
 
       return new AnnotationProcessorPerfStats(
           processorName, Long.parseLong(initTime), Long.parseLong(totalTime), roundTimesList);
+    }
+
+    return null;
+  }
+
+  private List<Long> parseRounds(String roundsString, Pattern roundPattern) {
+    Matcher matcherRoundData = roundPattern.matcher(roundsString);
+    List<Long> roundDataList = new ArrayList<>();
+    while (matcherRoundData.find()) {
+      String roundTimeStr = matcherRoundData.group(1);
+      roundDataList.add(Long.parseLong(roundTimeStr));
+    }
+
+    return roundDataList;
+  }
+
+  @Nullable
+  private AnnotationProcessorGenerationStats parseGenerationStats(String line) {
+    Matcher matcher = PATTERN_GENERATIONS_STATS.matcher(line);
+
+    if (matcher.find()) {
+      // The first group is the entire line, so we start from the second group
+      String processorName = matcher.group(1);
+      String totalSources = matcher.group(2);
+      String roundSourceGenerations = matcher.group(3);
+
+      List<Long> generatedSourcesRounds =
+          parseRounds(roundSourceGenerations, PATTERN_ROUND_GENERATED);
+
+      return new AnnotationProcessorGenerationStats(
+          processorName, Long.parseLong(totalSources), generatedSourcesRounds);
     }
 
     return null;

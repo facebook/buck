@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ public class AnnotationProcessorPerfStats {
   final long totalTime;
   final int rounds;
   final List<Long> roundTimes;
+  AnnotationProcessorGenerationStats generationStats;
 
   public AnnotationProcessorPerfStats(
       String processorName, long initTime, long totalTime, List<Long> roundTimes) {
@@ -54,6 +55,14 @@ public class AnnotationProcessorPerfStats {
 
   public List<Long> getRoundTimes() {
     return roundTimes;
+  }
+
+  public AnnotationProcessorGenerationStats getGenerationStats() {
+    return generationStats;
+  }
+
+  public void setGenerationStats(AnnotationProcessorGenerationStats generationStats) {
+    this.generationStats = generationStats;
   }
 
   @Override

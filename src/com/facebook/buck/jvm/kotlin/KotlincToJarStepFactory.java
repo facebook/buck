@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,7 +108,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
   private static final String CORRECT_ERROR_TYPES = KAPT3_PLUGIN + "correctErrorTypes=";
   private static final String JAVAC_ARG = KAPT3_PLUGIN + "javacArguments=";
   private static final String AP_OPTIONS = KAPT3_PLUGIN + "apoptions=";
-  private static final String AP_STATS_REPORT_ARG = KAPT3_PLUGIN + "dumpProcessorTimings=";
+  private static final String AP_STATS_REPORT_ARG = KAPT3_PLUGIN + "dumpProcessorStats=";
   private static final String KAPT_GENERATED = "kapt.kotlin.generated";
   private static final String MODULE_NAME = "-module-name";
   private static final String NO_STDLIB = "-no-stdlib";
