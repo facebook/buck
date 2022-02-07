@@ -42,6 +42,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
@@ -97,7 +98,11 @@ public class FatJarMain {
       // Update the appropriate environment variable with the location of our native libraries
       // and start the real main class in a new process so that it picks it up.
       ProcessBuilder builder = new ProcessBuilder();
-      List<String> command = getCommand(isWrapperScript, innerArtifact, args);
+      List<String> command =
+          getCommand(
+              isWrapperScript,
+              innerArtifact,
+              debug ? Arrays.copyOfRange(args, 1, args.length) : args);
       if (debug) {
         printDebugInfo("Executing command: " + command);
       }

@@ -49,7 +49,6 @@ import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.isolatedsteps.common.WriteFileIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.PatternsMatcher;
-import com.facebook.buck.util.java.JavaRuntimeUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -163,13 +162,14 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         WriteFileIsolatedStep.of(
             () ->
-                Stream.of(
-                        JavaRuntimeUtils.getBucksJavaBinCommand(),
-                        "-cp",
-                        "@" + filesystem.resolve(classpathArgs),
-                        Optional.ofNullable(mainClass).orElse(""),
-                        "\"$@\"")
-                    .filter(s -> !s.isEmpty())
+                Stream.concat(
+                        javaRuntimeLauncher.getCommandPrefix(sourcePathResolver).stream(),
+                        Stream.of(
+                                "-cp",
+                                "@" + filesystem.resolve(classpathArgs),
+                                Optional.ofNullable(mainClass).orElse(""),
+                                "\"$@\"")
+                            .filter(s -> !s.isEmpty()))
                     .collect(Collectors.joining(" ")),
             outputFile,
             true));
