@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -633,6 +633,12 @@ public class AppleCxxPlatforms {
       XcodeToolFinder xcodeToolFinder,
       ProjectFilesystem filesystem) {
     String platformName = sdk.getApplePlatform().getName();
+
+    // catalyst uses the macosx swift stdlib
+    if (platformName.equals("maccatalyst")) {
+      platformName = "macosx";
+    }
+
     ImmutableList.Builder<String> swiftStdlibToolParamsBuilder = ImmutableList.builder();
     swiftStdlibToolParamsBuilder
         .add("--copy")
