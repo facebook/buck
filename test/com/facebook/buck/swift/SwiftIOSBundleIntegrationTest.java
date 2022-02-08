@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -126,6 +126,31 @@ public class SwiftIOSBundleIntegrationTest {
 
       assertThat(actualArchs, arrayContainingInAnyOrder(expectedArchs[i]));
     }
+  }
+
+  @Test
+  public void swiftStdLibsContainConcurrency() throws Exception {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "swift_concurrency_application", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphonesimulator-x86_64,no-debug");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path frameworksPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(),
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app")
+                .resolve("Frameworks"));
+    assertTrue(Files.exists(frameworksPath.resolve("libswift_Concurrency.dylib")));
   }
 
   @Test

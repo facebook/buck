@@ -16,6 +16,20 @@
 
 import UIKit
 
-@UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+// swift currently throws a spurious ""'UIApplicationMain' attribute cannot be used in a module that
+// contains top-level code" error if there's only one file in a iOS swift_library.
+class ViewController: UIViewController {
+
+}
+
+actor TemperatureLogger {
+    let label: String
+    var measurements: [Int]
+    private(set) var max: Int
+
+    init(label: String, measurement: Int) {
+        self.label = label
+        self.measurements = [measurement]
+        self.max = measurement
+    }
 }

@@ -673,16 +673,9 @@ public class AppleCxxPlatforms {
       ImmutableList.Builder<String> swiftStdlibToolParamsBuilder,
       Path toolchainPath,
       String platformName) {
-    Optional<Path> foundSwiftRuntimePath =
-        SwiftPlatformFactory.findSwiftRuntimePath(toolchainPath, platformName);
-    if (foundSwiftRuntimePath.isPresent()) {
-      swiftStdlibToolParamsBuilder
-          .add("--source-libraries")
-          .add(foundSwiftRuntimePath.get().toString());
-    } else {
-      if (platformName != "driverkit") {
-        LOG.info("Swift stdlib missing from: %s for platform: %s", toolchainPath, platformName);
-      }
+    for (Path runtimePath :
+        SwiftPlatformFactory.findSwiftRuntimePaths(toolchainPath, platformName)) {
+      swiftStdlibToolParamsBuilder.add("--source-libraries").add(runtimePath.toString());
     }
   }
 
