@@ -19,7 +19,6 @@
 
 # Setup - exit on any failure, record current dir and go to repo root.
 set -e
-current_dir=$(pwd)
 
 function ls_files_cmd {
     pattern="$1"
@@ -89,6 +88,3 @@ set_generated_tag src-gen/**/model/*.java
 
 #Verify generated srcs are valid
 buck build buck//src-gen/...
-
-cd "$current_dir"
-set +e
