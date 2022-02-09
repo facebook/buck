@@ -28,6 +28,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 
+import com.facebook.buck.cd.model.common.RelPath;
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.cd.model.java.BaseCommandParams.SpoolMode;
 import com.facebook.buck.cd.model.java.BaseJarCommand;
@@ -39,7 +40,6 @@ import com.facebook.buck.cd.model.java.JavaAbiInfo;
 import com.facebook.buck.cd.model.java.LibraryJarBaseCommand;
 import com.facebook.buck.cd.model.java.LibraryJarCommand;
 import com.facebook.buck.cd.model.java.OutputPathsValue;
-import com.facebook.buck.cd.model.java.RelPath;
 import com.facebook.buck.cd.model.java.ResolvedJavac;
 import com.facebook.buck.cd.model.java.ResolvedJavacOptions;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
@@ -435,7 +435,7 @@ public class JavaCDIntegrationTest {
         .setFilesystemParams(
             FilesystemParams.newBuilder()
                 .setRootPath(
-                    com.facebook.buck.cd.model.java.AbsPath.newBuilder()
+                    com.facebook.buck.cd.model.common.AbsPath.newBuilder()
                         .setPath(baseDirectory)
                         .build())
                 .setConfiguredBuckOut(RelPath.newBuilder().setPath("buck-out").build())
@@ -573,7 +573,7 @@ public class JavaCDIntegrationTest {
                 .setDuplicatesLogLevel(JarParameters.LogLevel.INFO)
                 .build())
         .setBuildCellRootPath(
-            com.facebook.buck.cd.model.java.AbsPath.newBuilder().setPath(baseDirectory).build())
+            com.facebook.buck.cd.model.common.AbsPath.newBuilder().setPath(baseDirectory).build())
         .setResolvedJavac(
             ResolvedJavac.newBuilder()
                 .setJsr199Javac(ResolvedJavac.JSR199Javac.getDefaultInstance())

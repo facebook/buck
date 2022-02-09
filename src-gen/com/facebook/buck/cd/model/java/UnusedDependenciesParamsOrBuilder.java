@@ -58,27 +58,27 @@ public interface UnusedDependenciesParamsOrBuilder extends
       int index);
 
   /**
-   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .RelPath depFile = 3;</code>
    */
-  java.util.List<com.facebook.buck.cd.model.java.RelPath> 
+  java.util.List<com.facebook.buck.cd.model.common.RelPath> 
       getDepFileList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .RelPath depFile = 3;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getDepFile(int index);
+  com.facebook.buck.cd.model.common.RelPath getDepFile(int index);
   /**
-   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .RelPath depFile = 3;</code>
    */
   int getDepFileCount();
   /**
-   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .RelPath depFile = 3;</code>
    */
-  java.util.List<? extends com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+  java.util.List<? extends com.facebook.buck.cd.model.common.RelPathOrBuilder> 
       getDepFileOrBuilderList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .RelPath depFile = 3;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getDepFileOrBuilder(
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getDepFileOrBuilder(
       int index);
 
   /**

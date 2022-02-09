@@ -16,10 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.cd.model.common.RelPathMapEntry;
 import com.facebook.buck.cd.model.java.BasePipeliningCommand;
 import com.facebook.buck.cd.model.java.FilesystemParams;
 import com.facebook.buck.cd.model.java.PipelineState;
-import com.facebook.buck.cd.model.java.RelPathMapEntry;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;

@@ -46,11 +46,11 @@ private static final long serialVersionUID = 0L;
             done = true;
             break;
           case 10: {
-            com.facebook.buck.cd.model.java.AbsPath.Builder subBuilder = null;
+            com.facebook.buck.cd.model.common.AbsPath.Builder subBuilder = null;
             if (rootPath_ != null) {
               subBuilder = rootPath_.toBuilder();
             }
-            rootPath_ = input.readMessage(com.facebook.buck.cd.model.java.AbsPath.parser(), extensionRegistry);
+            rootPath_ = input.readMessage(com.facebook.buck.cd.model.common.AbsPath.parser(), extensionRegistry);
             if (subBuilder != null) {
               subBuilder.mergeFrom(rootPath_);
               rootPath_ = subBuilder.buildPartial();
@@ -59,11 +59,11 @@ private static final long serialVersionUID = 0L;
             break;
           }
           case 18: {
-            com.facebook.buck.cd.model.java.RelPath.Builder subBuilder = null;
+            com.facebook.buck.cd.model.common.RelPath.Builder subBuilder = null;
             if (configuredBuckOut_ != null) {
               subBuilder = configuredBuckOut_.toBuilder();
             }
-            configuredBuckOut_ = input.readMessage(com.facebook.buck.cd.model.java.RelPath.parser(), extensionRegistry);
+            configuredBuckOut_ = input.readMessage(com.facebook.buck.cd.model.common.RelPath.parser(), extensionRegistry);
             if (subBuilder != null) {
               subBuilder.mergeFrom(configuredBuckOut_);
               configuredBuckOut_ = subBuilder.buildPartial();
@@ -117,44 +117,44 @@ private static final long serialVersionUID = 0L;
 
   private int bitField0_;
   public static final int ROOTPATH_FIELD_NUMBER = 1;
-  private com.facebook.buck.cd.model.java.AbsPath rootPath_;
+  private com.facebook.buck.cd.model.common.AbsPath rootPath_;
   /**
-   * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+   * <code>.AbsPath rootPath = 1;</code>
    */
   public boolean hasRootPath() {
     return rootPath_ != null;
   }
   /**
-   * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+   * <code>.AbsPath rootPath = 1;</code>
    */
-  public com.facebook.buck.cd.model.java.AbsPath getRootPath() {
-    return rootPath_ == null ? com.facebook.buck.cd.model.java.AbsPath.getDefaultInstance() : rootPath_;
+  public com.facebook.buck.cd.model.common.AbsPath getRootPath() {
+    return rootPath_ == null ? com.facebook.buck.cd.model.common.AbsPath.getDefaultInstance() : rootPath_;
   }
   /**
-   * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+   * <code>.AbsPath rootPath = 1;</code>
    */
-  public com.facebook.buck.cd.model.java.AbsPathOrBuilder getRootPathOrBuilder() {
+  public com.facebook.buck.cd.model.common.AbsPathOrBuilder getRootPathOrBuilder() {
     return getRootPath();
   }
 
   public static final int CONFIGUREDBUCKOUT_FIELD_NUMBER = 2;
-  private com.facebook.buck.cd.model.java.RelPath configuredBuckOut_;
+  private com.facebook.buck.cd.model.common.RelPath configuredBuckOut_;
   /**
-   * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+   * <code>.RelPath configuredBuckOut = 2;</code>
    */
   public boolean hasConfiguredBuckOut() {
     return configuredBuckOut_ != null;
   }
   /**
-   * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+   * <code>.RelPath configuredBuckOut = 2;</code>
    */
-  public com.facebook.buck.cd.model.java.RelPath getConfiguredBuckOut() {
-    return configuredBuckOut_ == null ? com.facebook.buck.cd.model.java.RelPath.getDefaultInstance() : configuredBuckOut_;
+  public com.facebook.buck.cd.model.common.RelPath getConfiguredBuckOut() {
+    return configuredBuckOut_ == null ? com.facebook.buck.cd.model.common.RelPath.getDefaultInstance() : configuredBuckOut_;
   }
   /**
-   * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+   * <code>.RelPath configuredBuckOut = 2;</code>
    */
-  public com.facebook.buck.cd.model.java.RelPathOrBuilder getConfiguredBuckOutOrBuilder() {
+  public com.facebook.buck.cd.model.common.RelPathOrBuilder getConfiguredBuckOutOrBuilder() {
     return getConfiguredBuckOut();
   }
 
@@ -570,29 +570,29 @@ private static final long serialVersionUID = 0L;
     }
     private int bitField0_;
 
-    private com.facebook.buck.cd.model.java.AbsPath rootPath_;
+    private com.facebook.buck.cd.model.common.AbsPath rootPath_;
     private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.cd.model.java.AbsPath, com.facebook.buck.cd.model.java.AbsPath.Builder, com.facebook.buck.cd.model.java.AbsPathOrBuilder> rootPathBuilder_;
+        com.facebook.buck.cd.model.common.AbsPath, com.facebook.buck.cd.model.common.AbsPath.Builder, com.facebook.buck.cd.model.common.AbsPathOrBuilder> rootPathBuilder_;
     /**
-     * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+     * <code>.AbsPath rootPath = 1;</code>
      */
     public boolean hasRootPath() {
       return rootPathBuilder_ != null || rootPath_ != null;
     }
     /**
-     * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+     * <code>.AbsPath rootPath = 1;</code>
      */
-    public com.facebook.buck.cd.model.java.AbsPath getRootPath() {
+    public com.facebook.buck.cd.model.common.AbsPath getRootPath() {
       if (rootPathBuilder_ == null) {
-        return rootPath_ == null ? com.facebook.buck.cd.model.java.AbsPath.getDefaultInstance() : rootPath_;
+        return rootPath_ == null ? com.facebook.buck.cd.model.common.AbsPath.getDefaultInstance() : rootPath_;
       } else {
         return rootPathBuilder_.getMessage();
       }
     }
     /**
-     * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+     * <code>.AbsPath rootPath = 1;</code>
      */
-    public Builder setRootPath(com.facebook.buck.cd.model.java.AbsPath value) {
+    public Builder setRootPath(com.facebook.buck.cd.model.common.AbsPath value) {
       if (rootPathBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -606,10 +606,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+     * <code>.AbsPath rootPath = 1;</code>
      */
     public Builder setRootPath(
-        com.facebook.buck.cd.model.java.AbsPath.Builder builderForValue) {
+        com.facebook.buck.cd.model.common.AbsPath.Builder builderForValue) {
       if (rootPathBuilder_ == null) {
         rootPath_ = builderForValue.build();
         onChanged();
@@ -620,13 +620,13 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+     * <code>.AbsPath rootPath = 1;</code>
      */
-    public Builder mergeRootPath(com.facebook.buck.cd.model.java.AbsPath value) {
+    public Builder mergeRootPath(com.facebook.buck.cd.model.common.AbsPath value) {
       if (rootPathBuilder_ == null) {
         if (rootPath_ != null) {
           rootPath_ =
-            com.facebook.buck.cd.model.java.AbsPath.newBuilder(rootPath_).mergeFrom(value).buildPartial();
+            com.facebook.buck.cd.model.common.AbsPath.newBuilder(rootPath_).mergeFrom(value).buildPartial();
         } else {
           rootPath_ = value;
         }
@@ -638,7 +638,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+     * <code>.AbsPath rootPath = 1;</code>
      */
     public Builder clearRootPath() {
       if (rootPathBuilder_ == null) {
@@ -652,33 +652,33 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+     * <code>.AbsPath rootPath = 1;</code>
      */
-    public com.facebook.buck.cd.model.java.AbsPath.Builder getRootPathBuilder() {
+    public com.facebook.buck.cd.model.common.AbsPath.Builder getRootPathBuilder() {
       
       onChanged();
       return getRootPathFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+     * <code>.AbsPath rootPath = 1;</code>
      */
-    public com.facebook.buck.cd.model.java.AbsPathOrBuilder getRootPathOrBuilder() {
+    public com.facebook.buck.cd.model.common.AbsPathOrBuilder getRootPathOrBuilder() {
       if (rootPathBuilder_ != null) {
         return rootPathBuilder_.getMessageOrBuilder();
       } else {
         return rootPath_ == null ?
-            com.facebook.buck.cd.model.java.AbsPath.getDefaultInstance() : rootPath_;
+            com.facebook.buck.cd.model.common.AbsPath.getDefaultInstance() : rootPath_;
       }
     }
     /**
-     * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+     * <code>.AbsPath rootPath = 1;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.cd.model.java.AbsPath, com.facebook.buck.cd.model.java.AbsPath.Builder, com.facebook.buck.cd.model.java.AbsPathOrBuilder> 
+        com.facebook.buck.cd.model.common.AbsPath, com.facebook.buck.cd.model.common.AbsPath.Builder, com.facebook.buck.cd.model.common.AbsPathOrBuilder> 
         getRootPathFieldBuilder() {
       if (rootPathBuilder_ == null) {
         rootPathBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-            com.facebook.buck.cd.model.java.AbsPath, com.facebook.buck.cd.model.java.AbsPath.Builder, com.facebook.buck.cd.model.java.AbsPathOrBuilder>(
+            com.facebook.buck.cd.model.common.AbsPath, com.facebook.buck.cd.model.common.AbsPath.Builder, com.facebook.buck.cd.model.common.AbsPathOrBuilder>(
                 getRootPath(),
                 getParentForChildren(),
                 isClean());
@@ -687,29 +687,29 @@ private static final long serialVersionUID = 0L;
       return rootPathBuilder_;
     }
 
-    private com.facebook.buck.cd.model.java.RelPath configuredBuckOut_;
+    private com.facebook.buck.cd.model.common.RelPath configuredBuckOut_;
     private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder> configuredBuckOutBuilder_;
+        com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder> configuredBuckOutBuilder_;
     /**
-     * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+     * <code>.RelPath configuredBuckOut = 2;</code>
      */
     public boolean hasConfiguredBuckOut() {
       return configuredBuckOutBuilder_ != null || configuredBuckOut_ != null;
     }
     /**
-     * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+     * <code>.RelPath configuredBuckOut = 2;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPath getConfiguredBuckOut() {
+    public com.facebook.buck.cd.model.common.RelPath getConfiguredBuckOut() {
       if (configuredBuckOutBuilder_ == null) {
-        return configuredBuckOut_ == null ? com.facebook.buck.cd.model.java.RelPath.getDefaultInstance() : configuredBuckOut_;
+        return configuredBuckOut_ == null ? com.facebook.buck.cd.model.common.RelPath.getDefaultInstance() : configuredBuckOut_;
       } else {
         return configuredBuckOutBuilder_.getMessage();
       }
     }
     /**
-     * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+     * <code>.RelPath configuredBuckOut = 2;</code>
      */
-    public Builder setConfiguredBuckOut(com.facebook.buck.cd.model.java.RelPath value) {
+    public Builder setConfiguredBuckOut(com.facebook.buck.cd.model.common.RelPath value) {
       if (configuredBuckOutBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -723,10 +723,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+     * <code>.RelPath configuredBuckOut = 2;</code>
      */
     public Builder setConfiguredBuckOut(
-        com.facebook.buck.cd.model.java.RelPath.Builder builderForValue) {
+        com.facebook.buck.cd.model.common.RelPath.Builder builderForValue) {
       if (configuredBuckOutBuilder_ == null) {
         configuredBuckOut_ = builderForValue.build();
         onChanged();
@@ -737,13 +737,13 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+     * <code>.RelPath configuredBuckOut = 2;</code>
      */
-    public Builder mergeConfiguredBuckOut(com.facebook.buck.cd.model.java.RelPath value) {
+    public Builder mergeConfiguredBuckOut(com.facebook.buck.cd.model.common.RelPath value) {
       if (configuredBuckOutBuilder_ == null) {
         if (configuredBuckOut_ != null) {
           configuredBuckOut_ =
-            com.facebook.buck.cd.model.java.RelPath.newBuilder(configuredBuckOut_).mergeFrom(value).buildPartial();
+            com.facebook.buck.cd.model.common.RelPath.newBuilder(configuredBuckOut_).mergeFrom(value).buildPartial();
         } else {
           configuredBuckOut_ = value;
         }
@@ -755,7 +755,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+     * <code>.RelPath configuredBuckOut = 2;</code>
      */
     public Builder clearConfiguredBuckOut() {
       if (configuredBuckOutBuilder_ == null) {
@@ -769,33 +769,33 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+     * <code>.RelPath configuredBuckOut = 2;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPath.Builder getConfiguredBuckOutBuilder() {
+    public com.facebook.buck.cd.model.common.RelPath.Builder getConfiguredBuckOutBuilder() {
       
       onChanged();
       return getConfiguredBuckOutFieldBuilder().getBuilder();
     }
     /**
-     * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+     * <code>.RelPath configuredBuckOut = 2;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPathOrBuilder getConfiguredBuckOutOrBuilder() {
+    public com.facebook.buck.cd.model.common.RelPathOrBuilder getConfiguredBuckOutOrBuilder() {
       if (configuredBuckOutBuilder_ != null) {
         return configuredBuckOutBuilder_.getMessageOrBuilder();
       } else {
         return configuredBuckOut_ == null ?
-            com.facebook.buck.cd.model.java.RelPath.getDefaultInstance() : configuredBuckOut_;
+            com.facebook.buck.cd.model.common.RelPath.getDefaultInstance() : configuredBuckOut_;
       }
     }
     /**
-     * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+     * <code>.RelPath configuredBuckOut = 2;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
-        com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+        com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder> 
         getConfiguredBuckOutFieldBuilder() {
       if (configuredBuckOutBuilder_ == null) {
         configuredBuckOutBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-            com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder>(
+            com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder>(
                 getConfiguredBuckOut(),
                 getParentForChildren(),
                 isClean());

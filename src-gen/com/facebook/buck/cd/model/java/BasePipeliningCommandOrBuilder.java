@@ -49,35 +49,35 @@ public interface BasePipeliningCommandOrBuilder extends
   com.facebook.buck.cd.model.java.OutputPathsValueOrBuilder getOutputPathsValueOrBuilder();
 
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
    */
-  java.util.List<com.facebook.buck.cd.model.java.RelPathMapEntry> 
+  java.util.List<com.facebook.buck.cd.model.common.RelPathMapEntry> 
       getResourcesMapList();
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathMapEntry getResourcesMap(int index);
+  com.facebook.buck.cd.model.common.RelPathMapEntry getResourcesMap(int index);
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
    */
   int getResourcesMapCount();
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
    */
-  java.util.List<? extends com.facebook.buck.cd.model.java.RelPathMapEntryOrBuilder> 
+  java.util.List<? extends com.facebook.buck.cd.model.common.RelPathMapEntryOrBuilder> 
       getResourcesMapOrBuilderList();
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
+  com.facebook.buck.cd.model.common.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
       int index);
 
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
    */
   int getCellToPathMappingsCount();
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
    */
   boolean containsCellToPathMappings(
       java.lang.String key);
@@ -85,24 +85,24 @@ public interface BasePipeliningCommandOrBuilder extends
    * Use {@link #getCellToPathMappingsMap()} instead.
    */
   @java.lang.Deprecated
-  java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath>
+  java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
   getCellToPathMappings();
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
    */
-  java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath>
+  java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
   getCellToPathMappingsMap();
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
    */
 
-  com.facebook.buck.cd.model.java.RelPath getCellToPathMappingsOrDefault(
+  com.facebook.buck.cd.model.common.RelPath getCellToPathMappingsOrDefault(
       java.lang.String key,
-      com.facebook.buck.cd.model.java.RelPath defaultValue);
+      com.facebook.buck.cd.model.common.RelPath defaultValue);
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
    */
 
-  com.facebook.buck.cd.model.java.RelPath getCellToPathMappingsOrThrow(
+  com.facebook.buck.cd.model.common.RelPath getCellToPathMappingsOrThrow(
       java.lang.String key);
 }

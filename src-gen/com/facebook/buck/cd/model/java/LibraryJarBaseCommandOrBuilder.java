@@ -10,56 +10,56 @@ public interface LibraryJarBaseCommandOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+   * <code>.RelPath pathToClasses = 3;</code>
    */
   boolean hasPathToClasses();
   /**
-   * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+   * <code>.RelPath pathToClasses = 3;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getPathToClasses();
+  com.facebook.buck.cd.model.common.RelPath getPathToClasses();
   /**
-   * <code>.javacd.api.v1.RelPath pathToClasses = 3;</code>
+   * <code>.RelPath pathToClasses = 3;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getPathToClassesOrBuilder();
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getPathToClassesOrBuilder();
 
   /**
-   * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
+   * <code>.RelPath rootOutput = 4;</code>
    */
   boolean hasRootOutput();
   /**
-   * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
+   * <code>.RelPath rootOutput = 4;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getRootOutput();
+  com.facebook.buck.cd.model.common.RelPath getRootOutput();
   /**
-   * <code>.javacd.api.v1.RelPath rootOutput = 4;</code>
+   * <code>.RelPath rootOutput = 4;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getRootOutputOrBuilder();
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getRootOutputOrBuilder();
 
   /**
-   * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
+   * <code>.RelPath pathToClassHashes = 5;</code>
    */
   boolean hasPathToClassHashes();
   /**
-   * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
+   * <code>.RelPath pathToClassHashes = 5;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getPathToClassHashes();
+  com.facebook.buck.cd.model.common.RelPath getPathToClassHashes();
   /**
-   * <code>.javacd.api.v1.RelPath pathToClassHashes = 5;</code>
+   * <code>.RelPath pathToClassHashes = 5;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getPathToClassHashesOrBuilder();
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getPathToClassHashesOrBuilder();
 
   /**
-   * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
+   * <code>.RelPath annotationsPath = 6;</code>
    */
   boolean hasAnnotationsPath();
   /**
-   * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
+   * <code>.RelPath annotationsPath = 6;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getAnnotationsPath();
+  com.facebook.buck.cd.model.common.RelPath getAnnotationsPath();
   /**
-   * <code>.javacd.api.v1.RelPath annotationsPath = 6;</code>
+   * <code>.RelPath annotationsPath = 6;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getAnnotationsPathOrBuilder();
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getAnnotationsPathOrBuilder();
 
   /**
    * <code>.javacd.api.v1.UnusedDependenciesParams unusedDependenciesParams = 7;</code>

@@ -24,14 +24,16 @@ public class PathSerializer {
 
   private PathSerializer() {}
 
-  /** Serializes {@link Path} into javacd model's {@link com.facebook.buck.cd.model.java.Path}. */
-  public static com.facebook.buck.cd.model.java.Path serialize(Path path) {
+  /** Serializes {@link Path} into javacd model's {@link com.facebook.buck.cd.model.common.Path}. */
+  public static com.facebook.buck.cd.model.common.Path serialize(Path path) {
     String value = path.toString();
-    return com.facebook.buck.cd.model.java.Path.newBuilder().setPath(value).build();
+    return com.facebook.buck.cd.model.common.Path.newBuilder().setPath(value).build();
   }
 
-  /** Deserializes javacd model's {@link com.facebook.buck.cd.model.java.Path} into {@link Path}. */
-  public static Path deserialize(com.facebook.buck.cd.model.java.Path path) {
+  /**
+   * Deserializes javacd model's {@link com.facebook.buck.cd.model.common.Path} into {@link Path}.
+   */
+  public static Path deserialize(com.facebook.buck.cd.model.common.Path path) {
     return Paths.get(path.getPath());
   }
 }

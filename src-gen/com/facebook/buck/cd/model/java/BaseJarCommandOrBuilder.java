@@ -82,51 +82,51 @@ public interface BaseJarCommandOrBuilder extends
   com.facebook.buck.cd.model.java.OutputPathsValueOrBuilder getOutputPathsValueOrBuilder();
 
   /**
-   * <code>repeated .javacd.api.v1.RelPath compileTimeClasspathPaths = 9;</code>
+   * <code>repeated .RelPath compileTimeClasspathPaths = 9;</code>
    */
-  java.util.List<com.facebook.buck.cd.model.java.RelPath> 
+  java.util.List<com.facebook.buck.cd.model.common.RelPath> 
       getCompileTimeClasspathPathsList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath compileTimeClasspathPaths = 9;</code>
+   * <code>repeated .RelPath compileTimeClasspathPaths = 9;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getCompileTimeClasspathPaths(int index);
+  com.facebook.buck.cd.model.common.RelPath getCompileTimeClasspathPaths(int index);
   /**
-   * <code>repeated .javacd.api.v1.RelPath compileTimeClasspathPaths = 9;</code>
+   * <code>repeated .RelPath compileTimeClasspathPaths = 9;</code>
    */
   int getCompileTimeClasspathPathsCount();
   /**
-   * <code>repeated .javacd.api.v1.RelPath compileTimeClasspathPaths = 9;</code>
+   * <code>repeated .RelPath compileTimeClasspathPaths = 9;</code>
    */
-  java.util.List<? extends com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+  java.util.List<? extends com.facebook.buck.cd.model.common.RelPathOrBuilder> 
       getCompileTimeClasspathPathsOrBuilderList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath compileTimeClasspathPaths = 9;</code>
+   * <code>repeated .RelPath compileTimeClasspathPaths = 9;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getCompileTimeClasspathPathsOrBuilder(
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getCompileTimeClasspathPathsOrBuilder(
       int index);
 
   /**
-   * <code>repeated .javacd.api.v1.RelPath javaSrcs = 10;</code>
+   * <code>repeated .RelPath javaSrcs = 10;</code>
    */
-  java.util.List<com.facebook.buck.cd.model.java.RelPath> 
+  java.util.List<com.facebook.buck.cd.model.common.RelPath> 
       getJavaSrcsList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath javaSrcs = 10;</code>
+   * <code>repeated .RelPath javaSrcs = 10;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getJavaSrcs(int index);
+  com.facebook.buck.cd.model.common.RelPath getJavaSrcs(int index);
   /**
-   * <code>repeated .javacd.api.v1.RelPath javaSrcs = 10;</code>
+   * <code>repeated .RelPath javaSrcs = 10;</code>
    */
   int getJavaSrcsCount();
   /**
-   * <code>repeated .javacd.api.v1.RelPath javaSrcs = 10;</code>
+   * <code>repeated .RelPath javaSrcs = 10;</code>
    */
-  java.util.List<? extends com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+  java.util.List<? extends com.facebook.buck.cd.model.common.RelPathOrBuilder> 
       getJavaSrcsOrBuilderList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath javaSrcs = 10;</code>
+   * <code>repeated .RelPath javaSrcs = 10;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getJavaSrcsOrBuilder(
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getJavaSrcsOrBuilder(
       int index);
 
   /**
@@ -178,35 +178,35 @@ public interface BaseJarCommandOrBuilder extends
       int index);
 
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 13;</code>
    */
-  java.util.List<com.facebook.buck.cd.model.java.RelPathMapEntry> 
+  java.util.List<com.facebook.buck.cd.model.common.RelPathMapEntry> 
       getResourcesMapList();
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 13;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathMapEntry getResourcesMap(int index);
+  com.facebook.buck.cd.model.common.RelPathMapEntry getResourcesMap(int index);
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 13;</code>
    */
   int getResourcesMapCount();
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 13;</code>
    */
-  java.util.List<? extends com.facebook.buck.cd.model.java.RelPathMapEntryOrBuilder> 
+  java.util.List<? extends com.facebook.buck.cd.model.common.RelPathMapEntryOrBuilder> 
       getResourcesMapOrBuilderList();
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 13;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 13;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
+  com.facebook.buck.cd.model.common.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
       int index);
 
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 14;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 14;</code>
    */
   int getCellToPathMappingsCount();
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 14;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 14;</code>
    */
   boolean containsCellToPathMappings(
       java.lang.String key);
@@ -214,25 +214,25 @@ public interface BaseJarCommandOrBuilder extends
    * Use {@link #getCellToPathMappingsMap()} instead.
    */
   @java.lang.Deprecated
-  java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath>
+  java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
   getCellToPathMappings();
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 14;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 14;</code>
    */
-  java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath>
+  java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
   getCellToPathMappingsMap();
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 14;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 14;</code>
    */
 
-  com.facebook.buck.cd.model.java.RelPath getCellToPathMappingsOrDefault(
+  com.facebook.buck.cd.model.common.RelPath getCellToPathMappingsOrDefault(
       java.lang.String key,
-      com.facebook.buck.cd.model.java.RelPath defaultValue);
+      com.facebook.buck.cd.model.common.RelPath defaultValue);
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 14;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 14;</code>
    */
 
-  com.facebook.buck.cd.model.java.RelPath getCellToPathMappingsOrThrow(
+  com.facebook.buck.cd.model.common.RelPath getCellToPathMappingsOrThrow(
       java.lang.String key);
 
   /**
@@ -249,17 +249,17 @@ public interface BaseJarCommandOrBuilder extends
   com.facebook.buck.cd.model.java.JarParametersOrBuilder getLibraryJarParametersOrBuilder();
 
   /**
-   * <code>.javacd.api.v1.AbsPath buildCellRootPath = 16;</code>
+   * <code>.AbsPath buildCellRootPath = 16;</code>
    */
   boolean hasBuildCellRootPath();
   /**
-   * <code>.javacd.api.v1.AbsPath buildCellRootPath = 16;</code>
+   * <code>.AbsPath buildCellRootPath = 16;</code>
    */
-  com.facebook.buck.cd.model.java.AbsPath getBuildCellRootPath();
+  com.facebook.buck.cd.model.common.AbsPath getBuildCellRootPath();
   /**
-   * <code>.javacd.api.v1.AbsPath buildCellRootPath = 16;</code>
+   * <code>.AbsPath buildCellRootPath = 16;</code>
    */
-  com.facebook.buck.cd.model.java.AbsPathOrBuilder getBuildCellRootPathOrBuilder();
+  com.facebook.buck.cd.model.common.AbsPathOrBuilder getBuildCellRootPathOrBuilder();
 
   /**
    * <code>.javacd.api.v1.ResolvedJavac resolvedJavac = 17;</code>

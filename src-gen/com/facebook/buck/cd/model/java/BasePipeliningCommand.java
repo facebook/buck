@@ -90,11 +90,11 @@ private static final long serialVersionUID = 0L;
           }
           case 34: {
             if (!((mutable_bitField0_ & 0x00000008) != 0)) {
-              resourcesMap_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.RelPathMapEntry>();
+              resourcesMap_ = new java.util.ArrayList<com.facebook.buck.cd.model.common.RelPathMapEntry>();
               mutable_bitField0_ |= 0x00000008;
             }
             resourcesMap_.add(
-                input.readMessage(com.facebook.buck.cd.model.java.RelPathMapEntry.parser(), extensionRegistry));
+                input.readMessage(com.facebook.buck.cd.model.common.RelPathMapEntry.parser(), extensionRegistry));
             break;
           }
           case 42: {
@@ -103,7 +103,7 @@ private static final long serialVersionUID = 0L;
                   CellToPathMappingsDefaultEntryHolder.defaultEntry);
               mutable_bitField0_ |= 0x00000010;
             }
-            com.google.protobuf.MapEntry<java.lang.String, com.facebook.buck.cd.model.java.RelPath>
+            com.google.protobuf.MapEntry<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
             cellToPathMappings__ = input.readMessage(
                 CellToPathMappingsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
             cellToPathMappings_.getMutableMap().put(
@@ -222,36 +222,36 @@ private static final long serialVersionUID = 0L;
   }
 
   public static final int RESOURCESMAP_FIELD_NUMBER = 4;
-  private java.util.List<com.facebook.buck.cd.model.java.RelPathMapEntry> resourcesMap_;
+  private java.util.List<com.facebook.buck.cd.model.common.RelPathMapEntry> resourcesMap_;
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
    */
-  public java.util.List<com.facebook.buck.cd.model.java.RelPathMapEntry> getResourcesMapList() {
+  public java.util.List<com.facebook.buck.cd.model.common.RelPathMapEntry> getResourcesMapList() {
     return resourcesMap_;
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
    */
-  public java.util.List<? extends com.facebook.buck.cd.model.java.RelPathMapEntryOrBuilder> 
+  public java.util.List<? extends com.facebook.buck.cd.model.common.RelPathMapEntryOrBuilder> 
       getResourcesMapOrBuilderList() {
     return resourcesMap_;
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
    */
   public int getResourcesMapCount() {
     return resourcesMap_.size();
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
    */
-  public com.facebook.buck.cd.model.java.RelPathMapEntry getResourcesMap(int index) {
+  public com.facebook.buck.cd.model.common.RelPathMapEntry getResourcesMap(int index) {
     return resourcesMap_.get(index);
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+   * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
    */
-  public com.facebook.buck.cd.model.java.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
+  public com.facebook.buck.cd.model.common.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
       int index) {
     return resourcesMap_.get(index);
   }
@@ -259,18 +259,18 @@ private static final long serialVersionUID = 0L;
   public static final int CELLTOPATHMAPPINGS_FIELD_NUMBER = 5;
   private static final class CellToPathMappingsDefaultEntryHolder {
     static final com.google.protobuf.MapEntry<
-        java.lang.String, com.facebook.buck.cd.model.java.RelPath> defaultEntry =
+        java.lang.String, com.facebook.buck.cd.model.common.RelPath> defaultEntry =
             com.google.protobuf.MapEntry
-            .<java.lang.String, com.facebook.buck.cd.model.java.RelPath>newDefaultInstance(
+            .<java.lang.String, com.facebook.buck.cd.model.common.RelPath>newDefaultInstance(
                 com.facebook.buck.cd.model.java.JavaCDProto.internal_static_javacd_api_v1_BasePipeliningCommand_CellToPathMappingsEntry_descriptor, 
                 com.google.protobuf.WireFormat.FieldType.STRING,
                 "",
                 com.google.protobuf.WireFormat.FieldType.MESSAGE,
-                com.facebook.buck.cd.model.java.RelPath.getDefaultInstance());
+                com.facebook.buck.cd.model.common.RelPath.getDefaultInstance());
   }
   private com.google.protobuf.MapField<
-      java.lang.String, com.facebook.buck.cd.model.java.RelPath> cellToPathMappings_;
-  private com.google.protobuf.MapField<java.lang.String, com.facebook.buck.cd.model.java.RelPath>
+      java.lang.String, com.facebook.buck.cd.model.common.RelPath> cellToPathMappings_;
+  private com.google.protobuf.MapField<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
   internalGetCellToPathMappings() {
     if (cellToPathMappings_ == null) {
       return com.google.protobuf.MapField.emptyMapField(
@@ -283,7 +283,7 @@ private static final long serialVersionUID = 0L;
     return internalGetCellToPathMappings().getMap().size();
   }
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
    */
 
   public boolean containsCellToPathMappings(
@@ -295,36 +295,36 @@ private static final long serialVersionUID = 0L;
    * Use {@link #getCellToPathMappingsMap()} instead.
    */
   @java.lang.Deprecated
-  public java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath> getCellToPathMappings() {
+  public java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath> getCellToPathMappings() {
     return getCellToPathMappingsMap();
   }
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
    */
 
-  public java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath> getCellToPathMappingsMap() {
+  public java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath> getCellToPathMappingsMap() {
     return internalGetCellToPathMappings().getMap();
   }
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
    */
 
-  public com.facebook.buck.cd.model.java.RelPath getCellToPathMappingsOrDefault(
+  public com.facebook.buck.cd.model.common.RelPath getCellToPathMappingsOrDefault(
       java.lang.String key,
-      com.facebook.buck.cd.model.java.RelPath defaultValue) {
+      com.facebook.buck.cd.model.common.RelPath defaultValue) {
     if (key == null) { throw new java.lang.NullPointerException(); }
-    java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath> map =
+    java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath> map =
         internalGetCellToPathMappings().getMap();
     return map.containsKey(key) ? map.get(key) : defaultValue;
   }
   /**
-   * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+   * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
    */
 
-  public com.facebook.buck.cd.model.java.RelPath getCellToPathMappingsOrThrow(
+  public com.facebook.buck.cd.model.common.RelPath getCellToPathMappingsOrThrow(
       java.lang.String key) {
     if (key == null) { throw new java.lang.NullPointerException(); }
-    java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath> map =
+    java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath> map =
         internalGetCellToPathMappings().getMap();
     if (!map.containsKey(key)) {
       throw new java.lang.IllegalArgumentException();
@@ -389,9 +389,9 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(4, resourcesMap_.get(i));
     }
-    for (java.util.Map.Entry<java.lang.String, com.facebook.buck.cd.model.java.RelPath> entry
+    for (java.util.Map.Entry<java.lang.String, com.facebook.buck.cd.model.common.RelPath> entry
          : internalGetCellToPathMappings().getMap().entrySet()) {
-      com.google.protobuf.MapEntry<java.lang.String, com.facebook.buck.cd.model.java.RelPath>
+      com.google.protobuf.MapEntry<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
       cellToPathMappings__ = CellToPathMappingsDefaultEntryHolder.defaultEntry.newBuilderForType()
           .setKey(entry.getKey())
           .setValue(entry.getValue())
@@ -1170,22 +1170,22 @@ private static final long serialVersionUID = 0L;
       return outputPathsValueBuilder_;
     }
 
-    private java.util.List<com.facebook.buck.cd.model.java.RelPathMapEntry> resourcesMap_ =
+    private java.util.List<com.facebook.buck.cd.model.common.RelPathMapEntry> resourcesMap_ =
       java.util.Collections.emptyList();
     private void ensureResourcesMapIsMutable() {
       if (!((bitField0_ & 0x00000008) != 0)) {
-        resourcesMap_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.RelPathMapEntry>(resourcesMap_);
+        resourcesMap_ = new java.util.ArrayList<com.facebook.buck.cd.model.common.RelPathMapEntry>(resourcesMap_);
         bitField0_ |= 0x00000008;
        }
     }
 
     private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.cd.model.java.RelPathMapEntry, com.facebook.buck.cd.model.java.RelPathMapEntry.Builder, com.facebook.buck.cd.model.java.RelPathMapEntryOrBuilder> resourcesMapBuilder_;
+        com.facebook.buck.cd.model.common.RelPathMapEntry, com.facebook.buck.cd.model.common.RelPathMapEntry.Builder, com.facebook.buck.cd.model.common.RelPathMapEntryOrBuilder> resourcesMapBuilder_;
 
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
-    public java.util.List<com.facebook.buck.cd.model.java.RelPathMapEntry> getResourcesMapList() {
+    public java.util.List<com.facebook.buck.cd.model.common.RelPathMapEntry> getResourcesMapList() {
       if (resourcesMapBuilder_ == null) {
         return java.util.Collections.unmodifiableList(resourcesMap_);
       } else {
@@ -1193,7 +1193,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
     public int getResourcesMapCount() {
       if (resourcesMapBuilder_ == null) {
@@ -1203,9 +1203,9 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPathMapEntry getResourcesMap(int index) {
+    public com.facebook.buck.cd.model.common.RelPathMapEntry getResourcesMap(int index) {
       if (resourcesMapBuilder_ == null) {
         return resourcesMap_.get(index);
       } else {
@@ -1213,10 +1213,10 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
     public Builder setResourcesMap(
-        int index, com.facebook.buck.cd.model.java.RelPathMapEntry value) {
+        int index, com.facebook.buck.cd.model.common.RelPathMapEntry value) {
       if (resourcesMapBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -1230,10 +1230,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
     public Builder setResourcesMap(
-        int index, com.facebook.buck.cd.model.java.RelPathMapEntry.Builder builderForValue) {
+        int index, com.facebook.buck.cd.model.common.RelPathMapEntry.Builder builderForValue) {
       if (resourcesMapBuilder_ == null) {
         ensureResourcesMapIsMutable();
         resourcesMap_.set(index, builderForValue.build());
@@ -1244,9 +1244,9 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
-    public Builder addResourcesMap(com.facebook.buck.cd.model.java.RelPathMapEntry value) {
+    public Builder addResourcesMap(com.facebook.buck.cd.model.common.RelPathMapEntry value) {
       if (resourcesMapBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -1260,10 +1260,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
     public Builder addResourcesMap(
-        int index, com.facebook.buck.cd.model.java.RelPathMapEntry value) {
+        int index, com.facebook.buck.cd.model.common.RelPathMapEntry value) {
       if (resourcesMapBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -1277,10 +1277,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
     public Builder addResourcesMap(
-        com.facebook.buck.cd.model.java.RelPathMapEntry.Builder builderForValue) {
+        com.facebook.buck.cd.model.common.RelPathMapEntry.Builder builderForValue) {
       if (resourcesMapBuilder_ == null) {
         ensureResourcesMapIsMutable();
         resourcesMap_.add(builderForValue.build());
@@ -1291,10 +1291,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
     public Builder addResourcesMap(
-        int index, com.facebook.buck.cd.model.java.RelPathMapEntry.Builder builderForValue) {
+        int index, com.facebook.buck.cd.model.common.RelPathMapEntry.Builder builderForValue) {
       if (resourcesMapBuilder_ == null) {
         ensureResourcesMapIsMutable();
         resourcesMap_.add(index, builderForValue.build());
@@ -1305,10 +1305,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
     public Builder addAllResourcesMap(
-        java.lang.Iterable<? extends com.facebook.buck.cd.model.java.RelPathMapEntry> values) {
+        java.lang.Iterable<? extends com.facebook.buck.cd.model.common.RelPathMapEntry> values) {
       if (resourcesMapBuilder_ == null) {
         ensureResourcesMapIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
@@ -1320,7 +1320,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
     public Builder clearResourcesMap() {
       if (resourcesMapBuilder_ == null) {
@@ -1333,7 +1333,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
     public Builder removeResourcesMap(int index) {
       if (resourcesMapBuilder_ == null) {
@@ -1346,16 +1346,16 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPathMapEntry.Builder getResourcesMapBuilder(
+    public com.facebook.buck.cd.model.common.RelPathMapEntry.Builder getResourcesMapBuilder(
         int index) {
       return getResourcesMapFieldBuilder().getBuilder(index);
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
+    public com.facebook.buck.cd.model.common.RelPathMapEntryOrBuilder getResourcesMapOrBuilder(
         int index) {
       if (resourcesMapBuilder_ == null) {
         return resourcesMap_.get(index);  } else {
@@ -1363,9 +1363,9 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
-    public java.util.List<? extends com.facebook.buck.cd.model.java.RelPathMapEntryOrBuilder> 
+    public java.util.List<? extends com.facebook.buck.cd.model.common.RelPathMapEntryOrBuilder> 
          getResourcesMapOrBuilderList() {
       if (resourcesMapBuilder_ != null) {
         return resourcesMapBuilder_.getMessageOrBuilderList();
@@ -1374,33 +1374,33 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPathMapEntry.Builder addResourcesMapBuilder() {
+    public com.facebook.buck.cd.model.common.RelPathMapEntry.Builder addResourcesMapBuilder() {
       return getResourcesMapFieldBuilder().addBuilder(
-          com.facebook.buck.cd.model.java.RelPathMapEntry.getDefaultInstance());
+          com.facebook.buck.cd.model.common.RelPathMapEntry.getDefaultInstance());
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPathMapEntry.Builder addResourcesMapBuilder(
+    public com.facebook.buck.cd.model.common.RelPathMapEntry.Builder addResourcesMapBuilder(
         int index) {
       return getResourcesMapFieldBuilder().addBuilder(
-          index, com.facebook.buck.cd.model.java.RelPathMapEntry.getDefaultInstance());
+          index, com.facebook.buck.cd.model.common.RelPathMapEntry.getDefaultInstance());
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPathMapEntry resourcesMap = 4;</code>
+     * <code>repeated .RelPathMapEntry resourcesMap = 4;</code>
      */
-    public java.util.List<com.facebook.buck.cd.model.java.RelPathMapEntry.Builder> 
+    public java.util.List<com.facebook.buck.cd.model.common.RelPathMapEntry.Builder> 
          getResourcesMapBuilderList() {
       return getResourcesMapFieldBuilder().getBuilderList();
     }
     private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.cd.model.java.RelPathMapEntry, com.facebook.buck.cd.model.java.RelPathMapEntry.Builder, com.facebook.buck.cd.model.java.RelPathMapEntryOrBuilder> 
+        com.facebook.buck.cd.model.common.RelPathMapEntry, com.facebook.buck.cd.model.common.RelPathMapEntry.Builder, com.facebook.buck.cd.model.common.RelPathMapEntryOrBuilder> 
         getResourcesMapFieldBuilder() {
       if (resourcesMapBuilder_ == null) {
         resourcesMapBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-            com.facebook.buck.cd.model.java.RelPathMapEntry, com.facebook.buck.cd.model.java.RelPathMapEntry.Builder, com.facebook.buck.cd.model.java.RelPathMapEntryOrBuilder>(
+            com.facebook.buck.cd.model.common.RelPathMapEntry, com.facebook.buck.cd.model.common.RelPathMapEntry.Builder, com.facebook.buck.cd.model.common.RelPathMapEntryOrBuilder>(
                 resourcesMap_,
                 ((bitField0_ & 0x00000008) != 0),
                 getParentForChildren(),
@@ -1411,8 +1411,8 @@ private static final long serialVersionUID = 0L;
     }
 
     private com.google.protobuf.MapField<
-        java.lang.String, com.facebook.buck.cd.model.java.RelPath> cellToPathMappings_;
-    private com.google.protobuf.MapField<java.lang.String, com.facebook.buck.cd.model.java.RelPath>
+        java.lang.String, com.facebook.buck.cd.model.common.RelPath> cellToPathMappings_;
+    private com.google.protobuf.MapField<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
     internalGetCellToPathMappings() {
       if (cellToPathMappings_ == null) {
         return com.google.protobuf.MapField.emptyMapField(
@@ -1420,7 +1420,7 @@ private static final long serialVersionUID = 0L;
       }
       return cellToPathMappings_;
     }
-    private com.google.protobuf.MapField<java.lang.String, com.facebook.buck.cd.model.java.RelPath>
+    private com.google.protobuf.MapField<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
     internalGetMutableCellToPathMappings() {
       onChanged();;
       if (cellToPathMappings_ == null) {
@@ -1437,7 +1437,7 @@ private static final long serialVersionUID = 0L;
       return internalGetCellToPathMappings().getMap().size();
     }
     /**
-     * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+     * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
      */
 
     public boolean containsCellToPathMappings(
@@ -1449,36 +1449,36 @@ private static final long serialVersionUID = 0L;
      * Use {@link #getCellToPathMappingsMap()} instead.
      */
     @java.lang.Deprecated
-    public java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath> getCellToPathMappings() {
+    public java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath> getCellToPathMappings() {
       return getCellToPathMappingsMap();
     }
     /**
-     * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+     * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
      */
 
-    public java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath> getCellToPathMappingsMap() {
+    public java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath> getCellToPathMappingsMap() {
       return internalGetCellToPathMappings().getMap();
     }
     /**
-     * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+     * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
      */
 
-    public com.facebook.buck.cd.model.java.RelPath getCellToPathMappingsOrDefault(
+    public com.facebook.buck.cd.model.common.RelPath getCellToPathMappingsOrDefault(
         java.lang.String key,
-        com.facebook.buck.cd.model.java.RelPath defaultValue) {
+        com.facebook.buck.cd.model.common.RelPath defaultValue) {
       if (key == null) { throw new java.lang.NullPointerException(); }
-      java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath> map =
+      java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath> map =
           internalGetCellToPathMappings().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+     * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
      */
 
-    public com.facebook.buck.cd.model.java.RelPath getCellToPathMappingsOrThrow(
+    public com.facebook.buck.cd.model.common.RelPath getCellToPathMappingsOrThrow(
         java.lang.String key) {
       if (key == null) { throw new java.lang.NullPointerException(); }
-      java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath> map =
+      java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath> map =
           internalGetCellToPathMappings().getMap();
       if (!map.containsKey(key)) {
         throw new java.lang.IllegalArgumentException();
@@ -1492,7 +1492,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+     * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
      */
 
     public Builder removeCellToPathMappings(
@@ -1506,16 +1506,16 @@ private static final long serialVersionUID = 0L;
      * Use alternate mutation accessors instead.
      */
     @java.lang.Deprecated
-    public java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath>
+    public java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
     getMutableCellToPathMappings() {
       return internalGetMutableCellToPathMappings().getMutableMap();
     }
     /**
-     * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+     * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
      */
     public Builder putCellToPathMappings(
         java.lang.String key,
-        com.facebook.buck.cd.model.java.RelPath value) {
+        com.facebook.buck.cd.model.common.RelPath value) {
       if (key == null) { throw new java.lang.NullPointerException(); }
       if (value == null) { throw new java.lang.NullPointerException(); }
       internalGetMutableCellToPathMappings().getMutableMap()
@@ -1523,11 +1523,11 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>map&lt;string, .javacd.api.v1.RelPath&gt; cellToPathMappings = 5;</code>
+     * <code>map&lt;string, .RelPath&gt; cellToPathMappings = 5;</code>
      */
 
     public Builder putAllCellToPathMappings(
-        java.util.Map<java.lang.String, com.facebook.buck.cd.model.java.RelPath> values) {
+        java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath> values) {
       internalGetMutableCellToPathMappings().getMutableMap()
           .putAll(values);
       return this;

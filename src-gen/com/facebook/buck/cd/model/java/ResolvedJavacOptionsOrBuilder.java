@@ -20,27 +20,27 @@ public interface ResolvedJavacOptionsOrBuilder extends
       getBootclasspathBytes();
 
   /**
-   * <code>repeated .javacd.api.v1.RelPath bootclasspathList = 2;</code>
+   * <code>repeated .RelPath bootclasspathList = 2;</code>
    */
-  java.util.List<com.facebook.buck.cd.model.java.RelPath> 
+  java.util.List<com.facebook.buck.cd.model.common.RelPath> 
       getBootclasspathListList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath bootclasspathList = 2;</code>
+   * <code>repeated .RelPath bootclasspathList = 2;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getBootclasspathList(int index);
+  com.facebook.buck.cd.model.common.RelPath getBootclasspathList(int index);
   /**
-   * <code>repeated .javacd.api.v1.RelPath bootclasspathList = 2;</code>
+   * <code>repeated .RelPath bootclasspathList = 2;</code>
    */
   int getBootclasspathListCount();
   /**
-   * <code>repeated .javacd.api.v1.RelPath bootclasspathList = 2;</code>
+   * <code>repeated .RelPath bootclasspathList = 2;</code>
    */
-  java.util.List<? extends com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+  java.util.List<? extends com.facebook.buck.cd.model.common.RelPathOrBuilder> 
       getBootclasspathListOrBuilderList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath bootclasspathList = 2;</code>
+   * <code>repeated .RelPath bootclasspathList = 2;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getBootclasspathListOrBuilder(
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getBootclasspathListOrBuilder(
       int index);
 
   /**

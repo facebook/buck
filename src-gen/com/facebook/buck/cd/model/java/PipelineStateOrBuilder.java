@@ -23,51 +23,51 @@ public interface PipelineStateOrBuilder extends
   com.facebook.buck.cd.model.java.BuildTargetValueOrBuilder getBuildTargetValueOrBuilder();
 
   /**
-   * <code>repeated .javacd.api.v1.RelPath compileTimeClasspathPaths = 2;</code>
+   * <code>repeated .RelPath compileTimeClasspathPaths = 2;</code>
    */
-  java.util.List<com.facebook.buck.cd.model.java.RelPath> 
+  java.util.List<com.facebook.buck.cd.model.common.RelPath> 
       getCompileTimeClasspathPathsList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath compileTimeClasspathPaths = 2;</code>
+   * <code>repeated .RelPath compileTimeClasspathPaths = 2;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getCompileTimeClasspathPaths(int index);
+  com.facebook.buck.cd.model.common.RelPath getCompileTimeClasspathPaths(int index);
   /**
-   * <code>repeated .javacd.api.v1.RelPath compileTimeClasspathPaths = 2;</code>
+   * <code>repeated .RelPath compileTimeClasspathPaths = 2;</code>
    */
   int getCompileTimeClasspathPathsCount();
   /**
-   * <code>repeated .javacd.api.v1.RelPath compileTimeClasspathPaths = 2;</code>
+   * <code>repeated .RelPath compileTimeClasspathPaths = 2;</code>
    */
-  java.util.List<? extends com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+  java.util.List<? extends com.facebook.buck.cd.model.common.RelPathOrBuilder> 
       getCompileTimeClasspathPathsOrBuilderList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath compileTimeClasspathPaths = 2;</code>
+   * <code>repeated .RelPath compileTimeClasspathPaths = 2;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getCompileTimeClasspathPathsOrBuilder(
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getCompileTimeClasspathPathsOrBuilder(
       int index);
 
   /**
-   * <code>repeated .javacd.api.v1.RelPath javaSrcs = 3;</code>
+   * <code>repeated .RelPath javaSrcs = 3;</code>
    */
-  java.util.List<com.facebook.buck.cd.model.java.RelPath> 
+  java.util.List<com.facebook.buck.cd.model.common.RelPath> 
       getJavaSrcsList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath javaSrcs = 3;</code>
+   * <code>repeated .RelPath javaSrcs = 3;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getJavaSrcs(int index);
+  com.facebook.buck.cd.model.common.RelPath getJavaSrcs(int index);
   /**
-   * <code>repeated .javacd.api.v1.RelPath javaSrcs = 3;</code>
+   * <code>repeated .RelPath javaSrcs = 3;</code>
    */
   int getJavaSrcsCount();
   /**
-   * <code>repeated .javacd.api.v1.RelPath javaSrcs = 3;</code>
+   * <code>repeated .RelPath javaSrcs = 3;</code>
    */
-  java.util.List<? extends com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+  java.util.List<? extends com.facebook.buck.cd.model.common.RelPathOrBuilder> 
       getJavaSrcsOrBuilderList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath javaSrcs = 3;</code>
+   * <code>repeated .RelPath javaSrcs = 3;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getJavaSrcsOrBuilder(
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getJavaSrcsOrBuilder(
       int index);
 
   /**

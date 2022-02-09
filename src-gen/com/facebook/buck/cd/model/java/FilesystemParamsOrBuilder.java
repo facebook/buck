@@ -10,30 +10,30 @@ public interface FilesystemParamsOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+   * <code>.AbsPath rootPath = 1;</code>
    */
   boolean hasRootPath();
   /**
-   * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+   * <code>.AbsPath rootPath = 1;</code>
    */
-  com.facebook.buck.cd.model.java.AbsPath getRootPath();
+  com.facebook.buck.cd.model.common.AbsPath getRootPath();
   /**
-   * <code>.javacd.api.v1.AbsPath rootPath = 1;</code>
+   * <code>.AbsPath rootPath = 1;</code>
    */
-  com.facebook.buck.cd.model.java.AbsPathOrBuilder getRootPathOrBuilder();
+  com.facebook.buck.cd.model.common.AbsPathOrBuilder getRootPathOrBuilder();
 
   /**
-   * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+   * <code>.RelPath configuredBuckOut = 2;</code>
    */
   boolean hasConfiguredBuckOut();
   /**
-   * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+   * <code>.RelPath configuredBuckOut = 2;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getConfiguredBuckOut();
+  com.facebook.buck.cd.model.common.RelPath getConfiguredBuckOut();
   /**
-   * <code>.javacd.api.v1.RelPath configuredBuckOut = 2;</code>
+   * <code>.RelPath configuredBuckOut = 2;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getConfiguredBuckOutOrBuilder();
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getConfiguredBuckOutOrBuilder();
 
   /**
    * <code>repeated string globIgnorePaths = 3;</code>

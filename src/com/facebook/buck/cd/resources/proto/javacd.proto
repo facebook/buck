@@ -31,6 +31,8 @@ option java_outer_classname = "JavaCDProto";
 // best practices to include version number in package
 package javacd.api.v1;
 
+import "cd/resources/proto/common.proto";
+
 // Base parameters used by all commands (abi or library jars, as well as pipelining command)
 message BaseCommandParams{
     SpoolMode spoolMode = 1;
@@ -102,12 +104,6 @@ enum AbiGenerationMode {
      * Generate ABIs by parsing .java files without dependency ABIs available (has some limitations)
      */
     SOURCE_ONLY = 4;
-}
-
-// protobuf map doesn't support custom type as map key, so would present a map as list of entries.
-message RelPathMapEntry {
-    RelPath key = 1;
-    RelPath value = 2;
 }
 
 // Represents base parameter for library commands (both library jar and pipelining library jar)
@@ -335,17 +331,4 @@ message UnusedDependenciesParams {
         RelPath fullJarPath = 2;
         RelPath abiPath = 3;
     }
-}
-
-message RelPath {
-    string path = 1;
-}
-
-message AbsPath {
-    string path = 1;
-}
-
-// TODO: the only place where this type is used is JavaAbiInfo.contentPaths
-message Path {
-    string path = 1;
 }

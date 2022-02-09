@@ -64,7 +64,8 @@ public class JavaAbiInfoSerializer {
   public static DefaultBaseJavaAbiInfo deserialize(JavaAbiInfo javaAbiInfo) {
     DefaultBaseJavaAbiInfo defaultBaseJavaAbiInfo =
         new DefaultBaseJavaAbiInfo(javaAbiInfo.getBuildTargetName());
-    List<com.facebook.buck.cd.model.java.Path> contentPathsList = javaAbiInfo.getContentPathsList();
+    List<com.facebook.buck.cd.model.common.Path> contentPathsList =
+        javaAbiInfo.getContentPathsList();
     if (!contentPathsList.isEmpty()) {
       defaultBaseJavaAbiInfo.setContentPaths(
           contentPathsList.stream()

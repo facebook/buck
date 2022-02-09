@@ -54,11 +54,11 @@ private static final long serialVersionUID = 0L;
           }
           case 18: {
             if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-              contentPaths_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.Path>();
+              contentPaths_ = new java.util.ArrayList<com.facebook.buck.cd.model.common.Path>();
               mutable_bitField0_ |= 0x00000002;
             }
             contentPaths_.add(
-                input.readMessage(com.facebook.buck.cd.model.java.Path.parser(), extensionRegistry));
+                input.readMessage(com.facebook.buck.cd.model.common.Path.parser(), extensionRegistry));
             break;
           }
           default: {
@@ -132,36 +132,36 @@ private static final long serialVersionUID = 0L;
   }
 
   public static final int CONTENTPATHS_FIELD_NUMBER = 2;
-  private java.util.List<com.facebook.buck.cd.model.java.Path> contentPaths_;
+  private java.util.List<com.facebook.buck.cd.model.common.Path> contentPaths_;
   /**
-   * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+   * <code>repeated .Path contentPaths = 2;</code>
    */
-  public java.util.List<com.facebook.buck.cd.model.java.Path> getContentPathsList() {
+  public java.util.List<com.facebook.buck.cd.model.common.Path> getContentPathsList() {
     return contentPaths_;
   }
   /**
-   * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+   * <code>repeated .Path contentPaths = 2;</code>
    */
-  public java.util.List<? extends com.facebook.buck.cd.model.java.PathOrBuilder> 
+  public java.util.List<? extends com.facebook.buck.cd.model.common.PathOrBuilder> 
       getContentPathsOrBuilderList() {
     return contentPaths_;
   }
   /**
-   * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+   * <code>repeated .Path contentPaths = 2;</code>
    */
   public int getContentPathsCount() {
     return contentPaths_.size();
   }
   /**
-   * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+   * <code>repeated .Path contentPaths = 2;</code>
    */
-  public com.facebook.buck.cd.model.java.Path getContentPaths(int index) {
+  public com.facebook.buck.cd.model.common.Path getContentPaths(int index) {
     return contentPaths_.get(index);
   }
   /**
-   * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+   * <code>repeated .Path contentPaths = 2;</code>
    */
-  public com.facebook.buck.cd.model.java.PathOrBuilder getContentPathsOrBuilder(
+  public com.facebook.buck.cd.model.common.PathOrBuilder getContentPathsOrBuilder(
       int index) {
     return contentPaths_.get(index);
   }
@@ -596,22 +596,22 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private java.util.List<com.facebook.buck.cd.model.java.Path> contentPaths_ =
+    private java.util.List<com.facebook.buck.cd.model.common.Path> contentPaths_ =
       java.util.Collections.emptyList();
     private void ensureContentPathsIsMutable() {
       if (!((bitField0_ & 0x00000002) != 0)) {
-        contentPaths_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.Path>(contentPaths_);
+        contentPaths_ = new java.util.ArrayList<com.facebook.buck.cd.model.common.Path>(contentPaths_);
         bitField0_ |= 0x00000002;
        }
     }
 
     private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.cd.model.java.Path, com.facebook.buck.cd.model.java.Path.Builder, com.facebook.buck.cd.model.java.PathOrBuilder> contentPathsBuilder_;
+        com.facebook.buck.cd.model.common.Path, com.facebook.buck.cd.model.common.Path.Builder, com.facebook.buck.cd.model.common.PathOrBuilder> contentPathsBuilder_;
 
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
-    public java.util.List<com.facebook.buck.cd.model.java.Path> getContentPathsList() {
+    public java.util.List<com.facebook.buck.cd.model.common.Path> getContentPathsList() {
       if (contentPathsBuilder_ == null) {
         return java.util.Collections.unmodifiableList(contentPaths_);
       } else {
@@ -619,7 +619,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
     public int getContentPathsCount() {
       if (contentPathsBuilder_ == null) {
@@ -629,9 +629,9 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
-    public com.facebook.buck.cd.model.java.Path getContentPaths(int index) {
+    public com.facebook.buck.cd.model.common.Path getContentPaths(int index) {
       if (contentPathsBuilder_ == null) {
         return contentPaths_.get(index);
       } else {
@@ -639,10 +639,10 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
     public Builder setContentPaths(
-        int index, com.facebook.buck.cd.model.java.Path value) {
+        int index, com.facebook.buck.cd.model.common.Path value) {
       if (contentPathsBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -656,10 +656,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
     public Builder setContentPaths(
-        int index, com.facebook.buck.cd.model.java.Path.Builder builderForValue) {
+        int index, com.facebook.buck.cd.model.common.Path.Builder builderForValue) {
       if (contentPathsBuilder_ == null) {
         ensureContentPathsIsMutable();
         contentPaths_.set(index, builderForValue.build());
@@ -670,9 +670,9 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
-    public Builder addContentPaths(com.facebook.buck.cd.model.java.Path value) {
+    public Builder addContentPaths(com.facebook.buck.cd.model.common.Path value) {
       if (contentPathsBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -686,10 +686,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
     public Builder addContentPaths(
-        int index, com.facebook.buck.cd.model.java.Path value) {
+        int index, com.facebook.buck.cd.model.common.Path value) {
       if (contentPathsBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -703,10 +703,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
     public Builder addContentPaths(
-        com.facebook.buck.cd.model.java.Path.Builder builderForValue) {
+        com.facebook.buck.cd.model.common.Path.Builder builderForValue) {
       if (contentPathsBuilder_ == null) {
         ensureContentPathsIsMutable();
         contentPaths_.add(builderForValue.build());
@@ -717,10 +717,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
     public Builder addContentPaths(
-        int index, com.facebook.buck.cd.model.java.Path.Builder builderForValue) {
+        int index, com.facebook.buck.cd.model.common.Path.Builder builderForValue) {
       if (contentPathsBuilder_ == null) {
         ensureContentPathsIsMutable();
         contentPaths_.add(index, builderForValue.build());
@@ -731,10 +731,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
     public Builder addAllContentPaths(
-        java.lang.Iterable<? extends com.facebook.buck.cd.model.java.Path> values) {
+        java.lang.Iterable<? extends com.facebook.buck.cd.model.common.Path> values) {
       if (contentPathsBuilder_ == null) {
         ensureContentPathsIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
@@ -746,7 +746,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
     public Builder clearContentPaths() {
       if (contentPathsBuilder_ == null) {
@@ -759,7 +759,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
     public Builder removeContentPaths(int index) {
       if (contentPathsBuilder_ == null) {
@@ -772,16 +772,16 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
-    public com.facebook.buck.cd.model.java.Path.Builder getContentPathsBuilder(
+    public com.facebook.buck.cd.model.common.Path.Builder getContentPathsBuilder(
         int index) {
       return getContentPathsFieldBuilder().getBuilder(index);
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
-    public com.facebook.buck.cd.model.java.PathOrBuilder getContentPathsOrBuilder(
+    public com.facebook.buck.cd.model.common.PathOrBuilder getContentPathsOrBuilder(
         int index) {
       if (contentPathsBuilder_ == null) {
         return contentPaths_.get(index);  } else {
@@ -789,9 +789,9 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
-    public java.util.List<? extends com.facebook.buck.cd.model.java.PathOrBuilder> 
+    public java.util.List<? extends com.facebook.buck.cd.model.common.PathOrBuilder> 
          getContentPathsOrBuilderList() {
       if (contentPathsBuilder_ != null) {
         return contentPathsBuilder_.getMessageOrBuilderList();
@@ -800,33 +800,33 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
-    public com.facebook.buck.cd.model.java.Path.Builder addContentPathsBuilder() {
+    public com.facebook.buck.cd.model.common.Path.Builder addContentPathsBuilder() {
       return getContentPathsFieldBuilder().addBuilder(
-          com.facebook.buck.cd.model.java.Path.getDefaultInstance());
+          com.facebook.buck.cd.model.common.Path.getDefaultInstance());
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
-    public com.facebook.buck.cd.model.java.Path.Builder addContentPathsBuilder(
+    public com.facebook.buck.cd.model.common.Path.Builder addContentPathsBuilder(
         int index) {
       return getContentPathsFieldBuilder().addBuilder(
-          index, com.facebook.buck.cd.model.java.Path.getDefaultInstance());
+          index, com.facebook.buck.cd.model.common.Path.getDefaultInstance());
     }
     /**
-     * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+     * <code>repeated .Path contentPaths = 2;</code>
      */
-    public java.util.List<com.facebook.buck.cd.model.java.Path.Builder> 
+    public java.util.List<com.facebook.buck.cd.model.common.Path.Builder> 
          getContentPathsBuilderList() {
       return getContentPathsFieldBuilder().getBuilderList();
     }
     private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.cd.model.java.Path, com.facebook.buck.cd.model.java.Path.Builder, com.facebook.buck.cd.model.java.PathOrBuilder> 
+        com.facebook.buck.cd.model.common.Path, com.facebook.buck.cd.model.common.Path.Builder, com.facebook.buck.cd.model.common.PathOrBuilder> 
         getContentPathsFieldBuilder() {
       if (contentPathsBuilder_ == null) {
         contentPathsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-            com.facebook.buck.cd.model.java.Path, com.facebook.buck.cd.model.java.Path.Builder, com.facebook.buck.cd.model.java.PathOrBuilder>(
+            com.facebook.buck.cd.model.common.Path, com.facebook.buck.cd.model.common.Path.Builder, com.facebook.buck.cd.model.common.PathOrBuilder>(
                 contentPaths_,
                 ((bitField0_ & 0x00000002) != 0),
                 getParentForChildren(),

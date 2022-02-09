@@ -48,9 +48,11 @@ public class FilesystemParamsUtils {
 
     FilesystemParams.Builder builder = FilesystemParams.newBuilder();
     builder.setRootPath(
-        com.facebook.buck.cd.model.java.AbsPath.newBuilder().setPath(rootPath.toString()).build());
+        com.facebook.buck.cd.model.common.AbsPath.newBuilder()
+            .setPath(rootPath.toString())
+            .build());
     builder.setConfiguredBuckOut(
-        com.facebook.buck.cd.model.java.RelPath.newBuilder()
+        com.facebook.buck.cd.model.common.RelPath.newBuilder()
             .setPath(configuredBuckOut.toString())
             .build());
     for (PathMatcher pathMatcher : projectFilesystem.getIgnoredPaths()) {

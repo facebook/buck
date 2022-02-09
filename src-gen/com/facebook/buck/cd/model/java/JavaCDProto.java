@@ -37,11 +37,6 @@ public final class JavaCDProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_javacd_api_v1_BaseJarCommand_CellToPathMappingsEntry_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_javacd_api_v1_RelPathMapEntry_descriptor;
-  static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_javacd_api_v1_RelPathMapEntry_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_javacd_api_v1_LibraryJarBaseCommand_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -181,21 +176,6 @@ public final class JavaCDProto {
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_javacd_api_v1_UnusedDependenciesParams_BuildTargetAndPaths_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_javacd_api_v1_RelPath_descriptor;
-  static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_javacd_api_v1_RelPath_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_javacd_api_v1_AbsPath_descriptor;
-  static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_javacd_api_v1_AbsPath_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_javacd_api_v1_Path_descriptor;
-  static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_javacd_api_v1_Path_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -206,212 +186,197 @@ public final class JavaCDProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\037cd/resources/proto/javacd.proto\022\rjavac" +
-      "d.api.v1\"\323\001\n\021BaseCommandParams\022=\n\tspoolM" +
-      "ode\030\001 \001(\0162*.javacd.api.v1.BaseCommandPar" +
-      "ams.SpoolMode\022\037\n\027hasAnnotationProcessing" +
-      "\030\002 \001(\010\022\027\n\017withDownwardApi\030\003 \001(\010\"E\n\tSpool" +
-      "Mode\022\013\n\007UNKNOWN\020\000\022\021\n\rDIRECT_TO_JAR\020\001\022\030\n\024" +
-      "INTERMEDIATE_TO_DISK\020\002\"\320\001\n\020BuildJavaComm" +
-      "and\022;\n\021baseCommandParams\030\001 \001(\0132 .javacd." +
-      "api.v1.BaseCommandParams\022=\n\021libraryJarCo" +
-      "mmand\030\002 \001(\0132 .javacd.api.v1.LibraryJarCo" +
-      "mmandH\000\0225\n\rabiJarCommand\030\003 \001(\0132\034.javacd." +
-      "api.v1.AbiJarCommandH\000B\t\n\007command\"\245\010\n\016Ba" +
-      "seJarCommand\022>\n\024abiCompatibilityMode\030\001 \001" +
-      "(\0162 .javacd.api.v1.AbiGenerationMode\022;\n\021" +
-      "abiGenerationMode\030\002 \001(\0162 .javacd.api.v1." +
-      "AbiGenerationMode\022\"\n\032isRequiredForSource" +
-      "OnlyAbi\030\003 \001(\010\022\027\n\017trackClassUsage\030\004 \001(\010\022\035" +
-      "\n\025trackJavacPhaseEvents\030\005 \001(\010\0229\n\020filesys" +
-      "temParams\030\006 \001(\0132\037.javacd.api.v1.Filesyst" +
-      "emParams\0229\n\020buildTargetValue\030\007 \001(\0132\037.jav" +
-      "acd.api.v1.BuildTargetValue\0229\n\020outputPat" +
-      "hsValue\030\010 \001(\0132\037.javacd.api.v1.OutputPath" +
-      "sValue\0229\n\031compileTimeClasspathPaths\030\t \003(" +
-      "\0132\026.javacd.api.v1.RelPath\022(\n\010javaSrcs\030\n " +
-      "\003(\0132\026.javacd.api.v1.RelPath\0220\n\014fullJarIn" +
-      "fos\030\013 \003(\0132\032.javacd.api.v1.JavaAbiInfo\022/\n" +
-      "\013abiJarInfos\030\014 \003(\0132\032.javacd.api.v1.JavaA" +
-      "biInfo\0224\n\014resourcesMap\030\r \003(\0132\036.javacd.ap" +
-      "i.v1.RelPathMapEntry\022Q\n\022cellToPathMappin" +
-      "gs\030\016 \003(\01325.javacd.api.v1.BaseJarCommand." +
-      "CellToPathMappingsEntry\022:\n\024libraryJarPar" +
-      "ameters\030\017 \001(\0132\034.javacd.api.v1.JarParamet" +
-      "ers\0221\n\021buildCellRootPath\030\020 \001(\0132\026.javacd." +
-      "api.v1.AbsPath\0223\n\rresolvedJavac\030\021 \001(\0132\034." +
-      "javacd.api.v1.ResolvedJavac\022A\n\024resolvedJ" +
-      "avacOptions\030\022 \001(\0132#.javacd.api.v1.Resolv" +
-      "edJavacOptions\032Q\n\027CellToPathMappingsEntr" +
-      "y\022\013\n\003key\030\001 \001(\t\022%\n\005value\030\002 \001(\0132\026.javacd.a" +
-      "pi.v1.RelPath:\0028\001\"]\n\017RelPathMapEntry\022#\n\003" +
-      "key\030\001 \001(\0132\026.javacd.api.v1.RelPath\022%\n\005val" +
-      "ue\030\002 \001(\0132\026.javacd.api.v1.RelPath\"\241\002\n\025Lib" +
-      "raryJarBaseCommand\022-\n\rpathToClasses\030\003 \001(" +
-      "\0132\026.javacd.api.v1.RelPath\022*\n\nrootOutput\030" +
-      "\004 \001(\0132\026.javacd.api.v1.RelPath\0221\n\021pathToC" +
-      "lassHashes\030\005 \001(\0132\026.javacd.api.v1.RelPath" +
-      "\022/\n\017annotationsPath\030\006 \001(\0132\026.javacd.api.v" +
-      "1.RelPath\022I\n\030unusedDependenciesParams\030\007 " +
-      "\001(\0132\'.javacd.api.v1.UnusedDependenciesPa" +
-      "rams\"\217\001\n\021LibraryJarCommand\0225\n\016baseJarCom" +
-      "mand\030\001 \001(\0132\035.javacd.api.v1.BaseJarComman" +
-      "d\022C\n\025libraryJarBaseCommand\030\002 \001(\0132$.javac" +
-      "d.api.v1.LibraryJarBaseCommand\"~\n\rAbiJar" +
-      "Command\0225\n\016baseJarCommand\030\001 \001(\0132\035.javacd" +
-      ".api.v1.BaseJarCommand\0226\n\020abiJarParamete" +
-      "rs\030\002 \001(\0132\034.javacd.api.v1.JarParameters\"\202" +
-      "\002\n\021PipeliningCommand\022;\n\021baseCommandParam" +
-      "s\030\001 \001(\0132 .javacd.api.v1.BaseCommandParam" +
-      "s\0225\n\017pipeliningState\030\002 \001(\0132\034.javacd.api." +
-      "v1.PipelineState\0228\n\nabiCommand\030\003 \001(\0132$.j" +
-      "avacd.api.v1.BasePipeliningCommand\022?\n\016li" +
-      "braryCommand\030\004 \001(\0132\'.javacd.api.v1.Libra" +
-      "ryPipeliningCommand\"\253\003\n\025BasePipeliningCo" +
-      "mmand\0229\n\020buildTargetValue\030\001 \001(\0132\037.javacd" +
-      ".api.v1.BuildTargetValue\0229\n\020filesystemPa" +
-      "rams\030\002 \001(\0132\037.javacd.api.v1.FilesystemPar" +
-      "ams\0229\n\020outputPathsValue\030\003 \001(\0132\037.javacd.a" +
-      "pi.v1.OutputPathsValue\0224\n\014resourcesMap\030\004" +
-      " \003(\0132\036.javacd.api.v1.RelPathMapEntry\022X\n\022" +
-      "cellToPathMappings\030\005 \003(\0132<.javacd.api.v1" +
-      ".BasePipeliningCommand.CellToPathMapping" +
-      "sEntry\032Q\n\027CellToPathMappingsEntry\022\013\n\003key" +
-      "\030\001 \001(\t\022%\n\005value\030\002 \001(\0132\026.javacd.api.v1.Re" +
-      "lPath:\0028\001\"\244\001\n\030LibraryPipeliningCommand\022C" +
-      "\n\025basePipeliningCommand\030\001 \001(\0132$.javacd.a" +
-      "pi.v1.BasePipeliningCommand\022C\n\025libraryJa" +
-      "rBaseCommand\030\002 \001(\0132$.javacd.api.v1.Libra" +
-      "ryJarBaseCommand\"\262\006\n\rPipelineState\0229\n\020bu" +
-      "ildTargetValue\030\001 \001(\0132\037.javacd.api.v1.Bui" +
-      "ldTargetValue\0229\n\031compileTimeClasspathPat" +
-      "hs\030\002 \003(\0132\026.javacd.api.v1.RelPath\022(\n\010java" +
-      "Srcs\030\003 \003(\0132\026.javacd.api.v1.RelPath\0220\n\014fu" +
-      "llJarInfos\030\004 \003(\0132\032.javacd.api.v1.JavaAbi" +
-      "Info\022/\n\013abiJarInfos\030\005 \003(\0132\032.javacd.api.v" +
-      "1.JavaAbiInfo\022\027\n\017trackClassUsage\030\006 \001(\010\022\035" +
-      "\n\025trackJavacPhaseEvents\030\007 \001(\010\022>\n\024abiComp" +
-      "atibilityMode\030\010 \001(\0162 .javacd.api.v1.AbiG" +
-      "enerationMode\022;\n\021abiGenerationMode\030\t \001(\016" +
-      "2 .javacd.api.v1.AbiGenerationMode\022\"\n\032is" +
-      "RequiredForSourceOnlyAbi\030\n \001(\010\022@\n\013output" +
-      "Paths\030\013 \001(\0132+.javacd.api.v1.OutputPathsV" +
-      "alue.OutputPaths\0226\n\020abiJarParameters\030\014 \001" +
-      "(\0132\034.javacd.api.v1.JarParameters\022:\n\024libr" +
-      "aryJarParameters\030\r \001(\0132\034.javacd.api.v1.J" +
-      "arParameters\022\027\n\017withDownwardApi\030\016 \001(\010\0223\n" +
-      "\rresolvedJavac\030\017 \001(\0132\034.javacd.api.v1.Res" +
-      "olvedJavac\022A\n\024resolvedJavacOptions\030\020 \001(\013" +
-      "2#.javacd.api.v1.ResolvedJavacOptions\"\210\001" +
-      "\n\020FilesystemParams\022(\n\010rootPath\030\001 \001(\0132\026.j" +
-      "avacd.api.v1.AbsPath\0221\n\021configuredBuckOu" +
-      "t\030\002 \001(\0132\026.javacd.api.v1.RelPath\022\027\n\017globI" +
-      "gnorePaths\030\003 \003(\t\"\251\001\n\020BuildTargetValue\022\032\n" +
-      "\022fullyQualifiedName\030\001 \001(\t\0222\n\004type\030\002 \001(\0162" +
-      "$.javacd.api.v1.BuildTargetValue.Type\"E\n" +
-      "\004Type\022\013\n\007UNKNOWN\020\000\022\013\n\007LIBRARY\020\001\022\016\n\nSOURC" +
-      "E_ABI\020\002\022\023\n\017SOURCE_ONLY_ABI\020\003\"\352\004\n\020OutputP" +
-      "athsValue\022A\n\014libraryPaths\030\001 \001(\0132+.javacd" +
-      ".api.v1.OutputPathsValue.OutputPaths\022C\n\016" +
-      "sourceAbiPaths\030\002 \001(\0132+.javacd.api.v1.Out" +
-      "putPathsValue.OutputPaths\022G\n\022sourceOnlyA" +
-      "biPaths\030\003 \001(\0132+.javacd.api.v1.OutputPath" +
-      "sValue.OutputPaths\022\'\n\037libraryTargetFully" +
-      "QualifiedName\030\004 \001(\t\032\333\002\n\013OutputPaths\022*\n\nc" +
-      "lassesDir\030\001 \001(\0132\026.javacd.api.v1.RelPath\022" +
-      "0\n\020outputJarDirPath\030\002 \001(\0132\026.javacd.api.v" +
-      "1.RelPath\022*\n\nabiJarPath\030\003 \001(\0132\026.javacd.a" +
-      "pi.v1.RelPath\022.\n\016annotationPath\030\004 \001(\0132\026." +
-      "javacd.api.v1.RelPath\0221\n\021pathToSourcesLi" +
-      "st\030\005 \001(\0132\026.javacd.api.v1.RelPath\0220\n\020work" +
-      "ingDirectory\030\006 \001(\0132\026.javacd.api.v1.RelPa" +
-      "th\022-\n\routputJarPath\030\007 \001(\0132\026.javacd.api.v" +
-      "1.RelPath\"Q\n\013JavaAbiInfo\022\027\n\017buildTargetN" +
-      "ame\030\001 \001(\t\022)\n\014contentPaths\030\002 \003(\0132\023.javacd" +
-      ".api.v1.Path\"\210\013\n\024ResolvedJavacOptions\022\025\n" +
-      "\rbootclasspath\030\001 \001(\t\0221\n\021bootclasspathLis" +
-      "t\030\002 \003(\0132\026.javacd.api.v1.RelPath\022[\n\024langu" +
-      "ageLevelOptions\030\003 \001(\0132=.javacd.api.v1.Re" +
-      "solvedJavacOptions.JavacLanguageLevelOpt" +
-      "ions\022\r\n\005debug\030\004 \001(\010\022\017\n\007verbose\030\005 \001(\010\022\\\n\035" +
-      "javaAnnotationProcessorParams\030\006 \001(\01325.ja" +
-      "vacd.api.v1.ResolvedJavacOptions.JavacPl" +
-      "uginParams\022X\n\031standardJavacPluginParams\030" +
-      "\007 \001(\01325.javacd.api.v1.ResolvedJavacOptio" +
-      "ns.JavacPluginParams\022\026\n\016extraArguments\030\010" +
-      " \003(\t\022Y\n\024annotationProcessors\030\t \003(\0132;.jav" +
-      "acd.api.v1.ResolvedJavacOptions.JavacPlu" +
-      "ginJsr199Fields\022P\n\013javaPlugins\030\n \003(\0132;.j" +
+      "d.api.v1\032\037cd/resources/proto/common.prot" +
+      "o\"\323\001\n\021BaseCommandParams\022=\n\tspoolMode\030\001 \001" +
+      "(\0162*.javacd.api.v1.BaseCommandParams.Spo" +
+      "olMode\022\037\n\027hasAnnotationProcessing\030\002 \001(\010\022" +
+      "\027\n\017withDownwardApi\030\003 \001(\010\"E\n\tSpoolMode\022\013\n" +
+      "\007UNKNOWN\020\000\022\021\n\rDIRECT_TO_JAR\020\001\022\030\n\024INTERME" +
+      "DIATE_TO_DISK\020\002\"\320\001\n\020BuildJavaCommand\022;\n\021" +
+      "baseCommandParams\030\001 \001(\0132 .javacd.api.v1." +
+      "BaseCommandParams\022=\n\021libraryJarCommand\030\002" +
+      " \001(\0132 .javacd.api.v1.LibraryJarCommandH\000" +
+      "\0225\n\rabiJarCommand\030\003 \001(\0132\034.javacd.api.v1." +
+      "AbiJarCommandH\000B\t\n\007command\"\337\007\n\016BaseJarCo" +
+      "mmand\022>\n\024abiCompatibilityMode\030\001 \001(\0162 .ja" +
+      "vacd.api.v1.AbiGenerationMode\022;\n\021abiGene" +
+      "rationMode\030\002 \001(\0162 .javacd.api.v1.AbiGene" +
+      "rationMode\022\"\n\032isRequiredForSourceOnlyAbi" +
+      "\030\003 \001(\010\022\027\n\017trackClassUsage\030\004 \001(\010\022\035\n\025track" +
+      "JavacPhaseEvents\030\005 \001(\010\0229\n\020filesystemPara" +
+      "ms\030\006 \001(\0132\037.javacd.api.v1.FilesystemParam" +
+      "s\0229\n\020buildTargetValue\030\007 \001(\0132\037.javacd.api" +
+      ".v1.BuildTargetValue\0229\n\020outputPathsValue" +
+      "\030\010 \001(\0132\037.javacd.api.v1.OutputPathsValue\022" +
+      "+\n\031compileTimeClasspathPaths\030\t \003(\0132\010.Rel" +
+      "Path\022\032\n\010javaSrcs\030\n \003(\0132\010.RelPath\0220\n\014full" +
+      "JarInfos\030\013 \003(\0132\032.javacd.api.v1.JavaAbiIn" +
+      "fo\022/\n\013abiJarInfos\030\014 \003(\0132\032.javacd.api.v1." +
+      "JavaAbiInfo\022&\n\014resourcesMap\030\r \003(\0132\020.RelP" +
+      "athMapEntry\022Q\n\022cellToPathMappings\030\016 \003(\0132" +
+      "5.javacd.api.v1.BaseJarCommand.CellToPat" +
+      "hMappingsEntry\022:\n\024libraryJarParameters\030\017" +
+      " \001(\0132\034.javacd.api.v1.JarParameters\022#\n\021bu" +
+      "ildCellRootPath\030\020 \001(\0132\010.AbsPath\0223\n\rresol" +
+      "vedJavac\030\021 \001(\0132\034.javacd.api.v1.ResolvedJ" +
+      "avac\022A\n\024resolvedJavacOptions\030\022 \001(\0132#.jav" +
+      "acd.api.v1.ResolvedJavacOptions\032C\n\027CellT" +
+      "oPathMappingsEntry\022\013\n\003key\030\001 \001(\t\022\027\n\005value" +
+      "\030\002 \001(\0132\010.RelPath:\0028\001\"\351\001\n\025LibraryJarBaseC" +
+      "ommand\022\037\n\rpathToClasses\030\003 \001(\0132\010.RelPath\022" +
+      "\034\n\nrootOutput\030\004 \001(\0132\010.RelPath\022#\n\021pathToC" +
+      "lassHashes\030\005 \001(\0132\010.RelPath\022!\n\017annotation" +
+      "sPath\030\006 \001(\0132\010.RelPath\022I\n\030unusedDependenc" +
+      "iesParams\030\007 \001(\0132\'.javacd.api.v1.UnusedDe" +
+      "pendenciesParams\"\217\001\n\021LibraryJarCommand\0225" +
+      "\n\016baseJarCommand\030\001 \001(\0132\035.javacd.api.v1.B" +
+      "aseJarCommand\022C\n\025libraryJarBaseCommand\030\002" +
+      " \001(\0132$.javacd.api.v1.LibraryJarBaseComma" +
+      "nd\"~\n\rAbiJarCommand\0225\n\016baseJarCommand\030\001 " +
+      "\001(\0132\035.javacd.api.v1.BaseJarCommand\0226\n\020ab" +
+      "iJarParameters\030\002 \001(\0132\034.javacd.api.v1.Jar" +
+      "Parameters\"\202\002\n\021PipeliningCommand\022;\n\021base" +
+      "CommandParams\030\001 \001(\0132 .javacd.api.v1.Base" +
+      "CommandParams\0225\n\017pipeliningState\030\002 \001(\0132\034" +
+      ".javacd.api.v1.PipelineState\0228\n\nabiComma" +
+      "nd\030\003 \001(\0132$.javacd.api.v1.BasePipeliningC" +
+      "ommand\022?\n\016libraryCommand\030\004 \001(\0132\'.javacd." +
+      "api.v1.LibraryPipeliningCommand\"\217\003\n\025Base" +
+      "PipeliningCommand\0229\n\020buildTargetValue\030\001 " +
+      "\001(\0132\037.javacd.api.v1.BuildTargetValue\0229\n\020" +
+      "filesystemParams\030\002 \001(\0132\037.javacd.api.v1.F" +
+      "ilesystemParams\0229\n\020outputPathsValue\030\003 \001(" +
+      "\0132\037.javacd.api.v1.OutputPathsValue\022&\n\014re" +
+      "sourcesMap\030\004 \003(\0132\020.RelPathMapEntry\022X\n\022ce" +
+      "llToPathMappings\030\005 \003(\0132<.javacd.api.v1.B" +
+      "asePipeliningCommand.CellToPathMappingsE" +
+      "ntry\032C\n\027CellToPathMappingsEntry\022\013\n\003key\030\001" +
+      " \001(\t\022\027\n\005value\030\002 \001(\0132\010.RelPath:\0028\001\"\244\001\n\030Li" +
+      "braryPipeliningCommand\022C\n\025basePipelining" +
+      "Command\030\001 \001(\0132$.javacd.api.v1.BasePipeli" +
+      "ningCommand\022C\n\025libraryJarBaseCommand\030\002 \001" +
+      "(\0132$.javacd.api.v1.LibraryJarBaseCommand" +
+      "\"\226\006\n\rPipelineState\0229\n\020buildTargetValue\030\001" +
+      " \001(\0132\037.javacd.api.v1.BuildTargetValue\022+\n" +
+      "\031compileTimeClasspathPaths\030\002 \003(\0132\010.RelPa" +
+      "th\022\032\n\010javaSrcs\030\003 \003(\0132\010.RelPath\0220\n\014fullJa" +
+      "rInfos\030\004 \003(\0132\032.javacd.api.v1.JavaAbiInfo" +
+      "\022/\n\013abiJarInfos\030\005 \003(\0132\032.javacd.api.v1.Ja" +
+      "vaAbiInfo\022\027\n\017trackClassUsage\030\006 \001(\010\022\035\n\025tr" +
+      "ackJavacPhaseEvents\030\007 \001(\010\022>\n\024abiCompatib" +
+      "ilityMode\030\010 \001(\0162 .javacd.api.v1.AbiGener" +
+      "ationMode\022;\n\021abiGenerationMode\030\t \001(\0162 .j" +
+      "avacd.api.v1.AbiGenerationMode\022\"\n\032isRequ" +
+      "iredForSourceOnlyAbi\030\n \001(\010\022@\n\013outputPath" +
+      "s\030\013 \001(\0132+.javacd.api.v1.OutputPathsValue" +
+      ".OutputPaths\0226\n\020abiJarParameters\030\014 \001(\0132\034" +
+      ".javacd.api.v1.JarParameters\022:\n\024libraryJ" +
+      "arParameters\030\r \001(\0132\034.javacd.api.v1.JarPa" +
+      "rameters\022\027\n\017withDownwardApi\030\016 \001(\010\0223\n\rres" +
+      "olvedJavac\030\017 \001(\0132\034.javacd.api.v1.Resolve" +
+      "dJavac\022A\n\024resolvedJavacOptions\030\020 \001(\0132#.j" +
+      "avacd.api.v1.ResolvedJavacOptions\"l\n\020Fil" +
+      "esystemParams\022\032\n\010rootPath\030\001 \001(\0132\010.AbsPat" +
+      "h\022#\n\021configuredBuckOut\030\002 \001(\0132\010.RelPath\022\027" +
+      "\n\017globIgnorePaths\030\003 \003(\t\"\251\001\n\020BuildTargetV" +
+      "alue\022\032\n\022fullyQualifiedName\030\001 \001(\t\0222\n\004type" +
+      "\030\002 \001(\0162$.javacd.api.v1.BuildTargetValue." +
+      "Type\"E\n\004Type\022\013\n\007UNKNOWN\020\000\022\013\n\007LIBRARY\020\001\022\016" +
+      "\n\nSOURCE_ABI\020\002\022\023\n\017SOURCE_ONLY_ABI\020\003\"\210\004\n\020" +
+      "OutputPathsValue\022A\n\014libraryPaths\030\001 \001(\0132+" +
+      ".javacd.api.v1.OutputPathsValue.OutputPa" +
+      "ths\022C\n\016sourceAbiPaths\030\002 \001(\0132+.javacd.api" +
+      ".v1.OutputPathsValue.OutputPaths\022G\n\022sour" +
+      "ceOnlyAbiPaths\030\003 \001(\0132+.javacd.api.v1.Out" +
+      "putPathsValue.OutputPaths\022\'\n\037libraryTarg" +
+      "etFullyQualifiedName\030\004 \001(\t\032\371\001\n\013OutputPat" +
+      "hs\022\034\n\nclassesDir\030\001 \001(\0132\010.RelPath\022\"\n\020outp" +
+      "utJarDirPath\030\002 \001(\0132\010.RelPath\022\034\n\nabiJarPa" +
+      "th\030\003 \001(\0132\010.RelPath\022 \n\016annotationPath\030\004 \001" +
+      "(\0132\010.RelPath\022#\n\021pathToSourcesList\030\005 \001(\0132" +
+      "\010.RelPath\022\"\n\020workingDirectory\030\006 \001(\0132\010.Re" +
+      "lPath\022\037\n\routputJarPath\030\007 \001(\0132\010.RelPath\"C" +
+      "\n\013JavaAbiInfo\022\027\n\017buildTargetName\030\001 \001(\t\022\033" +
+      "\n\014contentPaths\030\002 \003(\0132\005.Path\"\336\n\n\024Resolved" +
+      "JavacOptions\022\025\n\rbootclasspath\030\001 \001(\t\022#\n\021b" +
+      "ootclasspathList\030\002 \003(\0132\010.RelPath\022[\n\024lang" +
+      "uageLevelOptions\030\003 \001(\0132=.javacd.api.v1.R" +
+      "esolvedJavacOptions.JavacLanguageLevelOp" +
+      "tions\022\r\n\005debug\030\004 \001(\010\022\017\n\007verbose\030\005 \001(\010\022\\\n" +
+      "\035javaAnnotationProcessorParams\030\006 \001(\01325.j" +
       "avacd.api.v1.ResolvedJavacOptions.JavacP" +
-      "luginJsr199Fields\022,\n$javaAnnotationProce" +
-      "ssorParamsPresent\030\013 \001(\010\032E\n\031JavacLanguage" +
-      "LevelOptions\022\023\n\013sourceLevel\030\001 \001(\t\022\023\n\013tar" +
-      "getLevel\030\002 \001(\t\032\270\001\n\027JavacPluginJsr199Fiel" +
-      "ds\022\033\n\023canReuseClassLoader\030\001 \001(\010\022\026\n\016proce" +
-      "ssorNames\030\002 \003(\t\022R\n\tclasspath\030\003 \003(\0132?.jav" +
-      "acd.api.v1.ResolvedJavacOptions.JavacPlu" +
-      "ginJsr199Fields.URL\032\024\n\003URL\022\r\n\005value\030\001 \001(" +
-      "\t\032\204\001\n\021JavacPluginParams\022\022\n\nparameters\030\001 " +
-      "\003(\t\022[\n\020pluginProperties\030\002 \003(\0132A.javacd.a" +
-      "pi.v1.ResolvedJavacOptions.ResolvedJavac" +
-      "PluginProperties\032\364\002\n\035ResolvedJavacPlugin" +
-      "Properties\022\033\n\023canReuseClassLoader\030\001 \001(\010\022" +
-      "\030\n\020doesNotAffectAbi\030\002 \001(\010\022\'\n\037supportsAbi" +
-      "GenerationFromSource\030\003 \001(\010\022\026\n\016processorN" +
-      "ames\030\004 \003(\t\022)\n\tclasspath\030\005 \003(\0132\026.javacd.a" +
-      "pi.v1.RelPath\022e\n\npathParams\030\006 \003(\0132Q.java" +
-      "cd.api.v1.ResolvedJavacOptions.ResolvedJ" +
-      "avacPluginProperties.PathParamsEntry\032I\n\017" +
-      "PathParamsEntry\022\013\n\003key\030\001 \001(\t\022%\n\005value\030\002 " +
-      "\001(\0132\026.javacd.api.v1.RelPath:\0028\001\"\323\004\n\rJarP" +
-      "arameters\022\023\n\013hashEntries\030\001 \001(\010\022\026\n\016mergeM" +
-      "anifests\030\002 \001(\010\022\'\n\007jarPath\030\003 \001(\0132\026.javacd" +
-      ".api.v1.RelPath\022W\n\024removeEntryPredicate\030" +
-      "\004 \001(\01329.javacd.api.v1.JarParameters.Remo" +
-      "veClassesPatternsMatcher\022,\n\014entriesToJar" +
-      "\030\005 \003(\0132\026.javacd.api.v1.RelPath\0224\n\024overri" +
-      "deEntriesToJar\030\006 \003(\0132\026.javacd.api.v1.Rel" +
-      "Path\022\021\n\tmainClass\030\007 \001(\t\022,\n\014manifestFile\030" +
-      "\010 \001(\0132\026.javacd.api.v1.RelPath\022A\n\022duplica" +
-      "tesLogLevel\030\t \001(\0162%.javacd.api.v1.JarPar" +
-      "ameters.LogLevel\0320\n\034RemoveClassesPattern" +
-      "sMatcher\022\020\n\010patterns\030\001 \003(\t\"y\n\010LogLevel\022\013" +
-      "\n\007UNKNOWN\020\000\022\007\n\003OFF\020\001\022\n\n\006SEVERE\020\002\022\013\n\007WARN" +
-      "ING\020\003\022\010\n\004INFO\020\004\022\n\n\006CONFIG\020\005\022\010\n\004FINE\020\006\022\t\n" +
-      "\005FINER\020\007\022\n\n\006FINEST\020\010\022\007\n\003ALL\020\t\"\350\001\n\rResolv" +
-      "edJavac\022C\n\rexternalJavac\030\001 \001(\0132*.javacd." +
-      "api.v1.ResolvedJavac.ExternalJavacH\000\022?\n\013" +
-      "jsr199Javac\030\002 \001(\0132(.javacd.api.v1.Resolv" +
-      "edJavac.JSR199JavacH\000\0329\n\rExternalJavac\022\021" +
-      "\n\tshortName\030\001 \001(\t\022\025\n\rcommandPrefix\030\002 \003(\t" +
-      "\032\r\n\013JSR199JavacB\007\n\005javac\"\337\006\n\030UnusedDepen" +
-      "denciesParams\022S\n\004deps\030\001 \003(\0132E.javacd.api" +
-      ".v1.UnusedDependenciesParams.DependencyA" +
-      "ndExportedDepsPath\022[\n\014providedDeps\030\002 \003(\013" +
-      "2E.javacd.api.v1.UnusedDependenciesParam" +
-      "s.DependencyAndExportedDepsPath\022\'\n\007depFi" +
-      "le\030\003 \003(\0132\026.javacd.api.v1.RelPath\022b\n\030unus" +
-      "edDependenciesAction\030\004 \001(\0162@.javacd.api." +
-      "v1.UnusedDependenciesParams.UnusedDepend" +
-      "enciesAction\022\024\n\014exportedDeps\030\005 \003(\t\022\025\n\rbu" +
-      "ildozerPath\030\006 \001(\t\022\031\n\021onlyPrintCommands\030\007" +
-      " \001(\010\022\034\n\024doUltralightChecking\030\010 \001(\010\032\315\001\n\035D" +
-      "ependencyAndExportedDepsPath\022O\n\ndependen" +
-      "cy\030\001 \001(\0132;.javacd.api.v1.UnusedDependenc" +
-      "iesParams.BuildTargetAndPaths\022[\n\014exporte" +
-      "dDeps\030\002 \003(\0132E.javacd.api.v1.UnusedDepend" +
-      "enciesParams.DependencyAndExportedDepsPa" +
-      "th\032\204\001\n\023BuildTargetAndPaths\022\027\n\017buildTarge" +
-      "tName\030\001 \001(\t\022+\n\013fullJarPath\030\002 \001(\0132\026.javac" +
-      "d.api.v1.RelPath\022\'\n\007abiPath\030\003 \001(\0132\026.java" +
-      "cd.api.v1.RelPath\"G\n\030UnusedDependenciesA" +
-      "ction\022\013\n\007UNKNOWN\020\000\022\010\n\004FAIL\020\001\022\010\n\004WARN\020\002\022\n" +
-      "\n\006IGNORE\020\003\"\027\n\007RelPath\022\014\n\004path\030\001 \001(\t\"\027\n\007A" +
-      "bsPath\022\014\n\004path\030\001 \001(\t\"\024\n\004Path\022\014\n\004path\030\001 \001" +
-      "(\t*f\n\021AbiGenerationMode\022\013\n\007UNKNOWN\020\000\022\t\n\005" +
-      "CLASS\020\001\022\n\n\006SOURCE\020\002\022\034\n\030MIGRATING_TO_SOUR" +
-      "CE_ONLY\020\003\022\017\n\013SOURCE_ONLY\020\004B0\n\037com.facebo" +
-      "ok.buck.cd.model.javaB\013JavaCDProtoP\001b\006pr" +
-      "oto3"
+      "luginParams\022X\n\031standardJavacPluginParams" +
+      "\030\007 \001(\01325.javacd.api.v1.ResolvedJavacOpti" +
+      "ons.JavacPluginParams\022\026\n\016extraArguments\030" +
+      "\010 \003(\t\022Y\n\024annotationProcessors\030\t \003(\0132;.ja" +
+      "vacd.api.v1.ResolvedJavacOptions.JavacPl" +
+      "uginJsr199Fields\022P\n\013javaPlugins\030\n \003(\0132;." +
+      "javacd.api.v1.ResolvedJavacOptions.Javac" +
+      "PluginJsr199Fields\022,\n$javaAnnotationProc" +
+      "essorParamsPresent\030\013 \001(\010\032E\n\031JavacLanguag" +
+      "eLevelOptions\022\023\n\013sourceLevel\030\001 \001(\t\022\023\n\013ta" +
+      "rgetLevel\030\002 \001(\t\032\270\001\n\027JavacPluginJsr199Fie" +
+      "lds\022\033\n\023canReuseClassLoader\030\001 \001(\010\022\026\n\016proc" +
+      "essorNames\030\002 \003(\t\022R\n\tclasspath\030\003 \003(\0132?.ja" +
+      "vacd.api.v1.ResolvedJavacOptions.JavacPl" +
+      "uginJsr199Fields.URL\032\024\n\003URL\022\r\n\005value\030\001 \001" +
+      "(\t\032\204\001\n\021JavacPluginParams\022\022\n\nparameters\030\001" +
+      " \003(\t\022[\n\020pluginProperties\030\002 \003(\0132A.javacd." +
+      "api.v1.ResolvedJavacOptions.ResolvedJava" +
+      "cPluginProperties\032\330\002\n\035ResolvedJavacPlugi" +
+      "nProperties\022\033\n\023canReuseClassLoader\030\001 \001(\010" +
+      "\022\030\n\020doesNotAffectAbi\030\002 \001(\010\022\'\n\037supportsAb" +
+      "iGenerationFromSource\030\003 \001(\010\022\026\n\016processor" +
+      "Names\030\004 \003(\t\022\033\n\tclasspath\030\005 \003(\0132\010.RelPath" +
+      "\022e\n\npathParams\030\006 \003(\0132Q.javacd.api.v1.Res" +
+      "olvedJavacOptions.ResolvedJavacPluginPro" +
+      "perties.PathParamsEntry\032;\n\017PathParamsEnt" +
+      "ry\022\013\n\003key\030\001 \001(\t\022\027\n\005value\030\002 \001(\0132\010.RelPath" +
+      ":\0028\001\"\233\004\n\rJarParameters\022\023\n\013hashEntries\030\001 " +
+      "\001(\010\022\026\n\016mergeManifests\030\002 \001(\010\022\031\n\007jarPath\030\003" +
+      " \001(\0132\010.RelPath\022W\n\024removeEntryPredicate\030\004" +
+      " \001(\01329.javacd.api.v1.JarParameters.Remov" +
+      "eClassesPatternsMatcher\022\036\n\014entriesToJar\030" +
+      "\005 \003(\0132\010.RelPath\022&\n\024overrideEntriesToJar\030" +
+      "\006 \003(\0132\010.RelPath\022\021\n\tmainClass\030\007 \001(\t\022\036\n\014ma" +
+      "nifestFile\030\010 \001(\0132\010.RelPath\022A\n\022duplicates" +
+      "LogLevel\030\t \001(\0162%.javacd.api.v1.JarParame" +
+      "ters.LogLevel\0320\n\034RemoveClassesPatternsMa" +
+      "tcher\022\020\n\010patterns\030\001 \003(\t\"y\n\010LogLevel\022\013\n\007U" +
+      "NKNOWN\020\000\022\007\n\003OFF\020\001\022\n\n\006SEVERE\020\002\022\013\n\007WARNING" +
+      "\020\003\022\010\n\004INFO\020\004\022\n\n\006CONFIG\020\005\022\010\n\004FINE\020\006\022\t\n\005FI" +
+      "NER\020\007\022\n\n\006FINEST\020\010\022\007\n\003ALL\020\t\"\350\001\n\rResolvedJ" +
+      "avac\022C\n\rexternalJavac\030\001 \001(\0132*.javacd.api" +
+      ".v1.ResolvedJavac.ExternalJavacH\000\022?\n\013jsr" +
+      "199Javac\030\002 \001(\0132(.javacd.api.v1.ResolvedJ" +
+      "avac.JSR199JavacH\000\0329\n\rExternalJavac\022\021\n\ts" +
+      "hortName\030\001 \001(\t\022\025\n\rcommandPrefix\030\002 \003(\t\032\r\n" +
+      "\013JSR199JavacB\007\n\005javac\"\264\006\n\030UnusedDependen" +
+      "ciesParams\022S\n\004deps\030\001 \003(\0132E.javacd.api.v1" +
+      ".UnusedDependenciesParams.DependencyAndE" +
+      "xportedDepsPath\022[\n\014providedDeps\030\002 \003(\0132E." +
+      "javacd.api.v1.UnusedDependenciesParams.D" +
+      "ependencyAndExportedDepsPath\022\031\n\007depFile\030" +
+      "\003 \003(\0132\010.RelPath\022b\n\030unusedDependenciesAct" +
+      "ion\030\004 \001(\0162@.javacd.api.v1.UnusedDependen" +
+      "ciesParams.UnusedDependenciesAction\022\024\n\014e" +
+      "xportedDeps\030\005 \003(\t\022\025\n\rbuildozerPath\030\006 \001(\t" +
+      "\022\031\n\021onlyPrintCommands\030\007 \001(\010\022\034\n\024doUltrali" +
+      "ghtChecking\030\010 \001(\010\032\315\001\n\035DependencyAndExpor" +
+      "tedDepsPath\022O\n\ndependency\030\001 \001(\0132;.javacd" +
+      ".api.v1.UnusedDependenciesParams.BuildTa" +
+      "rgetAndPaths\022[\n\014exportedDeps\030\002 \003(\0132E.jav" +
+      "acd.api.v1.UnusedDependenciesParams.Depe" +
+      "ndencyAndExportedDepsPath\032h\n\023BuildTarget" +
+      "AndPaths\022\027\n\017buildTargetName\030\001 \001(\t\022\035\n\013ful" +
+      "lJarPath\030\002 \001(\0132\010.RelPath\022\031\n\007abiPath\030\003 \001(" +
+      "\0132\010.RelPath\"G\n\030UnusedDependenciesAction\022" +
+      "\013\n\007UNKNOWN\020\000\022\010\n\004FAIL\020\001\022\010\n\004WARN\020\002\022\n\n\006IGNO" +
+      "RE\020\003*f\n\021AbiGenerationMode\022\013\n\007UNKNOWN\020\000\022\t" +
+      "\n\005CLASS\020\001\022\n\n\006SOURCE\020\002\022\034\n\030MIGRATING_TO_SO" +
+      "URCE_ONLY\020\003\022\017\n\013SOURCE_ONLY\020\004B0\n\037com.face" +
+      "book.buck.cd.model.javaB\013JavaCDProtoP\001b\006" +
+      "proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -424,6 +389,7 @@ public final class JavaCDProto {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
+          com.facebook.buck.cd.model.common.CommonCDProto.getDescriptor(),
         }, assigner);
     internal_static_javacd_api_v1_BaseCommandParams_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -449,38 +415,32 @@ public final class JavaCDProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_BaseJarCommand_CellToPathMappingsEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
-    internal_static_javacd_api_v1_RelPathMapEntry_descriptor =
-      getDescriptor().getMessageTypes().get(3);
-    internal_static_javacd_api_v1_RelPathMapEntry_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_javacd_api_v1_RelPathMapEntry_descriptor,
-        new java.lang.String[] { "Key", "Value", });
     internal_static_javacd_api_v1_LibraryJarBaseCommand_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_javacd_api_v1_LibraryJarBaseCommand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_LibraryJarBaseCommand_descriptor,
         new java.lang.String[] { "PathToClasses", "RootOutput", "PathToClassHashes", "AnnotationsPath", "UnusedDependenciesParams", });
     internal_static_javacd_api_v1_LibraryJarCommand_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_javacd_api_v1_LibraryJarCommand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_LibraryJarCommand_descriptor,
         new java.lang.String[] { "BaseJarCommand", "LibraryJarBaseCommand", });
     internal_static_javacd_api_v1_AbiJarCommand_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_javacd_api_v1_AbiJarCommand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_AbiJarCommand_descriptor,
         new java.lang.String[] { "BaseJarCommand", "AbiJarParameters", });
     internal_static_javacd_api_v1_PipeliningCommand_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_javacd_api_v1_PipeliningCommand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_PipeliningCommand_descriptor,
         new java.lang.String[] { "BaseCommandParams", "PipeliningState", "AbiCommand", "LibraryCommand", });
     internal_static_javacd_api_v1_BasePipeliningCommand_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_javacd_api_v1_BasePipeliningCommand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_BasePipeliningCommand_descriptor,
@@ -492,31 +452,31 @@ public final class JavaCDProto {
         internal_static_javacd_api_v1_BasePipeliningCommand_CellToPathMappingsEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
     internal_static_javacd_api_v1_LibraryPipeliningCommand_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_javacd_api_v1_LibraryPipeliningCommand_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_LibraryPipeliningCommand_descriptor,
         new java.lang.String[] { "BasePipeliningCommand", "LibraryJarBaseCommand", });
     internal_static_javacd_api_v1_PipelineState_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_javacd_api_v1_PipelineState_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_PipelineState_descriptor,
         new java.lang.String[] { "BuildTargetValue", "CompileTimeClasspathPaths", "JavaSrcs", "FullJarInfos", "AbiJarInfos", "TrackClassUsage", "TrackJavacPhaseEvents", "AbiCompatibilityMode", "AbiGenerationMode", "IsRequiredForSourceOnlyAbi", "OutputPaths", "AbiJarParameters", "LibraryJarParameters", "WithDownwardApi", "ResolvedJavac", "ResolvedJavacOptions", });
     internal_static_javacd_api_v1_FilesystemParams_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_javacd_api_v1_FilesystemParams_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_FilesystemParams_descriptor,
         new java.lang.String[] { "RootPath", "ConfiguredBuckOut", "GlobIgnorePaths", });
     internal_static_javacd_api_v1_BuildTargetValue_descriptor =
-      getDescriptor().getMessageTypes().get(12);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_javacd_api_v1_BuildTargetValue_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_BuildTargetValue_descriptor,
         new java.lang.String[] { "FullyQualifiedName", "Type", });
     internal_static_javacd_api_v1_OutputPathsValue_descriptor =
-      getDescriptor().getMessageTypes().get(13);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_javacd_api_v1_OutputPathsValue_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_OutputPathsValue_descriptor,
@@ -528,13 +488,13 @@ public final class JavaCDProto {
         internal_static_javacd_api_v1_OutputPathsValue_OutputPaths_descriptor,
         new java.lang.String[] { "ClassesDir", "OutputJarDirPath", "AbiJarPath", "AnnotationPath", "PathToSourcesList", "WorkingDirectory", "OutputJarPath", });
     internal_static_javacd_api_v1_JavaAbiInfo_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_javacd_api_v1_JavaAbiInfo_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_JavaAbiInfo_descriptor,
         new java.lang.String[] { "BuildTargetName", "ContentPaths", });
     internal_static_javacd_api_v1_ResolvedJavacOptions_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_javacd_api_v1_ResolvedJavacOptions_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_ResolvedJavacOptions_descriptor,
@@ -576,7 +536,7 @@ public final class JavaCDProto {
         internal_static_javacd_api_v1_ResolvedJavacOptions_ResolvedJavacPluginProperties_PathParamsEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
     internal_static_javacd_api_v1_JarParameters_descriptor =
-      getDescriptor().getMessageTypes().get(16);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_javacd_api_v1_JarParameters_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_JarParameters_descriptor,
@@ -588,7 +548,7 @@ public final class JavaCDProto {
         internal_static_javacd_api_v1_JarParameters_RemoveClassesPatternsMatcher_descriptor,
         new java.lang.String[] { "Patterns", });
     internal_static_javacd_api_v1_ResolvedJavac_descriptor =
-      getDescriptor().getMessageTypes().get(17);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_javacd_api_v1_ResolvedJavac_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_ResolvedJavac_descriptor,
@@ -606,7 +566,7 @@ public final class JavaCDProto {
         internal_static_javacd_api_v1_ResolvedJavac_JSR199Javac_descriptor,
         new java.lang.String[] { });
     internal_static_javacd_api_v1_UnusedDependenciesParams_descriptor =
-      getDescriptor().getMessageTypes().get(18);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_javacd_api_v1_UnusedDependenciesParams_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_UnusedDependenciesParams_descriptor,
@@ -623,24 +583,7 @@ public final class JavaCDProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_UnusedDependenciesParams_BuildTargetAndPaths_descriptor,
         new java.lang.String[] { "BuildTargetName", "FullJarPath", "AbiPath", });
-    internal_static_javacd_api_v1_RelPath_descriptor =
-      getDescriptor().getMessageTypes().get(19);
-    internal_static_javacd_api_v1_RelPath_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_javacd_api_v1_RelPath_descriptor,
-        new java.lang.String[] { "Path", });
-    internal_static_javacd_api_v1_AbsPath_descriptor =
-      getDescriptor().getMessageTypes().get(20);
-    internal_static_javacd_api_v1_AbsPath_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_javacd_api_v1_AbsPath_descriptor,
-        new java.lang.String[] { "Path", });
-    internal_static_javacd_api_v1_Path_descriptor =
-      getDescriptor().getMessageTypes().get(21);
-    internal_static_javacd_api_v1_Path_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_javacd_api_v1_Path_descriptor,
-        new java.lang.String[] { "Path", });
+    com.facebook.buck.cd.model.common.CommonCDProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

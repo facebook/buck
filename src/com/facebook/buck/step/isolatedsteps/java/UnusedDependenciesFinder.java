@@ -258,7 +258,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
     return dependency.hasAbiPath() && usedJars.contains(toAbsPath(root, dependency.getAbiPath()));
   }
 
-  private AbsPath toAbsPath(AbsPath root, com.facebook.buck.cd.model.java.RelPath relPath) {
+  private AbsPath toAbsPath(AbsPath root, com.facebook.buck.cd.model.common.RelPath relPath) {
     return toAbsPath(root, RelPath.get(relPath.getPath()));
   }
 

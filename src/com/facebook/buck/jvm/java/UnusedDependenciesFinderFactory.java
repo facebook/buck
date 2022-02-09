@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.cd.model.java.RelPath;
+import com.facebook.buck.cd.model.common.RelPath;
 import com.facebook.buck.cd.model.java.UnusedDependenciesParams;
 import com.facebook.buck.cd.model.java.UnusedDependenciesParams.BuildTargetAndPaths;
 import com.facebook.buck.cd.model.java.UnusedDependenciesParams.DependencyAndExportedDepsPath;

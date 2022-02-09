@@ -24,18 +24,19 @@ public class AbsPathSerializer {
   private AbsPathSerializer() {}
 
   /**
-   * Serializes {@link AbsPath} into javacd model's {@link com.facebook.buck.cd.model.java.AbsPath}.
+   * Serializes {@link AbsPath} into javacd model's {@link
+   * com.facebook.buck.cd.model.common.AbsPath}.
    */
-  public static com.facebook.buck.cd.model.java.AbsPath serialize(AbsPath absPath) {
+  public static com.facebook.buck.cd.model.common.AbsPath serialize(AbsPath absPath) {
     String path = absPath.toString();
-    return com.facebook.buck.cd.model.java.AbsPath.newBuilder().setPath(path).build();
+    return com.facebook.buck.cd.model.common.AbsPath.newBuilder().setPath(path).build();
   }
 
   /**
-   * Deserializes javacd model's {@link com.facebook.buck.cd.model.java.AbsPath} into {@link
+   * Deserializes javacd model's {@link com.facebook.buck.cd.model.common.AbsPath} into {@link
    * AbsPath}.
    */
-  public static AbsPath deserialize(com.facebook.buck.cd.model.java.AbsPath absPath) {
+  public static AbsPath deserialize(com.facebook.buck.cd.model.common.AbsPath absPath) {
     return AbsPath.get(absPath.getPath());
   }
 }

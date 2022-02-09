@@ -19,12 +19,12 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder.isActionableUnusedDependenciesAction;
 import static java.util.Objects.requireNonNull;
 
+import com.facebook.buck.cd.model.common.RelPathMapEntry;
 import com.facebook.buck.cd.model.java.BasePipeliningCommand;
 import com.facebook.buck.cd.model.java.FilesystemParams;
 import com.facebook.buck.cd.model.java.LibraryJarBaseCommand;
 import com.facebook.buck.cd.model.java.LibraryPipeliningCommand;
 import com.facebook.buck.cd.model.java.PipelineState;
-import com.facebook.buck.cd.model.java.RelPathMapEntry;
 import com.facebook.buck.cd.model.java.UnusedDependenciesParams;
 import com.facebook.buck.cd.model.java.UnusedDependenciesParams.DependencyAndExportedDepsPath;
 import com.facebook.buck.cd.model.java.UnusedDependenciesParams.UnusedDependenciesAction;
@@ -454,9 +454,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return builder.build();
   }
 
-  public com.facebook.buck.cd.model.java.RelPath toModelRelPath(RelPath relPath) {
+  public com.facebook.buck.cd.model.common.RelPath toModelRelPath(RelPath relPath) {
     String path = relPath.toString();
-    return com.facebook.buck.cd.model.java.RelPath.newBuilder().setPath(path).build();
+    return com.facebook.buck.cd.model.common.RelPath.newBuilder().setPath(path).build();
   }
 
   private void addUnusedDependencyStep(

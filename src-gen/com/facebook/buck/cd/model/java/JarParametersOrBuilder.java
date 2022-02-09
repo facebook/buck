@@ -20,17 +20,17 @@ public interface JarParametersOrBuilder extends
   boolean getMergeManifests();
 
   /**
-   * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
+   * <code>.RelPath jarPath = 3;</code>
    */
   boolean hasJarPath();
   /**
-   * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
+   * <code>.RelPath jarPath = 3;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getJarPath();
+  com.facebook.buck.cd.model.common.RelPath getJarPath();
   /**
-   * <code>.javacd.api.v1.RelPath jarPath = 3;</code>
+   * <code>.RelPath jarPath = 3;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getJarPathOrBuilder();
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getJarPathOrBuilder();
 
   /**
    * <code>.javacd.api.v1.JarParameters.RemoveClassesPatternsMatcher removeEntryPredicate = 4;</code>
@@ -46,51 +46,51 @@ public interface JarParametersOrBuilder extends
   com.facebook.buck.cd.model.java.JarParameters.RemoveClassesPatternsMatcherOrBuilder getRemoveEntryPredicateOrBuilder();
 
   /**
-   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
+   * <code>repeated .RelPath entriesToJar = 5;</code>
    */
-  java.util.List<com.facebook.buck.cd.model.java.RelPath> 
+  java.util.List<com.facebook.buck.cd.model.common.RelPath> 
       getEntriesToJarList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
+   * <code>repeated .RelPath entriesToJar = 5;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getEntriesToJar(int index);
+  com.facebook.buck.cd.model.common.RelPath getEntriesToJar(int index);
   /**
-   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
+   * <code>repeated .RelPath entriesToJar = 5;</code>
    */
   int getEntriesToJarCount();
   /**
-   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
+   * <code>repeated .RelPath entriesToJar = 5;</code>
    */
-  java.util.List<? extends com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+  java.util.List<? extends com.facebook.buck.cd.model.common.RelPathOrBuilder> 
       getEntriesToJarOrBuilderList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath entriesToJar = 5;</code>
+   * <code>repeated .RelPath entriesToJar = 5;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getEntriesToJarOrBuilder(
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getEntriesToJarOrBuilder(
       int index);
 
   /**
-   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
+   * <code>repeated .RelPath overrideEntriesToJar = 6;</code>
    */
-  java.util.List<com.facebook.buck.cd.model.java.RelPath> 
+  java.util.List<com.facebook.buck.cd.model.common.RelPath> 
       getOverrideEntriesToJarList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
+   * <code>repeated .RelPath overrideEntriesToJar = 6;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getOverrideEntriesToJar(int index);
+  com.facebook.buck.cd.model.common.RelPath getOverrideEntriesToJar(int index);
   /**
-   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
+   * <code>repeated .RelPath overrideEntriesToJar = 6;</code>
    */
   int getOverrideEntriesToJarCount();
   /**
-   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
+   * <code>repeated .RelPath overrideEntriesToJar = 6;</code>
    */
-  java.util.List<? extends com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+  java.util.List<? extends com.facebook.buck.cd.model.common.RelPathOrBuilder> 
       getOverrideEntriesToJarOrBuilderList();
   /**
-   * <code>repeated .javacd.api.v1.RelPath overrideEntriesToJar = 6;</code>
+   * <code>repeated .RelPath overrideEntriesToJar = 6;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getOverrideEntriesToJarOrBuilder(
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getOverrideEntriesToJarOrBuilder(
       int index);
 
   /**
@@ -104,17 +104,17 @@ public interface JarParametersOrBuilder extends
       getMainClassBytes();
 
   /**
-   * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
+   * <code>.RelPath manifestFile = 8;</code>
    */
   boolean hasManifestFile();
   /**
-   * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
+   * <code>.RelPath manifestFile = 8;</code>
    */
-  com.facebook.buck.cd.model.java.RelPath getManifestFile();
+  com.facebook.buck.cd.model.common.RelPath getManifestFile();
   /**
-   * <code>.javacd.api.v1.RelPath manifestFile = 8;</code>
+   * <code>.RelPath manifestFile = 8;</code>
    */
-  com.facebook.buck.cd.model.java.RelPathOrBuilder getManifestFileOrBuilder();
+  com.facebook.buck.cd.model.common.RelPathOrBuilder getManifestFileOrBuilder();
 
   /**
    * <code>.javacd.api.v1.JarParameters.LogLevel duplicatesLogLevel = 9;</code>

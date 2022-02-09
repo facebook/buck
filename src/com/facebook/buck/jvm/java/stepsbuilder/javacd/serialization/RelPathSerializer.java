@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
-import com.facebook.buck.cd.model.java.RelPathMapEntry;
+import com.facebook.buck.cd.model.common.RelPathMapEntry;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.google.common.collect.ImmutableMap;
@@ -48,7 +48,7 @@ public class RelPathSerializer {
    * {@link CanonicalCellName}
    */
   public static ImmutableMap<CanonicalCellName, RelPath> toCellToPathMapping(
-      Map<String, com.facebook.buck.cd.model.java.RelPath> cellToPathMappings) {
+      Map<String, com.facebook.buck.cd.model.common.RelPath> cellToPathMappings) {
     ImmutableMap.Builder<CanonicalCellName, RelPath> builder =
         ImmutableMap.builderWithExpectedSize(cellToPathMappings.size());
     cellToPathMappings.forEach(
@@ -65,32 +65,33 @@ public class RelPathSerializer {
   }
 
   /**
-   * Deserializes list of {@link com.facebook.buck.cd.model.java.RelPath} into a sorted set of
+   * Deserializes list of {@link com.facebook.buck.cd.model.common.RelPath} into a sorted set of
    * {@link RelPath}
    */
   public static ImmutableSortedSet<RelPath> toSortedSetOfRelPath(
-      List<com.facebook.buck.cd.model.java.RelPath> list) {
+      List<com.facebook.buck.cd.model.common.RelPath> list) {
     ImmutableSortedSet.Builder<RelPath> builder =
         ImmutableSortedSet.orderedBy(RelPath.comparator());
-    for (com.facebook.buck.cd.model.java.RelPath item : list) {
+    for (com.facebook.buck.cd.model.common.RelPath item : list) {
       builder.add(RelPathSerializer.deserialize(item));
     }
     return builder.build();
   }
 
   /**
-   * Serializes {@link RelPath} into javacd model's {@link com.facebook.buck.cd.model.java.RelPath}.
+   * Serializes {@link RelPath} into javacd model's {@link
+   * com.facebook.buck.cd.model.common.RelPath}.
    */
-  public static com.facebook.buck.cd.model.java.RelPath serialize(RelPath relPath) {
+  public static com.facebook.buck.cd.model.common.RelPath serialize(RelPath relPath) {
     String path = relPath.toString();
-    return com.facebook.buck.cd.model.java.RelPath.newBuilder().setPath(path).build();
+    return com.facebook.buck.cd.model.common.RelPath.newBuilder().setPath(path).build();
   }
 
   /**
-   * Deserializes javacd model's {@link com.facebook.buck.cd.model.java.RelPath} into {@link
+   * Deserializes javacd model's {@link com.facebook.buck.cd.model.common.RelPath} into {@link
    * RelPath}.
    */
-  public static RelPath deserialize(com.facebook.buck.cd.model.java.RelPath relPath) {
+  public static RelPath deserialize(com.facebook.buck.cd.model.common.RelPath relPath) {
     return RelPath.get(relPath.getPath());
   }
 }

@@ -70,11 +70,11 @@ private static final long serialVersionUID = 0L;
           }
           case 26: {
             if (!((mutable_bitField0_ & 0x00000004) != 0)) {
-              depFile_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.RelPath>();
+              depFile_ = new java.util.ArrayList<com.facebook.buck.cd.model.common.RelPath>();
               mutable_bitField0_ |= 0x00000004;
             }
             depFile_.add(
-                input.readMessage(com.facebook.buck.cd.model.java.RelPath.parser(), extensionRegistry));
+                input.readMessage(com.facebook.buck.cd.model.common.RelPath.parser(), extensionRegistry));
             break;
           }
           case 32: {
@@ -1265,30 +1265,30 @@ private static final long serialVersionUID = 0L;
         getBuildTargetNameBytes();
 
     /**
-     * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+     * <code>.RelPath fullJarPath = 2;</code>
      */
     boolean hasFullJarPath();
     /**
-     * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+     * <code>.RelPath fullJarPath = 2;</code>
      */
-    com.facebook.buck.cd.model.java.RelPath getFullJarPath();
+    com.facebook.buck.cd.model.common.RelPath getFullJarPath();
     /**
-     * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+     * <code>.RelPath fullJarPath = 2;</code>
      */
-    com.facebook.buck.cd.model.java.RelPathOrBuilder getFullJarPathOrBuilder();
+    com.facebook.buck.cd.model.common.RelPathOrBuilder getFullJarPathOrBuilder();
 
     /**
-     * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+     * <code>.RelPath abiPath = 3;</code>
      */
     boolean hasAbiPath();
     /**
-     * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+     * <code>.RelPath abiPath = 3;</code>
      */
-    com.facebook.buck.cd.model.java.RelPath getAbiPath();
+    com.facebook.buck.cd.model.common.RelPath getAbiPath();
     /**
-     * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+     * <code>.RelPath abiPath = 3;</code>
      */
-    com.facebook.buck.cd.model.java.RelPathOrBuilder getAbiPathOrBuilder();
+    com.facebook.buck.cd.model.common.RelPathOrBuilder getAbiPathOrBuilder();
   }
   /**
    * Protobuf type {@code javacd.api.v1.UnusedDependenciesParams.BuildTargetAndPaths}
@@ -1337,11 +1337,11 @@ private static final long serialVersionUID = 0L;
               break;
             }
             case 18: {
-              com.facebook.buck.cd.model.java.RelPath.Builder subBuilder = null;
+              com.facebook.buck.cd.model.common.RelPath.Builder subBuilder = null;
               if (fullJarPath_ != null) {
                 subBuilder = fullJarPath_.toBuilder();
               }
-              fullJarPath_ = input.readMessage(com.facebook.buck.cd.model.java.RelPath.parser(), extensionRegistry);
+              fullJarPath_ = input.readMessage(com.facebook.buck.cd.model.common.RelPath.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(fullJarPath_);
                 fullJarPath_ = subBuilder.buildPartial();
@@ -1350,11 +1350,11 @@ private static final long serialVersionUID = 0L;
               break;
             }
             case 26: {
-              com.facebook.buck.cd.model.java.RelPath.Builder subBuilder = null;
+              com.facebook.buck.cd.model.common.RelPath.Builder subBuilder = null;
               if (abiPath_ != null) {
                 subBuilder = abiPath_.toBuilder();
               }
-              abiPath_ = input.readMessage(com.facebook.buck.cd.model.java.RelPath.parser(), extensionRegistry);
+              abiPath_ = input.readMessage(com.facebook.buck.cd.model.common.RelPath.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(abiPath_);
                 abiPath_ = subBuilder.buildPartial();
@@ -1429,44 +1429,44 @@ private static final long serialVersionUID = 0L;
     }
 
     public static final int FULLJARPATH_FIELD_NUMBER = 2;
-    private com.facebook.buck.cd.model.java.RelPath fullJarPath_;
+    private com.facebook.buck.cd.model.common.RelPath fullJarPath_;
     /**
-     * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+     * <code>.RelPath fullJarPath = 2;</code>
      */
     public boolean hasFullJarPath() {
       return fullJarPath_ != null;
     }
     /**
-     * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+     * <code>.RelPath fullJarPath = 2;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPath getFullJarPath() {
-      return fullJarPath_ == null ? com.facebook.buck.cd.model.java.RelPath.getDefaultInstance() : fullJarPath_;
+    public com.facebook.buck.cd.model.common.RelPath getFullJarPath() {
+      return fullJarPath_ == null ? com.facebook.buck.cd.model.common.RelPath.getDefaultInstance() : fullJarPath_;
     }
     /**
-     * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+     * <code>.RelPath fullJarPath = 2;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPathOrBuilder getFullJarPathOrBuilder() {
+    public com.facebook.buck.cd.model.common.RelPathOrBuilder getFullJarPathOrBuilder() {
       return getFullJarPath();
     }
 
     public static final int ABIPATH_FIELD_NUMBER = 3;
-    private com.facebook.buck.cd.model.java.RelPath abiPath_;
+    private com.facebook.buck.cd.model.common.RelPath abiPath_;
     /**
-     * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+     * <code>.RelPath abiPath = 3;</code>
      */
     public boolean hasAbiPath() {
       return abiPath_ != null;
     }
     /**
-     * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+     * <code>.RelPath abiPath = 3;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPath getAbiPath() {
-      return abiPath_ == null ? com.facebook.buck.cd.model.java.RelPath.getDefaultInstance() : abiPath_;
+    public com.facebook.buck.cd.model.common.RelPath getAbiPath() {
+      return abiPath_ == null ? com.facebook.buck.cd.model.common.RelPath.getDefaultInstance() : abiPath_;
     }
     /**
-     * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+     * <code>.RelPath abiPath = 3;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPathOrBuilder getAbiPathOrBuilder() {
+    public com.facebook.buck.cd.model.common.RelPathOrBuilder getAbiPathOrBuilder() {
       return getAbiPath();
     }
 
@@ -1901,29 +1901,29 @@ private static final long serialVersionUID = 0L;
         return this;
       }
 
-      private com.facebook.buck.cd.model.java.RelPath fullJarPath_;
+      private com.facebook.buck.cd.model.common.RelPath fullJarPath_;
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder> fullJarPathBuilder_;
+          com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder> fullJarPathBuilder_;
       /**
-       * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+       * <code>.RelPath fullJarPath = 2;</code>
        */
       public boolean hasFullJarPath() {
         return fullJarPathBuilder_ != null || fullJarPath_ != null;
       }
       /**
-       * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+       * <code>.RelPath fullJarPath = 2;</code>
        */
-      public com.facebook.buck.cd.model.java.RelPath getFullJarPath() {
+      public com.facebook.buck.cd.model.common.RelPath getFullJarPath() {
         if (fullJarPathBuilder_ == null) {
-          return fullJarPath_ == null ? com.facebook.buck.cd.model.java.RelPath.getDefaultInstance() : fullJarPath_;
+          return fullJarPath_ == null ? com.facebook.buck.cd.model.common.RelPath.getDefaultInstance() : fullJarPath_;
         } else {
           return fullJarPathBuilder_.getMessage();
         }
       }
       /**
-       * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+       * <code>.RelPath fullJarPath = 2;</code>
        */
-      public Builder setFullJarPath(com.facebook.buck.cd.model.java.RelPath value) {
+      public Builder setFullJarPath(com.facebook.buck.cd.model.common.RelPath value) {
         if (fullJarPathBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -1937,10 +1937,10 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+       * <code>.RelPath fullJarPath = 2;</code>
        */
       public Builder setFullJarPath(
-          com.facebook.buck.cd.model.java.RelPath.Builder builderForValue) {
+          com.facebook.buck.cd.model.common.RelPath.Builder builderForValue) {
         if (fullJarPathBuilder_ == null) {
           fullJarPath_ = builderForValue.build();
           onChanged();
@@ -1951,13 +1951,13 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+       * <code>.RelPath fullJarPath = 2;</code>
        */
-      public Builder mergeFullJarPath(com.facebook.buck.cd.model.java.RelPath value) {
+      public Builder mergeFullJarPath(com.facebook.buck.cd.model.common.RelPath value) {
         if (fullJarPathBuilder_ == null) {
           if (fullJarPath_ != null) {
             fullJarPath_ =
-              com.facebook.buck.cd.model.java.RelPath.newBuilder(fullJarPath_).mergeFrom(value).buildPartial();
+              com.facebook.buck.cd.model.common.RelPath.newBuilder(fullJarPath_).mergeFrom(value).buildPartial();
           } else {
             fullJarPath_ = value;
           }
@@ -1969,7 +1969,7 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+       * <code>.RelPath fullJarPath = 2;</code>
        */
       public Builder clearFullJarPath() {
         if (fullJarPathBuilder_ == null) {
@@ -1983,33 +1983,33 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+       * <code>.RelPath fullJarPath = 2;</code>
        */
-      public com.facebook.buck.cd.model.java.RelPath.Builder getFullJarPathBuilder() {
+      public com.facebook.buck.cd.model.common.RelPath.Builder getFullJarPathBuilder() {
         
         onChanged();
         return getFullJarPathFieldBuilder().getBuilder();
       }
       /**
-       * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+       * <code>.RelPath fullJarPath = 2;</code>
        */
-      public com.facebook.buck.cd.model.java.RelPathOrBuilder getFullJarPathOrBuilder() {
+      public com.facebook.buck.cd.model.common.RelPathOrBuilder getFullJarPathOrBuilder() {
         if (fullJarPathBuilder_ != null) {
           return fullJarPathBuilder_.getMessageOrBuilder();
         } else {
           return fullJarPath_ == null ?
-              com.facebook.buck.cd.model.java.RelPath.getDefaultInstance() : fullJarPath_;
+              com.facebook.buck.cd.model.common.RelPath.getDefaultInstance() : fullJarPath_;
         }
       }
       /**
-       * <code>.javacd.api.v1.RelPath fullJarPath = 2;</code>
+       * <code>.RelPath fullJarPath = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+          com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder> 
           getFullJarPathFieldBuilder() {
         if (fullJarPathBuilder_ == null) {
           fullJarPathBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder>(
+              com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder>(
                   getFullJarPath(),
                   getParentForChildren(),
                   isClean());
@@ -2018,29 +2018,29 @@ private static final long serialVersionUID = 0L;
         return fullJarPathBuilder_;
       }
 
-      private com.facebook.buck.cd.model.java.RelPath abiPath_;
+      private com.facebook.buck.cd.model.common.RelPath abiPath_;
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder> abiPathBuilder_;
+          com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder> abiPathBuilder_;
       /**
-       * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+       * <code>.RelPath abiPath = 3;</code>
        */
       public boolean hasAbiPath() {
         return abiPathBuilder_ != null || abiPath_ != null;
       }
       /**
-       * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+       * <code>.RelPath abiPath = 3;</code>
        */
-      public com.facebook.buck.cd.model.java.RelPath getAbiPath() {
+      public com.facebook.buck.cd.model.common.RelPath getAbiPath() {
         if (abiPathBuilder_ == null) {
-          return abiPath_ == null ? com.facebook.buck.cd.model.java.RelPath.getDefaultInstance() : abiPath_;
+          return abiPath_ == null ? com.facebook.buck.cd.model.common.RelPath.getDefaultInstance() : abiPath_;
         } else {
           return abiPathBuilder_.getMessage();
         }
       }
       /**
-       * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+       * <code>.RelPath abiPath = 3;</code>
        */
-      public Builder setAbiPath(com.facebook.buck.cd.model.java.RelPath value) {
+      public Builder setAbiPath(com.facebook.buck.cd.model.common.RelPath value) {
         if (abiPathBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -2054,10 +2054,10 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+       * <code>.RelPath abiPath = 3;</code>
        */
       public Builder setAbiPath(
-          com.facebook.buck.cd.model.java.RelPath.Builder builderForValue) {
+          com.facebook.buck.cd.model.common.RelPath.Builder builderForValue) {
         if (abiPathBuilder_ == null) {
           abiPath_ = builderForValue.build();
           onChanged();
@@ -2068,13 +2068,13 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+       * <code>.RelPath abiPath = 3;</code>
        */
-      public Builder mergeAbiPath(com.facebook.buck.cd.model.java.RelPath value) {
+      public Builder mergeAbiPath(com.facebook.buck.cd.model.common.RelPath value) {
         if (abiPathBuilder_ == null) {
           if (abiPath_ != null) {
             abiPath_ =
-              com.facebook.buck.cd.model.java.RelPath.newBuilder(abiPath_).mergeFrom(value).buildPartial();
+              com.facebook.buck.cd.model.common.RelPath.newBuilder(abiPath_).mergeFrom(value).buildPartial();
           } else {
             abiPath_ = value;
           }
@@ -2086,7 +2086,7 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+       * <code>.RelPath abiPath = 3;</code>
        */
       public Builder clearAbiPath() {
         if (abiPathBuilder_ == null) {
@@ -2100,33 +2100,33 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
-       * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+       * <code>.RelPath abiPath = 3;</code>
        */
-      public com.facebook.buck.cd.model.java.RelPath.Builder getAbiPathBuilder() {
+      public com.facebook.buck.cd.model.common.RelPath.Builder getAbiPathBuilder() {
         
         onChanged();
         return getAbiPathFieldBuilder().getBuilder();
       }
       /**
-       * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+       * <code>.RelPath abiPath = 3;</code>
        */
-      public com.facebook.buck.cd.model.java.RelPathOrBuilder getAbiPathOrBuilder() {
+      public com.facebook.buck.cd.model.common.RelPathOrBuilder getAbiPathOrBuilder() {
         if (abiPathBuilder_ != null) {
           return abiPathBuilder_.getMessageOrBuilder();
         } else {
           return abiPath_ == null ?
-              com.facebook.buck.cd.model.java.RelPath.getDefaultInstance() : abiPath_;
+              com.facebook.buck.cd.model.common.RelPath.getDefaultInstance() : abiPath_;
         }
       }
       /**
-       * <code>.javacd.api.v1.RelPath abiPath = 3;</code>
+       * <code>.RelPath abiPath = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+          com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder> 
           getAbiPathFieldBuilder() {
         if (abiPathBuilder_ == null) {
           abiPathBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder>(
+              com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder>(
                   getAbiPath(),
                   getParentForChildren(),
                   isClean());
@@ -2259,36 +2259,36 @@ private static final long serialVersionUID = 0L;
   }
 
   public static final int DEPFILE_FIELD_NUMBER = 3;
-  private java.util.List<com.facebook.buck.cd.model.java.RelPath> depFile_;
+  private java.util.List<com.facebook.buck.cd.model.common.RelPath> depFile_;
   /**
-   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .RelPath depFile = 3;</code>
    */
-  public java.util.List<com.facebook.buck.cd.model.java.RelPath> getDepFileList() {
+  public java.util.List<com.facebook.buck.cd.model.common.RelPath> getDepFileList() {
     return depFile_;
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .RelPath depFile = 3;</code>
    */
-  public java.util.List<? extends com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+  public java.util.List<? extends com.facebook.buck.cd.model.common.RelPathOrBuilder> 
       getDepFileOrBuilderList() {
     return depFile_;
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .RelPath depFile = 3;</code>
    */
   public int getDepFileCount() {
     return depFile_.size();
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .RelPath depFile = 3;</code>
    */
-  public com.facebook.buck.cd.model.java.RelPath getDepFile(int index) {
+  public com.facebook.buck.cd.model.common.RelPath getDepFile(int index) {
     return depFile_.get(index);
   }
   /**
-   * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+   * <code>repeated .RelPath depFile = 3;</code>
    */
-  public com.facebook.buck.cd.model.java.RelPathOrBuilder getDepFileOrBuilder(
+  public com.facebook.buck.cd.model.common.RelPathOrBuilder getDepFileOrBuilder(
       int index) {
     return depFile_.get(index);
   }
@@ -3428,22 +3428,22 @@ private static final long serialVersionUID = 0L;
       return providedDepsBuilder_;
     }
 
-    private java.util.List<com.facebook.buck.cd.model.java.RelPath> depFile_ =
+    private java.util.List<com.facebook.buck.cd.model.common.RelPath> depFile_ =
       java.util.Collections.emptyList();
     private void ensureDepFileIsMutable() {
       if (!((bitField0_ & 0x00000004) != 0)) {
-        depFile_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.RelPath>(depFile_);
+        depFile_ = new java.util.ArrayList<com.facebook.buck.cd.model.common.RelPath>(depFile_);
         bitField0_ |= 0x00000004;
        }
     }
 
     private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder> depFileBuilder_;
+        com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder> depFileBuilder_;
 
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
-    public java.util.List<com.facebook.buck.cd.model.java.RelPath> getDepFileList() {
+    public java.util.List<com.facebook.buck.cd.model.common.RelPath> getDepFileList() {
       if (depFileBuilder_ == null) {
         return java.util.Collections.unmodifiableList(depFile_);
       } else {
@@ -3451,7 +3451,7 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
     public int getDepFileCount() {
       if (depFileBuilder_ == null) {
@@ -3461,9 +3461,9 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPath getDepFile(int index) {
+    public com.facebook.buck.cd.model.common.RelPath getDepFile(int index) {
       if (depFileBuilder_ == null) {
         return depFile_.get(index);
       } else {
@@ -3471,10 +3471,10 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
     public Builder setDepFile(
-        int index, com.facebook.buck.cd.model.java.RelPath value) {
+        int index, com.facebook.buck.cd.model.common.RelPath value) {
       if (depFileBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -3488,10 +3488,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
     public Builder setDepFile(
-        int index, com.facebook.buck.cd.model.java.RelPath.Builder builderForValue) {
+        int index, com.facebook.buck.cd.model.common.RelPath.Builder builderForValue) {
       if (depFileBuilder_ == null) {
         ensureDepFileIsMutable();
         depFile_.set(index, builderForValue.build());
@@ -3502,9 +3502,9 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
-    public Builder addDepFile(com.facebook.buck.cd.model.java.RelPath value) {
+    public Builder addDepFile(com.facebook.buck.cd.model.common.RelPath value) {
       if (depFileBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -3518,10 +3518,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
     public Builder addDepFile(
-        int index, com.facebook.buck.cd.model.java.RelPath value) {
+        int index, com.facebook.buck.cd.model.common.RelPath value) {
       if (depFileBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
@@ -3535,10 +3535,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
     public Builder addDepFile(
-        com.facebook.buck.cd.model.java.RelPath.Builder builderForValue) {
+        com.facebook.buck.cd.model.common.RelPath.Builder builderForValue) {
       if (depFileBuilder_ == null) {
         ensureDepFileIsMutable();
         depFile_.add(builderForValue.build());
@@ -3549,10 +3549,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
     public Builder addDepFile(
-        int index, com.facebook.buck.cd.model.java.RelPath.Builder builderForValue) {
+        int index, com.facebook.buck.cd.model.common.RelPath.Builder builderForValue) {
       if (depFileBuilder_ == null) {
         ensureDepFileIsMutable();
         depFile_.add(index, builderForValue.build());
@@ -3563,10 +3563,10 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
     public Builder addAllDepFile(
-        java.lang.Iterable<? extends com.facebook.buck.cd.model.java.RelPath> values) {
+        java.lang.Iterable<? extends com.facebook.buck.cd.model.common.RelPath> values) {
       if (depFileBuilder_ == null) {
         ensureDepFileIsMutable();
         com.google.protobuf.AbstractMessageLite.Builder.addAll(
@@ -3578,7 +3578,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
     public Builder clearDepFile() {
       if (depFileBuilder_ == null) {
@@ -3591,7 +3591,7 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
     public Builder removeDepFile(int index) {
       if (depFileBuilder_ == null) {
@@ -3604,16 +3604,16 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPath.Builder getDepFileBuilder(
+    public com.facebook.buck.cd.model.common.RelPath.Builder getDepFileBuilder(
         int index) {
       return getDepFileFieldBuilder().getBuilder(index);
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPathOrBuilder getDepFileOrBuilder(
+    public com.facebook.buck.cd.model.common.RelPathOrBuilder getDepFileOrBuilder(
         int index) {
       if (depFileBuilder_ == null) {
         return depFile_.get(index);  } else {
@@ -3621,9 +3621,9 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
-    public java.util.List<? extends com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+    public java.util.List<? extends com.facebook.buck.cd.model.common.RelPathOrBuilder> 
          getDepFileOrBuilderList() {
       if (depFileBuilder_ != null) {
         return depFileBuilder_.getMessageOrBuilderList();
@@ -3632,33 +3632,33 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPath.Builder addDepFileBuilder() {
+    public com.facebook.buck.cd.model.common.RelPath.Builder addDepFileBuilder() {
       return getDepFileFieldBuilder().addBuilder(
-          com.facebook.buck.cd.model.java.RelPath.getDefaultInstance());
+          com.facebook.buck.cd.model.common.RelPath.getDefaultInstance());
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
-    public com.facebook.buck.cd.model.java.RelPath.Builder addDepFileBuilder(
+    public com.facebook.buck.cd.model.common.RelPath.Builder addDepFileBuilder(
         int index) {
       return getDepFileFieldBuilder().addBuilder(
-          index, com.facebook.buck.cd.model.java.RelPath.getDefaultInstance());
+          index, com.facebook.buck.cd.model.common.RelPath.getDefaultInstance());
     }
     /**
-     * <code>repeated .javacd.api.v1.RelPath depFile = 3;</code>
+     * <code>repeated .RelPath depFile = 3;</code>
      */
-    public java.util.List<com.facebook.buck.cd.model.java.RelPath.Builder> 
+    public java.util.List<com.facebook.buck.cd.model.common.RelPath.Builder> 
          getDepFileBuilderList() {
       return getDepFileFieldBuilder().getBuilderList();
     }
     private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder> 
+        com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder> 
         getDepFileFieldBuilder() {
       if (depFileBuilder_ == null) {
         depFileBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-            com.facebook.buck.cd.model.java.RelPath, com.facebook.buck.cd.model.java.RelPath.Builder, com.facebook.buck.cd.model.java.RelPathOrBuilder>(
+            com.facebook.buck.cd.model.common.RelPath, com.facebook.buck.cd.model.common.RelPath.Builder, com.facebook.buck.cd.model.common.RelPathOrBuilder>(
                 depFile_,
                 ((bitField0_ & 0x00000004) != 0),
                 getParentForChildren(),

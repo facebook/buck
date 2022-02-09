@@ -48,7 +48,7 @@ public class CompilerOutputPathsSerializer {
     return builder.build();
   }
 
-  private static com.facebook.buck.cd.model.java.RelPath toRelPath(RelPath relPath) {
+  private static com.facebook.buck.cd.model.common.RelPath toRelPath(RelPath relPath) {
     return RelPathSerializer.serialize(relPath);
   }
 
@@ -69,12 +69,12 @@ public class CompilerOutputPathsSerializer {
         .build();
   }
 
-  private static RelPath toRelPath(com.facebook.buck.cd.model.java.RelPath relPath) {
+  private static RelPath toRelPath(com.facebook.buck.cd.model.common.RelPath relPath) {
     return RelPathSerializer.deserialize(relPath);
   }
 
   private static Optional<RelPath> toOptionalRelPath(
-      boolean isPresent, com.facebook.buck.cd.model.java.RelPath value) {
+      boolean isPresent, com.facebook.buck.cd.model.common.RelPath value) {
     return isPresent ? Optional.of(toRelPath(value)) : Optional.empty();
   }
 }

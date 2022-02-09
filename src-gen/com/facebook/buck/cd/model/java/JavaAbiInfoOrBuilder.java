@@ -20,26 +20,26 @@ public interface JavaAbiInfoOrBuilder extends
       getBuildTargetNameBytes();
 
   /**
-   * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+   * <code>repeated .Path contentPaths = 2;</code>
    */
-  java.util.List<com.facebook.buck.cd.model.java.Path> 
+  java.util.List<com.facebook.buck.cd.model.common.Path> 
       getContentPathsList();
   /**
-   * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+   * <code>repeated .Path contentPaths = 2;</code>
    */
-  com.facebook.buck.cd.model.java.Path getContentPaths(int index);
+  com.facebook.buck.cd.model.common.Path getContentPaths(int index);
   /**
-   * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+   * <code>repeated .Path contentPaths = 2;</code>
    */
   int getContentPathsCount();
   /**
-   * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+   * <code>repeated .Path contentPaths = 2;</code>
    */
-  java.util.List<? extends com.facebook.buck.cd.model.java.PathOrBuilder> 
+  java.util.List<? extends com.facebook.buck.cd.model.common.PathOrBuilder> 
       getContentPathsOrBuilderList();
   /**
-   * <code>repeated .javacd.api.v1.Path contentPaths = 2;</code>
+   * <code>repeated .Path contentPaths = 2;</code>
    */
-  com.facebook.buck.cd.model.java.PathOrBuilder getContentPathsOrBuilder(
+  com.facebook.buck.cd.model.common.PathOrBuilder getContentPathsOrBuilder(
       int index);
 }

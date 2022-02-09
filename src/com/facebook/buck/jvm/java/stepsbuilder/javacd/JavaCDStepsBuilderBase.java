@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
+import com.facebook.buck.cd.model.common.RelPathMapEntry;
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.cd.model.java.AbiJarCommand;
 import com.facebook.buck.cd.model.java.BaseCommandParams;
@@ -24,7 +25,6 @@ import com.facebook.buck.cd.model.java.BaseJarCommand;
 import com.facebook.buck.cd.model.java.BuildJavaCommand;
 import com.facebook.buck.cd.model.java.FilesystemParams;
 import com.facebook.buck.cd.model.java.LibraryJarCommand;
-import com.facebook.buck.cd.model.java.RelPathMapEntry;
 import com.facebook.buck.cd.model.java.ResolvedJavacOptions;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;

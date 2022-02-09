@@ -75,10 +75,10 @@ class ResolvedJavacPluginPropertiesSerializer {
   }
 
   private static ImmutableMap<String, RelPath> toPathParams(
-      Map<String, com.facebook.buck.cd.model.java.RelPath> pathParamsMap) {
+      Map<String, com.facebook.buck.cd.model.common.RelPath> pathParamsMap) {
     ImmutableMap.Builder<String, RelPath> pathParamsBuilder =
         ImmutableMap.builderWithExpectedSize(pathParamsMap.size());
-    for (Map.Entry<String, com.facebook.buck.cd.model.java.RelPath> entry :
+    for (Map.Entry<String, com.facebook.buck.cd.model.common.RelPath> entry :
         pathParamsMap.entrySet()) {
       pathParamsBuilder.put(entry.getKey(), RelPathSerializer.deserialize(entry.getValue()));
     }
