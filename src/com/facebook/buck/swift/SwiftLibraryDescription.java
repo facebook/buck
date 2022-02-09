@@ -74,8 +74,10 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
+import com.facebook.buck.swift.toolchain.SwiftSdkDependenciesProvider;
 import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
 import com.facebook.buck.util.stream.RichStream;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -296,6 +298,7 @@ public class SwiftLibraryDescription
           cxxPlatform.getCpp().resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
       BuildTarget buildTargetCopy = buildTarget;
+
       return new SwiftCompile(
           swiftBuckConfig,
           buildTarget,
@@ -334,7 +337,12 @@ public class SwiftLibraryDescription
           swiftPlatform.get().getPrefixSerializedDebugInfo(),
           swiftBuckConfig.getAddXctestImportPaths(),
           args.getSerializeDebuggingOptions(),
-          args.getUsesExplicitModules());
+          args.getUsesExplicitModules(),
+          getSdkSwiftmoduleDependencies(
+              args.getUsesExplicitModules(),
+              graphBuilder,
+              swiftPlatform.get(),
+              args.getFrameworks()));
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -516,7 +524,9 @@ public class SwiftLibraryDescription
         swiftPlatform.getPrefixSerializedDebugInfo(),
         swiftBuckConfig.getAddXctestImportPaths(),
         args.getSerializeDebuggingOptions(),
-        args.getUsesExplicitModules());
+        args.getUsesExplicitModules(),
+        getSdkSwiftmoduleDependencies(
+            args.getUsesExplicitModules(), graphBuilder, swiftPlatform, args.getFrameworks()));
   }
 
   private static AppleCompilerTargetTriple getSwiftTarget(
@@ -609,7 +619,49 @@ public class SwiftLibraryDescription
         swiftPlatform.getPrefixSerializedDebugInfo(),
         swiftBuckConfig.getAddXctestImportPaths(),
         args.getSerializeDebuggingOptions(),
-        args.getUsesExplicitModules());
+        args.getUsesExplicitModules(),
+        getSdkSwiftmoduleDependencies(
+            args.getUsesExplicitModules(), graphBuilder, swiftPlatform, args.getFrameworks()));
+  }
+
+  private static ImmutableSortedSet<SourcePath> getSdkSwiftmoduleDependencies(
+      boolean usesExplicitModules,
+      ActionGraphBuilder graphBuilder,
+      SwiftPlatform swiftPlatform,
+      ImmutableSortedSet<FrameworkPath> frameworks) {
+    if (!usesExplicitModules) {
+      return ImmutableSortedSet.of();
+    }
+
+    Preconditions.checkState(
+        swiftPlatform.getSdkDependencies().isPresent(),
+        "Explicit module compilation requires the sdk_dependencies_path to be set on swift_toolchain.");
+    SwiftSdkDependenciesProvider sdkDependencyProvider = swiftPlatform.getSdkDependencies().get();
+
+    ImmutableList.Builder<String> modules = ImmutableList.builder();
+
+    // We always need the stdlib and Onone support
+    modules.add("Swift", "SwiftOnoneSupport");
+
+    // _Concurrency is implicity added to all Swift compilation
+    modules.add("_Concurrency");
+
+    // Dispatch is a separate module but not a framework. We don't have a way to model that in
+    // the apple rules so just always include it for now.
+    modules.add("Dispatch");
+
+    for (FrameworkPath frameworkPath : frameworks) {
+      modules.add(
+          frameworkPath.getName(
+              sp -> graphBuilder.getSourcePathResolver().getAbsolutePath(sp).getPath()));
+    }
+
+    ImmutableSortedSet.Builder<SourcePath> swiftDependenciesBuilder =
+        ImmutableSortedSet.naturalOrder();
+    for (String module : modules.build()) {
+      swiftDependenciesBuilder.addAll(sdkDependencyProvider.getSwiftmoduleDependencyPaths(module));
+    }
+    return swiftDependenciesBuilder.build();
   }
 
   private static Optional<SourcePath> getPlatformPathIfRequired(

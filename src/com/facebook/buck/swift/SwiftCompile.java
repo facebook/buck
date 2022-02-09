@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -75,7 +76,8 @@ public class SwiftCompile extends SwiftCompileBase {
       boolean hasPrefixSerializedDebugInfo,
       boolean addXCTestImportPaths,
       boolean serializeDebuggingOptions,
-      boolean usesExplicitModules) {
+      boolean usesExplicitModules,
+      ImmutableSortedSet<SourcePath> sdkDependencies) {
     super(
         swiftBuckConfig,
         buildTarget,
@@ -103,7 +105,8 @@ public class SwiftCompile extends SwiftCompileBase {
         hasPrefixSerializedDebugInfo,
         addXCTestImportPaths,
         serializeDebuggingOptions,
-        usesExplicitModules);
+        usesExplicitModules,
+        sdkDependencies);
 
     transformErrorsToAbsolutePaths = swiftBuckConfig.getTransformErrorsToAbsolutePaths();
   }

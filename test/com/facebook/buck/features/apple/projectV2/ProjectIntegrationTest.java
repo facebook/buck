@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -574,6 +574,12 @@ public class ProjectIntegrationTest {
     List<String> expectedArgs =
         ImmutableList.of(
             "-import-underlying-module",
+            "-I",
+            getAbsolutePathString(swiftDepMixedModuleCompileTarget, filesystem),
+            "-I",
+            getAbsolutePathString(swiftDepCompileTarget, filesystem),
+            "-I",
+            getAbsolutePathString(swiftCompileTarget, filesystem),
             "-Xcc",
             "-ivfsoverlay",
             "-Xcc",
@@ -598,12 +604,6 @@ public class ProjectIntegrationTest {
             "-Xcc",
             "-I",
             "-Xcc",
-            getAbsolutePathString(swiftCompileTarget, filesystem),
-            "-I",
-            getAbsolutePathString(swiftDepMixedModuleCompileTarget, filesystem),
-            "-I",
-            getAbsolutePathString(swiftDepCompileTarget, filesystem),
-            "-I",
             getAbsolutePathString(swiftCompileTarget, filesystem),
             "-module-name",
             "Primary");

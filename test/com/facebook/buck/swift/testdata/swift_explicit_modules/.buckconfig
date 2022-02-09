@@ -1,0 +1,5 @@
+[apple]
+toolchain_set_target = "//:toolchain"
+
+[project]
+read_only_paths = xcode

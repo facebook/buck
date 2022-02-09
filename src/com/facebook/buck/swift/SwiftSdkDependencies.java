@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +77,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
     ObjectMapper objectMapper = new ObjectMapper();
     try {
       sdkDependencies =
-          objectMapper.readValue(Paths.get(sdkDependenciesPath).toFile(), SdkDependencyJson.class);
+          objectMapper.readValue(
+              projectFilesystem.resolve(sdkDependenciesPath).toFile(), SdkDependencyJson.class);
     } catch (IOException ex) {
       throw new HumanReadableException(
           "Failed to parse SDK dependencies info: " + ex.getLocalizedMessage());

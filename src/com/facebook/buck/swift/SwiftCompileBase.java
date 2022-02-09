@@ -154,10 +154,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final Optional<SourcePath> platformPath;
 
-  // We need the dependent swiftmodule paths to contribute to the rulekey. These
-  // paths are not used directly in the compilation action as the compiler does
-  // not take explicit swiftmodule paths. Instead we use the containing folders
-  // in `swiftIncludePaths` with `-I`.
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> swiftmoduleDeps;
 
   // The following fields do not have to be part of the rulekey, all the others must.
@@ -200,7 +196,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       boolean hasPrefixSerializedDebugInfo,
       boolean addXCTestImportPaths,
       boolean serializeDebuggingOptions,
-      boolean usesExplicitModules) {
+      boolean usesExplicitModules,
+      ImmutableSortedSet<SourcePath> sdkDependencies) {
     super(buildTarget, projectFilesystem);
     this.systemFrameworkSearchPaths = systemFrameworkSearchPaths;
     this.frameworks = frameworks;
@@ -286,6 +283,11 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       }
     }
 
+    // If using explicit modules we need to explicitly include the SDK dependencies too.
+    if (usesExplicitModules) {
+      swiftmoduleDepPathBuilder.addAll(sdkDependencies);
+    }
+
     this.swiftmoduleDeps = swiftmoduleDepPathBuilder.build();
     this.swiftIncludePaths = swiftIncludePathBuilder.build();
 
@@ -326,6 +328,24 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       argBuilder.add("-import-underlying-module");
     }
 
+    if (usesExplicitModules) {
+      argBuilder.add(frontendFlag, "-disable-implicit-swift-modules");
+
+      for (SourcePath swiftmodulePath : swiftmoduleDeps) {
+        argBuilder.add(
+            frontendFlag,
+            "-swift-module-file",
+            frontendFlag,
+            resolver.getIdeallyRelativePath(swiftmodulePath).toString());
+      }
+    } else {
+      for (SourcePath includePath : swiftIncludePaths) {
+        argBuilder.add(
+            INCLUDE_FLAG,
+            getProjectFilesystem().relativize(resolver.getAbsolutePath(includePath)).toString());
+      }
+    }
+
     argBuilder.addAll(
         MoreIterables.zipAndConcat(
             Iterables.cycle("-Fsystem"), Arg.stringify(systemFrameworkSearchPaths, resolver)));
@@ -345,12 +365,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
     argBuilder.addAll(
         MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"), getSwiftIncludeArgs(resolver)));
-
-    for (SourcePath includePath : swiftIncludePaths) {
-      argBuilder.add(
-          INCLUDE_FLAG,
-          getProjectFilesystem().relativize(resolver.getAbsolutePath(includePath)).toString());
-    }
 
     boolean hasMainEntry =
         srcs.stream()

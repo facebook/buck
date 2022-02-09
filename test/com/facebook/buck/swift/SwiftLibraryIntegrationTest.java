@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -70,7 +71,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.BiFunction;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -453,6 +456,23 @@ public class SwiftLibraryIntegrationTest {
             "-driver-batch-count",
             "1",
             "-enable-incremental-imports"));
+  }
+
+  @Test
+  public void testExplicitModules() throws IOException {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("swift_explicit_modules");
+    workspace.setUp();
+
+    // We need to set up a relative path symlink to point back to Xcode contents
+    AbsPath projectRoot = workspace.getProjectFileSystem().getRootPath();
+    Files.createSymbolicLink(
+        projectRoot.getPath().resolve("xcode"), Paths.get("/var/db/xcode_select_link"));
+
+    BuildTarget target = workspace.newBuildTarget("//:a#iphonesimulator-x86_64,swift-compile");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
   }
 
   @Test
