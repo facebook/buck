@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
-
-import static com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.SerializationUtil.createNotSupportedException;
+package com.facebook.buck.jvm.cd.serialization.java;
 
 import com.facebook.buck.cd.model.java.JarParameters;
 import java.util.logging.Level;
@@ -58,7 +56,7 @@ class LogLevelSerializer {
       case UNRECOGNIZED:
       case UNKNOWN:
       default:
-        throw createNotSupportedException(level);
+        throw SerializationUtil.createNotSupportedException(level);
     }
   }
 }

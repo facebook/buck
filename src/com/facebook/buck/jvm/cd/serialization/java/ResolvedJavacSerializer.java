@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
-
-import static com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.SerializationUtil.createNotSupportedException;
+package com.facebook.buck.jvm.cd.serialization.java;
 
 import com.facebook.buck.jvm.java.ExternalJavac;
 import com.facebook.buck.jvm.java.JdkProvidedInMemoryJavac;
@@ -86,7 +84,7 @@ public class ResolvedJavacSerializer {
 
       case JAVAC_NOT_SET:
       default:
-        throw createNotSupportedException(javacCase);
+        throw SerializationUtil.createNotSupportedException(javacCase);
     }
   }
 

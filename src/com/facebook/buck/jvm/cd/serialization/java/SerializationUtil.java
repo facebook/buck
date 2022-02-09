@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
+package com.facebook.buck.jvm.cd.serialization.java;
 
 /** JavaCD serialization utilities. */
 class SerializationUtil {

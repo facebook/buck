@@ -1,6 +1,6 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 buck_java_library(
-    name = "serialization",
+    name = "java",
     srcs = glob(["*.java"]),
     visibility = [
         "//src/com/facebook/buck/jvm/java/...",
