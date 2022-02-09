@@ -132,13 +132,15 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private ImmutableList<Step> getBuildWrapperScriptSteps(
       BuildContext context, BuildableContext buildableContext) {
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    ImmutableList.Builder<Step> steps = ImmutableList.builderWithExpectedSize(4);
 
-    RelPath outputDirectory = getOutputDirectory();
+    RelPath outputDirectory =
+        BuildTargetPaths.getGenPath(getProjectFilesystem().getBuckPaths(), getBuildTarget(), "%s")
+            .resolveRel("classpath_dir");
     ProjectFilesystem filesystem = getProjectFilesystem();
     AbsPath buildCellRootPath = context.getBuildCellRootPath();
-    steps.add(
-        MkdirStep.of(
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 buildCellRootPath, filesystem, outputDirectory)));
 
