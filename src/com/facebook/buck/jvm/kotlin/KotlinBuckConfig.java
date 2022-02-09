@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -23,7 +24,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.groovy;
 
+import com.facebook.buck.cd.model.java.FilesystemParams;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -23,7 +24,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.javacd.model.FilesystemParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;

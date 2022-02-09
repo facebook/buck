@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,12 +31,12 @@ public class JarParametersSerializer {
 
   /**
    * Serializes {@link JarParameters} into javacd model's {@link
-   * com.facebook.buck.javacd.model.JarParameters}.
+   * com.facebook.buck.cd.model.java.JarParameters}.
    */
-  public static com.facebook.buck.javacd.model.JarParameters serialize(
+  public static com.facebook.buck.cd.model.java.JarParameters serialize(
       JarParameters jarParameters) {
-    com.facebook.buck.javacd.model.JarParameters.Builder builder =
-        com.facebook.buck.javacd.model.JarParameters.newBuilder();
+    com.facebook.buck.cd.model.java.JarParameters.Builder builder =
+        com.facebook.buck.cd.model.java.JarParameters.newBuilder();
 
     builder.setHashEntries(jarParameters.getHashEntries());
     builder.setMergeManifests(jarParameters.getMergeManifests());
@@ -66,11 +66,11 @@ public class JarParametersSerializer {
   }
 
   /**
-   * Deserializes javacd model's {@link com.facebook.buck.javacd.model.JarParameters} into {@link
+   * Deserializes javacd model's {@link com.facebook.buck.cd.model.java.JarParameters} into {@link
    * JarParameters}.
    */
   public static JarParameters deserialize(
-      com.facebook.buck.javacd.model.JarParameters jarParameters) {
+      com.facebook.buck.cd.model.java.JarParameters jarParameters) {
     JarParameters.Builder builder = JarParameters.builder();
 
     builder.setHashEntries(jarParameters.getHashEntries());

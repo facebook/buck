@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.JavacPluginProperties.Type.ANNOTATION_PROCESSOR;
 import static com.facebook.buck.jvm.java.JavacPluginProperties.Type.JAVAC_PLUGIN;
 
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
+import com.facebook.buck.cd.model.java.UnusedDependenciesParams;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -26,8 +28,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.javacd.model.AbiGenerationMode;
-import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

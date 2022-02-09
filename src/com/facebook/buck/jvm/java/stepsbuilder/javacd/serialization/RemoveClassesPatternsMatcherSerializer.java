@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
-import com.facebook.buck.javacd.model.JarParameters;
+import com.facebook.buck.cd.model.java.JarParameters;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -34,8 +34,8 @@ class RemoveClassesPatternsMatcherSerializer {
   public static JarParameters.RemoveClassesPatternsMatcher serialize(
       RemoveClassesPatternsMatcher removeClassesPatternsMatcher) {
     ImmutableList<Pattern> patterns = removeClassesPatternsMatcher.getPatterns();
-    com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher.Builder builder =
-        com.facebook.buck.javacd.model.JarParameters.RemoveClassesPatternsMatcher.newBuilder();
+    com.facebook.buck.cd.model.java.JarParameters.RemoveClassesPatternsMatcher.Builder builder =
+        com.facebook.buck.cd.model.java.JarParameters.RemoveClassesPatternsMatcher.newBuilder();
     for (Pattern pattern : patterns) {
       builder.addPatterns(pattern.pattern());
     }

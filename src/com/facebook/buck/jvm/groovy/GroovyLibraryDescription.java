@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.groovy;
 
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -28,7 +29,6 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.AbstractGroovyLibraryDescriptionArg;
 import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;

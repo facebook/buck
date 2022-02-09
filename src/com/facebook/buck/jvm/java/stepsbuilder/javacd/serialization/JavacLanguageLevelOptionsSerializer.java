@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
-import com.facebook.buck.javacd.model.ResolvedJavacOptions;
+import com.facebook.buck.cd.model.java.ResolvedJavacOptions;
 import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 
 /** {@link JavacLanguageLevelOptions} to protobuf serializer */

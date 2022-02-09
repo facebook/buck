@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -30,7 +31,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.javacd.model.AbiGenerationMode;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableMap;

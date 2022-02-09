@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.cd.model.java.BuildTargetValue.Type;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.BuckPaths;
-import com.facebook.buck.javacd.model.BuildTargetValue.Type;
 import com.facebook.buck.jvm.core.JavaAbis;
 
 /**

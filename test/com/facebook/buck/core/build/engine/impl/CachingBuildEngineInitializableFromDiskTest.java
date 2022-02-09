@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.InMemoryArtifactCache;
+import com.facebook.buck.cd.model.java.PipelineState;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
@@ -48,7 +49,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.rules.keys.DefaultDependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactories;

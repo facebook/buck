@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.isSourceAbi;
 import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.usesDependencies;
 
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
-import com.facebook.buck.javacd.model.AbiGenerationMode;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;

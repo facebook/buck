@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
+import com.facebook.buck.cd.model.java.PipelineState;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
@@ -41,8 +43,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.javacd.model.AbiGenerationMode;
-import com.facebook.buck.javacd.model.PipelineState;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.DefaultBaseJavaAbiInfo;

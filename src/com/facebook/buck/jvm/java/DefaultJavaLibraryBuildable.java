@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,15 @@ package com.facebook.buck.jvm.java;
 import static com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder.isActionableUnusedDependenciesAction;
 import static java.util.Objects.requireNonNull;
 
+import com.facebook.buck.cd.model.java.BasePipeliningCommand;
+import com.facebook.buck.cd.model.java.FilesystemParams;
+import com.facebook.buck.cd.model.java.LibraryJarBaseCommand;
+import com.facebook.buck.cd.model.java.LibraryPipeliningCommand;
+import com.facebook.buck.cd.model.java.PipelineState;
+import com.facebook.buck.cd.model.java.RelPathMapEntry;
+import com.facebook.buck.cd.model.java.UnusedDependenciesParams;
+import com.facebook.buck.cd.model.java.UnusedDependenciesParams.DependencyAndExportedDepsPath;
+import com.facebook.buck.cd.model.java.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.CellPathResolverUtils;
@@ -37,15 +46,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.javacd.model.BasePipeliningCommand;
-import com.facebook.buck.javacd.model.FilesystemParams;
-import com.facebook.buck.javacd.model.LibraryJarBaseCommand;
-import com.facebook.buck.javacd.model.LibraryPipeliningCommand;
-import com.facebook.buck.javacd.model.PipelineState;
-import com.facebook.buck.javacd.model.RelPathMapEntry;
-import com.facebook.buck.javacd.model.UnusedDependenciesParams;
-import com.facebook.buck.javacd.model.UnusedDependenciesParams.DependencyAndExportedDepsPath;
-import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
@@ -454,9 +454,9 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     return builder.build();
   }
 
-  public com.facebook.buck.javacd.model.RelPath toModelRelPath(RelPath relPath) {
+  public com.facebook.buck.cd.model.java.RelPath toModelRelPath(RelPath relPath) {
     String path = relPath.toString();
-    return com.facebook.buck.javacd.model.RelPath.newBuilder().setPath(path).build();
+    return com.facebook.buck.cd.model.java.RelPath.newBuilder().setPath(path).build();
   }
 
   private void addUnusedDependencyStep(

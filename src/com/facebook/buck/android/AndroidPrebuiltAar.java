@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
+import com.facebook.buck.cd.model.java.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -27,8 +29,6 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.javacd.model.AbiGenerationMode;
-import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.JarBuildStepsFactory;
 import com.facebook.buck.jvm.java.Javac;

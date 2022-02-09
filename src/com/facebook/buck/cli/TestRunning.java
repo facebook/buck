@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.cd.model.java.BaseCommandParams.SpoolMode;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -41,7 +42,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;

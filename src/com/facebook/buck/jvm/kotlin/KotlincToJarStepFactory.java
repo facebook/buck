@@ -20,6 +20,8 @@ import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.transform;
 
+import com.facebook.buck.cd.model.java.FilesystemParams;
+import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
@@ -37,8 +39,6 @@ import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.javacd.model.FilesystemParams;
-import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.BuildTargetValueExtraParams;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;

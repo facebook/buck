@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.android.AndroidLibraryBuilder;
+import com.facebook.buck.cd.model.java.BaseCommandParams.SpoolMode;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
@@ -67,7 +68,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;

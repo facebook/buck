@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,23 +25,23 @@ public class BuildTargetValueSerializer {
 
   /**
    * Serializes {@link BuildTargetValue} into javacd model's {@link
-   * com.facebook.buck.javacd.model.BuildTargetValue}.
+   * com.facebook.buck.cd.model.java.BuildTargetValue}.
    */
-  public static com.facebook.buck.javacd.model.BuildTargetValue serialize(
+  public static com.facebook.buck.cd.model.java.BuildTargetValue serialize(
       BuildTargetValue buildTargetValue) {
-    com.facebook.buck.javacd.model.BuildTargetValue.Builder builder =
-        com.facebook.buck.javacd.model.BuildTargetValue.newBuilder();
+    com.facebook.buck.cd.model.java.BuildTargetValue.Builder builder =
+        com.facebook.buck.cd.model.java.BuildTargetValue.newBuilder();
     builder.setFullyQualifiedName(buildTargetValue.getFullyQualifiedName());
     builder.setType(buildTargetValue.getType());
     return builder.build();
   }
 
   /**
-   * Deserializes javacd model's {@link com.facebook.buck.javacd.model.BuildTargetValue} into {@link
-   * BuildTargetValue}.
+   * Deserializes javacd model's {@link com.facebook.buck.cd.model.java.BuildTargetValue} into
+   * {@link BuildTargetValue}.
    */
   public static BuildTargetValue deserialize(
-      com.facebook.buck.javacd.model.BuildTargetValue buildTargetValue) {
+      com.facebook.buck.cd.model.java.BuildTargetValue buildTargetValue) {
     return BuildTargetValue.of(
         buildTargetValue.getType(), buildTargetValue.getFullyQualifiedName());
   }

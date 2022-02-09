@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 
 package com.facebook.buck.step.isolatedsteps.java;
 
+import com.facebook.buck.cd.model.java.UnusedDependenciesParams;
+import com.facebook.buck.cd.model.java.UnusedDependenciesParams.DependencyAndExportedDepsPath;
+import com.facebook.buck.cd.model.java.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.cell.CellPathExtractor;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
@@ -26,9 +29,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.javacd.model.UnusedDependenciesParams;
-import com.facebook.buck.javacd.model.UnusedDependenciesParams.DependencyAndExportedDepsPath;
-import com.facebook.buck.javacd.model.UnusedDependenciesParams.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.DefaultClassUsageFileReader;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -258,7 +258,7 @@ public abstract class UnusedDependenciesFinder extends IsolatedStep {
     return dependency.hasAbiPath() && usedJars.contains(toAbsPath(root, dependency.getAbiPath()));
   }
 
-  private AbsPath toAbsPath(AbsPath root, com.facebook.buck.javacd.model.RelPath relPath) {
+  private AbsPath toAbsPath(AbsPath root, com.facebook.buck.cd.model.java.RelPath relPath) {
     return toAbsPath(root, RelPath.get(relPath.getPath()));
   }
 

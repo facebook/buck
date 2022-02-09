@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static com.facebook.buck.javacd.model.BuildTargetValue.Type.LIBRARY;
+import static com.facebook.buck.cd.model.java.BuildTargetValue.Type.LIBRARY;
 import static com.google.common.collect.Lists.newArrayList;
 import static org.easymock.EasyMock.capture;
 import static org.easymock.EasyMock.replay;

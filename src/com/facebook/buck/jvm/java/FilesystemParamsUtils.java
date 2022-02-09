@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.cd.model.java.FilesystemParams;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.javacd.model.FilesystemParams;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
 
@@ -48,9 +48,9 @@ public class FilesystemParamsUtils {
 
     FilesystemParams.Builder builder = FilesystemParams.newBuilder();
     builder.setRootPath(
-        com.facebook.buck.javacd.model.AbsPath.newBuilder().setPath(rootPath.toString()).build());
+        com.facebook.buck.cd.model.java.AbsPath.newBuilder().setPath(rootPath.toString()).build());
     builder.setConfiguredBuckOut(
-        com.facebook.buck.javacd.model.RelPath.newBuilder()
+        com.facebook.buck.cd.model.java.RelPath.newBuilder()
             .setPath(configuredBuckOut.toString())
             .build());
     for (PathMatcher pathMatcher : projectFilesystem.getIgnoredPaths()) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,14 @@ public class PathSerializer {
 
   private PathSerializer() {}
 
-  /** Serializes {@link Path} into javacd model's {@link com.facebook.buck.javacd.model.Path}. */
-  public static com.facebook.buck.javacd.model.Path serialize(Path path) {
+  /** Serializes {@link Path} into javacd model's {@link com.facebook.buck.cd.model.java.Path}. */
+  public static com.facebook.buck.cd.model.java.Path serialize(Path path) {
     String value = path.toString();
-    return com.facebook.buck.javacd.model.Path.newBuilder().setPath(value).build();
+    return com.facebook.buck.cd.model.java.Path.newBuilder().setPath(value).build();
   }
 
-  /** Deserializes javacd model's {@link com.facebook.buck.javacd.model.Path} into {@link Path}. */
-  public static Path deserialize(com.facebook.buck.javacd.model.Path path) {
+  /** Deserializes javacd model's {@link com.facebook.buck.cd.model.java.Path} into {@link Path}. */
+  public static Path deserialize(com.facebook.buck.cd.model.java.Path path) {
     return Paths.get(path.getPath());
   }
 }

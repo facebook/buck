@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,17 +32,17 @@ public class ResolvedJavacSerializer {
 
   /**
    * Serializes {@link ResolvedJavac} into javacd model's {@link
-   * com.facebook.buck.javacd.model.ResolvedJavac}.
+   * com.facebook.buck.cd.model.java.ResolvedJavac}.
    */
-  public static com.facebook.buck.javacd.model.ResolvedJavac serialize(ResolvedJavac javac) {
-    var builder = com.facebook.buck.javacd.model.ResolvedJavac.newBuilder();
+  public static com.facebook.buck.cd.model.java.ResolvedJavac serialize(ResolvedJavac javac) {
+    var builder = com.facebook.buck.cd.model.java.ResolvedJavac.newBuilder();
 
     boolean done = false;
 
     if (javac instanceof ExternalJavac.ResolvedExternalJavac) {
       var externalJavac = (ExternalJavac.ResolvedExternalJavac) javac;
       var externalJavacBuilder =
-          com.facebook.buck.javacd.model.ResolvedJavac.ExternalJavac.newBuilder();
+          com.facebook.buck.cd.model.java.ResolvedJavac.ExternalJavac.newBuilder();
 
       externalJavacBuilder.setShortName(externalJavac.getShortName());
       for (String item : externalJavac.getCommandPrefix()) {
@@ -55,7 +55,7 @@ public class ResolvedJavacSerializer {
 
     if (!done && javac instanceof Jsr199Javac.ResolvedJsr199Javac) {
       builder.setJsr199Javac(
-          com.facebook.buck.javacd.model.ResolvedJavac.JSR199Javac.getDefaultInstance());
+          com.facebook.buck.cd.model.java.ResolvedJavac.JSR199Javac.getDefaultInstance());
       done = true;
     }
 
@@ -68,10 +68,10 @@ public class ResolvedJavacSerializer {
   }
 
   /**
-   * Deserializes javacd model's {@link com.facebook.buck.javacd.model.ResolvedJavac} into {@link
+   * Deserializes javacd model's {@link com.facebook.buck.cd.model.java.ResolvedJavac} into {@link
    * ResolvedJavac}.
    */
-  public static ResolvedJavac deserialize(com.facebook.buck.javacd.model.ResolvedJavac javac) {
+  public static ResolvedJavac deserialize(com.facebook.buck.cd.model.java.ResolvedJavac javac) {
     var javacCase = javac.getJavacCase();
     switch (javacCase) {
       case EXTERNALJAVAC:

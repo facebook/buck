@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,13 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
+import com.facebook.buck.cd.model.java.BasePipeliningCommand;
+import com.facebook.buck.cd.model.java.FilesystemParams;
+import com.facebook.buck.cd.model.java.LibraryJarBaseCommand;
+import com.facebook.buck.cd.model.java.LibraryPipeliningCommand;
+import com.facebook.buck.cd.model.java.PipelineState;
+import com.facebook.buck.cd.model.java.PipeliningCommand;
+import com.facebook.buck.cd.model.java.UnusedDependenciesParams;
 import com.facebook.buck.core.build.buildable.context.NoOpBuildableContext;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
@@ -26,13 +33,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.downward.model.ResultEvent;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.event.IsolatedEventBus;
-import com.facebook.buck.javacd.model.BasePipeliningCommand;
-import com.facebook.buck.javacd.model.FilesystemParams;
-import com.facebook.buck.javacd.model.LibraryJarBaseCommand;
-import com.facebook.buck.javacd.model.LibraryPipeliningCommand;
-import com.facebook.buck.javacd.model.PipelineState;
-import com.facebook.buck.javacd.model.PipeliningCommand;
-import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;

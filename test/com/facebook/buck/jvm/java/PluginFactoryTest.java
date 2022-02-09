@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.util.ClassLoaderCache;

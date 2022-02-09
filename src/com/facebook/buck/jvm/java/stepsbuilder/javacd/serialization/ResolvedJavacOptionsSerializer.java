@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
+import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.java.ResolvedJavacOptions;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -29,11 +29,11 @@ public class ResolvedJavacOptionsSerializer {
 
   /**
    * Serializes {@link ResolvedJavacOptions} into javacd model's {@link
-   * com.facebook.buck.javacd.model.ResolvedJavacOptions}.
+   * com.facebook.buck.cd.model.java.ResolvedJavacOptions}.
    */
-  public static com.facebook.buck.javacd.model.ResolvedJavacOptions serialize(
+  public static com.facebook.buck.cd.model.java.ResolvedJavacOptions serialize(
       ResolvedJavacOptions options) {
-    var builder = com.facebook.buck.javacd.model.ResolvedJavacOptions.newBuilder();
+    var builder = com.facebook.buck.cd.model.java.ResolvedJavacOptions.newBuilder();
 
     Optional<String> bootclasspath = options.getBootclasspath();
     bootclasspath.ifPresent(builder::setBootclasspath);
@@ -70,11 +70,11 @@ public class ResolvedJavacOptionsSerializer {
   }
 
   /**
-   * Deserializes javacd model's {@link com.facebook.buck.javacd.model.ResolvedJavacOptions} into
+   * Deserializes javacd model's {@link com.facebook.buck.cd.model.java.ResolvedJavacOptions} into
    * {@link ResolvedJavacOptions}.
    */
   public static ResolvedJavacOptions deserialize(
-      com.facebook.buck.javacd.model.ResolvedJavacOptions options) {
+      com.facebook.buck.cd.model.java.ResolvedJavacOptions options) {
     var bootclasspathListList = options.getBootclasspathListList();
     ImmutableList<RelPath> bootclasspathList =
         bootclasspathListList.stream()

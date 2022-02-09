@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
 import static com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization.SerializationUtil.createNotSupportedException;
 
-import com.facebook.buck.javacd.model.JarParameters;
+import com.facebook.buck.cd.model.java.JarParameters;
 import java.util.logging.Level;
 
 /** {@link Level} to protobuf serializer */
@@ -28,7 +28,7 @@ class LogLevelSerializer {
 
   /** Serializes {@link Level} into javacd model's {@link JarParameters.LogLevel}. */
   public static JarParameters.LogLevel serialize(Level level) {
-    return com.facebook.buck.javacd.model.JarParameters.LogLevel.valueOf(level.getName());
+    return com.facebook.buck.cd.model.java.JarParameters.LogLevel.valueOf(level.getName());
   }
 
   /** Deserializes javacd model's {@link JarParameters.LogLevel} into {@link Level}. */

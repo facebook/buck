@@ -16,6 +16,9 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
+import com.facebook.buck.cd.model.java.BaseCommandParams.SpoolMode;
+import com.facebook.buck.cd.model.java.UnusedDependenciesParams;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -26,9 +29,6 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.javacd.model.AbiGenerationMode;
-import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
-import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.rules.args.SourcePathArg;

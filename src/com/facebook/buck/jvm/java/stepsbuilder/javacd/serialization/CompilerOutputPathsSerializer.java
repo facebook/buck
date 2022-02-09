@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
+import com.facebook.buck.cd.model.java.OutputPathsValue;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.javacd.model.OutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import java.util.Optional;
 
@@ -48,7 +48,7 @@ public class CompilerOutputPathsSerializer {
     return builder.build();
   }
 
-  private static com.facebook.buck.javacd.model.RelPath toRelPath(RelPath relPath) {
+  private static com.facebook.buck.cd.model.java.RelPath toRelPath(RelPath relPath) {
     return RelPathSerializer.serialize(relPath);
   }
 
@@ -69,12 +69,12 @@ public class CompilerOutputPathsSerializer {
         .build();
   }
 
-  private static RelPath toRelPath(com.facebook.buck.javacd.model.RelPath relPath) {
+  private static RelPath toRelPath(com.facebook.buck.cd.model.java.RelPath relPath) {
     return RelPathSerializer.deserialize(relPath);
   }
 
   private static Optional<RelPath> toOptionalRelPath(
-      boolean isPresent, com.facebook.buck.javacd.model.RelPath value) {
+      boolean isPresent, com.facebook.buck.cd.model.java.RelPath value) {
     return isPresent ? Optional.of(toRelPath(value)) : Optional.empty();
   }
 }

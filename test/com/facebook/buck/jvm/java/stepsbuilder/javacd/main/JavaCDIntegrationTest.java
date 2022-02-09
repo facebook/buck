@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,20 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
+import com.facebook.buck.cd.model.java.BaseCommandParams.SpoolMode;
+import com.facebook.buck.cd.model.java.BaseJarCommand;
+import com.facebook.buck.cd.model.java.BuildJavaCommand;
+import com.facebook.buck.cd.model.java.BuildTargetValue;
+import com.facebook.buck.cd.model.java.FilesystemParams;
+import com.facebook.buck.cd.model.java.JarParameters;
+import com.facebook.buck.cd.model.java.JavaAbiInfo;
+import com.facebook.buck.cd.model.java.LibraryJarBaseCommand;
+import com.facebook.buck.cd.model.java.LibraryJarCommand;
+import com.facebook.buck.cd.model.java.OutputPathsValue;
+import com.facebook.buck.cd.model.java.RelPath;
+import com.facebook.buck.cd.model.java.ResolvedJavac;
+import com.facebook.buck.cd.model.java.ResolvedJavacOptions;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -40,20 +54,6 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.io.namedpipes.windows.handle.WindowsHandleFactory;
-import com.facebook.buck.javacd.model.AbiGenerationMode;
-import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
-import com.facebook.buck.javacd.model.BaseJarCommand;
-import com.facebook.buck.javacd.model.BuildJavaCommand;
-import com.facebook.buck.javacd.model.BuildTargetValue;
-import com.facebook.buck.javacd.model.FilesystemParams;
-import com.facebook.buck.javacd.model.JarParameters;
-import com.facebook.buck.javacd.model.JavaAbiInfo;
-import com.facebook.buck.javacd.model.LibraryJarBaseCommand;
-import com.facebook.buck.javacd.model.LibraryJarCommand;
-import com.facebook.buck.javacd.model.OutputPathsValue;
-import com.facebook.buck.javacd.model.RelPath;
-import com.facebook.buck.javacd.model.ResolvedJavac;
-import com.facebook.buck.javacd.model.ResolvedJavacOptions;
 import com.facebook.buck.jvm.java.JavaCDWorkerStepUtils;
 import com.facebook.buck.testutil.ExecutorServiceUtils;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -435,7 +435,7 @@ public class JavaCDIntegrationTest {
         .setFilesystemParams(
             FilesystemParams.newBuilder()
                 .setRootPath(
-                    com.facebook.buck.javacd.model.AbsPath.newBuilder()
+                    com.facebook.buck.cd.model.java.AbsPath.newBuilder()
                         .setPath(baseDirectory)
                         .build())
                 .setConfiguredBuckOut(RelPath.newBuilder().setPath("buck-out").build())
@@ -573,7 +573,7 @@ public class JavaCDIntegrationTest {
                 .setDuplicatesLogLevel(JarParameters.LogLevel.INFO)
                 .build())
         .setBuildCellRootPath(
-            com.facebook.buck.javacd.model.AbsPath.newBuilder().setPath(baseDirectory).build())
+            com.facebook.buck.cd.model.java.AbsPath.newBuilder().setPath(baseDirectory).build())
         .setResolvedJavac(
             ResolvedJavac.newBuilder()
                 .setJsr199Javac(ResolvedJavac.JSR199Javac.getDefaultInstance())

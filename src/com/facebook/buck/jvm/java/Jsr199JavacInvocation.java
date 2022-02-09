@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.checkForSour
 import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.getDiagnosticKindForSourceOnlyAbiCompatibility;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
+import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -27,8 +29,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
-import com.facebook.buck.javacd.model.AbiGenerationMode;
-import com.facebook.buck.javacd.model.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.SourceBasedAbiStubber;
 import com.facebook.buck.jvm.java.abi.SourceVersionUtils;

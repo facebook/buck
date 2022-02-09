@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
+import com.facebook.buck.cd.model.java.BuildJavaCommand;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.event.IsolatedEventBus;
-import com.facebook.buck.javacd.model.BuildJavaCommand;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.JavaStepsBuilder;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.ClassLoaderCache;

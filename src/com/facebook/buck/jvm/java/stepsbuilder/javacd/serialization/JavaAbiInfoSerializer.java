@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
-import com.facebook.buck.javacd.model.JavaAbiInfo;
+import com.facebook.buck.cd.model.java.JavaAbiInfo;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.DefaultBaseJavaAbiInfo;
 import com.google.common.base.Preconditions;
@@ -64,7 +64,7 @@ public class JavaAbiInfoSerializer {
   public static DefaultBaseJavaAbiInfo deserialize(JavaAbiInfo javaAbiInfo) {
     DefaultBaseJavaAbiInfo defaultBaseJavaAbiInfo =
         new DefaultBaseJavaAbiInfo(javaAbiInfo.getBuildTargetName());
-    List<com.facebook.buck.javacd.model.Path> contentPathsList = javaAbiInfo.getContentPathsList();
+    List<com.facebook.buck.cd.model.java.Path> contentPathsList = javaAbiInfo.getContentPathsList();
     if (!contentPathsList.isEmpty()) {
       defaultBaseJavaAbiInfo.setContentPaths(
           contentPathsList.stream()

@@ -70,7 +70,7 @@ buck_java_library(
 
 buck_java_library(
     name = "javacd-model",
-    srcs = glob(["**/javacd/model/**/*.java"]),
+    srcs = glob(["**/cd/model/java/**/*.java"]),
     visibility = [
         "//src/com/facebook/buck/...",
         "//test/com/facebook/buck/...",

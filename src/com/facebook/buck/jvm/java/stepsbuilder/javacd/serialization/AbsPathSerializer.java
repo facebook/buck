@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,18 +24,18 @@ public class AbsPathSerializer {
   private AbsPathSerializer() {}
 
   /**
-   * Serializes {@link AbsPath} into javacd model's {@link com.facebook.buck.javacd.model.AbsPath}.
+   * Serializes {@link AbsPath} into javacd model's {@link com.facebook.buck.cd.model.java.AbsPath}.
    */
-  public static com.facebook.buck.javacd.model.AbsPath serialize(AbsPath absPath) {
+  public static com.facebook.buck.cd.model.java.AbsPath serialize(AbsPath absPath) {
     String path = absPath.toString();
-    return com.facebook.buck.javacd.model.AbsPath.newBuilder().setPath(path).build();
+    return com.facebook.buck.cd.model.java.AbsPath.newBuilder().setPath(path).build();
   }
 
   /**
-   * Deserializes javacd model's {@link com.facebook.buck.javacd.model.AbsPath} into {@link
+   * Deserializes javacd model's {@link com.facebook.buck.cd.model.java.AbsPath} into {@link
    * AbsPath}.
    */
-  public static AbsPath deserialize(com.facebook.buck.javacd.model.AbsPath absPath) {
+  public static AbsPath deserialize(com.facebook.buck.cd.model.java.AbsPath absPath) {
     return AbsPath.get(absPath.getPath());
   }
 }

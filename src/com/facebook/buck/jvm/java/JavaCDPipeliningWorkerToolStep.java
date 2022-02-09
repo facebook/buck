@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,11 @@ package com.facebook.buck.jvm.java;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
+import com.facebook.buck.cd.model.java.BaseCommandParams;
+import com.facebook.buck.cd.model.java.BasePipeliningCommand;
+import com.facebook.buck.cd.model.java.LibraryPipeliningCommand;
+import com.facebook.buck.cd.model.java.PipelineState;
+import com.facebook.buck.cd.model.java.PipeliningCommand;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -25,11 +30,6 @@ import com.facebook.buck.core.rules.pipeline.CompilationDaemonStep;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.PipelineFinishedEvent;
 import com.facebook.buck.downward.model.ResultEvent;
-import com.facebook.buck.javacd.model.BaseCommandParams;
-import com.facebook.buck.javacd.model.BasePipeliningCommand;
-import com.facebook.buck.javacd.model.LibraryPipeliningCommand;
-import com.facebook.buck.javacd.model.PipelineState;
-import com.facebook.buck.javacd.model.PipeliningCommand;
 import com.facebook.buck.jvm.java.stepsbuilder.params.JavaCDParams;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.common.AbstractIsolatedExecutionStep;

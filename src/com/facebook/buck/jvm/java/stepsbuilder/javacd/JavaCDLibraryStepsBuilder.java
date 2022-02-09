@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,17 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
+import com.facebook.buck.cd.model.java.AbiGenerationMode;
+import com.facebook.buck.cd.model.java.BaseCommandParams.SpoolMode;
+import com.facebook.buck.cd.model.java.BaseJarCommand;
+import com.facebook.buck.cd.model.java.FilesystemParams;
+import com.facebook.buck.cd.model.java.LibraryJarBaseCommand;
+import com.facebook.buck.cd.model.java.LibraryJarCommand;
+import com.facebook.buck.cd.model.java.UnusedDependenciesParams;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.javacd.model.AbiGenerationMode;
-import com.facebook.buck.javacd.model.BaseCommandParams.SpoolMode;
-import com.facebook.buck.javacd.model.BaseJarCommand;
-import com.facebook.buck.javacd.model.FilesystemParams;
-import com.facebook.buck.javacd.model.LibraryJarBaseCommand;
-import com.facebook.buck.javacd.model.LibraryJarCommand;
-import com.facebook.buck.javacd.model.UnusedDependenciesParams;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;

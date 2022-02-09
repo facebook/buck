@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
+import com.facebook.buck.cd.model.java.BuildJavaCommand;
+import com.facebook.buck.cd.model.java.PipeliningCommand;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
@@ -31,8 +33,6 @@ import com.facebook.buck.external.log.ExternalLogHandler;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.io.namedpipes.NamedPipeReader;
 import com.facebook.buck.io.namedpipes.NamedPipeWriter;
-import com.facebook.buck.javacd.model.BuildJavaCommand;
-import com.facebook.buck.javacd.model.PipeliningCommand;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;

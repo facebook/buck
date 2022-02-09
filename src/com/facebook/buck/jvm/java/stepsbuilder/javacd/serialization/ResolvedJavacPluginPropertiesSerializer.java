@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.serialization;
 
+import com.facebook.buck.cd.model.java.ResolvedJavacOptions;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.javacd.model.ResolvedJavacOptions;
 import com.facebook.buck.jvm.java.ResolvedJavacPluginProperties;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -75,10 +75,10 @@ class ResolvedJavacPluginPropertiesSerializer {
   }
 
   private static ImmutableMap<String, RelPath> toPathParams(
-      Map<String, com.facebook.buck.javacd.model.RelPath> pathParamsMap) {
+      Map<String, com.facebook.buck.cd.model.java.RelPath> pathParamsMap) {
     ImmutableMap.Builder<String, RelPath> pathParamsBuilder =
         ImmutableMap.builderWithExpectedSize(pathParamsMap.size());
-    for (Map.Entry<String, com.facebook.buck.javacd.model.RelPath> entry :
+    for (Map.Entry<String, com.facebook.buck.cd.model.java.RelPath> entry :
         pathParamsMap.entrySet()) {
       pathParamsBuilder.put(entry.getKey(), RelPathSerializer.deserialize(entry.getValue()));
     }
