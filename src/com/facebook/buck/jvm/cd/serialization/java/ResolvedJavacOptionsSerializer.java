@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.cd.serialization.java;
 
 import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.java.ResolvedJavacOptions;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;

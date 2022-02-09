@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.cd.serialization.java;
 
+import com.facebook.buck.jvm.cd.serialization.SerializationUtil;
 import com.facebook.buck.jvm.java.ExternalJavac;
 import com.facebook.buck.jvm.java.JdkProvidedInMemoryJavac;
 import com.facebook.buck.jvm.java.Jsr199Javac;

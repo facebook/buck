@@ -14,6 +14,7 @@ buck_java_library(
         "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event/isolated:isolated",
+        "//src/com/facebook/buck/jvm/cd/serialization:serialization",
         "//src/com/facebook/buck/jvm/cd/serialization/java:java",
         "//src/com/facebook/buck/jvm/core:core",
         "//src/com/facebook/buck/jvm/java:config",

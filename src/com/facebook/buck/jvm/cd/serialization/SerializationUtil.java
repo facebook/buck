@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.cd.serialization.java;
+package com.facebook.buck.jvm.cd.serialization;
 
-/** JavaCD serialization utilities. */
-class SerializationUtil {
+/** CD serialization utilities. */
+public class SerializationUtil {
 
   private SerializationUtil() {}
 
-  static RuntimeException createNotSupportedException(Enum<?> value) {
+  public static RuntimeException createNotSupportedException(Enum<?> value) {
     return new IllegalStateException(value.name() + " enum value is not supported!");
   }
 }

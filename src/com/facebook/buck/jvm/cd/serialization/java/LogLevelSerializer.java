@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.cd.serialization.java;
 
 import com.facebook.buck.cd.model.java.JarParameters;
+import com.facebook.buck.jvm.cd.serialization.SerializationUtil;
 import java.util.logging.Level;
 
 /** {@link Level} to protobuf serializer */

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.cd.serialization.java;
+package com.facebook.buck.jvm.cd.serialization;
 
 import com.facebook.buck.cd.model.common.RelPathMapEntry;
 import com.facebook.buck.core.cell.name.CanonicalCellName;

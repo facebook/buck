@@ -10,6 +10,8 @@ buck_java_library(
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/rules/common:common",
+        "//src/com/facebook/buck/jvm/cd/serialization:util",
+        "//src/com/facebook/buck/jvm/cd/serialization:serialization",
         "//src/com/facebook/buck/jvm/java:config",
         "//src/com/facebook/buck/jvm/java:support",
         "//src/com/facebook/buck/step/isolatedsteps/java:java",

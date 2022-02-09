@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.cd.serialization.java;
 
 import com.facebook.buck.cd.model.java.JavaAbiInfo;
+import com.facebook.buck.jvm.cd.serialization.PathSerializer;
 import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.DefaultBaseJavaAbiInfo;
 import com.google.common.base.Preconditions;

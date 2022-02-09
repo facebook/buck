@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.cd.serialization.java;
 
 import com.facebook.buck.cd.model.java.OutputPathsValue;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import java.util.Optional;
 

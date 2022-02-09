@@ -1,0 +1,23 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+buck_java_library(
+    name = "serialization",
+    srcs = glob(["*.java"], exclude=["SerializationUtil.java"]),
+    visibility = [
+        "//src/com/facebook/buck/jvm/...",
+    ],
+    deps = [
+        "//src-gen:cd-model",
+        "//src/com/facebook/buck/core/cell/name:name",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//src/com/facebook/buck/jvm/cd/serialization:util",
+        "//third-party/java/guava:guava",
+    ],
+)
+
+buck_java_library(
+    name = "util",
+    srcs = ["SerializationUtil.java"],
+    visibility = [
+        "//src/com/facebook/buck/jvm/cd/serialization/...",
+    ]
+)

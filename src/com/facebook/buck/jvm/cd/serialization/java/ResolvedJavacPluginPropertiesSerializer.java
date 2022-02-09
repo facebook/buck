@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.cd.serialization.java;
 
 import com.facebook.buck.cd.model.java.ResolvedJavacOptions;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.java.ResolvedJavacPluginProperties;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

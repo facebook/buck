@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.cd.serialization.java;
 
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.google.common.base.Preconditions;

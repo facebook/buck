@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.cd.serialization.java;
+package com.facebook.buck.jvm.cd.serialization;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
