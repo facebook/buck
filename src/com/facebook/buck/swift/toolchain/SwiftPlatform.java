@@ -46,6 +46,11 @@ public interface SwiftPlatform {
   SourcePath getSdkPath();
 
   /**
+   * @return an optional SDK dependency object derived from the toolchains sdk_dependencies_path.
+   */
+  Optional<SwiftSdkDependenciesProvider> getSdkDependencies();
+
+  /**
    * @return A set of directories which contain the Swift runtime as dynamic libraries. On macOS,
    *     the directory will contain libs like libswiftCore.dylib and others. The libs will be passed
    *     to swift-stdlib-tool for inclusion in the app bundle.

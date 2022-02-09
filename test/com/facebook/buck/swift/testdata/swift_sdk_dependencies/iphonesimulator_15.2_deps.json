@@ -1,0 +1,3072 @@
+{
+    "sdk_version": "15.2",
+    "swift": [
+        {
+            "name": "ARKit",
+            "swiftinterface": "usr/lib/swift/ARKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CoreLocation",
+                "CoreMIDI",
+                "CoreML",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "GLKit",
+                "Metal",
+                "ModelIO",
+                "ObjectiveC",
+                "QuartzCore",
+                "QuickLook",
+                "SceneKit",
+                "SpriteKit",
+                "Swift",
+                "UIKit",
+                "UniformTypeIdentifiers",
+                "Vision",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "ARKit"
+            ]
+        },
+        {
+            "name": "AVFoundation",
+            "swiftinterface": "usr/lib/swift/AVFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreMIDI",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "AVFoundation"
+            ]
+        },
+        {
+            "name": "Accelerate",
+            "swiftinterface": "usr/lib/swift/Accelerate.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": [
+                "Accelerate"
+            ]
+        },
+        {
+            "name": "Accessibility",
+            "swiftinterface": "System/Library/Frameworks/Accessibility.framework/Modules/Accessibility.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "Accessibility"
+            ]
+        },
+        {
+            "name": "AssetsLibrary",
+            "swiftinterface": "usr/lib/swift/AssetsLibrary.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "AssetsLibrary"
+            ]
+        },
+        {
+            "name": "CallKit",
+            "swiftinterface": "usr/lib/swift/CallKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CallKit"
+            ]
+        },
+        {
+            "name": "CarPlay",
+            "swiftinterface": "usr/lib/swift/CarPlay.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CoreLocation",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "MapKit",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CarPlay"
+            ]
+        },
+        {
+            "name": "CloudKit",
+            "swiftinterface": "usr/lib/swift/CloudKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreLocation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": [
+                "CloudKit"
+            ]
+        },
+        {
+            "name": "Combine",
+            "swiftinterface": "System/Library/Frameworks/Combine.framework/Modules/Combine.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Darwin",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "Compression",
+            "swiftinterface": "usr/lib/swift/Compression.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Darwin",
+                "Foundation",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "Compression"
+            ]
+        },
+        {
+            "name": "Contacts",
+            "swiftinterface": "usr/lib/swift/Contacts.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "Contacts"
+            ]
+        },
+        {
+            "name": "CoreAudio",
+            "swiftinterface": "usr/lib/swift/CoreAudio.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreAudio"
+            ]
+        },
+        {
+            "name": "CoreAudioKit",
+            "swiftinterface": "System/Library/Frameworks/CoreAudioKit.framework/Modules/CoreAudioKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CoreMIDI",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreAudioKit"
+            ]
+        },
+        {
+            "name": "CoreData",
+            "swiftinterface": "usr/lib/swift/CoreData.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Combine",
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreData"
+            ]
+        },
+        {
+            "name": "CoreFoundation",
+            "swiftinterface": "usr/lib/swift/CoreFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Darwin",
+                "Dispatch",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreFoundation"
+            ]
+        },
+        {
+            "name": "CoreGraphics",
+            "swiftinterface": "usr/lib/swift/CoreGraphics.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreGraphics"
+            ]
+        },
+        {
+            "name": "CoreImage",
+            "swiftinterface": "usr/lib/swift/CoreImage.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreImage"
+            ]
+        },
+        {
+            "name": "CoreLocation",
+            "swiftinterface": "usr/lib/swift/CoreLocation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreLocation"
+            ]
+        },
+        {
+            "name": "CoreMIDI",
+            "swiftinterface": "usr/lib/swift/CoreMIDI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreMIDI"
+            ]
+        },
+        {
+            "name": "CoreML",
+            "swiftinterface": "usr/lib/swift/CoreML.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreML"
+            ]
+        },
+        {
+            "name": "CoreMedia",
+            "swiftinterface": "usr/lib/swift/CoreMedia.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreAudioTypes",
+                "CoreMedia",
+                "CoreVideo"
+            ]
+        },
+        {
+            "name": "CoreNFC",
+            "swiftinterface": "usr/lib/swift/CoreNFC.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreNFC"
+            ]
+        },
+        {
+            "name": "CryptoKit",
+            "swiftinterface": "System/Library/Frameworks/CryptoKit.framework/Modules/CryptoKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "LocalAuthentication",
+                "Security"
+            ]
+        },
+        {
+            "name": "CryptoTokenKit",
+            "swiftinterface": "usr/lib/swift/CryptoTokenKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CryptoTokenKit"
+            ]
+        },
+        {
+            "name": "Darwin",
+            "swiftinterface": "usr/lib/swift/Darwin.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "Darwin",
+                "SwiftOverlayShims",
+                "SwiftShims"
+            ]
+        },
+        {
+            "name": "DataDetection",
+            "swiftinterface": "usr/lib/swift/DataDetection.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "DataDetection"
+            ]
+        },
+        {
+            "name": "DeveloperToolsSupport",
+            "swiftinterface": "System/Library/Frameworks/DeveloperToolsSupport.framework/Modules/DeveloperToolsSupport.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "DeviceActivity",
+            "swiftinterface": "System/Library/Frameworks/DeviceActivity.framework/Modules/DeviceActivity.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Foundation",
+                "ManagedSettings",
+                "Swift",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "Dispatch",
+            "swiftinterface": "usr/lib/swift/Dispatch.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Combine",
+                "Darwin",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "Dispatch"
+            ]
+        },
+        {
+            "name": "ExtensionFoundation",
+            "swiftinterface": "usr/lib/swift/ExtensionFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Foundation",
+                "Swift",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "ExtensionKit",
+            "swiftinterface": "usr/lib/swift/ExtensionKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "ExtensionFoundation",
+                "Foundation",
+                "Swift",
+                "SwiftUI",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "FamilyControls",
+            "swiftinterface": "System/Library/Frameworks/FamilyControls.framework/Modules/FamilyControls.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Combine",
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ManagedSettings",
+                "ObjectiveC",
+                "Swift",
+                "SwiftUI",
+                "UIKit",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": [
+                "CoreServices"
+            ]
+        },
+        {
+            "name": "FileProvider",
+            "swiftinterface": "usr/lib/swift/FileProvider.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "FileProvider"
+            ]
+        },
+        {
+            "name": "Foundation",
+            "swiftinterface": "usr/lib/swift/Foundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Combine",
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "GLKit",
+            "swiftinterface": "usr/lib/swift/GLKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ModelIO",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "GLKit"
+            ]
+        },
+        {
+            "name": "GameplayKit",
+            "swiftinterface": "usr/lib/swift/GameplayKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "GLKit",
+                "Metal",
+                "ModelIO",
+                "ObjectiveC",
+                "QuartzCore",
+                "SceneKit",
+                "SpriteKit",
+                "Swift",
+                "UIKit",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "GameplayKit"
+            ]
+        },
+        {
+            "name": "GroupActivities",
+            "swiftinterface": "System/Library/Frameworks/GroupActivities.framework/Modules/GroupActivities.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
+                "Combine",
+                "CoreGraphics",
+                "CryptoKit",
+                "Darwin",
+                "Foundation",
+                "Network",
+                "Swift",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "HealthKit",
+            "swiftinterface": "usr/lib/swift/HealthKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "HealthKit"
+            ]
+        },
+        {
+            "name": "HomeKit",
+            "swiftinterface": "usr/lib/swift/HomeKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "HomeKit"
+            ]
+        },
+        {
+            "name": "Intents",
+            "swiftinterface": "usr/lib/swift/Intents.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreLocation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "Intents"
+            ]
+        },
+        {
+            "name": "ManagedSettings",
+            "swiftinterface": "System/Library/Frameworks/ManagedSettings.framework/Modules/ManagedSettings.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Combine",
+                "Foundation",
+                "Swift",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "ManagedSettingsUI",
+            "swiftinterface": "System/Library/Frameworks/ManagedSettingsUI.framework/Modules/ManagedSettingsUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Foundation",
+                "ManagedSettings",
+                "Swift",
+                "UIKit",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "MapKit",
+            "swiftinterface": "usr/lib/swift/MapKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CoreLocation",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "MapKit"
+            ]
+        },
+        {
+            "name": "MediaPlayer",
+            "swiftinterface": "usr/lib/swift/MediaPlayer.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CoreMIDI",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "MediaPlayer"
+            ]
+        },
+        {
+            "name": "Metal",
+            "swiftinterface": "usr/lib/swift/Metal.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "Metal"
+            ]
+        },
+        {
+            "name": "MetalKit",
+            "swiftinterface": "usr/lib/swift/MetalKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ModelIO",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "MetalKit"
+            ]
+        },
+        {
+            "name": "MetricKit",
+            "swiftinterface": "usr/lib/swift/MetricKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": [
+                "MetricKit"
+            ]
+        },
+        {
+            "name": "ModelIO",
+            "swiftinterface": "usr/lib/swift/ModelIO.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "ModelIO"
+            ]
+        },
+        {
+            "name": "MusicKit",
+            "swiftinterface": "System/Library/Frameworks/MusicKit.framework/Modules/MusicKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Combine",
+                "CoreGraphics",
+                "Foundation",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "NaturalLanguage",
+            "swiftinterface": "usr/lib/swift/NaturalLanguage.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "NaturalLanguage"
+            ]
+        },
+        {
+            "name": "NearbyInteraction",
+            "swiftinterface": "usr/lib/swift/NearbyInteraction.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "NearbyInteraction"
+            ]
+        },
+        {
+            "name": "Network",
+            "swiftinterface": "usr/lib/swift/Network.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "Network",
+                "Security"
+            ]
+        },
+        {
+            "name": "OSLog",
+            "swiftinterface": "usr/lib/swift/OSLog.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": [
+                "OSLog"
+            ]
+        },
+        {
+            "name": "ObjectiveC",
+            "swiftinterface": "usr/lib/swift/ObjectiveC.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Darwin",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "ObjectiveC"
+            ]
+        },
+        {
+            "name": "PassKit",
+            "swiftinterface": "usr/lib/swift/PassKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Contacts",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "PassKit"
+            ]
+        },
+        {
+            "name": "PencilKit",
+            "swiftinterface": "System/Library/Frameworks/PencilKit.framework/Modules/PencilKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "PencilKit"
+            ]
+        },
+        {
+            "name": "Photos",
+            "swiftinterface": "usr/lib/swift/Photos.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CoreLocation",
+                "CoreMIDI",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "Photos"
+            ]
+        },
+        {
+            "name": "PhotosUI",
+            "swiftinterface": "usr/lib/swift/PhotosUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CoreLocation",
+                "CoreMIDI",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "Photos",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "PhotosUI"
+            ]
+        },
+        {
+            "name": "QuartzCore",
+            "swiftinterface": "usr/lib/swift/QuartzCore.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "QuartzCore"
+            ]
+        },
+        {
+            "name": "QuickLook",
+            "swiftinterface": "usr/lib/swift/QuickLook.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "UniformTypeIdentifiers",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "PDFKit",
+                "QuickLook"
+            ]
+        },
+        {
+            "name": "RealityFoundation",
+            "swiftinterface": "System/Library/Frameworks/RealityFoundation.framework/Modules/RealityFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
+                "Combine",
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreMIDI",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency",
+                "os",
+                "simd"
+            ],
+            "clang_deps": [
+                "AVFAudio",
+                "AudioToolbox",
+                "CoreText"
+            ]
+        },
+        {
+            "name": "RealityKit",
+            "swiftinterface": "System/Library/Frameworks/RealityKit.framework/Modules/RealityKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "ARKit",
+                "Combine",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "RealityFoundation",
+                "Swift",
+                "UIKit",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "MultipeerConnectivity"
+            ]
+        },
+        {
+            "name": "SceneKit",
+            "swiftinterface": "usr/lib/swift/SceneKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "GLKit",
+                "Metal",
+                "ModelIO",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "SceneKit"
+            ]
+        },
+        {
+            "name": "ShazamKit",
+            "swiftinterface": "usr/lib/swift/ShazamKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreMIDI",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "MusicKit",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "ShazamKit"
+            ]
+        },
+        {
+            "name": "SoundAnalysis",
+            "swiftinterface": "usr/lib/swift/SoundAnalysis.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreMIDI",
+                "CoreML",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "SoundAnalysis"
+            ]
+        },
+        {
+            "name": "Speech",
+            "swiftinterface": "usr/lib/swift/Speech.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreMIDI",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "Speech"
+            ]
+        },
+        {
+            "name": "SpriteKit",
+            "swiftinterface": "usr/lib/swift/SpriteKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "GLKit",
+                "Metal",
+                "ModelIO",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "SpriteKit"
+            ]
+        },
+        {
+            "name": "StoreKit",
+            "swiftinterface": "System/Library/Frameworks/StoreKit.framework/Modules/StoreKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CryptoKit",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": [
+                "Security",
+                "StoreKit"
+            ]
+        },
+        {
+            "name": "Swift",
+            "swiftinterface": "usr/lib/swift/Swift.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [],
+            "clang_deps": [
+                "SwiftShims"
+            ]
+        },
+        {
+            "name": "SwiftOnoneSupport",
+            "swiftinterface": "usr/lib/swift/SwiftOnoneSupport.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Swift"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "SwiftUI",
+            "swiftinterface": "System/Library/Frameworks/SwiftUI.framework/Modules/SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Accessibility",
+                "Combine",
+                "CoreData",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "DeveloperToolsSupport",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": [
+                "SwiftUI"
+            ]
+        },
+        {
+            "name": "System",
+            "swiftinterface": "usr/lib/swift/System.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Darwin",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "TabularData",
+            "swiftinterface": "System/Library/Frameworks/TabularData.framework/Modules/TabularData.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Combine",
+                "Dispatch",
+                "Foundation",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "UIKit",
+            "swiftinterface": "usr/lib/swift/UIKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Accessibility",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "DataDetection",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "UIKit"
+            ]
+        },
+        {
+            "name": "UniformTypeIdentifiers",
+            "swiftinterface": "usr/lib/swift/UniformTypeIdentifiers.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "UniformTypeIdentifiers"
+            ]
+        },
+        {
+            "name": "Vision",
+            "swiftinterface": "usr/lib/swift/Vision.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreML",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "Vision"
+            ]
+        },
+        {
+            "name": "WebKit",
+            "swiftinterface": "usr/lib/swift/WebKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "WebKit"
+            ]
+        },
+        {
+            "name": "WidgetKit",
+            "swiftinterface": "System/Library/Frameworks/WidgetKit.framework/Modules/WidgetKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Combine",
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "Intents",
+                "ObjectiveC",
+                "Swift",
+                "SwiftUI",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": [
+                "WidgetKit"
+            ]
+        },
+        {
+            "name": "_Concurrency",
+            "swiftinterface": "usr/lib/swift/_Concurrency.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Swift"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "os",
+            "swiftinterface": "usr/lib/swift/os.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Darwin",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "os"
+            ]
+        },
+        {
+            "name": "simd",
+            "swiftinterface": "usr/lib/swift/simd.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Darwin",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "simd"
+            ]
+        },
+        {
+            "name": "_AVKit_SwiftUI",
+            "swiftinterface": "System/Library/Frameworks/_AVKit_SwiftUI.framework/Modules/_AVKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "AVFoundation",
+                "Combine",
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CoreMIDI",
+                "CoreMedia",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "SwiftUI",
+                "UIKit",
+                "UniformTypeIdentifiers",
+                "_Concurrency",
+                "simd"
+            ],
+            "clang_deps": [
+                "AVKit"
+            ]
+        },
+        {
+            "name": "_AuthenticationServices_SwiftUI",
+            "swiftinterface": "System/Library/Frameworks/_AuthenticationServices_SwiftUI.framework/Modules/_AuthenticationServices_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "SwiftUI",
+                "UIKit",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "AuthenticationServices"
+            ]
+        },
+        {
+            "name": "_CoreData_CloudKit",
+            "swiftinterface": "System/Library/Frameworks/_CoreData_CloudKit.framework/Modules/_CoreData_CloudKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CloudKit",
+                "CoreData",
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "ObjectiveC",
+                "Swift",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "_CoreData_CloudKit"
+            ]
+        },
+        {
+            "name": "_CoreLocationUI_SwiftUI",
+            "swiftinterface": "System/Library/Frameworks/_CoreLocationUI_SwiftUI.framework/Modules/_CoreLocationUI_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "SwiftUI",
+                "UIKit",
+                "_Concurrency"
+            ],
+            "clang_deps": [
+                "CoreLocationUI",
+                "_CoreLocationUI_SwiftUI"
+            ]
+        },
+        {
+            "name": "_HomeKit_SwiftUI",
+            "swiftinterface": "System/Library/Frameworks/_HomeKit_SwiftUI.framework/Modules/_HomeKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "HomeKit",
+                "Swift",
+                "SwiftUI",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "_MapKit_SwiftUI",
+            "swiftinterface": "System/Library/Frameworks/_MapKit_SwiftUI.framework/Modules/_MapKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "MapKit",
+                "Swift",
+                "SwiftUI",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "_MusicKit_SwiftUI",
+            "swiftinterface": "System/Library/Frameworks/_MusicKit_SwiftUI.framework/Modules/_MusicKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreGraphics",
+                "Foundation",
+                "MusicKit",
+                "Swift",
+                "SwiftUI",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "_QuickLook_SwiftUI",
+            "swiftinterface": "System/Library/Frameworks/_QuickLook_SwiftUI.framework/Modules/_QuickLook_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "QuickLook",
+                "Swift",
+                "SwiftUI",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "_SceneKit_SwiftUI",
+            "swiftinterface": "System/Library/Frameworks/_SceneKit_SwiftUI.framework/Modules/_SceneKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "SceneKit",
+                "Swift",
+                "SwiftUI",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "_SpriteKit_SwiftUI",
+            "swiftinterface": "System/Library/Frameworks/_SpriteKit_SwiftUI.framework/Modules/_SpriteKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "SpriteKit",
+                "Swift",
+                "SwiftUI",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "_StoreKit_SwiftUI",
+            "swiftinterface": "System/Library/Frameworks/_StoreKit_SwiftUI.framework/Modules/_StoreKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Foundation",
+                "StoreKit",
+                "Swift",
+                "SwiftUI",
+                "_Concurrency",
+                "os"
+            ],
+            "clang_deps": []
+        },
+        {
+            "name": "_System_Foundation",
+            "swiftinterface": "usr/lib/swift/_System_Foundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "Foundation",
+                "Swift",
+                "System",
+                "_Concurrency"
+            ],
+            "clang_deps": []
+        }
+    ],
+    "clang": [
+        {
+            "name": "AVFAudio",
+            "modulemap": "System/Library/Frameworks/AVFAudio.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AudioToolbox",
+                "CoreAudioTypes",
+                "CoreMIDI",
+                "CoreMedia",
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "AVKit",
+            "modulemap": "System/Library/Frameworks/AVKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AVFoundation",
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "Accounts",
+            "modulemap": "System/Library/Frameworks/Accounts.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "AdServices",
+            "modulemap": "System/Library/Frameworks/AdServices.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "AdSupport",
+            "modulemap": "System/Library/Frameworks/AdSupport.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "AddressBook",
+            "modulemap": "System/Library/Frameworks/AddressBook.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin"
+            ]
+        },
+        {
+            "name": "AddressBookUI",
+            "modulemap": "System/Library/Frameworks/AddressBookUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AddressBook",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "AppClip",
+            "modulemap": "System/Library/Frameworks/AppClip.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "AppTrackingTransparency",
+            "modulemap": "System/Library/Frameworks/AppTrackingTransparency.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "AudioToolbox",
+            "modulemap": "System/Library/Frameworks/AudioToolbox.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreAudioTypes",
+                "CoreFoundation",
+                "CoreMIDI",
+                "Darwin",
+                "Dispatch",
+                "Foundation",
+                "os_workgroup"
+            ]
+        },
+        {
+            "name": "AudioUnit",
+            "modulemap": "System/Library/Frameworks/AudioUnit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AudioToolbox"
+            ]
+        },
+        {
+            "name": "AuthenticationServices",
+            "modulemap": "System/Library/Frameworks/AuthenticationServices.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "AutomaticAssessmentConfiguration",
+            "modulemap": "System/Library/Frameworks/AutomaticAssessmentConfiguration.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "BackgroundTasks",
+            "modulemap": "System/Library/Frameworks/BackgroundTasks.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "BusinessChat",
+            "modulemap": "System/Library/Frameworks/BusinessChat.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "CFNetwork",
+            "modulemap": "System/Library/Frameworks/CFNetwork.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin"
+            ]
+        },
+        {
+            "name": "ClassKit",
+            "modulemap": "System/Library/Frameworks/ClassKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "ClockKit",
+            "modulemap": "System/Library/Frameworks/ClockKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "ContactsUI",
+            "modulemap": "System/Library/Frameworks/ContactsUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Contacts",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "CoreAudioTypes",
+            "modulemap": "System/Library/Frameworks/CoreAudioTypes.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin"
+            ]
+        },
+        {
+            "name": "CoreBluetooth",
+            "modulemap": "System/Library/Frameworks/CoreBluetooth.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "CoreHaptics",
+            "modulemap": "System/Library/Frameworks/CoreHaptics.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "CoreLocationUI",
+            "modulemap": "System/Library/Frameworks/CoreLocationUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "CoreMotion",
+            "modulemap": "System/Library/Frameworks/CoreMotion.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "CoreServices",
+            "modulemap": "System/Library/Frameworks/CoreServices.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin"
+            ]
+        },
+        {
+            "name": "CoreSpotlight",
+            "modulemap": "System/Library/Frameworks/CoreSpotlight.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UniformTypeIdentifiers"
+            ]
+        },
+        {
+            "name": "CoreTelephony",
+            "modulemap": "System/Library/Frameworks/CoreTelephony.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "CoreText",
+            "modulemap": "System/Library/Frameworks/CoreText.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin"
+            ]
+        },
+        {
+            "name": "CoreVideo",
+            "modulemap": "System/Library/Frameworks/CoreVideo.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "IOSurface",
+                "Metal",
+                "OpenGLES"
+            ]
+        },
+        {
+            "name": "DeviceCheck",
+            "modulemap": "System/Library/Frameworks/DeviceCheck.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "EventKit",
+            "modulemap": "System/Library/Frameworks/EventKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AddressBook",
+                "CoreGraphics",
+                "CoreLocation",
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "EventKitUI",
+            "modulemap": "System/Library/Frameworks/EventKitUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "EventKit",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "ExposureNotification",
+            "modulemap": "System/Library/Frameworks/ExposureNotification.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Dispatch",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "ExternalAccessory",
+            "modulemap": "System/Library/Frameworks/ExternalAccessory.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "FileProviderUI",
+            "modulemap": "System/Library/Frameworks/FileProviderUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "FileProvider",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "GSS",
+            "modulemap": "System/Library/Frameworks/GSS.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin"
+            ]
+        },
+        {
+            "name": "GameController",
+            "modulemap": "System/Library/Frameworks/GameController.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "GameKit",
+            "modulemap": "System/Library/Frameworks/GameKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Contacts",
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "GameController",
+                "GameplayKit",
+                "ModelIO",
+                "ObjectiveC",
+                "ReplayKit",
+                "SceneKit",
+                "SpriteKit",
+                "UIKit",
+                "simd"
+            ]
+        },
+        {
+            "name": "HealthKitUI",
+            "modulemap": "System/Library/Frameworks/HealthKitUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "HealthKit",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "IOSurface",
+            "modulemap": "System/Library/Frameworks/IOSurface.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "IdentityLookup",
+            "modulemap": "System/Library/Frameworks/IdentityLookup.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "IdentityLookupUI",
+            "modulemap": "System/Library/Frameworks/IdentityLookupUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "IdentityLookup",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "ImageCaptureCore",
+            "modulemap": "System/Library/Frameworks/ImageCaptureCore.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "ImageIO",
+            "modulemap": "System/Library/Frameworks/ImageIO.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin"
+            ]
+        },
+        {
+            "name": "IntentsUI",
+            "modulemap": "System/Library/Frameworks/IntentsUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Foundation",
+                "Intents",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "JavaScriptCore",
+            "modulemap": "System/Library/Frameworks/JavaScriptCore.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "LinkPresentation",
+            "modulemap": "System/Library/Frameworks/LinkPresentation.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "LocalAuthentication",
+            "modulemap": "System/Library/Frameworks/LocalAuthentication.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "MediaAccessibility",
+            "modulemap": "System/Library/Frameworks/MediaAccessibility.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreText",
+                "Darwin"
+            ]
+        },
+        {
+            "name": "MediaToolbox",
+            "modulemap": "System/Library/Frameworks/MediaToolbox.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AudioToolbox",
+                "CoreFoundation",
+                "CoreMedia"
+            ]
+        },
+        {
+            "name": "MessageUI",
+            "modulemap": "System/Library/Frameworks/MessageUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "UIKit"
+            ]
+        },
+        {
+            "name": "Messages",
+            "modulemap": "System/Library/Frameworks/Messages.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "MetalPerformanceShaders",
+            "modulemap": "System/Library/Frameworks/MetalPerformanceShaders.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "Metal",
+                "simd"
+            ]
+        },
+        {
+            "name": "MetalPerformanceShadersGraph",
+            "modulemap": "System/Library/Frameworks/MetalPerformanceShadersGraph.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "MetalPerformanceShaders"
+            ]
+        },
+        {
+            "name": "MobileCoreServices",
+            "modulemap": "System/Library/Frameworks/MobileCoreServices.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreServices"
+            ]
+        },
+        {
+            "name": "MultipeerConnectivity",
+            "modulemap": "System/Library/Frameworks/MultipeerConnectivity.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "NetworkExtension",
+            "modulemap": "System/Library/Frameworks/NetworkExtension.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "Network",
+                "Security"
+            ]
+        },
+        {
+            "name": "NewsstandKit",
+            "modulemap": "System/Library/Frameworks/NewsstandKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "NotificationCenter",
+            "modulemap": "System/Library/Frameworks/NotificationCenter.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "OpenAL",
+            "modulemap": "System/Library/Frameworks/OpenAL.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
+            "name": "OpenGLES",
+            "modulemap": "System/Library/Frameworks/OpenGLES.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "PDFKit",
+            "modulemap": "System/Library/Frameworks/PDFKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "PHASE",
+            "modulemap": "System/Library/Frameworks/PHASE.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AVFAudio",
+                "AVFoundation",
+                "CoreAudioTypes",
+                "Foundation",
+                "ModelIO",
+                "simd"
+            ]
+        },
+        {
+            "name": "PushKit",
+            "modulemap": "System/Library/Frameworks/PushKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "QuickLookThumbnailing",
+            "modulemap": "System/Library/Frameworks/QuickLookThumbnailing.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "UniformTypeIdentifiers"
+            ]
+        },
+        {
+            "name": "ReplayKit",
+            "modulemap": "System/Library/Frameworks/ReplayKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AVFoundation",
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "SafariServices",
+            "modulemap": "System/Library/Frameworks/SafariServices.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "ScreenTime",
+            "modulemap": "System/Library/Frameworks/ScreenTime.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "Security",
+            "modulemap": "System/Library/Frameworks/Security.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "os_object"
+            ]
+        },
+        {
+            "name": "SensorKit",
+            "modulemap": "System/Library/Frameworks/SensorKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "CoreLocation",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "Social",
+            "modulemap": "System/Library/Frameworks/Social.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "SystemConfiguration",
+            "modulemap": "System/Library/Frameworks/SystemConfiguration.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch"
+            ]
+        },
+        {
+            "name": "UserNotifications",
+            "modulemap": "System/Library/Frameworks/UserNotifications.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "UserNotificationsUI",
+            "modulemap": "System/Library/Frameworks/UserNotificationsUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "VideoSubscriberAccount",
+            "modulemap": "System/Library/Frameworks/VideoSubscriberAccount.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "VideoToolbox",
+            "modulemap": "System/Library/Frameworks/VideoToolbox.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreMedia",
+                "CoreVideo",
+                "Darwin"
+            ]
+        },
+        {
+            "name": "VisionKit",
+            "modulemap": "System/Library/Frameworks/VisionKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "WatchConnectivity",
+            "modulemap": "System/Library/Frameworks/WatchConnectivity.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "iAd",
+            "modulemap": "System/Library/Frameworks/iAd.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "ARKit",
+            "modulemap": "System/Library/Frameworks/ARKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AVFoundation",
+                "CoreGraphics",
+                "CoreLocation",
+                "CoreVideo",
+                "Foundation",
+                "ImageIO",
+                "Metal",
+                "QuickLook",
+                "SceneKit",
+                "SpriteKit",
+                "UIKit",
+                "Vision",
+                "simd"
+            ]
+        },
+        {
+            "name": "CoreMIDI",
+            "modulemap": "System/Library/Frameworks/CoreMIDI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "CoreMedia",
+            "modulemap": "System/Library/Frameworks/CoreMedia.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreVideo",
+                "Darwin",
+                "Dispatch"
+            ]
+        },
+        {
+            "name": "Darwin",
+            "modulemap": "usr/include/module.modulemap",
+            "clang_deps": [
+                "_Builtin_stddef_max_align_t"
+            ]
+        },
+        {
+            "name": "Foundation",
+            "modulemap": "System/Library/Frameworks/Foundation.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CFNetwork",
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "ObjectiveC",
+                "Security",
+                "ptrauth"
+            ]
+        },
+        {
+            "name": "AVFoundation",
+            "modulemap": "System/Library/Frameworks/AVFoundation.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AVFAudio",
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreMedia",
+                "CoreVideo",
+                "Darwin",
+                "Foundation",
+                "ImageIO",
+                "MediaToolbox",
+                "QuartzCore",
+                "UniformTypeIdentifiers",
+                "simd"
+            ]
+        },
+        {
+            "name": "UIKit",
+            "modulemap": "System/Library/Frameworks/UIKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "CoreImage",
+                "CoreText",
+                "Darwin",
+                "FileProvider",
+                "Foundation",
+                "QuartzCore",
+                "UserNotifications"
+            ]
+        },
+        {
+            "name": "Accelerate",
+            "modulemap": "System/Library/Frameworks/Accelerate.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreVideo",
+                "Darwin",
+                "_Builtin_intrinsics",
+                "os",
+                "os_object"
+            ]
+        },
+        {
+            "name": "Accessibility",
+            "modulemap": "System/Library/Frameworks/Accessibility.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "CoreFoundation",
+            "modulemap": "System/Library/Frameworks/CoreFoundation.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Dispatch",
+                "ptrauth"
+            ]
+        },
+        {
+            "name": "AssetsLibrary",
+            "modulemap": "System/Library/Frameworks/AssetsLibrary.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "Dispatch",
+            "modulemap": "usr/include/dispatch/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "os_object",
+                "os_workgroup"
+            ]
+        },
+        {
+            "name": "os_workgroup",
+            "modulemap": "usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "os_object"
+            ]
+        },
+        {
+            "name": "CallKit",
+            "modulemap": "System/Library/Frameworks/CallKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "CarPlay",
+            "modulemap": "System/Library/Frameworks/CarPlay.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "MapKit",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "CoreGraphics",
+            "modulemap": "System/Library/Frameworks/CoreGraphics.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin"
+            ]
+        },
+        {
+            "name": "CloudKit",
+            "modulemap": "System/Library/Frameworks/CloudKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreLocation",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "Compression",
+            "modulemap": "usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
+            "name": "Contacts",
+            "modulemap": "System/Library/Frameworks/Contacts.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "CoreAudio",
+            "modulemap": "System/Library/Frameworks/CoreAudio.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreAudioTypes"
+            ]
+        },
+        {
+            "name": "CoreAudioKit",
+            "modulemap": "System/Library/Frameworks/CoreAudioKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AudioUnit",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "CoreData",
+            "modulemap": "System/Library/Frameworks/CoreData.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "CoreImage",
+            "modulemap": "System/Library/Frameworks/CoreImage.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "CoreVideo",
+                "Darwin",
+                "Foundation",
+                "IOSurface",
+                "ImageIO",
+                "Metal",
+                "OpenGLES"
+            ]
+        },
+        {
+            "name": "CoreLocation",
+            "modulemap": "System/Library/Frameworks/CoreLocation.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "CoreML",
+            "modulemap": "System/Library/Frameworks/CoreML.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "CoreVideo",
+                "Foundation",
+                "ImageIO"
+            ]
+        },
+        {
+            "name": "CoreNFC",
+            "modulemap": "System/Library/Frameworks/CoreNFC.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Dispatch",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "UniformTypeIdentifiers",
+            "modulemap": "System/Library/Frameworks/UniformTypeIdentifiers.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "Metal",
+            "modulemap": "System/Library/Frameworks/Metal.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "IOSurface"
+            ]
+        },
+        {
+            "name": "CryptoTokenKit",
+            "modulemap": "System/Library/Frameworks/CryptoTokenKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "Security"
+            ]
+        },
+        {
+            "name": "SwiftOverlayShims",
+            "modulemap": "usr/lib/swift/shims/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "SwiftShims"
+            ]
+        },
+        {
+            "name": "SwiftShims",
+            "modulemap": "usr/lib/swift/shims/module.modulemap",
+            "clang_deps": []
+        },
+        {
+            "name": "DataDetection",
+            "modulemap": "System/Library/Frameworks/DataDetection.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "FileProvider",
+            "modulemap": "System/Library/Frameworks/FileProvider.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "GLKit",
+            "modulemap": "System/Library/Frameworks/GLKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "ModelIO",
+                "OpenGLES",
+                "UIKit",
+                "_Builtin_intrinsics"
+            ]
+        },
+        {
+            "name": "GameplayKit",
+            "modulemap": "System/Library/Frameworks/GameplayKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "SceneKit",
+                "SpriteKit",
+                "simd"
+            ]
+        },
+        {
+            "name": "ModelIO",
+            "modulemap": "System/Library/Frameworks/ModelIO.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "simd"
+            ]
+        },
+        {
+            "name": "ObjectiveC",
+            "modulemap": "usr/include/objc/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
+            "name": "SceneKit",
+            "modulemap": "System/Library/Frameworks/SceneKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "GLKit",
+                "Metal",
+                "ModelIO",
+                "QuartzCore",
+                "UIKit",
+                "simd"
+            ]
+        },
+        {
+            "name": "SpriteKit",
+            "modulemap": "System/Library/Frameworks/SpriteKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "GLKit",
+                "Metal",
+                "UIKit",
+                "simd"
+            ]
+        },
+        {
+            "name": "simd",
+            "modulemap": "usr/include/simd/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "_Builtin_intrinsics"
+            ]
+        },
+        {
+            "name": "HealthKit",
+            "modulemap": "System/Library/Frameworks/HealthKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "ObjectiveC"
+            ]
+        },
+        {
+            "name": "HomeKit",
+            "modulemap": "System/Library/Frameworks/HomeKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "Intents",
+            "modulemap": "System/Library/Frameworks/Intents.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "CoreLocation",
+                "Darwin",
+                "Foundation",
+                "UserNotifications"
+            ]
+        },
+        {
+            "name": "MapKit",
+            "modulemap": "System/Library/Frameworks/MapKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "CoreLocation",
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "MediaPlayer",
+            "modulemap": "System/Library/Frameworks/MediaPlayer.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AVFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "MetalKit",
+            "modulemap": "System/Library/Frameworks/MetalKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "Metal",
+                "ModelIO",
+                "QuartzCore",
+                "UIKit",
+                "simd"
+            ]
+        },
+        {
+            "name": "MetricKit",
+            "modulemap": "System/Library/Frameworks/MetricKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "os"
+            ]
+        },
+        {
+            "name": "NaturalLanguage",
+            "modulemap": "System/Library/Frameworks/NaturalLanguage.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "NearbyInteraction",
+            "modulemap": "System/Library/Frameworks/NearbyInteraction.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "simd"
+            ]
+        },
+        {
+            "name": "Network",
+            "modulemap": "System/Library/Frameworks/Network.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "Darwin",
+                "Dispatch",
+                "Security",
+                "dnssd",
+                "os_object"
+            ]
+        },
+        {
+            "name": "OSLog",
+            "modulemap": "System/Library/Frameworks/OSLog.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "os"
+            ]
+        },
+        {
+            "name": "PassKit",
+            "modulemap": "System/Library/Frameworks/PassKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AddressBook",
+                "Contacts",
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "PencilKit",
+            "modulemap": "System/Library/Frameworks/PencilKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "Photos",
+            "modulemap": "System/Library/Frameworks/Photos.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AVFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "CoreLocation",
+                "CoreMedia",
+                "Darwin",
+                "Foundation",
+                "ImageIO"
+            ]
+        },
+        {
+            "name": "PhotosUI",
+            "modulemap": "System/Library/Frameworks/PhotosUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Foundation",
+                "Photos",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "QuartzCore",
+            "modulemap": "System/Library/Frameworks/QuartzCore.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "OpenGLES"
+            ]
+        },
+        {
+            "name": "QuickLook",
+            "modulemap": "System/Library/Frameworks/QuickLook.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "Foundation",
+                "PDFKit",
+                "QuickLookThumbnailing",
+                "UIKit",
+                "UniformTypeIdentifiers"
+            ]
+        },
+        {
+            "name": "os_object",
+            "modulemap": "usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "ObjectiveC"
+            ]
+        },
+        {
+            "name": "ShazamKit",
+            "modulemap": "System/Library/Frameworks/ShazamKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AVFAudio",
+                "Darwin",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "SoundAnalysis",
+            "modulemap": "System/Library/Frameworks/SoundAnalysis.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AVFoundation",
+                "CoreML",
+                "CoreMedia",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "Speech",
+            "modulemap": "System/Library/Frameworks/Speech.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "AVFoundation",
+                "Foundation"
+            ]
+        },
+        {
+            "name": "StoreKit",
+            "modulemap": "System/Library/Frameworks/StoreKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "SwiftUI",
+            "modulemap": "System/Library/Frameworks/SwiftUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "UIKit"
+            ]
+        },
+        {
+            "name": "Vision",
+            "modulemap": "System/Library/Frameworks/Vision.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "CoreML",
+                "CoreMedia",
+                "CoreVideo",
+                "Foundation",
+                "ImageIO",
+                "Metal",
+                "simd"
+            ]
+        },
+        {
+            "name": "WebKit",
+            "modulemap": "System/Library/Frameworks/WebKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Darwin",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
+            "name": "WidgetKit",
+            "modulemap": "System/Library/Frameworks/WidgetKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        },
+        {
+            "name": "os",
+            "modulemap": "usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "MachO",
+                "os_object",
+                "os_workgroup"
+            ]
+        },
+        {
+            "name": "_Builtin_stddef_max_align_t",
+            "modulemap": "../../../../../Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/clang/include/module.modulemap",
+            "clang_deps": []
+        },
+        {
+            "name": "ptrauth",
+            "modulemap": "../../../../../Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/clang/include/module.modulemap",
+            "clang_deps": []
+        },
+        {
+            "name": "_Builtin_intrinsics",
+            "modulemap": "../../../../../Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/clang/include/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
+            "name": "dnssd",
+            "modulemap": "usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Dispatch"
+            ]
+        },
+        {
+            "name": "MachO",
+            "modulemap": "usr/include/mach-o/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
+            "name": "_CoreData_CloudKit",
+            "modulemap": "System/Library/Frameworks/_CoreData_CloudKit.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreData"
+            ]
+        },
+        {
+            "name": "_CoreLocationUI_SwiftUI",
+            "modulemap": "System/Library/Frameworks/_CoreLocationUI_SwiftUI.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "Foundation"
+            ]
+        }
+    ]
+}

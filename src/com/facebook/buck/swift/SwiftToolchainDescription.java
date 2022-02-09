@@ -86,6 +86,7 @@ public class SwiftToolchainDescription
         swiftStdlibTool,
         args.getPlatformPath(),
         args.getSdkPath(),
+        args.getSdkDependenciesPath(),
         args.getRuntimePathsForBundling().stream()
             .map(Paths::get)
             .collect(ImmutableList.toImmutableList()),
@@ -148,6 +149,20 @@ public class SwiftToolchainDescription
 
     /** The path to the SDK for the targeted platform. */
     SourcePath getSdkPath();
+
+    /**
+     * Local path to Apple SDK dependencies. The SDK dependencies file is a JSON file generated for
+     * a specific SDK, toolchain and platform using the script in
+     * `scripts/generate_swift_sdk_dependencies.py`. This is used to provide the exported_deps of
+     * the SDK frameworks, as well as the paths to their swiftinterface files for compilation.
+     *
+     * <p>We use a string here instead of a SourcePath as we need to be able to load this file at
+     * parse time in order to be able to construct the build rules for each of the swiftinterface
+     * files and to set them up as dependencies to the SwiftCompile rules. If we allowed SourcePath
+     * here then the path could come from rule output which could only be evaluated at action
+     * execution time.
+     */
+    Optional<String> getSdkDependenciesPath();
 
     /** The path to the platform dir. */
     SourcePath getPlatformPath();

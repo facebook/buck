@@ -40,6 +40,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   private final Optional<Tool> swiftStdlibTool;
   private final SourcePath platformPath;
   private final SourcePath sdkPath;
+  private final Optional<String> sdkDependenciesPath;
   private final ImmutableList<Path> runtimePathsForBundling;
   private final ImmutableList<Path> runtimePathsForLinking;
   private final ImmutableList<Path> staticRuntimePaths;
@@ -54,6 +55,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
       Optional<Tool> swiftStdlibTool,
       SourcePath platformPath,
       SourcePath sdkPath,
+      Optional<String> sdkDependenciesPath,
       ImmutableList<Path> runtimePathsForBundling,
       ImmutableList<Path> runtimePathsForLinking,
       ImmutableList<Path> staticRuntimePaths,
@@ -65,6 +67,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
     this.swiftStdlibTool = swiftStdlibTool;
     this.platformPath = platformPath;
     this.sdkPath = sdkPath;
+    this.sdkDependenciesPath = sdkDependenciesPath;
     this.runtimePathsForBundling = runtimePathsForBundling;
     this.runtimePathsForLinking = runtimePathsForLinking;
     this.staticRuntimePaths = staticRuntimePaths;
@@ -80,6 +83,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
         .setSwiftStdlibTool(swiftStdlibTool)
         .setPlatformPath(platformPath)
         .setSdkPath(sdkPath)
+        .setSdkDependencies(getSdkDependencies(swiftTarget))
         .setSwiftTarget(swiftTarget)
         .setSwiftRuntimePathsForBundling(runtimePathsForBundling)
         .setSwiftRuntimePathsForLinking(runtimePathsForLinking)
@@ -88,5 +92,13 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
         .setDebugPrefixMap(ImmutableBiMap.of())
         .setPrefixSerializedDebugInfo(prefixSerializedDebugInfo)
         .build();
+  }
+
+  private Optional<SwiftSdkDependencies> getSdkDependencies(AppleCompilerTargetTriple swiftTarget) {
+    if (sdkDependenciesPath.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(new SwiftSdkDependencies(sdkDependenciesPath.get(), swiftc, swiftTarget));
   }
 }
