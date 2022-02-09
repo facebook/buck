@@ -18,6 +18,7 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -76,14 +77,17 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   }
 
   /** Provides SwiftPlatform for given Swift target triple */
-  public SwiftPlatform getSwiftPlatform(AppleCompilerTargetTriple swiftTarget) {
+  public SwiftPlatform getSwiftPlatform(
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
+      AppleCompilerTargetTriple swiftTarget) {
     return SwiftPlatform.builder()
         .setSwiftc(swiftc)
         .setSwiftFlags(swiftFlags)
         .setSwiftStdlibTool(swiftStdlibTool)
         .setPlatformPath(platformPath)
         .setSdkPath(sdkPath)
-        .setSdkDependencies(getSdkDependencies(swiftTarget))
+        .setSdkDependencies(getSdkDependencies(graphBuilder, projectFilesystem, swiftTarget))
         .setSwiftTarget(swiftTarget)
         .setSwiftRuntimePathsForBundling(runtimePathsForBundling)
         .setSwiftRuntimePathsForLinking(runtimePathsForLinking)
@@ -94,11 +98,22 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
         .build();
   }
 
-  private Optional<SwiftSdkDependencies> getSdkDependencies(AppleCompilerTargetTriple swiftTarget) {
+  private Optional<SwiftSdkDependencies> getSdkDependencies(
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
+      AppleCompilerTargetTriple swiftTarget) {
     if (sdkDependenciesPath.isEmpty()) {
       return Optional.empty();
     }
 
-    return Optional.of(new SwiftSdkDependencies(sdkDependenciesPath.get(), swiftc, swiftTarget));
+    return Optional.of(
+        new SwiftSdkDependencies(
+            graphBuilder,
+            projectFilesystem,
+            sdkDependenciesPath.get(),
+            swiftc,
+            swiftFlags,
+            swiftTarget,
+            sdkPath));
   }
 }

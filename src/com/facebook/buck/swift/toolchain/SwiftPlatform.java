@@ -46,7 +46,7 @@ public interface SwiftPlatform {
   SourcePath getSdkPath();
 
   /**
-   * @return an optional SDK dependency object derived from the toolchains sdk_dependencies_path.
+   * @return an optional SDK dependency provider derived from the toolchains sdk_dependencies_path.
    */
   Optional<SwiftSdkDependenciesProvider> getSdkDependencies();
 

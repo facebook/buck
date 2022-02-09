@@ -21,18 +21,30 @@ import static org.hamcrest.Matchers.equalTo;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Optional;
 import org.junit.Test;
 
 public class SwiftSdkDependenciesTest {
   @Test
   public void testLoadSdkDependenciesJson() throws HumanReadableException {
+    ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
     Path testDataPath = TestDataHelper.getTestDataScenario(this, "swift_sdk_dependencies");
     Path simulatorDeps = testDataPath.resolve("iphonesimulator_15.2_deps.json");
     Tool swiftc = VersionedTool.of("foo", FakeSourcePath.of("swiftc"), "1.0");
@@ -41,7 +53,14 @@ public class SwiftSdkDependenciesTest {
             "x86_64", "apple", "ios", Optional.of("13.0"), Optional.empty());
 
     SwiftSdkDependencies sdkDependencies =
-        new SwiftSdkDependencies(simulatorDeps.toString(), swiftc, triple);
+        new SwiftSdkDependencies(
+            new TestActionGraphBuilder(TargetGraph.EMPTY),
+            fakeFilesystem,
+            simulatorDeps.toString(),
+            swiftc,
+            ImmutableList.of(),
+            triple,
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")));
 
     SwiftSdkDependencies.SwiftModule module = sdkDependencies.getSwiftModule("Foundation");
     assertThat(
@@ -71,5 +90,45 @@ public class SwiftSdkDependenciesTest {
                 "ObjectiveC",
                 "Swift",
                 "_Concurrency")));
+  }
+
+  @Test
+  public void testGetSwiftmoduleDependencyPaths() throws HumanReadableException {
+    ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder(TargetGraph.EMPTY);
+    ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
+    Path testDataPath = TestDataHelper.getTestDataScenario(this, "swift_sdk_dependencies");
+    Path simulatorDeps = testDataPath.resolve("iphonesimulator_15.2_deps.json");
+    Tool swiftc = VersionedTool.of("foo", FakeSourcePath.of("swiftc"), "1.0");
+    AppleCompilerTargetTriple triple =
+        AppleCompilerTargetTriple.of(
+            "x86_64", "apple", "ios", Optional.of("13.0"), Optional.empty());
+
+    SwiftSdkDependencies sdkDependencies =
+        new SwiftSdkDependencies(
+            actionGraphBuilder,
+            fakeFilesystem,
+            simulatorDeps.toString(),
+            swiftc,
+            ImmutableList.of(),
+            triple,
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")));
+
+    ImmutableSet<SourcePath> swiftmoduleDeps =
+        sdkDependencies.getSwiftmoduleDependencyPaths("SwiftOnoneSupport");
+    assertThat(swiftmoduleDeps.size(), equalTo(2));
+
+    ImmutableSortedSet<String> filenames =
+        swiftmoduleDeps.stream()
+            .map(
+                sp ->
+                    actionGraphBuilder
+                        .getSourcePathResolver()
+                        .getIdeallyRelativePath(sp)
+                        .getFileName()
+                        .toString())
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
+    assertThat(
+        filenames,
+        equalTo(ImmutableSortedSet.of("Swift.swiftmodule", "SwiftOnoneSupport.swiftmodule")));
   }
 }

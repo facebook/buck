@@ -16,5 +16,10 @@
 
 package com.facebook.buck.swift.toolchain;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.google.common.collect.ImmutableSet;
+
 /** A provider for SDK dependency build rules */
-public interface SwiftSdkDependenciesProvider {}
+public interface SwiftSdkDependenciesProvider {
+  ImmutableSet<SourcePath> getSwiftmoduleDependencyPaths(String moduleName);
+}
