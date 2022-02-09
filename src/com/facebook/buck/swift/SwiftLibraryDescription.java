@@ -333,7 +333,8 @@ public class SwiftLibraryDescription
           downwardApiConfig.isEnabledForApple(),
           swiftPlatform.get().getPrefixSerializedDebugInfo(),
           swiftBuckConfig.getAddXctestImportPaths(),
-          args.getSerializeDebuggingOptions());
+          args.getSerializeDebuggingOptions(),
+          args.getUsesExplicitModules());
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -514,7 +515,8 @@ public class SwiftLibraryDescription
         downwardApiConfig.isEnabledForApple(),
         swiftPlatform.getPrefixSerializedDebugInfo(),
         swiftBuckConfig.getAddXctestImportPaths(),
-        args.getSerializeDebuggingOptions());
+        args.getSerializeDebuggingOptions(),
+        args.getUsesExplicitModules());
   }
 
   private static AppleCompilerTargetTriple getSwiftTarget(
@@ -606,7 +608,8 @@ public class SwiftLibraryDescription
         downwardApiConfig.isEnabledForApple(),
         swiftPlatform.getPrefixSerializedDebugInfo(),
         swiftBuckConfig.getAddXctestImportPaths(),
-        args.getSerializeDebuggingOptions());
+        args.getSerializeDebuggingOptions(),
+        args.getUsesExplicitModules());
   }
 
   private static Optional<SourcePath> getPlatformPathIfRequired(
@@ -681,6 +684,11 @@ public class SwiftLibraryDescription
 
     @Value.Default
     default boolean getEnableCxxInterop() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean getUsesExplicitModules() {
       return false;
     }
   }

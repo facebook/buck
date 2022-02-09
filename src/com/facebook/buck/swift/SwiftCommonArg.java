@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,20 @@ public interface SwiftCommonArg extends BuildRuleArg {
   ImmutableList<StringWithMacros> getSwiftCompilerFlags();
 
   Optional<String> getSwiftVersion();
+
+  /**
+   * When set the target will use explicit module compilation. All dependencies will be passed in
+   * either with a Swift module map file for dependent swiftmodules or using
+   * `-fmodule-file=<name>=<path>` for dependent Clang modules. The build rules to compile the
+   * module outputs will be created for the SDK dependencies and the Clang module dependencies.
+   *
+   * <p>This should improve compilation time via sharing of cached module artifacts and reducing the
+   * amount of time spent resolving headers and swiftmodule files from search paths.
+   */
+  @Value.Default
+  default boolean getUsesExplicitModules() {
+    return false;
+  }
 
   @Value.Default
   default boolean getSerializeDebuggingOptions() {

@@ -74,7 +74,8 @@ public class SwiftCompile extends SwiftCompileBase {
       boolean withDownwardApi,
       boolean hasPrefixSerializedDebugInfo,
       boolean addXCTestImportPaths,
-      boolean serializeDebuggingOptions) {
+      boolean serializeDebuggingOptions,
+      boolean usesExplicitModules) {
     super(
         swiftBuckConfig,
         buildTarget,
@@ -101,7 +102,8 @@ public class SwiftCompile extends SwiftCompileBase {
         withDownwardApi,
         hasPrefixSerializedDebugInfo,
         addXCTestImportPaths,
-        serializeDebuggingOptions);
+        serializeDebuggingOptions,
+        usesExplicitModules);
 
     transformErrorsToAbsolutePaths = swiftBuckConfig.getTransformErrorsToAbsolutePaths();
   }

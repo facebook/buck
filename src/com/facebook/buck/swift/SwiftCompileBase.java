@@ -148,6 +148,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey private final boolean addXCTestImportPaths;
 
+  @AddToRuleKey private final boolean usesExplicitModules;
+
   @AddToRuleKey private final boolean serializeDebuggingOptions;
 
   @AddToRuleKey private final Optional<SourcePath> platformPath;
@@ -197,7 +199,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       boolean withDownwardApi,
       boolean hasPrefixSerializedDebugInfo,
       boolean addXCTestImportPaths,
-      boolean serializeDebuggingOptions) {
+      boolean serializeDebuggingOptions,
+      boolean usesExplicitModules) {
     super(buildTarget, projectFilesystem);
     this.systemFrameworkSearchPaths = systemFrameworkSearchPaths;
     this.frameworks = frameworks;
@@ -208,6 +211,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.platformPath = platformPath;
     this.importUnderlyingModule = importUnderlyingModule;
     this.addXCTestImportPaths = addXCTestImportPaths;
+    this.usesExplicitModules = usesExplicitModules;
     this.headerPath = outputPath.resolve(SwiftDescriptions.toSwiftHeaderName(moduleName) + ".h");
     this.moduleName = moduleName;
 
