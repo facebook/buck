@@ -147,7 +147,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableSortedSet<RelPath> includePaths =
         sourcePathResolver.getAllRelativePaths(filesystem, getTransitiveClasspaths());
 
-    RelPath classpathArgs = outputDirectory.resolveRel("classpath_args");
+    RelPath classpathArgsPath = outputDirectory.resolveRel("classpath_args");
     steps.add(
         WriteFileIsolatedStep.of(
             () ->
@@ -155,10 +155,10 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     .map(filesystem::resolve)
                     .map(AbsPath::toString)
                     .collect(Collectors.joining(File.pathSeparator)),
-            classpathArgs,
+            classpathArgsPath,
             false));
 
-    RelPath outputFile = sourcePathResolver.getRelativePath(filesystem, getSourcePathToOutput());
+    RelPath scriptPath = sourcePathResolver.getRelativePath(filesystem, getSourcePathToOutput());
     steps.add(
         WriteFileIsolatedStep.of(
             () ->
@@ -166,15 +166,16 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                         javaRuntimeLauncher.getCommandPrefix(sourcePathResolver).stream(),
                         Stream.of(
                                 "-cp",
-                                "@" + filesystem.resolve(classpathArgs),
+                                "@" + filesystem.resolve(classpathArgsPath),
                                 Optional.ofNullable(mainClass).orElse(""),
                                 "\"$@\"")
                             .filter(s -> !s.isEmpty()))
                     .collect(Collectors.joining(" ")),
-            outputFile,
+            scriptPath,
             true));
 
-    buildableContext.recordArtifact(outputFile.getPath());
+    buildableContext.recordArtifact(classpathArgsPath.getPath());
+    buildableContext.recordArtifact(scriptPath.getPath());
     return steps.build();
   }
 
