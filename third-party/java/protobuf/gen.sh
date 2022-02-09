@@ -50,21 +50,31 @@ script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # assume this script is in third-party/java/protobuf
 cd "${script_dir}/../../.."
 
+case "$(uname -s)" in
+  Darwin) OS="osx" ;;
+  Linux) OS="linux" ;;
+esac
+
+PROTOC="protoc"
+PROTOC_VERSION="3.7.0"
+
 #----------------------------------------------
 #  Sync protoc version with library version used.
 #----------------------------------------------
-#   PROTOC_VERSION=3.7.0
-#   PROTOC_ZIP=protoc-${PROTOC_VERSION}-osx-x86_64.zip
+#   PROTOC_ZIP=protoc-${PROTOC_VERSION}-${OS}-x86_64.zip
 #   curl -OL "https://github.com/protocolbuffers/protobuf/releases/download/v${PROTOC_VERSION}/$PROTOC_ZIP"
 #   sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
 #   sudo unzip -o $PROTOC_ZIP -d /usr/local 'include/*'
 #   rm -f $PROTOC_ZIP
 #   sudo chown -R $(whoami) /usr/local/bin/protoc
+#   sudo chown -R $(whoami) /usr/local/include/google
 
-# default for macos
-OS="osx"
-PROTOC="protoc"
 
+read -ra ACTUAL_PROTOC_VERSION < <($PROTOC --version)
+if [ "${ACTUAL_PROTOC_VERSION[1]}" != "$PROTOC_VERSION" ]; then
+  >&2 echo "Protobuf Compiler version mismatch: Expected $PROTOC_VERSION, got ${ACTUAL_PROTOC_VERSION[1]}"
+  exit 1
+fi
 
 # Compile all proto files.
 remove_files src-gen/**/proto/*.java
