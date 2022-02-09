@@ -29,7 +29,6 @@ import stat
 import functools
 import pkgutil
 import token
-import symbol
 import operator
 import platform
 import collections
@@ -80,6 +79,7 @@ else:
     importlib_machinery = None
 
 try:
+    import symbol
     import parser
 except ImportError:
     pass
