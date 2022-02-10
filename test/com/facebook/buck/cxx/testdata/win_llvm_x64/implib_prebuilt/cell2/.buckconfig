@@ -50,7 +50,7 @@
   linker_platform=windows
   ar=C:/tools/toolchains/LLVM/bin/llvm-lib.exe
   archiver_platform=windows
-  archiver_type=llvm_lib
+  archiver_type=windows_clang
   asm=C:/tools/toolchains/vs2017_15.9/BuildTools/VC/Tools/MSVC/14.16.27023/bin/HostX64/x64/ml64.exe
   asm_type=windows_ml64
   asmpp=C:/tools/toolchains/vs2017_15.9/BuildTools/VC/Tools/MSVC/14.16.27023/bin/HostX64/x64/ml64.exe

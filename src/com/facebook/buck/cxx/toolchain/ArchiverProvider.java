@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,7 +64,9 @@ public interface ArchiverProvider {
         archiverType = Type.GNU;
         break;
       case WINDOWS:
-        if (legacyType.isPresent() && legacyType.get().equals(LegacyArchiverType.LLVM_LIB)) {
+        if (legacyType.isPresent()
+            && (legacyType.get().equals(LegacyArchiverType.LLVM_LIB)
+                || legacyType.get().equals(LegacyArchiverType.WINDOWS_CLANG))) {
           archiverType = Type.WINDOWS_CLANG;
         } else {
           archiverType = Type.WINDOWS;
@@ -135,5 +137,6 @@ public interface ArchiverProvider {
   // TODO(cjhopman): .buckconfig should be updated to take Type.
   enum LegacyArchiverType {
     LLVM_LIB,
+    WINDOWS_CLANG,
   }
 }
