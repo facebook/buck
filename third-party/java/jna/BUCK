@@ -2,20 +2,20 @@ load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
 
 buck_prebuilt_jar(
     name = "jna",
-    binary_jar = "jna-5.6.0.jar",
+    binary_jar = "jna-5.10.0.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "jna-5.6.0-sources.jar",
+    source_jar = "jna-5.10.0-sources.jar",
     visibility = ["PUBLIC"],
 )
 
 buck_prebuilt_jar(
     name = "jna-platform",
-    binary_jar = "jna-platform-5.6.0.jar",
+    binary_jar = "jna-platform-5.10.0.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "jna-platform-5.6.0-sources.jar",
+    source_jar = "jna-platform-5.10.0-sources.jar",
     visibility = ["PUBLIC"],
 )
