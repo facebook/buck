@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -194,6 +194,12 @@ public class AppleToolchainIntegrationTest {
             BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-sdk"),
             "%s/sdk");
     Path sdkPath = workspace.getDestPath().resolve(sdkRelPath.getPath());
+    RelPath resourceDirRelPath =
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem().getBuckPaths(),
+            BuildTargetFactory.newInstance("//apple_toolchain/tools:gen-resource-dir"),
+            "%s/resource-dir");
+    Path resourceDirPath = workspace.getDestPath().resolve(resourceDirRelPath.getPath());
 
     assertEquals(
         String.format(
@@ -204,6 +210,9 @@ public class AppleToolchainIntegrationTest {
                 + "swift flags: -sdk "
                 + sdkPath
                 + "%n"
+                + "swift flags: -resource-dir "
+                + resourceDirPath
+                + "%n"
                 + "swift flags: -prefix-serialized-debug-info%n"
                 + "linker: input:%n"
                 + companionLibraryPath
@@ -213,6 +222,9 @@ public class AppleToolchainIntegrationTest {
                 + "swift flags: -sdk "
                 + sdkPath
                 + "%n"
+                + "swift flags: -resource-dir "
+                + resourceDirPath
+                + "%n"
                 + "swift flags: -prefix-serialized-debug-info%n"
                 + "linker: input:%n"
                 + anotherSwiftLibraryPath
@@ -220,6 +232,9 @@ public class AppleToolchainIntegrationTest {
                 + "swift compile: extra swift code%n"
                 + "swift flags: -sdk "
                 + sdkPath
+                + "%n"
+                + "swift flags: -resource-dir "
+                + resourceDirPath
                 + "%n"
                 + "swift flags: -prefix-serialized-debug-info%n"
                 + "linker: fpath: apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"

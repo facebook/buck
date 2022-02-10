@@ -132,6 +132,7 @@ swift_toolchain(
     name = "swift_toolchain",
     platform_path = "Developer/iPhoneOS.platform",
     sdk_path = "//apple_toolchain/tools:gen-sdk",
+    resource_dir = "//apple_toolchain/tools:gen-resource-dir",
     swiftc = "//apple_toolchain/tools:swiftc",
     swiftc_flags = [
         "-test-arg1",

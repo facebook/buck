@@ -45,6 +45,9 @@ public interface SwiftPlatform {
   /** @return the path to the target SDK. */
   SourcePath getSdkPath();
 
+  /** @return the path to the compiler resource dir. TODO: make this non-optional once adopted. */
+  Optional<SourcePath> getResourceDir();
+
   /**
    * @return an optional SDK dependency provider derived from the toolchains sdk_dependencies_path.
    */

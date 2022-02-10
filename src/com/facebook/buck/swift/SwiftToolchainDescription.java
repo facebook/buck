@@ -70,6 +70,9 @@ public class SwiftToolchainDescription
       swiftFlagsBuilder.add(macrosConverter.convert(flag));
     }
 
+    args.getResourceDir()
+        .map(rd -> swiftFlagsBuilder.add(StringArg.of("-resource-dir"), SourcePathArg.of(rd)));
+
     Optional<Tool> swiftStdlibTool =
         args.getSwiftStdlibTool().map(path -> resolveTool(path, actionGraphBuilder));
     if (swiftStdlibTool.isPresent() && !args.getSwiftStdlibToolFlags().isEmpty()) {
@@ -86,6 +89,7 @@ public class SwiftToolchainDescription
         swiftStdlibTool,
         args.getPlatformPath(),
         args.getSdkPath(),
+        args.getResourceDir(),
         args.getSdkDependenciesPath(),
         args.getRuntimePathsForBundling().stream()
             .map(Paths::get)
@@ -166,5 +170,8 @@ public class SwiftToolchainDescription
 
     /** The path to the platform dir. */
     SourcePath getPlatformPath();
+
+    /** The path to the compiler resource dir. */
+    Optional<SourcePath> getResourceDir();
   }
 }

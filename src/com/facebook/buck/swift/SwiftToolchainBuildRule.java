@@ -41,6 +41,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   private final Optional<Tool> swiftStdlibTool;
   private final SourcePath platformPath;
   private final SourcePath sdkPath;
+  private final Optional<SourcePath> resourceDir;
   private final Optional<String> sdkDependenciesPath;
   private final ImmutableList<Path> runtimePathsForBundling;
   private final ImmutableList<Path> runtimePathsForLinking;
@@ -56,6 +57,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
       Optional<Tool> swiftStdlibTool,
       SourcePath platformPath,
       SourcePath sdkPath,
+      Optional<SourcePath> resourceDir,
       Optional<String> sdkDependenciesPath,
       ImmutableList<Path> runtimePathsForBundling,
       ImmutableList<Path> runtimePathsForLinking,
@@ -68,6 +70,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
     this.swiftStdlibTool = swiftStdlibTool;
     this.platformPath = platformPath;
     this.sdkPath = sdkPath;
+    this.resourceDir = resourceDir;
     this.sdkDependenciesPath = sdkDependenciesPath;
     this.runtimePathsForBundling = runtimePathsForBundling;
     this.runtimePathsForLinking = runtimePathsForLinking;
@@ -87,6 +90,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
         .setSwiftStdlibTool(swiftStdlibTool)
         .setPlatformPath(platformPath)
         .setSdkPath(sdkPath)
+        .setResourceDir(resourceDir)
         .setSdkDependencies(getSdkDependencies(graphBuilder, projectFilesystem, swiftTarget))
         .setSwiftTarget(swiftTarget)
         .setSwiftRuntimePathsForBundling(runtimePathsForBundling)
