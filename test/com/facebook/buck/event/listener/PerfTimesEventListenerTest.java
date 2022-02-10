@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckInitializationDurationEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.PerfTimesEventListener.PerfTimesEvent;
 import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.parser.ParseEvent;
@@ -112,6 +113,14 @@ public class PerfTimesEventListenerTest {
     BuckInitializationDurationEvent buckInit = new BuckInitializationDurationEvent(500);
     eventBus.post(buckInit);
 
+    fakeClock.setCurrentTimeMillis(600);
+    WatchmanStatusEvent.Started watchmanStarted = new WatchmanStatusEvent.Started();
+    eventBus.post(watchmanStarted);
+
+    fakeClock.setCurrentTimeMillis(700);
+    WatchmanStatusEvent.Finished watchmanFinished = new WatchmanStatusEvent.Finished();
+    eventBus.post(watchmanFinished);
+
     fakeClock.setCurrentTimeMillis(1000);
     ParseEvent.Started parseStarted = ParseEvent.started(ImmutableSet.of(buildTarget));
     eventBus.post(parseStarted);
@@ -176,6 +185,7 @@ public class PerfTimesEventListenerTest {
     assertThat(perfTimesStats, Matchers.notNullValue());
     assertEquals(new Long(500L), perfTimesStats.getInitTimeMs());
     assertEquals(new Long(500L), perfTimesStats.getProcessingTimeMs());
+    assertEquals(new Long(100L), perfTimesStats.getWatchmanQueryTimeMs());
     assertEquals(new Long(1000L), perfTimesStats.getParseTimeMs());
     assertEquals(new Long(500L), perfTimesStats.getActionGraphTimeMs());
     assertEquals(new Long(1500L), perfTimesStats.getRulekeyTimeMs());

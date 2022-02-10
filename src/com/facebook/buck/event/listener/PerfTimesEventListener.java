@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import com.facebook.buck.event.BuckInitializationDurationEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
+import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.parser.ParseEvent;
@@ -44,6 +45,7 @@ public class PerfTimesEventListener implements BuckEventListener {
 
   private final BuckEventBus eventBus;
 
+  private final AtomicLong watchmanQueryLastStartTime = new AtomicLong();
   private final AtomicLong buildPhasesLastEvent = new AtomicLong();
   private final AtomicLong accumulatedParseTime = new AtomicLong();
   private final AtomicBoolean firstCacheFetchEvent = new AtomicBoolean(false);
@@ -75,6 +77,20 @@ public class PerfTimesEventListener implements BuckEventListener {
   public synchronized void initializationFinished(BuckInitializationDurationEvent event) {
     buildPhasesLastEvent.set(event.getTimestampMillis());
     perfTimesStatsBuilder.setInitTimeMs(event.getDuration());
+    eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
+  }
+
+  /** Listens to the WatchmanStatusEvent.Started event */
+  @Subscribe
+  public synchronized void watchmanQueryStarted(WatchmanStatusEvent.Started startEvent) {
+    watchmanQueryLastStartTime.set(startEvent.getTimestampMillis());
+  }
+
+  /** Listens to the WatchmanStatusEvent.Finished event and log time to query Watchman */
+  @Subscribe
+  public synchronized void watchmanQueryFinished(WatchmanStatusEvent.Finished finishEvent) {
+    long watchmanQueryTime = finishEvent.getTimestampMillis() - watchmanQueryLastStartTime.get();
+    perfTimesStatsBuilder.setWatchmanQueryTimeMs(watchmanQueryTime);
     eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
   }
 

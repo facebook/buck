@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,6 +42,13 @@ public abstract class PerfTimesStats {
   @JsonView(JsonViews.MachineReadableLog.class)
   @Value.Default
   public Long getProcessingTimeMs() {
+    return 0L;
+  }
+
+  /** @return time spent querying watchman for local file change state, in milliseconds. */
+  @JsonView(JsonViews.MachineReadableLog.class)
+  @Value.Default
+  public Long getWatchmanQueryTimeMs() {
     return 0L;
   }
 

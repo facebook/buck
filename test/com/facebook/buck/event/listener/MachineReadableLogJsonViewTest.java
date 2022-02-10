@@ -177,6 +177,7 @@ public class MachineReadableLogJsonViewTest {
             + "\"perfTimesStats\":{"
             + "\"pythonTimeMs\":4,"
             + "\"initTimeMs\":8,"
+            + "\"watchmanQueryTimeMs\":0,"
             + "\"parseTimeMs\":0,"
             + "\"processingTimeMs\":15,"
             + "\"actionGraphTimeMs\":16,"
