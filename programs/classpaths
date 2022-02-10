@@ -72,7 +72,7 @@ third-party/java/ObjCBridge/java-objc-bridge-1.1-SNAPSHOT.jar
 third-party/java/objenesis/objenesis-1.2.jar
 third-party/java/okhttp/okhttp-3.9.0.jar
 third-party/java/okio/okio-1.13.0.jar
-third-party/java/oshi/oshi-core-5.2.5.jar
+third-party/java/oshi/oshi-core-5.8.7.jar
 third-party/java/opencensus/opencensus-api-0.24.0.jar
 third-party/java/opencensus/opencensus-contrib-grpc-metrics-0.24.0.jar
 third-party/java/pf4j/pf4j-2.0.0-SNAPSHOT.jar

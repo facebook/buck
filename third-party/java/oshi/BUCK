@@ -2,11 +2,11 @@ load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
 
 buck_prebuilt_jar(
     name = "oshi-core",
-    binary_jar = "oshi-core-5.2.5.jar",
+    binary_jar = "oshi-core-5.8.7.jar",
     licenses = [
         "LICENSE.html",
     ],
-    source_jar = "oshi-core-5.2.5-sources.jar",
+    source_jar = "oshi-core-5.8.7-sources.jar",
     visibility = ["PUBLIC"],
     deps = [
         "//third-party/java/jna:jna",

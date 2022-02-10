@@ -219,7 +219,7 @@
     <include name="okio/okio-1.13.0.jar" />
     <include name="opencensus/opencensus-api-0.24.0.jar" />
     <include name="opencensus/opencensus-contrib-grpc-metrics-0.24.0.jar" />
-    <include name="oshi/oshi-core-5.2.5.jar" />
+    <include name="oshi/oshi-core-5.8.7.jar" />
     <include name="pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
     <include name="protobuf/protobuf-java-3.7.0.jar" />
     <include name="protobuf/protobuf-java-util-3.7.0.jar" />

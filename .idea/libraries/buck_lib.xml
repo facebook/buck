@@ -9,7 +9,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/ObjCBridge/java-objc-bridge-1.1-SNAPSHOT.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/thrift/libthrift-0.12.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/slf4j/slf4j-jdk14-1.7.5.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/oshi/oshi-core-5.2.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/oshi/oshi-core-5.8.7.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jimfs/jimfs-1.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/android/ddmlib-25.3.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/nuprocess/nuprocess-2.0.1.jar!/" />
@@ -30,7 +30,7 @@
     <SOURCES>
       <root url="jar://$PROJECT_DIR$/third-party/java/args4j/args4j-2.0.30-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jsr/jsr305.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/oshi/oshi-core-5.2.5-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/oshi/oshi-core-5.8.7-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/thrift/libthrift-0.12.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/slf4j/slf4j-jdk14-1.7.5-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/jimfs/jimfs-1.1-sources.jar!/" />

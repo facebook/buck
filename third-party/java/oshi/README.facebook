@@ -1,8 +1,8 @@
 README for OSHI
 
 Repository: https://github.com/oshi/oshi
-URL: https://search.maven.org/artifact/com.github.oshi/oshi-core/5.2.5/jar
-Version: 5.2.5
+URL: https://search.maven.org/artifact/com.github.oshi/oshi-core/5.8.7/jar
+Version: 5.8.7
 Build Instructions:
   mvn package
   mvn source:jar
