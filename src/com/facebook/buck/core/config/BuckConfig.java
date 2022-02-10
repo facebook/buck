@@ -148,6 +148,7 @@ public class BuckConfig {
     nonSerializableREConfigFieldsBuilder.put("dummy", ImmutableSet.of());
     nonSerializableREConfigFieldsBuilder.put("stampede", ImmutableSet.of());
     nonSerializableREConfigFieldsBuilder.put("modern_build_rule", ImmutableSet.of());
+    nonSerializableREConfigFieldsBuilder.put("build", ImmutableSet.of("threads"));
     nonSerializableREConfigFieldsBuilder.put(
         "version_control",
         ImmutableSet.of(
