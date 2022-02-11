@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,9 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -79,7 +81,11 @@ import org.immutables.value.Value;
  */
 public class AndroidAarDescription
     implements DescriptionWithTargetGraph<AndroidAarDescriptionArg>,
-        ImplicitDepsInferringDescription<AndroidAarDescriptionArg> {
+        ImplicitDepsInferringDescription<AndroidAarDescriptionArg>,
+        Flavored {
+
+  private static final ImmutableSet<Flavor> FLAVORS =
+      ImmutableSet.of(AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR);
 
   private static final Flavor AAR_ANDROID_MANIFEST_FLAVOR =
       InternalFlavor.of("aar_android_manifest");
@@ -130,7 +136,20 @@ public class AndroidAarDescription
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+
+    for (Flavor flavor : FLAVORS) {
+      if (buildTarget.getFlavors().contains(flavor)) {
+        graphBuilder.requireRule(buildTarget.withoutFlavors(flavor));
+        return graphBuilder
+            .getRuleOptional(buildTarget)
+            .orElseThrow(
+                () ->
+                    new HumanReadableException(
+                        "Rule for target '%s' could not be resolved.", buildTarget));
+      }
+    }
     buildTarget.assertUnflavored();
+
     ImmutableSortedSet.Builder<BuildRule> aarExtraDepsBuilder =
         new ImmutableSortedSet.Builder<BuildRule>(Ordering.natural())
             .addAll(originalBuildRuleParams.getExtraDeps().get());
@@ -283,6 +302,18 @@ public class AndroidAarDescription
     AndroidNativeLibsPackageableGraphEnhancer.AndroidNativeLibsGraphEnhancementResult
         nativeLibsEnhancementResult = packageableGraphEnhancer.enhance(packageableCollection);
 
+    if (nativeLibsEnhancementResult.getUnstrippedLibraries().isPresent()) {
+      UnstrippedNativeLibraries unstrippedNativeLibraries =
+          new UnstrippedNativeLibraries(
+              buildTarget.withAppendedFlavors(
+                  AndroidBinaryGraphEnhancer.UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR),
+              projectFilesystem,
+              originalBuildRuleParams.withoutDeclaredDeps(),
+              graphBuilder,
+              nativeLibsEnhancementResult.getUnstrippedLibraries().get());
+      graphBuilder.addToIndex(unstrippedNativeLibraries);
+    }
+
     Optional<ImmutableMap<APKModule, CopyNativeLibraries>> nativeLibrariesOptional =
         nativeLibsEnhancementResult.getCopyNativeLibraries();
 
@@ -360,6 +391,17 @@ public class AndroidAarDescription
         .orElse(ImmutableList.of()).stream()
         .map(platform -> platform.getParseTimeDeps(buildTarget.getTargetConfiguration()))
         .forEach(extraDepsBuilder::addAll);
+  }
+
+  @Override
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    for (Flavor flavor : flavors) {
+      if (!FLAVORS.contains(flavor)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   // TODO: Don't inherit from AndroidLibraryDescription if most args are ignored
