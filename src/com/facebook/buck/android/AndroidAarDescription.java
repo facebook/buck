@@ -426,10 +426,7 @@ public class AndroidAarDescription
       return false;
     }
 
-    @Value.Default
-    default Optional<SourcePath> getBuildConfigValuesFile() {
-      return Optional.empty();
-    }
+    Optional<SourcePath> getBuildConfigValuesFile();
 
     ImmutableList<Pattern> getRelinkerWhitelist();
 
