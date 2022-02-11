@@ -210,16 +210,14 @@ public class SplitZipStepTest {
             "foo/bar/b",
             "x/b");
 
-    Path proguardConfigFile = Paths.get("the/configuration.txt");
-    Path proguardMappingFile = Paths.get("the/mapping.txt");
-
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    projectFilesystem.writeLinesToPath(ImmutableList.of(), proguardConfigFile);
-    projectFilesystem.writeLinesToPath(linesInMappingFile, proguardMappingFile);
+    Path proguardConfigFile = tempDir.newFile("configuration.txt").toPath();
+    Path proguardMappingFile = tempDir.newFile("mapping.txt").toPath();
+    Files.write(proguardConfigFile, ImmutableList.of());
+    Files.write(proguardMappingFile, linesInMappingFile);
 
     SplitZipStep splitZipStep =
         new SplitZipStep(
-            projectFilesystem,
+            new FakeProjectFilesystem(),
             /* inputPathsToSplit */ ImmutableSet.of(),
             /* secondaryJarMetaPath */ Paths.get(""),
             /* primaryJarPath */ Paths.get(""),
@@ -245,10 +243,7 @@ public class SplitZipStepTest {
 
     ProguardTranslatorFactory translatorFactory =
         ProguardTranslatorFactory.create(
-            projectFilesystem,
-            Optional.of(proguardConfigFile),
-            Optional.of(proguardMappingFile),
-            false);
+            Optional.of(proguardConfigFile), Optional.of(proguardMappingFile), false);
 
     Predicate<String> requiredInPrimaryZipPredicate =
         splitZipStep.createRequiredInPrimaryZipPredicate(translatorFactory);
@@ -277,15 +272,14 @@ public class SplitZipStepTest {
 
   @Test
   public void testNonObfuscatedBuild() throws IOException {
-    Path proguardConfigFile = Paths.get("the/configuration.txt");
-    Path proguardMappingFile = Paths.get("the/mapping.txt");
+    Path proguardConfigFile = tempDir.newFile("configuration.txt").toPath();
+    Path proguardMappingFile = tempDir.newFile("mapping.txt").toPath();
 
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    projectFilesystem.writeLinesToPath(ImmutableList.of("-dontobfuscate"), proguardConfigFile);
+    Files.write(proguardConfigFile, ImmutableList.of("-dontobfuscate"));
 
     SplitZipStep splitZipStep =
         new SplitZipStep(
-            projectFilesystem,
+            new FakeProjectFilesystem(),
             /* inputPathsToSplit */ ImmutableSet.of(),
             /* secondaryJarMetaPath */ Paths.get(""),
             /* primaryJarPath */ Paths.get(""),
@@ -311,10 +305,7 @@ public class SplitZipStepTest {
 
     ProguardTranslatorFactory translatorFactory =
         ProguardTranslatorFactory.create(
-            projectFilesystem,
-            Optional.of(proguardConfigFile),
-            Optional.of(proguardMappingFile),
-            false);
+            Optional.of(proguardConfigFile), Optional.of(proguardMappingFile), false);
 
     Predicate<String> requiredInPrimaryZipPredicate =
         splitZipStep.createRequiredInPrimaryZipPredicate(translatorFactory);

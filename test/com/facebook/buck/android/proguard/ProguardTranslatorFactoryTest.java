@@ -19,38 +19,36 @@ package com.facebook.buck.android.proguard;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class ProguardTranslatorFactoryTest {
+  @Rule public TemporaryFolder tempDir = new TemporaryFolder();
 
   @Test
   public void testEnableObfuscation() throws IOException {
-    Path proguardConfigFile = Paths.get("the/configuration.txt");
-    Path proguardMappingFile = Paths.get("the/mapping.txt");
+    Path proguardConfigFile = tempDir.newFile("configuration.txt").toPath();
+    Path proguardMappingFile = tempDir.newFile("mapping.txt").toPath();
+
     List<String> linesInMappingFile =
         ImmutableList.of(
             "foo.bar.MappedPrimary -> foo.bar.a:",
             "foo.bar.UnmappedPrimary -> foo.bar.UnmappedPrimary:",
             "foo.primary.MappedPackage -> x.a:");
 
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    projectFilesystem.writeLinesToPath(ImmutableList.of(), proguardConfigFile);
-    projectFilesystem.writeLinesToPath(linesInMappingFile, proguardMappingFile);
+    Files.write(proguardConfigFile, ImmutableList.of());
+    Files.write(proguardMappingFile, linesInMappingFile);
 
     ProguardTranslatorFactory translatorFactory =
         ProguardTranslatorFactory.create(
-            projectFilesystem,
-            Optional.of(proguardConfigFile),
-            Optional.of(proguardMappingFile),
-            false);
+            Optional.of(proguardConfigFile), Optional.of(proguardMappingFile), false);
     checkMapping(translatorFactory, "foo/bar/MappedPrimary", "foo/bar/a");
     checkMapping(translatorFactory, "foo/bar/UnmappedPrimary", "foo/bar/UnmappedPrimary");
     checkMapping(translatorFactory, "foo/primary/MappedPackage", "x/a");
@@ -60,18 +58,13 @@ public class ProguardTranslatorFactoryTest {
 
   @Test
   public void testDisableObfuscation() throws IOException {
-    Path proguardConfigFile = Paths.get("the/configuration.txt");
-    Path proguardMappingFile = Paths.get("the/mapping.txt");
-
-    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    projectFilesystem.writeLinesToPath(ImmutableList.of("-dontobfuscate"), proguardConfigFile);
+    Path proguardConfigFile = tempDir.newFile("configuration.txt").toPath();
+    Path proguardMappingFile = tempDir.newFile("mapping.txt").toPath();
+    Files.write(proguardConfigFile, ImmutableList.of("-dontobfuscate"));
 
     ProguardTranslatorFactory translatorFactory =
         ProguardTranslatorFactory.create(
-            projectFilesystem,
-            Optional.of(proguardConfigFile),
-            Optional.of(proguardMappingFile),
-            false);
+            Optional.of(proguardConfigFile), Optional.of(proguardMappingFile), false);
     checkMapping(translatorFactory, "anything", "anything");
   }
 

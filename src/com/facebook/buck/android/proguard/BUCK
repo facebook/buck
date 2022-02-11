@@ -12,7 +12,6 @@ buck_java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//third-party/java/guava:guava",
     ],
 )

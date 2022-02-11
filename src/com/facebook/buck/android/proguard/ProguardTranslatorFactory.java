@@ -16,12 +16,12 @@
 
 package com.facebook.buck.android.proguard;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -41,13 +41,12 @@ public class ProguardTranslatorFactory {
   }
 
   public static ProguardTranslatorFactory create(
-      ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
       Optional<Path> proguardMappingFile,
       boolean skipProguard)
       throws IOException {
     return new ProguardTranslatorFactory(
-        loadOptionalRawMap(filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard));
+        loadOptionalRawMap(proguardFullConfigFile, proguardMappingFile, skipProguard));
   }
 
   @VisibleForTesting
@@ -57,7 +56,6 @@ public class ProguardTranslatorFactory {
   }
 
   private static Optional<ImmutableMap<String, String>> loadOptionalRawMap(
-      ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
       Optional<Path> proguardMappingFile,
       boolean skipProguard)
@@ -70,13 +68,13 @@ public class ProguardTranslatorFactory {
 
     // Proguard doesn't print a mapping when obfuscation is disabled.
     boolean obfuscationSkipped =
-        Iterables.any(filesystem.readLines(pathToProguardConfig), "-dontobfuscate"::equals);
+        Iterables.any(Files.readAllLines(pathToProguardConfig), "-dontobfuscate"::equals);
     if (obfuscationSkipped) {
       return Optional.empty();
     }
 
     Path mappingFile = proguardMappingFile.get();
-    List<String> lines = filesystem.readLines(mappingFile);
+    List<String> lines = Files.readAllLines(mappingFile);
     return Optional.of(ProguardMapping.readClassMapping(lines));
   }
 

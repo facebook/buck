@@ -158,7 +158,9 @@ public class SplitZipStep implements Step {
         inputPathsToSplit.stream().map(filesystem::resolve).collect(ImmutableSet.toImmutableSet());
     ProguardTranslatorFactory translatorFactory =
         ProguardTranslatorFactory.create(
-            filesystem, proguardFullConfigFile, proguardMappingFile, skipProguard);
+            proguardFullConfigFile.map(filesystem::getPathForRelativePath),
+            proguardMappingFile.map(filesystem::getPathForRelativePath),
+            skipProguard);
     Predicate<String> requiredInPrimaryZip = createRequiredInPrimaryZipPredicate(translatorFactory);
     ImmutableMultimap<APKModule, String> additionalDexStoreClasses =
         APKModuleGraph.getAPKModuleToClassesMap(
