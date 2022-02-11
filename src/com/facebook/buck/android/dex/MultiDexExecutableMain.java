@@ -17,6 +17,7 @@
 package com.facebook.buck.android.dex;
 
 import com.android.tools.r8.CompilationFailedException;
+import com.facebook.buck.android.proguard.ProguardTranslatorFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -27,7 +28,9 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.kohsuke.args4j.CmdLineException;
@@ -53,6 +56,12 @@ public class MultiDexExecutableMain {
 
   @Option(name = "--primary-dex-patterns-path", required = true)
   private String primaryDexPatternsPathString;
+
+  @Option(name = "--proguard-configuration-file")
+  private String proguardConfigurationFileString;
+
+  @Option(name = "--proguard-mapping-file")
+  private String proguardMappingFileString;
 
   @Option(name = "--min-sdk-version")
   private String minSdkVersionString;
@@ -84,7 +93,14 @@ public class MultiDexExecutableMain {
 
     List<String> primaryDexPatterns = Files.readAllLines(Paths.get(primaryDexPatternsPathString));
     Path primaryDexClassNamesPath = Files.createTempFile("primary_dex_class_names", "txt");
-    Files.write(primaryDexClassNamesPath, getPrimaryDexClassNames(filesToDex, primaryDexPatterns));
+    ProguardTranslatorFactory proguardTranslatorFactory =
+        ProguardTranslatorFactory.create(
+            Optional.ofNullable(proguardConfigurationFileString).map(Paths::get),
+            Optional.ofNullable(proguardMappingFileString).map(Paths::get),
+            false);
+    Files.write(
+        primaryDexClassNamesPath,
+        getPrimaryDexClassNames(filesToDex, primaryDexPatterns, proguardTranslatorFactory));
 
     Optional<Integer> minSdkVersion =
         Optional.ofNullable(minSdkVersionString).map(Integer::parseInt);
@@ -114,10 +130,16 @@ public class MultiDexExecutableMain {
   }
 
   private ImmutableList<String> getPrimaryDexClassNames(
-      ImmutableSet<Path> filesToDex, List<String> primaryDexPatterns) throws IOException {
+      ImmutableSet<Path> filesToDex,
+      List<String> primaryDexPatterns,
+      ProguardTranslatorFactory proguardTranslatorFactory)
+      throws IOException {
     ClassNameFilter primaryDexClassNameFilter =
         ClassNameFilter.fromConfiguration(primaryDexPatterns);
     ImmutableList.Builder<String> primaryDexClassNames = ImmutableList.builder();
+    Function<String, String> deobfuscateFunction =
+        proguardTranslatorFactory.createDeobfuscationFunction();
+
     for (Path fileToDex : filesToDex) {
       try (ZipFile zipFile = new ZipFile(fileToDex.toFile())) {
         Enumeration<? extends ZipEntry> entries = zipFile.entries();
@@ -130,7 +152,10 @@ public class MultiDexExecutableMain {
           }
 
           String className =
-              zipEntryName.substring(0, zipEntryName.length() - CLASS_NAME_SUFFIX.length());
+              Objects.requireNonNull(
+                  deobfuscateFunction.apply(
+                      zipEntryName.substring(
+                          0, zipEntryName.length() - CLASS_NAME_SUFFIX.length())));
           if (primaryDexClassNameFilter.matches(className)) {
             primaryDexClassNames.add(zipEntryName);
           }
