@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.proguard;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
@@ -32,7 +32,7 @@ import java.util.function.Function;
  * If we end up creating both an obfuscator function and a deobfuscator function, it would be nice
  * to load the proguard mapping file once. This class enables sharing that work.
  */
-class ProguardTranslatorFactory {
+public class ProguardTranslatorFactory {
 
   private final Optional<ImmutableMap<String, String>> rawMap;
 
@@ -40,7 +40,7 @@ class ProguardTranslatorFactory {
     this.rawMap = rawMap;
   }
 
-  static ProguardTranslatorFactory create(
+  public static ProguardTranslatorFactory create(
       ProjectFilesystem filesystem,
       Optional<Path> proguardFullConfigFile,
       Optional<Path> proguardMappingFile,
@@ -51,7 +51,8 @@ class ProguardTranslatorFactory {
   }
 
   @VisibleForTesting
-  static ProguardTranslatorFactory createForTest(Optional<ImmutableMap<String, String>> rawMap) {
+  public static ProguardTranslatorFactory createForTest(
+      Optional<ImmutableMap<String, String>> rawMap) {
     return new ProguardTranslatorFactory(rawMap);
   }
 

@@ -519,6 +519,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android/dalvik/firstorder:firstorder",
         "//src/com/facebook/buck/android/dex:dex",
         "//src/com/facebook/buck/android/packageable:packageable",
+        "//src/com/facebook/buck/android/proguard:translator",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",

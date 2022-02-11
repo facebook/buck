@@ -1,0 +1,18 @@
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+
+TRANSLATOR_SRCS = [
+    "ProguardMapping.java",
+    "ProguardTranslatorFactory.java",
+]
+
+buck_java_library(
+    name = "translator",
+    srcs = TRANSLATOR_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//third-party/java/guava:guava",
+    ],
+)

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.dalvik.ZipSplitter;
+import com.facebook.buck.android.proguard.ProguardTranslatorFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;

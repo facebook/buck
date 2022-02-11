@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "translator",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/android/proguard:translator",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
