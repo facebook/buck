@@ -23,3 +23,14 @@ buck_java_binary(
         ":dex",
     ],
 )
+
+buck_java_binary(
+    name = "multi_dex_binary",
+    main_class = "com.facebook.buck.android.dex.MultiDexExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dex",
+    ],
+)
