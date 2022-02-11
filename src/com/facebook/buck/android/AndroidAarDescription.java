@@ -243,7 +243,7 @@ public class AndroidAarDescription
               PackageType.RELEASE,
               EnumSet.noneOf(ExopackageMode.class),
               args.getBuildConfigValues(),
-              Optional.empty(),
+              args.getBuildConfigValuesFile(),
               graphBuilder,
               javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
               javacOptions,
@@ -382,6 +382,11 @@ public class AndroidAarDescription
     @Value.Default
     default boolean isEnableRelinker() {
       return false;
+    }
+
+    @Value.Default
+    default Optional<SourcePath> getBuildConfigValuesFile() {
+      return Optional.empty();
     }
 
     ImmutableList<Pattern> getRelinkerWhitelist();
