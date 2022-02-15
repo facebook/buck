@@ -21,9 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
-import java.util.Optional;
 
 public interface ArchiverProvider {
 
@@ -44,51 +42,6 @@ public interface ArchiverProvider {
         return ImmutableList.of();
       }
     };
-  }
-
-  /**
-   * Creates an appropriate ArchiverProvider instance for the given parameters.
-   *
-   * @deprecated Use the non-legacy type.
-   */
-  @Deprecated
-  static ArchiverProvider from(
-      ToolProvider archiver, Platform platform, Optional<LegacyArchiverType> legacyType) {
-    ArchiverProvider.Type archiverType;
-    switch (platform) {
-      case MACOS:
-      case FREEBSD:
-        archiverType = Type.BSD;
-        break;
-      case LINUX:
-        archiverType = Type.GNU;
-        break;
-      case WINDOWS:
-        if (legacyType.isPresent()
-            && (legacyType.get().equals(LegacyArchiverType.LLVM_LIB)
-                || legacyType.get().equals(LegacyArchiverType.WINDOWS_CLANG))) {
-          archiverType = Type.WINDOWS_CLANG;
-        } else {
-          archiverType = Type.WINDOWS;
-        }
-        break;
-      case UNKNOWN:
-      default:
-        return new ArchiverProvider() {
-          @Override
-          public Archiver resolve(
-              BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
-            throw new RuntimeException(
-                "Invalid platform for archiver. Must be one of {MACOS, LINUX, WINDOWS}");
-          }
-
-          @Override
-          public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-            return ImmutableList.of();
-          }
-        };
-    }
-    return ArchiverProvider.from(archiver, archiverType);
   }
 
   /** Creates an appropriate ArchiverProvider instance for the given parameters. */
@@ -127,16 +80,6 @@ public interface ArchiverProvider {
     BSD,
     GNU,
     WINDOWS,
-    WINDOWS_CLANG,
-  }
-
-  /**
-   * .buckconfig accepts this and we combine it with the current platform to determine the archiver
-   * type.
-   */
-  // TODO(cjhopman): .buckconfig should be updated to take Type.
-  enum LegacyArchiverType {
-    LLVM_LIB,
     WINDOWS_CLANG,
   }
 }

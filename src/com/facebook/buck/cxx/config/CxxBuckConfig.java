@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.UserFlavor;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -36,8 +37,8 @@ import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolPro
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
+import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
-import com.facebook.buck.cxx.toolchain.ArchiverProvider.LegacyArchiverType;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider.Type;
 import com.facebook.buck.cxx.toolchain.CxxToolTypeInferer;
@@ -301,16 +302,49 @@ public class CxxBuckConfig {
   public Optional<ArchiverProvider> getArchiverProvider(Platform defaultPlatform) {
     Optional<ToolProvider> toolProvider =
         delegate.getView(ToolConfig.class).getToolProvider(cxxSection, ToolType.AR.key);
-    // TODO(cjhopman): This should probably accept ArchiverProvider.Type, not LegacyArchiverType.
-    Optional<LegacyArchiverType> type =
-        delegate.getEnum(cxxSection, ARCHIVER_TYPE, LegacyArchiverType.class);
+
+    Optional<ArchiverProvider.Type> type =
+        delegate.getEnum(cxxSection, ARCHIVER_TYPE, ArchiverProvider.Type.class);
+
+    Optional<ArchiverProvider.Type> computedType =
+        type.or(
+            () -> {
+              Optional<Platform> archiverPlatform =
+                  delegate.getEnum(cxxSection, ARCHIVER_PLATFORM, Platform.class);
+              switch (archiverPlatform.orElse(defaultPlatform)) {
+                case MACOS:
+                case FREEBSD:
+                  return Optional.of(ArchiverProvider.Type.BSD);
+                case LINUX:
+                  return Optional.of(ArchiverProvider.Type.GNU);
+                case WINDOWS:
+                  return Optional.of(ArchiverProvider.Type.WINDOWS);
+                case UNKNOWN:
+                default:
+                  return Optional.empty();
+              }
+            });
+
+    if (!computedType.isPresent()) {
+      return Optional.of(
+          new ArchiverProvider() {
+            @Override
+            public Archiver resolve(
+                BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
+              throw new RuntimeException(
+                  "Invalid platform for archiver. Must be one of {MACOS, LINUX, WINDOWS}");
+            }
+
+            @Override
+            public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
+              return ImmutableList.of();
+            }
+          });
+    }
+
     return toolProvider.map(
         archiver -> {
-          Optional<Platform> archiverPlatform =
-              delegate.getEnum(cxxSection, ARCHIVER_PLATFORM, Platform.class);
-
-          Platform platform = archiverPlatform.orElse(defaultPlatform);
-          return ArchiverProvider.from(archiver, platform, type);
+          return ArchiverProvider.from(archiver, computedType.get());
         });
   }
 
