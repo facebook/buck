@@ -18,6 +18,7 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -135,7 +136,11 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
       }
 
       Path sdkRelPath = resolver.getIdeallyRelativePath(sdkPath);
-      argsBuilder.add(sdkRelPath.resolve(swiftInterfacePath).toString());
+      if (!swiftInterfacePath.startsWith("$SDKROOT")) {
+        throw new HumanReadableException(
+            "Trying to compile swiftinterface file outside sdk: " + sdkRelPath);
+      }
+      argsBuilder.add(sdkRelPath.resolve(swiftInterfacePath.substring(9)).toString());
       for (SourcePath dep : swiftmoduleDeps) {
         argsBuilder.add("-swift-module-file", resolver.getIdeallyRelativePath(dep).toString());
       }

@@ -256,6 +256,11 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
   public static class SwiftModule implements Comparable<SwiftModule> {
     private String name;
 
+    private String target;
+
+    @JsonProperty("is_framework")
+    private boolean isFramework;
+
     @JsonProperty("swiftinterface")
     private Path swiftInterfacePath;
 
@@ -271,6 +276,22 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
 
     public void setName(String name) {
       this.name = name;
+    }
+
+    public String getTarget() {
+      return target;
+    }
+
+    public void setTarget(String target) {
+      this.target = target;
+    }
+
+    public boolean isFramework() {
+      return isFramework;
+    }
+
+    public void setFramework(boolean framework) {
+      isFramework = framework;
     }
 
     public Path getSwiftInterfacePath() {

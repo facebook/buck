@@ -22,6 +22,7 @@ import tempfile
 
 parser = argparse.ArgumentParser(description="Generate SDK dependencies")
 parser.add_argument("--sdk", required=True)
+parser.add_argument("--resource-dir", required=True)
 parser.add_argument("--target", default="x86_64-apple-ios15.0-simulator")
 args = parser.parse_args()
 
@@ -59,6 +60,8 @@ with tempfile.NamedTemporaryFile(mode="w+t", suffix=".swift") as src:
             src.name,
             "-module-name",
             "ignore",
+            "-resource-dir",
+            args.resource_dir,
             "-o",
             out.name,
         ]
@@ -70,6 +73,22 @@ main_module_name = j["mainModuleName"]
 module_iter = iter(j["modules"])
 sdk_swiftmodules = []
 sdk_clangmodules = []
+
+
+def prefix_absolute_path(path):
+    if path.startswith(args.sdk):
+        return "$SDKROOT/" + os.path.relpath(path, start=args.sdk)
+    elif path.startswith(args.resource_dir):
+        return "$RESOURCEDIR/" + os.path.relpath(path, start=args.resource_dir)
+    else:
+        raise SystemExit("Unknown path prefix: " + path)
+
+
+def get_clang_target(pcm_args):
+    # Each swiftinterface defines its own compiler target which
+    # needs to be propagated to all its clang module dependencies.
+    return pcm_args[pcm_args.index("-target") + 2]
+
 
 while True:
     try:
@@ -95,11 +114,13 @@ while True:
     if module_type == "swift":
         sdk_swiftmodules.append(
             {
+                "is_framework": details["details"]["swift"]["isFramework"],
                 "name": module_name,
-                "swiftinterface": os.path.relpath(
-                    details["details"]["swift"]["moduleInterfacePath"], start=args.sdk
+                "swiftinterface": prefix_absolute_path(
+                    details["details"]["swift"]["moduleInterfacePath"]
                 ),
                 "swift_deps": swift_deps,
+                "target": get_clang_target(details["details"]["swift"]["extraPcmArgs"]),
                 "clang_deps": clang_deps,
             }
         )
@@ -108,8 +129,8 @@ while True:
         sdk_clangmodules.append(
             {
                 "name": module_name,
-                "modulemap": os.path.relpath(
-                    details["details"]["clang"]["moduleMapPath"], start=args.sdk
+                "modulemap": prefix_absolute_path(
+                    details["details"]["clang"]["moduleMapPath"]
                 ),
                 "clang_deps": clang_deps,
             }

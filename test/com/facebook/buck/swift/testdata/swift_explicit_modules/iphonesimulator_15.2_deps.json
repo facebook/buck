@@ -2,8 +2,9 @@
     "sdk_version": "15.2",
     "swift": [
         {
+            "is_framework": false,
             "name": "ARKit",
-            "swiftinterface": "usr/lib/swift/ARKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/ARKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
                 "CoreAudio",
@@ -33,13 +34,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "ARKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "AVFoundation",
-            "swiftinterface": "usr/lib/swift/AVFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/AVFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreAudio",
                 "CoreFoundation",
@@ -57,13 +60,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "AVFoundation"
             ]
         },
         {
+            "is_framework": false,
             "name": "Accelerate",
-            "swiftinterface": "usr/lib/swift/Accelerate.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Accelerate.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -76,13 +81,15 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Accelerate"
             ]
         },
         {
+            "is_framework": true,
             "name": "Accessibility",
-            "swiftinterface": "System/Library/Frameworks/Accessibility.framework/Modules/Accessibility.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/Accessibility.framework/Modules/Accessibility.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -93,13 +100,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Accessibility"
             ]
         },
         {
+            "is_framework": false,
             "name": "AssetsLibrary",
-            "swiftinterface": "usr/lib/swift/AssetsLibrary.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/AssetsLibrary.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -110,13 +119,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "AssetsLibrary"
             ]
         },
         {
+            "is_framework": false,
             "name": "CallKit",
-            "swiftinterface": "usr/lib/swift/CallKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CallKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -126,13 +137,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CallKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "CarPlay",
-            "swiftinterface": "usr/lib/swift/CarPlay.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CarPlay.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -150,13 +163,15 @@
                 "UIKit",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CarPlay"
             ]
         },
         {
+            "is_framework": false,
             "name": "CloudKit",
-            "swiftinterface": "usr/lib/swift/CloudKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CloudKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreLocation",
@@ -168,36 +183,42 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CloudKit"
             ]
         },
         {
+            "is_framework": true,
             "name": "Combine",
-            "swiftinterface": "System/Library/Frameworks/Combine.framework/Modules/Combine.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/Combine.framework/Modules/Combine.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Darwin",
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": false,
             "name": "Compression",
-            "swiftinterface": "usr/lib/swift/Compression.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Compression.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Darwin",
                 "Foundation",
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Compression"
             ]
         },
         {
+            "is_framework": false,
             "name": "Contacts",
-            "swiftinterface": "usr/lib/swift/Contacts.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Contacts.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -207,13 +228,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Contacts"
             ]
         },
         {
+            "is_framework": false,
             "name": "CoreAudio",
-            "swiftinterface": "usr/lib/swift/CoreAudio.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CoreAudio.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -222,13 +245,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreAudio"
             ]
         },
         {
+            "is_framework": true,
             "name": "CoreAudioKit",
-            "swiftinterface": "System/Library/Frameworks/CoreAudioKit.framework/Modules/CoreAudioKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/CoreAudioKit.framework/Modules/CoreAudioKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
                 "CoreFoundation",
@@ -246,13 +271,15 @@
                 "UIKit",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreAudioKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "CoreData",
-            "swiftinterface": "usr/lib/swift/CoreData.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CoreData.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Combine",
                 "CoreFoundation",
@@ -263,13 +290,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreData"
             ]
         },
         {
+            "is_framework": false,
             "name": "CoreFoundation",
-            "swiftinterface": "usr/lib/swift/CoreFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CoreFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Darwin",
                 "Dispatch",
@@ -277,13 +306,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreFoundation"
             ]
         },
         {
+            "is_framework": false,
             "name": "CoreGraphics",
-            "swiftinterface": "usr/lib/swift/CoreGraphics.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CoreGraphics.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -292,13 +323,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreGraphics"
             ]
         },
         {
+            "is_framework": false,
             "name": "CoreImage",
-            "swiftinterface": "usr/lib/swift/CoreImage.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CoreImage.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -310,13 +343,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreImage"
             ]
         },
         {
+            "is_framework": false,
             "name": "CoreLocation",
-            "swiftinterface": "usr/lib/swift/CoreLocation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CoreLocation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -326,13 +361,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreLocation"
             ]
         },
         {
+            "is_framework": false,
             "name": "CoreMIDI",
-            "swiftinterface": "usr/lib/swift/CoreMIDI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CoreMIDI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -342,13 +379,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreMIDI"
             ]
         },
         {
+            "is_framework": false,
             "name": "CoreML",
-            "swiftinterface": "usr/lib/swift/CoreML.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CoreML.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -360,13 +399,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreML"
             ]
         },
         {
+            "is_framework": false,
             "name": "CoreMedia",
-            "swiftinterface": "usr/lib/swift/CoreMedia.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CoreMedia.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreAudio",
                 "CoreFoundation",
@@ -379,6 +420,7 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreAudioTypes",
                 "CoreMedia",
@@ -386,8 +428,9 @@
             ]
         },
         {
+            "is_framework": false,
             "name": "CoreNFC",
-            "swiftinterface": "usr/lib/swift/CoreNFC.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CoreNFC.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -397,13 +440,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreNFC"
             ]
         },
         {
+            "is_framework": true,
             "name": "CryptoKit",
-            "swiftinterface": "System/Library/Frameworks/CryptoKit.framework/Modules/CryptoKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/CryptoKit.framework/Modules/CryptoKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -413,14 +458,16 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "LocalAuthentication",
                 "Security"
             ]
         },
         {
+            "is_framework": false,
             "name": "CryptoTokenKit",
-            "swiftinterface": "usr/lib/swift/CryptoTokenKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/CryptoTokenKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -430,17 +477,20 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CryptoTokenKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "Darwin",
-            "swiftinterface": "usr/lib/swift/Darwin.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Darwin.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Darwin",
                 "SwiftOverlayShims",
@@ -448,8 +498,9 @@
             ]
         },
         {
+            "is_framework": false,
             "name": "DataDetection",
-            "swiftinterface": "usr/lib/swift/DataDetection.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/DataDetection.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -459,22 +510,26 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "DataDetection"
             ]
         },
         {
+            "is_framework": true,
             "name": "DeveloperToolsSupport",
-            "swiftinterface": "System/Library/Frameworks/DeveloperToolsSupport.framework/Modules/DeveloperToolsSupport.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/DeveloperToolsSupport.framework/Modules/DeveloperToolsSupport.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": true,
             "name": "DeviceActivity",
-            "swiftinterface": "System/Library/Frameworks/DeviceActivity.framework/Modules/DeviceActivity.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/DeviceActivity.framework/Modules/DeviceActivity.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Foundation",
                 "ManagedSettings",
@@ -482,11 +537,13 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": false,
             "name": "Dispatch",
-            "swiftinterface": "usr/lib/swift/Dispatch.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Dispatch.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Combine",
                 "Darwin",
@@ -494,24 +551,28 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Dispatch"
             ]
         },
         {
+            "is_framework": false,
             "name": "ExtensionFoundation",
-            "swiftinterface": "usr/lib/swift/ExtensionFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/ExtensionFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Foundation",
                 "Swift",
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": false,
             "name": "ExtensionKit",
-            "swiftinterface": "usr/lib/swift/ExtensionKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/ExtensionKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "ExtensionFoundation",
                 "Foundation",
@@ -519,11 +580,13 @@
                 "SwiftUI",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": true,
             "name": "FamilyControls",
-            "swiftinterface": "System/Library/Frameworks/FamilyControls.framework/Modules/FamilyControls.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/FamilyControls.framework/Modules/FamilyControls.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Combine",
                 "CoreFoundation",
@@ -538,13 +601,15 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreServices"
             ]
         },
         {
+            "is_framework": false,
             "name": "FileProvider",
-            "swiftinterface": "usr/lib/swift/FileProvider.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/FileProvider.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -555,13 +620,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "FileProvider"
             ]
         },
         {
+            "is_framework": false,
             "name": "Foundation",
-            "swiftinterface": "usr/lib/swift/Foundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Foundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Combine",
                 "CoreFoundation",
@@ -572,13 +639,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
+            "is_framework": false,
             "name": "GLKit",
-            "swiftinterface": "usr/lib/swift/GLKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/GLKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -596,13 +665,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "GLKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "GameplayKit",
-            "swiftinterface": "usr/lib/swift/GameplayKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/GameplayKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -623,13 +694,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "GameplayKit"
             ]
         },
         {
+            "is_framework": true,
             "name": "GroupActivities",
-            "swiftinterface": "System/Library/Frameworks/GroupActivities.framework/Modules/GroupActivities.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/GroupActivities.framework/Modules/GroupActivities.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
                 "Combine",
@@ -642,11 +715,13 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": false,
             "name": "HealthKit",
-            "swiftinterface": "usr/lib/swift/HealthKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/HealthKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -656,13 +731,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "HealthKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "HomeKit",
-            "swiftinterface": "usr/lib/swift/HomeKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/HomeKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -678,13 +755,15 @@
                 "UIKit",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "HomeKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "Intents",
-            "swiftinterface": "usr/lib/swift/Intents.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Intents.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -696,13 +775,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Intents"
             ]
         },
         {
+            "is_framework": true,
             "name": "ManagedSettings",
-            "swiftinterface": "System/Library/Frameworks/ManagedSettings.framework/Modules/ManagedSettings.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/ManagedSettings.framework/Modules/ManagedSettings.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Combine",
                 "Foundation",
@@ -710,11 +791,13 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": true,
             "name": "ManagedSettingsUI",
-            "swiftinterface": "System/Library/Frameworks/ManagedSettingsUI.framework/Modules/ManagedSettingsUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/ManagedSettingsUI.framework/Modules/ManagedSettingsUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Foundation",
                 "ManagedSettings",
@@ -723,11 +806,13 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": false,
             "name": "MapKit",
-            "swiftinterface": "usr/lib/swift/MapKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/MapKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -744,13 +829,15 @@
                 "UIKit",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "MapKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "MediaPlayer",
-            "swiftinterface": "usr/lib/swift/MediaPlayer.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/MediaPlayer.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
                 "CoreAudio",
@@ -772,13 +859,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "MediaPlayer"
             ]
         },
         {
+            "is_framework": false,
             "name": "Metal",
-            "swiftinterface": "usr/lib/swift/Metal.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Metal.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -788,13 +877,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Metal"
             ]
         },
         {
+            "is_framework": false,
             "name": "MetalKit",
-            "swiftinterface": "usr/lib/swift/MetalKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/MetalKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -812,13 +903,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "MetalKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "MetricKit",
-            "swiftinterface": "usr/lib/swift/MetricKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/MetricKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -829,13 +922,15 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "MetricKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "ModelIO",
-            "swiftinterface": "usr/lib/swift/ModelIO.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/ModelIO.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -847,13 +942,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "ModelIO"
             ]
         },
         {
+            "is_framework": true,
             "name": "MusicKit",
-            "swiftinterface": "System/Library/Frameworks/MusicKit.framework/Modules/MusicKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/MusicKit.framework/Modules/MusicKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Combine",
                 "CoreGraphics",
@@ -861,11 +958,13 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": false,
             "name": "NaturalLanguage",
-            "swiftinterface": "usr/lib/swift/NaturalLanguage.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/NaturalLanguage.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -875,13 +974,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "NaturalLanguage"
             ]
         },
         {
+            "is_framework": false,
             "name": "NearbyInteraction",
-            "swiftinterface": "usr/lib/swift/NearbyInteraction.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/NearbyInteraction.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -892,13 +993,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "NearbyInteraction"
             ]
         },
         {
+            "is_framework": false,
             "name": "Network",
-            "swiftinterface": "usr/lib/swift/Network.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Network.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -908,14 +1011,16 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Network",
                 "Security"
             ]
         },
         {
+            "is_framework": false,
             "name": "OSLog",
-            "swiftinterface": "usr/lib/swift/OSLog.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/OSLog.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -926,25 +1031,29 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "OSLog"
             ]
         },
         {
+            "is_framework": false,
             "name": "ObjectiveC",
-            "swiftinterface": "usr/lib/swift/ObjectiveC.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/ObjectiveC.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Darwin",
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "ObjectiveC"
             ]
         },
         {
+            "is_framework": false,
             "name": "PassKit",
-            "swiftinterface": "usr/lib/swift/PassKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/PassKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Contacts",
                 "CoreFoundation",
@@ -961,13 +1070,15 @@
                 "UIKit",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "PassKit"
             ]
         },
         {
+            "is_framework": true,
             "name": "PencilKit",
-            "swiftinterface": "System/Library/Frameworks/PencilKit.framework/Modules/PencilKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/PencilKit.framework/Modules/PencilKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -983,13 +1094,15 @@
                 "UIKit",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "PencilKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "Photos",
-            "swiftinterface": "usr/lib/swift/Photos.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Photos.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
                 "CoreAudio",
@@ -1010,13 +1123,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Photos"
             ]
         },
         {
+            "is_framework": false,
             "name": "PhotosUI",
-            "swiftinterface": "usr/lib/swift/PhotosUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/PhotosUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
                 "CoreAudio",
@@ -1040,13 +1155,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "PhotosUI"
             ]
         },
         {
+            "is_framework": false,
             "name": "QuartzCore",
-            "swiftinterface": "usr/lib/swift/QuartzCore.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/QuartzCore.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -1058,13 +1175,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "QuartzCore"
             ]
         },
         {
+            "is_framework": false,
             "name": "QuickLook",
-            "swiftinterface": "usr/lib/swift/QuickLook.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/QuickLook.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -1081,14 +1200,16 @@
                 "UniformTypeIdentifiers",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "PDFKit",
                 "QuickLook"
             ]
         },
         {
+            "is_framework": true,
             "name": "RealityFoundation",
-            "swiftinterface": "System/Library/Frameworks/RealityFoundation.framework/Modules/RealityFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/RealityFoundation.framework/Modules/RealityFoundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
                 "Combine",
@@ -1109,6 +1230,7 @@
                 "os",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "AVFAudio",
                 "AudioToolbox",
@@ -1116,8 +1238,9 @@
             ]
         },
         {
+            "is_framework": true,
             "name": "RealityKit",
-            "swiftinterface": "System/Library/Frameworks/RealityKit.framework/Modules/RealityKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/RealityKit.framework/Modules/RealityKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "ARKit",
                 "Combine",
@@ -1137,13 +1260,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "MultipeerConnectivity"
             ]
         },
         {
+            "is_framework": false,
             "name": "SceneKit",
-            "swiftinterface": "usr/lib/swift/SceneKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/SceneKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -1162,13 +1287,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "SceneKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "ShazamKit",
-            "swiftinterface": "usr/lib/swift/ShazamKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/ShazamKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreAudio",
                 "CoreFoundation",
@@ -1184,13 +1311,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "ShazamKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "SoundAnalysis",
-            "swiftinterface": "usr/lib/swift/SoundAnalysis.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/SoundAnalysis.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
                 "CoreAudio",
@@ -1210,13 +1339,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "SoundAnalysis"
             ]
         },
         {
+            "is_framework": false,
             "name": "Speech",
-            "swiftinterface": "usr/lib/swift/Speech.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Speech.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
                 "CoreAudio",
@@ -1235,13 +1366,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Speech"
             ]
         },
         {
+            "is_framework": false,
             "name": "SpriteKit",
-            "swiftinterface": "usr/lib/swift/SpriteKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/SpriteKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -1260,13 +1393,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "SpriteKit"
             ]
         },
         {
+            "is_framework": true,
             "name": "StoreKit",
-            "swiftinterface": "System/Library/Frameworks/StoreKit.framework/Modules/StoreKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/StoreKit.framework/Modules/StoreKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -1284,30 +1419,36 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Security",
                 "StoreKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "Swift",
-            "swiftinterface": "usr/lib/swift/Swift.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Swift.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [],
+            "target": "x86_64-apple-ios15.0-simulator",
             "clang_deps": [
                 "SwiftShims"
             ]
         },
         {
+            "is_framework": false,
             "name": "SwiftOnoneSupport",
-            "swiftinterface": "usr/lib/swift/SwiftOnoneSupport.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/SwiftOnoneSupport.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Swift"
             ],
+            "target": "x86_64-apple-ios15.0-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": true,
             "name": "SwiftUI",
-            "swiftinterface": "System/Library/Frameworks/SwiftUI.framework/Modules/SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/SwiftUI.framework/Modules/SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Accessibility",
                 "Combine",
@@ -1329,23 +1470,27 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "SwiftUI"
             ]
         },
         {
+            "is_framework": false,
             "name": "System",
-            "swiftinterface": "usr/lib/swift/System.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/System.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Darwin",
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": true,
             "name": "TabularData",
-            "swiftinterface": "System/Library/Frameworks/TabularData.framework/Modules/TabularData.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/TabularData.framework/Modules/TabularData.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Combine",
                 "Dispatch",
@@ -1353,11 +1498,13 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": false,
             "name": "UIKit",
-            "swiftinterface": "usr/lib/swift/UIKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/UIKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Accessibility",
                 "CoreFoundation",
@@ -1374,13 +1521,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "UIKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "UniformTypeIdentifiers",
-            "swiftinterface": "usr/lib/swift/UniformTypeIdentifiers.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/UniformTypeIdentifiers.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -1390,13 +1539,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "UniformTypeIdentifiers"
             ]
         },
         {
+            "is_framework": false,
             "name": "Vision",
-            "swiftinterface": "usr/lib/swift/Vision.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/Vision.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreAudio",
                 "CoreFoundation",
@@ -1412,13 +1563,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "Vision"
             ]
         },
         {
+            "is_framework": false,
             "name": "WebKit",
-            "swiftinterface": "usr/lib/swift/WebKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/WebKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -1434,13 +1587,15 @@
                 "UIKit",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "WebKit"
             ]
         },
         {
+            "is_framework": true,
             "name": "WidgetKit",
-            "swiftinterface": "System/Library/Frameworks/WidgetKit.framework/Modules/WidgetKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/WidgetKit.framework/Modules/WidgetKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Combine",
                 "CoreFoundation",
@@ -1456,46 +1611,54 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "WidgetKit"
             ]
         },
         {
+            "is_framework": false,
             "name": "_Concurrency",
-            "swiftinterface": "usr/lib/swift/_Concurrency.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/_Concurrency.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Swift"
             ],
+            "target": "x86_64-apple-ios15.0-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": false,
             "name": "os",
-            "swiftinterface": "usr/lib/swift/os.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/os.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Darwin",
                 "ObjectiveC",
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "os"
             ]
         },
         {
+            "is_framework": false,
             "name": "simd",
-            "swiftinterface": "usr/lib/swift/simd.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/simd.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Darwin",
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "simd"
             ]
         },
         {
+            "is_framework": true,
             "name": "_AVKit_SwiftUI",
-            "swiftinterface": "System/Library/Frameworks/_AVKit_SwiftUI.framework/Modules/_AVKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_AVKit_SwiftUI.framework/Modules/_AVKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "AVFoundation",
                 "Combine",
@@ -1519,13 +1682,15 @@
                 "_Concurrency",
                 "simd"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "AVKit"
             ]
         },
         {
+            "is_framework": true,
             "name": "_AuthenticationServices_SwiftUI",
-            "swiftinterface": "System/Library/Frameworks/_AuthenticationServices_SwiftUI.framework/Modules/_AuthenticationServices_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_AuthenticationServices_SwiftUI.framework/Modules/_AuthenticationServices_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -1542,13 +1707,15 @@
                 "UIKit",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "AuthenticationServices"
             ]
         },
         {
+            "is_framework": true,
             "name": "_CoreData_CloudKit",
-            "swiftinterface": "System/Library/Frameworks/_CoreData_CloudKit.framework/Modules/_CoreData_CloudKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_CoreData_CloudKit.framework/Modules/_CoreData_CloudKit.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CloudKit",
                 "CoreData",
@@ -1560,13 +1727,15 @@
                 "Swift",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "_CoreData_CloudKit"
             ]
         },
         {
+            "is_framework": true,
             "name": "_CoreLocationUI_SwiftUI",
-            "swiftinterface": "System/Library/Frameworks/_CoreLocationUI_SwiftUI.framework/Modules/_CoreLocationUI_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_CoreLocationUI_SwiftUI.framework/Modules/_CoreLocationUI_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -1583,36 +1752,42 @@
                 "UIKit",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": [
                 "CoreLocationUI",
                 "_CoreLocationUI_SwiftUI"
             ]
         },
         {
+            "is_framework": true,
             "name": "_HomeKit_SwiftUI",
-            "swiftinterface": "System/Library/Frameworks/_HomeKit_SwiftUI.framework/Modules/_HomeKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_HomeKit_SwiftUI.framework/Modules/_HomeKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "HomeKit",
                 "Swift",
                 "SwiftUI",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": true,
             "name": "_MapKit_SwiftUI",
-            "swiftinterface": "System/Library/Frameworks/_MapKit_SwiftUI.framework/Modules/_MapKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_MapKit_SwiftUI.framework/Modules/_MapKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "MapKit",
                 "Swift",
                 "SwiftUI",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": true,
             "name": "_MusicKit_SwiftUI",
-            "swiftinterface": "System/Library/Frameworks/_MusicKit_SwiftUI.framework/Modules/_MusicKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_MusicKit_SwiftUI.framework/Modules/_MusicKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "CoreGraphics",
                 "Foundation",
@@ -1621,44 +1796,52 @@
                 "SwiftUI",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": true,
             "name": "_QuickLook_SwiftUI",
-            "swiftinterface": "System/Library/Frameworks/_QuickLook_SwiftUI.framework/Modules/_QuickLook_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_QuickLook_SwiftUI.framework/Modules/_QuickLook_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "QuickLook",
                 "Swift",
                 "SwiftUI",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": true,
             "name": "_SceneKit_SwiftUI",
-            "swiftinterface": "System/Library/Frameworks/_SceneKit_SwiftUI.framework/Modules/_SceneKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_SceneKit_SwiftUI.framework/Modules/_SceneKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "SceneKit",
                 "Swift",
                 "SwiftUI",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": true,
             "name": "_SpriteKit_SwiftUI",
-            "swiftinterface": "System/Library/Frameworks/_SpriteKit_SwiftUI.framework/Modules/_SpriteKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_SpriteKit_SwiftUI.framework/Modules/_SpriteKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "SpriteKit",
                 "Swift",
                 "SwiftUI",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": true,
             "name": "_StoreKit_SwiftUI",
-            "swiftinterface": "System/Library/Frameworks/_StoreKit_SwiftUI.framework/Modules/_StoreKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/System/Library/Frameworks/_StoreKit_SwiftUI.framework/Modules/_StoreKit_SwiftUI.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Foundation",
                 "StoreKit",
@@ -1667,24 +1850,27 @@
                 "_Concurrency",
                 "os"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         },
         {
+            "is_framework": false,
             "name": "_System_Foundation",
-            "swiftinterface": "usr/lib/swift/_System_Foundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swiftinterface": "$SDKROOT/usr/lib/swift/_System_Foundation.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
                 "Foundation",
                 "Swift",
                 "System",
                 "_Concurrency"
             ],
+            "target": "x86_64-apple-ios15.2-simulator",
             "clang_deps": []
         }
     ],
     "clang": [
         {
             "name": "AVFAudio",
-            "modulemap": "System/Library/Frameworks/AVFAudio.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AVFAudio.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AudioToolbox",
                 "CoreAudioTypes",
@@ -1696,7 +1882,7 @@
         },
         {
             "name": "AVKit",
-            "modulemap": "System/Library/Frameworks/AVKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AVKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AVFoundation",
                 "Darwin",
@@ -1706,28 +1892,28 @@
         },
         {
             "name": "Accounts",
-            "modulemap": "System/Library/Frameworks/Accounts.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Accounts.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "AdServices",
-            "modulemap": "System/Library/Frameworks/AdServices.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AdServices.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "AdSupport",
-            "modulemap": "System/Library/Frameworks/AdSupport.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AdSupport.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "AddressBook",
-            "modulemap": "System/Library/Frameworks/AddressBook.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AddressBook.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin"
@@ -1735,7 +1921,7 @@
         },
         {
             "name": "AddressBookUI",
-            "modulemap": "System/Library/Frameworks/AddressBookUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AddressBookUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AddressBook",
                 "UIKit"
@@ -1743,14 +1929,14 @@
         },
         {
             "name": "AppClip",
-            "modulemap": "System/Library/Frameworks/AppClip.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AppClip.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "AppTrackingTransparency",
-            "modulemap": "System/Library/Frameworks/AppTrackingTransparency.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AppTrackingTransparency.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation"
@@ -1758,7 +1944,7 @@
         },
         {
             "name": "AudioToolbox",
-            "modulemap": "System/Library/Frameworks/AudioToolbox.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AudioToolbox.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreAudioTypes",
                 "CoreFoundation",
@@ -1771,14 +1957,14 @@
         },
         {
             "name": "AudioUnit",
-            "modulemap": "System/Library/Frameworks/AudioUnit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AudioUnit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AudioToolbox"
             ]
         },
         {
             "name": "AuthenticationServices",
-            "modulemap": "System/Library/Frameworks/AuthenticationServices.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AuthenticationServices.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "UIKit"
@@ -1786,21 +1972,21 @@
         },
         {
             "name": "AutomaticAssessmentConfiguration",
-            "modulemap": "System/Library/Frameworks/AutomaticAssessmentConfiguration.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AutomaticAssessmentConfiguration.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "BackgroundTasks",
-            "modulemap": "System/Library/Frameworks/BackgroundTasks.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/BackgroundTasks.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "BusinessChat",
-            "modulemap": "System/Library/Frameworks/BusinessChat.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/BusinessChat.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation",
@@ -1809,7 +1995,7 @@
         },
         {
             "name": "CFNetwork",
-            "modulemap": "System/Library/Frameworks/CFNetwork.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CFNetwork.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin"
@@ -1817,7 +2003,7 @@
         },
         {
             "name": "ClassKit",
-            "modulemap": "System/Library/Frameworks/ClassKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ClassKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Foundation"
@@ -1825,7 +2011,7 @@
         },
         {
             "name": "ClockKit",
-            "modulemap": "System/Library/Frameworks/ClockKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ClockKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "UIKit"
@@ -1833,7 +2019,7 @@
         },
         {
             "name": "ContactsUI",
-            "modulemap": "System/Library/Frameworks/ContactsUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ContactsUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Contacts",
                 "UIKit"
@@ -1841,7 +2027,7 @@
         },
         {
             "name": "CoreAudioTypes",
-            "modulemap": "System/Library/Frameworks/CoreAudioTypes.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreAudioTypes.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin"
@@ -1849,21 +2035,21 @@
         },
         {
             "name": "CoreBluetooth",
-            "modulemap": "System/Library/Frameworks/CoreBluetooth.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreBluetooth.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "CoreHaptics",
-            "modulemap": "System/Library/Frameworks/CoreHaptics.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreHaptics.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "CoreLocationUI",
-            "modulemap": "System/Library/Frameworks/CoreLocationUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreLocationUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "UIKit"
@@ -1871,7 +2057,7 @@
         },
         {
             "name": "CoreMotion",
-            "modulemap": "System/Library/Frameworks/CoreMotion.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreMotion.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation"
@@ -1879,7 +2065,7 @@
         },
         {
             "name": "CoreServices",
-            "modulemap": "System/Library/Frameworks/CoreServices.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreServices.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin"
@@ -1887,7 +2073,7 @@
         },
         {
             "name": "CoreSpotlight",
-            "modulemap": "System/Library/Frameworks/CoreSpotlight.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreSpotlight.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "UniformTypeIdentifiers"
@@ -1895,7 +2081,7 @@
         },
         {
             "name": "CoreTelephony",
-            "modulemap": "System/Library/Frameworks/CoreTelephony.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreTelephony.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Foundation"
@@ -1903,7 +2089,7 @@
         },
         {
             "name": "CoreText",
-            "modulemap": "System/Library/Frameworks/CoreText.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreText.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -1912,7 +2098,7 @@
         },
         {
             "name": "CoreVideo",
-            "modulemap": "System/Library/Frameworks/CoreVideo.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreVideo.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -1924,14 +2110,14 @@
         },
         {
             "name": "DeviceCheck",
-            "modulemap": "System/Library/Frameworks/DeviceCheck.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/DeviceCheck.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "EventKit",
-            "modulemap": "System/Library/Frameworks/EventKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/EventKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AddressBook",
                 "CoreGraphics",
@@ -1942,7 +2128,7 @@
         },
         {
             "name": "EventKitUI",
-            "modulemap": "System/Library/Frameworks/EventKitUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/EventKitUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "EventKit",
                 "Foundation",
@@ -1951,7 +2137,7 @@
         },
         {
             "name": "ExposureNotification",
-            "modulemap": "System/Library/Frameworks/ExposureNotification.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ExposureNotification.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Dispatch",
                 "Foundation"
@@ -1959,14 +2145,14 @@
         },
         {
             "name": "ExternalAccessory",
-            "modulemap": "System/Library/Frameworks/ExternalAccessory.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ExternalAccessory.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "FileProviderUI",
-            "modulemap": "System/Library/Frameworks/FileProviderUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/FileProviderUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "FileProvider",
@@ -1976,7 +2162,7 @@
         },
         {
             "name": "GSS",
-            "modulemap": "System/Library/Frameworks/GSS.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/GSS.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin"
@@ -1984,7 +2170,7 @@
         },
         {
             "name": "GameController",
-            "modulemap": "System/Library/Frameworks/GameController.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/GameController.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation",
@@ -1993,7 +2179,7 @@
         },
         {
             "name": "GameKit",
-            "modulemap": "System/Library/Frameworks/GameKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/GameKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Contacts",
                 "CoreGraphics",
@@ -2012,7 +2198,7 @@
         },
         {
             "name": "HealthKitUI",
-            "modulemap": "System/Library/Frameworks/HealthKitUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/HealthKitUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "HealthKit",
                 "UIKit"
@@ -2020,7 +2206,7 @@
         },
         {
             "name": "IOSurface",
-            "modulemap": "System/Library/Frameworks/IOSurface.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/IOSurface.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -2029,14 +2215,14 @@
         },
         {
             "name": "IdentityLookup",
-            "modulemap": "System/Library/Frameworks/IdentityLookup.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/IdentityLookup.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "IdentityLookupUI",
-            "modulemap": "System/Library/Frameworks/IdentityLookupUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/IdentityLookupUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "IdentityLookup",
@@ -2045,7 +2231,7 @@
         },
         {
             "name": "ImageCaptureCore",
-            "modulemap": "System/Library/Frameworks/ImageCaptureCore.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ImageCaptureCore.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Darwin",
@@ -2054,7 +2240,7 @@
         },
         {
             "name": "ImageIO",
-            "modulemap": "System/Library/Frameworks/ImageIO.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ImageIO.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -2063,7 +2249,7 @@
         },
         {
             "name": "IntentsUI",
-            "modulemap": "System/Library/Frameworks/IntentsUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/IntentsUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Foundation",
@@ -2073,7 +2259,7 @@
         },
         {
             "name": "JavaScriptCore",
-            "modulemap": "System/Library/Frameworks/JavaScriptCore.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/JavaScriptCore.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -2083,7 +2269,7 @@
         },
         {
             "name": "LinkPresentation",
-            "modulemap": "System/Library/Frameworks/LinkPresentation.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/LinkPresentation.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation",
@@ -2092,14 +2278,14 @@
         },
         {
             "name": "LocalAuthentication",
-            "modulemap": "System/Library/Frameworks/LocalAuthentication.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/LocalAuthentication.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "MediaAccessibility",
-            "modulemap": "System/Library/Frameworks/MediaAccessibility.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/MediaAccessibility.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -2109,7 +2295,7 @@
         },
         {
             "name": "MediaToolbox",
-            "modulemap": "System/Library/Frameworks/MediaToolbox.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/MediaToolbox.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AudioToolbox",
                 "CoreFoundation",
@@ -2118,14 +2304,14 @@
         },
         {
             "name": "MessageUI",
-            "modulemap": "System/Library/Frameworks/MessageUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/MessageUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "UIKit"
             ]
         },
         {
             "name": "Messages",
-            "modulemap": "System/Library/Frameworks/Messages.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Messages.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "UIKit"
@@ -2133,7 +2319,7 @@
         },
         {
             "name": "MetalPerformanceShaders",
-            "modulemap": "System/Library/Frameworks/MetalPerformanceShaders.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/MetalPerformanceShaders.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Darwin",
@@ -2144,7 +2330,7 @@
         },
         {
             "name": "MetalPerformanceShadersGraph",
-            "modulemap": "System/Library/Frameworks/MetalPerformanceShadersGraph.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/MetalPerformanceShadersGraph.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "MetalPerformanceShaders"
@@ -2152,14 +2338,14 @@
         },
         {
             "name": "MobileCoreServices",
-            "modulemap": "System/Library/Frameworks/MobileCoreServices.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/MobileCoreServices.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreServices"
             ]
         },
         {
             "name": "MultipeerConnectivity",
-            "modulemap": "System/Library/Frameworks/MultipeerConnectivity.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/MultipeerConnectivity.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "UIKit"
@@ -2167,7 +2353,7 @@
         },
         {
             "name": "NetworkExtension",
-            "modulemap": "System/Library/Frameworks/NetworkExtension.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/NetworkExtension.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation",
@@ -2177,14 +2363,14 @@
         },
         {
             "name": "NewsstandKit",
-            "modulemap": "System/Library/Frameworks/NewsstandKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/NewsstandKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "NotificationCenter",
-            "modulemap": "System/Library/Frameworks/NotificationCenter.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/NotificationCenter.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation",
@@ -2193,14 +2379,14 @@
         },
         {
             "name": "OpenAL",
-            "modulemap": "System/Library/Frameworks/OpenAL.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/OpenAL.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin"
             ]
         },
         {
             "name": "OpenGLES",
-            "modulemap": "System/Library/Frameworks/OpenGLES.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/OpenGLES.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation"
@@ -2208,7 +2394,7 @@
         },
         {
             "name": "PDFKit",
-            "modulemap": "System/Library/Frameworks/PDFKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/PDFKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation",
@@ -2217,7 +2403,7 @@
         },
         {
             "name": "PHASE",
-            "modulemap": "System/Library/Frameworks/PHASE.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/PHASE.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AVFAudio",
                 "AVFoundation",
@@ -2229,14 +2415,14 @@
         },
         {
             "name": "PushKit",
-            "modulemap": "System/Library/Frameworks/PushKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/PushKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "QuickLookThumbnailing",
-            "modulemap": "System/Library/Frameworks/QuickLookThumbnailing.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/QuickLookThumbnailing.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Darwin",
@@ -2246,7 +2432,7 @@
         },
         {
             "name": "ReplayKit",
-            "modulemap": "System/Library/Frameworks/ReplayKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ReplayKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AVFoundation",
                 "Darwin",
@@ -2256,7 +2442,7 @@
         },
         {
             "name": "SafariServices",
-            "modulemap": "System/Library/Frameworks/SafariServices.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/SafariServices.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "UIKit"
@@ -2264,7 +2450,7 @@
         },
         {
             "name": "ScreenTime",
-            "modulemap": "System/Library/Frameworks/ScreenTime.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ScreenTime.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "UIKit"
@@ -2272,7 +2458,7 @@
         },
         {
             "name": "Security",
-            "modulemap": "System/Library/Frameworks/Security.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Security.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -2282,7 +2468,7 @@
         },
         {
             "name": "SensorKit",
-            "modulemap": "System/Library/Frameworks/SensorKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/SensorKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "CoreLocation",
@@ -2291,7 +2477,7 @@
         },
         {
             "name": "Social",
-            "modulemap": "System/Library/Frameworks/Social.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Social.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "UIKit"
@@ -2299,7 +2485,7 @@
         },
         {
             "name": "SystemConfiguration",
-            "modulemap": "System/Library/Frameworks/SystemConfiguration.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/SystemConfiguration.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -2308,14 +2494,14 @@
         },
         {
             "name": "UserNotifications",
-            "modulemap": "System/Library/Frameworks/UserNotifications.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/UserNotifications.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "UserNotificationsUI",
-            "modulemap": "System/Library/Frameworks/UserNotificationsUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/UserNotificationsUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "UIKit"
@@ -2323,7 +2509,7 @@
         },
         {
             "name": "VideoSubscriberAccount",
-            "modulemap": "System/Library/Frameworks/VideoSubscriberAccount.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/VideoSubscriberAccount.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation"
@@ -2331,7 +2517,7 @@
         },
         {
             "name": "VideoToolbox",
-            "modulemap": "System/Library/Frameworks/VideoToolbox.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/VideoToolbox.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -2342,7 +2528,7 @@
         },
         {
             "name": "VisionKit",
-            "modulemap": "System/Library/Frameworks/VisionKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/VisionKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "UIKit"
@@ -2350,21 +2536,21 @@
         },
         {
             "name": "WatchConnectivity",
-            "modulemap": "System/Library/Frameworks/WatchConnectivity.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/WatchConnectivity.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "iAd",
-            "modulemap": "System/Library/Frameworks/iAd.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/iAd.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "ARKit",
-            "modulemap": "System/Library/Frameworks/ARKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ARKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AVFoundation",
                 "CoreGraphics",
@@ -2383,7 +2569,7 @@
         },
         {
             "name": "CoreMIDI",
-            "modulemap": "System/Library/Frameworks/CoreMIDI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreMIDI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -2392,7 +2578,7 @@
         },
         {
             "name": "CoreMedia",
-            "modulemap": "System/Library/Frameworks/CoreMedia.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreMedia.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreAudio",
                 "CoreFoundation",
@@ -2404,14 +2590,14 @@
         },
         {
             "name": "Darwin",
-            "modulemap": "usr/include/module.modulemap",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
             "clang_deps": [
                 "_Builtin_stddef_max_align_t"
             ]
         },
         {
             "name": "Foundation",
-            "modulemap": "System/Library/Frameworks/Foundation.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Foundation.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CFNetwork",
                 "CoreFoundation",
@@ -2424,7 +2610,7 @@
         },
         {
             "name": "AVFoundation",
-            "modulemap": "System/Library/Frameworks/AVFoundation.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AVFoundation.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AVFAudio",
                 "CoreFoundation",
@@ -2442,7 +2628,7 @@
         },
         {
             "name": "UIKit",
-            "modulemap": "System/Library/Frameworks/UIKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/UIKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "CoreImage",
@@ -2456,7 +2642,7 @@
         },
         {
             "name": "Accelerate",
-            "modulemap": "System/Library/Frameworks/Accelerate.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Accelerate.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -2469,7 +2655,7 @@
         },
         {
             "name": "Accessibility",
-            "modulemap": "System/Library/Frameworks/Accessibility.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Accessibility.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Foundation"
@@ -2477,7 +2663,7 @@
         },
         {
             "name": "CoreFoundation",
-            "modulemap": "System/Library/Frameworks/CoreFoundation.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreFoundation.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Dispatch",
@@ -2486,7 +2672,7 @@
         },
         {
             "name": "AssetsLibrary",
-            "modulemap": "System/Library/Frameworks/AssetsLibrary.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/AssetsLibrary.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Foundation"
@@ -2494,7 +2680,7 @@
         },
         {
             "name": "Dispatch",
-            "modulemap": "usr/include/dispatch/module.modulemap",
+            "modulemap": "$SDKROOT/usr/include/dispatch/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "os_object",
@@ -2503,7 +2689,7 @@
         },
         {
             "name": "os_workgroup",
-            "modulemap": "usr/include/module.modulemap",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "os_object"
@@ -2511,14 +2697,14 @@
         },
         {
             "name": "CallKit",
-            "modulemap": "System/Library/Frameworks/CallKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CallKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "CarPlay",
-            "modulemap": "System/Library/Frameworks/CarPlay.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CarPlay.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "MapKit",
@@ -2527,7 +2713,7 @@
         },
         {
             "name": "CoreGraphics",
-            "modulemap": "System/Library/Frameworks/CoreGraphics.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreGraphics.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin"
@@ -2535,7 +2721,7 @@
         },
         {
             "name": "CloudKit",
-            "modulemap": "System/Library/Frameworks/CloudKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CloudKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreLocation",
                 "Foundation"
@@ -2543,14 +2729,14 @@
         },
         {
             "name": "Compression",
-            "modulemap": "usr/include/module.modulemap",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
             "clang_deps": [
                 "Darwin"
             ]
         },
         {
             "name": "Contacts",
-            "modulemap": "System/Library/Frameworks/Contacts.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Contacts.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation"
@@ -2558,14 +2744,14 @@
         },
         {
             "name": "CoreAudio",
-            "modulemap": "System/Library/Frameworks/CoreAudio.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreAudio.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreAudioTypes"
             ]
         },
         {
             "name": "CoreAudioKit",
-            "modulemap": "System/Library/Frameworks/CoreAudioKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreAudioKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AudioUnit",
                 "Foundation",
@@ -2574,7 +2760,7 @@
         },
         {
             "name": "CoreData",
-            "modulemap": "System/Library/Frameworks/CoreData.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreData.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation"
@@ -2582,7 +2768,7 @@
         },
         {
             "name": "CoreImage",
-            "modulemap": "System/Library/Frameworks/CoreImage.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreImage.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "CoreVideo",
@@ -2596,7 +2782,7 @@
         },
         {
             "name": "CoreLocation",
-            "modulemap": "System/Library/Frameworks/CoreLocation.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreLocation.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation"
@@ -2604,7 +2790,7 @@
         },
         {
             "name": "CoreML",
-            "modulemap": "System/Library/Frameworks/CoreML.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreML.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "CoreVideo",
@@ -2614,7 +2800,7 @@
         },
         {
             "name": "CoreNFC",
-            "modulemap": "System/Library/Frameworks/CoreNFC.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CoreNFC.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Dispatch",
                 "Foundation"
@@ -2622,7 +2808,7 @@
         },
         {
             "name": "UniformTypeIdentifiers",
-            "modulemap": "System/Library/Frameworks/UniformTypeIdentifiers.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/UniformTypeIdentifiers.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation"
@@ -2630,7 +2816,7 @@
         },
         {
             "name": "Metal",
-            "modulemap": "System/Library/Frameworks/Metal.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Metal.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation",
@@ -2639,7 +2825,7 @@
         },
         {
             "name": "CryptoTokenKit",
-            "modulemap": "System/Library/Frameworks/CryptoTokenKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/CryptoTokenKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "Security"
@@ -2647,7 +2833,7 @@
         },
         {
             "name": "SwiftOverlayShims",
-            "modulemap": "usr/lib/swift/shims/module.modulemap",
+            "modulemap": "$SDKROOT/usr/lib/swift/shims/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "SwiftShims"
@@ -2655,19 +2841,19 @@
         },
         {
             "name": "SwiftShims",
-            "modulemap": "usr/lib/swift/shims/module.modulemap",
+            "modulemap": "$SDKROOT/usr/lib/swift/shims/module.modulemap",
             "clang_deps": []
         },
         {
             "name": "DataDetection",
-            "modulemap": "System/Library/Frameworks/DataDetection.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/DataDetection.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "FileProvider",
-            "modulemap": "System/Library/Frameworks/FileProvider.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/FileProvider.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Foundation"
@@ -2675,7 +2861,7 @@
         },
         {
             "name": "GLKit",
-            "modulemap": "System/Library/Frameworks/GLKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/GLKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -2689,7 +2875,7 @@
         },
         {
             "name": "GameplayKit",
-            "modulemap": "System/Library/Frameworks/GameplayKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/GameplayKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation",
@@ -2700,7 +2886,7 @@
         },
         {
             "name": "ModelIO",
-            "modulemap": "System/Library/Frameworks/ModelIO.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ModelIO.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Darwin",
@@ -2710,14 +2896,14 @@
         },
         {
             "name": "ObjectiveC",
-            "modulemap": "usr/include/objc/module.modulemap",
+            "modulemap": "$SDKROOT/usr/include/objc/module.modulemap",
             "clang_deps": [
                 "Darwin"
             ]
         },
         {
             "name": "SceneKit",
-            "modulemap": "System/Library/Frameworks/SceneKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/SceneKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Darwin",
@@ -2732,7 +2918,7 @@
         },
         {
             "name": "SpriteKit",
-            "modulemap": "System/Library/Frameworks/SpriteKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/SpriteKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Darwin",
@@ -2745,7 +2931,7 @@
         },
         {
             "name": "simd",
-            "modulemap": "usr/include/simd/module.modulemap",
+            "modulemap": "$SDKROOT/usr/include/simd/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "_Builtin_intrinsics"
@@ -2753,7 +2939,7 @@
         },
         {
             "name": "HealthKit",
-            "modulemap": "System/Library/Frameworks/HealthKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/HealthKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "ObjectiveC"
@@ -2761,7 +2947,7 @@
         },
         {
             "name": "HomeKit",
-            "modulemap": "System/Library/Frameworks/HomeKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/HomeKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Foundation",
@@ -2770,7 +2956,7 @@
         },
         {
             "name": "Intents",
-            "modulemap": "System/Library/Frameworks/Intents.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Intents.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "CoreLocation",
@@ -2781,7 +2967,7 @@
         },
         {
             "name": "MapKit",
-            "modulemap": "System/Library/Frameworks/MapKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/MapKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "CoreLocation",
@@ -2792,7 +2978,7 @@
         },
         {
             "name": "MediaPlayer",
-            "modulemap": "System/Library/Frameworks/MediaPlayer.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/MediaPlayer.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AVFoundation",
                 "CoreGraphics",
@@ -2803,7 +2989,7 @@
         },
         {
             "name": "MetalKit",
-            "modulemap": "System/Library/Frameworks/MetalKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/MetalKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Darwin",
@@ -2817,7 +3003,7 @@
         },
         {
             "name": "MetricKit",
-            "modulemap": "System/Library/Frameworks/MetricKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/MetricKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation",
@@ -2826,14 +3012,14 @@
         },
         {
             "name": "NaturalLanguage",
-            "modulemap": "System/Library/Frameworks/NaturalLanguage.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/NaturalLanguage.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "NearbyInteraction",
-            "modulemap": "System/Library/Frameworks/NearbyInteraction.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/NearbyInteraction.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "simd"
@@ -2841,7 +3027,7 @@
         },
         {
             "name": "Network",
-            "modulemap": "System/Library/Frameworks/Network.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Network.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "Darwin",
@@ -2853,7 +3039,7 @@
         },
         {
             "name": "OSLog",
-            "modulemap": "System/Library/Frameworks/OSLog.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/OSLog.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "os"
@@ -2861,7 +3047,7 @@
         },
         {
             "name": "PassKit",
-            "modulemap": "System/Library/Frameworks/PassKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/PassKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AddressBook",
                 "Contacts",
@@ -2873,7 +3059,7 @@
         },
         {
             "name": "PencilKit",
-            "modulemap": "System/Library/Frameworks/PencilKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/PencilKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation",
                 "UIKit"
@@ -2881,7 +3067,7 @@
         },
         {
             "name": "Photos",
-            "modulemap": "System/Library/Frameworks/Photos.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Photos.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AVFoundation",
                 "CoreGraphics",
@@ -2895,7 +3081,7 @@
         },
         {
             "name": "PhotosUI",
-            "modulemap": "System/Library/Frameworks/PhotosUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/PhotosUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Foundation",
@@ -2905,7 +3091,7 @@
         },
         {
             "name": "QuartzCore",
-            "modulemap": "System/Library/Frameworks/QuartzCore.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/QuartzCore.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -2918,7 +3104,7 @@
         },
         {
             "name": "QuickLook",
-            "modulemap": "System/Library/Frameworks/QuickLook.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/QuickLook.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreFoundation",
                 "CoreGraphics",
@@ -2931,7 +3117,7 @@
         },
         {
             "name": "os_object",
-            "modulemap": "usr/include/module.modulemap",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "ObjectiveC"
@@ -2939,7 +3125,7 @@
         },
         {
             "name": "ShazamKit",
-            "modulemap": "System/Library/Frameworks/ShazamKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/ShazamKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AVFAudio",
                 "Darwin",
@@ -2948,7 +3134,7 @@
         },
         {
             "name": "SoundAnalysis",
-            "modulemap": "System/Library/Frameworks/SoundAnalysis.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/SoundAnalysis.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AVFoundation",
                 "CoreML",
@@ -2958,7 +3144,7 @@
         },
         {
             "name": "Speech",
-            "modulemap": "System/Library/Frameworks/Speech.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Speech.framework/Modules/module.modulemap",
             "clang_deps": [
                 "AVFoundation",
                 "Foundation"
@@ -2966,7 +3152,7 @@
         },
         {
             "name": "StoreKit",
-            "modulemap": "System/Library/Frameworks/StoreKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/StoreKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Darwin",
@@ -2976,14 +3162,14 @@
         },
         {
             "name": "SwiftUI",
-            "modulemap": "System/Library/Frameworks/SwiftUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/SwiftUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "UIKit"
             ]
         },
         {
             "name": "Vision",
-            "modulemap": "System/Library/Frameworks/Vision.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/Vision.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "CoreML",
@@ -2997,7 +3183,7 @@
         },
         {
             "name": "WebKit",
-            "modulemap": "System/Library/Frameworks/WebKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/WebKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreGraphics",
                 "Darwin",
@@ -3007,14 +3193,14 @@
         },
         {
             "name": "WidgetKit",
-            "modulemap": "System/Library/Frameworks/WidgetKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/WidgetKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
         },
         {
             "name": "os",
-            "modulemap": "usr/include/module.modulemap",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "MachO",
@@ -3024,24 +3210,24 @@
         },
         {
             "name": "_Builtin_stddef_max_align_t",
-            "modulemap": "../../../../../Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/clang/include/module.modulemap",
+            "modulemap": "$RESOURCEDIR/clang/include/module.modulemap",
             "clang_deps": []
         },
         {
             "name": "ptrauth",
-            "modulemap": "../../../../../Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/clang/include/module.modulemap",
+            "modulemap": "$RESOURCEDIR/clang/include/module.modulemap",
             "clang_deps": []
         },
         {
             "name": "_Builtin_intrinsics",
-            "modulemap": "../../../../../Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/clang/include/module.modulemap",
+            "modulemap": "$RESOURCEDIR/clang/include/module.modulemap",
             "clang_deps": [
                 "Darwin"
             ]
         },
         {
             "name": "dnssd",
-            "modulemap": "usr/include/module.modulemap",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
             "clang_deps": [
                 "Darwin",
                 "Dispatch"
@@ -3049,21 +3235,21 @@
         },
         {
             "name": "MachO",
-            "modulemap": "usr/include/mach-o/module.modulemap",
+            "modulemap": "$SDKROOT/usr/include/mach-o/module.modulemap",
             "clang_deps": [
                 "Darwin"
             ]
         },
         {
             "name": "_CoreData_CloudKit",
-            "modulemap": "System/Library/Frameworks/_CoreData_CloudKit.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/_CoreData_CloudKit.framework/Modules/module.modulemap",
             "clang_deps": [
                 "CoreData"
             ]
         },
         {
             "name": "_CoreLocationUI_SwiftUI",
-            "modulemap": "System/Library/Frameworks/_CoreLocationUI_SwiftUI.framework/Modules/module.modulemap",
+            "modulemap": "$SDKROOT/System/Library/Frameworks/_CoreLocationUI_SwiftUI.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
