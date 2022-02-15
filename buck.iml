@@ -148,7 +148,7 @@
     <orderEntry type="library" name="aapt2-proto-0.4.0" level="project" />
     <orderEntry type="library" name="commons-compress-1.18" level="project" />
     <orderEntry type="library" name="apksig" level="project" />
-    <orderEntry type="library" name="zstd-jni-1.4.0-1" level="project" />
+    <orderEntry type="library" name="zstd-jni-1.5.2-1" level="project" />
     <orderEntry type="library" name="a2api" level="project" />
     <orderEntry type="library" name="devspeed.logging" level="project" />
     <orderEntry type="library" name="kotlin-compiler" level="project" />

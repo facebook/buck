@@ -2,7 +2,7 @@ load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
 
 buck_prebuilt_jar(
     name = "zstd-jni",
-    binary_jar = "zstd-jni-1.4.0-1.jar",
+    binary_jar = "zstd-jni-1.5.2-1.jar",
     licenses = [
         "LICENSE",
     ],
@@ -13,7 +13,7 @@ buck_prebuilt_jar(
 
 android_prebuilt_aar(
     name = "zstd-jni-android",
-    aar = "zstd-jni-1.4.0-1.aar",
+    aar = "zstd-jni-1.5.2-1.aar",
     licenses = [
         "LICENSE",
     ],
