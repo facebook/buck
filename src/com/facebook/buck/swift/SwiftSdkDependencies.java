@@ -42,10 +42,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * Parser for Swift SDK dependency info JSON. The expected input can be generated using the script
@@ -55,14 +53,21 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
 
   private final SdkDependencyJson sdkDependencies;
 
+  private final ImmutableMap<String, ClangModule> clangModules;
+
   private final ImmutableMap<String, SwiftModule> swiftModules;
 
   private final LoadingCache<CacheKey, ImmutableSet<ExplicitModuleOutput>>
       swiftBuildRuleDependencyCache;
 
-  private final Flavor platformFlavor;
+  private final LoadingCache<CacheKey, ImmutableSet<ExplicitModuleOutput>>
+      clangBuildRuleDependencyCache;
 
-  private final BaseName targetBaseName;
+  private final BaseName swiftTargetBaseName;
+
+  private final BaseName clangTargetBaseName;
+
+  private final String ResourceDirPrefix = "$RESOURCEDIR/";
 
   private final String SdkRootPrefix = "$SDKROOT/";
 
@@ -73,7 +78,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       Tool swiftc,
       ImmutableList<Arg> swiftFlags,
       AppleCompilerTargetTriple triple,
-      SourcePath sdkPath)
+      SourcePath sdkPath,
+      SourcePath swiftResourceDir)
       throws HumanReadableException {
     ObjectMapper objectMapper = new ObjectMapper();
     try {
@@ -85,19 +91,31 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
           "Failed to parse SDK dependencies info: " + ex.getLocalizedMessage());
     }
 
-    // Construct the target base name and toolchain hash code to use for this SDK and toolchain.
-    int hashCode =
-        swiftc.getCommandPrefix(graphBuilder.getSourcePathResolver()).hashCode()
-            ^ Arg.stringify(swiftFlags, graphBuilder.getSourcePathResolver()).hashCode();
-    platformFlavor = InternalFlavor.of(Integer.toHexString(hashCode));
-    targetBaseName =
+    // Construct the target base names to use for this SDK and toolchain.
+    swiftTargetBaseName =
         BaseName.of(
             "//_swift_runtime/sdk/"
                 + sdkDependencies.getSdkVersion()
                 + "/"
                 + triple.getPlatformName()
                 + "/"
-                + triple.getArchitecture());
+                + triple.getArchitecture()
+                + "/swift");
+    clangTargetBaseName =
+        BaseName.of(
+            "//_swift_runtime/sdk/"
+                + sdkDependencies.getSdkVersion()
+                + "/"
+                + triple.getPlatformName()
+                + "/"
+                + triple.getArchitecture()
+                + "/clang");
+
+    ImmutableMap.Builder<String, ClangModule> clangModulesBuilder = ImmutableMap.builder();
+    for (ClangModule module : sdkDependencies.getClangDependencies()) {
+      clangModulesBuilder.put(module.getName(), module);
+    }
+    clangModules = clangModulesBuilder.build();
 
     ImmutableMap.Builder<String, SwiftModule> modulesBuilder = ImmutableMap.builder();
     for (SwiftModule module : sdkDependencies.getSwiftDependencies()) {
@@ -112,7 +130,30 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                   @Override
                   public ImmutableSet<ExplicitModuleOutput> load(CacheKey key) {
                     return getSwiftmoduleDependencies(
-                        key, graphBuilder, projectFilesystem, swiftc, swiftFlags, sdkPath);
+                        key,
+                        graphBuilder,
+                        projectFilesystem,
+                        swiftc,
+                        swiftFlags,
+                        sdkPath,
+                        swiftResourceDir);
+                  }
+                });
+
+    clangBuildRuleDependencyCache =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<>() {
+                  @Override
+                  public ImmutableSet<ExplicitModuleOutput> load(CacheKey key) {
+                    return getClangModuleDependencies(
+                        key,
+                        graphBuilder,
+                        projectFilesystem,
+                        swiftc,
+                        swiftFlags,
+                        sdkPath,
+                        swiftResourceDir);
                   }
                 });
   }
@@ -137,50 +178,9 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       ProjectFilesystem projectFilesystem,
       Tool swiftc,
       ImmutableList<Arg> swiftFlags,
-      SourcePath sdkPath) {
-    // Create build rules for all the dependent SDK modules of this one.
-    HashSet<ExplicitModuleOutput> ruleOutputs = new HashSet<>();
-    visitSwiftDependencies(
-        ruleOutputs,
-        graphBuilder,
-        projectFilesystem,
-        key.getCompilerTarget(),
-        key.getName(),
-        swiftc,
-        swiftFlags,
-        sdkPath);
-
-    // Cache the dependencies so we don't have to walk the graph again for this SDK module.
-    return ImmutableSet.copyOf(ruleOutputs);
-  }
-
-  private void visitSwiftDependencies(
-      Set<ExplicitModuleOutput> outputs,
-      ActionGraphBuilder graphBuilder,
-      ProjectFilesystem projectFilesystem,
-      String targetTriple,
-      String moduleName,
-      Tool swiftc,
-      ImmutableList<Arg> swiftFlags,
-      SourcePath sdkPath) {
-    SwiftModule swiftModule = getSwiftModule(moduleName);
-    if (swiftModule == null) {
-      // Framework uses a modulemap without swiftinterface
-      return;
-    }
-
-    HashSet<ExplicitModuleOutput> transitiveOutputs = new HashSet<>();
-    for (String dep : swiftModule.getSwiftDependencies()) {
-      visitSwiftDependencies(
-          transitiveOutputs,
-          graphBuilder,
-          projectFilesystem,
-          targetTriple,
-          dep,
-          swiftc,
-          swiftFlags,
-          sdkPath);
-    }
+      SourcePath sdkPath,
+      SourcePath resourceDir) {
+    SwiftModule module = getSwiftModule(key.getName());
 
     /**
      * For every Swift SDK dependency we need to create a build rule that produces a .swiftmodule
@@ -206,39 +206,127 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
      * away from Xcode toolchain selection, as we would then need to model a target SDK in the graph
      * more explicitly.
      */
+
+    // SwiftInterfaceCompile rules are already specific to target SDK version via the target name,
+    // the compiler target is not used.
+    int hashCode =
+        swiftc.getCommandPrefix(graphBuilder.getSourcePathResolver()).hashCode()
+            ^ Arg.stringify(swiftFlags, graphBuilder.getSourcePathResolver()).hashCode();
+    Flavor swiftFlavor = InternalFlavor.of(Integer.toHexString(hashCode));
     UnconfiguredBuildTarget unconfiguredBuildTarget =
-        UnconfiguredBuildTarget.of(targetBaseName, moduleName);
+        UnconfiguredBuildTarget.of(swiftTargetBaseName, key.getName());
     BuildTarget buildTarget =
         unconfiguredBuildTarget
             .configure(UnconfiguredTargetConfiguration.INSTANCE)
-            .withFlavors(platformFlavor);
+            .withFlavors(swiftFlavor);
 
     BuildRule rule =
         graphBuilder.computeIfAbsent(
             buildTarget,
             target -> {
-              ImmutableSet.Builder<ExplicitModuleOutput> deps = ImmutableSet.builder();
-              deps.addAll(transitiveOutputs);
+              // Collect the transitive Swift and Clang module dependencies for the target
+              // triple used by this Swift module.
+              ImmutableSet.Builder<ExplicitModuleOutput> moduleDepsBuilder = ImmutableSet.builder();
+              for (String dep : module.getSwiftDependencies()) {
+                moduleDepsBuilder.addAll(
+                    swiftBuildRuleDependencyCache.getUnchecked(
+                        CacheKey.of(dep, module.getTarget())));
+              }
+
+              for (String dep : module.getClangDependencies()) {
+                moduleDepsBuilder.addAll(
+                    clangBuildRuleDependencyCache.getUnchecked(
+                        CacheKey.of(dep, module.getTarget())));
+              }
 
               return new SwiftInterfaceCompile(
                   target,
                   projectFilesystem,
                   graphBuilder,
-                  targetTriple,
                   swiftc,
                   swiftFlags,
                   false,
-                  moduleName,
-                  replacePathPrefix(swiftModule.getSwiftInterfacePath(), sdkPath),
-                  deps.build());
+                  module.getName(),
+                  replacePathPrefix(module.getSwiftInterfacePath(), sdkPath, resourceDir),
+                  moduleDepsBuilder.build());
             });
-    outputs.addAll(transitiveOutputs);
-    outputs.add(ImmutableExplicitModuleOutput.of(moduleName, true, rule.getSourcePathToOutput()));
+
+    ImmutableSet.Builder<ExplicitModuleOutput> depsBuilder = ImmutableSet.builder();
+    depsBuilder.add(ExplicitModuleOutput.of(key.getName(), true, rule.getSourcePathToOutput()));
+
+    // We need to collect the transitive dependencies at the specified target triple, which
+    // is most likely different from this modules target.
+    for (String dep : module.getSwiftDependencies()) {
+      depsBuilder.addAll(
+          swiftBuildRuleDependencyCache.getUnchecked(CacheKey.of(dep, key.getCompilerTarget())));
+    }
+
+    for (String dep : module.getClangDependencies()) {
+      depsBuilder.addAll(
+          clangBuildRuleDependencyCache.getUnchecked(CacheKey.of(dep, key.getCompilerTarget())));
+    }
+
+    return depsBuilder.build();
   }
 
-  private ExplicitModuleInput replacePathPrefix(Path path, SourcePath sdkPath) {
+  private ImmutableSet<ExplicitModuleOutput> getClangModuleDependencies(
+      CacheKey key,
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
+      Tool swiftc,
+      ImmutableList<Arg> swiftFlags,
+      SourcePath sdkPath,
+      SourcePath swiftResourceDir) {
+    ClangModule clangModule = clangModules.get(key.getName());
+
+    // Recursively collect dependencies at the given compiler target.
+    ImmutableSet.Builder<ExplicitModuleOutput> depsBuilder = ImmutableSet.builder();
+    for (String dep : clangModule.getClangDependencies()) {
+      depsBuilder.addAll(
+          clangBuildRuleDependencyCache.getUnchecked(CacheKey.of(dep, key.getCompilerTarget())));
+    }
+
+    // Clang module compilation is specific to the compiler target, so include that in the
+    // target flavor.
+    int hashCode =
+        swiftc.getCommandPrefix(graphBuilder.getSourcePathResolver()).hashCode()
+            ^ Arg.stringify(swiftFlags, graphBuilder.getSourcePathResolver()).hashCode()
+            ^ key.getCompilerTarget().hashCode();
+    Flavor clangFlavor = InternalFlavor.of(Integer.toHexString(hashCode));
+    UnconfiguredBuildTarget unconfiguredBuildTarget =
+        UnconfiguredBuildTarget.of(clangTargetBaseName, key.getName());
+    BuildTarget buildTarget =
+        unconfiguredBuildTarget
+            .configure(UnconfiguredTargetConfiguration.INSTANCE)
+            .withFlavors(clangFlavor);
+
+    BuildRule rule =
+        graphBuilder.computeIfAbsent(
+            buildTarget,
+            target ->
+                new SwiftModuleMapCompile(
+                    target,
+                    projectFilesystem,
+                    graphBuilder,
+                    key.getCompilerTarget(),
+                    swiftc,
+                    swiftFlags,
+                    false,
+                    key.getName(),
+                    true,
+                    replacePathPrefix(clangModule.getModulemapPath(), sdkPath, swiftResourceDir),
+                    depsBuilder.build()));
+
+    depsBuilder.add(ExplicitModuleOutput.of(key.getName(), false, rule.getSourcePathToOutput()));
+    return depsBuilder.build();
+  }
+
+  private ExplicitModuleInput replacePathPrefix(
+      Path path, SourcePath sdkPath, SourcePath resourceDir) {
     if (path.startsWith(SdkRootPrefix)) {
       return ExplicitModuleInput.of(sdkPath, path.subpath(1, path.getNameCount()));
+    } else if (path.startsWith(ResourceDirPrefix)) {
+      return ExplicitModuleInput.of(resourceDir, path.subpath(1, path.getNameCount()));
     } else {
       throw new HumanReadableException("Unknown SDK dependency path prefix: " + path);
     }

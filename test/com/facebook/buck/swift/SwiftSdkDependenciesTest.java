@@ -60,7 +60,8 @@ public class SwiftSdkDependenciesTest {
             swiftc,
             ImmutableList.of(),
             triple,
-            PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")));
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")));
 
     SwiftSdkDependencies.SwiftModule module = sdkDependencies.getSwiftModule("Foundation");
     assertThat(
@@ -96,7 +97,8 @@ public class SwiftSdkDependenciesTest {
             swiftc,
             ImmutableList.of(),
             triple,
-            PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")));
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")));
 
     ImmutableSet<SourcePath> swiftmoduleDeps =
         sdkDependencies.getSwiftmoduleDependencyPaths("SwiftOnoneSupport", triple);

@@ -52,6 +52,7 @@ swift_toolchain(
     name = "swift_toolchain",
     platform_path = "xcode/Platforms/iPhoneSimulator.platform",
     sdk_path = "xcode/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk",
+    resource_dir = "xcode/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift",
     sdk_dependencies_path = "iphonesimulator_15.2_deps.json",
     swiftc = "xcode/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
 )

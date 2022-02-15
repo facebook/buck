@@ -31,6 +31,7 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -38,27 +39,33 @@ import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
-/**
- * A class to compile .swiftinterface files from SDK targets into .swiftmodule files. These are used
- * as input to SwiftCompile actions when using explicit modules.
- */
-public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile.Impl> {
-
-  public SwiftInterfaceCompile(
+/** A build rule to compile a Clang module from a given modulemap file */
+public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile.Impl> {
+  public SwiftModuleMapCompile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
+      String targetTriple,
       Tool swiftc,
       ImmutableList<Arg> swiftArgs,
       boolean withDownwardApi,
       String moduleName,
-      ExplicitModuleInput swiftInterfacePath,
-      ImmutableSet<ExplicitModuleOutput> moduleDeps) {
+      boolean isSystemModule,
+      ExplicitModuleInput moduleMapPath,
+      ImmutableSet<ExplicitModuleOutput> clangModuleDeps) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new Impl(swiftc, swiftArgs, withDownwardApi, moduleName, swiftInterfacePath, moduleDeps));
+        new SwiftModuleMapCompile.Impl(
+            targetTriple,
+            swiftc,
+            swiftArgs,
+            withDownwardApi,
+            moduleName,
+            isSystemModule,
+            moduleMapPath,
+            clangModuleDeps));
   }
 
   @Nullable
@@ -67,30 +74,36 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
     return getSourcePath(getBuildable().output);
   }
 
-  /** Inner class to implement logic for .swiftinterface compilation. */
+  /** Inner class to implement logic for .modulemap compilation. */
   static class Impl implements Buildable {
+    @AddToRuleKey private final String targetTriple;
     @AddToRuleKey private final Tool swiftc;
     @AddToRuleKey private final ImmutableList<Arg> swiftArgs;
     @AddToRuleKey private final boolean withDownwardApi;
     @AddToRuleKey private final String moduleName;
-    @AddToRuleKey private final ExplicitModuleInput swiftInterfacePath;
-    @AddToRuleKey private final ImmutableSet<ExplicitModuleOutput> moduleDeps;
+    @AddToRuleKey private final ExplicitModuleInput modulemapPath;
+    @AddToRuleKey private final boolean isSystemModule;
+    @AddToRuleKey private final ImmutableSet<ExplicitModuleOutput> clangModuleDeps;
     @AddToRuleKey private final OutputPath output;
 
     Impl(
+        String targetTriple,
         Tool swiftc,
         ImmutableList<Arg> swiftArgs,
         boolean withDownwardApi,
         String moduleName,
-        ExplicitModuleInput swiftInterfacePath,
-        ImmutableSet<ExplicitModuleOutput> moduleDeps) {
+        boolean isSystemModule,
+        ExplicitModuleInput modulemapPath,
+        ImmutableSet<ExplicitModuleOutput> clangModuleDeps) {
+      this.targetTriple = targetTriple;
       this.swiftc = swiftc;
       this.swiftArgs = swiftArgs;
       this.withDownwardApi = withDownwardApi;
       this.moduleName = moduleName;
-      this.swiftInterfacePath = swiftInterfacePath;
-      this.moduleDeps = moduleDeps;
-      this.output = new OutputPath(moduleName + ".swiftmodule");
+      this.isSystemModule = isSystemModule;
+      this.modulemapPath = modulemapPath;
+      this.clangModuleDeps = clangModuleDeps;
+      this.output = new OutputPath(moduleName + ".pcm");
     }
 
     @Override
@@ -102,35 +115,44 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
       ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();
-      argsBuilder.add(
-          "-frontend",
-          "-compile-module-from-interface",
-          "-disable-implicit-swift-modules",
-          "-serialize-parseable-module-interface-dependency-hashes",
-          "-disable-modules-validate-system-headers",
-          "-suppress-warnings",
-          "-Xcc",
-          "-fno-implicit-modules");
       argsBuilder.addAll(Arg.stringify(swiftArgs, resolver));
+      argsBuilder.add(
+          "-emit-pcm",
+          "-target",
+          targetTriple,
+          "-module-name",
+          moduleName,
+          "-o",
+          outputPathResolver.resolvePath(output).getPath().toString(),
+          // Embed all input files into the PCM so we don't need to include module map files when
+          // building remotely.
+          // https://github.com/apple/llvm-project/commit/fb1e7f7d1aca7bcfc341e9214bda8b554f5ae9b6
+          "-Xcc",
+          "-Xclang",
+          "-Xcc",
+          "-fmodules-embed-all-files");
 
-      if (moduleName.equals("Swift") || moduleName.equals("SwiftOnoneSupport")) {
-        argsBuilder.add("-parse-stdlib");
+      if (isSystemModule) {
+        argsBuilder.add(
+            "-Xcc",
+            "-Xclang",
+            "-Xcc",
+            "-emit-module",
+            "-Xcc",
+            "-Xclang",
+            "-Xcc",
+            "-fsystem-module");
       }
 
-      argsBuilder.add(swiftInterfacePath.resolve(resolver));
+      argsBuilder.add(modulemapPath.resolve(resolver));
 
-      for (ExplicitModuleOutput dep : moduleDeps) {
-        if (dep.getIsSwiftmodule()) {
-          argsBuilder.add(
-              "-swift-module-file",
-              resolver.getIdeallyRelativePath(dep.getOutputPath()).toString());
-        } else {
-          Path modulePath = resolver.getIdeallyRelativePath(dep.getOutputPath());
-          argsBuilder.add("-Xcc", "-fmodule-file=" + dep.getName() + "=" + modulePath);
-        }
+      for (ExplicitModuleOutput dep : clangModuleDeps) {
+        Preconditions.checkState(
+            !dep.getIsSwiftmodule(),
+            "Clang module compilation should not have a swiftmodule dependency");
+        Path depPath = resolver.getIdeallyRelativePath(dep.getOutputPath());
+        argsBuilder.add("-Xcc", "-fmodule-file=" + dep.getName() + "=" + depPath);
       }
-
-      argsBuilder.add("-o", outputPathResolver.resolvePath(output).getPath().toString());
 
       return ImmutableList.of(
           new SwiftCompileStep(
