@@ -1,13 +1,29 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "buck_java_library")
 
+D8_EXECUTABLE_MAIN = "D8ExecutableMain.java"
+
+MULTI_DEX_EXECUTABLE_MAIN = "MultiDexExecutableMain.java"
+
 buck_java_library(
     name = "dex",
-    srcs = glob(["*.java"]),
+    srcs = glob(["*.java"], exclude = [D8_EXECUTABLE_MAIN, MULTI_DEX_EXECUTABLE_MAIN]),
     visibility = [
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/android/proguard:translator",
+        "//third-party/java/d8:d8",
+        "//third-party/java/guava:guava",
+    ],
+)
+
+buck_java_library(
+    name = "d8_executable_main",
+    srcs = [D8_EXECUTABLE_MAIN],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dex",
         "//third-party/java/args4j:args4j",
         "//third-party/java/d8:d8",
         "//third-party/java/guava:guava",
@@ -22,6 +38,22 @@ buck_java_binary(
     ],
     deps = [
         ":dex",
+        ":d8_executable_main",
+    ],
+)
+
+buck_java_library(
+    name = "multi_dex_executable_main",
+    srcs = [MULTI_DEX_EXECUTABLE_MAIN],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dex",
+        "//src/com/facebook/buck/android/proguard:translator",
+        "//third-party/java/args4j:args4j",
+        "//third-party/java/d8:d8",
+        "//third-party/java/guava:guava",
     ],
 )
 
@@ -33,5 +65,6 @@ buck_java_binary(
     ],
     deps = [
         ":dex",
+        ":multi_dex_executable_main"
     ],
 )
