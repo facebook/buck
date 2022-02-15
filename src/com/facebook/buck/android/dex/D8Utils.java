@@ -89,6 +89,11 @@ public class D8Utils {
             .setInternalOptionsModifier(
                 (InternalOptions opt) -> {
                   opt.testing.forceJumboStringProcessing = options.contains(D8Options.FORCE_JUMBO);
+                  if (options.contains(D8Options.MINIMIZE_PRIMARY_DEX)) {
+                    opt.minimalMainDex = true;
+                  } else if (options.contains(D8Options.MAXIMIZE_PRIMARY_DEX)) {
+                    opt.minimalMainDex = false;
+                  }
                 });
 
     bucketId.ifPresent(builder::setBucketId);

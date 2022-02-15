@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,5 +29,11 @@ public enum D8Options {
 
   /** Compile an intermediate result intended for later merging */
   INTERMEDIATE,
+
+  /** Don't fill up the primary dex beyond classes that need to be in the primary dex */
+  MINIMIZE_PRIMARY_DEX,
+
+  /** Fill up the primary dex as much as possible */
+  MAXIMIZE_PRIMARY_DEX,
   ;
 }

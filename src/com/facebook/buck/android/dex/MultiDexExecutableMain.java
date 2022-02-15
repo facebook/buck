@@ -28,11 +28,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.EnumSet;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
@@ -78,6 +78,9 @@ public class MultiDexExecutableMain {
   @Option(name = "--no-optimize")
   private boolean noOptimize = false;
 
+  @Option(name = "--minimize-primary-dex")
+  private boolean minimizePrimaryDex = false;
+
   public static void main(String[] args) throws IOException {
     MultiDexExecutableMain main = new MultiDexExecutableMain();
     CmdLineParser parser = new CmdLineParser(main);
@@ -119,7 +122,7 @@ public class MultiDexExecutableMain {
           d8OutputDir,
           Optional.empty(),
           filesToDex,
-          noOptimize ? EnumSet.of(D8Options.NO_OPTIMIZE) : EnumSet.noneOf(D8Options.class),
+          getD8Options(),
           Optional.of(primaryDexClassNamesPath),
           Paths.get(androidJar),
           ImmutableList.of(),
@@ -213,5 +216,19 @@ public class MultiDexExecutableMain {
     }
 
     return primaryDexClassNames.build();
+  }
+
+  private Set<D8Options> getD8Options() {
+    ImmutableSet.Builder<D8Options> d8OptionsBuilder = ImmutableSet.builder();
+    if (noOptimize) {
+      d8OptionsBuilder.add(D8Options.NO_OPTIMIZE);
+    }
+    if (minimizePrimaryDex) {
+      d8OptionsBuilder.add(D8Options.MINIMIZE_PRIMARY_DEX);
+    } else {
+      d8OptionsBuilder.add(D8Options.MAXIMIZE_PRIMARY_DEX);
+    }
+
+    return d8OptionsBuilder.build();
   }
 }
