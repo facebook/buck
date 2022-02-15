@@ -99,7 +99,7 @@ public class SwiftSdkDependenciesTest {
             PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")));
 
     ImmutableSet<SourcePath> swiftmoduleDeps =
-        sdkDependencies.getSwiftmoduleDependencyPaths("SwiftOnoneSupport");
+        sdkDependencies.getSwiftmoduleDependencyPaths("SwiftOnoneSupport", triple);
     assertThat(swiftmoduleDeps.size(), equalTo(2));
 
     ImmutableSortedSet<String> filenames =

@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.toolchain.SwiftSdkDependenciesProvider;
@@ -56,7 +57,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
 
   private final ImmutableMap<String, SwiftModule> swiftModules;
 
-  private final LoadingCache<String, ImmutableSet<ExplicitModuleOutput>>
+  private final LoadingCache<CacheKey, ImmutableSet<ExplicitModuleOutput>>
       swiftBuildRuleDependencyCache;
 
   private final Flavor platformFlavor;
@@ -109,15 +110,9 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
             .build(
                 new CacheLoader<>() {
                   @Override
-                  public ImmutableSet<ExplicitModuleOutput> load(String moduleName) {
+                  public ImmutableSet<ExplicitModuleOutput> load(CacheKey key) {
                     return getSwiftmoduleDependencies(
-                        graphBuilder,
-                        projectFilesystem,
-                        triple,
-                        swiftc,
-                        swiftFlags,
-                        sdkPath,
-                        moduleName);
+                        key, graphBuilder, projectFilesystem, swiftc, swiftFlags, sdkPath);
                   }
                 });
   }
@@ -127,32 +122,33 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
   }
 
   @Override
-  public ImmutableSet<SourcePath> getSwiftmoduleDependencyPaths(String moduleName) {
-    return swiftBuildRuleDependencyCache.getUnchecked(moduleName).stream()
+  public ImmutableSet<SourcePath> getSwiftmoduleDependencyPaths(
+      String moduleName, AppleCompilerTargetTriple triple) {
+    return swiftBuildRuleDependencyCache
+        .getUnchecked(CacheKey.of(moduleName, triple.getVersionedTriple())).stream()
         .filter(ExplicitModuleOutput::getIsSwiftmodule)
         .map(ExplicitModuleOutput::getOutputPath)
         .collect(ImmutableSet.toImmutableSet());
   }
 
   private ImmutableSet<ExplicitModuleOutput> getSwiftmoduleDependencies(
+      CacheKey key,
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
-      AppleCompilerTargetTriple targetTriple,
       Tool swiftc,
       ImmutableList<Arg> swiftFlags,
-      SourcePath sdkPath,
-      String moduleName) {
+      SourcePath sdkPath) {
     // Create build rules for all the dependent SDK modules of this one.
     HashSet<ExplicitModuleOutput> ruleOutputs = new HashSet<>();
     visitSwiftDependencies(
         ruleOutputs,
         graphBuilder,
         projectFilesystem,
-        targetTriple,
+        key.getCompilerTarget(),
+        key.getName(),
         swiftc,
         swiftFlags,
-        sdkPath,
-        moduleName);
+        sdkPath);
 
     // Cache the dependencies so we don't have to walk the graph again for this SDK module.
     return ImmutableSet.copyOf(ruleOutputs);
@@ -162,11 +158,11 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       Set<ExplicitModuleOutput> outputs,
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
-      AppleCompilerTargetTriple targetTriple,
+      String targetTriple,
+      String moduleName,
       Tool swiftc,
       ImmutableList<Arg> swiftFlags,
-      SourcePath sdkPath,
-      String moduleName) {
+      SourcePath sdkPath) {
     SwiftModule swiftModule = getSwiftModule(moduleName);
     if (swiftModule == null) {
       // Framework uses a modulemap without swiftinterface
@@ -180,10 +176,10 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
           graphBuilder,
           projectFilesystem,
           targetTriple,
+          dep,
           swiftc,
           swiftFlags,
-          sdkPath,
-          dep);
+          sdkPath);
     }
 
     /**
@@ -248,8 +244,22 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
     }
   }
 
+  /** A pair class used for the SDK dependencies that need to cache per target. */
+  @BuckStyleValue
+  abstract static class CacheKey {
+    /** The module name we are compiling dependencies for. */
+    abstract String getName();
+
+    /** The compiler target used to compile the modules. */
+    abstract String getCompilerTarget();
+
+    static CacheKey of(String name, String target) {
+      return ImmutableCacheKey.ofImpl(name, target);
+    }
+  }
+
   /** A class that represents a Swift module dependency of an Apple SDK. */
-  public static class SwiftModule implements Comparable<SwiftModule> {
+  static class SwiftModule implements Comparable<SwiftModule> {
     private String name;
 
     private String target;
@@ -338,7 +348,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
   }
 
   /** A class that represents a Clang module dependency of an Apple SDK. */
-  public static class ClangModule {
+  static class ClangModule {
     private String name;
 
     @JsonProperty("modulemap")

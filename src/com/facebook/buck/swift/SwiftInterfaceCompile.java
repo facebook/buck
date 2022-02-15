@@ -16,7 +16,6 @@
 
 package com.facebook.buck.swift;
 
-import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -48,7 +47,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      AppleCompilerTargetTriple targetTriple,
+      String targetTriple,
       Tool swiftc,
       ImmutableList<Arg> swiftArgs,
       boolean withDownwardApi,
@@ -87,14 +86,14 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
     @AddToRuleKey private final OutputPath output;
 
     Impl(
-        AppleCompilerTargetTriple targetTriple,
+        String targetTriple,
         Tool swiftc,
         ImmutableList<Arg> swiftArgs,
         boolean withDownwardApi,
         String moduleName,
         ExplicitModuleInput swiftInterfacePath,
         ImmutableSet<ExplicitModuleOutput> moduleDeps) {
-      this.targetTriple = targetTriple.getUnversionedTriple();
+      this.targetTriple = targetTriple;
       this.swiftc = swiftc;
       this.swiftArgs = swiftArgs;
       this.withDownwardApi = withDownwardApi;

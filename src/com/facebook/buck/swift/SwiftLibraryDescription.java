@@ -299,12 +299,15 @@ public class SwiftLibraryDescription
 
       BuildTarget buildTargetCopy = buildTarget;
 
+      AppleCompilerTargetTriple targetTriple =
+          args.getTargetSdkVersion()
+              .map(version -> swiftPlatform.get().getSwiftTarget().withTargetSdkVersion(version))
+              .orElse(swiftPlatform.get().getSwiftTarget());
+
       return new SwiftCompile(
           swiftBuckConfig,
           buildTarget,
-          args.getTargetSdkVersion()
-              .map(version -> swiftPlatform.get().getSwiftTarget().withTargetSdkVersion(version))
-              .orElse(swiftPlatform.get().getSwiftTarget()),
+          targetTriple,
           projectFilesystem,
           graphBuilder,
           swiftPlatform.get().getSwiftc(),
@@ -342,7 +345,8 @@ public class SwiftLibraryDescription
               args.getUsesExplicitModules(),
               graphBuilder,
               swiftPlatform.get(),
-              args.getFrameworks()));
+              args.getFrameworks(),
+              targetTriple));
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -489,10 +493,11 @@ public class SwiftLibraryDescription
       PreprocessorFlags preprocessFlags,
       boolean importUnderlyingModule,
       Optional<AppleCompilerTargetTriple> swiftTarget) {
+    AppleCompilerTargetTriple targetTriple = getSwiftTarget(swiftPlatform, swiftTarget);
     return new SwiftCompilationDatabase(
         swiftBuckConfig,
         buildTarget,
-        getSwiftTarget(swiftPlatform, swiftTarget),
+        targetTriple,
         projectFilesystem,
         graphBuilder,
         swiftPlatform.getSwiftc(),
@@ -526,7 +531,11 @@ public class SwiftLibraryDescription
         args.getSerializeDebuggingOptions(),
         args.getUsesExplicitModules(),
         getSdkSwiftmoduleDependencies(
-            args.getUsesExplicitModules(), graphBuilder, swiftPlatform, args.getFrameworks()));
+            args.getUsesExplicitModules(),
+            graphBuilder,
+            swiftPlatform,
+            args.getFrameworks(),
+            targetTriple));
   }
 
   private static AppleCompilerTargetTriple getSwiftTarget(
@@ -584,10 +593,11 @@ public class SwiftLibraryDescription
       PreprocessorFlags preprocessFlags,
       boolean importUnderlyingModule,
       Optional<AppleCompilerTargetTriple> swiftTarget) {
+    AppleCompilerTargetTriple targetTriple = getSwiftTarget(swiftPlatform, swiftTarget);
     return new SwiftCompile(
         swiftBuckConfig,
         buildTarget,
-        getSwiftTarget(swiftPlatform, swiftTarget),
+        targetTriple,
         projectFilesystem,
         graphBuilder,
         swiftPlatform.getSwiftc(),
@@ -621,14 +631,19 @@ public class SwiftLibraryDescription
         args.getSerializeDebuggingOptions(),
         args.getUsesExplicitModules(),
         getSdkSwiftmoduleDependencies(
-            args.getUsesExplicitModules(), graphBuilder, swiftPlatform, args.getFrameworks()));
+            args.getUsesExplicitModules(),
+            graphBuilder,
+            swiftPlatform,
+            args.getFrameworks(),
+            targetTriple));
   }
 
   private static ImmutableSortedSet<SourcePath> getSdkSwiftmoduleDependencies(
       boolean usesExplicitModules,
       ActionGraphBuilder graphBuilder,
       SwiftPlatform swiftPlatform,
-      ImmutableSortedSet<FrameworkPath> frameworks) {
+      ImmutableSortedSet<FrameworkPath> frameworks,
+      AppleCompilerTargetTriple targetTriple) {
     if (!usesExplicitModules) {
       return ImmutableSortedSet.of();
     }
@@ -659,7 +674,8 @@ public class SwiftLibraryDescription
     ImmutableSortedSet.Builder<SourcePath> swiftDependenciesBuilder =
         ImmutableSortedSet.naturalOrder();
     for (String module : modules.build()) {
-      swiftDependenciesBuilder.addAll(sdkDependencyProvider.getSwiftmoduleDependencyPaths(module));
+      swiftDependenciesBuilder.addAll(
+          sdkDependencyProvider.getSwiftmoduleDependencyPaths(module, targetTriple));
     }
     return swiftDependenciesBuilder.build();
   }
