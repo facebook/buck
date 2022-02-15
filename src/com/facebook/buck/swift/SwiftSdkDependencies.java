@@ -42,10 +42,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Parser for Swift SDK dependency info JSON. The expected input can be generated using the script
@@ -56,8 +56,6 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
   private final SdkDependencyJson sdkDependencies;
 
   private final ImmutableMap<String, SwiftModule> swiftModules;
-
-  private final ImmutableMap<String, ImmutableList<SwiftModule>> swiftDependencies;
 
   private final LoadingCache<String, ImmutableSet<SourcePath>> swiftBuildRuleDependencyCache;
 
@@ -104,16 +102,6 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
     }
     swiftModules = modulesBuilder.build();
 
-    ImmutableMap.Builder<String, ImmutableList<SwiftModule>> depsBuilder = ImmutableMap.builder();
-    for (SwiftModule module : sdkDependencies.getSwiftDependencies()) {
-      ImmutableList.Builder<SwiftModule> moduleDepsBuilder = ImmutableList.builder();
-      for (String dep : module.getSwiftDependencies()) {
-        moduleDepsBuilder.add(swiftModules.get(dep));
-      }
-      depsBuilder.put(module.getName(), moduleDepsBuilder.build());
-    }
-    swiftDependencies = depsBuilder.build();
-
     swiftBuildRuleDependencyCache =
         CacheBuilder.newBuilder()
             .build(
@@ -130,10 +118,6 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                         moduleName);
                   }
                 });
-  }
-
-  public ImmutableList<SwiftModule> getSwiftDependencies(String moduleName) {
-    return swiftDependencies.get(moduleName);
   }
 
   public SwiftModule getSwiftModule(String moduleName) {
@@ -154,7 +138,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       SourcePath sdkPath,
       String moduleName) {
     // Create build rules for all the dependent SDK modules of this one.
-    HashMap<String, SourcePath> ruleOutputs = new HashMap<>();
+    HashSet<SourcePath> ruleOutputs = new HashSet<>();
     visitSwiftDependencies(
         ruleOutputs,
         graphBuilder,
@@ -166,11 +150,11 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
         moduleName);
 
     // Cache the dependencies so we don't have to walk the graph again for this SDK module.
-    return ImmutableSet.copyOf(ruleOutputs.values());
+    return ImmutableSet.copyOf(ruleOutputs);
   }
 
   private void visitSwiftDependencies(
-      Map<String, SourcePath> outputs,
+      Set<SourcePath> outputs,
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
       AppleCompilerTargetTriple targetTriple,
@@ -184,8 +168,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       return;
     }
 
-    HashMap<String, SourcePath> transitiveOutputs = new HashMap<>();
-    for (SwiftModule dep : getSwiftDependencies(moduleName)) {
+    HashSet<SourcePath> transitiveOutputs = new HashSet<>();
+    for (String dep : swiftModule.getSwiftDependencies()) {
       visitSwiftDependencies(
           transitiveOutputs,
           graphBuilder,
@@ -194,7 +178,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
           swiftc,
           swiftFlags,
           sdkPath,
-          dep.getName());
+          dep);
     }
 
     /**
@@ -233,7 +217,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
             buildTarget,
             target -> {
               ImmutableSortedSet.Builder<SourcePath> deps = ImmutableSortedSet.naturalOrder();
-              deps.addAll(transitiveOutputs.values());
+              deps.addAll(transitiveOutputs);
 
               return new SwiftInterfaceCompile(
                   target,
@@ -248,8 +232,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                   swiftModule.getSwiftInterfacePath(),
                   deps.build());
             });
-    outputs.putAll(transitiveOutputs);
-    outputs.put(moduleName, rule.getSourcePathToOutput());
+    outputs.addAll(transitiveOutputs);
+    outputs.add(rule.getSourcePathToOutput());
   }
 
   /** A class that represents a Swift module dependency of an Apple SDK. */

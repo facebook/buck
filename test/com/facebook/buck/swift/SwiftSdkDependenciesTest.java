@@ -75,21 +75,6 @@ public class SwiftSdkDependenciesTest {
                 "ObjectiveC",
                 "Swift",
                 "_Concurrency")));
-
-    assertThat(
-        sdkDependencies.getSwiftDependencies("Foundation").stream()
-            .map(SwiftSdkDependencies.SwiftModule::getName)
-            .collect(ImmutableList.toImmutableList()),
-        equalTo(
-            ImmutableList.of(
-                "Combine",
-                "CoreFoundation",
-                "CoreGraphics",
-                "Darwin",
-                "Dispatch",
-                "ObjectiveC",
-                "Swift",
-                "_Concurrency")));
   }
 
   @Test
