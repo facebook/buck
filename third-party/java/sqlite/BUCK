@@ -2,11 +2,11 @@ load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
 
 buck_prebuilt_jar(
     name = "sqlite",
-    binary_jar = "sqlite-jdbc-3.20.0.jar",
+    binary_jar = "sqlite-jdbc-3.36.0.3.jar",
     licenses = [
         "LICENSE.txt",
     ],
-    source_jar = "sqlite-jdbc-3.20.0-sources.jar",
+    source_jar = "sqlite-jdbc-3.36.0.3-sources.jar",
     visibility = [
         "PUBLIC",
     ],
