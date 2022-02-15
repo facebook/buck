@@ -135,7 +135,7 @@
     <include name="nailgun/nailgun-server-1.0.1.jar" />
     <include name="jna/jna-5.10.0.jar" />
     <include name="jna/jna-platform-5.10.0.jar" />
-    <include name="junixsocket/junixsocket-2.3.2.jar" />
+    <include name="junixsocket/junixsocket-selftest-2.4.0-jar-with-dependencies.jar" />
     <include name="sqlite/sqlite-jdbc-3.36.0.3.jar" />
     <include name="remote-apis/remote-apis.jar" />
   </fileset>
