@@ -21,18 +21,13 @@ import com.facebook.buck.util.liteinfersupport.Nullable;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.Tree.Kind;
-import com.sun.source.tree.TypeParameterTree;
-import com.sun.source.tree.VariableTree;
-import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.Trees;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -325,17 +320,16 @@ class TreeBackedEnter {
         return;
       }
 
-      List<? extends AnnotationTree> annotationTrees = getAnnotationTrees(currentTree);
-      if (underlyingAnnotations.size() != annotationTrees.size()) {
-        throw new IllegalArgumentException();
-      }
-
-      for (int i = 0; i < underlyingAnnotations.size(); i++) {
+      for (var underlyingAnnotation : underlyingAnnotations) {
+        var annotationTreePath =
+            javacTrees.getPath(element.getUnderlyingElement(), underlyingAnnotation);
+        if (annotationTreePath == null) {
+          throw new IllegalArgumentException(
+              String.format("Annotation node of element %s could not be found.", element));
+        }
         element.addAnnotationMirror(
             new TreeBackedAnnotationMirror(
-                underlyingAnnotations.get(i),
-                new TreePath(currentPath, annotationTrees.get(i)),
-                canonicalizer));
+                underlyingAnnotation, annotationTreePath, canonicalizer));
       }
     }
 
@@ -349,47 +343,5 @@ class TreeBackedEnter {
         contextStack.pop();
       }
     }
-  }
-
-  private static List<? extends AnnotationTree> getAnnotationTrees(@Nullable Tree parentTree) {
-    if (parentTree == null) {
-      return Collections.emptyList();
-    }
-
-    return parentTree.accept(
-        new SimpleTreeVisitor<List<? extends AnnotationTree>, Void>() {
-          @Override
-          public List<? extends AnnotationTree> visitCompilationUnit(
-              CompilationUnitTree node, Void aVoid) {
-            return node.getPackageAnnotations();
-          }
-
-          @Override
-          public List<? extends AnnotationTree> visitClass(ClassTree node, Void aVoid) {
-            return node.getModifiers().getAnnotations();
-          }
-
-          @Override
-          public List<? extends AnnotationTree> visitMethod(MethodTree node, Void aVoid) {
-            return node.getModifiers().getAnnotations();
-          }
-
-          @Override
-          public List<? extends AnnotationTree> visitVariable(VariableTree node, Void aVoid) {
-            return node.getModifiers().getAnnotations();
-          }
-
-          @Override
-          public List<? extends AnnotationTree> visitTypeParameter(
-              TypeParameterTree node, Void aVoid) {
-            return node.getAnnotations();
-          }
-
-          @Override
-          protected List<? extends AnnotationTree> defaultAction(Tree node, Void aVoid) {
-            throw new AssertionError(String.format("Unexpected tree: %s", node));
-          }
-        },
-        null);
   }
 }

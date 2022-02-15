@@ -129,4 +129,26 @@ public class TreeBackedAnnotationMirrorTest extends CompilerTreeApiParameterized
             .collect(Collectors.toList()),
         Matchers.contains("number", 42, "string", "42", "doubleNumber", 42.0));
   }
+
+  @Test
+  public void testMethodAnnotatedWithTypeUseAnnotation() throws IOException {
+    compile(
+        Joiner.on('\n')
+            .join(
+                "import java.lang.annotation.*;",
+                "class Foo { @Override @Anno public String toString() { return \"\"; } }",
+                "@Target(ElementType.TYPE_USE)",
+                "@interface Anno { }"));
+  }
+
+  @Test
+  public void testMethodAnnotatedWithTypeAndMethodUseAnnotation() throws IOException {
+    compile(
+        Joiner.on('\n')
+            .join(
+                "import java.lang.annotation.*;",
+                "class Foo { @Override @Anno public String toString() { return \"\"; } }",
+                "@Target({ElementType.TYPE_USE, ElementType.METHOD})",
+                "@interface Anno { }"));
+  }
 }
