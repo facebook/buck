@@ -57,7 +57,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
       String moduleName,
       SourcePath sdkPath,
       Path swiftInterfacePath,
-      ImmutableSet<SourcePath> swiftmoduleDeps) {
+      ImmutableSet<ExplicitModuleOutput> moduleDeps) {
     super(
         buildTarget,
         projectFilesystem,
@@ -70,7 +70,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
             moduleName,
             sdkPath,
             swiftInterfacePath.toString(),
-            swiftmoduleDeps));
+            moduleDeps));
   }
 
   @Nullable
@@ -88,7 +88,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
     @AddToRuleKey private final String moduleName;
     @AddToRuleKey private final SourcePath sdkPath;
     @AddToRuleKey private final String swiftInterfacePath;
-    @AddToRuleKey private final ImmutableSet<SourcePath> swiftmoduleDeps;
+    @AddToRuleKey private final ImmutableSet<ExplicitModuleOutput> moduleDeps;
     @AddToRuleKey private final OutputPath output;
 
     Impl(
@@ -99,7 +99,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
         String moduleName,
         SourcePath sdkPath,
         String swiftInterfacePath,
-        ImmutableSet<SourcePath> swiftmoduleDeps) {
+        ImmutableSet<ExplicitModuleOutput> moduleDeps) {
       this.targetTriple = targetTriple.getUnversionedTriple();
       this.swiftc = swiftc;
       this.swiftArgs = swiftArgs;
@@ -107,7 +107,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
       this.moduleName = moduleName;
       this.sdkPath = sdkPath;
       this.swiftInterfacePath = swiftInterfacePath;
-      this.swiftmoduleDeps = swiftmoduleDeps;
+      this.moduleDeps = moduleDeps;
       this.output = new OutputPath(moduleName + ".swiftmodule");
     }
 
@@ -141,8 +141,13 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
             "Trying to compile swiftinterface file outside sdk: " + sdkRelPath);
       }
       argsBuilder.add(sdkRelPath.resolve(swiftInterfacePath.substring(9)).toString());
-      for (SourcePath dep : swiftmoduleDeps) {
-        argsBuilder.add("-swift-module-file", resolver.getIdeallyRelativePath(dep).toString());
+
+      for (ExplicitModuleOutput dep : moduleDeps) {
+        if (dep.getIsSwiftmodule()) {
+          argsBuilder.add(
+              "-swift-module-file",
+              resolver.getIdeallyRelativePath(dep.getOutputPath()).toString());
+        }
       }
 
       argsBuilder.add("-o", outputPathResolver.resolvePath(output).getPath().toString());

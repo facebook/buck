@@ -39,7 +39,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -57,7 +56,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
 
   private final ImmutableMap<String, SwiftModule> swiftModules;
 
-  private final LoadingCache<String, ImmutableSet<SourcePath>> swiftBuildRuleDependencyCache;
+  private final LoadingCache<String, ImmutableSet<ExplicitModuleOutput>>
+      swiftBuildRuleDependencyCache;
 
   private final Flavor platformFlavor;
 
@@ -107,7 +107,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
             .build(
                 new CacheLoader<>() {
                   @Override
-                  public ImmutableSet<SourcePath> load(String moduleName) {
+                  public ImmutableSet<ExplicitModuleOutput> load(String moduleName) {
                     return getSwiftmoduleDependencies(
                         graphBuilder,
                         projectFilesystem,
@@ -126,10 +126,13 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
 
   @Override
   public ImmutableSet<SourcePath> getSwiftmoduleDependencyPaths(String moduleName) {
-    return swiftBuildRuleDependencyCache.getUnchecked(moduleName);
+    return swiftBuildRuleDependencyCache.getUnchecked(moduleName).stream()
+        .filter(ExplicitModuleOutput::getIsSwiftmodule)
+        .map(ExplicitModuleOutput::getOutputPath)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
-  private ImmutableSet<SourcePath> getSwiftmoduleDependencies(
+  private ImmutableSet<ExplicitModuleOutput> getSwiftmoduleDependencies(
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
       AppleCompilerTargetTriple targetTriple,
@@ -138,7 +141,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       SourcePath sdkPath,
       String moduleName) {
     // Create build rules for all the dependent SDK modules of this one.
-    HashSet<SourcePath> ruleOutputs = new HashSet<>();
+    HashSet<ExplicitModuleOutput> ruleOutputs = new HashSet<>();
     visitSwiftDependencies(
         ruleOutputs,
         graphBuilder,
@@ -154,7 +157,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
   }
 
   private void visitSwiftDependencies(
-      Set<SourcePath> outputs,
+      Set<ExplicitModuleOutput> outputs,
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
       AppleCompilerTargetTriple targetTriple,
@@ -168,7 +171,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       return;
     }
 
-    HashSet<SourcePath> transitiveOutputs = new HashSet<>();
+    HashSet<ExplicitModuleOutput> transitiveOutputs = new HashSet<>();
     for (String dep : swiftModule.getSwiftDependencies()) {
       visitSwiftDependencies(
           transitiveOutputs,
@@ -216,7 +219,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
         graphBuilder.computeIfAbsent(
             buildTarget,
             target -> {
-              ImmutableSortedSet.Builder<SourcePath> deps = ImmutableSortedSet.naturalOrder();
+              ImmutableSet.Builder<ExplicitModuleOutput> deps = ImmutableSet.builder();
               deps.addAll(transitiveOutputs);
 
               return new SwiftInterfaceCompile(
@@ -233,7 +236,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                   deps.build());
             });
     outputs.addAll(transitiveOutputs);
-    outputs.add(rule.getSourcePathToOutput());
+    outputs.add(ImmutableExplicitModuleOutput.of(moduleName, true, rule.getSourcePathToOutput()));
   }
 
   /** A class that represents a Swift module dependency of an Apple SDK. */
