@@ -63,6 +63,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
 
   private final BaseName targetBaseName;
 
+  private final String SdkRootPrefix = "$SDKROOT/";
+
   public SwiftSdkDependencies(
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
@@ -231,12 +233,19 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                   swiftFlags,
                   false,
                   moduleName,
-                  sdkPath,
-                  swiftModule.getSwiftInterfacePath(),
+                  replacePathPrefix(swiftModule.getSwiftInterfacePath(), sdkPath),
                   deps.build());
             });
     outputs.addAll(transitiveOutputs);
     outputs.add(ImmutableExplicitModuleOutput.of(moduleName, true, rule.getSourcePathToOutput()));
+  }
+
+  private ExplicitModuleInput replacePathPrefix(Path path, SourcePath sdkPath) {
+    if (path.startsWith(SdkRootPrefix)) {
+      return ExplicitModuleInput.of(sdkPath, path.subpath(1, path.getNameCount()));
+    } else {
+      throw new HumanReadableException("Unknown SDK dependency path prefix: " + path);
+    }
   }
 
   /** A class that represents a Swift module dependency of an Apple SDK. */

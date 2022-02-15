@@ -18,7 +18,6 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -36,7 +35,6 @@ import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -55,8 +53,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
       ImmutableList<Arg> swiftArgs,
       boolean withDownwardApi,
       String moduleName,
-      SourcePath sdkPath,
-      Path swiftInterfacePath,
+      ExplicitModuleInput swiftInterfacePath,
       ImmutableSet<ExplicitModuleOutput> moduleDeps) {
     super(
         buildTarget,
@@ -68,8 +65,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
             swiftArgs,
             withDownwardApi,
             moduleName,
-            sdkPath,
-            swiftInterfacePath.toString(),
+            swiftInterfacePath,
             moduleDeps));
   }
 
@@ -86,8 +82,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
     @AddToRuleKey private final ImmutableList<Arg> swiftArgs;
     @AddToRuleKey private final boolean withDownwardApi;
     @AddToRuleKey private final String moduleName;
-    @AddToRuleKey private final SourcePath sdkPath;
-    @AddToRuleKey private final String swiftInterfacePath;
+    @AddToRuleKey private final ExplicitModuleInput swiftInterfacePath;
     @AddToRuleKey private final ImmutableSet<ExplicitModuleOutput> moduleDeps;
     @AddToRuleKey private final OutputPath output;
 
@@ -97,15 +92,13 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
         ImmutableList<Arg> swiftArgs,
         boolean withDownwardApi,
         String moduleName,
-        SourcePath sdkPath,
-        String swiftInterfacePath,
+        ExplicitModuleInput swiftInterfacePath,
         ImmutableSet<ExplicitModuleOutput> moduleDeps) {
       this.targetTriple = targetTriple.getUnversionedTriple();
       this.swiftc = swiftc;
       this.swiftArgs = swiftArgs;
       this.withDownwardApi = withDownwardApi;
       this.moduleName = moduleName;
-      this.sdkPath = sdkPath;
       this.swiftInterfacePath = swiftInterfacePath;
       this.moduleDeps = moduleDeps;
       this.output = new OutputPath(moduleName + ".swiftmodule");
@@ -135,12 +128,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
         argsBuilder.add("-parse-stdlib");
       }
 
-      Path sdkRelPath = resolver.getIdeallyRelativePath(sdkPath);
-      if (!swiftInterfacePath.startsWith("$SDKROOT")) {
-        throw new HumanReadableException(
-            "Trying to compile swiftinterface file outside sdk: " + sdkRelPath);
-      }
-      argsBuilder.add(sdkRelPath.resolve(swiftInterfacePath.substring(9)).toString());
+      argsBuilder.add(swiftInterfacePath.resolve(resolver));
 
       for (ExplicitModuleOutput dep : moduleDeps) {
         if (dep.getIsSwiftmodule()) {
