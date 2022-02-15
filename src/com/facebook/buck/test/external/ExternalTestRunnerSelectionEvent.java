@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,6 +60,13 @@ public abstract class ExternalTestRunnerSelectionEvent extends AbstractBuckEvent
     return new OverrideEvent(testRuleNames, allRulesWithinAllowedPrefixes, customRunner);
   }
 
+  public static ExternalTestRunnerSelectionEvent externalTestRunnerSelected(
+      Iterable<String> testRuleNames,
+      boolean allRulesWithinAllowedPrefixes,
+      Optional<String> customRunner) {
+    return new SelectEvent(testRuleNames, allRulesWithinAllowedPrefixes, customRunner);
+  }
+
   @JsonIgnore
   public String getCategory() {
     return "external_test_runner_selection";
@@ -88,6 +95,32 @@ public abstract class ExternalTestRunnerSelectionEvent extends AbstractBuckEvent
     @Override
     public String getShortEventName() {
       return "Override";
+    }
+  }
+
+  /** The extern test runner defined at project level has been selected */
+  public static class SelectEvent extends ExternalTestRunnerSelectionEvent {
+
+    private SelectEvent(
+        Iterable<String> testRules,
+        boolean allRulesWithinAllowedPrefixes,
+        Optional<String> customRunner) {
+      super(testRules.hashCode(), testRules, allRulesWithinAllowedPrefixes, customRunner);
+    }
+
+    @Override
+    protected String getValueString() {
+      return getCustomRunner().toString();
+    }
+
+    @Override
+    public String getEventName() {
+      return "ExternalTestRunner.Select";
+    }
+
+    @Override
+    public String getShortEventName() {
+      return "Select";
     }
   }
 }

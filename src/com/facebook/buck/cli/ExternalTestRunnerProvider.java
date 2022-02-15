@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,6 +87,8 @@ public class ExternalTestRunnerProvider {
         console.warn(
             String.format(EXTERNAL_RUNNER_OVERRIDDEN_IN_ALLOWED_PATH, allowedPathsPrefixes.get()));
         postOverrideEvent(testRules, allTargetsWithinAllowedPrefixes, externalTestRunner);
+      } else {
+        postSelectedEvent(testRules, allTargetsWithinAllowedPrefixes, externalTestRunner);
       }
       return externalTestRunner;
     } else {
@@ -145,6 +147,17 @@ public class ExternalTestRunnerProvider {
       Optional<ImmutableList<String>> customRunner) {
     eventBus.post(
         ExternalTestRunnerSelectionEvent.externalTestRunnerOverridden(
+            Iterables.transform(testRules, r -> r.getFullyQualifiedName()),
+            allTargetsWithinAllowedPrefixes,
+            customRunner.map(r -> r.stream().collect(Collectors.joining(" ")))));
+  }
+
+  private void postSelectedEvent(
+      Iterable<TestRule> testRules,
+      boolean allTargetsWithinAllowedPrefixes,
+      Optional<ImmutableList<String>> customRunner) {
+    eventBus.post(
+        ExternalTestRunnerSelectionEvent.externalTestRunnerSelected(
             Iterables.transform(testRules, r -> r.getFullyQualifiedName()),
             allTargetsWithinAllowedPrefixes,
             customRunner.map(r -> r.stream().collect(Collectors.joining(" ")))));

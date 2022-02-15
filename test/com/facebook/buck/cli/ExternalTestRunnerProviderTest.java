@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -228,7 +228,7 @@ public class ExternalTestRunnerProviderTest {
   }
 
   @Test
-  public void testOverrideEventsAreNotPostedWhenThereIsNoOverride() {
+  public void testSelectEventsArePostedWhenThereIsNoOverride() {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     BuckEventBusForTests.CapturingEventListener listener =
         new BuckEventBusForTests.CapturingEventListener();
@@ -239,11 +239,14 @@ public class ExternalTestRunnerProviderTest {
 
     BuckConfig config = createConfig("runner", "//a", null);
     runnerDeterminator.getExternalTestRunner(config, createSimpleTestRules("//a:a"));
-    assertThat(listener.getExternalRunnerSelectionEvents(), Matchers.empty());
+    assertThat(
+        Iterables.getLast(listener.getExternalRunnerSelectionEvents(), null),
+        Matchers.isA(ExternalTestRunnerSelectionEvent.SelectEvent.class));
   }
 
   @Test
-  public void testOverrideEventsAreNotPostedWhenNoPathPrefixesDefined() {
+  public void testNoEventsArePostedWhenNoPathPrefixesDefined() {
+
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     BuckEventBusForTests.CapturingEventListener listener =
         new BuckEventBusForTests.CapturingEventListener();
