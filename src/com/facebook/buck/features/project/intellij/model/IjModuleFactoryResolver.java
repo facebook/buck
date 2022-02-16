@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,11 +80,17 @@ public interface IjModuleFactoryResolver {
   Optional<Path> getAnnotationOutputPath(TargetNode<? extends JvmLibraryArg> targetNode);
 
   /**
-   * @param targetNode node which may use annotation processors.
-   * @return path to the kapt output if any annotation proceessors are configured for the given
-   *     node.
+   * @param targetNode node which may use annotation processors using KAPT.
+   * @return path to the kapt output if any annotation processors are configured for the given node.
    */
   Optional<Path> getKaptAnnotationOutputPath(TargetNode<? extends JvmLibraryArg> targetNode);
+
+  /**
+   * @param targetNode node which may use annotation processors using KSP.
+   * @return path to the ksp output if any KSP annotation processors are configured for the given
+   *     node.
+   */
+  Optional<Path> getKspAnnotationOutputPath(TargetNode<? extends JvmLibraryArg> targetNode);
 
   /**
    * @param targetNode node which may specify it's own compiler output path.

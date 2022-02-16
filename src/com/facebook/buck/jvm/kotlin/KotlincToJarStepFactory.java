@@ -406,6 +406,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       return;
     }
 
+    // We need to generate the KAPT generation folder anyway, to help IntelliJ with red symbols.
+    RelPath kaptAnnotationGenFolder = getKaptAnnotationGenPath(buckPaths, invokingRule);
+    steps.addAll(MakeCleanDirectoryIsolatedStep.of(kaptAnnotationGenFolder));
+
     ImmutableList<ResolvedJavacPluginProperties> kaptAnnotationProcessors =
         javaAnnotationProcessorParams.isEmpty()
             ? ImmutableList.of()
@@ -426,7 +430,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     RelPath stubsOutput = getAnnotationPath(buckPaths, invokingRule, "__%s_stubs__");
     RelPath kaptGeneratedOutput =
         getAnnotationPath(buckPaths, invokingRule, "__%s_kapt_generated__");
-    RelPath kaptAnnotationGenFolder = getKaptAnnotationGenPath(buckPaths, invokingRule);
     RelPath kaptGenOutputFolder = getGenPath(buckPaths, invokingRule, "__%s_kapt_gen_sources__");
     RelPath kaptGenOutput =
         getGenPath(buckPaths, invokingRule, "__%s_kapt_gen_sources__/generated" + SRC_ZIP);
@@ -434,7 +437,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     // Creating KAPT dirs
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(stubsOutput));
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(kaptGeneratedOutput));
-    steps.addAll(MakeCleanDirectoryIsolatedStep.of(kaptAnnotationGenFolder));
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(kaptGenOutputFolder));
 
     ImmutableList<String> kaptProcessorsArg =
@@ -568,6 +570,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       return;
     }
 
+    // We need to generate the KSP generation folder anyway, to help IntelliJ with red symbols.
+    RelPath kspAnnotationGenFolder = getKspAnnotationGenPath(buckPaths, invokingRule);
+    steps.addAll(MakeCleanDirectoryIsolatedStep.of(kspAnnotationGenFolder));
+
     // KSP Annotation processors are defined like Java's,
     // but their name starts with KSP_PROCESSOR_NAME_PREFIX
     ImmutableList<ResolvedJavacPluginProperties> kspAnnotationProcessors =
@@ -589,7 +595,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     RelPath kspKotlinOutput =
         getAnnotationPath(buckPaths, invokingRule, "__%s_ksp_generated_kotlin__");
     RelPath kspJavaOutput = getAnnotationPath(buckPaths, invokingRule, "__%s_ksp_generated_java__");
-    RelPath kspAnnotationGenFolder = getKspAnnotationGenPath(buckPaths, invokingRule);
     RelPath kspGenOutputFolder = getGenPath(buckPaths, invokingRule, "__%s_ksp_gen_sources__");
     RelPath kspGenOutput =
         getGenPath(buckPaths, invokingRule, "__%s_ksp_gen_sources__/generated" + SRC_ZIP);
@@ -602,7 +607,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     // Creating KSP dirs
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(kspKotlinOutput));
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(kspJavaOutput));
-    steps.addAll(MakeCleanDirectoryIsolatedStep.of(kspAnnotationGenFolder));
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(kspGenOutputFolder));
 
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(kspResOutput));
@@ -951,6 +955,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
 
   public static RelPath getKaptAnnotationGenPath(BuckPaths buckPaths, BuildTarget buildTarget) {
     return getKaptAnnotationGenPath(
+        buckPaths, BuildTargetValue.withExtraParams(buildTarget, buckPaths));
+  }
+
+  public static RelPath getKspAnnotationGenPath(BuckPaths buckPaths, BuildTarget buildTarget) {
+    return getKspAnnotationGenPath(
         buckPaths, BuildTargetValue.withExtraParams(buildTarget, buckPaths));
   }
 

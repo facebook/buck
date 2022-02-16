@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -296,6 +296,14 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
 
     moduleFactoryResolver
         .getKaptAnnotationOutputPath(jvmLibraryTargetNode)
+        .ifPresent(
+            path ->
+                context.addGeneratedSourceCodeFolder(
+                    targetNode.getBuildTarget(),
+                    folderFactory.create(path, false, ImmutableSortedSet.of(path))));
+
+    moduleFactoryResolver
+        .getKspAnnotationOutputPath(jvmLibraryTargetNode)
         .ifPresent(
             path ->
                 context.addGeneratedSourceCodeFolder(

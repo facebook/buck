@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -214,9 +214,21 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   public Optional<Path> getKaptAnnotationOutputPath(
       TargetNode<? extends JvmLibraryArg> targetNode) {
     if (IjKotlinHelper.isKotlinModule(targetNode.getConstructorArg())
-        && IjKotlinHelper.requiresKapt(targetNode.getConstructorArg())) {
+        && IjKotlinHelper.requiresKotlinAnnotationProcessing(targetNode.getConstructorArg())) {
       return Optional.of(
           KotlincToJarStepFactory.getKaptAnnotationGenPath(
+                  projectFilesystem.getBuckPaths(), targetNode.getBuildTarget())
+              .getPath());
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<Path> getKspAnnotationOutputPath(TargetNode<? extends JvmLibraryArg> targetNode) {
+    if (IjKotlinHelper.isKotlinModule(targetNode.getConstructorArg())
+        && IjKotlinHelper.requiresKotlinAnnotationProcessing(targetNode.getConstructorArg())) {
+      return Optional.of(
+          KotlincToJarStepFactory.getKspAnnotationGenPath(
                   projectFilesystem.getBuckPaths(), targetNode.getBuildTarget())
               .getPath());
     }

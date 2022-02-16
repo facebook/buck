@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,8 +43,11 @@ public final class IjKotlinHelper {
                 .orElse(false);
   }
 
-  /** Whether the target node associated with the constructorArg requires kapt */
-  public static boolean requiresKapt(JvmLibraryArg constructorArg) {
+  /**
+   * Whether the target node associated with the constructorArg requires annotation processing using
+   * Kotlin (using KAPT or KSP)
+   */
+  public static boolean requiresKotlinAnnotationProcessing(JvmLibraryArg constructorArg) {
     return (!constructorArg.getPlugins().isEmpty()
             || !constructorArg.getAnnotationProcessors().isEmpty())
         && constructorArg instanceof KotlinLibraryDescription.CoreArg
