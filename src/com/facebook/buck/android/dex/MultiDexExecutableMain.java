@@ -153,11 +153,11 @@ public class MultiDexExecutableMain {
 
   private void postprocessFiles(Path d8OutputDir) throws IOException {
     Preconditions.checkState(
-        ImmutableList.of("raw", "jar", "xz").contains(compression),
-        "Only raw, jar and xz compression is supported!");
+        ImmutableList.of("raw", "jar", "xz", "xzs").contains(compression),
+        "Only raw, jar, xz and xzs compression is supported!");
     Preconditions.checkState(
-        !compression.equals("xz") || xzCompressionLevel != -1,
-        "Must specify a valid compression level when xz compression is used!");
+        compression.equals("raw") || compression.equals("jar") || xzCompressionLevel != -1,
+        "Must specify a valid compression level when xz or xzs compression is used!");
 
     Path createdPrimaryDex = d8OutputDir.resolve("classes.dex");
     Preconditions.checkState(Files.exists(createdPrimaryDex));
@@ -183,12 +183,17 @@ public class MultiDexExecutableMain {
 
       long secondaryDexCount = Files.list(d8OutputDir).count();
       ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
+      ImmutableList.Builder<Path> secondaryDexJarPaths = ImmutableList.builder();
       for (int i = 0; i < secondaryDexCount; i++) {
         String secondaryDexName = String.format("classes%s.dex", i + 2);
         Path rawSecondaryDexPath = d8OutputDir.resolve(secondaryDexName);
         Preconditions.checkState(Files.exists(rawSecondaryDexPath));
         Path secondaryDexOutputJarPath =
-            secondaryDexSubdir.resolve(String.format("secondary-%s.dex.jar", i + 1));
+            compression.equals("xzs")
+                ? secondaryDexSubdir.resolve(String.format("secondary-%s.dex.jar.xzs.tmp~", i + 1))
+                : secondaryDexSubdir.resolve(String.format("secondary-%s.dex.jar", i + 1));
+        secondaryDexJarPaths.add(secondaryDexOutputJarPath);
+
         writeSecondaryDexJarAndMetadataFile(secondaryDexOutputJarPath, rawSecondaryDexPath);
 
         // TODO(ianc) Find contained class in DEX.
@@ -205,6 +210,10 @@ public class MultiDexExecutableMain {
         }
       }
 
+      if (compression.equals("xzs")) {
+        doXzsCompression(secondaryDexSubdir, secondaryDexJarPaths.build());
+      }
+
       Files.write(secondaryDexSubdir.resolve("metadata.txt"), metadataLines.build());
     }
   }
@@ -216,7 +225,7 @@ public class MultiDexExecutableMain {
         JarOutputStream jarOutputStream = new JarOutputStream(secondaryDexJar);
         InputStream secondaryDexInputStream =
             new BufferedInputStream(new FileInputStream(createdSecondaryDexPath.toFile()))) {
-      if (compression.equals("xz")) {
+      if (compression.equals("xz") || compression.equals("xzs")) {
         jarOutputStream.setLevel(Deflater.NO_COMPRESSION);
       }
       jarOutputStream.putNextEntry(new ZipEntry("classes.dex"));
@@ -263,6 +272,24 @@ public class MultiDexExecutableMain {
     }
 
     Files.delete(secondaryDexOutputJarPath);
+  }
+
+  private void doXzsCompression(Path secondaryDexSubdir, ImmutableList<Path> secondaryDexJarPaths)
+      throws IOException {
+    try (OutputStream secondaryDexOutput =
+            new BufferedOutputStream(
+                new FileOutputStream(
+                    secondaryDexSubdir.resolve("secondary.dex.jar.xzs").toFile()));
+        XZOutputStream xzOutputStream =
+            new XZOutputStream(
+                secondaryDexOutput, new LZMA2Options(xzCompressionLevel), XZ.CHECK_CRC32)) {
+      for (Path secondaryDexJarPath : secondaryDexJarPaths) {
+        try (InputStream secondaryDexInputStream =
+            new BufferedInputStream(new FileInputStream(secondaryDexJarPath.toFile()))) {
+          ByteStreams.copy(secondaryDexInputStream, xzOutputStream);
+        }
+      }
+    }
   }
 
   private ImmutableList<String> getPrimaryDexClassNames(
