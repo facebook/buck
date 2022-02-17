@@ -58,20 +58,23 @@ public class MultiDexExecutableMain {
 
   private static final String SECONDARY_DEX_SUBDIR = "assets/secondary-program-dex-jars";
 
-  @Option(name = "--primary-dex", required = true)
+  @Option(name = "--primary-dex")
   private String primaryDexString;
 
   @Option(name = "--secondary-dex-output-dir", required = true)
   private String secondaryDexOutputDirString;
 
-  @Option(name = "--files-to-dex-list", required = true)
+  @Option(name = "--files-to-dex-list")
   private String filesToDexList;
 
-  @Option(name = "--android-jar", required = true)
+  @Option(name = "--android-jar")
   private String androidJar;
 
-  @Option(name = "--primary-dex-patterns-path", required = true)
+  @Option(name = "--primary-dex-patterns-path")
   private String primaryDexPatternsPathString;
+
+  @Option(name = "--raw-secondary-dexes-dir")
+  private String rawSecondaryDexesDir;
 
   @Option(name = "--compression", required = true)
   private String compression;
@@ -109,49 +112,60 @@ public class MultiDexExecutableMain {
   }
 
   private void run() throws IOException {
-    Path d8OutputDir = Files.createTempDirectory("d8_output_dir");
-    ImmutableSet<Path> filesToDex =
-        Files.readAllLines(Paths.get(filesToDexList)).stream()
-            .map(Paths::get)
-            .collect(ImmutableSet.toImmutableSet());
+    Path rawSecondaryDexesDirPath;
+    if (rawSecondaryDexesDir == null) {
+      Path d8OutputDir = Files.createTempDirectory("d8_output_dir");
+      ImmutableSet<Path> filesToDex =
+          Files.readAllLines(Paths.get(filesToDexList)).stream()
+              .map(Paths::get)
+              .collect(ImmutableSet.toImmutableSet());
 
-    List<String> primaryDexPatterns = Files.readAllLines(Paths.get(primaryDexPatternsPathString));
-    Path primaryDexClassNamesPath = Files.createTempFile("primary_dex_class_names", "txt");
-    ProguardTranslatorFactory proguardTranslatorFactory =
-        ProguardTranslatorFactory.create(
-            Optional.ofNullable(proguardConfigurationFileString).map(Paths::get),
-            Optional.ofNullable(proguardMappingFileString).map(Paths::get),
-            false);
-    Files.write(
-        primaryDexClassNamesPath,
-        getPrimaryDexClassNames(filesToDex, primaryDexPatterns, proguardTranslatorFactory));
+      List<String> primaryDexPatterns = Files.readAllLines(Paths.get(primaryDexPatternsPathString));
+      Path primaryDexClassNamesPath = Files.createTempFile("primary_dex_class_names", "txt");
+      ProguardTranslatorFactory proguardTranslatorFactory =
+          ProguardTranslatorFactory.create(
+              Optional.ofNullable(proguardConfigurationFileString).map(Paths::get),
+              Optional.ofNullable(proguardMappingFileString).map(Paths::get),
+              false);
+      Files.write(
+          primaryDexClassNamesPath,
+          getPrimaryDexClassNames(filesToDex, primaryDexPatterns, proguardTranslatorFactory));
 
-    Optional<Integer> minSdkVersion =
-        Optional.ofNullable(minSdkVersionString).map(Integer::parseInt);
+      Optional<Integer> minSdkVersion =
+          Optional.ofNullable(minSdkVersionString).map(Integer::parseInt);
 
-    try {
-      D8Utils.runD8Command(
-          new D8Utils.D8DiagnosticsHandler(),
-          d8OutputDir,
-          Optional.empty(),
-          filesToDex,
-          getD8Options(),
-          Optional.of(primaryDexClassNamesPath),
-          Paths.get(androidJar),
-          ImmutableList.of(),
-          Optional.empty(),
-          minSdkVersion);
+      try {
+        D8Utils.runD8Command(
+            new D8Utils.D8DiagnosticsHandler(),
+            d8OutputDir,
+            Optional.empty(),
+            filesToDex,
+            getD8Options(),
+            Optional.of(primaryDexClassNamesPath),
+            Paths.get(androidJar),
+            ImmutableList.of(),
+            Optional.empty(),
+            minSdkVersion);
+      } catch (CompilationFailedException e) {
+        throw new IOException(e);
+      }
 
-      postprocessFiles(d8OutputDir);
+      Path createdPrimaryDex = d8OutputDir.resolve("classes.dex");
+      Preconditions.checkState(Files.exists(createdPrimaryDex));
+      Path primaryDexPath = Paths.get(primaryDexString);
+      Files.move(createdPrimaryDex, primaryDexPath);
 
-    } catch (CompilationFailedException e) {
-      throw new IOException(e);
+      rawSecondaryDexesDirPath = d8OutputDir;
+    } else {
+      rawSecondaryDexesDirPath = Paths.get(rawSecondaryDexesDir);
     }
+
+    postprocessSecondaryDexFiles(rawSecondaryDexesDirPath);
 
     System.exit(0);
   }
 
-  private void postprocessFiles(Path d8OutputDir) throws IOException {
+  private void postprocessSecondaryDexFiles(Path rawSecondaryDexesDirPath) throws IOException {
     Preconditions.checkState(
         ImmutableList.of("raw", "jar", "xz", "xzs").contains(compression),
         "Only raw, jar, xz and xzs compression is supported!");
@@ -159,16 +173,11 @@ public class MultiDexExecutableMain {
         compression.equals("raw") || compression.equals("jar") || xzCompressionLevel != -1,
         "Must specify a valid compression level when xz or xzs compression is used!");
 
-    Path createdPrimaryDex = d8OutputDir.resolve("classes.dex");
-    Preconditions.checkState(Files.exists(createdPrimaryDex));
-    Path primaryDexPath = Paths.get(primaryDexString);
-    Files.move(createdPrimaryDex, primaryDexPath);
-
     Path secondaryDexOutputDir = Paths.get(secondaryDexOutputDirString);
     Files.createDirectories(secondaryDexOutputDir);
 
     if (compression.equals("raw")) {
-      Files.list(d8OutputDir)
+      Files.list(rawSecondaryDexesDirPath)
           .forEach(
               path -> {
                 try {
@@ -181,12 +190,12 @@ public class MultiDexExecutableMain {
       Path secondaryDexSubdir = secondaryDexOutputDir.resolve(SECONDARY_DEX_SUBDIR);
       Files.createDirectories(secondaryDexSubdir);
 
-      long secondaryDexCount = Files.list(d8OutputDir).count();
+      long secondaryDexCount = Files.list(rawSecondaryDexesDirPath).count();
       ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
       ImmutableList.Builder<Path> secondaryDexJarPaths = ImmutableList.builder();
       for (int i = 0; i < secondaryDexCount; i++) {
         String secondaryDexName = String.format("classes%s.dex", i + 2);
-        Path rawSecondaryDexPath = d8OutputDir.resolve(secondaryDexName);
+        Path rawSecondaryDexPath = rawSecondaryDexesDirPath.resolve(secondaryDexName);
         Preconditions.checkState(Files.exists(rawSecondaryDexPath));
         Path secondaryDexOutputJarPath =
             compression.equals("xzs")
