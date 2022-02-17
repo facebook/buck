@@ -125,6 +125,10 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
           moduleName,
           "-o",
           outputPathResolver.resolvePath(output).getPath().toString(),
+          "-Xfrontend",
+          "-disable-implicit-swift-modules",
+          "-Xcc",
+          "-fno-implicit-modules",
           // Embed all input files into the PCM so we don't need to include module map files when
           // building remotely.
           // https://github.com/apple/llvm-project/commit/fb1e7f7d1aca7bcfc341e9214bda8b554f5ae9b6

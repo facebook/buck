@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,7 +95,8 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         preprocessor,
         preprocessorFlags,
         underlyingModule.isPresent(),
-        getSwiftTargetTruple(args, swiftPlatform));
+        getSwiftTargetTruple(args, swiftPlatform),
+        inputs);
   }
 
   private static Optional<AppleCompilerTargetTriple> getSwiftTargetTruple(
@@ -180,7 +181,8 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         getPreprocessor(target, graphBuilder, platform),
         getPreprocessorFlags(inputs, applePlatform.getAppleSdk()),
         underlyingModule.isPresent(),
-        getSwiftTargetTruple(args, swiftPlatform));
+        getSwiftTargetTruple(args, swiftPlatform),
+        inputs);
   }
 
   /**

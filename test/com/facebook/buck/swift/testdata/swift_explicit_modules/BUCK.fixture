@@ -1,11 +1,11 @@
-swift_library(
+apple_library(
     name = "a",
     srcs = ["a.swift"],
     deps = [":b"],
     uses_explicit_modules = True,
 )
 
-swift_library(
+apple_library(
     name = "b",
     srcs = ["b.swift"],
     frameworks = ["$SDKROOT/System/Library/Frameworks/Foundation.framework"],

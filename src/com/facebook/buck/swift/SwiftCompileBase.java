@@ -65,6 +65,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;
+import com.google.common.collect.UnmodifiableIterator;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -328,7 +329,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     }
 
     if (usesExplicitModules) {
-      argBuilder.add(frontendFlag, "-disable-implicit-swift-modules");
+      argBuilder.add(
+          frontendFlag, "-disable-implicit-swift-modules", "-Xcc", "-fno-implicit-modules");
 
       // Import the swiftmodule output of dependent apple_library rules
       for (SourcePath swiftmodulePath : swiftmoduleDeps) {
@@ -345,7 +347,10 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         if (module.getIsSwiftmodule()) {
           argBuilder.add(frontendFlag, "-swift-module-file", frontendFlag, path);
         } else {
-          argBuilder.add("-Xcc", "-fmodule-file=" + module.getName() + "=" + path);
+          // TODO: this should use -fmodule-file=modulename=path syntax to avoid always loading
+          // module files when they are not imported. Unfortunately this does not seem to work
+          // correctly and the modules don't get loaded sometimes.
+          argBuilder.add("-Xcc", "-fmodule-file=" + path);
         }
       }
     } else {
@@ -354,27 +359,27 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
             INCLUDE_FLAG,
             getProjectFilesystem().relativize(resolver.getAbsolutePath(includePath)).toString());
       }
+
+      argBuilder.addAll(
+          MoreIterables.zipAndConcat(
+              Iterables.cycle("-Fsystem"), Arg.stringify(systemFrameworkSearchPaths, resolver)));
+
+      if (addXCTestImportPaths) {
+        argBuilder.addAll(xctestImportArgs(resolver));
+      }
+
+      argBuilder.addAll(
+          Streams.concat(frameworks.stream(), cxxDeps.getFrameworkPaths().stream())
+              .filter(x -> !x.isSDKROOTFrameworkPath())
+              .map(frameworkPathToSearchPath)
+              .filter(Optional::isPresent)
+              .map(Optional::get)
+              .flatMap(searchPath -> ImmutableSet.of("-F", searchPath.toString()).stream())
+              .iterator());
+
+      argBuilder.addAll(
+          MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"), getSwiftIncludeArgs(resolver)));
     }
-
-    argBuilder.addAll(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle("-Fsystem"), Arg.stringify(systemFrameworkSearchPaths, resolver)));
-
-    if (addXCTestImportPaths) {
-      argBuilder.addAll(xctestImportArgs(resolver));
-    }
-
-    argBuilder.addAll(
-        Streams.concat(frameworks.stream(), cxxDeps.getFrameworkPaths().stream())
-            .filter(x -> !x.isSDKROOTFrameworkPath())
-            .map(frameworkPathToSearchPath)
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .flatMap(searchPath -> ImmutableSet.of("-F", searchPath.toString()).stream())
-            .iterator());
-
-    argBuilder.addAll(
-        MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"), getSwiftIncludeArgs(resolver)));
 
     boolean hasMainEntry =
         srcs.stream()
@@ -425,8 +430,18 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
           argBuilder.add("-swift-version", validVersionString(v));
         });
 
-    for (Arg f : compilerFlags) {
-      argBuilder.add(Arg.stringify(f, resolver));
+    UnmodifiableIterator<? extends Arg> flagIterator = compilerFlags.iterator();
+    ImmutableSet<String> incompatibleExplicitModuleFlags = ImmutableSet.of("-module-cache-path");
+
+    while (flagIterator.hasNext()) {
+      String flag = Arg.stringify(flagIterator.next(), resolver);
+
+      // Remove any incompatible flag pairs when compiling with explicit modules
+      if (usesExplicitModules && incompatibleExplicitModuleFlags.contains(flag)) {
+        flagIterator.next();
+      } else {
+        argBuilder.add(flag);
+      }
     }
 
     for (SourcePath sourcePath : srcs) {

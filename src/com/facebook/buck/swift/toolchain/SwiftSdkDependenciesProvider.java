@@ -23,4 +23,7 @@ import com.google.common.collect.ImmutableSet;
 public interface SwiftSdkDependenciesProvider {
   ImmutableSet<ExplicitModuleOutput> getSdkModuleDependencies(
       String moduleName, AppleCompilerTargetTriple targetTriple);
+
+  ImmutableSet<ExplicitModuleOutput> getSdkClangModuleDependencies(
+      String moduleName, AppleCompilerTargetTriple targetTriple);
 }

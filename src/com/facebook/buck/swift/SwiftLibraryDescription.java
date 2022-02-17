@@ -17,6 +17,7 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
+import com.facebook.buck.apple.common.AppleFlavors;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -41,12 +42,15 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.AbstractSwiftCxxCommonArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -54,10 +58,13 @@ import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxToolFlags;
 import com.facebook.buck.cxx.PreprocessorFlags;
+import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTreeWithModuleMap;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -70,6 +77,8 @@ import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
@@ -88,12 +97,16 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import org.immutables.value.Value;
 
 public class SwiftLibraryDescription
@@ -342,12 +355,16 @@ public class SwiftLibraryDescription
           swiftBuckConfig.getAddXctestImportPaths(),
           args.getSerializeDebuggingOptions(),
           args.getUsesExplicitModules(),
-          getSdkSwiftmoduleDependencies(
-              args.getUsesExplicitModules(),
+          getModuleDependencies(
               graphBuilder,
+              projectFilesystem,
+              cellRoots.getCellNameResolver(),
+              buildTarget,
               swiftPlatform.get(),
-              args.getFrameworks(),
-              targetTriple));
+              cxxPlatform,
+              targetTriple,
+              args,
+              ImmutableSet.of(inputs)));
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -493,7 +510,8 @@ public class SwiftLibraryDescription
       Preprocessor preprocessor,
       PreprocessorFlags preprocessFlags,
       boolean importUnderlyingModule,
-      Optional<AppleCompilerTargetTriple> swiftTarget) {
+      Optional<AppleCompilerTargetTriple> swiftTarget,
+      ImmutableSet<CxxPreprocessorInput> preprocessorInputs) {
     AppleCompilerTargetTriple targetTriple = getSwiftTarget(swiftPlatform, swiftTarget);
     return new SwiftCompilationDatabase(
         swiftBuckConfig,
@@ -531,12 +549,16 @@ public class SwiftLibraryDescription
         swiftBuckConfig.getAddXctestImportPaths(),
         args.getSerializeDebuggingOptions(),
         args.getUsesExplicitModules(),
-        getSdkSwiftmoduleDependencies(
-            args.getUsesExplicitModules(),
+        getModuleDependencies(
             graphBuilder,
+            projectFilesystem,
+            cellRoots.getCellNameResolver(),
+            buildTarget,
             swiftPlatform,
-            args.getFrameworks(),
-            targetTriple));
+            cxxPlatform,
+            targetTriple,
+            args,
+            preprocessorInputs));
   }
 
   private static AppleCompilerTargetTriple getSwiftTarget(
@@ -593,7 +615,8 @@ public class SwiftLibraryDescription
       Preprocessor preprocessor,
       PreprocessorFlags preprocessFlags,
       boolean importUnderlyingModule,
-      Optional<AppleCompilerTargetTriple> swiftTarget) {
+      Optional<AppleCompilerTargetTriple> swiftTarget,
+      ImmutableSet<CxxPreprocessorInput> preprocessorInputs) {
     AppleCompilerTargetTriple targetTriple = getSwiftTarget(swiftPlatform, swiftTarget);
     return new SwiftCompile(
         swiftBuckConfig,
@@ -631,24 +654,90 @@ public class SwiftLibraryDescription
         swiftBuckConfig.getAddXctestImportPaths(),
         args.getSerializeDebuggingOptions(),
         args.getUsesExplicitModules(),
-        getSdkSwiftmoduleDependencies(
-            args.getUsesExplicitModules(),
+        getModuleDependencies(
             graphBuilder,
+            projectFilesystem,
+            cellRoots.getCellNameResolver(),
+            buildTarget,
             swiftPlatform,
-            args.getFrameworks(),
-            targetTriple));
+            cxxPlatform,
+            targetTriple,
+            args,
+            preprocessorInputs));
+  }
+
+  private static ImmutableSet<ExplicitModuleOutput> getModuleDependencies(
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
+      CellNameResolver cellNameResolver,
+      BuildTarget buildTarget,
+      SwiftPlatform swiftPlatform,
+      CxxPlatform cxxPlatform,
+      AppleCompilerTargetTriple targetTriple,
+      SwiftLibraryDescriptionArg args,
+      ImmutableSet<CxxPreprocessorInput> preprocessorInputs) {
+    if (!args.getUsesExplicitModules()) {
+      return ImmutableSet.of();
+    }
+
+    // Get the list of Swift args that will contribute to the clang module output and target hash.
+    ImmutableList<Arg> moduleMapCompileArgs =
+        getModuleMapCompileArgs(buildTarget, cellNameResolver, graphBuilder, swiftPlatform, args);
+    Flavor pcmFlavor =
+        getPcmFlavor(targetTriple, moduleMapCompileArgs, graphBuilder.getSourcePathResolver());
+
+    ImmutableSet.Builder<ExplicitModuleOutput> depsBuilder = ImmutableSet.builder();
+
+    // Collect all Swift and Clang module dependencies of SDK dependencies of this target and its
+    // transitive dependencies.
+    ImmutableSet.Builder<FrameworkPath> frameworkPathBuilder = ImmutableSet.builder();
+    frameworkPathBuilder.addAll(args.getFrameworks());
+    for (CxxPreprocessorInput input : preprocessorInputs) {
+      frameworkPathBuilder.addAll(input.getFrameworks());
+    }
+    ImmutableSet<ExplicitModuleOutput> sdkDependencies =
+        getSdkSwiftmoduleDependencies(
+            graphBuilder, swiftPlatform, frameworkPathBuilder.build(), targetTriple);
+    depsBuilder.addAll(sdkDependencies);
+
+    // Create PCM compilation rules for all modular dependencies.
+    ImmutableSet<ExplicitModuleOutput> pcmDependencyRules =
+        createPcmCompileRules(
+            graphBuilder,
+            projectFilesystem,
+            swiftPlatform,
+            cxxPlatform,
+            targetTriple,
+            preprocessorInputs,
+            moduleMapCompileArgs,
+            pcmFlavor);
+    depsBuilder.addAll(pcmDependencyRules);
+
+    // If required add a rule to compile the underlying clang module for this target.
+    depsBuilder.addAll(
+        createUnderlyingModulePcmCompileRule(
+            graphBuilder,
+            projectFilesystem,
+            buildTarget,
+            swiftPlatform,
+            cxxPlatform,
+            targetTriple,
+            args,
+            preprocessorInputs,
+            Stream.concat(sdkDependencies.stream(), pcmDependencyRules.stream())
+                .filter(o -> !o.getIsSwiftmodule())
+                .collect(ImmutableSet.toImmutableSet()),
+            moduleMapCompileArgs,
+            pcmFlavor));
+
+    return depsBuilder.build();
   }
 
   private static ImmutableSet<ExplicitModuleOutput> getSdkSwiftmoduleDependencies(
-      boolean usesExplicitModules,
       ActionGraphBuilder graphBuilder,
       SwiftPlatform swiftPlatform,
-      ImmutableSortedSet<FrameworkPath> frameworks,
+      Iterable<FrameworkPath> frameworks,
       AppleCompilerTargetTriple targetTriple) {
-    if (!usesExplicitModules) {
-      return ImmutableSortedSet.of();
-    }
-
     Preconditions.checkState(
         swiftPlatform.getSdkDependencies().isPresent(),
         "Explicit module compilation requires the sdk_dependencies_path to be set on swift_toolchain.");
@@ -667,9 +756,12 @@ public class SwiftLibraryDescription
     modules.add("Dispatch");
 
     for (FrameworkPath frameworkPath : frameworks) {
-      modules.add(
-          frameworkPath.getName(
-              sp -> graphBuilder.getSourcePathResolver().getAbsolutePath(sp).getPath()));
+      // TODO: need to add support for platform dir relative frameworks too
+      if (frameworkPath.isSDKROOTFrameworkPath()) {
+        modules.add(
+            frameworkPath.getName(
+                sp -> graphBuilder.getSourcePathResolver().getAbsolutePath(sp).getPath()));
+      }
     }
 
     ImmutableSet.Builder<ExplicitModuleOutput> swiftDependenciesBuilder = ImmutableSet.builder();
@@ -678,6 +770,278 @@ public class SwiftLibraryDescription
           sdkDependencyProvider.getSdkModuleDependencies(module, targetTriple));
     }
     return swiftDependenciesBuilder.build();
+  }
+
+  private static ImmutableSet<ExplicitModuleOutput> createPcmCompileRules(
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
+      SwiftPlatform swiftPlatform,
+      CxxPlatform cxxPlatform,
+      AppleCompilerTargetTriple targetTriple,
+      Iterable<CxxPreprocessorInput> preprocessorInputs,
+      Iterable<Arg> moduleMapCompileArgs,
+      Flavor pcmFlavor) {
+    // Collect all the modular inputs and create PCM rules for each of them.
+    ImmutableSet.Builder<ExplicitModuleOutput> outputBuilder = ImmutableSet.builder();
+    for (HeaderSymlinkTreeWithModuleMap moduleMapRule :
+        getModuleMapDepRules(preprocessorInputs, graphBuilder)) {
+      outputBuilder.add(
+          createPcmCompile(
+              graphBuilder,
+              projectFilesystem,
+              swiftPlatform,
+              cxxPlatform,
+              targetTriple,
+              moduleMapRule.getBuildTarget().withAppendedFlavors(pcmFlavor),
+              ExplicitModuleInput.of(moduleMapRule.getSourcePathToOutput()),
+              moduleMapRule.getModuleName(),
+              moduleMapCompileArgs,
+              pcmFlavor));
+    }
+
+    return outputBuilder.build();
+  }
+
+  private static Iterable<ExplicitModuleOutput> createUnderlyingModulePcmCompileRule(
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
+      SwiftPlatform swiftPlatform,
+      CxxPlatform cxxPlatform,
+      AppleCompilerTargetTriple targetTriple,
+      SwiftLibraryDescriptionArg args,
+      Iterable<CxxPreprocessorInput> preprocessorInputs,
+      ImmutableSet<ExplicitModuleOutput> clangModuleDependencies,
+      Iterable<Arg> moduleMapCompileFlags,
+      Flavor pcmFlavor) {
+    // Check if this target requires an underlying module
+    if (graphBuilder
+        .requireMetadata(
+            buildTarget.withFlavors(
+                cxxPlatform.getFlavor(), AppleFlavors.SWIFT_UNDERLYING_MODULE_INPUT_FLAVOR),
+            CxxPreprocessorInput.class)
+        .isEmpty()) {
+      return ImmutableList.of();
+    }
+
+    BuildTarget underlyingModuleCompileTarget =
+        buildTarget.withFlavors(
+            cxxPlatform.getFlavor(), AppleFlavors.SWIFT_UNDERLYING_MODULE_FLAVOR);
+    String moduleName = getModuleName(buildTarget, args);
+
+    BuildRule underlyingModuleCompileRule =
+        graphBuilder.computeIfAbsent(
+            underlyingModuleCompileTarget.withAppendedFlavors(pcmFlavor),
+            target ->
+                new SwiftModuleMapCompile(
+                    target,
+                    projectFilesystem,
+                    graphBuilder,
+                    targetTriple.getVersionedTriple(),
+                    swiftPlatform.getSwiftc(),
+                    getModuleCompileSwiftArgs(
+                        moduleMapCompileFlags,
+                        preprocessorInputs,
+                        graphBuilder,
+                        projectFilesystem,
+                        cxxPlatform,
+                        target),
+                    false,
+                    moduleName,
+                    false,
+                    ExplicitModuleInput.of(
+                        graphBuilder
+                            .requireRule(underlyingModuleCompileTarget)
+                            .getSourcePathToOutput()),
+                    clangModuleDependencies));
+    return ImmutableList.of(
+        ExplicitModuleOutput.of(
+            moduleName, false, underlyingModuleCompileRule.getSourcePathToOutput()));
+  }
+
+  private static Iterable<HeaderSymlinkTreeWithModuleMap> getModuleMapDepRules(
+      Iterable<CxxPreprocessorInput> preprocessorInputs, ActionGraphBuilder graphBuilder) {
+    ImmutableSet.Builder<HeaderSymlinkTreeWithModuleMap> ruleBuilder = ImmutableSet.builder();
+    for (CxxPreprocessorInput input : preprocessorInputs) {
+      for (BuildRule dep : input.getDeps(graphBuilder)) {
+        if (dep instanceof HeaderSymlinkTreeWithModuleMap) {
+          ruleBuilder.add((HeaderSymlinkTreeWithModuleMap) dep);
+        }
+      }
+    }
+
+    return ruleBuilder.build();
+  }
+
+  private static ImmutableList<Arg> getModuleMapCompileArgs(
+      BuildTarget buildTarget,
+      CellNameResolver cellNameResolver,
+      ActionGraphBuilder graphBuilder,
+      SwiftPlatform swiftPlatform,
+      SwiftLibraryDescriptionArg args) {
+    ImmutableList.Builder<Arg> filteredArgs = ImmutableList.builder();
+
+    // We always add the platform flags, these include the -sdk and -resource-dir flags that we
+    // need to compile correctly.
+    filteredArgs.addAll(swiftPlatform.getSwiftFlags());
+
+    // Only apply a version if one is specified in the target
+    args.getVersion().map(v -> filteredArgs.add(StringArg.of("-swift-version"), StringArg.of(v)));
+
+    // Target flags will only take the explicitly passed -Xcc flags to the Swift driver.
+    // These should be rare.
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(
+            buildTarget,
+            cellNameResolver,
+            graphBuilder,
+            ImmutableList.of(LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE));
+
+    Iterator<StringWithMacros> argIter = args.getCompilerFlags().iterator();
+    while (argIter.hasNext()) {
+      StringWithMacros arg = argIter.next();
+      if (arg.matches("-Xcc")) {
+        filteredArgs.add(StringArg.of("-Xcc"), macrosConverter.convert(argIter.next()));
+      }
+    }
+
+    // If we need c++ interop make sure that all dependent PCM modules are compiled with c++
+    // support.
+    if (args.getEnableCxxInterop()) {
+      filteredArgs.add(StringArg.of("-Xfrontend"), StringArg.of("-enable-cxx-interop"));
+    }
+
+    return filteredArgs.build();
+  }
+
+  private static Flavor getPcmFlavor(
+      AppleCompilerTargetTriple targetTriple,
+      Iterable<Arg> moduleMapCompileFlags,
+      SourcePathResolverAdapter resolver) {
+    ImmutableList<String> stringArgs = Arg.stringify(moduleMapCompileFlags, resolver);
+    String flagHashSuffix =
+        Integer.toHexString(targetTriple.getVersionedTriple().hashCode() ^ stringArgs.hashCode());
+    return InternalFlavor.of("swift-pcm-" + flagHashSuffix);
+  }
+
+  private static ExplicitModuleOutput createPcmCompile(
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
+      SwiftPlatform swiftPlatform,
+      CxxPlatform cxxPlatform,
+      AppleCompilerTargetTriple targetTriple,
+      BuildTarget buildTarget,
+      ExplicitModuleInput moduleMapInput,
+      String moduleName,
+      Iterable<Arg> moduleMapCompileFlags,
+      Flavor pcmFlavor) {
+    BuildRule rule =
+        graphBuilder.computeIfAbsent(
+            buildTarget,
+            target -> {
+              // Collect the transitive preprocessor input for this target
+              CxxLibraryGroup lib =
+                  (CxxLibraryGroup) graphBuilder.requireRule(target.withFlavors());
+              ImmutableCollection<CxxPreprocessorInput> preprocessorInputs =
+                  TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
+                          cxxPlatform, lib, false, graphBuilder)
+                      .values();
+
+              // Collect the dependent PCM inputs for this rule
+              ImmutableSet<ExplicitModuleOutput> pcmInputs =
+                  createPcmCompileRules(
+                      graphBuilder,
+                      projectFilesystem,
+                      swiftPlatform,
+                      cxxPlatform,
+                      targetTriple,
+                      preprocessorInputs,
+                      moduleMapCompileFlags,
+                      pcmFlavor);
+
+              // Collect this libraries preprocessor input too so that we have all include and
+              // framework flags.
+              preprocessorInputs =
+                  TransitiveCxxPreprocessorInputCache.computeTransitiveCxxToPreprocessorInputMap(
+                          cxxPlatform, lib, true, graphBuilder)
+                      .values();
+
+              // get framework PCM dependencies
+              ImmutableSet.Builder<ExplicitModuleOutput> depsBuilder = ImmutableSet.builder();
+              depsBuilder.addAll(pcmInputs);
+              for (CxxPreprocessorInput input : preprocessorInputs) {
+                collectFrameworkPcmDependencies(
+                    depsBuilder, input, graphBuilder, swiftPlatform, targetTriple);
+              }
+
+              return new SwiftModuleMapCompile(
+                  target,
+                  projectFilesystem,
+                  graphBuilder,
+                  targetTriple.getVersionedTriple(),
+                  swiftPlatform.getSwiftc(),
+                  getModuleCompileSwiftArgs(
+                      moduleMapCompileFlags,
+                      preprocessorInputs,
+                      graphBuilder,
+                      projectFilesystem,
+                      cxxPlatform,
+                      buildTarget),
+                  false,
+                  moduleName,
+                  false,
+                  moduleMapInput,
+                  depsBuilder.build());
+            });
+
+    return ExplicitModuleOutput.of(moduleName, false, rule.getSourcePathToOutput());
+  }
+
+  private static void collectFrameworkPcmDependencies(
+      ImmutableSet.Builder<ExplicitModuleOutput> builder,
+      CxxPreprocessorInput input,
+      ActionGraphBuilder graphBuilder,
+      SwiftPlatform swiftPlatform,
+      AppleCompilerTargetTriple targetTriple) {
+    for (FrameworkPath frameworkPath : input.getFrameworks()) {
+      String frameworkName =
+          frameworkPath.getName(
+              fp -> graphBuilder.getSourcePathResolver().getIdeallyRelativePath(fp));
+      builder.addAll(
+          swiftPlatform
+              .getSdkDependencies()
+              .get()
+              .getSdkClangModuleDependencies(frameworkName, targetTriple));
+    }
+  }
+
+  private static ImmutableList<Arg> getModuleCompileSwiftArgs(
+      Iterable<Arg> platformArgs,
+      Iterable<CxxPreprocessorInput> preprocessorInputs,
+      ActionGraphBuilder graphBuilder,
+      ProjectFilesystem projectFilesystem,
+      CxxPlatform cxxPlatform,
+      BuildTarget buildTarget) {
+    ImmutableList.Builder<Arg> argBuilder = ImmutableList.builder();
+    argBuilder.addAll(platformArgs);
+
+    Preprocessor preprocessor =
+        cxxPlatform.getCpp().resolve(graphBuilder, buildTarget.getTargetConfiguration());
+    Iterable<CxxHeaders> cxxHeaders =
+        StreamSupport.stream(preprocessorInputs.spliterator(), false)
+            .flatMap(input -> input.getIncludes().stream())
+            .collect(Collectors.toUnmodifiableList());
+    Iterable<String> includeArgs =
+        CxxHeaders.getArgs(
+            cxxHeaders,
+            graphBuilder.getSourcePathResolver(),
+            Optional.of(PathShortener.byRelativizingToWorkingDir(projectFilesystem.getRootPath())),
+            preprocessor);
+    for (String arg : includeArgs) {
+      argBuilder.add(StringArg.of("-Xcc"), StringArg.of(arg));
+    }
+
+    return argBuilder.build();
   }
 
   private static Optional<SourcePath> getPlatformPathIfRequired(

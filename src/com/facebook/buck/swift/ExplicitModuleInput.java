@@ -28,7 +28,7 @@ import java.nio.file.Path;
  * SourcePath for the corresponding toolchain component with the relative path.
  */
 @BuckStyleValue
-abstract class ExplicitModuleInput implements AddsToRuleKey {
+public abstract class ExplicitModuleInput implements AddsToRuleKey {
   /** The base path for this input. */
   @AddToRuleKey
   public abstract SourcePath getBasePath();
@@ -38,10 +38,19 @@ abstract class ExplicitModuleInput implements AddsToRuleKey {
   public abstract String getRelativePath();
 
   public String resolve(SourcePathResolverAdapter resolver) {
-    return resolver.getIdeallyRelativePath(getBasePath()).resolve(getRelativePath()).toString();
+    Path path = resolver.getIdeallyRelativePath(getBasePath());
+    if (!getRelativePath().isEmpty()) {
+      path = path.resolve(getRelativePath());
+    }
+
+    return path.toString();
   }
 
-  static ExplicitModuleInput of(SourcePath basePath, Path relativePath) {
+  public static ExplicitModuleInput of(SourcePath basePath, Path relativePath) {
     return ImmutableExplicitModuleInput.ofImpl(basePath, relativePath.toString());
+  }
+
+  public static ExplicitModuleInput of(SourcePath path) {
+    return ImmutableExplicitModuleInput.ofImpl(path, "");
   }
 }

@@ -170,6 +170,13 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
         CacheKey.of(moduleName, targetTriple.getVersionedTriple()));
   }
 
+  @Override
+  public ImmutableSet<ExplicitModuleOutput> getSdkClangModuleDependencies(
+      String moduleName, AppleCompilerTargetTriple targetTriple) {
+    return clangBuildRuleDependencyCache.getUnchecked(
+        CacheKey.of(moduleName, targetTriple.getVersionedTriple()));
+  }
+
   private ImmutableSet<ExplicitModuleOutput> getSwiftmoduleDependencies(
       CacheKey key,
       ActionGraphBuilder graphBuilder,
