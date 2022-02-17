@@ -22,10 +22,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
+import com.facebook.buck.apple.common.AppleFlavors;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
@@ -536,25 +536,23 @@ public class SwiftLibraryIntegrationTest {
         };
 
     BuildRule rootLibRule =
-        requireRule.apply(rootLibNode.getBuildTarget(), AppleDescriptions.SWIFT_COMPILE_FLAVOR);
+        requireRule.apply(rootLibNode.getBuildTarget(), AppleFlavors.SWIFT_COMPILE_FLAVOR);
 
     BuildRule directDepHeaderRule =
         requireRule.apply(
             directDepLibNode.getBuildTarget(),
-            AppleDescriptions.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR);
+            AppleFlavors.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR);
 
     BuildRule exportedDepHeaderRule =
         requireRule.apply(
             exportedDepLibNode.getBuildTarget(),
-            AppleDescriptions.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR);
+            AppleFlavors.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR);
 
     BuildRule directDepCompileRule =
-        requireRule.apply(
-            directDepLibNode.getBuildTarget(), AppleDescriptions.SWIFT_COMPILE_FLAVOR);
+        requireRule.apply(directDepLibNode.getBuildTarget(), AppleFlavors.SWIFT_COMPILE_FLAVOR);
 
     BuildRule exportedDepCompileRule =
-        requireRule.apply(
-            exportedDepLibNode.getBuildTarget(), AppleDescriptions.SWIFT_COMPILE_FLAVOR);
+        requireRule.apply(exportedDepLibNode.getBuildTarget(), AppleFlavors.SWIFT_COMPILE_FLAVOR);
 
     assertThat(
         rootLibRule.getBuildDeps(),

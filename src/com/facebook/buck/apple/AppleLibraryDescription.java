@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 
+import com.facebook.buck.apple.common.AppleFlavors;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
@@ -160,13 +161,13 @@ public class AppleLibraryDescription
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
     FRAMEWORK(AppleDescriptions.FRAMEWORK_FLAVOR),
-    SWIFT_COMPILE(AppleDescriptions.SWIFT_COMPILE_FLAVOR),
-    SWIFT_COMMAND(AppleDescriptions.SWIFT_COMMAND_FLAVOR),
-    SWIFT_OBJC_GENERATED_HEADER(AppleDescriptions.SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
+    SWIFT_COMPILE(AppleFlavors.SWIFT_COMPILE_FLAVOR),
+    SWIFT_COMMAND(AppleFlavors.SWIFT_COMMAND_FLAVOR),
+    SWIFT_OBJC_GENERATED_HEADER(AppleFlavors.SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
     SWIFT_EXPORTED_OBJC_GENERATED_HEADER(
-        AppleDescriptions.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
-    SWIFT_UNDERLYING_MODULE(AppleDescriptions.SWIFT_UNDERLYING_MODULE_FLAVOR),
-    SWIFT_UNDERLYING_VFS_OVERLAY(AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR);
+        AppleFlavors.SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR),
+    SWIFT_UNDERLYING_MODULE(AppleFlavors.SWIFT_UNDERLYING_MODULE_FLAVOR),
+    SWIFT_UNDERLYING_VFS_OVERLAY(AppleFlavors.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR);
 
     private final Flavor flavor;
 
@@ -181,8 +182,8 @@ public class AppleLibraryDescription
   }
 
   enum MetadataType implements FlavorConvertible {
-    APPLE_SWIFT_METADATA(InternalFlavor.of("swift-metadata")),
-    APPLE_SWIFT_UNDERLYING_MODULE_INPUT(InternalFlavor.of("swift-underlying-module-input"));
+    APPLE_SWIFT_METADATA(AppleFlavors.SWIFT_METADATA_FLAVOR),
+    APPLE_SWIFT_UNDERLYING_MODULE_INPUT(AppleFlavors.SWIFT_UNDERLYING_MODULE_INPUT_FLAVOR);
 
     private final Flavor flavor;
 

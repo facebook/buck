@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.apple.projectV2;
 
-import static com.facebook.buck.apple.AppleDescriptions.SWIFT_COMPILE_FLAVOR;
-import static com.facebook.buck.apple.AppleDescriptions.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR;
+import static com.facebook.buck.apple.common.AppleFlavors.SWIFT_COMPILE_FLAVOR;
+import static com.facebook.buck.apple.common.AppleFlavors.SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;

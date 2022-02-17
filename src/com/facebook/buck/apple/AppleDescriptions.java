@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,18 +120,7 @@ import java.util.stream.Stream;
 public class AppleDescriptions {
 
   public static final Flavor FRAMEWORK_FLAVOR = InternalFlavor.of("framework");
-  public static final Flavor SWIFT_COMPILE_FLAVOR = InternalFlavor.of("apple-swift-compile");
-  public static final Flavor SWIFT_COMMAND_FLAVOR = InternalFlavor.of("apple-swift-command");
-  public static final Flavor SWIFT_EXPORTED_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR =
-      InternalFlavor.of("apple-swift-objc-generated-header");
-  public static final Flavor SWIFT_OBJC_GENERATED_HEADER_SYMLINK_TREE_FLAVOR =
-      InternalFlavor.of("apple-swift-private-objc-generated-header");
-  public static final Flavor SWIFT_UNDERLYING_MODULE_FLAVOR =
-      InternalFlavor.of("apple-swift-underlying-module");
-  public static final Flavor SWIFT_UNDERLYING_VFS_OVERLAY_FLAVOR =
-      InternalFlavor.of("apple-swift-underlying-vfs-overlay");
   public static final Flavor DWARF_AND_DSYM = InternalFlavor.of("dwarf-and-dsym");
-
   public static final Flavor INCLUDE_FRAMEWORKS_FLAVOR = InternalFlavor.of("include-frameworks");
   public static final Flavor NO_INCLUDE_FRAMEWORKS_FLAVOR =
       InternalFlavor.of("no-include-frameworks");

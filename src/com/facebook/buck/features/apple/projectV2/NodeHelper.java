@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@ import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
 import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleBundleExtension;
-import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.AppleLibraryDescriptionArg;
 import com.facebook.buck.apple.AppleTestDescription;
+import com.facebook.buck.apple.common.AppleFlavors;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -98,7 +98,7 @@ public class NodeHelper {
     return targetNode
         .getBuildTarget()
         .withoutFlavors(CxxLibraryDescription.LIBRARY_TYPE.getFlavors())
-        .withAppendedFlavors(AppleDescriptions.SWIFT_COMPILE_FLAVOR, platformFlavor);
+        .withAppendedFlavors(AppleFlavors.SWIFT_COMPILE_FLAVOR, platformFlavor);
   }
 
   /**
