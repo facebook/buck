@@ -21,6 +21,7 @@ import com.facebook.buck.android.proguard.ProguardTranslatorFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -167,6 +168,7 @@ public class MultiDexExecutableMain {
       Files.createDirectories(secondaryDexSubdir);
 
       long secondaryDexCount = Files.list(d8OutputDir).count();
+      ImmutableList.Builder<String> metadataLines = ImmutableList.builder();
       for (int i = 0; i < secondaryDexCount; i++) {
         String secondaryDexName = String.format("classes%s.dex", i + 2);
         Path rawSecondaryDexPath = d8OutputDir.resolve(secondaryDexName);
@@ -174,7 +176,18 @@ public class MultiDexExecutableMain {
         Path secondaryDexOutputJarPath =
             secondaryDexSubdir.resolve(String.format("secondary-%s.dex.jar", i + 1));
         writeSecondaryDexJarAndMetadataFile(secondaryDexOutputJarPath, rawSecondaryDexPath);
+
+        // TODO(ianc) Find contained class in DEX.
+        metadataLines.add(
+            String.format(
+                "%s %s %s",
+                secondaryDexOutputJarPath.getFileName(),
+                com.google.common.io.Files.hash(secondaryDexOutputJarPath.toFile(), Hashing.sha1())
+                    .toString(),
+                "Unknown.class"));
       }
+
+      Files.write(secondaryDexSubdir.resolve("metadata.txt"), metadataLines.build());
     }
   }
 
