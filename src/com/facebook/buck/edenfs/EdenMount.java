@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.facebook.buck.edenfs;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.skylark.io.impl.UnixGlobPattern;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.Dtype;
@@ -268,7 +269,21 @@ public class EdenMount {
   Optional<ForwardRelPath> getPathRelativeToProjectRoot(Path path) {
     if (path.isAbsolute()) {
       if (AbsPath.of(path).startsWith(projectRoot)) {
-        return Optional.of(ForwardRelPath.ofRelPath(projectRoot.relativize(path)));
+        RelPath relPath = projectRoot.relativize(path);
+        try {
+          return Optional.of(ForwardRelPath.ofRelPath(relPath));
+        } catch (Exception e) {
+          // NOTE(nga): this is diagnostics to understand the issue https://fburl.com/w4skwnnr
+          throw new RuntimeException(
+              "rel path: `"
+                  + relPath
+                  + "` cannot be converted to forward rel path; path: `"
+                  + path
+                  + "`; projectRoot: `"
+                  + projectRoot
+                  + "`",
+              e);
+        }
       } else {
         return Optional.empty();
       }
