@@ -140,6 +140,10 @@ public class MultiDexExecutableMain {
   }
 
   private void postprocessFiles(Path d8OutputDir) throws IOException {
+    Preconditions.checkState(
+        ImmutableList.of("raw", "jar").contains(compression),
+        "Only raw and jar compression is supported!");
+
     Path createdPrimaryDex = d8OutputDir.resolve("classes.dex");
     Preconditions.checkState(Files.exists(createdPrimaryDex));
     Path primaryDexPath = Paths.get(primaryDexString);
@@ -148,28 +152,29 @@ public class MultiDexExecutableMain {
     Path secondaryDexOutputDir = Paths.get(secondaryDexOutputDirString);
     Files.createDirectories(secondaryDexOutputDir);
 
-    long secondaryDexCount = Files.list(d8OutputDir).count();
-    for (int i = 0; i < secondaryDexCount; i++) {
-      String secondaryDexName = String.format("classes%s.dex", i + 2);
-      Path rawSecondaryDexPath = d8OutputDir.resolve(secondaryDexName);
-      Preconditions.checkState(Files.exists(rawSecondaryDexPath));
-      postprocessFile(secondaryDexOutputDir, rawSecondaryDexPath, i);
-    }
-  }
-
-  private void postprocessFile(Path secondaryDexOutputDir, Path rawSecondaryDexPath, int index)
-      throws IOException {
     if (compression.equals("raw")) {
-      Files.move(
-          rawSecondaryDexPath, secondaryDexOutputDir.resolve(rawSecondaryDexPath.getFileName()));
+      Files.list(d8OutputDir)
+          .forEach(
+              path -> {
+                try {
+                  Files.move(path, secondaryDexOutputDir.resolve(path.getFileName()));
+                } catch (IOException e) {
+                  throw new RuntimeException(e);
+                }
+              });
     } else {
-      Preconditions.checkState(
-          compression.equals("jar"), "Only raw and jar compression is supported at this time!");
       Path secondaryDexSubdir = secondaryDexOutputDir.resolve(SECONDARY_DEX_SUBDIR);
       Files.createDirectories(secondaryDexSubdir);
-      Path secondaryDexOutputJarPath =
-          secondaryDexSubdir.resolve(String.format("secondary-%s.dex.jar", index + 1));
-      writeSecondaryDexJarAndMetadataFile(secondaryDexOutputJarPath, rawSecondaryDexPath);
+
+      long secondaryDexCount = Files.list(d8OutputDir).count();
+      for (int i = 0; i < secondaryDexCount; i++) {
+        String secondaryDexName = String.format("classes%s.dex", i + 2);
+        Path rawSecondaryDexPath = d8OutputDir.resolve(secondaryDexName);
+        Preconditions.checkState(Files.exists(rawSecondaryDexPath));
+        Path secondaryDexOutputJarPath =
+            secondaryDexSubdir.resolve(String.format("secondary-%s.dex.jar", i + 1));
+        writeSecondaryDexJarAndMetadataFile(secondaryDexOutputJarPath, rawSecondaryDexPath);
+      }
     }
   }
 
