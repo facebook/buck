@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
@@ -150,18 +151,17 @@ public class MultiDexExecutableMain {
     long secondaryDexCount = Files.list(d8OutputDir).count();
     for (int i = 0; i < secondaryDexCount; i++) {
       String secondaryDexName = String.format("classes%s.dex", i + 2);
-      Path createdSecondaryDexPath = d8OutputDir.resolve(secondaryDexName);
-      Preconditions.checkState(Files.exists(createdSecondaryDexPath));
-      postprocessFile(secondaryDexOutputDir, createdSecondaryDexPath, i);
+      Path rawSecondaryDexPath = d8OutputDir.resolve(secondaryDexName);
+      Preconditions.checkState(Files.exists(rawSecondaryDexPath));
+      postprocessFile(secondaryDexOutputDir, rawSecondaryDexPath, i);
     }
   }
 
-  private void postprocessFile(Path secondaryDexOutputDir, Path createdSecondaryDexPath, int index)
+  private void postprocessFile(Path secondaryDexOutputDir, Path rawSecondaryDexPath, int index)
       throws IOException {
     if (compression.equals("raw")) {
       Files.move(
-          createdSecondaryDexPath,
-          secondaryDexOutputDir.resolve(createdSecondaryDexPath.getFileName()));
+          rawSecondaryDexPath, secondaryDexOutputDir.resolve(rawSecondaryDexPath.getFileName()));
     } else {
       Preconditions.checkState(
           compression.equals("jar"), "Only raw and jar compression is supported at this time!");
@@ -169,15 +169,44 @@ public class MultiDexExecutableMain {
       Files.createDirectories(secondaryDexSubdir);
       Path secondaryDexOutputJarPath =
           secondaryDexSubdir.resolve(String.format("secondary-%s.dex.jar", index + 1));
-      try (FileOutputStream secondaryDexJar =
-              new FileOutputStream(secondaryDexOutputJarPath.toFile());
-          JarOutputStream jarOutputStream = new JarOutputStream(secondaryDexJar);
-          FileInputStream secondaryDexInputStream =
-              new FileInputStream(createdSecondaryDexPath.toFile())) {
-        jarOutputStream.putNextEntry(new ZipEntry("classes.dex"));
-        ByteStreams.copy(secondaryDexInputStream, jarOutputStream);
-        jarOutputStream.closeEntry();
+      writeSecondaryDexJarAndMetadataFile(secondaryDexOutputJarPath, rawSecondaryDexPath);
+    }
+  }
+
+  private void writeSecondaryDexJarAndMetadataFile(
+      Path secondaryDexOutputJarPath, Path createdSecondaryDexPath) throws IOException {
+    try (FileOutputStream secondaryDexJar =
+            new FileOutputStream(secondaryDexOutputJarPath.toFile());
+        JarOutputStream jarOutputStream = new JarOutputStream(secondaryDexJar);
+        FileInputStream secondaryDexInputStream =
+            new FileInputStream(createdSecondaryDexPath.toFile())) {
+      jarOutputStream.putNextEntry(new ZipEntry("classes.dex"));
+      ByteStreams.copy(secondaryDexInputStream, jarOutputStream);
+      jarOutputStream.closeEntry();
+    }
+
+    writeSecondaryDexMetadata(secondaryDexOutputJarPath);
+  }
+
+  private void writeSecondaryDexMetadata(Path secondaryDexOutputJarPath) throws IOException {
+    Path metadataPath =
+        secondaryDexOutputJarPath.resolveSibling(secondaryDexOutputJarPath.getFileName() + ".meta");
+    try (ZipFile zf = new ZipFile(secondaryDexOutputJarPath.toFile())) {
+      ZipEntry classesDexEntry = zf.getEntry("classes.dex");
+      if (classesDexEntry == null) {
+        throw new RuntimeException("could not find classes.dex in jar");
       }
+
+      long uncompressedSize = classesDexEntry.getSize();
+      if (uncompressedSize == -1) {
+        throw new RuntimeException("classes.dex size should be known");
+      }
+
+      Files.write(
+          metadataPath,
+          Collections.singletonList(
+              String.format(
+                  "jar:%s dex:%s", Files.size(secondaryDexOutputJarPath), uncompressedSize)));
     }
   }
 
