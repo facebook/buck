@@ -72,6 +72,7 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.swift.toolchain.SwiftSdkDependenciesProvider;
@@ -638,7 +639,7 @@ public class SwiftLibraryDescription
             targetTriple));
   }
 
-  private static ImmutableSortedSet<SourcePath> getSdkSwiftmoduleDependencies(
+  private static ImmutableSet<ExplicitModuleOutput> getSdkSwiftmoduleDependencies(
       boolean usesExplicitModules,
       ActionGraphBuilder graphBuilder,
       SwiftPlatform swiftPlatform,
@@ -671,11 +672,10 @@ public class SwiftLibraryDescription
               sp -> graphBuilder.getSourcePathResolver().getAbsolutePath(sp).getPath()));
     }
 
-    ImmutableSortedSet.Builder<SourcePath> swiftDependenciesBuilder =
-        ImmutableSortedSet.naturalOrder();
+    ImmutableSet.Builder<ExplicitModuleOutput> swiftDependenciesBuilder = ImmutableSet.builder();
     for (String module : modules.build()) {
       swiftDependenciesBuilder.addAll(
-          sdkDependencyProvider.getSwiftmoduleDependencyPaths(module, targetTriple));
+          sdkDependencyProvider.getSdkModuleDependencies(module, targetTriple));
     }
     return swiftDependenciesBuilder.build();
   }

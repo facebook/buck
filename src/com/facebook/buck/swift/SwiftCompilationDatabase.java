@@ -37,10 +37,10 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -78,7 +78,7 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
       boolean addXCTestImportPaths,
       boolean serializeDebuggingOptions,
       boolean usesExplicitModules,
-      ImmutableSortedSet<SourcePath> sdkDependencies) {
+      ImmutableSet<ExplicitModuleOutput> moduleDependencies) {
     super(
         swiftBuckConfig,
         buildTarget,
@@ -107,7 +107,7 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
         addXCTestImportPaths,
         serializeDebuggingOptions,
         usesExplicitModules,
-        sdkDependencies);
+        moduleDependencies);
     this.outputCommandPath = RelPath.of(this.outputPath.resolve("swift_compile_commands.json"));
   }
 

@@ -26,11 +26,11 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -100,9 +100,9 @@ public class SwiftSdkDependenciesTest {
             PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")));
 
-    ImmutableSet<SourcePath> swiftmoduleDeps =
-        sdkDependencies.getSwiftmoduleDependencyPaths("SwiftOnoneSupport", triple);
-    assertThat(swiftmoduleDeps.size(), equalTo(2));
+    ImmutableSet<ExplicitModuleOutput> swiftmoduleDeps =
+        sdkDependencies.getSdkModuleDependencies("SwiftOnoneSupport", triple);
+    assertThat(swiftmoduleDeps.size(), equalTo(3));
 
     ImmutableSortedSet<String> filenames =
         swiftmoduleDeps.stream()
@@ -110,12 +110,14 @@ public class SwiftSdkDependenciesTest {
                 sp ->
                     actionGraphBuilder
                         .getSourcePathResolver()
-                        .getIdeallyRelativePath(sp)
+                        .getIdeallyRelativePath(sp.getOutputPath())
                         .getFileName()
                         .toString())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
     assertThat(
         filenames,
-        equalTo(ImmutableSortedSet.of("Swift.swiftmodule", "SwiftOnoneSupport.swiftmodule")));
+        equalTo(
+            ImmutableSet.of(
+                "Swift.swiftmodule", "SwiftOnoneSupport.swiftmodule", "SwiftShims.pcm")));
   }
 }

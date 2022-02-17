@@ -31,6 +31,7 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

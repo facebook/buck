@@ -31,6 +31,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
 import com.facebook.buck.swift.toolchain.SwiftSdkDependenciesProvider;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -163,13 +164,10 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
   }
 
   @Override
-  public ImmutableSet<SourcePath> getSwiftmoduleDependencyPaths(
-      String moduleName, AppleCompilerTargetTriple triple) {
-    return swiftBuildRuleDependencyCache
-        .getUnchecked(CacheKey.of(moduleName, triple.getVersionedTriple())).stream()
-        .filter(ExplicitModuleOutput::getIsSwiftmodule)
-        .map(ExplicitModuleOutput::getOutputPath)
-        .collect(ImmutableSet.toImmutableSet());
+  public ImmutableSet<ExplicitModuleOutput> getSdkModuleDependencies(
+      String moduleName, AppleCompilerTargetTriple targetTriple) {
+    return swiftBuildRuleDependencyCache.getUnchecked(
+        CacheKey.of(moduleName, targetTriple.getVersionedTriple()));
   }
 
   private ImmutableSet<ExplicitModuleOutput> getSwiftmoduleDependencies(

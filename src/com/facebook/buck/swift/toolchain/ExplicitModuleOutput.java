@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.swift;
+package com.facebook.buck.swift.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -26,7 +26,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
  * need to pass this as a Swift or a Clang module.
  */
 @BuckStyleValue
-abstract class ExplicitModuleOutput implements AddsToRuleKey {
+public abstract class ExplicitModuleOutput implements AddsToRuleKey {
   /** The name of the module. */
   @AddToRuleKey
   public abstract String getName();
@@ -39,7 +39,7 @@ abstract class ExplicitModuleOutput implements AddsToRuleKey {
   @AddToRuleKey
   public abstract SourcePath getOutputPath();
 
-  static ExplicitModuleOutput of(String name, boolean isSwiftModule, SourcePath outputPath) {
+  public static ExplicitModuleOutput of(String name, boolean isSwiftModule, SourcePath outputPath) {
     return ImmutableExplicitModuleOutput.ofImpl(name, isSwiftModule, outputPath);
   }
 }

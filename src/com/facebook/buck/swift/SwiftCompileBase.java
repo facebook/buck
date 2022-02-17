@@ -55,6 +55,7 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -163,6 +164,8 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       inputs = DefaultFieldInputs.class)
   private final ImmutableSet<SourcePath> swiftIncludePaths;
 
+  @AddToRuleKey private final ImmutableSet<ExplicitModuleOutput> moduleDeps;
+
   private BuildableSupport.DepsSupplier depsSupplier;
   protected final Optional<AbsPath> argfilePath; // internal scratch temp path
 
@@ -197,7 +200,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       boolean addXCTestImportPaths,
       boolean serializeDebuggingOptions,
       boolean usesExplicitModules,
-      ImmutableSortedSet<SourcePath> sdkDependencies) {
+      ImmutableSet<ExplicitModuleOutput> moduleDependencies) {
     super(buildTarget, projectFilesystem);
     this.systemFrameworkSearchPaths = systemFrameworkSearchPaths;
     this.frameworks = frameworks;
@@ -283,13 +286,9 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       }
     }
 
-    // If using explicit modules we need to explicitly include the SDK dependencies too.
-    if (usesExplicitModules) {
-      swiftmoduleDepPathBuilder.addAll(sdkDependencies);
-    }
-
     this.swiftmoduleDeps = swiftmoduleDepPathBuilder.build();
     this.swiftIncludePaths = swiftIncludePathBuilder.build();
+    this.moduleDeps = moduleDependencies;
 
     performChecks(buildTarget);
   }
@@ -331,12 +330,23 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     if (usesExplicitModules) {
       argBuilder.add(frontendFlag, "-disable-implicit-swift-modules");
 
+      // Import the swiftmodule output of dependent apple_library rules
       for (SourcePath swiftmodulePath : swiftmoduleDeps) {
         argBuilder.add(
             frontendFlag,
             "-swift-module-file",
             frontendFlag,
             resolver.getIdeallyRelativePath(swiftmodulePath).toString());
+      }
+
+      // Import the swiftmodule and pcm output of SDK frameworks and Objc dependencies
+      for (ExplicitModuleOutput module : moduleDeps) {
+        String path = resolver.getIdeallyRelativePath(module.getOutputPath()).toString();
+        if (module.getIsSwiftmodule()) {
+          argBuilder.add(frontendFlag, "-swift-module-file", frontendFlag, path);
+        } else {
+          argBuilder.add("-Xcc", "-fmodule-file=" + module.getName() + "=" + path);
+        }
       }
     } else {
       for (SourcePath includePath : swiftIncludePaths) {
