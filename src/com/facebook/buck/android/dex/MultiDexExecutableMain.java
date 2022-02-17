@@ -23,9 +23,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,11 +41,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.jar.JarOutputStream;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import org.tukaani.xz.LZMA2Options;
+import org.tukaani.xz.XZ;
+import org.tukaani.xz.XZOutputStream;
 
 /** Executable for creating multiple DEX files from library jars. */
 public class MultiDexExecutableMain {
@@ -82,6 +90,9 @@ public class MultiDexExecutableMain {
 
   @Option(name = "--minimize-primary-dex")
   private boolean minimizePrimaryDex = false;
+
+  @Option(name = "--xz-compression-level")
+  private int xzCompressionLevel = -1;
 
   public static void main(String[] args) throws IOException {
     MultiDexExecutableMain main = new MultiDexExecutableMain();
@@ -142,8 +153,11 @@ public class MultiDexExecutableMain {
 
   private void postprocessFiles(Path d8OutputDir) throws IOException {
     Preconditions.checkState(
-        ImmutableList.of("raw", "jar").contains(compression),
-        "Only raw and jar compression is supported!");
+        ImmutableList.of("raw", "jar", "xz").contains(compression),
+        "Only raw, jar and xz compression is supported!");
+    Preconditions.checkState(
+        !compression.equals("xz") || xzCompressionLevel != -1,
+        "Must specify a valid compression level when xz compression is used!");
 
     Path createdPrimaryDex = d8OutputDir.resolve("classes.dex");
     Preconditions.checkState(Files.exists(createdPrimaryDex));
@@ -185,6 +199,10 @@ public class MultiDexExecutableMain {
                 com.google.common.io.Files.hash(secondaryDexOutputJarPath.toFile(), Hashing.sha1())
                     .toString(),
                 "Unknown.class"));
+
+        if (compression.equals("xz")) {
+          doXzCompression(secondaryDexOutputJarPath);
+        }
       }
 
       Files.write(secondaryDexSubdir.resolve("metadata.txt"), metadataLines.build());
@@ -193,11 +211,14 @@ public class MultiDexExecutableMain {
 
   private void writeSecondaryDexJarAndMetadataFile(
       Path secondaryDexOutputJarPath, Path createdSecondaryDexPath) throws IOException {
-    try (FileOutputStream secondaryDexJar =
-            new FileOutputStream(secondaryDexOutputJarPath.toFile());
+    try (OutputStream secondaryDexJar =
+            new BufferedOutputStream(new FileOutputStream(secondaryDexOutputJarPath.toFile()));
         JarOutputStream jarOutputStream = new JarOutputStream(secondaryDexJar);
-        FileInputStream secondaryDexInputStream =
-            new FileInputStream(createdSecondaryDexPath.toFile())) {
+        InputStream secondaryDexInputStream =
+            new BufferedInputStream(new FileInputStream(createdSecondaryDexPath.toFile()))) {
+      if (compression.equals("xz")) {
+        jarOutputStream.setLevel(Deflater.NO_COMPRESSION);
+      }
       jarOutputStream.putNextEntry(new ZipEntry("classes.dex"));
       ByteStreams.copy(secondaryDexInputStream, jarOutputStream);
       jarOutputStream.closeEntry();
@@ -226,6 +247,22 @@ public class MultiDexExecutableMain {
               String.format(
                   "jar:%s dex:%s", Files.size(secondaryDexOutputJarPath), uncompressedSize)));
     }
+  }
+
+  private void doXzCompression(Path secondaryDexOutputJarPath) throws IOException {
+    Path xzCompressedOutputJarPath =
+        secondaryDexOutputJarPath.resolveSibling(secondaryDexOutputJarPath.getFileName() + ".xz");
+
+    try (InputStream in =
+            new BufferedInputStream(new FileInputStream(secondaryDexOutputJarPath.toFile()));
+        OutputStream out =
+            new BufferedOutputStream(new FileOutputStream(xzCompressedOutputJarPath.toFile()));
+        XZOutputStream xzOut =
+            new XZOutputStream(out, new LZMA2Options(xzCompressionLevel), XZ.CHECK_CRC32)) {
+      ByteStreams.copy(in, xzOut);
+    }
+
+    Files.delete(secondaryDexOutputJarPath);
   }
 
   private ImmutableList<String> getPrimaryDexClassNames(
