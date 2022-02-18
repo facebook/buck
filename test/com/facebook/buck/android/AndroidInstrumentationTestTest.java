@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -140,7 +140,7 @@ public class AndroidInstrumentationTestTest {
         AndroidInstrumentationTest.readSummariesFromPath(
             "//foo:foo",
             Paths.get("DoesNotExist"),
-            new TestAndroidDevice(null, null, "FakeDevice", null));
+            new TestAndroidDevice(null, null, "FakeDevice", null, false));
     assertEquals(1, testCaseSummaries.size());
     assertEquals(
         "The APK crashed while trying to set up the test runner. No tests ran",
@@ -162,7 +162,7 @@ public class AndroidInstrumentationTestTest {
         AndroidInstrumentationTest.readSummariesFromPath(
             "//foo:foo",
             resultsPath.getPath(),
-            new TestAndroidDevice(null, null, "FakeDevice", null));
+            new TestAndroidDevice(null, null, "FakeDevice", null, false));
     assertEquals(1, testCaseSummaries.size());
     assertEquals(
         "[PASS   1.1s com.example.foo.FooTest (FakeDevice)#FooTest()]",

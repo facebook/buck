@@ -427,6 +427,7 @@ public class RealAndroidDevice implements AndroidDevice {
     }
   }
 
+  @Override
   public boolean isEmulator() {
     return isLocalTransport() || device.isEmulator();
   }

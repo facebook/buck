@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,14 +70,22 @@ public interface AndroidDeviceInfo {
 
   String getSdk();
 
+  boolean isEmulator();
+
   static AndroidDeviceInfo of(
-      String locale, String abi, String buildFingerprint, String dotsPerInch, String sdk) {
+      String locale,
+      String abi,
+      String buildFingerprint,
+      String dotsPerInch,
+      String sdk,
+      boolean isEmulator) {
     return ImmutableAndroidDeviceInfo.ofImpl(
         locale,
         abi,
         buildFingerprint,
         DensityClass.forPhysicalDensity(dotsPerInch),
         dotsPerInch,
-        sdk);
+        sdk,
+        isEmulator);
   }
 }

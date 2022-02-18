@@ -316,7 +316,9 @@ public class AdbHelper implements AndroidDevicesHelper {
               String buildFingerprint = device.getProperty("ro.build.fingerprint");
               String dpi = getDeviceDpi(device);
               String sdk = device.getProperty("ro.build.version.sdk");
-              deviceInfos.add(AndroidDeviceInfo.of(locale, abi, buildFingerprint, dpi, sdk));
+              boolean isEmulator = device.isEmulator();
+              deviceInfos.add(
+                  AndroidDeviceInfo.of(locale, abi, buildFingerprint, dpi, sdk, isEmulator));
             } catch (Exception e) {
               // Don't log.
             }
@@ -343,6 +345,7 @@ public class AdbHelper implements AndroidDevicesHelper {
     map.put("install_device_densities", toCommaList(infos, i -> i.getDensity().toString()));
     map.put("install_device_dpi", toCommaList(infos, i -> i.getDpi()));
     map.put("install_device_sdk", toCommaList(infos, i -> i.getSdk()));
+    map.put("install_device_is_emulator", toCommaList(infos, i -> String.valueOf(i.isEmulator())));
 
     return map.build();
   }

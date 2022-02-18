@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -138,7 +138,8 @@ public class AndroidApkInstallIntegrationTest {
             (apk) -> new TestAndroidDevice.ApkInfo(FAKE_PACKAGE_NAME, apkVersionCode),
             deviceStateDirectory.getRoot().getPath(),
             "fake.serial",
-            abi);
+            abi,
+            false);
     this.installLimiter =
         new InstallLimitingAndroidDevice(
             testDevice,

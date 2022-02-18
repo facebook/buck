@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ public class TestAndroidDevice implements AndroidDevice {
   private final Path stateDirectory;
   private final String serial;
   private final ApkInfoReader apkInfoReader;
+  private final boolean isEmulator;
 
   public Map<String, Path> getInstalledApks() throws Exception {
     return listDirRecursive(APK_INSTALL_DIR).stream()
@@ -82,11 +83,16 @@ public class TestAndroidDevice implements AndroidDevice {
   }
 
   public TestAndroidDevice(
-      ApkInfoReader apkInfoReader, Path stateDirectory, String serial, String abi) {
+      ApkInfoReader apkInfoReader,
+      Path stateDirectory,
+      String serial,
+      String abi,
+      boolean isEmulator) {
     this.abi = abi;
     this.stateDirectory = stateDirectory;
     this.serial = serial;
     this.apkInfoReader = apkInfoReader;
+    this.isEmulator = isEmulator;
   }
 
   @Override
@@ -229,6 +235,11 @@ public class TestAndroidDevice implements AndroidDevice {
   @Override
   public String getWindowManagerProperty(String name) {
     return "";
+  }
+
+  @Override
+  public boolean isEmulator() {
+    return isEmulator;
   }
 
   @Override
