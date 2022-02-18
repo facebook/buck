@@ -601,7 +601,7 @@ public class AdbHelper implements AndroidDevicesHelper {
         device,
         getConsole(),
         getApkFilePathFromProperties().orElse(null),
-        nextAgentPort.incrementAndGet(),
+        nextAgentPort.getAndIncrement(),
         alwaysUseJavaAgent,
         isZstdCompressionEnabled);
   }
