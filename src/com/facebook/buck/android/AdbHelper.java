@@ -303,7 +303,10 @@ public class AdbHelper implements AndroidDevicesHelper {
                         Optional.of(
                             AdbHelper.tryToExtractPackageNameFromManifest(
                                 pathResolver, hasInstallableApk.getApkInfo())),
-                        deviceInfoMap));
+                        deviceInfoMap,
+                        AndroidDebugBridge.getSocketAddress() != null
+                            ? Optional.of(AndroidDebugBridge.getSocketAddress().getPort())
+                            : Optional.empty()));
           }
         }) {
 

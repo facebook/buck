@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,13 +54,14 @@ public abstract class InstallEvent extends AbstractBuckEvent
       boolean success,
       Optional<Long> pid,
       Optional<String> packageName,
-      ImmutableMap<String, String> deviceInfos) {
-    return new Finished(started, success, pid, packageName, deviceInfos);
+      ImmutableMap<String, String> deviceInfos,
+      Optional<Integer> adbPort) {
+    return new Finished(started, success, pid, packageName, deviceInfos, adbPort);
   }
 
   public static Finished finished(
       Started started, boolean success, Optional<Long> pid, Optional<String> packageName) {
-    return finished(started, success, pid, packageName, ImmutableMap.of());
+    return finished(started, success, pid, packageName, ImmutableMap.of(), Optional.empty());
   }
 
   public static class Started extends InstallEvent {
@@ -85,18 +86,21 @@ public abstract class InstallEvent extends AbstractBuckEvent
     private final long pid;
     private final String packageName;
     private final ImmutableMap<String, String> deviceInfo;
+    private final Integer adbPort;
 
     protected Finished(
         Started started,
         boolean success,
         Optional<Long> pid,
         Optional<String> packageName,
-        ImmutableMap<String, String> deviceInfo) {
+        ImmutableMap<String, String> deviceInfo,
+        Optional<Integer> adbPort) {
       super(started.getEventKey(), started.getBuildTarget());
       this.success = success;
       this.pid = pid.orElse(invalidPid);
       this.packageName = packageName.orElse("");
       this.deviceInfo = deviceInfo;
+      this.adbPort = adbPort.orElse(0);
     }
 
     @Override
@@ -120,6 +124,10 @@ public abstract class InstallEvent extends AbstractBuckEvent
     @Override
     public String getEventName() {
       return INSTALL_FINISHED;
+    }
+
+    public int getAdbPort() {
+      return adbPort;
     }
 
     @Override
