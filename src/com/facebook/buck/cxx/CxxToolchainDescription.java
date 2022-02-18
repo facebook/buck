@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -141,7 +141,9 @@ public class CxxToolchainDescription
 
     cxxPlatform.setAspp(
         new PreprocessorProvider(
-            getToolProvider(args.getAssembler()), args.getAssemblerType(), ToolType.ASPP));
+            getToolProvider(args.getAssemblerPreprocessor()),
+            args.getAssemblerPreprocessorType(),
+            ToolType.ASPP));
     cxxPlatform.setAsppflags(
         args.getAssemblerPreprocessorFlags().stream()
             .map(macrosConverter::convert)
@@ -191,7 +193,9 @@ public class CxxToolchainDescription
             compiler -> {
               cxxPlatform.setAsmpp(
                   new PreprocessorProvider(
-                      getToolProvider(compiler), args.getAsmCompilerType(), ToolType.ASMPP));
+                      getToolProvider(args.getAsmPreprocessor().orElse(compiler)),
+                      args.getAsmPreprocessorType(),
+                      ToolType.ASMPP));
               cxxPlatform.setAsm(
                   new CompilerProvider(
                       getToolProvider(compiler),
@@ -473,6 +477,18 @@ public class CxxToolchainDescription
     /** Flags for the assembler. */
     ImmutableList<StringWithMacros> getAssemblerFlags();
 
+    /** Assembler binary. */
+    @Value.Default
+    default SourcePath getAssemblerPreprocessor() {
+      return getAssembler();
+    }
+
+    /** {@link CxxToolProvider.Type} of the assembler. */
+    @Value.Default
+    default CxxToolProvider.Type getAssemblerPreprocessorType() {
+      return getAssemblerType();
+    }
+
     /** Flags for the assembler preprocessor. */
     ImmutableList<StringWithMacros> getAssemblerPreprocessorFlags();
 
@@ -517,6 +533,15 @@ public class CxxToolchainDescription
 
     /** ASM compiler flags. */
     ImmutableList<StringWithMacros> getAsmCompilerFlags();
+
+    /** ASM compiler binary. */
+    Optional<SourcePath> getAsmPreprocessor();
+
+    /** {@link CxxToolProvider.Type} of ASM compiler. */
+    @Value.Default
+    default CxxToolProvider.Type getAsmPreprocessorType() {
+      return getAsmCompilerType();
+    }
 
     /** ASM preprocessor flags. */
     ImmutableList<StringWithMacros> getAsmPreprocessorFlags();
