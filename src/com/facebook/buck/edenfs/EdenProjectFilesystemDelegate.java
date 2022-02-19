@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package com.facebook.buck.edenfs;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.io.watchman.FileSystemNotWatchedException;
@@ -232,7 +233,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
 
   private Optional<Sha1HashCode> computeSha1ViaThrift(
       AbsPath path, boolean retryWithRealPathIfEdenError) throws IOException {
-    Optional<ForwardRelPath> entry = mount.getPathRelativeToProjectRoot(path.getPath());
+    Optional<RelPath> entry = mount.getPathRelativeToProjectRoot(path.getPath());
     if (entry.isPresent()) {
       try {
         return Optional.of(mount.getSha1(entry.get()));

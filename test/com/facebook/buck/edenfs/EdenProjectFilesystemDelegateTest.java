@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.console.TestEventConsole;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
@@ -106,7 +106,7 @@ public class EdenProjectFilesystemDelegateTest {
         new DefaultProjectFilesystemDelegate(root, Optional.empty());
 
     EdenMount mount = createMock(EdenMount.class);
-    ForwardRelPath path = ForwardRelPath.of("foo/bar");
+    RelPath path = RelPath.of(Path.of("foo/bar"));
     expect(mount.getPathRelativeToProjectRoot(root.resolve(fs.getPath(path.toString()))))
         .andReturn(Optional.of(path));
     expect(mount.getSha1(path)).andReturn(DUMMY_SHA1);
@@ -114,7 +114,7 @@ public class EdenProjectFilesystemDelegateTest {
 
     EdenProjectFilesystemDelegate edenDelegate =
         new EdenProjectFilesystemDelegate(mount, delegate, AbsPath.of(root));
-    assertEquals(DUMMY_SHA1, edenDelegate.computeSha1(path.toPath(fs)));
+    assertEquals(DUMMY_SHA1, edenDelegate.computeSha1(path.getPath()));
 
     verify(mount);
   }
@@ -137,11 +137,11 @@ public class EdenProjectFilesystemDelegateTest {
     // is requested.
     EdenMount mount = createMock(EdenMount.class);
     expect(mount.getPathRelativeToProjectRoot(link))
-        .andReturn(Optional.of(ForwardRelPath.of("link")));
+        .andReturn(Optional.of(RelPath.of(Path.of("link"))));
     expect(mount.getPathRelativeToProjectRoot(target))
-        .andReturn(Optional.of(ForwardRelPath.of("target")));
-    expect(mount.getSha1(ForwardRelPath.of("link"))).andThrow(new EdenError());
-    expect(mount.getSha1(ForwardRelPath.of("target"))).andReturn(DUMMY_SHA1);
+        .andReturn(Optional.of(RelPath.of(Path.of("target"))));
+    expect(mount.getSha1(RelPath.of(Path.of("link")))).andThrow(new EdenError());
+    expect(mount.getSha1(RelPath.of(Path.of("target")))).andReturn(DUMMY_SHA1);
     replay(mount);
 
     EdenProjectFilesystemDelegate edenDelegate =
@@ -171,9 +171,9 @@ public class EdenProjectFilesystemDelegateTest {
     // is requested.
     EdenMount mount = createMock(EdenMount.class);
     expect(mount.getPathRelativeToProjectRoot(link))
-        .andReturn(Optional.of(ForwardRelPath.of("link")));
+        .andReturn(Optional.of(RelPath.of(Path.of("link"))));
     expect(mount.getPathRelativeToProjectRoot(target)).andReturn(Optional.empty());
-    expect(mount.getSha1(ForwardRelPath.of("link"))).andThrow(new EdenError());
+    expect(mount.getSha1(RelPath.of(Path.of("link")))).andThrow(new EdenError());
     replay(mount);
 
     EdenProjectFilesystemDelegate edenDelegate =
@@ -351,8 +351,8 @@ public class EdenProjectFilesystemDelegateTest {
             "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
 
     EdenMount mount = createMock(EdenMount.class);
-    ForwardRelPath path = ForwardRelPath.of("foo/bar");
-    expect(mount.getPathRelativeToProjectRoot(root.resolve(path.toPath(fs))))
+    RelPath path = RelPath.of(fs.getPath("foo/bar"));
+    expect(mount.getPathRelativeToProjectRoot(root.resolve(path.getPath())))
         .andReturn(Optional.of(path));
     expect(mount.getSha1(path)).andReturn(DUMMY_SHA1);
     replay(mount);
@@ -368,7 +368,7 @@ public class EdenProjectFilesystemDelegateTest {
             new WatchmanFactory.NullWatchman(
                 "EdenProjectFilesystemDelegateTest", WatchmanError.TEST),
             AbsPath.of(root));
-    edenDelegate.computeSha1(path.toPath(fs));
+    edenDelegate.computeSha1(path.getPath());
   }
 
   @Test

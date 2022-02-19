@@ -109,7 +109,7 @@ public class EdenMount {
   }
 
   /** @param entry is a path that is relative to {@link #getProjectRoot()}. */
-  public Sha1HashCode getSha1(ForwardRelPath entry) throws EdenError, IOException, TException {
+  public Sha1HashCode getSha1(RelPath entry) throws EdenError, IOException, TException {
     try (EdenClientResource client = pool.openClient()) {
       List<SHA1Result> results =
           client
@@ -266,12 +266,12 @@ public class EdenMount {
    * Returns the path relative to {@link #getProjectRoot()} if {@code path} is contained by {@link
    * #getProjectRoot()}; otherwise, returns {@link Optional#empty()}.
    */
-  Optional<ForwardRelPath> getPathRelativeToProjectRoot(Path path) {
+  Optional<RelPath> getPathRelativeToProjectRoot(Path path) {
     if (path.isAbsolute()) {
       if (AbsPath.of(path).startsWith(projectRoot)) {
         RelPath relPath = projectRoot.relativize(path);
         try {
-          return Optional.of(ForwardRelPath.ofRelPath(relPath));
+          return Optional.of(relPath);
         } catch (Exception e) {
           // NOTE(nga): this is diagnostics to understand the issue https://fburl.com/w4skwnnr
           throw new RuntimeException(
@@ -288,7 +288,7 @@ public class EdenMount {
         return Optional.empty();
       }
     } else {
-      return Optional.of(ForwardRelPath.ofPath(path));
+      return Optional.of(RelPath.of(path));
     }
   }
 
@@ -296,7 +296,7 @@ public class EdenMount {
    * @param entry is a path that is relative to {@link #getProjectRoot()}.
    * @return a path that is relative to {@link #mountPoint}.
    */
-  private byte[] normalizePathArg(ForwardRelPath entry) {
+  private byte[] normalizePathArg(RelPath entry) {
     return prefix
         .toRelPath(projectRoot.getFileSystem())
         .resolve(entry)

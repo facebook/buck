@@ -17,7 +17,6 @@
 package com.facebook.buck.edenfs.cli;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.ForwardRelPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.edenfs.EdenClientResourcePool;
 import com.facebook.buck.edenfs.EdenMount;
@@ -47,7 +46,7 @@ public class Sha1Command implements Command {
 
     for (String path : paths) {
       RelPath entry = mountPoint.relativize(Paths.get(path));
-      Sha1HashCode sha1 = mount.getSha1(ForwardRelPath.ofRelPath(entry));
+      Sha1HashCode sha1 = mount.getSha1(entry);
       System.out.printf("%s %s\n", entry, sha1);
     }
 

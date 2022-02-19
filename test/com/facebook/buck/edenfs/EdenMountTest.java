@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.ForwardRelPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.testutil.DeepMatcher;
 import com.facebook.buck.testutil.PathNormalizer;
 import com.facebook.buck.util.environment.Platform;
@@ -55,7 +55,7 @@ public class EdenMountTest {
     EdenClient thriftClient = createMock(EdenClient.class);
 
     FileSystem fs = Jimfs.newFileSystem(Configuration.unix());
-    ForwardRelPath entry = ForwardRelPath.of("LICENSE");
+    RelPath entry = RelPath.of(fs.getPath("LICENSE"));
     HashCode hash = HashCode.fromString("2b8b815229aa8a61e483fb4ba0588b8b6c491890");
     SHA1Result sha1Result = new SHA1Result();
     sha1Result.setSha1(hash.asBytes());
