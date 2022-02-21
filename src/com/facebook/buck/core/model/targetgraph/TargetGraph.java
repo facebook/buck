@@ -57,7 +57,10 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
     for (TargetNode<?> node : getNodes()) {
       for (TargetNode<?> dep : getOutgoingNodesFor(node)) {
         Optional<VisibilityError> error = dep.isVisibleTo(node);
-        error.ifPresent(visibilityError -> errors.add(visibilityError));
+        // This code is on a hot path, we should avoid any lambda allocation in here
+        if (error.isPresent()) {
+          errors.add(error.get());
+        }
       }
     }
     ImmutableList<VisibilityError> computedErrors = errors.build();
