@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -418,54 +418,6 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
-  public void testWithDepsCompileDeps() throws Exception {
-    assumeTrue(
-        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_lib_deps", tmp);
-    workspace.setUp();
-
-    BuildTarget buildTarget = workspace.newBuildTarget("//:foo#compile-deps");
-    workspace
-        .runBuckCommand(
-            "build",
-            "--config",
-            "cxx.default_platform=iphonesimulator-x86_64",
-            buildTarget.getFullyQualifiedName())
-        .assertSuccess();
-
-    Path projectRoot = Paths.get(tmp.getRoot().toFile().getCanonicalPath());
-    Path outputPath =
-        projectRoot.resolve(
-            BuildTargetPaths.getGenPath(
-                    filesystem.getBuckPaths(), buildTarget.withAppendedFlavors(), "%s")
-                .resolve(AppleTestDescription.COMPILE_DEPS.toString()));
-    Path archivePath = outputPath.resolve("code").resolve("TEST_DEPS.a");
-
-    ProcessExecutor.Result binaryFileTypeResult =
-        workspace.runCommand("file", "-b", archivePath.toString());
-    assertEquals(0, binaryFileTypeResult.getExitCode());
-    assertThat(
-        binaryFileTypeResult.getStdout().orElse(""),
-        containsString("current ar archive random library"));
-
-    ProcessExecutor.Result otoolResult =
-        workspace.runCommand("otool", "-L", archivePath.toString());
-    assertEquals(0, otoolResult.getExitCode());
-    String otoolStdout = otoolResult.getStdout().orElse("");
-    assertThat(otoolStdout, containsString("Bar.m.o"));
-    assertThat(otoolStdout, containsString("Baz.m.o"));
-    assertThat(otoolStdout, not(containsString("Foo.m.o")));
-
-    ProcessExecutor.Result nmResult = workspace.runCommand("nm", "-p", archivePath.toString());
-    assertEquals(0, nmResult.getExitCode());
-    String nmStdout = nmResult.getStdout().orElse("");
-    assertThat(nmStdout, containsString("t +[Bar bar]"));
-    assertThat(nmStdout, containsString("t +[Baz baz]"));
-    assertThat(nmStdout, not(containsString("_OBJC_CLASS_$_Foo")));
-  }
-
-  @Test
   public void testWithResourcesCopiesResourceFilesAndDirs() throws Exception {
 
     ProjectWorkspace workspace =
@@ -485,23 +437,6 @@ public class AppleTestIntegrationTest {
                 LinkerMapMode.NO_LINKER_MAP.getFlavor(),
                 AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
-  }
-
-  @Test
-  public void testCompileDepsWithResourcesCopiesResourceFilesAndDirs() throws Exception {
-    assumeTrue(
-        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_resources", tmp);
-    workspace.setUp();
-
-    BuildTarget target = workspace.newBuildTarget("//:foo#iphonesimulator-x86_64,compile-deps");
-    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
-
-    workspace.verify(
-        Paths.get("foo_output_compile_deps.expected"),
-        BuildTargetPaths.getGenPath(filesystem.getBuckPaths(), target.withAppendedFlavors(), "%s")
-            .resolve("compile-deps"));
   }
 
   @Test

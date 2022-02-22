@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,8 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.apple.AppleBuildRules.RecursiveDependenciesMode;
-import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
-import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
@@ -42,10 +39,7 @@ import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -112,7 +106,6 @@ import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -130,17 +123,9 @@ public class AppleTestDescription
 
   static final Flavor BUNDLE_FLAVOR = InternalFlavor.of("apple-test-bundle");
   private static final Flavor UNZIP_XCTOOL_FLAVOR = InternalFlavor.of("unzip-xctool");
-  public static final UserFlavor COMPILE_DEPS =
-      UserFlavor.of(
-          "compile-deps",
-          "Produces a directory containing the resource dependencies and an aggregated static library created from the dependencies of the target");
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
-      ImmutableSet.of(
-          LIBRARY_FLAVOR,
-          BUNDLE_FLAVOR,
-          COMPILE_DEPS,
-          CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS);
+      ImmutableSet.of(LIBRARY_FLAVOR, BUNDLE_FLAVOR, CxxFocusedDebugTargets.FOCUSED_DEBUG_TARGETS);
 
   /**
    * Auxiliary build modes which makes this description emit just the results of the underlying
@@ -206,10 +191,6 @@ public class AppleTestDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CxxPlatformsProvider cxxPlatformsProvider =
         getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
-    if (buildTarget.getFlavors().contains(COMPILE_DEPS)) {
-      return createCompileDepsRule(
-          cxxPlatformsProvider, buildTarget, graphBuilder, context, params, args);
-    }
 
     if (!appleConfig.shouldUseSwiftDelegate()) {
       // Tests should serialize debugging options as they are the top level module for a link unit.
@@ -523,157 +504,6 @@ public class AppleTestDescription
           cxxPlatform.getFlavor().getName());
     }
     return appleCxxPlatform;
-  }
-
-  private boolean flavorIndicatesStaticLibrary(Flavor flavor) {
-    boolean isCxxLibraryType = CxxLibraryDescription.LIBRARY_TYPE.contains(flavor);
-    boolean isStaticLibrary = flavor == CxxLibraryDescription.Type.STATIC.getFlavor();
-    return isCxxLibraryType && isStaticLibrary;
-  }
-
-  private boolean flavorIndicatesCorrectPlatform(Flavor flavor, CxxPlatform cxxPlatform) {
-    boolean isApplePlatform = ApplePlatformType.of(flavor.getName()) != ApplePlatformType.UNKNOWN;
-    boolean sameApplePlatform =
-        ApplePlatform.of(flavor.getName()) == ApplePlatform.of(cxxPlatform.getFlavor().getName());
-    return isApplePlatform && sameApplePlatform;
-  }
-
-  private boolean configSdkRootIndicatesCorrectPlatform(
-      TargetNode<AppleLibraryDescriptionArg> targetNode, AppleTestDescriptionArg args) {
-    if (targetNode.getConstructorArg().getConfigs() == null
-        || targetNode.getConstructorArg().getConfigs().get("Debug") == null
-        || targetNode.getConstructorArg().getConfigs().get("Debug").get("SDKROOT") == null
-        || args.getConfigs() == null
-        || args.getConfigs().get("Debug") == null
-        || args.getConfigs().get("Debug").get("SDKROOT") == null) {
-      return true;
-    }
-    return ApplePlatform.of(targetNode.getConstructorArg().getConfigs().get("Debug").get("SDKROOT"))
-        == ApplePlatform.of(args.getConfigs().get("Debug").get("SDKROOT"));
-  }
-
-  private BuildRule createCompileDepsRule(
-      CxxPlatformsProvider cxxPlatformsProvider,
-      BuildTarget buildTarget,
-      ActionGraphBuilder graphBuilder,
-      BuildRuleCreationContextWithTargetGraph context,
-      BuildRuleParams params,
-      AppleTestDescriptionArg args) {
-    CxxPlatform cxxPlatform =
-        ApplePlatforms.getCxxPlatformForBuildTarget(
-                cxxPlatformsProvider, buildTarget, args.getDefaultPlatform())
-            .resolve(graphBuilder, buildTarget.getTargetConfiguration());
-    FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain =
-        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
-            toolchainProvider, buildTarget.getTargetConfiguration());
-    AppleCxxPlatform appleCxxPlatform =
-        verifyAppleCxxPlatform(appleCxxPlatformFlavorDomain, cxxPlatform, buildTarget)
-            .resolve(graphBuilder);
-    TargetGraph targetGraph = context.getTargetGraph();
-    AppleBundleResources collectedResources =
-        AppleResources.collectResourceDirsAndFiles(
-            xcodeDescriptions,
-            targetGraph,
-            graphBuilder,
-            Optional.empty(),
-            targetGraph.get(buildTarget),
-            appleCxxPlatform,
-            AppleBuildRules.RecursiveDependenciesMode.COPYING,
-            Predicates.alwaysTrue());
-
-    ImmutableSortedSet<BuildRule> transitiveStaticLibraryDependencies =
-        collectTransitiveStaticLibraries(
-            targetGraph, buildTarget, cxxPlatform, args, graphBuilder, context, params);
-    ImmutableList<SourcePath> depBuildRuleSourcePaths =
-        transitiveStaticLibraryDependencies.stream()
-            .map(BuildRule::getSourcePathToOutput)
-            .filter(Objects::nonNull)
-            .collect(ImmutableList.toImmutableList());
-    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-
-    Path outputPath =
-        BuildTargetPaths.getGenPath(projectFilesystem.getBuckPaths(), buildTarget, "%s")
-            .resolve(AppleTestDescription.COMPILE_DEPS.getName());
-
-    BuildTarget processResourcesTarget =
-        buildTarget
-            .withoutFlavors(SUPPORTED_FLAVORS)
-            .withAppendedFlavors(AppleProcessResources.FLAVOR);
-    AppleProcessResources processResources =
-        (AppleProcessResources)
-            graphBuilder.computeIfAbsent(
-                processResourcesTarget,
-                target ->
-                    new AppleProcessResources(
-                        target,
-                        projectFilesystem,
-                        graphBuilder,
-                        collectedResources.getResourceFiles(),
-                        collectedResources.getResourceVariantFiles(),
-                        collectedResources.getNamedResourceVariantFiles(),
-                        ImmutableList.of(),
-                        appleCxxPlatform.getIbtool(),
-                        false,
-                        buildTarget,
-                        Optional.empty(),
-                        downwardApiConfig.isEnabledForApple(),
-                        appleCxxPlatform.getAppleSdk().getApplePlatform(),
-                        AppleBundleDestinations.platformDestinations(
-                            appleCxxPlatform.getAppleSdk().getApplePlatform()),
-                        appleConfig.getIncrementalBundlingEnabled()));
-
-    return new AppleTestAggregatedDependencies(
-        buildTarget,
-        projectFilesystem,
-        graphBuilder,
-        outputPath,
-        collectedResources,
-        appleCxxPlatform,
-        depBuildRuleSourcePaths,
-        downwardApiConfig.isEnabledForApple(),
-        processResources.getSourcePathToOutput());
-  }
-
-  private ImmutableSortedSet<BuildRule> collectTransitiveStaticLibraries(
-      TargetGraph targetGraph,
-      BuildTarget buildTarget,
-      CxxPlatform cxxPlatform,
-      AppleTestDescriptionArg args,
-      ActionGraphBuilder graphBuilder,
-      BuildRuleCreationContextWithTargetGraph context,
-      BuildRuleParams params) {
-    ImmutableSet<TargetNode<AppleLibraryDescriptionArg>>
-        transitiveStaticLibraryDependencyTargetNodes =
-            AppleBuildRules.collectTransitiveBuildRuleTargets(
-                xcodeDescriptions,
-                targetGraph,
-                Optional.empty(),
-                ImmutableSet.of(AppleLibraryDescription.class),
-                ImmutableList.of(targetGraph.get(buildTarget)),
-                RecursiveDependenciesMode.BUILDING);
-    return transitiveStaticLibraryDependencyTargetNodes.stream()
-        .filter(
-            t ->
-                t.getBuildTarget().getFlavors().getSet().stream()
-                        .reduce(
-                            true,
-                            (result, next) ->
-                                result
-                                    && flavorIndicatesStaticLibrary(next)
-                                    && flavorIndicatesCorrectPlatform(next, cxxPlatform),
-                            (result1, result2) -> result1 && result2)
-                    && configSdkRootIndicatesCorrectPlatform(t, args))
-        .map(
-            t ->
-                graphBuilder.computeIfAbsent(
-                    t.getBuildTarget()
-                        .withoutFlavors()
-                        .withAppendedFlavors(
-                            CxxLibraryDescription.Type.STATIC.getFlavor(), cxxPlatform.getFlavor()),
-                    t2 ->
-                        appleLibraryDescription.createBuildRule(
-                            context, t2, params, t.getConstructorArg())))
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
   }
 
   private Optional<SourcePath> getXctool(
