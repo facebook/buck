@@ -16,10 +16,17 @@
 
 package com.facebook.buck.testrunner;
 
+import com.android.ddmlib.IDevice;
+import com.android.ddmlib.IShellOutputReceiver;
+import com.android.ddmlib.MultiLineReceiver;
+import com.android.ddmlib.testrunner.TestIdentifier;
 import com.android.ddmlib.testrunner.XmlTestRunListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -38,6 +45,11 @@ public class BuckXmlTestRunListener extends XmlTestRunListener {
   protected static final String TEST_RESULT_FILE = "test_result.xml";
   private String mRunFailureMessage = null;
   private File mReportDir;
+  private IDevice mDevice;
+
+  BuckXmlTestRunListener(IDevice device) {
+    mDevice = device;
+  }
 
   @Override
   public void setReportDir(File file) {
@@ -59,6 +71,63 @@ public class BuckXmlTestRunListener extends XmlTestRunListener {
   public void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {
     super.testRunEnded(elapsedTime, runMetrics);
     addMainTestResult();
+  }
+
+  @Override
+  public void testFailed(TestIdentifier test, String trace) {
+    if (mDevice != null && trace.endsWith("Check device logcat for details")) {
+      try {
+        List<String> debugLines = new ArrayList<>();
+        IShellOutputReceiver receiver =
+            new MultiLineReceiver() {
+              private boolean inDebuggerdDump = false;
+
+              @Override
+              public boolean isCancelled() {
+                return false;
+              }
+
+              @Override
+              public void processNewLines(String[] lines) {
+                // Try to capture the last debuggerd dump in logcat.
+                for (String line : lines) {
+                  if (!line.contains("DEBUG")) {
+                    continue;
+                  }
+                  if (line.contains("*** *** ***")) {
+                    debugLines.clear();
+                    inDebuggerdDump = true;
+                  }
+                  if (inDebuggerdDump) {
+                    debugLines.add(line);
+                  }
+                }
+              }
+            };
+
+        // Wait a short time for debuggerd to (hopefully) write some info out.
+        Thread.sleep(1000);
+        mDevice.executeShellCommand("logcat -d", receiver, 10, TimeUnit.SECONDS);
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(trace);
+        if (debugLines.isEmpty()) {
+          builder.append("\nSearched logcat, but unable to find a crash.\n");
+        } else {
+          builder.append("\nFound a crash in logcat:\n\n");
+          for (String line : debugLines) {
+            builder.append(line).append('\n');
+          }
+        }
+        trace = builder.toString();
+      } catch (Exception e) {
+        // Is this too verbose?  Should we just ignore failure here?
+        // Logging isn't configured, unfortunately.
+        System.err.println("Warning: Failed to collect more info from logcat.");
+        e.printStackTrace();
+      }
+    }
+    super.testFailed(test, trace);
   }
 
   /** Adds one more XML element to the test_result.xml tracking the result of the whole process. */

@@ -299,7 +299,7 @@ public class InstrumentationTestRunner {
       if (codeCoverage) {
         runner.setCoverage(true);
       }
-      BuckXmlTestRunListener listener = new BuckXmlTestRunListener();
+      BuckXmlTestRunListener listener = new BuckXmlTestRunListener(device);
       ITestRunListener trimLineListener =
           new ITestRunListener() {
             /**
