@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,9 @@
 package com.facebook.buck.android.resources;
 
 import com.facebook.buck.android.aapt.RDotTxtEntry;
-import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,9 +38,6 @@ public class MergeAndroidResourcesExecutableMain {
 
   @Option(name = "--output-dir", required = true)
   private String outputDirString;
-
-  @Option(name = "--output-files", required = true)
-  private String outputFiles;
 
   @Option(name = "--force-final-resource-ids")
   private boolean forceFinalResourceIds = false;
@@ -140,17 +135,6 @@ public class MergeAndroidResourcesExecutableMain {
           referencedResources.build());
     } catch (MergeAndroidResources.DuplicateResourceException e) {
       throw new RuntimeException(e);
-    }
-
-    try (ThrowingPrintWriter writer = new ThrowingPrintWriter(new FileOutputStream(outputFiles))) {
-      for (String pkg : symbolsFileToRDotJavaPackage.build().values()) {
-        writer.printf("%s\n", MergeAndroidResources.getPathToRDotJava(outputDir, pkg));
-      }
-
-      if (unionPackage.isPresent()) {
-        writer.printf(
-            "%s\n", MergeAndroidResources.getPathToRDotJava(outputDir, unionPackage.get()));
-      }
     }
 
     System.exit(0);
