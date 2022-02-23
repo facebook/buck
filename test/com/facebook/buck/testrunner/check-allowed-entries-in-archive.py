@@ -18,6 +18,7 @@
 Verifies that an archive contains only allowed entries.
 """
 
+import re
 import unittest
 from zipfile import ZipFile
 
@@ -34,47 +35,24 @@ com/facebook/buck/test/selectors/PatternTestSelector.class
 com/facebook/buck/test/selectors/SimpleTestSelector.class
 com/facebook/buck/test/selectors/TestDescription.class
 com/facebook/buck/test/selectors/TestSelector.class
-com/facebook/buck/test/selectors/TestSelectorList$1.class
-com/facebook/buck/test/selectors/TestSelectorList$Builder.class
 com/facebook/buck/test/selectors/TestSelectorList.class
 com/facebook/buck/test/selectors/TestSelectorParseException.class
 com/facebook/buck/testrunner/BaseRunner.class
-com/facebook/buck/testrunner/BuckBlockJUnit4ClassRunner$1.class
 com/facebook/buck/testrunner/BuckBlockJUnit4ClassRunner.class
 com/facebook/buck/testrunner/BuckXmlTestRunListener.class
 com/facebook/buck/testrunner/CheckDependency.class
-com/facebook/buck/testrunner/DelegateRunNotifier$1.class
-com/facebook/buck/testrunner/DelegateRunNotifier$2.class
 com/facebook/buck/testrunner/DelegateRunNotifier.class
-com/facebook/buck/testrunner/DelegateRunnerWithTimeout$1.class
 com/facebook/buck/testrunner/DelegateRunnerWithTimeout.class
 com/facebook/buck/testrunner/InstrumentationMain.class
-com/facebook/buck/testrunner/InstrumentationTestRunner$1.class
-com/facebook/buck/testrunner/InstrumentationTestRunner$Nullable.class
 com/facebook/buck/testrunner/InstrumentationTestRunner.class
 com/facebook/buck/testrunner/JUnitMain.class
-com/facebook/buck/testrunner/JUnitRunner$1.class
-com/facebook/buck/testrunner/JUnitRunner$2$1.class
-com/facebook/buck/testrunner/JUnitRunner$2.class
-com/facebook/buck/testrunner/JUnitRunner$RecordingFilter.class
-com/facebook/buck/testrunner/JUnitRunner$TestListener.class
 com/facebook/buck/testrunner/JUnitRunner.class
-com/facebook/buck/testrunner/JulLogFormatter$1.class
 com/facebook/buck/testrunner/JulLogFormatter.class
 com/facebook/buck/testrunner/SameThreadFailOnTimeout.class
 com/facebook/buck/testrunner/TestNGMain.class
-com/facebook/buck/testrunner/TestNGRunner$1.class
-com/facebook/buck/testrunner/TestNGRunner$FilteringAnnotationTransformer.class
-com/facebook/buck/testrunner/TestNGRunner$JUnitReportReporterWithMethodParameters.class
-com/facebook/buck/testrunner/TestNGRunner$TestListener.class
 com/facebook/buck/testrunner/TestNGRunner.class
 com/facebook/buck/testrunner/TestResult.class
 com/facebook/buck/testrunner/TestXmlEscaper.class
-com/facebook/buck/testrunner/TestXmlEscaper$1.class
-com/facebook/buck/testrunner/TestXmlEscaper$AttributeEscaper.class
-com/facebook/buck/testrunner/TestXmlEscaper$ContentEscaper.class
-com/facebook/buck/util/concurrent/MostExecutors$1.class
-com/facebook/buck/util/concurrent/MostExecutors$NamedThreadFactory.class
 com/facebook/buck/util/concurrent/MostExecutors.class
 com/facebook/buck/util/environment/Architecture.class
 com/facebook/buck/util/environment/Platform.class
@@ -89,7 +67,9 @@ class TestAppend(unittest.TestCase):
             with ZipFile(r) as zip_file:
                 for entry in zip_file.namelist():
                     if not entry.endswith("/"):
+                        # Strip inner class names and only consider the containing class.
+                        containing_class = re.sub(r"\$[^./]*\.class", ".class", entry)
                         self.assertTrue(
-                            entry in ALLOWED_ENTRIES,
+                            containing_class in ALLOWED_ENTRIES,
                             "Found unexpected entry in testrunner jar: %s" % entry,
                         )
