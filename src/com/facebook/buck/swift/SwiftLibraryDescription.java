@@ -354,7 +354,7 @@ public class SwiftLibraryDescription
           swiftPlatform.get().getPrefixSerializedDebugInfo(),
           swiftBuckConfig.getAddXctestImportPaths(),
           args.getSerializeDebuggingOptions(),
-          args.getUsesExplicitModules(),
+          getUsesExplicitModules(args, swiftPlatform.get()),
           getModuleDependencies(
               graphBuilder,
               projectFilesystem,
@@ -548,7 +548,7 @@ public class SwiftLibraryDescription
         swiftPlatform.getPrefixSerializedDebugInfo(),
         swiftBuckConfig.getAddXctestImportPaths(),
         args.getSerializeDebuggingOptions(),
-        args.getUsesExplicitModules(),
+        getUsesExplicitModules(args, swiftPlatform),
         getModuleDependencies(
             graphBuilder,
             projectFilesystem,
@@ -653,7 +653,7 @@ public class SwiftLibraryDescription
         swiftPlatform.getPrefixSerializedDebugInfo(),
         swiftBuckConfig.getAddXctestImportPaths(),
         args.getSerializeDebuggingOptions(),
-        args.getUsesExplicitModules(),
+        getUsesExplicitModules(args, swiftPlatform),
         getModuleDependencies(
             graphBuilder,
             projectFilesystem,
@@ -666,6 +666,11 @@ public class SwiftLibraryDescription
             preprocessorInputs));
   }
 
+  private static boolean getUsesExplicitModules(
+      SwiftLibraryDescriptionArg args, SwiftPlatform swiftPlatform) {
+    return args.getUsesExplicitModules() && swiftPlatform.getSdkDependencies().isPresent();
+  }
+
   private static ImmutableSet<ExplicitModuleOutput> getModuleDependencies(
       ActionGraphBuilder graphBuilder,
       ProjectFilesystem projectFilesystem,
@@ -676,7 +681,7 @@ public class SwiftLibraryDescription
       AppleCompilerTargetTriple targetTriple,
       SwiftLibraryDescriptionArg args,
       ImmutableSet<CxxPreprocessorInput> preprocessorInputs) {
-    if (!args.getUsesExplicitModules()) {
+    if (!getUsesExplicitModules(args, swiftPlatform)) {
       return ImmutableSet.of();
     }
 

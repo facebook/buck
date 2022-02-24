@@ -17,6 +17,7 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
@@ -108,6 +109,10 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
       AppleCompilerTargetTriple swiftTarget) {
     if (sdkDependenciesPath.isEmpty()) {
       return Optional.empty();
+    }
+    if (resourceDir.isEmpty()) {
+      throw new HumanReadableException(
+          "swift_toolchain has sdk_dependencies_path but is missing resource_dir");
     }
 
     return Optional.of(
