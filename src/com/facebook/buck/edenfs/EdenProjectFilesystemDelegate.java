@@ -73,8 +73,6 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
    */
   private static final String BUCKCONFIG_DISABLE_SHA1_FAST_PATH = "disable_sha1_fast_path";
 
-  private static final String BUCKCONFIG_USE_XATTR_FOR_SHA1 = "use_xattr";
-  private static final String BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1 = "use_watchman_content_sha1";
   private static final String BUCKCONFIG_SHA1_HASHER = "sha1_hasher";
   private static final String WATCHMAN_CONTENT_SHA1_FIELD = "content.sha1hex";
   private static final int SHA1_HEX_LENGTH = 40;
@@ -92,23 +90,6 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
 
   @VisibleForTesting
   static Sha1Hasher getSha1HasherFromConfig(Config config) {
-    Optional<Boolean> use_xattr_for_sha1 = config.getBoolean("eden", BUCKCONFIG_USE_XATTR_FOR_SHA1);
-    if (use_xattr_for_sha1.isPresent() && use_xattr_for_sha1.get()) {
-      return Sha1Hasher.XATTR;
-    }
-
-    Optional<Boolean> use_watchman_for_sha1 =
-        config.getBoolean("eden", BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1);
-    if (use_watchman_for_sha1.isPresent() && use_watchman_for_sha1.get()) {
-      return Sha1Hasher.WATCHMAN;
-    }
-
-    if (use_xattr_for_sha1.isPresent()
-        && !use_xattr_for_sha1.get()
-        && use_watchman_for_sha1.isPresent()
-        && !use_watchman_for_sha1.get()) {
-      return Sha1Hasher.EDEN_THRIFT;
-    }
     return config
         .getEnum("eden", BUCKCONFIG_SHA1_HASHER, Sha1Hasher.class)
         .orElse(Sha1Hasher.XATTR);
@@ -173,6 +154,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
         .put("eden_filesystem", true)
         .put("eden_mountpoint", mount.getProjectRoot().toString())
         .put("eden_disablesha1fastpath", disableSha1FastPath)
+        .put("eden_sha1hasher", sha1Hasher)
         .build();
   }
 
@@ -283,8 +265,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
     if (watchman instanceof WatchmanFactory.NullWatchman) {
       throw new IllegalStateException(
           String.format(
-              "Watchman is not set. Please turn off eden.%s",
-              BUCKCONFIG_USE_WATCHMAN_CONTENT_SHA1));
+              "Watchman is not set. Please use another value for eden.%s", BUCKCONFIG_SHA1_HASHER));
     }
     return watchman;
   }

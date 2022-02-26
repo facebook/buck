@@ -229,7 +229,7 @@ public class EdenProjectFilesystemDelegateTest {
     ByteBuffer buf = ByteBuffer.wrap(DUMMY_SHA1.toString().getBytes(StandardCharsets.UTF_8));
     view.write("sha1", buf);
     EdenMount mount = createMock(EdenMount.class);
-    Config config = ConfigBuilder.createFromText("[eden]", "use_xattr = true");
+    Config config = ConfigBuilder.createFromText("[eden]", "sha1_hasher = xattr");
     EdenProjectFilesystemDelegate edenDelegate =
         new EdenProjectFilesystemDelegate(
             mount,
@@ -260,7 +260,7 @@ public class EdenProjectFilesystemDelegateTest {
     buf.putChar((char) 0xfffe);
     view.write("sha1", buf);
     EdenMount mount = createMock(EdenMount.class);
-    Config config = ConfigBuilder.createFromText("[eden]", "use_xattr = true");
+    Config config = ConfigBuilder.createFromText("[eden]", "sha1_hasher = xattr");
     EdenProjectFilesystemDelegate edenDelegate =
         new EdenProjectFilesystemDelegate(
             mount,
@@ -289,7 +289,7 @@ public class EdenProjectFilesystemDelegateTest {
     Files.write(path, bytes);
 
     EdenMount mount = createMock(EdenMount.class);
-    Config config = ConfigBuilder.createFromText("[eden]", "use_xattr = true");
+    Config config = ConfigBuilder.createFromText("[eden]", "sha1_hasher = xattr");
     EdenProjectFilesystemDelegate edenDelegate =
         new EdenProjectFilesystemDelegate(
             mount,
@@ -315,9 +315,7 @@ public class EdenProjectFilesystemDelegateTest {
 
     EdenMount mount = createMock(EdenMount.class);
 
-    Config configWithFileSystem =
-        ConfigBuilder.createFromText(
-            "[eden]", "use_xattr = true", "[eden]", "use_watchman_content_sha1 = false");
+    Config configWithFileSystem = ConfigBuilder.createFromText("[eden]", "sha1_hasher = xattr");
     EdenProjectFilesystemDelegate edenDelegateWithFileSystem =
         new EdenProjectFilesystemDelegate(
             mount,
@@ -327,9 +325,7 @@ public class EdenProjectFilesystemDelegateTest {
                 "EdenProjectFilesystemDelegateTest", WatchmanError.TEST),
             AbsPath.of(tmp.getRoot().getPath()));
 
-    Config configWithWatchman =
-        ConfigBuilder.createFromText(
-            "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
+    Config configWithWatchman = ConfigBuilder.createFromText("[eden]", "sha1_hasher = watchman");
     EdenProjectFilesystemDelegate edenDelegateWithWatchman =
         new EdenProjectFilesystemDelegate(
             mount, delegate, configWithWatchman, watchman, projectFilesystem.getRootPath());
@@ -346,9 +342,7 @@ public class EdenProjectFilesystemDelegateTest {
     ProjectFilesystemDelegate delegate =
         new DefaultProjectFilesystemDelegate(root, Optional.empty());
 
-    Config configWithWatchman =
-        ConfigBuilder.createFromText(
-            "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
+    Config configWithWatchman = ConfigBuilder.createFromText("[eden]", "sha1_hasher = watchman");
 
     EdenMount mount = createMock(EdenMount.class);
     RelPath path = RelPath.of(fs.getPath("foo/bar"));
@@ -358,7 +352,7 @@ public class EdenProjectFilesystemDelegateTest {
     replay(mount);
 
     thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Watchman is not set. Please turn off eden.use_watchman_content_sha1");
+    thrown.expectMessage("Watchman is not set. Please use another value for eden.sha1_hasher");
 
     EdenProjectFilesystemDelegate edenDelegate =
         new EdenProjectFilesystemDelegate(
@@ -384,9 +378,7 @@ public class EdenProjectFilesystemDelegateTest {
 
     WatchmanTestUtils.sync(watchman);
 
-    Config configWithFileSystem =
-        ConfigBuilder.createFromText(
-            "[eden]", "use_xattr = true", "[eden]", "use_watchman_content_sha1 = false");
+    Config configWithFileSystem = ConfigBuilder.createFromText("[eden]", "sha1_hasher = xattr");
     EdenProjectFilesystemDelegate edenDelegateWithFileSystem =
         new EdenProjectFilesystemDelegate(
             mount,
@@ -396,9 +388,7 @@ public class EdenProjectFilesystemDelegateTest {
                 "EdenProjectFilesystemDelegateTest", WatchmanError.TEST),
             tmp.getRoot());
 
-    Config configWithWatchman =
-        ConfigBuilder.createFromText(
-            "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
+    Config configWithWatchman = ConfigBuilder.createFromText("[eden]", "sha1_hasher = watchman");
     EdenProjectFilesystemDelegate edenDelegateWithWatchman =
         new EdenProjectFilesystemDelegate(
             mount, delegate, configWithWatchman, watchman, projectFilesystem.getRootPath());
@@ -414,9 +404,7 @@ public class EdenProjectFilesystemDelegateTest {
 
   @Test
   public void testGetSha1HahserFromConfig() {
-    Config configWithUseWatchman =
-        ConfigBuilder.createFromText(
-            "[eden]", "use_watchman_content_sha1 = true", "[eden]", "use_xattr = false");
+    Config configWithUseWatchman = ConfigBuilder.createFromText("[eden]", "sha1_hasher = watchman");
     assertEquals(
         EdenProjectFilesystemDelegate.Sha1Hasher.WATCHMAN,
         EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithUseWatchman));
@@ -427,8 +415,7 @@ public class EdenProjectFilesystemDelegateTest {
         EdenProjectFilesystemDelegate.Sha1Hasher.WATCHMAN,
         EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithWatchmanSHA1));
 
-    Config configWithUseXattr =
-        ConfigBuilder.createFromText("[eden]", "[eden]", "use_xattr = true");
+    Config configWithUseXattr = ConfigBuilder.createFromText("[eden]", "sha1_hasher = xattr");
     assertEquals(
         EdenProjectFilesystemDelegate.Sha1Hasher.XATTR,
         EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithUseXattr));
@@ -439,16 +426,9 @@ public class EdenProjectFilesystemDelegateTest {
         EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithXattrSHA1));
 
     Config configWithUseThrift =
-        ConfigBuilder.createFromText(
-            "[eden]", "use_watchman_content_sha1 = false", "[eden]", "use_xattr = false");
-    assertEquals(
-        EdenProjectFilesystemDelegate.Sha1Hasher.EDEN_THRIFT,
-        EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithUseThrift));
-
-    Config configWithThriftSHA1 =
         ConfigBuilder.createFromText("[eden]", "sha1_hasher = eden_thrift");
     assertEquals(
         EdenProjectFilesystemDelegate.Sha1Hasher.EDEN_THRIFT,
-        EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithThriftSHA1));
+        EdenProjectFilesystemDelegate.getSha1HasherFromConfig(configWithUseThrift));
   }
 }
