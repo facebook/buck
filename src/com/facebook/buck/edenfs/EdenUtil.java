@@ -101,7 +101,7 @@ public class EdenUtil {
         new ReconnectingEdenClient(unixSocket, new DefaultClock())) {
       edenClient.getEdenClient().getPid();
       return true;
-    } catch (EdenError | IOException | TException e) {
+    } catch (EdenError | IOException | TException | UnsupportedOperationException e) {
       LOG.debug("Could not connect Eden client via socket: " + unixSocket);
       return false;
     }
