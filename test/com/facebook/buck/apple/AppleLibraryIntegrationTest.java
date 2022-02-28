@@ -1399,25 +1399,13 @@ public class AppleLibraryIntegrationTest {
 
   private ProjectWorkspace testModularScenarioWithFlavor(
       String scenario, String targetName, Optional<Flavor> flavor) throws Exception {
-    return testModularScenarioWithFlavorAndLocalConfigs(
-        scenario, targetName, flavor, ImmutableMap.of());
-  }
-
-  private ProjectWorkspace testModularScenarioWithFlavorAndLocalConfigs(
-      String scenario,
-      String targetName,
-      Optional<Flavor> flavor,
-      Map<String, Map<String, String>> localConfigs)
-      throws Exception {
     Assume.assumeThat(Platform.detect(), Matchers.is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
     workspace.setUp();
-    workspace.addBuckConfigLocalOptions(localConfigs);
     workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
-    workspace.addBuckConfigLocalOption("cxx", "cflags", "-fmodules");
     BuildTarget target =
         workspace.newBuildTarget(String.format("//:%s#iphonesimulator-x86_64", targetName));
 
