@@ -34,6 +34,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -662,7 +663,9 @@ public class DefaultIjModuleFactoryTest {
         };
 
     Optional<IjLibrary> library =
-        new DefaultIjLibraryFactory(ijLibraryFactoryResolver).getLibrary(androidPrebuiltAar);
+        new DefaultIjLibraryFactory(
+                TargetGraphFactory.newInstance(androidPrebuiltAar), ijLibraryFactoryResolver)
+            .getLibrary(androidPrebuiltAar);
     assertTrue(library.isPresent());
     assertEquals(
         library.get().getBinaryJars(),

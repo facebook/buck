@@ -33,6 +33,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -796,11 +797,12 @@ public class IjModuleGraphTest {
             packageFinder);
     IjModuleFactory moduleFactory =
         new DefaultIjModuleFactory(filesystem, projectConfig, typeRegistry);
-    IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(targets);
+    IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(targetGraph, sourceOnlyResolver);
     return IjModuleGraphFactory.from(
         filesystem,
         projectConfig,
-        TargetGraphFactory.newInstance(targets),
+        targetGraph,
         libraryFactory,
         moduleFactory,
         new DefaultAggregationModuleFactory(typeRegistry),

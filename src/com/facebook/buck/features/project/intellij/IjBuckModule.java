@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.module.BuckModule;
+import com.facebook.buck.features.alias.AliasModule;
 import com.facebook.buck.features.filegroup.FilegroupModule;
 import com.facebook.buck.features.python.PythonModule;
 import com.facebook.buck.features.rust.RustModule;
@@ -25,6 +26,7 @@ import com.facebook.buck.features.zip.rules.ZipRulesModule;
 /** Module with project generator for IntelliJ. */
 @BuckModule(
     dependencies = {
+      AliasModule.class,
       FilegroupModule.class,
       PythonModule.class,
       RustModule.class,

@@ -794,6 +794,7 @@
         <include name="com/facebook/buck/features/project/intellij/**/*.java" />
       </module-javac-params>
       <additional-classpath-entries>
+        <include name="alias.jar"/>
         <include name="python.jar"/>
         <include name="rust.jar"/>
         <include name="filegroup.jar" />

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import com.facebook.buck.android.UnzipAar;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -65,10 +66,13 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
   private Map<Class<? extends DescriptionWithTargetGraph<?>>, IjLibraryRule> libraryRuleIndex =
       new HashMap<>();
+  private final TargetGraph targetGraph;
   private final IjLibraryFactoryResolver libraryFactoryResolver;
   private final Map<String, Optional<IjLibrary>> libraryCache;
 
-  public DefaultIjLibraryFactory(IjLibraryFactoryResolver libraryFactoryResolver) {
+  public DefaultIjLibraryFactory(
+      TargetGraph targetGraph, IjLibraryFactoryResolver libraryFactoryResolver) {
+    this.targetGraph = targetGraph;
     this.libraryFactoryResolver = libraryFactoryResolver;
 
     addToIndex(new AndroidPrebuiltAarLibraryRule());
@@ -84,7 +88,11 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
   }
 
   @Override
-  public Optional<IjLibrary> getLibrary(TargetNode<?> target) {
+  public Optional<IjLibrary> getLibrary(TargetNode<?> targetNode) {
+    TargetNode<?> target =
+        IjAliasHelper.isAliasNode(targetNode)
+            ? IjAliasHelper.resolveAliasNode(targetGraph, targetNode)
+            : targetNode;
     String libraryName = getLibraryName(target);
     Optional<IjLibrary> library = libraryCache.get(libraryName);
     if (library == null) {

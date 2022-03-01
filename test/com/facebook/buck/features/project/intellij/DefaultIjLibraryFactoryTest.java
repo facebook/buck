@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -117,7 +119,8 @@ public class DefaultIjLibraryFactoryTest {
           }
         };
 
-    factory = new DefaultIjLibraryFactory(libraryFactoryResolver);
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(guava, androidSupport, base);
+    factory = new DefaultIjLibraryFactory(targetGraph, libraryFactoryResolver);
 
     guavaLibrary = factory.getLibrary(guava).get();
     androidSupportLibrary = factory.getLibrary(androidSupport).get();
