@@ -393,7 +393,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         "-emit-module-path",
         modulePath.toString(),
         "-emit-objc-header-path",
-        headerPath.toString(),
+        getEmitObjCHeaderPath().toString(),
         "-emit-object");
 
     if (incrementalBuild || incrementalImports) {
@@ -651,6 +651,14 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   /** @return {@link SourcePath} of the Objective-C Generated Interface Header. */
   public SourcePath getObjCGeneratedHeaderPath() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), headerPath);
+  }
+
+  /**
+   * @return {@link Path} to the output path for the Objective-C Generated Interface Header, to be
+   *     passed to the Swift compiler.
+   */
+  public Path getEmitObjCHeaderPath() {
+    return headerPath;
   }
 
   /**

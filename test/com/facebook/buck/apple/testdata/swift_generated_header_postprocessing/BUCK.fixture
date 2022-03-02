@@ -1,0 +1,66 @@
+apple_library(
+    name = "Superclass",
+    exported_headers = ["Superclass.h"],
+    frameworks = ["$SDKROOT/System/Library/Frameworks/Foundation.framework"],
+    modular = True,
+    srcs = ["Superclass.m"],
+)
+
+apple_library(
+    name = "Subclass",
+    exported_deps = [":Superclass"],
+    modular = True,
+    srcs = ["Subclass.swift"],
+)
+
+apple_library(
+    name = "TestWithoutModules",
+    deps = [":Subclass"],
+    srcs = ["Test.m"],
+)
+
+apple_library(
+    name = "TestWithModules",
+    deps = [":Subclass"],
+    srcs = ["Test.m"],
+    uses_modules = True,
+)
+
+apple_library(
+    name = "FrameworkSubclass",
+    frameworks = ["$SDKROOT/System/Library/Frameworks/UIKit.framework"],
+    modular = True,
+    srcs = ["FrameworkSubclass.swift"],
+)
+
+apple_library(
+    name = "FrameworkTestWithoutModules",
+    deps = [":FrameworkSubclass"],
+    srcs = ["FrameworkTest.m"],
+)
+
+apple_library(
+    name = "FrameworkTestWithModules",
+    deps = [":FrameworkSubclass"],
+    srcs = ["FrameworkTest.m"],
+    uses_modules = True,
+)
+
+apple_library(
+    name = "ObjectiveCTestDependency",
+    srcs = ["ObjectiveCExportedImport.swift"],
+    modular = True,
+)
+
+apple_library(
+    name = "ObjectiveCTestWithoutModules",
+    deps = [":ObjectiveCTestDependency"],
+    srcs = ["ObjectiveCTest.m"],
+)
+
+apple_library(
+    name = "ObjectiveCTestWithModules",
+    deps = [":ObjectiveCTestDependency"],
+    srcs = ["ObjectiveCTest.m"],
+    uses_modules = True,
+)

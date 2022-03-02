@@ -1386,6 +1386,42 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testBuildAppleLibraryWithSwiftPostprocessingAndModulesDisabled() throws Exception {
+    testModularScenario("swift_generated_header_postprocessing", "TestWithoutModules");
+  }
+
+  @Test
+  public void testBuildAppleLibraryWithSwiftPostprocessingAndModulesEnabled() throws Exception {
+    testModularScenario("swift_generated_header_postprocessing", "TestWithModules");
+  }
+
+  @Test
+  public void testBuildAppleLibraryUsingAppleFrameworkWithSwiftPostprocessingAndModulesDisabled()
+      throws Exception {
+    testModularScenario("swift_generated_header_postprocessing", "FrameworkTestWithoutModules");
+  }
+
+  @Test
+  public void testBuildAppleLibraryUsingAppleFrameworkWithSwiftPostprocessingAndModulesEnabled()
+      throws Exception {
+    testModularScenario("swift_generated_header_postprocessing", "FrameworkTestWithModules");
+  }
+
+  @Test
+  public void
+      testBuildAppleLibraryUsingObjectiveCFrameworkWithSwiftPostprocessingAndModulesDisabled()
+          throws Exception {
+    testModularScenario("swift_generated_header_postprocessing", "ObjectiveCTestWithoutModules");
+  }
+
+  @Test
+  public void
+      testBuildAppleLibraryUsingObjectiveCFrameworkWithSwiftPostprocessingAndModulesEnabled()
+          throws Exception {
+    testModularScenario("swift_generated_header_postprocessing", "ObjectiveCTestWithModules");
+  }
+
+  @Test
   public void testTargetSDKVersion() throws Exception {
     testModularScenario("target_sdk_version", "Binary");
     testModularScenario("target_sdk_version", "Library");

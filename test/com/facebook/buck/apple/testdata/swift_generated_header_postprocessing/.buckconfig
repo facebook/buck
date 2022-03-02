@@ -1,0 +1,2 @@
+[swift]
+postprocess_generated_header_for_non_modules_compatibility=true

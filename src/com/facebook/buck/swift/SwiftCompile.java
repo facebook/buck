@@ -23,11 +23,13 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.PreprocessorFlags;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTreeWithModuleMap;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -48,6 +50,9 @@ import java.util.Optional;
 /** A build rule which compiles one or more Swift sources into a Swift module. */
 public class SwiftCompile extends SwiftCompileBase {
   @AddToRuleKey private final boolean transformErrorsToAbsolutePaths;
+  @AddToRuleKey private final boolean postprocessGeneratedHeaderForNonModulesCompatibility;
+  private final Path headerPathBeforePostprocessing;
+  private final ImmutableMap<String, HeaderSymlinkTreeWithModuleMap> moduleNameToSymlinkTrees;
 
   SwiftCompile(
       SwiftBuckConfig swiftBuckConfig,
@@ -109,6 +114,29 @@ public class SwiftCompile extends SwiftCompileBase {
         moduleDependencies);
 
     transformErrorsToAbsolutePaths = swiftBuckConfig.getTransformErrorsToAbsolutePaths();
+
+    this.postprocessGeneratedHeaderForNonModulesCompatibility =
+        swiftBuckConfig.getPostprocessGeneratedHeaderForNonModulesCompatibility();
+
+    if (postprocessGeneratedHeaderForNonModulesCompatibility) {
+      ImmutableMap.Builder<String, HeaderSymlinkTreeWithModuleMap> moduleNameToSymlinkTreesBuilder =
+          ImmutableMap.builder();
+
+      for (BuildRule dep : cxxDeps.getDeps(graphBuilder)) {
+        if (dep instanceof HeaderSymlinkTreeWithModuleMap) {
+          HeaderSymlinkTreeWithModuleMap symlinkTree = (HeaderSymlinkTreeWithModuleMap) dep;
+          moduleNameToSymlinkTreesBuilder.put(symlinkTree.getModuleName(), symlinkTree);
+        }
+      }
+
+      this.moduleNameToSymlinkTrees = moduleNameToSymlinkTreesBuilder.build();
+      this.headerPathBeforePostprocessing =
+          outputPath.resolve(
+              SwiftDescriptions.toSwiftHeaderName(moduleName) + "BeforePostprocessing.h");
+    } else {
+      this.moduleNameToSymlinkTrees = null;
+      this.headerPathBeforePostprocessing = null;
+    }
   }
 
   @Override
@@ -127,6 +155,15 @@ public class SwiftCompile extends SwiftCompileBase {
     }
 
     steps.add(makeCompileStep(context.getSourcePathResolver()));
+
+    if (postprocessGeneratedHeaderForNonModulesCompatibility) {
+      steps.add(
+          new SwiftGeneratedHeaderPostprocessingStep(
+              headerPathBeforePostprocessing,
+              getObjCGeneratedHeaderPath(),
+              moduleNameToSymlinkTrees,
+              context.getSourcePathResolver()));
+    }
 
     return steps.build();
   }
@@ -186,5 +223,12 @@ public class SwiftCompile extends SwiftCompileBase {
   @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), outputPath);
+  }
+
+  @Override
+  public Path getEmitObjCHeaderPath() {
+    return headerPathBeforePostprocessing != null
+        ? headerPathBeforePostprocessing
+        : super.getEmitObjCHeaderPath();
   }
 }

@@ -44,6 +44,8 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String ALLOW_PRIVATE_SWIFT_DEPS = "allow_private_swift_deps";
   public static final String INCREMENTAL_BUILDS = "incremental";
   public static final String INCREMENTAL_IMPORTS = "incremental_imports";
+  public static final String POSTPROCESS_GENERATED_HEADER_FOR_NON_MODULES_COMPATIBILITY =
+      "postprocess_generated_header_for_non_modules_compatibility";
   private final BuckConfig delegate;
 
   @Override
@@ -213,5 +215,14 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getIncrementalImports() {
     return delegate.getBooleanValue(SECTION_NAME, INCREMENTAL_IMPORTS, false);
+  }
+
+  /**
+   * If true, BUCK will postprocess the generated Objective-C header to make it compatible with
+   * Objective-C code that does not use the -fmodules flag for compilation.
+   */
+  public boolean getPostprocessGeneratedHeaderForNonModulesCompatibility() {
+    return delegate.getBooleanValue(
+        SECTION_NAME, POSTPROCESS_GENERATED_HEADER_FOR_NON_MODULES_COMPATIBILITY, false);
   }
 }
