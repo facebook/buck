@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
+import com.facebook.buck.jvm.java.abi.kotlin.InlineFunctionScope;
 import com.facebook.buck.jvm.java.abi.kotlin.KotlinMetadataReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -25,9 +26,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -37,82 +36,78 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InnerClassNode;
 
 class StubJarClassEntry extends StubJarEntry {
-  private static final String DEFAULT_METHOD_SUFFIX = "$default";
-  private static final int DEFAULT_METHOD_SUFFIX_LENGTH = DEFAULT_METHOD_SUFFIX.length();
-
   @Nullable private final Set<String> referencedClassNames;
-  private final List<String> methodBodiesToRetain;
   private final Path path;
   private final ClassNode stub;
-  private final boolean retainEverything;
+  private final List<String> kotlinInlineFunctions;
+  private final boolean isWithinInlineFunctionScope;
 
   @Nullable
   public static StubJarClassEntry of(
       LibraryReader input,
       Path path,
       @Nullable AbiGenerationMode compatibilityMode,
-      boolean isKotlinModule,
-      Map<String, List<String>> inlineFunctionsMap)
+      @Nullable InlineFunctionScope inlineFunctionScope)
       throws IOException {
-    ClassNode stub = new ClassNode(Opcodes.ASM7);
 
-    // Kotlin has the concept of "inline functions", which means that we need to retain the body
-    // of these functions so that the compiler is able to inline them.
-    List<String> methodBodiesToRetain = Collections.emptyList();
+    List<String> inlineFunctions = Collections.emptyList();
+    boolean isKotlinModule = inlineFunctionScope != null;
     boolean isKotlinClass = false;
-    boolean retainAllMethodBodies = false;
+    boolean isWithinInlineFunctionScope = false;
 
     if (isKotlinModule) {
-      AnnotationNode kotlinMetadataAnnotation = findKotlinMetadataAnnotation(input, path);
+      // Visit the class (skipping code) without filtering, to gather its annotations and class
+      // relationships
+      ClassNode classMetadata = new ClassNode(Opcodes.ASM7);
+      input.visitClass(path, classMetadata, true);
+
+      AnnotationNode kotlinMetadataAnnotation = findKotlinMetadataAnnotation(classMetadata);
       if (kotlinMetadataAnnotation != null) {
         isKotlinClass = true;
-        if (path.toString().contains("$sam$i")) {
-          // These classes are created when we have a Single Abstract Method (SAM) interface that is
-          // used within an inline function, and in these cases we need to retain the whole class.
-          input.visitClass(path, stub, false);
-          return new StubJarClassEntry(
-              path, stub, Collections.emptySet(), Collections.emptyList(), true);
-        }
-        ClassNode dummyStub = new ClassNode(Opcodes.ASM7);
-        input.visitClass(path, dummyStub, true);
-        retainAllMethodBodies =
-            retainAllMethodBodies(
-                inlineFunctionsMap, path, dummyStub.outerClass, dummyStub.outerMethod);
-        if (retainAllMethodBodies) {
-          methodBodiesToRetain =
-              dummyStub.methods.stream()
-                  .map(methodNode -> methodNode.name)
-                  .collect(Collectors.toList());
-        } else {
-          methodBodiesToRetain = KotlinMetadataReader.getInlineFunctions(kotlinMetadataAnnotation);
-        }
+        isWithinInlineFunctionScope = inlineFunctionScope.captures(path, classMetadata);
+        inlineFunctions = KotlinMetadataReader.getInlineFunctions(kotlinMetadataAnnotation);
       }
     }
 
     // As we read the class in, we create a partial stub that removes non-ABI methods and fields
     // but leaves the entire InnerClasses table. We record all classes that are referenced from
     // ABI methods and fields, and will use that information later to filter the InnerClasses table.
+    //
+    // If this class is within a Kotlin inline function's scope its ABI is unfiltered, because it
+    // will be copied in its entirety in the calling context.
+    ClassNode stub = new ClassNode(Opcodes.ASM7);
     ClassReferenceTracker referenceTracker = new ClassReferenceTracker(stub);
-    ClassVisitor firstLevelFiltering =
-        new AbiFilteringClassVisitor(referenceTracker, methodBodiesToRetain);
+    ClassVisitor visitor = referenceTracker;
+    if (!isWithinInlineFunctionScope) {
+      visitor = new AbiFilteringClassVisitor(visitor, inlineFunctions);
+    }
 
     // If we want ABIs that are compatible with those generated from source, we add a visitor
     // at the very start of the chain which transforms the event stream coming out of `ClassNode`
     // to look like what ClassVisitorDriverFromElement would have produced.
     if (compatibilityMode != null && compatibilityMode != AbiGenerationMode.CLASS) {
-      firstLevelFiltering = new SourceAbiCompatibleVisitor(firstLevelFiltering, compatibilityMode);
+      visitor = new SourceAbiCompatibleVisitor(visitor, compatibilityMode);
     }
-    input.visitClass(path, firstLevelFiltering, /* skipCode */ !isKotlinClass);
 
-    // The synthetic package-info class is how package annotations are recorded; that one is
-    // actually used by the compiler
+    // Don't skip the code if this is a Kotlin Class so that (a) we have a chance to visit the the
+    // classes referenced in inline function bodies, and (b) to retain debug information that
+    // Kotlin's
+    // own jvm-abi-gen plugin would retain.
+    input.visitClass(path, visitor, /* skipCode */ !isKotlinClass);
+
     // Kotlin top functions reside in synthetic classes, we should output ABIs for them.
     if ((isSyntheticClass(stub) && isKotlinModule)
         || !(isSyntheticClass(stub) || isAnonymousOrLocalClass(stub))
-        || retainAllMethodBodies
+        || isWithinInlineFunctionScope
+        // The synthetic package-info class is how package annotations are recorded; that one is
+        // actually used by the compiler
         || stub.name.endsWith("/package-info")) {
       return new StubJarClassEntry(
-          path, stub, referenceTracker.getReferencedClassNames(), methodBodiesToRetain, false);
+          path,
+          stub,
+          referenceTracker.getReferencedClassNames(),
+          inlineFunctions,
+          isWithinInlineFunctionScope);
     }
 
     return null;
@@ -122,13 +117,13 @@ class StubJarClassEntry extends StubJarEntry {
       Path path,
       ClassNode stub,
       Set<String> referencedClassNames,
-      List<String> methodBodiesToRetain,
-      boolean retainEverything) {
+      List<String> kotlinInlineFunctions,
+      boolean isWithinInlineFunctionScope) {
     this.path = path;
     this.stub = stub;
     this.referencedClassNames = referencedClassNames;
-    this.methodBodiesToRetain = methodBodiesToRetain;
-    this.retainEverything = retainEverything;
+    this.kotlinInlineFunctions = kotlinInlineFunctions;
+    this.isWithinInlineFunctionScope = isWithinInlineFunctionScope;
   }
 
   @Override
@@ -137,16 +132,21 @@ class StubJarClassEntry extends StubJarEntry {
   }
 
   @Override
-  public List<String> getInlineMethods() {
-    return methodBodiesToRetain;
+  public List<String> getInlineFunctions() {
+    return kotlinInlineFunctions;
+  }
+
+  @Override
+  public boolean extendsInlineFunctionScope() {
+    return isWithinInlineFunctionScope;
   }
 
   private InputStream openInputStream() {
     ClassWriter writer = new ClassWriter(0);
     ClassVisitor visitor = writer;
-    if (!retainEverything) {
+    if (!isWithinInlineFunctionScope) {
       visitor = new InnerClassSortingClassVisitor(stub.name, visitor);
-      visitor = new AbiFilteringClassVisitor(visitor, methodBodiesToRetain, referencedClassNames);
+      visitor = new AbiFilteringClassVisitor(visitor, kotlinInlineFunctions, referencedClassNames);
     }
 
     stub.accept(visitor);
@@ -170,37 +170,6 @@ class StubJarClassEntry extends StubJarEntry {
     return false;
   }
 
-  /**
-   * If this is a class that was created for a method that needs to be inlined, then we need to make
-   * sure that we retain its methods.
-   */
-  private static boolean retainAllMethodBodies(
-      Map<String, List<String>> inlineFunctionsMap,
-      Path path,
-      String outerClass,
-      String outerMethod) {
-    if (path.toString().contains("$$inlined$")) {
-      // These classes are created when a function calls an inline function with a crossinline
-      // parameter.
-      return true;
-    }
-
-    final List<String> inlineFunctions = inlineFunctionsMap.get(outerClass);
-    if (inlineFunctions == null || outerMethod == null) {
-      return false;
-    }
-
-    return inlineFunctions.contains(sanitizeMethodName(outerMethod));
-  }
-
-  private static String sanitizeMethodName(String methodName) {
-    if (methodName.endsWith(DEFAULT_METHOD_SUFFIX)) {
-      return methodName.substring(0, methodName.length() - DEFAULT_METHOD_SUFFIX_LENGTH);
-    }
-
-    return methodName;
-  }
-
   @Nullable
   private static InnerClassNode getInnerClassMetadata(ClassNode node) {
     String name = node.name;
@@ -208,24 +177,14 @@ class StubJarClassEntry extends StubJarEntry {
   }
 
   @Nullable
-  private static AnnotationNode findKotlinMetadataAnnotation(LibraryReader input, Path relativePath)
-      throws IOException {
-    final List<AnnotationNode> annotations = getVisibleAnnotations(input, relativePath);
-    if (annotations == null) {
+  private static AnnotationNode findKotlinMetadataAnnotation(ClassNode node) {
+    if (node.visibleAnnotations == null) {
       return null;
     }
-    return annotations.stream()
+    return node.visibleAnnotations.stream()
         .filter(annotation -> "Lkotlin/Metadata;".equals(annotation.desc))
         .findFirst()
         .orElse(null);
-  }
-
-  private static List<AnnotationNode> getVisibleAnnotations(LibraryReader input, Path relativePath)
-      throws IOException {
-    ClassNode node = new ClassNode();
-    input.visitClass(relativePath, node, /* skipCode */ true);
-
-    return node.visibleAnnotations;
   }
 
   @Nullable

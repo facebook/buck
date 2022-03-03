@@ -17,10 +17,10 @@
 package com.facebook.buck.jvm.java.abi;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
+import com.facebook.buck.jvm.java.abi.kotlin.InlineFunctionScope;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import javax.annotation.Nullable;
 
 public abstract class StubJarEntry {
@@ -29,13 +29,12 @@ public abstract class StubJarEntry {
       LibraryReader input,
       Path path,
       AbiGenerationMode compatibilityMode,
-      boolean isKotlinModule,
-      Map<String, List<String>> inlineFunctions)
+      @Nullable InlineFunctionScope inlineFunctionScope)
       throws IOException {
     if (isStubbableResource(input, path)) {
       return StubJarResourceEntry.of(input, path);
     } else if (input.isClass(path)) {
-      return StubJarClassEntry.of(input, path, compatibilityMode, isKotlinModule, inlineFunctions);
+      return StubJarClassEntry.of(input, path, compatibilityMode, inlineFunctionScope);
     }
 
     return null;
@@ -43,7 +42,9 @@ public abstract class StubJarEntry {
 
   public abstract void write(StubJarWriter writer);
 
-  public abstract List<String> getInlineMethods();
+  public abstract List<String> getInlineFunctions();
+
+  public abstract boolean extendsInlineFunctionScope();
 
   private static boolean isStubbableResource(LibraryReader input, Path path) {
     return input.isResource(path);
