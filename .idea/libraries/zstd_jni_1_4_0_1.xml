@@ -1,7 +1,7 @@
 <component name="libraryTable">
-  <library name="zstd-jni-1.4.0-1">
+  <library name="zstd-jni-1.4.9-5">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/third-party/java/zstd-jni/zstd-jni-1.4.0-1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/zstd-jni/zstd-jni-1.4.9-5.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
