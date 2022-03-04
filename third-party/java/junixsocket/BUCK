@@ -6,5 +6,5 @@ buck_prebuilt_jar(
     licenses = [
         "LICENSE",
     ],
-    visibility = ["//src/com/facebook/buck/io/unixsocket:unixsocket"],
+    visibility = ["PUBLIC"],
 )
