@@ -42,6 +42,7 @@ import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.AbstractGenruleStep;
+import com.facebook.buck.shell.GenruleBuildable;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -99,6 +100,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   @AddToRuleKey private final int optimizationPasses;
   @AddToRuleKey private final boolean shouldProguard;
   @AddToRuleKey private final Optional<Arg> preprocessJavaClassesBash;
+  @AddToRuleKey private final Optional<Arg> preprocessJavaClassesCmd;
   @AddToRuleKey private final Optional<String> proguardAgentPath;
   @AddToRuleKey private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey private final ImmutableList<SourcePath> proguardConfigs;
@@ -127,6 +129,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     Optional<String> getProguardAgentPath();
 
     Optional<Arg> getPreprocessJavaClassesBash();
+
+    Optional<Arg> getPreprocessJavaClassesCmd();
 
     ListeningExecutorService getDxExecutorService();
 
@@ -176,6 +180,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     this.optimizationPasses = args.getOptimizationPasses();
     this.shouldProguard = args.getShouldProguard();
     this.preprocessJavaClassesBash = args.getPreprocessJavaClassesBash();
+    this.preprocessJavaClassesCmd = args.getPreprocessJavaClassesCmd();
     this.proguardConfig = args.getProguardConfigPath();
     this.proguardConfigs = proguardConfigs;
     this.proguardJvmArgs = args.getProguardJvmArgs();
@@ -288,7 +293,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             .collect(ImmutableListMultimap.toImmutableListMultimap(Entry::getKey, Entry::getValue));
 
     // Execute preprocess_java_classes_binary, if appropriate.
-    if (preprocessJavaClassesBash.isPresent()) {
+    if (preprocessJavaClassesBash.isPresent() || preprocessJavaClassesCmd.isPresent()) {
       // Symlink everything in dexTransitiveDependencies.classpathEntriesToDex to the input
       // directory.
       Path preprocessJavaClassesInDir = getBinPath("java_classes_preprocess_in");
@@ -349,7 +354,9 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
               /* cmdForCmdExe */ Optional.empty(),
               /* bash */ Arg.flattenToSpaceSeparatedString(
                   preprocessJavaClassesBash, sourcePathResolver),
-              /* cmdExe */ Optional.empty());
+              /* cmdExe */ preprocessJavaClassesCmd.map(
+                  arg ->
+                      GenruleBuildable.flattenArgToWindowsCmdExeCommand(arg, sourcePathResolver)));
       steps.add(
           new AbstractGenruleStep(
               projectFilesystem,

@@ -102,7 +102,8 @@ public class AndroidBinaryGraphEnhancerFactory {
     boolean shouldPreDex =
         !args.getDisablePreDex()
             && !shouldProguard
-            && !args.getPreprocessJavaClassesBash().isPresent();
+            && !args.getPreprocessJavaClassesBash().isPresent()
+            && !args.getPreprocessJavaClassesCmd().isPresent();
 
     boolean shouldSkipCrunchPngs = args.isSkipCrunchPngs().orElse(false);
 
@@ -131,6 +132,8 @@ public class AndroidBinaryGraphEnhancerFactory {
             .setSdkProguardConfig(androidSdkProguardConfig)
             .setPreprocessJavaClassesBash(
                 getPreprocessJavaClassesBash(args, buildTarget, graphBuilder, cellPathResolver))
+            .setPreprocessJavaClassesCmd(
+                getPreprocessJavaClassesCmd(args, buildTarget, graphBuilder, cellPathResolver))
             .setDxExecutorService(dxExecutorService)
             .setOptimizationPasses(args.getOptimizationPasses())
             .setProguardJvmArgs(args.getProguardJvmArgs())
@@ -257,5 +260,19 @@ public class AndroidBinaryGraphEnhancerFactory {
             graphBuilder,
             MacroExpandersForAndroidRules.MACRO_EXPANDERS);
     return arg.getPreprocessJavaClassesBash().map(macrosConverter::convert);
+  }
+
+  private Optional<Arg> getPreprocessJavaClassesCmd(
+      AndroidGraphEnhancerArgs arg,
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots) {
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(
+            buildTarget,
+            cellRoots.getCellNameResolver(),
+            graphBuilder,
+            MacroExpandersForAndroidRules.MACRO_EXPANDERS);
+    return arg.getPreprocessJavaClassesCmd().map(macrosConverter::convert);
   }
 }

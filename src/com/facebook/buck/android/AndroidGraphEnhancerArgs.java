@@ -160,6 +160,8 @@ public interface AndroidGraphEnhancerArgs
 
   Optional<StringWithMacros> getPreprocessJavaClassesBash();
 
+  Optional<StringWithMacros> getPreprocessJavaClassesCmd();
+
   @Value.Default
   default String getDexTool() {
     return "d8";

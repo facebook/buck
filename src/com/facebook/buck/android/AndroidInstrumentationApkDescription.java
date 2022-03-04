@@ -182,6 +182,7 @@ public class AndroidInstrumentationApkDescription
             .setProguardMaxHeapSize(proGuardConfig.getProguardMaxHeapSize())
             .setSdkProguardConfig(apkUnderTest.getSdkProguardConfig())
             .setPreprocessJavaClassesBash(Optional.empty())
+            .setPreprocessJavaClassesCmd(Optional.empty())
             .setDxExecutorService(dxExecutorService)
             .setOptimizationPasses(apkUnderTest.getOptimizationPasses())
             .setProguardJvmArgs(apkUnderTest.getProguardJvmArgs())

@@ -843,7 +843,7 @@ public class GenruleBuildable implements Buildable {
    * @return {@link WindowsCmdExeEscaper.Command} suitable for later escaping by {@link
    *     WindowsCmdExeEscaper#escape(WindowsCmdExeEscaper.Command)}.
    */
-  private static WindowsCmdExeEscaper.Command flattenArgToWindowsCmdExeCommand(
+  public static WindowsCmdExeEscaper.Command flattenArgToWindowsCmdExeCommand(
       Arg cmdExeArg, SourcePathResolverAdapter pathResolver) {
     ImmutableList<Arg> args;
 
