@@ -35,6 +35,7 @@ import com.facebook.buck.cxx.CxxPrepareForLinkStep;
 import com.facebook.buck.cxx.CxxWriteArgsToFileStep;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.rust.RustBuckConfig.RemapSrcPaths;
+import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.rules.args.Arg;
@@ -44,6 +45,9 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.SymlinkMapsPaths;
+import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.Verbosity;
@@ -54,10 +58,12 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 /** Generate a rustc command line with all appropriate dependencies in place. */
 public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
+
   private final RustPlatform rustPlatform;
 
   /**
@@ -287,8 +293,37 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       //
       // NOTE: this means that all logical args should be a single string on the command
       // line (ie "-Lfoo", not ["-L", "foo"])
+      RelPath symlinkTreeRoot =
+          BuildTargetPaths.getGenPath(
+              filesystem.getBuckPaths(), buildTarget, "%s/symlink-tree-root");
       ImmutableSet.Builder<String> dedupArgs = ImmutableSet.builder();
-      dedupArgs.addAll(Arg.stringify(depArgs, buildContext.getSourcePathResolver()));
+      ImmutableMap.Builder<Path, Path> builder = new ImmutableMap.Builder<>();
+      for (Arg arg : depArgs) {
+        // We compile all the dependency args here, this emulates cargo, the reason we do is that on
+        // windows, we will exceed fileargs size
+        // https://github.com/rust-lang/rust/issues/79923
+        if (arg instanceof RustLibraryArg
+            && !((RustLibraryArg) arg).getDirectDependent().isPresent()) {
+          Path rlibPath = Paths.get(((RustLibraryArg) arg).getRlibRelativePath());
+          builder.put(rlibPath.getFileName(), filesystem.resolve(rlibPath));
+        } else {
+          arg.appendToCommandLine(dedupArgs::add, buildContext.getSourcePathResolver());
+        }
+      }
+
+      dedupArgs.add("-Ldependency=" + symlinkTreeRoot);
+
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  buildContext.getBuildCellRootPath(), filesystem, symlinkTreeRoot)));
+      steps.add(
+          new SymlinkTreeMergeStep(
+              "rust_rlib",
+              filesystem,
+              symlinkTreeRoot.getPath(),
+              new SymlinkMapsPaths(builder.build()),
+              (fs, p) -> false));
       steps.add(
           CxxWriteArgsToFileStep.create(
               depArgFilePath.getPath(),
