@@ -17,6 +17,7 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
+import com.facebook.buck.apple.common.AppleFlavors;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -72,6 +73,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -346,6 +348,33 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         String path = resolver.getIdeallyRelativePath(module.getOutputPath()).toString();
         if (module.getIsSwiftmodule()) {
           argBuilder.add(frontendFlag, "-swift-module-file", frontendFlag, path);
+        } else if (module.getName().equals(moduleName)) {
+          // We cannot import the direct path to the underlying module as it will conflict with
+          // the exported module of the same name when debugging. Instead we need to import the
+          // exported module path, this will be remapped in the VFS overlay to the underlying one.
+          Iterator<Arg> argIterator =
+              cxxDeps
+                  .toToolFlags(
+                      resolver,
+                      PathShortener.byRelativizingToWorkingDir(
+                          getProjectFilesystem().getRootPath()),
+                      frameworkPathToSearchPath,
+                      cPreprocessor,
+                      Optional.empty())
+                  .getAllFlags()
+                  .iterator();
+          while (argIterator.hasNext()) {
+            Arg arg = argIterator.next();
+            if (arg.equals(StringArg.of("-ivfsoverlay"))) {
+              argBuilder.add(
+                  "-Xcc", "-ivfsoverlay", "-Xcc", Arg.stringify(argIterator.next(), resolver));
+              break;
+            }
+          }
+          argBuilder.add(
+              "-Xcc",
+              "-fmodule-file="
+                  + path.replaceAll(AppleFlavors.SWIFT_UNDERLYING_MODULE_FLAVOR + ",", ""));
         } else {
           // TODO: this should use -fmodule-file=modulename=path syntax to avoid always loading
           // module files when they are not imported. Unfortunately this does not seem to work

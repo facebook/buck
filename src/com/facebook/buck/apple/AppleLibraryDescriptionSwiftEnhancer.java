@@ -105,7 +105,8 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         .map(version -> swiftPlatform.getSwiftTarget().withTargetSdkVersion(version));
   }
 
-  private static SwiftLibraryDescriptionArg getSwiftArgs(
+  /** Return the Swift compiler args used for this build target. */
+  public static SwiftLibraryDescriptionArg getSwiftArgs(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       AppleNativeTargetDescriptionArg args,

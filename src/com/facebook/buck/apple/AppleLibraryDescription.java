@@ -101,6 +101,7 @@ import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
 import com.facebook.buck.util.types.Either;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Joiner;
@@ -330,13 +331,38 @@ public class AppleLibraryDescription
                 BuildTargetPaths.getGenPath(
                     projectFilesystem.getBuckPaths(), exportedHeadersWithModulemapTarget, "%s");
 
+            Optional<Pair<RelPath, RelPath>> underlyingPcmPaths = Optional.empty();
+            if (args.getUsesExplicitModules()) {
+              // We need to add the underlying module path to the VFS overlay too as we can't
+              // make it visible to the debugger.
+              SwiftPlatform swiftPlatform =
+                  getSwiftPlatform(toolchainProvider, buildTarget, cxxPlatform, graphBuilder).get();
+              underlyingPcmPaths =
+                  SwiftLibraryDescription.getUnderlyingModulePaths(
+                      buildTarget,
+                      cellRoots.getCellNameResolver(),
+                      graphBuilder,
+                      cxxPlatform,
+                      swiftPlatform,
+                      AppleLibraryDescriptionSwiftEnhancer.getSwiftArgs(
+                          buildTarget, graphBuilder, args, swiftBuckConfig),
+                      args.getTargetSdkVersion()
+                          .map(
+                              version ->
+                                  swiftPlatform.getSwiftTarget().withTargetSdkVersion(version))
+                          .orElse(swiftPlatform.getSwiftTarget()),
+                      graphBuilder.getSourcePathResolver(),
+                      projectFilesystem);
+            }
+
             AppleVFSOverlayBuildRule vfsRule =
                 new AppleVFSOverlayBuildRule(
                     buildTarget,
                     projectFilesystem,
                     graphBuilder,
                     underlyingModuleRule.getRootSourcePath(),
-                    exportedHeadersWithModulemapPath);
+                    exportedHeadersWithModulemapPath,
+                    underlyingPcmPaths);
             return Optional.of(vfsRule);
           } else if (type.getValue().equals(Type.SWIFT_UNDERLYING_MODULE)) {
             return Optional.of(
@@ -434,6 +460,22 @@ public class AppleLibraryDescription
           }
           return Optional.empty();
         });
+  }
+
+  private static Optional<SwiftPlatform> getSwiftPlatform(
+      ToolchainProvider toolchainProvider,
+      BuildTarget buildTarget,
+      CxxPlatform cxxPlatform,
+      ActionGraphBuilder graphBuilder) {
+    SwiftPlatformsProvider swiftPlatformsProvider =
+        toolchainProvider.getByName(
+            SwiftPlatformsProvider.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            SwiftPlatformsProvider.class);
+    FlavorDomain<UnresolvedSwiftPlatform> swiftPlatformFlavorDomain =
+        swiftPlatformsProvider.getUnresolvedSwiftPlatforms();
+    BuildTarget targetWithPlatform = buildTarget.withAppendedFlavors(cxxPlatform.getFlavor());
+    return swiftPlatformFlavorDomain.getRequiredValue(targetWithPlatform).resolve(graphBuilder);
   }
 
   @Override
@@ -1311,17 +1353,8 @@ public class AppleLibraryDescription
     ImmutableList<BuildRule> compDbRules =
         getCompilationDatabaseRulesForDelegate(target, platform, graphBuilder);
 
-    SwiftPlatformsProvider swiftPlatformsProvider =
-        toolchainProvider.getByName(
-            SwiftPlatformsProvider.DEFAULT_NAME,
-            target.getTargetConfiguration(),
-            SwiftPlatformsProvider.class);
-    FlavorDomain<UnresolvedSwiftPlatform> swiftPlatformFlavorDomain =
-        swiftPlatformsProvider.getUnresolvedSwiftPlatforms();
-
-    BuildTarget targetWithPlatform = target.withAppendedFlavors(platform.getFlavor());
     Optional<SwiftPlatform> swiftPlatform =
-        swiftPlatformFlavorDomain.getRequiredValue(targetWithPlatform).resolve(graphBuilder);
+        getSwiftPlatform(toolchainProvider, target, platform, graphBuilder);
     TargetConfiguration targetConfiguration = target.getTargetConfiguration();
     Optional<ImmutableList<NativeLinkableGroup>> swiftRuntimeNativeLinkables =
         swiftPlatform.map(

@@ -87,6 +87,7 @@ import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.swift.toolchain.SwiftSdkDependenciesProvider;
 import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
 import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableCollection;
@@ -790,6 +791,8 @@ public class SwiftLibraryDescription
     ImmutableSet.Builder<ExplicitModuleOutput> outputBuilder = ImmutableSet.builder();
     for (HeaderSymlinkTreeWithModuleMap moduleMapRule :
         getModuleMapDepRules(preprocessorInputs, graphBuilder)) {
+      BuildTarget pcmBuildTarget =
+          moduleMapRule.getBuildTarget().withFlavors(cxxPlatform.getFlavor(), pcmFlavor);
       outputBuilder.add(
           createPcmCompile(
               graphBuilder,
@@ -797,7 +800,7 @@ public class SwiftLibraryDescription
               swiftPlatform,
               cxxPlatform,
               targetTriple,
-              moduleMapRule.getBuildTarget().withAppendedFlavors(pcmFlavor),
+              pcmBuildTarget,
               ExplicitModuleInput.of(moduleMapRule.getSourcePathToOutput()),
               moduleMapRule.getModuleName(),
               moduleMapCompileArgs,
@@ -876,6 +879,43 @@ public class SwiftLibraryDescription
     }
 
     return ruleBuilder.build();
+  }
+
+  /**
+   * Return a mapping of underlying module path -> exported module path. This is used when
+   * generating the VFS overlay for this module to remap the underlying module import.
+   */
+  public static Optional<Pair<RelPath, RelPath>> getUnderlyingModulePaths(
+      BuildTarget buildTarget,
+      CellNameResolver cellNameResolver,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
+      SwiftPlatform swiftPlatform,
+      SwiftLibraryDescriptionArg args,
+      AppleCompilerTargetTriple targetTriple,
+      SourcePathResolverAdapter resolver,
+      ProjectFilesystem projectFilesystem) {
+    if (swiftPlatform.getSdkDependencies().isEmpty()) {
+      return Optional.empty();
+    }
+
+    ImmutableList<Arg> compileArgs =
+        getModuleMapCompileArgs(buildTarget, cellNameResolver, graphBuilder, swiftPlatform, args);
+    Flavor pcmFlavor = getPcmFlavor(targetTriple, compileArgs, resolver);
+    BuildTarget moduleTarget = buildTarget.withFlavors(cxxPlatform.getFlavor(), pcmFlavor);
+    BuildTarget underlyingModuleTarget =
+        buildTarget.withFlavors(
+            cxxPlatform.getFlavor(), AppleFlavors.SWIFT_UNDERLYING_MODULE_FLAVOR, pcmFlavor);
+    return Optional.of(
+        new Pair<>(
+            BuildTargetPaths.getGenPath(
+                projectFilesystem.getBuckPaths(),
+                moduleTarget,
+                "%s/" + getModuleName(buildTarget, args) + ".pcm"),
+            BuildTargetPaths.getGenPath(
+                projectFilesystem.getBuckPaths(),
+                underlyingModuleTarget,
+                "%s/" + getModuleName(buildTarget, args) + ".pcm")));
   }
 
   private static ImmutableList<Arg> getModuleMapCompileArgs(

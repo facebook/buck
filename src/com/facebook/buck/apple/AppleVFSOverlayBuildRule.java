@@ -38,6 +38,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.IOException;
@@ -46,6 +47,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Optional;
 
 /**
  * For Swift projects, we have to build two modulemap files, one for the underlying (private) module
@@ -66,12 +68,13 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
       ProjectFilesystem filesystem,
       SourcePathRuleFinder finder,
       SourcePath underlyingModulemapPath,
-      RelPath exportedHeadersWithModulemapPath) {
+      RelPath exportedHeadersWithModulemapPath,
+      Optional<Pair<RelPath, RelPath>> underlyingPcmPaths) {
     super(
         buildTarget,
         filesystem,
         finder,
-        new Impl(underlyingModulemapPath, exportedHeadersWithModulemapPath));
+        new Impl(underlyingModulemapPath, exportedHeadersWithModulemapPath, underlyingPcmPaths));
   }
 
   @Override
@@ -92,16 +95,23 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
 
     @AddToRuleKey private final SourcePath underlyingModulemapPath;
     @AddToRuleKey private final String exportedHeadersWithModulemapPath;
+    @AddToRuleKey private final Optional<String> exportedPcmPath;
+    @AddToRuleKey private final Optional<String> underlyingPcmPath;
     @AddToRuleKey private final OutputPath yamlPath;
 
     // TODO: (andyyhope): swap to compiler-invocation relative paths
     @CustomFieldBehavior(RemoteExecutionEnabled.class)
     private final boolean remoteExecutionEnabled = false;
 
-    Impl(SourcePath underlyingModulemapPath, RelPath exportedHeadersWithModulemapPath) {
+    Impl(
+        SourcePath underlyingModulemapPath,
+        RelPath exportedHeadersWithModulemapPath,
+        Optional<Pair<RelPath, RelPath>> underlyingPcmPaths) {
       this.underlyingModulemapPath = underlyingModulemapPath;
       this.exportedHeadersWithModulemapPath = exportedHeadersWithModulemapPath.toString();
       this.yamlPath = new OutputPath(VFS_OVERLAY_FILENAME);
+      this.exportedPcmPath = underlyingPcmPaths.map(paths -> paths.getFirst().toString());
+      this.underlyingPcmPath = underlyingPcmPaths.map(paths -> paths.getSecond().toString());
     }
 
     @Override
@@ -135,6 +145,13 @@ public class AppleVFSOverlayBuildRule extends ModernBuildRule<AppleVFSOverlayBui
                     }
                   };
               Files.walkFileTree(underlyingModulemapAbsPath.getPath(), fileVisitor);
+
+              if (underlyingPcmPath.isPresent()) {
+                AbsPath exportedPcmAbsPath = filesystem.resolve(exportedPcmPath.get());
+                AbsPath underlyingPcmAbsPath = filesystem.resolve(underlyingPcmPath.get());
+                vfsBuilder.put(exportedPcmAbsPath.getPath(), underlyingPcmAbsPath.getPath());
+              }
+
               VFSOverlay vfsOverlay = new VFSOverlay(vfsBuilder.build());
               try {
                 String render = vfsOverlay.render();
