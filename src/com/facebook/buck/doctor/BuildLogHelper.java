@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,12 +130,20 @@ public class BuildLogHelper {
         Optional.of(logFile.getParent().resolve(BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME))
             .filter(path -> projectFilesystem.isFile(path));
 
-    Optional<Path> traceFile =
-        projectFilesystem.asView()
-            .getFilesUnderPath(logFile.getParent(), EnumSet.of(FileVisitOption.FOLLOW_LINKS))
-            .stream()
-            .filter(input -> input.toString().endsWith(".trace"))
-            .findFirst();
+    Optional<Path> traceFile = Optional.empty();
+    try {
+      traceFile =
+          projectFilesystem.asView()
+              .getFilesUnderPath(logFile.getParent(), EnumSet.of(FileVisitOption.FOLLOW_LINKS))
+              .stream()
+              .filter(input -> input.toString().endsWith(".trace"))
+              .findFirst();
+    } catch (IOException e) {
+      throw new HumanReadableException(
+          "Unable to find build logs ("
+              + e.getMessage()
+              + "). Buck may still be writing logs from a prior execution, try again.");
+    }
 
     Optional<Path> configJsonFile =
         Optional.of(logFile.resolveSibling(BuckConstant.CONFIG_JSON_FILE_NAME))

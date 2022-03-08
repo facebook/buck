@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.doctor.DefaultDefectReporter;
 import com.facebook.buck.doctor.DefaultExtraInfoCollector;
@@ -58,8 +59,13 @@ public class DoctorCommand extends AbstractCommand {
             params.getConsole(),
             params.getBuckConfig().getView(DoctorConfig.class));
 
-    Optional<BuildLogEntry> entry =
-        helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
+    Optional<BuildLogEntry> entry = Optional.empty();
+    try {
+      entry = helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
+    } catch (HumanReadableException e) {
+      params.getConsole().getStdErr().println(e.getMessage());
+      return ExitCode.FATAL_GENERIC;
+    }
     if (!entry.isPresent()) {
       params.getConsole().getStdOut().println("No interesting commands found in buck-out/log.");
       return ExitCode.NOTHING_TO_DO;
