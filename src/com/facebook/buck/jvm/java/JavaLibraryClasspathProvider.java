@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,30 @@ public class JavaLibraryClasspathProvider {
     outputJar.ifPresent(outputClasspathBuilder::add);
 
     return outputClasspathBuilder.build();
+  }
+
+  /**
+   * Group immediate exported dependencies and the specified output path jar.
+   *
+   * @param javaLibrary Java library
+   * @param outputJar output jar
+   * @return Immediate output jars
+   */
+  public static ImmutableSet<SourcePath> getImmediateClasspathJars(
+      JavaLibrary javaLibrary, Optional<SourcePath> outputJar) {
+    ImmutableSet.Builder<SourcePath> classpath = ImmutableSet.builder();
+    for (JavaLibrary rule : getExportedJavaLibraries(javaLibrary)) {
+      classpath.addAll(rule.getImmediateClasspaths());
+    }
+    outputJar.ifPresent(classpath::add);
+    return classpath.build();
+  }
+
+  static Iterable<JavaLibrary> getExportedJavaLibraries(JavaLibrary javaLibrary) {
+    if (javaLibrary instanceof ExportDependencies) {
+      return getJavaLibraryDeps(((ExportDependencies) javaLibrary).getExportedDeps());
+    }
+    return ImmutableSet.of();
   }
 
   public static ImmutableSet<JavaLibrary> getTransitiveClasspathDeps(JavaLibrary javaLibrary) {

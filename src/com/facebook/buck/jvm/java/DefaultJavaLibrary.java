@@ -112,6 +112,7 @@ public class DefaultJavaLibrary
   private final ImmutableSortedSet<BuildRule> runtimeDeps;
 
   private final Supplier<ImmutableSet<SourcePath>> outputClasspathEntriesSupplier;
+  private final Supplier<ImmutableSet<SourcePath>> immediateClasspathEntriesSupplier;
   private final Supplier<ImmutableSet<SourcePath>> transitiveClasspathsSupplier;
   private final Supplier<ImmutableSet<JavaLibrary>> transitiveClasspathDepsSupplier;
 
@@ -243,6 +244,12 @@ public class DefaultJavaLibrary
                 JavaLibraryClasspathProvider.getOutputClasspathJars(
                     DefaultJavaLibrary.this, sourcePathForOutputJar()));
 
+    this.immediateClasspathEntriesSupplier =
+        MoreSuppliers.memoize(
+            () ->
+                JavaLibraryClasspathProvider.getImmediateClasspathJars(
+                    DefaultJavaLibrary.this, sourcePathForOutputJar()));
+
     this.transitiveClasspathsSupplier =
         MoreSuppliers.memoize(
             () ->
@@ -345,20 +352,7 @@ public class DefaultJavaLibrary
 
   @Override
   public ImmutableSet<SourcePath> getImmediateClasspaths() {
-    ImmutableSet.Builder<SourcePath> builder = ImmutableSet.builder();
-
-    // Add any exported deps.
-    for (BuildRule exported : getExportedDeps()) {
-      if (exported instanceof JavaLibrary) {
-        builder.addAll(((JavaLibrary) exported).getImmediateClasspaths());
-      }
-    }
-
-    // Add ourselves to the classpath if there's a jar to be built.
-    Optional<SourcePath> sourcePathForOutputJar = sourcePathForOutputJar();
-    sourcePathForOutputJar.ifPresent(builder::add);
-
-    return builder.build();
+    return immediateClasspathEntriesSupplier.get();
   }
 
   @Override
