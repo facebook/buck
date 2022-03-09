@@ -175,7 +175,7 @@
     <include name="android/sdk-common-25.3.0.jar" />
     <include name="aopalliance/aopalliance.jar" />
     <include name="aosp/apksig.jar" />
-    <include name="asm/asm*-7.1.jar" />
+    <include name="asm/asm*-9.2.jar" />
     <include name="bazel/bazel_deploy.jar" />
     <include name="bundletool/bundletool-0.12.0-fb.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
@@ -944,11 +944,11 @@
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.core-0.8.3.201812281252.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/jacoco/org.jacoco.report-0.8.3.201812281252.jar"/>
       <zipfileset excludes="**/*SF **/*RSA" src="${third-party.dir}/java/plexus/plexus-utils-3.0.20.jar"/>
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-7.1.jar" />
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-analysis-7.1.jar" />
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-commons-7.1.jar" />
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-tree-7.1.jar" />
-      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-util-7.1.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-9.2.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-analysis-9.2.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-commons-9.2.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-tree-9.2.jar" />
+      <zipfileset includes="**/*.class" src="${third-party.dir}/java/asm/asm-util-9.2.jar" />
       <zipfileset includes="**/*.class" src="${third-party.dir}/java/guava/guava-23.3-jre.jar"/>
       <fileset dir="${classes.dir}">
           <include name="com/facebook/buck/jvm/java/coverage/ReportGenerator.class"/>
