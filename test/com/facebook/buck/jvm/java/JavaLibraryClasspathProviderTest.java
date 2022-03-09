@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -161,6 +161,22 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
             getFullOutput(e) // c exports e
             ),
         JavaLibraryClasspathProvider.getOutputClasspathJars(
+                aLib, Optional.of(aLib.getSourcePathToOutput()))
+            .stream()
+            .map(resolver::getAbsolutePath)
+            .collect(ImmutableSet.toImmutableSet()));
+  }
+
+  @Test
+  public void getImmediateClasspathEntries() {
+    JavaLibrary aLib = (JavaLibrary) a;
+    assertEquals(
+        ImmutableSet.of(
+            getFullOutput(a),
+            getFullOutput(c), // a exports c
+            getFullOutput(e) // c exports e
+            ),
+        JavaLibraryClasspathProvider.getImmediateClasspathJars(
                 aLib, Optional.of(aLib.getSourcePathToOutput()))
             .stream()
             .map(resolver::getAbsolutePath)
