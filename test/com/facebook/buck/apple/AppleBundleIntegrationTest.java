@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -194,7 +194,7 @@ public class AppleBundleIntegrationTest {
     workspace.addBuckConfigLocalOption("apple", "target_triple_enabled", "true");
     workspace.addBuckConfigLocalOption("apple", "use_entitlements_when_adhoc_code_signing", "true");
     workspace.addBuckConfigLocalOption("cxx", "skip_system_framework_search_paths", "true");
-    workspace.addBuckConfigLocalOption("apple", "maccatalyst_target_sdk_version", "13.0");
+    workspace.addBuckConfigLocalOption("apple", "maccatalyst_target_sdk_version", "13.1");
     workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
   }
 
