@@ -89,10 +89,7 @@ public final class InlineFunctionScope {
     //
     // TODO This is a pessimisation: not all "$sam$i" classes need to be retained, we can do better
     //  by tracking the ones that are referenced from inline functions.
-    //
-    // TODO I think we don't need to retain "$$inlined$" classes, but I'm too afraid to try in this
-    //  diff, I will try in a later stack.
-    if (path.toString().contains("$sam$i") || path.toString().contains("$$inlined$")) {
+    if (path.toString().contains("$sam$i")) {
       return true;
     }
 
