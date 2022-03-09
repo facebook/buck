@@ -174,6 +174,8 @@ public interface AndroidGraphEnhancerArgs
     return false;
   }
 
+  ImmutableSet<String> getPackagedLocales();
+
   ImmutableList<Pattern> getRelinkerWhitelist();
 
   @Value.Default

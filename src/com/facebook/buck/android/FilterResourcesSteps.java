@@ -80,6 +80,7 @@ public class FilterResourcesSteps {
   private final boolean filterByDensity;
   private final boolean enableStringWhitelisting;
   private final ImmutableSet<Path> whitelistedStringDirs;
+  private final ImmutableSet<String> packagedLocales;
   private final ImmutableSet<String> locales;
   private final FilteredDirectoryCopier filteredDirectoryCopier;
   private final CopyStep copyStep = new CopyStep();
@@ -96,6 +97,7 @@ public class FilterResourcesSteps {
    * @param enableStringWhitelisting whether to filter strings based on a whitelist
    * @param whitelistedStringDirs set of directories containing string resource files that must not
    *     be filtered out.
+   * @param packagedLocales set of locales that must not be filtered out.
    * @param locales set of locales that the localized strings.xml files within {@code values-*}
    *     directories should be filtered by. This is useful if there are multiple apps that support a
    *     different set of locales that share a module. If empty, no filtering is performed.
@@ -114,6 +116,7 @@ public class FilterResourcesSteps {
       boolean filterByDensity,
       boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
+      ImmutableSet<String> packagedLocales,
       ImmutableSet<String> locales,
       FilteredDirectoryCopier filteredDirectoryCopier,
       @Nullable Set<ResourceFilters.Density> targetDensities,
@@ -128,6 +131,7 @@ public class FilterResourcesSteps {
     this.filterByDensity = filterByDensity;
     this.enableStringWhitelisting = enableStringWhitelisting;
     this.whitelistedStringDirs = whitelistedStringDirs;
+    this.packagedLocales = packagedLocales;
     this.locales = locales;
     this.filteredDirectoryCopier = filteredDirectoryCopier;
     this.targetDensities = targetDensities;
@@ -217,16 +221,14 @@ public class FilterResourcesSteps {
             if (!matcher.matches() || !filePath.endsWith(DEFAULT_STRINGS_FILE_NAME)) {
               return true;
             }
-
+            String locale = matcher.group(1);
+            if (matcher.group(2) != null) {
+              locale += "_" + matcher.group(2);
+            }
             if (enableStringWhitelisting) {
-              return isPathWhitelisted(path);
+              return isPathWhitelisted(path, locale);
             } else {
               Preconditions.checkState(localeFilterEnabled);
-              String locale = matcher.group(1);
-              if (matcher.group(2) != null) {
-                locale += "_" + matcher.group(2);
-              }
-
               return locales.contains(locale);
             }
           });
@@ -234,7 +236,10 @@ public class FilterResourcesSteps {
     return pathPredicates.stream().reduce(p -> true, Predicate::and);
   }
 
-  private boolean isPathWhitelisted(Path path) {
+  private boolean isPathWhitelisted(Path path, String locale) {
+    if (packagedLocales.contains(locale)) {
+      return true;
+    }
     for (Path whitelistedStringDir : whitelistedStringDirs) {
       if (path.startsWith(whitelistedStringDir)) {
         return true;
@@ -472,6 +477,7 @@ public class FilterResourcesSteps {
     @Nullable private ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
     @Nullable private ResourceFilter resourceFilter;
     private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
+    private ImmutableSet<String> packagedLocales = ImmutableSet.of();
     private ImmutableSet<String> locales = ImmutableSet.of();
     private boolean enableStringWhitelisting = false;
     private boolean withDownwardApi = false;
@@ -508,6 +514,11 @@ public class FilterResourcesSteps {
       return this;
     }
 
+    public Builder setPackagedLocales(ImmutableSet<String> packagedLocales) {
+      this.packagedLocales = packagedLocales;
+      return this;
+    }
+
     public Builder setLocales(ImmutableSet<String> locales) {
       this.locales = locales;
       return this;
@@ -524,6 +535,7 @@ public class FilterResourcesSteps {
           /* filterByDensity */ resourceFilter.isEnabled(),
           enableStringWhitelisting,
           whitelistedStringDirs,
+          packagedLocales,
           locales,
           DefaultFilteredDirectoryCopier.getInstance(),
           resourceFilter.getDensities(),

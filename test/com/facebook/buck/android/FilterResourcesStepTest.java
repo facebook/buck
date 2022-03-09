@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,6 +75,7 @@ public class FilterResourcesStepTest {
             /* filterByDensity */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(ResourceFilters.Density.MDPI),
@@ -123,7 +124,10 @@ public class FilterResourcesStepTest {
   public void testWhitelistFilter() throws IOException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
-            true, ImmutableSet.of(Paths.get("com/whitelisted/res")), ImmutableSet.of());
+            true,
+            ImmutableSet.of(Paths.get("com/whitelisted/res")),
+            ImmutableSet.of(),
+            ImmutableSet.of());
 
     assertTrue(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
@@ -134,9 +138,27 @@ public class FilterResourcesStepTest {
   }
 
   @Test
+  public void testFilterPackagedLocales() throws IOException {
+    Predicate<Path> filePredicate =
+        getTestPathPredicate(true, ImmutableSet.of(), ImmutableSet.of(), ImmutableSet.of("ru"));
+
+    assertTrue(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
+
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-ru/strings.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-ru/integers.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-es/integers.xml")));
+    assertTrue(filePredicate.test(Paths.get("com/example/res/values-en/integers.xml")));
+
+    assertFalse(filePredicate.test(Paths.get("com/example/res/values-es/strings.xml")));
+    assertFalse(filePredicate.test(Paths.get("com/example/res/values-es-rUS/strings.xml")));
+  }
+
+  @Test
   public void testFilterLocales() throws IOException {
     Predicate<Path> filePredicate =
-        getTestPathPredicate(false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"));
+        getTestPathPredicate(
+            false, ImmutableSet.of(), ImmutableSet.of("es", "es_US"), ImmutableSet.of());
 
     assertTrue(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
@@ -153,7 +175,10 @@ public class FilterResourcesStepTest {
   public void testUsingWhitelistIgnoresLocaleFilter() throws IOException {
     Predicate<Path> filePredicate =
         getTestPathPredicate(
-            true, ImmutableSet.of(Paths.get("com/example/res")), ImmutableSet.of("es", "es_US"));
+            true,
+            ImmutableSet.of(Paths.get("com/example/res")),
+            ImmutableSet.of("es", "es_US"),
+            ImmutableSet.of());
 
     assertTrue(filePredicate.test(Paths.get("com/example/res/drawables/image.png")));
     assertTrue(filePredicate.test(Paths.get("com/example/res/values/strings.xml")));
@@ -204,6 +229,7 @@ public class FilterResourcesStepTest {
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
@@ -251,6 +277,7 @@ public class FilterResourcesStepTest {
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
@@ -297,6 +324,7 @@ public class FilterResourcesStepTest {
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
@@ -352,6 +380,7 @@ public class FilterResourcesStepTest {
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensityIncluded, targetDensityExcluded),
@@ -400,6 +429,7 @@ public class FilterResourcesStepTest {
             /* filterByDPI */ true,
             /* enableStringWhitelisting */ false,
             /* whitelistedStringDirs */ ImmutableSet.of(),
+            /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
@@ -431,7 +461,8 @@ public class FilterResourcesStepTest {
   private static Predicate<Path> getTestPathPredicate(
       boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
-      ImmutableSet<String> locales)
+      ImmutableSet<String> locales,
+      ImmutableSet<String> packagedLocales)
       throws IOException {
     FilterResourcesSteps step =
         new FilterResourcesSteps(
@@ -440,6 +471,7 @@ public class FilterResourcesStepTest {
             /* filterByDensity */ false,
             /* enableStringWhitelisting */ enableStringWhitelisting,
             /* whitelistedStringDirs */ whitelistedStringDirs,
+            /* packaged locales */ packagedLocales,
             /* locales */ locales,
             DefaultFilteredDirectoryCopier.getInstance(),
             /* targetDensities */ null,

@@ -111,6 +111,7 @@ public class ResourcesFilter extends AbstractBuildRule
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final ImmutableList<SourcePath> resDirectories;
   @AddToRuleKey private final ImmutableSet<SourcePath> whitelistedStringDirs;
+  @AddToRuleKey private final ImmutableSet<String> packagedLocales;
   @AddToRuleKey private final ImmutableSet<String> locales;
   @AddToRuleKey private final ResourceCompressionMode resourceCompressionMode;
   @AddToRuleKey private final FilterResourcesSteps.ResourceFilter resourceFilter;
@@ -127,6 +128,7 @@ public class ResourcesFilter extends AbstractBuildRule
       SourcePathRuleFinder ruleFinder,
       ImmutableList<SourcePath> resDirectories,
       ImmutableSet<SourcePath> whitelistedStringDirs,
+      ImmutableSet<String> packagedLocales,
       ImmutableSet<String> locales,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesSteps.ResourceFilter resourceFilter,
@@ -138,6 +140,7 @@ public class ResourcesFilter extends AbstractBuildRule
     this.ruleFinder = ruleFinder;
     this.resDirectories = resDirectories;
     this.whitelistedStringDirs = whitelistedStringDirs;
+    this.packagedLocales = packagedLocales;
     this.locales = locales;
     this.resourceCompressionMode = resourceCompressionMode;
     this.resourceFilter = resourceFilter;
@@ -216,7 +219,11 @@ public class ResourcesFilter extends AbstractBuildRule
         createInResDirToOutResDirMap(resPaths, filteredResDirectoriesBuilder);
     FilterResourcesSteps filterResourcesSteps =
         createFilterResourcesSteps(
-            whitelistedStringPaths, locales, inResDirToOutResDirMap, withDownwardApi);
+            whitelistedStringPaths,
+            packagedLocales,
+            locales,
+            inResDirToOutResDirMap,
+            withDownwardApi);
     steps.add(filterResourcesSteps.getCopyStep());
     maybeAddPostFilterCmdStep(context, buildableContext, steps, inResDirToOutResDirMap);
     steps.add(filterResourcesSteps.getScaleStep());
@@ -351,10 +358,13 @@ public class ResourcesFilter extends AbstractBuildRule
    *
    * @param whitelistedStringDirs overrides storing non-english strings as assets for resources
    *     inside these directories.
+   * @param packagedLocales overrides storing non-english strings as assets for resources of these
+   *     locales
    */
   @VisibleForTesting
   FilterResourcesSteps createFilterResourcesSteps(
       ImmutableSet<Path> whitelistedStringDirs,
+      ImmutableSet<String> packagedLocales,
       ImmutableSet<String> locales,
       ImmutableBiMap<Path, Path> resSourceToDestDirMap,
       boolean withDownwardApi) {
@@ -368,6 +378,7 @@ public class ResourcesFilter extends AbstractBuildRule
     if (resourceCompressionMode.isStoreStringsAsAssets()) {
       filterResourcesStepBuilder.enableStringWhitelisting();
       filterResourcesStepBuilder.setWhitelistedStringDirs(whitelistedStringDirs);
+      filterResourcesStepBuilder.setPackagedLocales(packagedLocales);
     }
 
     filterResourcesStepBuilder.setLocales(locales);

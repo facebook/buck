@@ -1,5 +1,5 @@
 /*
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -204,6 +204,7 @@ public class AaptPackageResourcesTest {
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of(),
+            ImmutableSet.of(),
             ResourcesFilter.ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             Optional.empty(),
@@ -221,6 +222,7 @@ public class AaptPackageResourcesTest {
             ImmutableList.of(resource1.getRes(), resource2.getRes()),
             ImmutableSet.of(),
             ImmutableSet.of("some_locale"),
+            ImmutableSet.of(),
             ResourcesFilter.ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             Optional.empty(),

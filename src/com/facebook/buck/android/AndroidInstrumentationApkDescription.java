@@ -215,6 +215,7 @@ public class AndroidInstrumentationApkDescription
             Optional.empty(),
             /* resourceUnionPackage */ Optional.empty(),
             /* locales */ ImmutableSet.of(),
+            /* packagedLocales */ ImmutableSet.of(),
             args.getManifest(),
             args.getManifestSkeleton(),
             /* moduleManifestSkeleton */ Optional.empty(),

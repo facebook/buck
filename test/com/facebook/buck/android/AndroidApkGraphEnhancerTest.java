@@ -1029,6 +1029,7 @@ public class AndroidApkGraphEnhancerTest {
         Optional.empty(),
         Optional.empty(),
         /* locales */ ImmutableSet.of(),
+        /* packaged locales */ ImmutableSet.of(),
         Optional.of(FakeSourcePath.of("AndroidManifest.xml")),
         Optional.empty(),
         Optional.empty(),

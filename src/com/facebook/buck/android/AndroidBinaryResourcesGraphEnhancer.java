@@ -74,6 +74,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final FilterResourcesSteps.ResourceFilter resourceFilter;
   private final ResourcesFilter.ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<String> locales;
+  private final ImmutableSet<String> packagedLocales;
   private final BuildTarget buildTarget;
   private final ProjectFilesystem projectFilesystem;
   private final ActionGraphBuilder graphBuilder;
@@ -120,6 +121,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       FilterResourcesSteps.ResourceFilter resourceFilter,
       ResourcesFilter.ResourceCompressionMode resourceCompressionMode,
       ImmutableSet<String> locales,
+      ImmutableSet<String> packagedLocales,
       Optional<String> resourceUnionPackage,
       boolean shouldBuildStringSourceMap,
       boolean skipCrunchPngs,
@@ -148,6 +150,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.resourceFilter = resourceFilter;
     this.resourceCompressionMode = resourceCompressionMode;
     this.locales = locales;
+    this.packagedLocales = packagedLocales;
     this.aaptMode = aaptMode;
     this.additionalAaptParams = additionalAaptParams;
     this.rawManifest = rawManifest;
@@ -685,6 +688,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         graphBuilder,
         resourceDetails.getResourceDirectories(),
         ImmutableSet.copyOf(resourceDetails.getWhitelistedStringDirectories()),
+        packagedLocales,
         locales,
         resourceCompressionMode,
         resourceFilter,
