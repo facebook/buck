@@ -166,15 +166,23 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
   @Override
   public ImmutableSet<ExplicitModuleOutput> getSdkModuleDependencies(
       String moduleName, AppleCompilerTargetTriple targetTriple) {
-    return swiftBuildRuleDependencyCache.getUnchecked(
-        CacheKey.of(moduleName, targetTriple.getVersionedTriple()));
+    if (swiftModules.containsKey(moduleName)) {
+      return swiftBuildRuleDependencyCache.getUnchecked(
+          CacheKey.of(moduleName, targetTriple.getVersionedTriple()));
+    } else {
+      return getSdkClangModuleDependencies(moduleName, targetTriple);
+    }
   }
 
   @Override
   public ImmutableSet<ExplicitModuleOutput> getSdkClangModuleDependencies(
       String moduleName, AppleCompilerTargetTriple targetTriple) {
-    return clangBuildRuleDependencyCache.getUnchecked(
-        CacheKey.of(moduleName, targetTriple.getVersionedTriple()));
+    if (clangModules.containsKey(moduleName)) {
+      return clangBuildRuleDependencyCache.getUnchecked(
+          CacheKey.of(moduleName, targetTriple.getVersionedTriple()));
+    } else {
+      return ImmutableSet.of();
+    }
   }
 
   private ImmutableSet<ExplicitModuleOutput> getSwiftmoduleDependencies(
