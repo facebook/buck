@@ -19,6 +19,7 @@ package com.facebook.buck.features.project.intellij.model;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.features.project.intellij.IjProjectPaths;
+import com.facebook.buck.features.project.intellij.ProjectRootExclusionMode;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.collect.ImmutableMap;
@@ -128,6 +129,8 @@ public abstract class IjProjectConfig {
   public abstract int getMaxLibraryNameLengthBeforeTruncate();
 
   public abstract Optional<Path> getKotlinJavaRuntimeLibraryTemplatePath();
+
+  public abstract ProjectRootExclusionMode getProjectRootExclusionMode();
 
   public abstract boolean isModuleLibraryEnabled();
 

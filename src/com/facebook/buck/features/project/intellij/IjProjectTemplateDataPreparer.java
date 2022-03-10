@@ -231,9 +231,12 @@ public class IjProjectTemplateDataPreparer {
       return ImmutableList.of();
     }
     ImmutableList.Builder<IjFolder> excludesBuilder = ImmutableList.builder();
+    boolean isTopLevelOnly =
+        moduleBasePath.toString().isEmpty()
+            && projectConfig.getProjectRootExclusionMode() == ProjectRootExclusionMode.TOP_LEVEL;
     projectFilesystem.walkRelativeFileTree(
         moduleBasePath,
-        new FileVisitor<Path>() {
+        new FileVisitor<>() {
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
             // This is another module that's nested in this one. The entire subtree will be handled
@@ -246,7 +249,8 @@ public class IjProjectTemplateDataPreparer {
               return FileVisitResult.SKIP_SUBTREE;
             }
 
-            if (!referencedFolderPaths.contains(dir)) {
+            if (!referencedFolderPaths.contains(dir)
+                || isTopLevelOnly && !moduleBasePath.equals(dir) && dir.getParent() == null) {
               excludesBuilder.add(new ExcludeFolder(dir));
               return FileVisitResult.SKIP_SUBTREE;
             }

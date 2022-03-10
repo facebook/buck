@@ -183,6 +183,11 @@ public class IjProjectBuckConfig {
             buckConfig
                 .getInteger(INTELLIJ_BUCK_CONFIG_SECTION, "max_library_name_length_before_truncate")
                 .orElse(DEFAULT_MAX_LIBRARY_NAME_LENGTH))
+        .setProjectRootExclusionMode(
+            buckConfig
+                .getValue(INTELLIJ_BUCK_CONFIG_SECTION, "project_root_exclusion_mode")
+                .map(ProjectRootExclusionMode::fromString)
+                .orElse(ProjectRootExclusionMode.RECURSIVE))
         .setModuleLibraryEnabled(
             buckConfig.getBooleanValue(INTELLIJ_BUCK_CONFIG_SECTION, "use_module_library", false))
         .setModuleLibraryThreshold(
