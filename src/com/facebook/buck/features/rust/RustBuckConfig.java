@@ -52,6 +52,7 @@ public class RustBuckConfig {
   private static final String DEFAULT_EDITION = "default_edition";
   private static final String EXTERN_LOCATIONS = "extern_locations";
   private static final String RUSTC_PLUGIN_PLATFORM = "rustc_plugin_platform";
+  private static final String NATIVE_UNBUNDLE_DEPS = "native_unbundle_deps";
 
   public static final String DEFAULT_FLAVOR_LIBRARY_TYPE = "type";
 
@@ -270,6 +271,18 @@ public class RustBuckConfig {
    */
   boolean getPreferStaticLibs() {
     return delegate.getBooleanValue(SECTION, PREFER_STATIC_LIBS, false);
+  }
+
+  /**
+   * Get "native_unbundle_deps" config. When set, `rlib` crate type will be used instead of the
+   * default `staticlib`. That will make rust not include all upstream dependencies into the
+   * resulting archive, but only symbols from the compiled target. But we will need to supply
+   * top-level link rules with direct and transitive linkable rust rules.
+   *
+   * @return native_unbundle_deps flag
+   */
+  boolean getNativeUnbundleDeps() {
+    return delegate.getBooleanValue(SECTION, NATIVE_UNBUNDLE_DEPS, false);
   }
 
   /**

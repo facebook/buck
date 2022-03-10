@@ -1,0 +1,31 @@
+
+cxx_binary(
+    name = "cxx_root",
+    srcs = ["main.cpp"],
+    link_style = "static",
+    deps = [":left", ":right"],
+)
+
+rust_library(
+    name = "left",
+    srcs = ["left.rs"],
+    crate = "left",
+    deps = [":bottom"],
+)
+
+rust_library(
+    name = "right",
+    srcs = ["right.rs"],
+    crate = "right",
+    deps = [":bottom"],
+)
+
+rust_library(
+    name = "bottom",
+    srcs = ["bottom.rs"],
+    crate = "bottom",
+)
+
+
+
+

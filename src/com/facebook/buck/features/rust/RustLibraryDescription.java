@@ -437,7 +437,7 @@ public class RustLibraryDescription
         public ImmutableList<NativeLinkable> getNativeLinkableExportedDepsForPlatform(
             CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
           // We want to skip over all the transitive Rust deps, and only return non-Rust
-          // deps at the edge of the graph
+          // deps at the edge of the graph if `native_unbundle_deps` not enabled.
           Stream.Builder<NativeLinkableGroup> nativedeps = Stream.builder();
 
           RustPlatform rustPlatform =
@@ -456,6 +456,11 @@ public class RustLibraryDescription
                   // but just leave procmacros out of it entirely
                   return ImmutableList.of();
                 } else {
+                  // If native_unbundle_deps=True, we should also include transitive rust deps.
+                  if (rustBuckConfig.getNativeUnbundleDeps()
+                      && rule instanceof NativeLinkableGroup) {
+                    nativedeps.add((NativeLinkableGroup) rule);
+                  }
                   return rl.getRustLinkableDeps(rustPlatform);
                 }
               }
@@ -487,12 +492,20 @@ public class RustLibraryDescription
               break;
 
             case STATIC_PIC:
-              crateType = CrateType.STATIC_PIC;
+              if (rustBuckConfig.getNativeUnbundleDeps()) {
+                crateType = CrateType.RLIB_PIC;
+              } else {
+                crateType = CrateType.STATIC_PIC;
+              }
               break;
 
             case STATIC:
             default:
-              crateType = CrateType.STATIC;
+              if (rustBuckConfig.getNativeUnbundleDeps()) {
+                crateType = CrateType.RLIB;
+              } else {
+                crateType = CrateType.STATIC;
+              }
               break;
           }
 

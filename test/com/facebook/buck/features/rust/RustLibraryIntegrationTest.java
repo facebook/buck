@@ -18,13 +18,23 @@ package com.facebook.buck.features.rust;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -36,6 +46,43 @@ public class RustLibraryIntegrationTest {
   @Before
   public void ensureRustIsAvailable() {
     RustAssumptions.assumeRustIsConfigured();
+  }
+
+  @Test
+  public void rustNoBundlingBuild() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "native_unbundle_deps", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    workspace.runBuckBuild("//:cxx_root", "-c", "rust.native_unbundle_deps=True").assertSuccess();
+
+    AbsPath ruleGenPath =
+        tmp.getRoot()
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(),
+                    BuildTargetFactory.newInstance("//:left#default,rlib"),
+                    "%s"));
+    Path ruleOutput =
+        Files.find(
+                ruleGenPath.getPath(),
+                1,
+                (p, attrs) ->
+                    !attrs.isDirectory() && p.getFileName().toString().contains("libleft"))
+            .findFirst()
+            .get();
+
+    String nmOutput = workspace.runCommand("nm", "-j", ruleOutput.toString()).getStdout().get();
+    assertFalse(nmOutput.isEmpty());
+
+    // With native_unbundle_deps=True, `:left`(and :right too) rule output shouldn't have anything
+    // else bundled in
+    // it.
+    assertSame(nmOutput.lines().count(), 6);
+    assertEquals("__ZN6bottom3bar17h7a15b7f2b46af511E", nmOutput.lines().toArray()[2].toString());
+    assertEquals("_foo_left", nmOutput.lines().toArray()[3].toString());
   }
 
   @Test
