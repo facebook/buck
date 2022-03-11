@@ -16,11 +16,13 @@
 
 package com.facebook.buck.cxx.toolchain.nativelink;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.immutables.value.Value;
@@ -49,19 +51,26 @@ public abstract class NativeLinkableInput {
   @Value.Parameter
   public abstract ImmutableSet<FrameworkPath> getLibraries();
 
+  // Swiftmodule files to be passed to the linker.
+  @Value.Parameter
+  public abstract ImmutableSet<SourcePath> getSwiftmodulePaths();
+
   /** Combine, in order, several {@link NativeLinkableInput} objects into a single one. */
   public static NativeLinkableInput concat(Iterable<NativeLinkableInput> items) {
     ImmutableList.Builder<Arg> args = ImmutableList.builder();
     ImmutableSet.Builder<FrameworkPath> frameworks = ImmutableSet.builder();
     ImmutableSet.Builder<FrameworkPath> libraries = ImmutableSet.builder();
+    ImmutableSet.Builder<SourcePath> swiftmodulePaths = ImmutableSet.builder();
 
     for (NativeLinkableInput item : items) {
       args.addAll(item.getArgs());
       frameworks.addAll(item.getFrameworks());
       libraries.addAll(item.getLibraries());
+      swiftmodulePaths.addAll(item.getSwiftmodulePaths());
     }
 
-    return NativeLinkableInput.of(args.build(), frameworks.build(), libraries.build());
+    return NativeLinkableInput.of(
+        args.build(), frameworks.build(), libraries.build(), swiftmodulePaths.build());
   }
 
   public NativeLinkableInput withArgs(List<Arg> args) {
@@ -77,8 +86,21 @@ public abstract class NativeLinkableInput {
 
   public static NativeLinkableInput of(
       List<Arg> args, Set<FrameworkPath> frameworks, Set<FrameworkPath> libraries) {
+    return of(args, frameworks, libraries, Collections.emptySet());
+  }
 
-    return builder().setArgs(args).setFrameworks(frameworks).setLibraries(libraries).build();
+  public static NativeLinkableInput of(
+      List<Arg> args,
+      Set<FrameworkPath> frameworks,
+      Set<FrameworkPath> libraries,
+      Set<SourcePath> swiftmodulePaths) {
+
+    return builder()
+        .setArgs(args)
+        .setFrameworks(frameworks)
+        .setLibraries(libraries)
+        .setSwiftmodulePaths(swiftmodulePaths)
+        .build();
   }
 
   public static Builder builder() {

@@ -407,6 +407,12 @@ public class CxxLinkableEnhancer {
           skipSystemFrameworkSearchPaths);
     }
 
+    // Add swiftmodule args
+    if (!linkableInput.getSwiftmodulePaths().isEmpty()) {
+      addSwiftmoduleLinkerArgs(
+          ImmutableSortedSet.copyOf(linkableInput.getSwiftmodulePaths()), argsBuilder);
+    }
+
     return argsBuilder.build();
   }
 
@@ -593,6 +599,14 @@ public class CxxLinkableEnhancer {
   @VisibleForTesting
   static Arg frameworksToLinkerArg(ImmutableSortedSet<FrameworkPath> frameworkPaths) {
     return new FrameworkToLinkerArg(frameworkPaths);
+  }
+
+  private static void addSwiftmoduleLinkerArgs(
+      ImmutableSortedSet<SourcePath> swiftmodulePaths, ImmutableList.Builder<Arg> argsBuilder) {
+    for (SourcePath path : swiftmodulePaths) {
+      argsBuilder.addAll(StringArg.from("-Xlinker", "-add_ast_path", "-Xlinker"));
+      argsBuilder.add(SourcePathArg.of(path));
+    }
   }
 
   public static CxxLink createCxxLinkableSharedBuildRule(

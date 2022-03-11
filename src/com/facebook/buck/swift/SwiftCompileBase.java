@@ -638,15 +638,15 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     return args.build();
   }
 
-  public ImmutableList<Arg> getAstLinkArgs() {
-    return ImmutableList.<Arg>builder()
-        .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
-        .add(StringArg.of("-Xlinker"))
-        // NB: The paths to the .swiftmodule files will be relative to the cell, not absolute.
-        //     This makes it non-machine specific but if we change the behavior, the OSO
-        //     rewriting code needs to adjusted to also fix-up N_AST entries.
-        .add(SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), modulePath)))
-        .build();
+  public ImmutableSet<SourcePath> getSwiftmoduleLinkerInput() {
+    ImmutableSet.Builder<SourcePath> builder = ImmutableSet.builder();
+    for (ExplicitModuleOutput output : moduleDeps) {
+      if (output.getIsSwiftmodule()) {
+        builder.add(output.getOutputPath());
+      }
+    }
+    builder.add(getSwiftModuleOutputPath());
+    return builder.build();
   }
 
   ImmutableList<Arg> getFileListLinkArg() {

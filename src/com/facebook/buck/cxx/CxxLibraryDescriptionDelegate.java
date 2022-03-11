@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 /**
@@ -89,6 +90,9 @@ public interface CxxLibraryDescriptionDelegate {
      * sources.
      */
     boolean getShouldProduceLibraryArtifact();
+
+    /** Provides the ability to pass swiftmodule paths to the linker. */
+    ImmutableSet<SourcePath> getSwiftmodulePaths();
   }
 
   Optional<ConfiguredDelegate> requireDelegate(

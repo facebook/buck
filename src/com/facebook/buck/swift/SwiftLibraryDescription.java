@@ -420,8 +420,8 @@ public class SwiftLibraryDescription
                     Linker.LinkableDepType.SHARED,
                     graphBuilder,
                     buildTarget.getTargetConfiguration()))
-            .addAllArgs(rule.getAstLinkArgs())
-            .addAllArgs(rule.getFileListLinkArg());
+            .addAllArgs(rule.getFileListLinkArg())
+            .addAllSwiftmodulePaths(rule.getSwiftmoduleLinkerInput());
     return graphBuilder.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             cxxBuckConfig,

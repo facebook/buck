@@ -241,11 +241,11 @@ public class AppleToolchainIntegrationTest {
                 + "linker: frameworks: Foundation%n"
                 + "linker: lpath: /test/linking,@executable_path/linking,@loader_path/linking%n"
                 + "linker: libs: %n"
-                + "linker: ast_paths: %s/SwiftLibrary.swiftmodule,%s/SwiftCompanionLibrary.swiftmodule,%s/AnotherSwiftLibrary.swiftmodule%n"
+                + "linker: ast_paths: %s/AnotherSwiftLibrary.swiftmodule,%s/SwiftCompanionLibrary.swiftmodule,%s/SwiftLibrary.swiftmodule%n"
                 + "linker: rpath: /test/runtime_run,@executable_path/runtime_run,@loader_path/runtime_run%n",
-            swiftLibraryPath,
+            anotherSwiftLibraryPath,
             companionLibraryPath,
-            anotherSwiftLibraryPath),
+            swiftLibraryPath),
         workspace.getFileContents(output));
   }
 

@@ -60,7 +60,6 @@ import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -137,21 +136,9 @@ public class SwiftLibraryIntegrationTest {
                 args);
     graphBuilder.addToIndex(buildRule);
 
-    ImmutableList<Arg> astArgs = buildRule.getAstLinkArgs();
-    assertThat(astArgs, Matchers.hasSize(4));
-    assertThat(astArgs.get(0), Matchers.equalTo(StringArg.of("-Xlinker")));
-    assertThat(astArgs.get(1), Matchers.equalTo(StringArg.of("-add_ast_path")));
-    assertThat(astArgs.get(2), Matchers.equalTo(StringArg.of("-Xlinker")));
-    assertThat(astArgs.get(3), Matchers.instanceOf(SourcePathArg.class));
-    SourcePathArg sourcePathArg = (SourcePathArg) astArgs.get(3);
     assertThat(
-        sourcePathArg.getPath(),
-        Matchers.equalTo(
-            ExplicitBuildTargetSourcePath.of(
-                swiftCompileTarget,
-                pathResolver
-                    .getCellUnsafeRelPath(buildRule.getSourcePathToOutput())
-                    .resolve("bar.swiftmodule"))));
+        buildRule.getSwiftmoduleLinkerInput(),
+        Matchers.equalTo(ImmutableSet.of(buildRule.getSwiftModuleOutputPath())));
 
     Arg objArg = buildRule.getFileListLinkArg().get(0);
     assertThat(objArg, Matchers.instanceOf(FileListableLinkerInputArg.class));

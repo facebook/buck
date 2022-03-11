@@ -167,9 +167,9 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     SwiftCompile rule = requireSwiftCompileRule(cxxPlatform.getFlavor());
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
     inputBuilder
-        .addAllArgs(rule.getAstLinkArgs())
         .addAllFrameworks(frameworks)
-        .addAllLibraries(libraries);
+        .addAllLibraries(libraries)
+        .addAllSwiftmodulePaths(rule.getSwiftmoduleLinkerInput());
     boolean isDynamic;
     Linkage preferredLinkage = getPreferredLinkage(cxxPlatform);
     switch (preferredLinkage) {

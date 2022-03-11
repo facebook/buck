@@ -641,6 +641,48 @@ public class CxxLinkableEnhancerTest {
   }
 
   @Test
+  public void swiftmoduleArgsAreIncluded() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CxxLink cxxLink =
+        CxxLinkableEnhancer.createCxxLinkableBuildRule(
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            DEFAULT_DOWNWARD_API_CONFIG,
+            CXX_PLATFORM,
+            filesystem,
+            graphBuilder,
+            target,
+            Linker.LinkType.EXECUTABLE,
+            Optional.empty(),
+            DEFAULT_OUTPUT,
+            ImmutableList.of(),
+            Linker.LinkableDepType.STATIC,
+            Optional.empty(),
+            CxxLinkOptions.of(),
+            EMPTY_DEPS,
+            Optional.empty(),
+            Optional.empty(),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            NativeLinkableInput.builder()
+                .setArgs(SourcePathArg.from(FakeSourcePath.of("simple.o")))
+                .addSwiftmodulePaths(FakeSourcePath.of("path/to/some.swiftmodule"))
+                .build(),
+            Optional.empty(),
+            TestCellPathResolver.get(filesystem));
+    ImmutableList<String> args =
+        Arg.stringify(cxxLink.getArgs(), graphBuilder.getSourcePathResolver());
+    assertThat(
+        args,
+        hasConsecutiveItems(
+            "-Xlinker",
+            "-add_ast_path",
+            "-Xlinker",
+            filesystem.resolve("path/to/some.swiftmodule").toString()));
+  }
+
+  @Test
   public void frameworksToLinkerFlagsTransformer() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();

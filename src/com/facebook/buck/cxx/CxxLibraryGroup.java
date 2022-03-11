@@ -530,9 +530,17 @@ public class CxxLibraryGroup extends NoopBuildRule
         Objects.requireNonNull(postExportedLinkerFlags.apply(cxxPlatform, graphBuilder)));
 
     ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
+    ImmutableSet<SourcePath> swiftmodulePaths =
+        delegate
+            .requireDelegate(getBuildTarget(), cxxPlatform, graphBuilder)
+            .map(d -> d.getSwiftmodulePaths())
+            .orElse(ImmutableSet.of());
 
     return NativeLinkableInput.of(
-        linkerArgs, Objects.requireNonNull(frameworks), Objects.requireNonNull(libraries));
+        linkerArgs,
+        Objects.requireNonNull(frameworks),
+        Objects.requireNonNull(libraries),
+        swiftmodulePaths);
   }
 
   @Override

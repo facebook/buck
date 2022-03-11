@@ -1399,12 +1399,17 @@ public class AppleLibraryDescription
 
           @Override
           public ImmutableList<Arg> getAdditionalExportedLinkerFlags() {
-            return swiftCompileRule.getAstLinkArgs();
+            return ImmutableList.of();
           }
 
           @Override
           public boolean getShouldProduceLibraryArtifact() {
             return true;
+          }
+
+          @Override
+          public ImmutableSet<SourcePath> getSwiftmodulePaths() {
+            return swiftCompileRule.getSwiftmoduleLinkerInput();
           }
         });
   }
