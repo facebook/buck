@@ -1,5 +1,9 @@
 import b
+import c
 
 private func doBStuff() -> Double {
-    return doStuff()
+    if isit() {
+        return doStuff()
+    }
+    return doStuff() / 2.0
 }

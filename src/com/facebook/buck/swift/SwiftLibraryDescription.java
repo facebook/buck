@@ -1058,6 +1058,13 @@ public class SwiftLibraryDescription
               .get()
               .getSdkClangModuleDependencies(frameworkName, targetTriple));
     }
+
+    // Always import Darwin, this is required for the C stdlib
+    builder.addAll(
+        swiftPlatform
+            .getSdkDependencies()
+            .get()
+            .getSdkClangModuleDependencies("Darwin", targetTriple));
   }
 
   private static ImmutableList<Arg> getModuleCompileSwiftArgs(
