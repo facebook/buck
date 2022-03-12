@@ -98,6 +98,18 @@ public class WatchmanTestDaemon implements Closeable {
 
     AbsPath watchmanStateFile = watchmanBaseDir.resolve("state");
 
+    ImmutableMap.Builder<String, String> watchmanEnvBuilder = ImmutableMap.builder();
+    watchmanEnvBuilder.put("WATCHMAN_CONFIG_FILE", watchmanCfgFile.toString());
+    watchmanEnvBuilder.put("TMP", watchmanBaseDir.toString());
+    if (Platform.detect() == Platform.WINDOWS) {
+      // On Windows watchman crashes if USERPROFILE is not set.
+      ImmutableMap<String, String> systemEnv = EnvVariablesProvider.getSystemEnv();
+      if (!systemEnv.containsKey("USERPROFILE")) {
+        throw new HumanReadableException("USERPROFILE environment variable is not set");
+      }
+      watchmanEnvBuilder.put("USERPROFILE", systemEnv.get("USERPROFILE"));
+    }
+
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
             .addCommand(
@@ -108,10 +120,7 @@ public class WatchmanTestDaemon implements Closeable {
                 "--logfile=" + watchmanLogFile,
                 "--statefile=" + watchmanStateFile,
                 "--pidfile=" + watchmanPidFile)
-            .setEnvironment(
-                ImmutableMap.of(
-                    "WATCHMAN_CONFIG_FILE", watchmanCfgFile.toString(),
-                    "TMP", watchmanBaseDir.toString()))
+            .setEnvironment(watchmanEnvBuilder.build())
             .build();
 
     WatchmanTestDaemon daemon =
