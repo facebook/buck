@@ -265,7 +265,9 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
             });
 
     ImmutableSet.Builder<ExplicitModuleOutput> depsBuilder = ImmutableSet.builder();
-    depsBuilder.add(ExplicitModuleOutput.of(key.getName(), true, rule.getSourcePathToOutput()));
+    depsBuilder.add(
+        ExplicitModuleOutput.of(
+            key.getName(), true, rule.getSourcePathToOutput(), module.isFramework()));
 
     // We need to collect the transitive dependencies at the specified target triple, which
     // is most likely different from this modules target.

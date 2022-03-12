@@ -39,7 +39,16 @@ public abstract class ExplicitModuleOutput implements AddsToRuleKey {
   @AddToRuleKey
   public abstract SourcePath getOutputPath();
 
+  /** If this output is a framework. */
+  @AddToRuleKey
+  public abstract boolean getIsFramework();
+
+  public static ExplicitModuleOutput of(
+      String name, boolean isSwiftModule, SourcePath outputPath, boolean isFramework) {
+    return ImmutableExplicitModuleOutput.ofImpl(name, isSwiftModule, outputPath, isFramework);
+  }
+
   public static ExplicitModuleOutput of(String name, boolean isSwiftModule, SourcePath outputPath) {
-    return ImmutableExplicitModuleOutput.ofImpl(name, isSwiftModule, outputPath);
+    return ImmutableExplicitModuleOutput.ofImpl(name, isSwiftModule, outputPath, false);
   }
 }
