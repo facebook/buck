@@ -77,6 +77,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
     @AddToRuleKey private final ExplicitModuleInput swiftInterfacePath;
     @AddToRuleKey private final ImmutableSet<ExplicitModuleOutput> moduleDeps;
     @AddToRuleKey private final OutputPath output;
+    @AddToRuleKey private final OutputPath swiftModuleMapPath;
 
     Impl(
         Tool swiftc,
@@ -92,6 +93,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
       this.swiftInterfacePath = swiftInterfacePath;
       this.moduleDeps = moduleDeps;
       this.output = new OutputPath(moduleName + ".swiftmodule");
+      this.swiftModuleMapPath = new OutputPath("swift_module_map.json");
     }
 
     @Override
@@ -120,20 +122,23 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
 
       argsBuilder.add(swiftInterfacePath.resolve(resolver));
 
+      Path swiftModuleMapOutputPath = outputPathResolver.resolvePath(swiftModuleMapPath).getPath();
+
+      argsBuilder.add("-explicit-swift-module-map-file", swiftModuleMapOutputPath.toString());
+
       for (ExplicitModuleOutput dep : moduleDeps) {
-        if (dep.getIsSwiftmodule()) {
-          argsBuilder.add(
-              "-swift-module-file",
-              resolver.getIdeallyRelativePath(dep.getOutputPath()).toString());
-        } else {
+        if (!dep.getIsSwiftmodule()) {
           Path modulePath = resolver.getIdeallyRelativePath(dep.getOutputPath());
           argsBuilder.add("-Xcc", "-fmodule-file=" + dep.getName() + "=" + modulePath);
         }
       }
 
-      argsBuilder.add("-o", outputPathResolver.resolvePath(output).getPath().toString());
+      argsBuilder.add("-module-name", moduleName);
+      Path swiftModuleOutputPath = outputPathResolver.resolvePath(output).getPath();
+      argsBuilder.add("-o", swiftModuleOutputPath.toString());
 
       return ImmutableList.of(
+          new SwiftModuleMapFileStep(swiftModuleMapOutputPath, moduleDeps, resolver, filesystem),
           new SwiftCompileStep(
               filesystem.getRootPath(),
               ImmutableMap.of(),
