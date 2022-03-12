@@ -151,6 +151,9 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
 
       argsBuilder.add(modulemapPath.resolve(resolver));
 
+      Path moduleMapPath = Path.of(modulemapPath.resolve(resolver));
+      argsBuilder.add("-Xcc", "-I", "-Xcc", moduleMapPath.getParent().toString());
+
       for (ExplicitModuleOutput dep : clangModuleDeps) {
         Preconditions.checkState(
             !dep.getIsSwiftmodule(),
