@@ -38,6 +38,7 @@ import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.HeadersAsRawHeadersMode;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
@@ -344,6 +345,8 @@ public class CxxToolchainDescription
             .collect(ImmutableList.toImmutableList()));
     cxxPlatform.setRuntimeLdflags(runtimeLdFlags);
 
+    cxxPlatform.setPicTypeForSharedLinking(args.getPicTypeForSharedLinking());
+
     cxxPlatform.setSymbolNameTool(
         new PosixNmSymbolNameTool(
             getToolProvider(args.getNm()), downwardApiConfig.isEnabledForCxx()));
@@ -635,6 +638,11 @@ public class CxxToolchainDescription
 
     /** Flags for linking the c/c++ runtime for shared libraries. */
     ImmutableList<StringWithMacros> getSharedDepRuntimeLdFlags();
+
+    @Value.Default
+    default PicType getPicTypeForSharedLinking() {
+      return PicType.PIC;
+    }
 
     /** nm binary. */
     SourcePath getNm();
