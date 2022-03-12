@@ -25,9 +25,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
-import com.facebook.buck.core.rulekey.ThrowingSerialization;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -110,6 +107,9 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   private final Path swiftdocPath;
 
   @AddToRuleKey(stringify = true)
+  private final Optional<Path> swiftModuleMapPath;
+
+  @AddToRuleKey(stringify = true)
   private final Path headerPath;
 
   @AddToRuleKey private final boolean shouldEmitSwiftdocs;
@@ -157,15 +157,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
   @AddToRuleKey private final boolean serializeDebuggingOptions;
 
   @AddToRuleKey private final Optional<SourcePath> platformPath;
-
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> swiftmoduleDeps;
-
-  // The following fields do not have to be part of the rulekey, all the others must.
-  @ExcludeFromRuleKey(
-      reason = "This is a folder path to the swiftmodule output already included in the rulekey.",
-      serialization = ThrowingSerialization.class,
-      inputs = DefaultFieldInputs.class)
-  private final ImmutableSet<SourcePath> swiftIncludePaths;
 
   @AddToRuleKey private final ImmutableSet<ExplicitModuleOutput> moduleDeps;
 
@@ -245,6 +236,12 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
     this.outputFileMapPath = outputPath.resolve("OutputFileMap.json");
 
+    if (usesExplicitModules) {
+      this.swiftModuleMapPath = Optional.of(outputPath.resolve("swift_module_map.json"));
+    } else {
+      this.swiftModuleMapPath = Optional.empty();
+    }
+
     RelPath scratchDir =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
 
@@ -277,20 +274,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.prefixSerializedDebugInfo =
         hasPrefixSerializedDebugInfo || swiftBuckConfig.getPrefixSerializedDebugInfo();
     this.serializeDebuggingOptions = serializeDebuggingOptions;
-
-    ImmutableSortedSet.Builder<SourcePath> swiftmoduleDepPathBuilder =
-        ImmutableSortedSet.naturalOrder();
-    ImmutableSet.Builder<SourcePath> swiftIncludePathBuilder = ImmutableSet.builder();
-    for (BuildRule dep : cxxDeps.getDeps(graphBuilder)) {
-      if (dep instanceof SwiftCompile) {
-        SwiftCompile swiftCompile = (SwiftCompile) dep;
-        swiftmoduleDepPathBuilder.add(swiftCompile.getSwiftModuleOutputPath());
-        swiftIncludePathBuilder.add(swiftCompile.getSourcePathToOutput());
-      }
-    }
-
-    this.swiftmoduleDeps = swiftmoduleDepPathBuilder.build();
-    this.swiftIncludePaths = swiftIncludePathBuilder.build();
     this.moduleDeps = moduleDependencies;
 
     performChecks(buildTarget);
@@ -334,21 +317,19 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       argBuilder.add(
           frontendFlag, "-disable-implicit-swift-modules", "-Xcc", "-fno-implicit-modules");
 
-      // Import the swiftmodule output of dependent apple_library rules
-      for (SourcePath swiftmodulePath : swiftmoduleDeps) {
-        argBuilder.add(
-            frontendFlag,
-            "-swift-module-file",
-            frontendFlag,
-            resolver.getIdeallyRelativePath(swiftmodulePath).toString());
-      }
+      Path swiftModuleMapPath =
+          getProjectFilesystem().getRootPath().resolve(this.swiftModuleMapPath.get()).getPath();
+
+      argBuilder.add(
+          frontendFlag,
+          "-explicit-swift-module-map-file",
+          frontendFlag,
+          swiftModuleMapPath.toString());
 
       // Import the swiftmodule and pcm output of SDK frameworks and Objc dependencies
       for (ExplicitModuleOutput module : moduleDeps) {
         String path = resolver.getIdeallyRelativePath(module.getOutputPath()).toString();
-        if (module.getIsSwiftmodule()) {
-          argBuilder.add(frontendFlag, "-swift-module-file", frontendFlag, path);
-        } else if (module.getName().equals(moduleName)) {
+        if (module.getName().equals(moduleName)) {
           // We cannot import the direct path to the underlying module as it will conflict with
           // the exported module of the same name when debugging. Instead we need to import the
           // exported module path, this will be remapped in the VFS overlay to the underlying one.
@@ -375,7 +356,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
               "-Xcc",
               "-fmodule-file="
                   + path.replaceAll(AppleFlavors.SWIFT_UNDERLYING_MODULE_FLAVOR + ",", ""));
-        } else {
+        } else if (!module.getIsSwiftmodule()) {
           // TODO: this should use -fmodule-file=modulename=path syntax to avoid always loading
           // module files when they are not imported. Unfortunately this does not seem to work
           // correctly and the modules don't get loaded sometimes.
@@ -383,10 +364,12 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         }
       }
     } else {
-      for (SourcePath includePath : swiftIncludePaths) {
-        argBuilder.add(
-            INCLUDE_FLAG,
-            getProjectFilesystem().relativize(resolver.getAbsolutePath(includePath)).toString());
+      for (ExplicitModuleOutput dep : moduleDeps) {
+        RelPath depOutputPath =
+            getProjectFilesystem()
+                .relativize(resolver.getAbsolutePath(dep.getOutputPath()))
+                .getParent();
+        argBuilder.add(INCLUDE_FLAG, depOutputPath.toString());
       }
 
       argBuilder.addAll(
@@ -592,6 +575,20 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
         return "swift-filelist";
       }
     };
+  }
+
+  /**
+   * A step that emits a SwiftModuleMap file that provides a mapping of module names to the
+   * swiftmodule path.
+   */
+  protected Optional<Step> getEmitSwiftModuleMapStep(SourcePathResolverAdapter resolver) {
+    if (!usesExplicitModules) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+        new SwiftModuleMapFileStep(
+            swiftModuleMapPath.get(), moduleDeps, resolver, getProjectFilesystem()));
   }
 
   /**

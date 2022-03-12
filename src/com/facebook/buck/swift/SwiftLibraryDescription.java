@@ -365,7 +365,8 @@ public class SwiftLibraryDescription
               cxxPlatform,
               targetTriple,
               args,
-              ImmutableSet.of(inputs)));
+              ImmutableSet.of(inputs),
+              cxxDeps));
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -559,7 +560,8 @@ public class SwiftLibraryDescription
             cxxPlatform,
             targetTriple,
             args,
-            preprocessorInputs));
+            preprocessorInputs,
+            preprocessFlags));
   }
 
   private static AppleCompilerTargetTriple getSwiftTarget(
@@ -664,7 +666,8 @@ public class SwiftLibraryDescription
             cxxPlatform,
             targetTriple,
             args,
-            preprocessorInputs));
+            preprocessorInputs,
+            preprocessFlags));
   }
 
   private static boolean getUsesExplicitModules(
@@ -681,9 +684,23 @@ public class SwiftLibraryDescription
       CxxPlatform cxxPlatform,
       AppleCompilerTargetTriple targetTriple,
       SwiftLibraryDescriptionArg args,
-      ImmutableSet<CxxPreprocessorInput> preprocessorInputs) {
+      ImmutableSet<CxxPreprocessorInput> preprocessorInputs,
+      PreprocessorFlags cxxDeps) {
+
+    ImmutableSet.Builder<ExplicitModuleOutput> depsBuilder = ImmutableSet.builder();
+
+    for (BuildRule dep : cxxDeps.getDeps(graphBuilder)) {
+      if (dep instanceof SwiftCompile) {
+        SwiftCompile swiftCompile = (SwiftCompile) dep;
+        depsBuilder.add(
+            ExplicitModuleOutput.of(
+                swiftCompile.getModuleName(), true, swiftCompile.getSwiftModuleOutputPath()));
+      }
+    }
+
+    // For implicit modules, we don't need to return any SDK's deps.
     if (!getUsesExplicitModules(args, swiftPlatform)) {
-      return ImmutableSet.of();
+      return depsBuilder.build();
     }
 
     // Get the list of Swift args that will contribute to the clang module output and target hash.
@@ -691,8 +708,6 @@ public class SwiftLibraryDescription
         getModuleMapCompileArgs(buildTarget, cellNameResolver, graphBuilder, swiftPlatform, args);
     Flavor pcmFlavor =
         getPcmFlavor(targetTriple, moduleMapCompileArgs, graphBuilder.getSourcePathResolver());
-
-    ImmutableSet.Builder<ExplicitModuleOutput> depsBuilder = ImmutableSet.builder();
 
     // Collect all Swift and Clang module dependencies of SDK dependencies of this target and its
     // transitive dependencies.

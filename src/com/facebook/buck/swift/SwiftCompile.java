@@ -154,6 +154,8 @@ public class SwiftCompile extends SwiftCompileBase {
       steps.add(makeOutputFileMapGenerationStep(context.getSourcePathResolver()));
     }
 
+    getEmitSwiftModuleMapStep(context.getSourcePathResolver()).map(steps::add);
+
     steps.add(makeCompileStep(context.getSourcePathResolver()));
 
     if (postprocessGeneratedHeaderForNonModulesCompatibility) {
