@@ -51,7 +51,8 @@ public class JarBuilder {
 
   private enum MergeableResource implements Predicate<String> {
     SERVICES("META-INF/services/"),
-    SPRING_SCHEMAS("META-INF/spring.schemas");
+    SPRING_SCHEMAS("META-INF/spring.schemas"),
+    SPRING_HANDLERS("META-INF/spring.handlers");
 
     private final Predicate<String> predicate;
 
