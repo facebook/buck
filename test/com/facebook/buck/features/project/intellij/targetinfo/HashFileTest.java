@@ -57,6 +57,8 @@ public class HashFileTest {
     assertEquals("Three", file.get("Third"));
     assertEquals("Four", file.get("Fourth"));
     assertNull(file.get("Random"));
+
+    file.close();
   }
 
   @Test
@@ -84,6 +86,7 @@ public class HashFileTest {
     assertEquals("Second", file.get("BBBB"));
     assertEquals("Third", file.get("AaBB"));
     assertEquals("Fourth", file.get("BBAa"));
+    file.close();
   }
 
   @Test(expected = FileNotFoundException.class)
@@ -93,6 +96,7 @@ public class HashFileTest {
         new HashFile<>(
             HashFile.STRING_SERIALIZER, HashFile.STRING_SERIALIZER, temporaryFile.toPath());
     file.get("Nothing");
+    file.close();
   }
 
   public void testGet_FailsSanelyWhenVersionIsWrong() throws Exception {
@@ -114,6 +118,7 @@ public class HashFileTest {
     exception.expectMessage("version");
 
     file.get("Foo");
+    file.close();
   }
 
   @Test
@@ -132,6 +137,7 @@ public class HashFileTest {
 
     assertEquals("Gniht", data.get("New"));
     assertNull(data.get("Old"));
+    file.close();
   }
 
   @Test
@@ -143,6 +149,7 @@ public class HashFileTest {
     Map<String, String> data = new HashMap<>();
     file.write(data);
     assertNull(data.get("Anything"));
+    file.close();
   }
 
   @Test
@@ -160,6 +167,7 @@ public class HashFileTest {
     widget = data.get("Hello");
     assertEquals("A widget!", widget.name);
     assertEquals("Class 1 widget", widget.type);
+    file.close();
   }
 
   private static class WidgetSerializer implements HashFile.Serializer<Widget> {

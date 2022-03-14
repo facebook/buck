@@ -46,6 +46,7 @@ public class ModuleToTargetsBinaryFileTest {
     assertEquals(toSet("//foo", "//bar", "//baz"), file.get("mymodule"));
     assertEquals(toSet("//foobar"), file.get("anothermodule"));
     assertNull(file.get("bogus"));
+    file.close();
   }
 
   @Test
@@ -56,6 +57,7 @@ public class ModuleToTargetsBinaryFileTest {
     Map<String, Set<String>> data = new HashMap<>();
     file.write(data);
     assertNull(file.get("foooooo"));
+    file.close();
   }
 
   private static Set<String> toSet(String... strings) {

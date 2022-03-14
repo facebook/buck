@@ -51,6 +51,7 @@ public class TargetInfoBinaryFileTest {
 
     TargetInfo newInfo = file.get("//foo/bar:foo");
     assertEquals(info, newInfo);
+    file.close();
   }
 
   @Test
@@ -67,6 +68,7 @@ public class TargetInfoBinaryFileTest {
 
     TargetInfo newInfo = file.get("//foo/bar:foo");
     assertEquals(info, newInfo);
+    file.close();
   }
 
   @Test
@@ -84,5 +86,6 @@ public class TargetInfoBinaryFileTest {
 
     TargetInfo newInfo = file.get("//foo/bar:foo");
     assertEquals(info, newInfo);
+    file.close();
   }
 }

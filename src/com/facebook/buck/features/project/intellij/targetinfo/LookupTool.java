@@ -34,9 +34,13 @@ public class LookupTool {
 
     // Try first the TargetInfo
     try {
-      print(new TargetInfoBinaryFile(path), key);
+      TargetInfoBinaryFile file = new TargetInfoBinaryFile(path);
+      print(file, key);
+      file.close();
     } catch (IOException e) {
-      print(new ModuleToTargetsBinaryFile(path), key);
+      ModuleToTargetsBinaryFile file = new ModuleToTargetsBinaryFile(path);
+      print(file, key);
+      file.close();
     }
   }
 

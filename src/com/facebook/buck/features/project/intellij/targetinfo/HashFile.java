@@ -47,6 +47,7 @@ public class HashFile<K, V> {
   private final Serializer<K> keySerializer;
   private final Serializer<V> valueSerializer;
   private final Path path;
+  private RandomAccessFile file;
 
   public HashFile(Serializer<K> keySerializer, Serializer<V> valueSerializer, Path path) {
     this.keySerializer = keySerializer;
@@ -104,8 +105,13 @@ public class HashFile<K, V> {
 
   /** Gets a value, or null if the value is not present. */
   public V get(K key) throws IOException {
+    if (this.file == null) {
+      this.file = new RandomAccessFile(path.toFile(), "r");
+    }
+
     int targetHash = key.hashCode();
-    try (RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")) {
+    try {
+      this.file.seek(0);
       byte version = file.readByte();
       if (version != VERSION) {
         throw new IOException("Unexpected version in " + path + ": " + version);
@@ -156,8 +162,23 @@ public class HashFile<K, V> {
           return currentValue;
         }
       }
+    } catch (Exception e) {
     }
+
     return null;
+  }
+
+  /** Closes the file if it is not already closed */
+  public void close() {
+    if (this.file == null) {
+      return;
+    }
+    try {
+      this.file.close();
+    } catch (IOException e) {
+    } finally {
+      this.file = null;
+    }
   }
 
   /**
