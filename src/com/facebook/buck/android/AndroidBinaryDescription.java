@@ -44,7 +44,6 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
@@ -266,7 +265,7 @@ public class AndroidBinaryDescription
     javacFactory.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
     TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();
-    Optionals.addIfPresent(proGuardConfig.getProguardTarget(targetConfiguration), extraDepsBuilder);
+    extraDepsBuilder.addAll(proGuardConfig.getProguardTargets(targetConfiguration));
 
     // TODO(cjhopman): we could filter this by the abis that this binary supports.
     toolchainProvider

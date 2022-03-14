@@ -93,6 +93,8 @@ public final class ProGuardObfuscateStep extends IsolatedShellStep {
       Map<Path, Path> inputAndOutputEntries,
       ImmutableSet<Path> additionalLibraryJarsForProguard,
       Path proguardDirectory,
+      Optional<Path> proguardConfigOverride,
+      Optional<Path> optimizedProguardConfigOverride,
       BuildableContext buildableContext,
       BuildContext buildContext,
       boolean skipProguard,
@@ -116,7 +118,9 @@ public final class ProGuardObfuscateStep extends IsolatedShellStep {
             inputAndOutputEntries,
             additionalLibraryJarsForProguard,
             proguardDirectory,
-            pathToProGuardCommandLineArgsFile);
+            pathToProGuardCommandLineArgsFile,
+            proguardConfigOverride,
+            optimizedProguardConfigOverride);
 
     if (skipProguard) {
       steps.add(commandLineHelperStep, new TouchStep(commandLineHelperStep.getMappingTxt()));
@@ -192,12 +196,10 @@ public final class ProGuardObfuscateStep extends IsolatedShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(IsolatedExecutionContext context) {
     // Run ProGuard as a standalone executable JAR file.
-    Path proguardJar;
-    if (proguardJarOverride.isPresent()) {
-      proguardJar = filesystem.getPathForRelativePath(proguardJarOverride.get());
-    } else {
-      proguardJar = androidPlatformTarget.getProguardJar();
-    }
+    Path proguardJar =
+        proguardJarOverride
+            .map(filesystem::getPathForRelativePath)
+            .orElse(androidPlatformTarget.getProguardJar());
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.addAll(javaRuntimeLauncher);
@@ -291,6 +293,8 @@ public final class ProGuardObfuscateStep extends IsolatedShellStep {
     private final int optimizationPasses;
     private final Path proguardDirectory;
     private final Path pathToProGuardCommandLineArgsFile;
+    private final Optional<Path> proguardConfigOverride;
+    private final Optional<Path> optimizedProguardConfigOverride;
 
     /**
      * @param customProguardConfigs Main rule and its dependencies proguard configurations.
@@ -311,7 +315,9 @@ public final class ProGuardObfuscateStep extends IsolatedShellStep {
         Map<Path, Path> inputAndOutputEntries,
         ImmutableSet<Path> additionalLibraryJarsForProguard,
         Path proguardDirectory,
-        Path pathToProGuardCommandLineArgsFile) {
+        Path pathToProGuardCommandLineArgsFile,
+        Optional<Path> proguardConfigOverride,
+        Optional<Path> optimizedProguardConfigOverride) {
       super("write_proguard_command_line_parameters");
 
       this.filesystem = filesystem;
@@ -323,6 +329,8 @@ public final class ProGuardObfuscateStep extends IsolatedShellStep {
       this.additionalLibraryJarsForProguard = additionalLibraryJarsForProguard;
       this.proguardDirectory = proguardDirectory;
       this.pathToProGuardCommandLineArgsFile = pathToProGuardCommandLineArgsFile;
+      this.proguardConfigOverride = proguardConfigOverride;
+      this.optimizedProguardConfigOverride = optimizedProguardConfigOverride;
     }
 
     @Override
@@ -346,11 +354,19 @@ public final class ProGuardObfuscateStep extends IsolatedShellStep {
       // -include
       switch (sdkProguardConfig) {
         case OPTIMIZED:
-          args.add("-include").add(androidPlatformTarget.getOptimizedProguardConfig().toString());
+          args.add("-include")
+              .add(
+                  optimizedProguardConfigOverride
+                      .orElse(androidPlatformTarget.getOptimizedProguardConfig())
+                      .toString());
           args.add("-optimizationpasses").add(String.valueOf(optimizationPasses));
           break;
         case DEFAULT:
-          args.add("-include").add(androidPlatformTarget.getProguardConfig().toString());
+          args.add("-include")
+              .add(
+                  proguardConfigOverride
+                      .orElse(androidPlatformTarget.getProguardConfig())
+                      .toString());
           break;
         case NONE:
           break;

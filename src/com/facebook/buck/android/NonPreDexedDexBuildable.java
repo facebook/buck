@@ -105,6 +105,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   @AddToRuleKey private final Optional<SourcePath> proguardConfig;
   @AddToRuleKey private final ImmutableList<SourcePath> proguardConfigs;
   @AddToRuleKey private final Optional<SourcePath> proguardJarOverride;
+  @AddToRuleKey private final Optional<SourcePath> proguardConfigOverride;
+  @AddToRuleKey private final Optional<SourcePath> optimizedProguardConfigOverride;
   @AddToRuleKey private final Optional<List<String>> proguardJvmArgs;
   @AddToRuleKey private final String proguardMaxHeapSize;
   @AddToRuleKey private final APKModule rootAPKModule;
@@ -123,6 +125,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   @BuckStyleValueWithBuilder
   interface NonPredexedDexBuildableArgs {
     Optional<SourcePath> getProguardJarOverride();
+
+    Optional<SourcePath> getProguardConfigOverride();
+
+    Optional<SourcePath> getOptimizedProguardConfigOverride();
 
     String getProguardMaxHeapSize();
 
@@ -186,6 +192,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
     this.proguardJvmArgs = args.getProguardJvmArgs();
     this.proguardAgentPath = args.getProguardAgentPath();
     this.proguardJarOverride = args.getProguardJarOverride();
+    this.proguardConfigOverride = args.getProguardConfigOverride();
+    this.optimizedProguardConfigOverride = args.getOptimizedProguardConfigOverride();
     this.proguardMaxHeapSize = args.getProguardMaxHeapSize();
     this.rootAPKModule = rootAPKModule;
     this.sdkProguardConfig = args.getSdkProguardConfig();
@@ -598,6 +606,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             .map(PathWrapper::getPath)
             .collect(ImmutableSet.toImmutableSet()),
         getProguardConfigDir(),
+        proguardConfigOverride.map(sourcePathResolver::getAbsolutePath).map(AbsPath::getPath),
+        optimizedProguardConfigOverride
+            .map(sourcePathResolver::getAbsolutePath)
+            .map(AbsPath::getPath),
         buildableContext,
         buildContext,
         skipProguard,

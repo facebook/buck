@@ -41,7 +41,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
@@ -251,8 +250,8 @@ public class AndroidBundleDescription
     javacFactory.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
 
-    Optionals.addIfPresent(
-        proGuardConfig.getProguardTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
+    extraDepsBuilder.addAll(
+        proGuardConfig.getProguardTargets(buildTarget.getTargetConfiguration()));
   }
 
   @RuleArg

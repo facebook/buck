@@ -197,6 +197,8 @@ public class AndroidApkTest {
                             libraryTwoRule.getBuildTarget().getShortNameAndFlavorPostfix()
                                 + ".jar"))),
         proguardOutputDir,
+        Optional.empty(),
+        Optional.empty(),
         buildableContext,
         buildContext,
         false,

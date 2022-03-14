@@ -189,6 +189,11 @@ public class AndroidInstrumentationApkDescription
             .setSkipProguard(apkUnderTest.getSkipProguard())
             .setJavaRuntimeLauncher(apkUnderTest.getJavaRuntimeLauncher())
             .setProguardConfigPath(apkUnderTest.getProguardConfig())
+            .setProguardConfigOverride(
+                proGuardConfig.getProguardConfigOverride(buildTarget.getTargetConfiguration()))
+            .setOptimizedProguardConfigOverride(
+                proGuardConfig.getOptimizedProguardConfigOverride(
+                    buildTarget.getTargetConfiguration()))
             .setShouldProguard(shouldProguard)
             .build();
 

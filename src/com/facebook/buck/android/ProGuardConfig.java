@@ -20,11 +20,14 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 public class ProGuardConfig {
   private final String SECTION = "tools";
-  private final String PROGUARD_CONFIG = "proguard";
+  private final String PROGUARD_JAR = "proguard";
+  private final String PROGUARD_CONFIG = "proguard_config";
+  private final String OPTIMIZED_PROGUARD_CONFIG = "optimized_proguard_config";
 
   private final BuckConfig delegate;
 
@@ -37,11 +40,29 @@ public class ProGuardConfig {
    *     specified, the Android platform proguard.jar will be used.
    */
   public Optional<SourcePath> getProguardJarOverride(TargetConfiguration targetConfiguration) {
+    return delegate.getSourcePath(SECTION, PROGUARD_JAR, targetConfiguration);
+  }
+
+  public ImmutableList<BuildTarget> getProguardTargets(TargetConfiguration targetConfiguration) {
+    ImmutableList.Builder<BuildTarget> buildTargets = ImmutableList.builder();
+    ImmutableList<String> configStrings =
+        ImmutableList.of(PROGUARD_JAR, PROGUARD_CONFIG, OPTIMIZED_PROGUARD_CONFIG);
+    for (String configString : configStrings) {
+      delegate
+          .getMaybeBuildTarget(SECTION, configString, targetConfiguration)
+          .ifPresent(buildTargets::add);
+    }
+
+    return buildTargets.build();
+  }
+
+  public Optional<SourcePath> getProguardConfigOverride(TargetConfiguration targetConfiguration) {
     return delegate.getSourcePath(SECTION, PROGUARD_CONFIG, targetConfiguration);
   }
 
-  public Optional<BuildTarget> getProguardTarget(TargetConfiguration targetConfiguration) {
-    return delegate.getMaybeBuildTarget(SECTION, PROGUARD_CONFIG, targetConfiguration);
+  public Optional<SourcePath> getOptimizedProguardConfigOverride(
+      TargetConfiguration targetConfiguration) {
+    return delegate.getSourcePath(SECTION, OPTIMIZED_PROGUARD_CONFIG, targetConfiguration);
   }
 
   /** @return The upper heap size limit for Proguard if specified. */

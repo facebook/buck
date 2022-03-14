@@ -130,6 +130,8 @@ public class ProGuardObfuscateStepTest {
         /* additionalLibraryJarsForProguard */ ImmutableSet.of(
             Paths.get("myfavorite.jar"), Paths.get("another.jar")),
         Paths.get("proguard-directory"),
+        Optional.empty(),
+        Optional.empty(),
         new FakeBuildableContext(),
         FakeBuildContext.NOOP_CONTEXT,
         false,
@@ -165,6 +167,8 @@ public class ProGuardObfuscateStepTest {
         /* additionalLibraryJarsForProguard */ ImmutableSet.of(
             Paths.get("myfavorite.jar"), Paths.get("another.jar")),
         Paths.get("proguard-directory"),
+        Optional.empty(),
+        Optional.empty(),
         new FakeBuildableContext(),
         FakeBuildContext.NOOP_CONTEXT,
         false,
@@ -197,6 +201,8 @@ public class ProGuardObfuscateStepTest {
         /* inputAndOutputEntries */ ImmutableMap.of(),
         /* additionalLibraryJarsForProguard */ ImmutableSet.of(),
         Paths.get("proguard-directory"),
+        Optional.empty(),
+        Optional.empty(),
         new FakeBuildableContext(),
         FakeBuildContext.NOOP_CONTEXT,
         false,
