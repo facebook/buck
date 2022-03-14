@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -47,6 +48,27 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 public class JarBuilder {
+
+  private enum MergeableResource implements Predicate<String> {
+    SERVICES("META-INF/services/"),
+    ;
+
+    private final Predicate<String> predicate;
+
+    MergeableResource(String pathPrefix) {
+      this.predicate = entryName -> entryName.startsWith(pathPrefix) && !entryName.endsWith("/");
+    }
+
+    @Override
+    public boolean test(String entryName) {
+      return predicate.test(entryName);
+    }
+
+    public static boolean check(String entryName) {
+      return Arrays.stream(MergeableResource.values())
+          .anyMatch(mergeableResource -> mergeableResource.test(entryName));
+    }
+  }
 
   public interface Observer {
 
@@ -65,7 +87,7 @@ public class JarBuilder {
   private final List<JarEntryContainer> sourceContainers = new ArrayList<>();
   private final List<JarEntryContainer> overrideSourceContainers = new ArrayList<>();
   private final Set<String> alreadyAddedEntries = new HashSet<>();
-  private final Map<String, Set<String>> services = new HashMap<>();
+  private final Map<String, Set<String>> mergeableResources = new HashMap<>();
 
   public JarBuilder setObserver(Observer observer) {
     this.observer = observer;
@@ -156,7 +178,7 @@ public class JarBuilder {
 
       addEntriesToJar(sortedEntries, jar);
 
-      addServices(jar);
+      addMergeableResources(jar);
 
       if (mainClass != null && !classPresent(mainClass)) {
         throw new HumanReadableException("ERROR: Main class %s does not exist.", mainClass);
@@ -184,12 +206,12 @@ public class JarBuilder {
     }
   }
 
-  private void addServices(CustomJarOutputStream jar) throws IOException {
+  private void addMergeableResources(CustomJarOutputStream jar) throws IOException {
     Joiner joiner = Joiner.on("\n");
-    for (String entryName : services.keySet()) {
+    for (String entryName : mergeableResources.keySet()) {
       CustomZipEntry entry = new CustomZipEntry(entryName);
       jar.putNextEntry(entry);
-      jar.write(joiner.join(services.get(entryName)).getBytes());
+      jar.write(joiner.join(mergeableResources.get(entryName)).getBytes());
       jar.closeEntry();
     }
   }
@@ -280,13 +302,13 @@ public class JarBuilder {
       return;
     }
 
-    // Collect all services together for later merging and addition to the output jar
-    if (isService(entryName)) {
+    // Collect all mergeable resources together for later merging and addition to the output jar
+    if (MergeableResource.check(entryName)) {
       try (InputStream entryInputStream =
           Objects.requireNonNull(entrySupplier.getInputStreamSupplier().get())) {
-        Set<String> existingServices =
-            services.computeIfAbsent(entryName, (m) -> new LinkedHashSet<>());
-        existingServices.add(
+        Set<String> existingResources =
+            mergeableResources.computeIfAbsent(entryName, (m) -> new LinkedHashSet<>());
+        existingResources.add(
             CharStreams.toString(new InputStreamReader(entryInputStream, StandardCharsets.UTF_8)));
       }
       return;
@@ -300,10 +322,6 @@ public class JarBuilder {
       }
     }
     jar.closeEntry();
-  }
-
-  private boolean isService(String entryName) {
-    return entryName.startsWith("META-INF/services/") && !entryName.endsWith("/");
   }
 
   private void mkdirs(String name, CustomJarOutputStream jar) throws IOException {
@@ -361,7 +379,7 @@ public class JarBuilder {
   }
 
   private boolean isDuplicateAllowed(String name) {
-    return isService(name) || (!name.endsWith(".class") && !name.endsWith("/"));
+    return MergeableResource.check(name) || (!name.endsWith(".class") && !name.endsWith("/"));
   }
 
   private static class SingletonJarEntryContainer implements JarEntryContainer {
