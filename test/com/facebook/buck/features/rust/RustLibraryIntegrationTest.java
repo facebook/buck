@@ -80,7 +80,7 @@ public class RustLibraryIntegrationTest {
     // With native_unbundle_deps=True, `:left`(and :right too) rule output shouldn't have anything
     // else bundled in
     // it.
-    assertSame(nmOutput.lines().count(), 6);
+    assertSame(nmOutput.lines().count(), 6L);
     assertEquals("__ZN6bottom3bar17h7a15b7f2b46af511E", nmOutput.lines().toArray()[2].toString());
     assertEquals("_foo_left", nmOutput.lines().toArray()[3].toString());
   }
