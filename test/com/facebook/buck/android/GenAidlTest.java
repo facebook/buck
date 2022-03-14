@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
@@ -38,9 +37,6 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
-import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -54,10 +50,10 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import org.junit.Before;
@@ -69,10 +65,9 @@ public class GenAidlTest {
   private PathSourcePath pathToAidl;
   private BuildTarget target;
   private SourcePathResolverAdapter pathResolver;
-  private String pathToAidlExecutable;
-  private String pathToFrameworkAidl;
+  private Path pathToAidlExecutable;
+  private Path pathToFrameworkAidl;
   private String importPath;
-  private AndroidPlatformTarget androidPlatformTarget;
 
   @Before
   public void setUp() throws IOException {
@@ -83,25 +78,8 @@ public class GenAidlTest {
     pathToAidl = FakeSourcePath.of(stubFilesystem, "java/com/example/base/IWhateverService.aidl");
     importPath = Paths.get("java/com/example/base").toString();
 
-    pathToAidlExecutable = Paths.get("/usr/local/bin/aidl").toString();
-    pathToFrameworkAidl =
-        Paths.get("/home/root/android/platforms/android-16/framework.aidl").toString();
-    androidPlatformTarget =
-        AndroidPlatformTarget.of(
-            "android",
-            Paths.get(""),
-            ImmutableList.of(),
-            () -> new SimpleTool(""),
-            new ConstantToolProvider(new SimpleTool("")),
-            Paths.get(""),
-            Paths.get(pathToAidlExecutable),
-            new ConstantToolProvider(new SimpleTool("")),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(pathToFrameworkAidl),
-            Paths.get(""),
-            Paths.get(""),
-            Paths.get(""));
+    pathToAidlExecutable = Paths.get("/usr/local/bin/aidl");
+    pathToFrameworkAidl = Paths.get("/home/root/android/platforms/android-16/framework.aidl");
 
     target = BuildTargetFactory.newInstance("//java/com/example/base:IWhateverService");
     pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
@@ -112,9 +90,8 @@ public class GenAidlTest {
     return new GenAidl(
         target,
         stubFilesystem,
-        new ToolchainProviderBuilder()
-            .withToolchain(AndroidPlatformTarget.DEFAULT_NAME, androidPlatformTarget)
-            .build(),
+        pathToAidlExecutable,
+        pathToFrameworkAidl,
         params,
         pathToAidl,
         importPath,

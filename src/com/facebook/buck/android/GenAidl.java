@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -63,8 +62,8 @@ import java.nio.file.Path;
  * </pre>
  */
 public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
-
-  private final ToolchainProvider toolchainProvider;
+  private final Path aidlExecutable;
+  private final Path frameworkIdlFile;
 
   // TODO(#2493457): This rule uses the aidl binary (part of the Android SDK), so the RuleKey
   // should incorporate which version of aidl is used.
@@ -78,14 +77,16 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   GenAidl(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      ToolchainProvider toolchainProvider,
+      Path aidlExecutable,
+      Path frameworkIdlFile,
       BuildRuleParams params,
       SourcePath aidlFilePath,
       String importPath,
       ImmutableSortedSet<SourcePath> aidlSrcs,
       boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
-    this.toolchainProvider = toolchainProvider;
+    this.aidlExecutable = aidlExecutable;
+    this.frameworkIdlFile = frameworkIdlFile;
     this.aidlFilePath = aidlFilePath;
     this.importPath = importPath;
     this.genPath =
@@ -125,8 +126,8 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     AidlStep command =
         new AidlStep(
             getProjectFilesystem(),
-            toolchainProvider,
-            target.getTargetConfiguration(),
+            aidlExecutable,
+            frameworkIdlFile,
             context.getSourcePathResolver().getAbsolutePath(aidlFilePath).getPath(),
             ImmutableSet.of(importPath),
             outputDirectory.getPath(),

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
@@ -47,10 +48,19 @@ public class GenAidlDescription implements DescriptionWithTargetGraph<GenAidlDes
       BuildTarget buildTarget,
       BuildRuleParams params,
       GenAidlDescriptionArg args) {
+    AndroidPlatformTarget androidPlatformTarget =
+        context
+            .getToolchainProvider()
+            .getByName(
+                AndroidPlatformTarget.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                AndroidPlatformTarget.class);
+
     return new GenAidl(
         buildTarget,
         context.getProjectFilesystem(),
-        context.getToolchainProvider(),
+        androidPlatformTarget.getAidlExecutable(),
+        androidPlatformTarget.getAndroidFrameworkIdlFile(),
         params,
         args.getAidl(),
         args.getImportPath(),

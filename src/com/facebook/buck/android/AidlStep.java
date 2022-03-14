@@ -16,12 +16,9 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.isolatedsteps.shell.IsolatedShellStep;
@@ -35,16 +32,16 @@ import java.util.Set;
 public class AidlStep extends IsolatedShellStep {
 
   private final ProjectFilesystem filesystem;
-  private final ToolchainProvider toolchainProvider;
-  private final TargetConfiguration toolchainTargetConfiguration;
+  private final Path aidlExecutable;
+  private final Path frameworkIdlFile;
   private final Path aidlFilePath;
   private final Set<String> importDirectoryPaths;
   private final Path destinationDirectory;
 
   public AidlStep(
       ProjectFilesystem filesystem,
-      ToolchainProvider toolchainProvider,
-      TargetConfiguration toolchainTargetConfiguration,
+      Path aidlExecutable,
+      Path frameworkIdlFile,
       Path aidlFilePath,
       Set<String> importDirectoryPaths,
       Path destinationDirectory,
@@ -53,8 +50,8 @@ public class AidlStep extends IsolatedShellStep {
     super(filesystem.getRootPath(), cellPath, withDownwardApi);
 
     this.filesystem = filesystem;
-    this.toolchainProvider = toolchainProvider;
-    this.toolchainTargetConfiguration = toolchainTargetConfiguration;
+    this.aidlExecutable = aidlExecutable;
+    this.frameworkIdlFile = frameworkIdlFile;
     this.aidlFilePath = aidlFilePath;
     this.importDirectoryPaths = ImmutableSet.copyOf(importDirectoryPaths);
     this.destinationDirectory = destinationDirectory;
@@ -68,19 +65,13 @@ public class AidlStep extends IsolatedShellStep {
     // mode.
     verifyImportPaths(filesystem, importDirectoryPaths);
 
-    AndroidPlatformTarget androidPlatformTarget =
-        toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME,
-            toolchainTargetConfiguration,
-            AndroidPlatformTarget.class);
-
-    args.add(androidPlatformTarget.getAidlExecutable().toString());
+    args.add(aidlExecutable.toString());
 
     // For some reason, all of the flags to aidl do not permit a space between the flag name and
     // the flag value.
 
     // file created by --preprocess to import
-    args.add("-p" + androidPlatformTarget.getAndroidFrameworkIdlFile());
+    args.add("-p" + frameworkIdlFile);
 
     // search path for import statements
     for (String importDirectoryPath : importDirectoryPaths) {
