@@ -124,6 +124,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
             swiftFlags,
             swiftTarget,
             sdkPath,
+            platformPath,
             resourceDir.get()));
   }
 }

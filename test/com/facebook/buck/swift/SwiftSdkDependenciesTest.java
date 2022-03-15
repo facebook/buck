@@ -61,6 +61,7 @@ public class SwiftSdkDependenciesTest {
             ImmutableList.of(),
             triple,
             PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/platform/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")));
 
     SwiftSdkDependencies.SwiftModule module = sdkDependencies.getSwiftModule("Foundation");
@@ -98,6 +99,7 @@ public class SwiftSdkDependenciesTest {
             ImmutableList.of(),
             triple,
             PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/platform/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")));
 
     ImmutableSet<ExplicitModuleOutput> swiftmoduleDeps =

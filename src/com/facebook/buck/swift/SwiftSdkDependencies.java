@@ -70,6 +70,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
 
   private final String ResourceDirPrefix = "$RESOURCEDIR/";
 
+  private final String PlatformDirPrefix = "$PLATFORM_DIR/";
+
   private final String SdkRootPrefix = "$SDKROOT/";
 
   public SwiftSdkDependencies(
@@ -80,6 +82,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       ImmutableList<Arg> swiftFlags,
       AppleCompilerTargetTriple triple,
       SourcePath sdkPath,
+      SourcePath platformPath,
       SourcePath swiftResourceDir)
       throws HumanReadableException {
     ObjectMapper objectMapper = new ObjectMapper();
@@ -137,6 +140,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                         swiftc,
                         swiftFlags,
                         sdkPath,
+                        platformPath,
                         swiftResourceDir);
                   }
                 });
@@ -154,6 +158,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                         swiftc,
                         swiftFlags,
                         sdkPath,
+                        platformPath,
                         swiftResourceDir);
                   }
                 });
@@ -192,6 +197,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       Tool swiftc,
       ImmutableList<Arg> swiftFlags,
       SourcePath sdkPath,
+      SourcePath platformPath,
       SourcePath resourceDir) {
     SwiftModule module = getSwiftModule(key.getName());
 
@@ -260,7 +266,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                   swiftFlags,
                   false,
                   module.getName(),
-                  replacePathPrefix(module.getSwiftInterfacePath(), sdkPath, resourceDir),
+                  replacePathPrefix(
+                      module.getSwiftInterfacePath(), sdkPath, platformPath, resourceDir),
                   moduleDepsBuilder.build());
             });
 
@@ -291,6 +298,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       Tool swiftc,
       ImmutableList<Arg> swiftFlags,
       SourcePath sdkPath,
+      SourcePath platformPath,
       SourcePath swiftResourceDir) {
     ClangModule clangModule = clangModules.get(key.getName());
 
@@ -329,7 +337,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                     false,
                     key.getName(),
                     true,
-                    replacePathPrefix(clangModule.getModulemapPath(), sdkPath, swiftResourceDir),
+                    replacePathPrefix(
+                        clangModule.getModulemapPath(), sdkPath, platformPath, swiftResourceDir),
                     depsBuilder.build()));
 
     depsBuilder.add(ExplicitModuleOutput.of(key.getName(), false, rule.getSourcePathToOutput()));
@@ -337,11 +346,13 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
   }
 
   private ExplicitModuleInput replacePathPrefix(
-      Path path, SourcePath sdkPath, SourcePath resourceDir) {
+      Path path, SourcePath sdkPath, SourcePath platformPath, SourcePath resourceDir) {
     if (path.startsWith(SdkRootPrefix)) {
       return ExplicitModuleInput.of(sdkPath, path.subpath(1, path.getNameCount()));
     } else if (path.startsWith(ResourceDirPrefix)) {
       return ExplicitModuleInput.of(resourceDir, path.subpath(1, path.getNameCount()));
+    } else if (path.startsWith(PlatformDirPrefix)) {
+      return ExplicitModuleInput.of(platformPath, path.subpath(1, path.getNameCount()));
     } else {
       throw new HumanReadableException("Unknown SDK dependency path prefix: " + path);
     }
