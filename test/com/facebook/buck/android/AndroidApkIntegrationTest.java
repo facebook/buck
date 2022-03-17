@@ -18,8 +18,6 @@ package com.facebook.buck.android;
 
 import static com.facebook.buck.testutil.RegexMatcher.containsPattern;
 import static com.facebook.buck.testutil.RegexMatcher.containsRegex;
-import static com.facebook.buck.testutil.integration.BuckOutConfigHashPlaceholder.removeHash;
-import static com.facebook.buck.testutil.integration.BuckOutConfigHashPlaceholder.removePlaceholder;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -1124,89 +1122,6 @@ public class AndroidApkIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testApkEmptyResDirectoriesBuildsCorrectly() {
     workspace.runBuckBuild("//apps/sample:app_with_aar_and_no_res").assertSuccess();
-  }
-
-  @Test
-  public void testNativeLibGeneratedProguardConfigIsUsedByProguardWithNdkPrior17()
-      throws IOException {
-    AssumeAndroidPlatform.get(workspace).assumeArmIsAvailable();
-    String target = "//apps/sample:app_with_native_lib_proguard-16";
-    workspace.runBuckBuild(target).assertSuccess();
-
-    Path generatedConfig =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem.getBuckPaths(),
-                BuildTargetFactory.newInstance(target)
-                    .withFlavors(AndroidBinaryGraphEnhancer.NATIVE_LIBRARY_PROGUARD_FLAVOR),
-                NativeLibraryProguardGenerator.OUTPUT_FORMAT));
-
-    Path proguardDir =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s/proguard"));
-
-    Path proguardCommandLine = proguardDir.resolve("command-line.txt");
-    // Check that the proguard command line references the native lib proguard config.
-    assertTrue(workspace.getFileContents(proguardCommandLine).contains(generatedConfig.toString()));
-    assertEquals(
-        removePlaceholder(workspace.getFileContents("native/proguard_gen/expected-16.pro")),
-        removeHash(workspace.getFileContents(generatedConfig)));
-  }
-
-  @Test
-  public void testNativeLibGeneratedProguardConfigIsUsedByProguardWithNdkPrior18()
-      throws IOException {
-    AssumeAndroidPlatform.get(workspace).assumeGnuStlIsAvailable();
-    String target = "//apps/sample:app_with_native_lib_proguard";
-    workspace.runBuckBuild(target).assertSuccess();
-
-    Path generatedConfig =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem.getBuckPaths(),
-                BuildTargetFactory.newInstance(target)
-                    .withFlavors(AndroidBinaryGraphEnhancer.NATIVE_LIBRARY_PROGUARD_FLAVOR),
-                NativeLibraryProguardGenerator.OUTPUT_FORMAT));
-
-    Path proguardDir =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s/proguard"));
-
-    Path proguardCommandLine = proguardDir.resolve("command-line.txt");
-    // Check that the proguard command line references the native lib proguard config.
-    assertTrue(workspace.getFileContents(proguardCommandLine).contains(generatedConfig.toString()));
-    assertEquals(
-        removePlaceholder(workspace.getFileContents("native/proguard_gen/expected-17.pro")),
-        removeHash(workspace.getFileContents(generatedConfig)));
-  }
-
-  @Test
-  public void testNativeLibGeneratedProguardConfigIsUsedByProguard() throws IOException {
-    AssumeAndroidPlatform.get(workspace).assumeGnuStlIsNotAvailable();
-    String target = "//apps/sample:app_with_native_lib_proguard";
-    workspace.runBuckBuild(target).assertSuccess();
-
-    Path generatedConfig =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem.getBuckPaths(),
-                BuildTargetFactory.newInstance(target)
-                    .withFlavors(AndroidBinaryGraphEnhancer.NATIVE_LIBRARY_PROGUARD_FLAVOR),
-                NativeLibraryProguardGenerator.OUTPUT_FORMAT));
-
-    Path proguardDir =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                filesystem.getBuckPaths(), BuildTargetFactory.newInstance(target), "%s/proguard"));
-
-    Path proguardCommandLine = proguardDir.resolve("command-line.txt");
-    // Check that the proguard command line references the native lib proguard config.
-    assertTrue(workspace.getFileContents(proguardCommandLine).contains(generatedConfig.toString()));
-    assertEquals(
-        removePlaceholder(workspace.getFileContents("native/proguard_gen/expected.pro")),
-        removeHash(workspace.getFileContents(generatedConfig)));
   }
 
   @Test

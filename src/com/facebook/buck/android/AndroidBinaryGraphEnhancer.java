@@ -142,7 +142,6 @@ public class AndroidBinaryGraphEnhancer {
   private final int xzCompressionLevel;
   private final AndroidNativeLibsPackageableGraphEnhancer nativeLibsEnhancer;
   private final APKModuleGraph apkModuleGraph;
-  private final Optional<BuildTarget> nativeLibraryProguardConfigGenerator;
   private final ListeningExecutorService dxExecutorService;
   private final AndroidBinaryResourcesGraphEnhancer androidBinaryResourcesGraphEnhancer;
   private final NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs;
@@ -206,7 +205,6 @@ public class AndroidBinaryGraphEnhancer {
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<BuildTarget> nativeLibraryMergeCodeGenerator,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
-      Optional<BuildTarget> nativeLibraryProguardConfigGenerator,
       RelinkerMode relinkerMode,
       ImmutableList<Pattern> relinkerWhitelist,
       ListeningExecutorService dxExecutorService,
@@ -256,7 +254,6 @@ public class AndroidBinaryGraphEnhancer {
     this.xzCompressionLevel = xzCompressionLevel;
     this.trimResourceIds = trimResourceIds;
     this.nativeLibraryMergeCodeGenerator = nativeLibraryMergeCodeGenerator;
-    this.nativeLibraryProguardConfigGenerator = nativeLibraryProguardConfigGenerator;
     this.nativeLibsEnhancer =
         new AndroidNativeLibsPackageableGraphEnhancer(
             toolchainProvider,
@@ -365,17 +362,6 @@ public class AndroidBinaryGraphEnhancer {
     nativeLibsEnhancementResult
         .getCopyNativeLibrariesForSystemLibraryLoader()
         .ifPresent(graphBuilder::addToIndex);
-
-    if (nativeLibraryProguardConfigGenerator.isPresent()) {
-      NativeLibraryProguardGenerator nativeLibraryProguardGenerator =
-          createNativeLibraryProguardGenerator(
-              copyNativeLibraries.get().values().stream()
-                  .map(CopyNativeLibraries::getSourcePathToAllLibsDir)
-                  .collect(ImmutableList.toImmutableList()));
-
-      graphBuilder.addToIndex(nativeLibraryProguardGenerator);
-      proguardConfigsBuilder.add(nativeLibraryProguardGenerator.getSourcePathToOutput());
-    }
 
     if (nativeLibsEnhancementResult.getUnstrippedLibraries().isPresent()) {
       UnstrippedNativeLibraries unstrippedNativeLibraries =
@@ -648,20 +634,6 @@ public class AndroidBinaryGraphEnhancer {
           D8_FLAVOR, InternalFlavor.of("min-api-" + minSdkVersion.get()));
     }
     return target.withAppendedFlavors(D8_FLAVOR);
-  }
-
-  private NativeLibraryProguardGenerator createNativeLibraryProguardGenerator(
-      ImmutableList<SourcePath> nativeLibsDirs) {
-    BuildRuleParams paramsForNativeLibraryProguardGenerator = buildRuleParams.withoutDeclaredDeps();
-
-    return new NativeLibraryProguardGenerator(
-        originalBuildTarget.withAppendedFlavors(NATIVE_LIBRARY_PROGUARD_FLAVOR),
-        projectFilesystem,
-        paramsForNativeLibraryProguardGenerator,
-        graphBuilder,
-        nativeLibsDirs,
-        graphBuilder.requireRule(nativeLibraryProguardConfigGenerator.get()),
-        downwardApiConfig.isEnabledForAndroid());
   }
 
   /**

@@ -206,7 +206,6 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.getNativeLibraryMergeGlue(),
         args.getNativeLibraryMergeCodeGenerator(),
         args.getNativeLibraryMergeLocalizedSymbols(),
-        shouldProguard ? args.getNativeLibraryProguardConfigGenerator() : Optional.empty(),
         args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,
         args.getRelinkerWhitelist(),
         dxExecutorService,

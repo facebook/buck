@@ -261,7 +261,6 @@ public class AndroidInstrumentationApkDescription
             /* nativeLibraryMergeMap */ Optional.empty(),
             /* nativeLibraryMergeGlue */ Optional.empty(),
             /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
-            /* nativeLibraryProguardConfigGenerator */ Optional.empty(),
             Optional.empty(),
             RelinkerMode.DISABLED,
             ImmutableList.of(),

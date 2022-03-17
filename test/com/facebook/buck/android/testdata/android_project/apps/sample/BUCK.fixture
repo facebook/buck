@@ -563,41 +563,6 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_native_lib_proguard",
-    cpu_filters = [
-        "armv7",
-        "x86",
-    ],
-    keystore = "//keystores:debug",
-    manifest = "AndroidManifest.xml",
-    native_library_proguard_config_generator = "//native/proguard_gen:generator",
-    package_type = "release",
-    proguard_config = "dontobfuscate.pro",
-    deps = [
-        "//native/cxx:lib",
-        "//res/com/sample/base:base",
-    ],
-)
-
-android_binary(
-    name = "app_with_native_lib_proguard-16",
-    cpu_filters = [
-        "arm",
-        "armv7",
-        "x86",
-    ],
-    keystore = "//keystores:debug",
-    manifest = "AndroidManifest.xml",
-    native_library_proguard_config_generator = "//native/proguard_gen:generator",
-    package_type = "release",
-    proguard_config = "dontobfuscate.pro",
-    deps = [
-        "//native/cxx:lib",
-        "//res/com/sample/base:base",
-    ],
-)
-
-android_binary(
     name = "app_cxx_lib_app_platform",
     cpu_filters = [
         "armv7",

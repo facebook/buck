@@ -167,8 +167,6 @@ public interface AndroidGraphEnhancerArgs
     return "d8";
   }
 
-  Optional<BuildTarget> getNativeLibraryProguardConfigGenerator();
-
   @Value.Default
   default boolean isEnableRelinker() {
     return false;
