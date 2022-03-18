@@ -7,7 +7,7 @@
     <title>Buck</title>
     <authors>Facebook Inc</authors>
     <projectUrl>https://dev.buck.build</projectUrl>
-    <copyright>2012-present Facebook Inc</copyright>
+    <copyright>Meta Platforms, Inc. and affiliates</copyright>
     <licenseUrl>https://github.com/facebook/buck/blob/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/facebook/buck</projectSourceUrl>
@@ -32,4 +32,3 @@
     <file src="chocolateyUninstall.ps1" target="tools/chocolateyUninstall.ps1" />
   </files>
 </package>
-
