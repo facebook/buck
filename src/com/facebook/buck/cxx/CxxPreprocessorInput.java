@@ -43,6 +43,8 @@ public abstract class CxxPreprocessorInput {
 
   public abstract ImmutableSet<FrameworkPath> getFrameworks();
 
+  public abstract ImmutableSet<FrameworkPath> getLibraries();
+
   // The build rules which produce headers found in the includes below.
 
   protected abstract ImmutableSet<BuildTarget> getRules();

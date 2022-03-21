@@ -104,6 +104,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -713,8 +714,10 @@ public class SwiftLibraryDescription
     // transitive dependencies.
     ImmutableSet.Builder<FrameworkPath> frameworkPathBuilder = ImmutableSet.builder();
     frameworkPathBuilder.addAll(args.getFrameworks());
+    frameworkPathBuilder.addAll(args.getLibraries());
     for (CxxPreprocessorInput input : preprocessorInputs) {
       frameworkPathBuilder.addAll(input.getFrameworks());
+      frameworkPathBuilder.addAll(input.getLibraries());
     }
     ImmutableSet<ExplicitModuleOutput> sdkDependencies =
         getSdkSwiftmoduleDependencies(
@@ -777,11 +780,11 @@ public class SwiftLibraryDescription
     modules.add("Dispatch");
 
     for (FrameworkPath frameworkPath : frameworks) {
-      // TODO: need to add support for platform dir relative frameworks too
-      if (frameworkPath.isSDKROOTFrameworkPath()) {
-        modules.add(
+      if (frameworkPath.isSDKROOTFrameworkPath() || frameworkPath.isPlatformDirFrameworkPath()) {
+        String linkName =
             frameworkPath.getName(
-                sp -> graphBuilder.getSourcePathResolver().getAbsolutePath(sp).getPath()));
+                sp -> graphBuilder.getSourcePathResolver().getAbsolutePath(sp).getPath());
+        modules.add(sdkDependencyProvider.getModuleNameForLinkName(linkName));
       }
     }
 
@@ -1063,23 +1066,20 @@ public class SwiftLibraryDescription
       ActionGraphBuilder graphBuilder,
       SwiftPlatform swiftPlatform,
       AppleCompilerTargetTriple targetTriple) {
-    for (FrameworkPath frameworkPath : input.getFrameworks()) {
-      String frameworkName =
-          frameworkPath.getName(
-              fp -> graphBuilder.getSourcePathResolver().getIdeallyRelativePath(fp));
-      builder.addAll(
-          swiftPlatform
-              .getSdkDependencies()
-              .get()
-              .getSdkClangModuleDependencies(frameworkName, targetTriple));
-    }
+    SwiftSdkDependenciesProvider sdkDepsProvider = swiftPlatform.getSdkDependencies().get();
+    Consumer<FrameworkPath> addDeps =
+        (frameworkPath) -> {
+          String linkName =
+              frameworkPath.getName(
+                  fp -> graphBuilder.getSourcePathResolver().getAbsolutePath(fp).getPath());
+          String moduleName = sdkDepsProvider.getModuleNameForLinkName(linkName);
+          builder.addAll(sdkDepsProvider.getSdkClangModuleDependencies(moduleName, targetTriple));
+        };
+    input.getFrameworks().forEach(addDeps);
+    input.getLibraries().forEach(addDeps);
 
     // Always import Darwin, this is required for the C stdlib
-    builder.addAll(
-        swiftPlatform
-            .getSdkDependencies()
-            .get()
-            .getSdkClangModuleDependencies("Darwin", targetTriple));
+    builder.addAll(sdkDepsProvider.getSdkClangModuleDependencies("Darwin", targetTriple));
   }
 
   private static ImmutableList<Arg> getModuleCompileSwiftArgs(

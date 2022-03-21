@@ -175,6 +175,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
     return swiftModules.get(moduleName);
   }
 
+  @Override
   public String getModuleNameForLinkName(String linkName) {
     // Link name should not include the lib prefix.
     if (linkName.startsWith("lib")) {

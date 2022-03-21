@@ -16,6 +16,7 @@ apple_library(
     name = "c",
     exported_headers = ["c.h"],
     modular = True,
+    libraries = ["$SDKROOT/usr/lib/libz.dylib"],
 )
 
 apple_toolchain_set(

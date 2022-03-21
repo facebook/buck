@@ -26,4 +26,6 @@ public interface SwiftSdkDependenciesProvider {
 
   ImmutableSet<ExplicitModuleOutput> getSdkClangModuleDependencies(
       String moduleName, AppleCompilerTargetTriple targetTriple);
+
+  String getModuleNameForLinkName(String linkName);
 }

@@ -1,5 +1,7 @@
 // requires Darwin module
 #include <stdbool.h>
 
-bool isit();
+// requires zlib
+#include <zlib.h>
 
+bool isit();
