@@ -38,7 +38,6 @@ import com.facebook.buck.cxx.toolchain.linker.HasIncrementalThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.HasLTO;
 import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.objectfile.LcUuidContentsScrubber;
 import com.facebook.buck.cxx.toolchain.objectfile.OsoSymbolsContentsScrubber;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.BuildCellRelativePath;
@@ -93,8 +92,6 @@ public class DarwinLinker extends DelegatingTool
       inputs = DefaultFieldInputs.class)
   private final boolean useFocusedDebugging;
 
-  @AddToRuleKey private final boolean scrubConcurrently;
-
   @AddToRuleKey private final boolean usePathNormalizationArgs;
 
   public DarwinLinker(
@@ -102,13 +99,11 @@ public class DarwinLinker extends DelegatingTool
       boolean shouldCacheLinks,
       boolean shouldUploadToCache,
       boolean useFocusedDebugging,
-      boolean scrubConcurrently,
       boolean usePathNormalizationArgs) {
     super(tool);
     this.shouldCreateHermeticLinkOutput = shouldCacheLinks;
     this.shouldUploadToCache = shouldUploadToCache;
     this.useFocusedDebugging = useFocusedDebugging;
-    this.scrubConcurrently = scrubConcurrently;
     this.usePathNormalizationArgs = usePathNormalizationArgs;
   }
 
@@ -120,12 +115,11 @@ public class DarwinLinker extends DelegatingTool
     if (shouldCreateHermeticLinkOutput) {
       if (shouldUploadToCache || !useFocusedDebugging) {
         // If we aren't using focused debugging, scrub all absolute OSO paths into relative paths.
-        FileScrubber uuidScrubber = new LcUuidContentsScrubber(scrubConcurrently);
         if (usePathNormalizationArgs) {
           // Path normalization would happen via pathNormalizationArgs()
-          return ImmutableList.of(uuidScrubber);
+          return ImmutableList.of();
         }
-        return ImmutableList.of(new OsoSymbolsContentsScrubber(cellRootMap), uuidScrubber);
+        return ImmutableList.of(new OsoSymbolsContentsScrubber(cellRootMap));
       } else {
         // If we're using focused debugging and  don't plan to upload to remote cache, e.g. during
         // local builds,

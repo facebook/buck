@@ -59,7 +59,6 @@ public class DylibStubContentsScrubber implements FileContentsScrubber {
     try (ByteBufferUnmapper unmapper =
         ByteBufferUnmapper.createUnsafe(file.map(FileChannel.MapMode.READ_WRITE, 0, file.size()))) {
       ByteBuffer mappedFile = unmapper.getByteBuffer();
-      LcUuidContentsScrubber.resetUuidIfPresent(mappedFile);
 
       Optional<MachoSymTabCommand> maybeCmd = MachoSymTabCommandReader.read(mappedFile);
       if (maybeCmd.isPresent()) {

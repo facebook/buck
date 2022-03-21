@@ -485,7 +485,6 @@ public class AppleCxxPlatforms {
                 cxxBuckConfig.shouldCacheLinks(),
                 cxxBuckConfig.shouldUploadToCache(),
                 cxxBuckConfig.getFocusedDebuggingEnabled(),
-                appleConfig.shouldLinkScrubConcurrently(),
                 cxxBuckConfig.getLinkPathNormalizationArgsEnabled()),
             StringArg.from(combinedLdFlags),
             ImmutableMultimap.of(),

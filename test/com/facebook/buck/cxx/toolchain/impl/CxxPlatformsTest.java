@@ -92,7 +92,6 @@ public class CxxPlatformsTest {
                     true,
                     true,
                     false,
-                    false,
                     true))
             .setStrip(new ConstantToolProvider(borland))
             .setSymbolNameTool(new PosixNmSymbolNameTool(new ConstantToolProvider(borland), false))

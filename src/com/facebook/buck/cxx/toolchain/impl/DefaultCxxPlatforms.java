@@ -286,7 +286,6 @@ public class DefaultCxxPlatforms {
             cxxBuckConfig.shouldCacheLinks(),
             cxxBuckConfig.shouldUploadToCache(),
             cxxBuckConfig.getFocusedDebuggingEnabled(),
-            false,
             cxxBuckConfig.getLinkPathNormalizationArgsEnabled()),
         ImmutableList.of(),
         ImmutableMultimap.of(),

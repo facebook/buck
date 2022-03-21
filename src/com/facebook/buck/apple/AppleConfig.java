@@ -70,8 +70,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public static final String BUILD_SCRIPT = "xcode_build_script";
 
-  public static final String LINK_SCRUB_CONCURRENTLY = "link_scrub_concurrently";
-
   private static final String PROJECT_EXCLUDE_LABEL = "exclude_from_xcode";
 
   private static final String COMP_DB_INCLUDES_SWIFT = "compilation_database_includes_swift";
@@ -562,10 +560,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean shouldUseModernBuildSystem() {
     return delegate.getBooleanValue(APPLE_SECTION, "use_modern_build_system", true);
-  }
-
-  public boolean shouldLinkScrubConcurrently() {
-    return delegate.getBooleanValue(APPLE_SECTION, LINK_SCRUB_CONCURRENTLY, false);
   }
 
   public ImmutableList<String> getProjectExcludeLabels() {

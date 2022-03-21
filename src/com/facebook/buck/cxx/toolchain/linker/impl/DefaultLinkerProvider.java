@@ -35,7 +35,6 @@ public class DefaultLinkerProvider implements LinkerProvider {
   private final boolean shouldCacheLinks;
   private final boolean shouldUploadToCache;
   private final boolean useFocusedDebugging;
-  private final boolean scrubConcurrently;
   private final boolean usePathNormalizationArgs;
 
   private final LoadingCache<BuildRuleResolver, BuildRuleResolverCacheByTargetConfiguration<Linker>>
@@ -58,7 +57,6 @@ public class DefaultLinkerProvider implements LinkerProvider {
                                   shouldCacheLinks,
                                   shouldUploadToCache,
                                   useFocusedDebugging,
-                                  scrubConcurrently,
                                   usePathNormalizationArgs));
                     }
                   });
@@ -69,31 +67,12 @@ public class DefaultLinkerProvider implements LinkerProvider {
       boolean shouldCacheLinks,
       boolean shouldUploadToCache,
       boolean useFocusedDebugging,
-      boolean usePathNormalization) {
-    this(
-        type,
-        toolProvider,
-        shouldCacheLinks,
-        shouldUploadToCache,
-        useFocusedDebugging,
-        false,
-        usePathNormalization);
-  }
-
-  public DefaultLinkerProvider(
-      Type type,
-      ToolProvider toolProvider,
-      boolean shouldCacheLinks,
-      boolean shouldUploadToCache,
-      boolean useFocusedDebugging,
-      boolean scrubConcurrently,
       boolean usePathNormalizationArgs) {
     this.type = type;
     this.toolProvider = toolProvider;
     this.shouldCacheLinks = shouldCacheLinks;
     this.shouldUploadToCache = shouldUploadToCache;
     this.useFocusedDebugging = useFocusedDebugging;
-    this.scrubConcurrently = scrubConcurrently;
     this.usePathNormalizationArgs = usePathNormalizationArgs;
   }
 
@@ -103,7 +82,6 @@ public class DefaultLinkerProvider implements LinkerProvider {
       boolean shouldCacheLinks,
       boolean shouldUploadToCache,
       boolean useFocusedDebugging,
-      boolean scrubConcurrently,
       boolean usePathNormalizationArgs) {
     switch (type) {
       case DARWIN:
@@ -112,7 +90,6 @@ public class DefaultLinkerProvider implements LinkerProvider {
             shouldCacheLinks,
             shouldUploadToCache,
             useFocusedDebugging,
-            scrubConcurrently,
             usePathNormalizationArgs);
       case GNU:
         return new GnuLinker(tool);

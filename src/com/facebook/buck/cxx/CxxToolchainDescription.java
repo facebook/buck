@@ -259,7 +259,6 @@ public class CxxToolchainDescription
             .map(macrosConverter::convert)
             .collect(ImmutableList.toImmutableList()));
 
-    boolean scrubConcurrently = false;
     cxxPlatform.setLd(
         new DefaultLinkerProvider(
             linkerType,
@@ -267,7 +266,6 @@ public class CxxToolchainDescription
             args.getCacheLinks(),
             cxxBuckConfig.shouldUploadToCache(),
             cxxBuckConfig.getFocusedDebuggingEnabled(),
-            scrubConcurrently,
             args.getLinkPathNormalizationArgsEnabled()));
 
     if (linkerType == LinkerProvider.Type.GNU) {
