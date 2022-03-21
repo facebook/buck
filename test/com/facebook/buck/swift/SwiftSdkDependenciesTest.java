@@ -124,6 +124,88 @@ public class SwiftSdkDependenciesTest {
   }
 
   @Test
+  public void testPathPrefixes() {
+    ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder(TargetGraph.EMPTY);
+    ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
+    Path testDataPath = TestDataHelper.getTestDataScenario(this, "swift_sdk_dependencies");
+    Path simulatorDeps = testDataPath.resolve("iphonesimulator_15.2_deps.json");
+    Tool swiftc = VersionedTool.of("foo", FakeSourcePath.of("swiftc"), "1.0");
+    AppleCompilerTargetTriple triple =
+        AppleCompilerTargetTriple.of(
+            "x86_64", "apple", "ios", Optional.of("13.0"), Optional.empty());
+
+    SwiftSdkDependencies sdkDependencies =
+        new SwiftSdkDependencies(
+            actionGraphBuilder,
+            fakeFilesystem,
+            simulatorDeps.toString(),
+            swiftc,
+            ImmutableList.of(),
+            triple,
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/platform/path")),
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")));
+
+    // Get the SDK deps for a module with each of the path prefixes. This will trigger the path
+    // prefixing logic for each of the cases.
+    ImmutableSet<ExplicitModuleOutput> sdkPrefixDeps =
+        sdkDependencies.getSdkModuleDependencies("Swift", triple);
+    assertThat(
+        sdkPrefixDeps.stream()
+            .map(ExplicitModuleOutput::getName)
+            .collect(ImmutableSet.toImmutableSet()),
+        equalTo(ImmutableSet.of("Swift", "SwiftShims")));
+
+    ImmutableSet<ExplicitModuleOutput> resourceDirPrefixDeps =
+        sdkDependencies.getSdkModuleDependencies("_Builtin_intrinsics", triple);
+    assertThat(
+        resourceDirPrefixDeps.stream()
+            .map(ExplicitModuleOutput::getName)
+            .collect(ImmutableSet.toImmutableSet()),
+        equalTo(ImmutableSet.of("_Builtin_intrinsics", "_Builtin_stddef_max_align_t", "Darwin")));
+
+    ImmutableSet<ExplicitModuleOutput> platformDirPrefixDeps =
+        sdkDependencies.getSdkModuleDependencies("XCTest", triple);
+    assertThat(
+        platformDirPrefixDeps.stream()
+            .map(ExplicitModuleOutput::getName)
+            .collect(ImmutableSet.toImmutableSet()),
+        equalTo(
+            ImmutableSet.of(
+                "XCTest",
+                "CoreFoundation",
+                "Darwin",
+                "Swift",
+                "SwiftShims",
+                "_Concurrency",
+                "_Builtin_stddef_max_align_t",
+                "SwiftOverlayShims",
+                "Dispatch",
+                "Combine",
+                "ObjectiveC",
+                "ptrauth",
+                "os_object",
+                "os_workgroup",
+                "CoreGraphics",
+                "CoreImage",
+                "Foundation",
+                "CFNetwork",
+                "Security",
+                "Metal",
+                "IOSurface",
+                "OpenGLES",
+                "CoreVideo",
+                "ImageIO",
+                "FileProvider",
+                "QuartzCore",
+                "UIKit",
+                "Accessibility",
+                "DataDetection",
+                "CoreText",
+                "UserNotifications")));
+  }
+
+  @Test
   public void testLinkNames() {
     ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder(TargetGraph.EMPTY);
     ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
