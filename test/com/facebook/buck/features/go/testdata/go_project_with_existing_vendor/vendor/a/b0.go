@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Facebook, Inc. and Uber Technologies, Inc.
+ * Copyright (c) Meta Platforms, Inc. and affiliates. and Uber Technologies, Inc.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
  *  not use this file except in compliance with the License. You may obtain

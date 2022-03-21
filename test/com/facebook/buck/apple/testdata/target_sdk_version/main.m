@@ -1,4 +1,4 @@
-// Copyright 2014-present Facebook, Inc.
+// Copyright (c) Meta Platforms, Inc. and affiliates.
 
 #import <AvailableLibrary/AvailableLibrary.h>
 
