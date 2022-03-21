@@ -1618,6 +1618,30 @@
         },
         {
             "is_framework": false,
+            "name": "XCTest",
+            "swiftinterface": "$PLATFORM_DIR/Developer/usr/lib/XCTest.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
+            "swift_deps": [
+                "CoreFoundation",
+                "CoreGraphics",
+                "CoreImage",
+                "Darwin",
+                "Dispatch",
+                "FileProvider",
+                "Foundation",
+                "Metal",
+                "ObjectiveC",
+                "QuartzCore",
+                "Swift",
+                "UIKit",
+                "_Concurrency"
+            ],
+            "target": "x86_64-apple-ios9.0-simulator",
+            "clang_deps": [
+                "XCTest"
+            ]
+        },
+        {
+            "is_framework": false,
             "name": "_Concurrency",
             "swiftinterface": "$SDKROOT/usr/lib/swift/_Concurrency.swiftmodule/x86_64-apple-ios-simulator.swiftinterface",
             "swift_deps": [
@@ -1943,6 +1967,22 @@
             ]
         },
         {
+            "name": "AppleArchive",
+            "modulemap": "$SDKROOT/usr/include/AppleArchive/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
+            "name": "AppleTextureEncoder",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "os_object"
+            ],
+            "link_name": "ate"
+        },
+        {
             "name": "AudioToolbox",
             "modulemap": "$SDKROOT/System/Library/Frameworks/AudioToolbox.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -2015,6 +2055,13 @@
             "clang_deps": [
                 "Foundation",
                 "UIKit"
+            ]
+        },
+        {
+            "name": "CommonCrypto",
+            "modulemap": "$SDKROOT/usr/include/CommonCrypto/module.modulemap",
+            "clang_deps": [
+                "Darwin"
             ]
         },
         {
@@ -2116,6 +2163,13 @@
             ]
         },
         {
+            "name": "DispatchIntrospection",
+            "modulemap": "$SDKROOT/usr/include/dispatch/module.modulemap",
+            "clang_deps": [
+                "Dispatch"
+            ]
+        },
+        {
             "name": "EventKit",
             "modulemap": "$SDKROOT/System/Library/Frameworks/EventKit.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -2205,6 +2259,13 @@
             ]
         },
         {
+            "name": "ICU",
+            "modulemap": "$SDKROOT/usr/include/unicode/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
             "name": "IOSurface",
             "modulemap": "$SDKROOT/System/Library/Frameworks/IOSurface.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -2281,6 +2342,13 @@
             "modulemap": "$SDKROOT/System/Library/Frameworks/LocalAuthentication.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
+            ]
+        },
+        {
+            "name": "MachO",
+            "modulemap": "$SDKROOT/usr/include/mach-o/module.modulemap",
+            "clang_deps": [
+                "Darwin"
             ]
         },
         {
@@ -2441,6 +2509,14 @@
             ]
         },
         {
+            "name": "SQLite3",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ],
+            "link_name": "sqlite3"
+        },
+        {
             "name": "SafariServices",
             "modulemap": "$SDKROOT/System/Library/Frameworks/SafariServices.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -2542,11 +2618,79 @@
             ]
         },
         {
+            "name": "asl",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
+            "name": "dnssd",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Dispatch"
+            ]
+        },
+        {
             "name": "iAd",
             "modulemap": "$SDKROOT/System/Library/Frameworks/iAd.framework/Modules/module.modulemap",
             "clang_deps": [
                 "Foundation"
             ]
+        },
+        {
+            "name": "libkern",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
+            "name": "libxml2",
+            "modulemap": "$SDKROOT/usr/include/libxml/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
+            "name": "networkext",
+            "modulemap": "$SDKROOT/usr/include/networkext/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ]
+        },
+        {
+            "name": "notify",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "Dispatch"
+            ]
+        },
+        {
+            "name": "os_object",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "ObjectiveC"
+            ]
+        },
+        {
+            "name": "os_workgroup",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin",
+                "os_object"
+            ]
+        },
+        {
+            "name": "zlib",
+            "modulemap": "$SDKROOT/usr/include/module.modulemap",
+            "clang_deps": [
+                "Darwin"
+            ],
+            "link_name": "z"
         },
         {
             "name": "ARKit",
@@ -2688,14 +2832,6 @@
             ]
         },
         {
-            "name": "os_workgroup",
-            "modulemap": "$SDKROOT/usr/include/module.modulemap",
-            "clang_deps": [
-                "Darwin",
-                "os_object"
-            ]
-        },
-        {
             "name": "CallKit",
             "modulemap": "$SDKROOT/System/Library/Frameworks/CallKit.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -2732,7 +2868,8 @@
             "modulemap": "$SDKROOT/usr/include/module.modulemap",
             "clang_deps": [
                 "Darwin"
-            ]
+            ],
+            "link_name": "compression"
         },
         {
             "name": "Contacts",
@@ -3116,14 +3253,6 @@
             ]
         },
         {
-            "name": "os_object",
-            "modulemap": "$SDKROOT/usr/include/module.modulemap",
-            "clang_deps": [
-                "Darwin",
-                "ObjectiveC"
-            ]
-        },
-        {
             "name": "ShazamKit",
             "modulemap": "$SDKROOT/System/Library/Frameworks/ShazamKit.framework/Modules/module.modulemap",
             "clang_deps": [
@@ -3199,6 +3328,15 @@
             ]
         },
         {
+            "name": "XCTest",
+            "modulemap": "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework/Modules/module.modulemap",
+            "clang_deps": [
+                "CoreGraphics",
+                "Foundation",
+                "UIKit"
+            ]
+        },
+        {
             "name": "os",
             "modulemap": "$SDKROOT/usr/include/module.modulemap",
             "clang_deps": [
@@ -3214,11 +3352,6 @@
             "clang_deps": []
         },
         {
-            "name": "ptrauth",
-            "modulemap": "$RESOURCEDIR/clang/include/module.modulemap",
-            "clang_deps": []
-        },
-        {
             "name": "_Builtin_intrinsics",
             "modulemap": "$RESOURCEDIR/clang/include/module.modulemap",
             "clang_deps": [
@@ -3226,19 +3359,9 @@
             ]
         },
         {
-            "name": "dnssd",
-            "modulemap": "$SDKROOT/usr/include/module.modulemap",
-            "clang_deps": [
-                "Darwin",
-                "Dispatch"
-            ]
-        },
-        {
-            "name": "MachO",
-            "modulemap": "$SDKROOT/usr/include/mach-o/module.modulemap",
-            "clang_deps": [
-                "Darwin"
-            ]
+            "name": "ptrauth",
+            "modulemap": "$RESOURCEDIR/clang/include/module.modulemap",
+            "clang_deps": []
         },
         {
             "name": "_CoreData_CloudKit",

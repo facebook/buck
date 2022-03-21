@@ -122,4 +122,31 @@ public class SwiftSdkDependenciesTest {
             ImmutableSet.of(
                 "Swift.swiftmodule", "SwiftOnoneSupport.swiftmodule", "SwiftShims.pcm")));
   }
+
+  @Test
+  public void testLinkNames() {
+    ActionGraphBuilder actionGraphBuilder = new TestActionGraphBuilder(TargetGraph.EMPTY);
+    ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
+    Path testDataPath = TestDataHelper.getTestDataScenario(this, "swift_sdk_dependencies");
+    Path simulatorDeps = testDataPath.resolve("iphonesimulator_15.2_deps.json");
+    Tool swiftc = VersionedTool.of("foo", FakeSourcePath.of("swiftc"), "1.0");
+    AppleCompilerTargetTriple triple =
+        AppleCompilerTargetTriple.of(
+            "x86_64", "apple", "ios", Optional.of("13.0"), Optional.empty());
+
+    SwiftSdkDependencies sdkDependencies =
+        new SwiftSdkDependencies(
+            actionGraphBuilder,
+            fakeFilesystem,
+            simulatorDeps.toString(),
+            swiftc,
+            ImmutableList.of(),
+            triple,
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/platform/path")),
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")));
+
+    assertThat(sdkDependencies.getModuleNameForLinkName("Foundation"), equalTo("Foundation"));
+    assertThat(sdkDependencies.getModuleNameForLinkName("libate"), equalTo("AppleTextureEncoder"));
+  }
 }
