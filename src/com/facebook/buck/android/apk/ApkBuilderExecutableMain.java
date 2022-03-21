@@ -16,9 +16,11 @@
 
 package com.facebook.buck.android.apk;
 
+import com.android.apksig.ApkSigner;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -98,18 +100,26 @@ public class ApkBuilderExecutableMain {
     Path keystorePath = Paths.get(keystore);
     Path keystorePropertiesPath = Paths.get(keystoreProperties);
 
+    Path intermediateApk = Files.createTempFile("intermediate", "output.apk");
+    KeystoreProperties keystoreProperties =
+        KeystoreProperties.createFromPropertiesFile(keystorePath, keystorePropertiesPath);
+
     try {
       ApkBuilderUtils.buildApk(
           Paths.get(resourceApk),
-          Paths.get(outputApk),
+          intermediateApk,
           Paths.get(dexFile),
           assetDirectories,
           nativeLibraryDirectories,
           zipFiles,
           jarFilesThatMayContainResources,
           keystorePath,
-          KeystoreProperties.createFromPropertiesFile(keystorePath, keystorePropertiesPath),
+          keystoreProperties,
           null);
+      ImmutableList<ApkSigner.SignerConfig> signerConfigs =
+          ApkSignerUtils.getSignerConfigs(keystoreProperties, Files.newInputStream(keystorePath));
+      ApkSignerUtils.signApkFile(
+          intermediateApk.toFile(), Paths.get(outputApk).toFile(), signerConfigs);
     } catch (UnrecoverableKeyException
         | NoSuchAlgorithmException
         | ApkCreationException
