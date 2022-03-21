@@ -9,6 +9,7 @@ buck_java_library(
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//third-party/java/aosp:aosp",
+        "//third-party/java/aosp:apksig",
         "//third-party/java/android:sdklib",
         "//third-party/java/args4j:args4j",
         "//third-party/java/guava:guava",

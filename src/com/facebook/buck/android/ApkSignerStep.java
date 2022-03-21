@@ -17,7 +17,7 @@
 package com.facebook.buck.android;
 
 import com.android.apksig.ApkSigner;
-import com.android.sdklib.build.ApkCreationException;
+import com.facebook.buck.android.apk.ApkSignerUtils;
 import com.facebook.buck.android.apk.KeystoreProperties;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -27,14 +27,6 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.nio.file.Path;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.PrivateKey;
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 import java.util.function.Supplier;
 
 /** Use Google apksigner to v1/v2/v3 sign the final APK */
@@ -59,88 +51,19 @@ class ApkSignerStep implements Step {
   @Override
   public StepExecutionResult execute(StepExecutionContext context) {
     try {
-      ImmutableList<ApkSigner.SignerConfig> signerConfigs = getSignerConfigs();
+      KeystoreProperties keystoreProperties = keystorePropertiesSupplier.get();
+      ImmutableList<ApkSigner.SignerConfig> signerConfigs =
+          ApkSignerUtils.getSignerConfigs(
+              keystoreProperties,
+              filesystem.getInputStreamForRelativePath(keystoreProperties.getKeystore()));
       File inputApkFile = filesystem.getPathForRelativePath(inputApkPath).toFile();
       File outputApkFile = filesystem.getPathForRelativePath(outputApkPath).toFile();
-      signApkFile(inputApkFile, outputApkFile, signerConfigs);
+      ApkSignerUtils.signApkFile(inputApkFile, outputApkFile, signerConfigs);
     } catch (Exception e) {
       context.logError(e, "Error when signing APK at: %s.", outputApkPath);
       return StepExecutionResults.ERROR;
     }
     return StepExecutionResults.SUCCESS;
-  }
-
-  /** Sign the APK using Google's {@link com.android.apksig.ApkSigner} */
-  private void signApkFile(
-      File inputApk, File outputApk, ImmutableList<ApkSigner.SignerConfig> signerConfigs)
-      throws ApkCreationException {
-    ApkSigner.Builder apkSignerBuilder = new ApkSigner.Builder(signerConfigs);
-    try {
-      apkSignerBuilder
-          .setV1SigningEnabled(true)
-          .setV2SigningEnabled(true)
-          .setV3SigningEnabled(false)
-          .setInputApk(inputApk)
-          .setOutputApk(outputApk)
-          .build()
-          .sign();
-    } catch (Exception e) {
-      throw new ApkCreationException(e, "Failed to sign APK");
-    }
-  }
-
-  private ImmutableList<ApkSigner.SignerConfig> getSignerConfigs() throws KeyStoreException {
-    KeystoreProperties keystoreProperties = keystorePropertiesSupplier.get();
-    Path keystorePath = keystoreProperties.getKeystore();
-    char[] keystorePassword = keystoreProperties.getStorepass().toCharArray();
-    String keyAlias = keystoreProperties.getAlias();
-    char[] keyPassword = keystoreProperties.getKeypass().toCharArray();
-    KeyStore keystore = loadKeyStore(keystorePath, keystorePassword);
-    PrivateKey key = loadPrivateKey(keystore, keyAlias, keyPassword);
-    List<X509Certificate> certs = loadCertificates(keystore, keyAlias);
-    ApkSigner.SignerConfig signerConfig =
-        new ApkSigner.SignerConfig.Builder("CERT", key, certs).build();
-    return ImmutableList.of(signerConfig);
-  }
-
-  private KeyStore loadKeyStore(Path keystorePath, char[] keystorePassword)
-      throws KeyStoreException {
-    try {
-      String ksType = KeyStore.getDefaultType();
-      KeyStore keystore = KeyStore.getInstance(ksType);
-      keystore.load(filesystem.getInputStreamForRelativePath(keystorePath), keystorePassword);
-      return keystore;
-    } catch (Exception e) {
-      throw new KeyStoreException("Failed to load keystore from " + keystorePath);
-    }
-  }
-
-  private PrivateKey loadPrivateKey(KeyStore keystore, String keyAlias, char[] keyPassword)
-      throws KeyStoreException {
-    PrivateKey key;
-    try {
-      key = (PrivateKey) keystore.getKey(keyAlias, keyPassword);
-      // key can be null if alias/password is incorrect.
-      Objects.requireNonNull(key);
-    } catch (Exception e) {
-      throw new KeyStoreException(
-          "Failed to load private key \"" + keyAlias + "\" from " + keystore);
-    }
-    return key;
-  }
-
-  private List<X509Certificate> loadCertificates(KeyStore keystore, String keyAlias)
-      throws KeyStoreException {
-    Certificate[] certChain = keystore.getCertificateChain(keyAlias);
-    if ((certChain == null) || (certChain.length == 0)) {
-      throw new KeyStoreException(
-          keystore + " entry \"" + keyAlias + "\" does not contain certificates");
-    }
-    List<X509Certificate> certs = new ArrayList<>(certChain.length);
-    for (Certificate cert : certChain) {
-      certs.add((X509Certificate) cert);
-    }
-    return certs;
   }
 
   @Override
