@@ -28,6 +28,12 @@ import java.util.Optional;
 interface HttpCommonDescriptionArg extends BuildRuleArg {
   String getSha256();
 
+  // This is not used by Buck1, but we want to support either hash in Buck2, so
+  // for compatibility we also allow it here. The reason to do this here
+  // instead of in a macro layer is because this is used by codegen is used
+  // across multiple repositories (which have different macro layers).
+  Optional<String> getSha1();
+
   ImmutableList<URI> getUrls();
 
   Optional<String> getOut();

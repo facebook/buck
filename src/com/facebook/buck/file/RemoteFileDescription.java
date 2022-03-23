@@ -81,6 +81,10 @@ public class RemoteFileDescription implements DescriptionWithTargetGraph<RemoteF
 
     String getSha1();
 
+    // This is not usede by Buck1. See HttpCommonDescriptionArg for why we
+    // accept it.
+    Optional<String> getSha256();
+
     Optional<String> getOut();
 
     Optional<RemoteFile.Type> getType();
