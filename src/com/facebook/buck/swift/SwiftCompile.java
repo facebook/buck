@@ -131,8 +131,9 @@ public class SwiftCompile extends SwiftCompileBase {
 
       this.moduleNameToSymlinkTrees = moduleNameToSymlinkTreesBuilder.build();
       this.headerPathBeforePostprocessing =
-          outputPath.resolve(
-              SwiftDescriptions.toSwiftHeaderName(moduleName) + "BeforePostprocessing.h");
+          projectFilesystem
+              .resolve(outputPath)
+              .resolve(SwiftDescriptions.toSwiftHeaderName(moduleName) + "BeforePostprocessing.h");
     } else {
       this.moduleNameToSymlinkTrees = null;
       this.headerPathBeforePostprocessing = null;
