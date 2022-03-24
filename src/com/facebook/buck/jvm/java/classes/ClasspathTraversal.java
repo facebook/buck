@@ -60,6 +60,12 @@ public abstract class ClasspathTraversal {
 
   public final void traverse() throws IOException {
     for (Path path : paths) {
+      // This check is unnecessary for normal builds but when building #nullsafex or
+      // #nullsafex-json flavours of java/android libraries we may run only javac frontend tasks
+      // without producing any jars in the end.
+      if (!ProjectFilesystemUtils.exists(rootPath, path)) {
+        continue;
+      }
       ClasspathTraverser adapter =
           createTraversalAdapter(ProjectFilesystemUtils.getPathForRelativePath(rootPath, path));
       adapter.traverse(this);
