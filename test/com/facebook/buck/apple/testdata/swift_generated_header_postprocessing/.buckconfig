@@ -1,2 +1,5 @@
 [swift]
 postprocess_generated_header_for_non_modules_compatibility=true
+
+[swift_postprocessing_module_to_header_mappings]
+ObjectiveC=objc/objc.h|objc/runtime.h

@@ -32,6 +32,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A step that transforms a Swift generated Objective-C header to be compatible with Objective-C
@@ -43,16 +45,20 @@ final class SwiftGeneratedHeaderPostprocessingStep implements Step {
   private final Path headerPathBeforePostprocessing;
   private final SourcePath headerPathAfterPostprocessing;
   private final ImmutableMap<String, HeaderSymlinkTreeWithModuleMap> moduleNameToSymlinkTrees;
+  private final Map<String, List<String>> generatedHeaderPostprocessingSystemModuleToHeadersMap;
   private final SourcePathResolverAdapter sourcePathResolver;
 
   public SwiftGeneratedHeaderPostprocessingStep(
       Path headerPathBeforePostprocessing,
       SourcePath headerPathAfterPostprocessing,
       ImmutableMap<String, HeaderSymlinkTreeWithModuleMap> moduleNameToSymlinkTrees,
+      Map<String, List<String>> generatedHeaderPostprocessingSystemModuleToHeadersMap,
       SourcePathResolverAdapter sourcePathResolver) {
     this.headerPathBeforePostprocessing = headerPathBeforePostprocessing;
     this.headerPathAfterPostprocessing = headerPathAfterPostprocessing;
     this.moduleNameToSymlinkTrees = moduleNameToSymlinkTrees;
+    this.generatedHeaderPostprocessingSystemModuleToHeadersMap =
+        generatedHeaderPostprocessingSystemModuleToHeadersMap;
     this.sourcePathResolver = sourcePathResolver;
   }
 
@@ -122,27 +128,22 @@ final class SwiftGeneratedHeaderPostprocessingStep implements Step {
                   "// issues from the current implementation of modules in Buck. For more");
               writer.println("// details, see the implementation of this file in Buck in the file");
               writer.println("// SwiftGeneratedHeaderPostprocessingStep.java.");
+              writer.println("#pragma clang diagnostic push");
+              writer.println(
+                  "#pragma clang diagnostic ignored \"-Wnonportable-system-include-path\"");
               for (String module : modulesBuilder.build()) {
                 HeaderSymlinkTreeWithModuleMap symlinkTree = moduleNameToSymlinkTrees.get(module);
                 if (symlinkTree == null) {
-                  // This system module doesn't have an umbrella header by the same name, so
-                  // we need to handle it manually. Headers were found by searching Xcode's
-                  // Developer directory for a modulemap file containing "ObjectiveC", then
-                  // listing the headers from the same directory. The modulemap file uses an
-                  // `umbrella "."` declaration, as of Xcode 13.2.1.
-                  if (module.equals("ObjectiveC")) {
-                    addImport(writer, "objc", "message.h");
-                    addImport(writer, "objc", "NSObjCRuntime.h");
-                    addImport(writer, "objc", "NSObject.h");
-                    addImport(writer, "objc", "objc-api.h");
-                    addImport(writer, "objc", "objc-auto.h");
-                    addImport(writer, "objc", "objc-exception.h");
-                    addImport(writer, "objc", "objc-sync.h");
-                    // This header *is not* an umbrella header, so we can't just import it alone, we
-                    // need all of the other headers too.
-                    addImport(writer, "objc", "objc.h");
-                    addImport(writer, "objc", "runtime.h");
+                  List<String> imports =
+                      generatedHeaderPostprocessingSystemModuleToHeadersMap.get(module);
+                  if (imports != null) {
+                    for (String imp : imports) {
+                      addImport(writer, imp);
+                    }
                   } else {
+                    // When we don't have an explicit override for the module, we use the module's
+                    // name as an umbrella header. This is used for typical Apple frameworks like
+                    // Foundation and UIKit.
                     addImport(writer, module, module + ".h");
                   }
                 } else {
@@ -151,6 +152,7 @@ final class SwiftGeneratedHeaderPostprocessingStep implements Step {
                   }
                 }
               }
+              writer.println("#pragma clang diagnostic pop");
               modulesBuilder = null;
             }
           }
@@ -165,13 +167,12 @@ final class SwiftGeneratedHeaderPostprocessingStep implements Step {
 
   private static void addImport(ThrowingPrintWriter writer, String module, String header)
       throws IOException {
-    // If we have other system modules (besides ObjectiveC) that lack an umbrella header,
-    // a non-gated import would break the build and require a Buck update to fix. Gating
-    // the imports with __has_include allows this to be fixed by adding the proper imports
-    // before the Swift header is imported.
-    String imp = String.format("<%s/%s>", module, header);
-    writer.println(String.format(" #if __has_include(%s)", imp));
-    writer.println(String.format("  #import %s", imp));
+    addImport(writer, String.format("%s/%s", module, header));
+  }
+
+  private static void addImport(ThrowingPrintWriter writer, String imp) throws IOException {
+    writer.println(String.format(" #if __has_include(<%s>)", imp));
+    writer.println(String.format("  #import <%s>", imp));
     writer.println(" #endif");
   }
 

@@ -45,12 +45,18 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /** A build rule which compiles one or more Swift sources into a Swift module. */
 public class SwiftCompile extends SwiftCompileBase {
   @AddToRuleKey private final boolean transformErrorsToAbsolutePaths;
   @AddToRuleKey private final boolean postprocessGeneratedHeaderForNonModulesCompatibility;
+
+  @AddToRuleKey
+  private final Map<String, List<String>> generatedHeaderPostprocessingSystemModuleToHeadersMap;
+
   private final Path headerPathBeforePostprocessing;
   private final ImmutableMap<String, HeaderSymlinkTreeWithModuleMap> moduleNameToSymlinkTrees;
 
@@ -134,9 +140,12 @@ public class SwiftCompile extends SwiftCompileBase {
           projectFilesystem
               .resolve(outputPath)
               .resolve(SwiftDescriptions.toSwiftHeaderName(moduleName) + "BeforePostprocessing.h");
+      this.generatedHeaderPostprocessingSystemModuleToHeadersMap =
+          swiftBuckConfig.getGeneratedHeaderPostprocessingSystemModuleToHeadersMap();
     } else {
       this.moduleNameToSymlinkTrees = null;
       this.headerPathBeforePostprocessing = null;
+      this.generatedHeaderPostprocessingSystemModuleToHeadersMap = null;
     }
   }
 
@@ -165,6 +174,7 @@ public class SwiftCompile extends SwiftCompileBase {
               headerPathBeforePostprocessing,
               getObjCGeneratedHeaderPath(),
               moduleNameToSymlinkTrees,
+              generatedHeaderPostprocessingSystemModuleToHeadersMap,
               context.getSourcePathResolver()));
     }
 

@@ -19,11 +19,17 @@ package com.facebook.buck.swift;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /** A Swift-specific "view" of BuckConfig. */
 public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   private static final String SECTION_NAME = "swift";
+  private static final String SWIFT_POSTPROCESSING_MODULE_TO_HEADER_MAPPINGS_SECTION_NAME =
+      "swift_postprocessing_module_to_header_mappings";
   public static final String COMPILER_FLAGS_NAME = "compiler_flags";
   public static final String VERSION_NAME = "version";
   public static final String USE_ARGFILE = "use_argfile";
@@ -224,5 +230,25 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public boolean getPostprocessGeneratedHeaderForNonModulesCompatibility() {
     return delegate.getBooleanValue(
         SECTION_NAME, POSTPROCESS_GENERATED_HEADER_FOR_NON_MODULES_COMPATIBILITY, false);
+  }
+
+  /**
+   * Maps a system model name to list of header imports that should be substituted for it. Headers
+   * are separated by the pipe character, chosen because that character is very unlikely to appear
+   * in a system header path.
+   */
+  public Map<String, List<String>> getGeneratedHeaderPostprocessingSystemModuleToHeadersMap() {
+    return delegate
+        .getSection(SWIFT_POSTPROCESSING_MODULE_TO_HEADER_MAPPINGS_SECTION_NAME)
+        .map(
+            section -> {
+              ImmutableMap.Builder<String, List<String>> builder = ImmutableMap.builder();
+              section.forEach(
+                  (moduleName, headers) -> {
+                    builder.put(moduleName, ImmutableList.copyOf(headers.split("\\|")));
+                  });
+              return builder.build();
+            })
+        .orElseGet(() -> ImmutableMap.of());
   }
 }
