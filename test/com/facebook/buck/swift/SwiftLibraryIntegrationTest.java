@@ -457,7 +457,7 @@ public class SwiftLibraryIntegrationTest {
     Files.createSymbolicLink(
         projectRoot.getPath().resolve("xcode"), Paths.get("/var/db/xcode_select_link"));
 
-    BuildTarget target = workspace.newBuildTarget("//:a#iphonesimulator-x86_64,swift-compile");
+    BuildTarget target = workspace.newBuildTarget("//:a#iphonesimulator-x86_64,static");
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertSuccess();
   }

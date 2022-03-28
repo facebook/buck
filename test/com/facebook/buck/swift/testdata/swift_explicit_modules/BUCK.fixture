@@ -1,7 +1,7 @@
 apple_library(
     name = "a",
     srcs = ["a.swift"],
-    deps = [":b", ":c"],
+    deps = [":b", ":c", ":d"],
     uses_explicit_modules = True,
 )
 
@@ -17,6 +17,14 @@ apple_library(
     exported_headers = ["c.h"],
     modular = True,
     libraries = ["$SDKROOT/usr/lib/libz.dylib"],
+)
+
+apple_library(
+    name = "d",
+    exported_headers = ["d.h"],
+    srcs = ["d.swift"],
+    modular = True,
+    uses_explicit_modules = True,
 )
 
 apple_toolchain_set(

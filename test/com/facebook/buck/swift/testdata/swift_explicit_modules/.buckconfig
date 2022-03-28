@@ -1,5 +1,6 @@
 [apple]
 toolchain_set_target = "//:toolchain"
+use_swift_delegate = false
 
 [project]
 read_only_paths = xcode

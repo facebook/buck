@@ -1085,6 +1085,10 @@ public class SwiftLibraryDescription
 
     // Always import Darwin, this is required for the C stdlib
     builder.addAll(sdkDepsProvider.getSdkClangModuleDependencies("Darwin", targetTriple));
+
+    // We also need Foundation as this is unconditionally added to exports in Swift generated
+    // headers.
+    builder.addAll(sdkDepsProvider.getSdkClangModuleDependencies("Foundation", targetTriple));
   }
 
   private static ImmutableList<Arg> getModuleCompileSwiftArgs(

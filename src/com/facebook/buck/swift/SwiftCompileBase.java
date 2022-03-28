@@ -336,6 +336,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       // Import the swiftmodule and pcm output of SDK frameworks and Objc dependencies
       for (ExplicitModuleOutput module : moduleDeps) {
         if (module.getName().equals(moduleName)) {
+          Preconditions.checkState(!module.getIsSwiftmodule());
           // We cannot import the direct path to the underlying module as it will conflict with
           // the exported module of the same name when debugging. Instead we need to import the
           // exported module path, this will be remapped in the VFS overlay to the underlying one.
