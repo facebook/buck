@@ -64,12 +64,14 @@ public class SwiftModuleMapFileStepTest {
     var outputFilePath = Optional.of(tempFile.toPath()).get();
 
     ExplicitModuleOutput foo =
-        ExplicitModuleOutput.of("Foo", true, FakeSourcePath.of("path/to/Foo.swiftmodule"));
+        ExplicitModuleOutput.ofSwiftmodule(
+            "Foo", FakeSourcePath.of("path/to/Foo.swiftmodule"), false);
     ExplicitModuleOutput bar =
-        ExplicitModuleOutput.of("Bar", false, FakeSourcePath.of("path/to/Bar.swiftmodule"));
+        ExplicitModuleOutput.ofSwiftmodule(
+            "Bar", FakeSourcePath.of("path/to/Bar.swiftmodule"), false);
     ExplicitModuleOutput swiftUI =
-        ExplicitModuleOutput.of(
-            "SwiftUI", true, FakeSourcePath.of("path/to/SwiftUI.swiftmodule"), true);
+        ExplicitModuleOutput.ofSwiftmodule(
+            "SwiftUI", FakeSourcePath.of("path/to/SwiftUI.swiftmodule"), true);
 
     ImmutableSet<ExplicitModuleOutput> moduleDeps = ImmutableSet.of(foo, bar, swiftUI);
 
@@ -86,6 +88,10 @@ public class SwiftModuleMapFileStepTest {
         "[ {\n"
             + "  \"moduleName\" : \"Foo\",\n"
             + "  \"modulePath\" : \"path/to/Foo.swiftmodule\",\n"
+            + "  \"isFramework\" : false\n"
+            + "}, {\n"
+            + "  \"moduleName\" : \"Bar\",\n"
+            + "  \"modulePath\" : \"path/to/Bar.swiftmodule\",\n"
             + "  \"isFramework\" : false\n"
             + "}, {\n"
             + "  \"moduleName\" : \"SwiftUI\",\n"

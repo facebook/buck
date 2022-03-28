@@ -31,8 +31,8 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.swift.toolchain.ExplicitModuleInput;
 import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -129,6 +129,8 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
           "-disable-implicit-swift-modules",
           "-Xcc",
           "-fno-implicit-modules",
+          "-Xcc",
+          "-fno-implicit-module-maps",
           // Embed all input files into the PCM so we don't need to include module map files when
           // building remotely.
           // https://github.com/apple/llvm-project/commit/fb1e7f7d1aca7bcfc341e9214bda8b554f5ae9b6
@@ -155,11 +157,7 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
       argsBuilder.add("-Xcc", "-I", "-Xcc", moduleMapPath.getParent().toString());
 
       for (ExplicitModuleOutput dep : clangModuleDeps) {
-        Preconditions.checkState(
-            !dep.getIsSwiftmodule(),
-            "Clang module compilation should not have a swiftmodule dependency");
-        Path depPath = resolver.getIdeallyRelativePath(dep.getOutputPath());
-        argsBuilder.add("-Xcc", "-fmodule-file=" + dep.getName() + "=" + depPath);
+        argsBuilder.addAll(dep.getClangArgs(resolver));
       }
 
       return ImmutableList.of(

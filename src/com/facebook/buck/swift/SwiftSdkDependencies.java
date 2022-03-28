@@ -31,6 +31,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.swift.toolchain.ExplicitModuleInput;
 import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
 import com.facebook.buck.swift.toolchain.SwiftSdkDependenciesProvider;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -295,8 +296,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
 
     ImmutableSet.Builder<ExplicitModuleOutput> depsBuilder = ImmutableSet.builder();
     depsBuilder.add(
-        ExplicitModuleOutput.of(
-            key.getName(), true, rule.getSourcePathToOutput(), module.isFramework()));
+        ExplicitModuleOutput.ofSwiftmodule(
+            key.getName(), rule.getSourcePathToOutput(), module.isFramework()));
 
     // We need to collect the transitive dependencies at the specified target triple, which
     // is most likely different from this modules target.
@@ -345,6 +346,9 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
             .configure(UnconfiguredTargetConfiguration.INSTANCE)
             .withFlavors(clangFlavor);
 
+    ExplicitModuleInput moduleMapInput =
+        replacePathPrefix(clangModule.getModulemapPath(), sdkPath, platformPath, swiftResourceDir);
+
     BuildRule rule =
         graphBuilder.computeIfAbsent(
             buildTarget,
@@ -359,11 +363,12 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                     false,
                     key.getName(),
                     true,
-                    replacePathPrefix(
-                        clangModule.getModulemapPath(), sdkPath, platformPath, swiftResourceDir),
+                    moduleMapInput,
                     depsBuilder.build()));
 
-    depsBuilder.add(ExplicitModuleOutput.of(key.getName(), false, rule.getSourcePathToOutput()));
+    depsBuilder.add(
+        ExplicitModuleOutput.ofClangModule(
+            key.getName(), moduleMapInput, rule.getSourcePathToOutput()));
     return depsBuilder.build();
   }
 

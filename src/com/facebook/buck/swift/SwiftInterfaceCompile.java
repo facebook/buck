@@ -31,6 +31,7 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.swift.toolchain.ExplicitModuleInput;
 import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -113,7 +114,9 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
           "-disable-modules-validate-system-headers",
           "-suppress-warnings",
           "-Xcc",
-          "-fno-implicit-modules");
+          "-fno-implicit-modules",
+          "-Xcc",
+          "-fno-implicit-module-maps");
       argsBuilder.addAll(Arg.stringify(swiftArgs, resolver));
 
       if (moduleName.equals("Swift") || moduleName.equals("SwiftOnoneSupport")) {
@@ -128,8 +131,7 @@ public class SwiftInterfaceCompile extends ModernBuildRule<SwiftInterfaceCompile
 
       for (ExplicitModuleOutput dep : moduleDeps) {
         if (!dep.getIsSwiftmodule()) {
-          Path modulePath = resolver.getIdeallyRelativePath(dep.getOutputPath());
-          argsBuilder.add("-Xcc", "-fmodule-file=" + dep.getName() + "=" + modulePath);
+          argsBuilder.addAll(dep.getClangArgs(resolver));
         }
       }
 

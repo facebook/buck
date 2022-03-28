@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.swift;
+package com.facebook.buck.swift.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;

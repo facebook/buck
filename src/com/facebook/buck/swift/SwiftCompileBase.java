@@ -36,7 +36,9 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.PreprocessorFlags;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PathShortener;
@@ -315,7 +317,12 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
     if (usesExplicitModules) {
       argBuilder.add(
-          frontendFlag, "-disable-implicit-swift-modules", "-Xcc", "-fno-implicit-modules");
+          frontendFlag,
+          "-disable-implicit-swift-modules",
+          "-Xcc",
+          "-fno-implicit-modules",
+          "-Xcc",
+          "-fno-implicit-module-maps");
 
       Path swiftModuleMapPath =
           getProjectFilesystem().getRootPath().resolve(this.swiftModuleMapPath.get()).getPath();
@@ -328,7 +335,6 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
       // Import the swiftmodule and pcm output of SDK frameworks and Objc dependencies
       for (ExplicitModuleOutput module : moduleDeps) {
-        String path = resolver.getIdeallyRelativePath(module.getOutputPath()).toString();
         if (module.getName().equals(moduleName)) {
           // We cannot import the direct path to the underlying module as it will conflict with
           // the exported module of the same name when debugging. Instead we need to import the
@@ -352,15 +358,28 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
               break;
             }
           }
+          String underlyingPcmPath =
+              resolver.getIdeallyRelativePath(module.getOutputPath()).toString();
           argBuilder.add(
               "-Xcc",
               "-fmodule-file="
-                  + path.replaceAll(AppleFlavors.SWIFT_UNDERLYING_MODULE_FLAVOR + ",", ""));
+                  + moduleName
+                  + "="
+                  + underlyingPcmPath.replaceAll(
+                      AppleFlavors.SWIFT_UNDERLYING_MODULE_FLAVOR + ",", ""));
+
+          String underlyingModulemapPath = module.getModulemapPath().get().resolve(resolver);
+          argBuilder.add(
+              "-Xcc",
+              "-fmodule-map-file="
+                  + underlyingModulemapPath.replaceAll(
+                      AppleFlavors.SWIFT_UNDERLYING_MODULE_FLAVOR.toString(),
+                      HeaderMode.SYMLINK_TREE_WITH_MODULEMAP.getFlavor()
+                          + ","
+                          + CxxLibraryDescription.Type.EXPORTED_HEADERS.getFlavor()));
+
         } else if (!module.getIsSwiftmodule()) {
-          // TODO: this should use -fmodule-file=modulename=path syntax to avoid always loading
-          // module files when they are not imported. Unfortunately this does not seem to work
-          // correctly and the modules don't get loaded sometimes.
-          argBuilder.add("-Xcc", "-fmodule-file=" + path);
+          argBuilder.addAll(module.getClangArgs(resolver));
         }
       }
     } else {

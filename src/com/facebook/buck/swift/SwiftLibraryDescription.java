@@ -81,6 +81,7 @@ import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.swift.toolchain.ExplicitModuleInput;
 import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
@@ -694,8 +695,8 @@ public class SwiftLibraryDescription
       if (dep instanceof SwiftCompile) {
         SwiftCompile swiftCompile = (SwiftCompile) dep;
         depsBuilder.add(
-            ExplicitModuleOutput.of(
-                swiftCompile.getModuleName(), true, swiftCompile.getSwiftModuleOutputPath()));
+            ExplicitModuleOutput.ofSwiftmodule(
+                swiftCompile.getModuleName(), swiftCompile.getSwiftModuleOutputPath(), false));
       }
     }
 
@@ -881,8 +882,11 @@ public class SwiftLibraryDescription
                             .getSourcePathToOutput()),
                     clangModuleDependencies));
     return ImmutableList.of(
-        ExplicitModuleOutput.of(
-            moduleName, false, underlyingModuleCompileRule.getSourcePathToOutput()));
+        ExplicitModuleOutput.ofClangModule(
+            moduleName,
+            ExplicitModuleInput.of(
+                graphBuilder.requireRule(underlyingModuleCompileTarget).getSourcePathToOutput()),
+            underlyingModuleCompileRule.getSourcePathToOutput()));
   }
 
   private static Iterable<HeaderSymlinkTreeWithModuleMap> getModuleMapDepRules(
@@ -1057,7 +1061,8 @@ public class SwiftLibraryDescription
                   depsBuilder.build());
             });
 
-    return ExplicitModuleOutput.of(moduleName, false, rule.getSourcePathToOutput());
+    return ExplicitModuleOutput.ofClangModule(
+        moduleName, moduleMapInput, rule.getSourcePathToOutput());
   }
 
   private static void collectFrameworkPcmDependencies(
