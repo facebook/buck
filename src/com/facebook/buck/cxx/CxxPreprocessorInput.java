@@ -80,6 +80,7 @@ public abstract class CxxPreprocessorInput {
       builder.putAllPreprocessorFlags(input.getPreprocessorFlags());
       builder.addAllIncludes(input.getIncludes());
       builder.addAllFrameworks(input.getFrameworks());
+      builder.addAllLibraries(input.getLibraries());
       builder.addAllRules(input.getRules());
     }
 
