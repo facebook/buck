@@ -206,13 +206,18 @@ public class AppleTestIntegrationTest {
 
   @Test
   public void testSetsFrameworkSearchPathAndLinksCorrectly() throws IOException {
+    testSetsFrameworkSearchPathAndLinksCorrectlyWithTargetName("foo");
+  }
 
+  private void testSetsFrameworkSearchPathAndLinksCorrectlyWithTargetName(String targetName)
+      throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "apple_test_framework_search_path", tmp);
     workspace.setUp();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//:foo#iphonesimulator-x86_64");
+    BuildTarget buildTarget =
+        BuildTargetFactory.newInstance(String.format("//:%s#iphonesimulator-x86_64", targetName));
     ProcessResult result = workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
@@ -230,8 +235,8 @@ public class AppleTestIntegrationTest {
             BuildTargetPaths.getGenPath(
                     filesystem.getBuckPaths(), appleTestBundleFlavoredBuildTarget, "%s")
                 .getPath());
-    Path bundlePath = outputPath.resolve("foo.xctest");
-    Path testBinaryPath = bundlePath.resolve("foo");
+    Path bundlePath = outputPath.resolve(String.format("%s.xctest", targetName));
+    Path testBinaryPath = bundlePath.resolve(targetName);
 
     assertTrue(Files.isDirectory(bundlePath));
     assertTrue(Files.isRegularFile(testBinaryPath));
