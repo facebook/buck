@@ -209,6 +209,11 @@ public class AppleTestIntegrationTest {
     testSetsFrameworkSearchPathAndLinksCorrectlyWithTargetName("foo");
   }
 
+  @Test
+  public void testSetsFrameworkSearchPathAndLinksCorrectlyForDevFramework() throws IOException {
+    testSetsFrameworkSearchPathAndLinksCorrectlyWithTargetName("dev_framework_usage");
+  }
+
   private void testSetsFrameworkSearchPathAndLinksCorrectlyWithTargetName(String targetName)
       throws IOException {
     ProjectWorkspace workspace =

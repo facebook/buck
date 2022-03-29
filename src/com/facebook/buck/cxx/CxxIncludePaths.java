@@ -93,7 +93,7 @@ abstract class CxxIncludePaths implements AddsToRuleKey {
         MoreIterables.zipAndConcat(
             Iterables.cycle("-F"),
             getFPaths().stream()
-                .filter(x -> !x.isSDKROOTFrameworkPath())
+                .filter(x -> !x.isImplicitlyIncludedInSearchPaths())
                 .map(frameworkPathTransformer)
                 .filter(Optional::isPresent)
                 .map(Optional::get)

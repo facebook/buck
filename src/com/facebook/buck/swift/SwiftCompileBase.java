@@ -402,7 +402,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
       argBuilder.addAll(
           Streams.concat(frameworks.stream(), cxxDeps.getFrameworkPaths().stream())
-              .filter(x -> !x.isSDKROOTFrameworkPath())
+              .filter(x -> !x.isImplicitlyIncludedInSearchPaths())
               .map(frameworkPathToSearchPath)
               .filter(Optional::isPresent)
               .map(Optional::get)

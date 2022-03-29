@@ -40,6 +40,16 @@ import org.immutables.value.Value;
 @BuckStyleValue
 public abstract class FrameworkPath implements Comparable<FrameworkPath>, AddsToRuleKey {
 
+  /**
+   * A list of implicitly included framework search paths relative to SDKROOT. Those paths do not
+   * require passing -F parameters when compiling and linking. All other SDKROOT framework paths
+   * require -F params.
+   */
+  private static final String[] IMPLICIT_SDKROOT_FRAMEWORK_SEARCH_PATHS =
+      new String[] {
+        "Library/Frameworks", "System/Library/Frameworks",
+      };
+
   /** The type of framework entry this object represents. */
   protected enum Type {
     /** An Xcode style {@link SourceTreePath}. */
@@ -82,6 +92,28 @@ public abstract class FrameworkPath implements Comparable<FrameworkPath>, AddsTo
       return getSourceTreePath().get().getSourceTree() == PBXReference.SourceTree.SDKROOT;
     }
     return false;
+  }
+
+  /**
+   * Determines whether a framework path is implicitly included as part of the compiler and linker.
+   * If a framework is implicitly included, there's no neeed
+   */
+  public boolean isImplicitlyIncludedInSearchPaths() {
+    return getSourceTreePath()
+        .map(
+            sourceTreePath -> {
+              if (sourceTreePath.getSourceTree() == PBXReference.SourceTree.SDKROOT) {
+                Path path = sourceTreePath.getPath();
+                for (String implicitPath : IMPLICIT_SDKROOT_FRAMEWORK_SEARCH_PATHS) {
+                  if (path.startsWith(implicitPath)) {
+                    return true;
+                  }
+                }
+              }
+
+              return false;
+            })
+        .orElse(false);
   }
 
   /** Returns true if the framework is in the PLATFORM_DIR */

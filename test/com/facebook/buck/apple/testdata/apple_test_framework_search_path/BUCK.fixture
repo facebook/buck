@@ -7,3 +7,14 @@ apple_test(
     ],
     info_plist = "Test.plist",
 )
+
+apple_test(
+    name = "dev_framework_usage",
+    srcs = ["DevFrameworkUsage.m"],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/Developer/Library/Frameworks/StoreKitTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    info_plist = "Test.plist",
+)
