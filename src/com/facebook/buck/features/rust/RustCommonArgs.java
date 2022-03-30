@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -55,6 +56,17 @@ public interface RustCommonArgs
 
   @Value.Default
   default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {
+    return PatternMatchedCollection.of();
+  }
+
+  @Value.Default
+  default ImmutableList<Pair<BuildTarget, ImmutableList<String>>> getFlaggedDeps() {
+    return ImmutableList.of();
+  }
+
+  @Value.Default
+  default PatternMatchedCollection<ImmutableList<Pair<BuildTarget, ImmutableList<String>>>>
+      getPlatformFlaggedDeps() {
     return PatternMatchedCollection.of();
   }
 }

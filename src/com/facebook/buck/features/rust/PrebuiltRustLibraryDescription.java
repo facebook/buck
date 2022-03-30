@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -76,13 +77,15 @@ public class PrebuiltRustLibraryDescription
           CrateType crateType,
           RustPlatform rustPlatform,
           Linker.LinkableDepType depType,
-          Optional<String> alias) {
+          Optional<String> alias,
+          ImmutableList<String> ruleFlags) {
         SourcePathResolverAdapter pathResolver =
             context.getActionGraphBuilder().getSourcePathResolver();
         AbsPath rlibAbsolutePath = pathResolver.getAbsolutePath(args.getRlib());
         return RustLibraryArg.of(
             buildTarget,
             alias.orElse(args.getCrate()),
+            ruleFlags,
             args.getRlib(),
             directDependent,
             dependentFilesystem.relativize(rlibAbsolutePath).toString(),

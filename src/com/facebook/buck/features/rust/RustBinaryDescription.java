@@ -83,6 +83,10 @@ public class RustBinaryDescription
             .addDeps(args.getDeps())
             .addDeps(args.getNamedDeps().values())
             .addPlatformDeps(args.getPlatformDeps())
+            .addDeps(FlaggedDeps.getDeps(args.getFlaggedDeps()))
+            .addPlatformDeps(
+                args.getPlatformFlaggedDeps()
+                    .map(platformDeps -> FlaggedDeps.getDeps(platformDeps)))
             .build();
 
     RustBinaryDescription.Type type =
@@ -99,6 +103,13 @@ public class RustBinaryDescription
 
     ImmutableList<Arg> linkerFlags =
         RustCompileUtils.getLinkerFlags(context, buildTarget, rustPlatform, args);
+
+    ImmutableList.Builder<Pair<BuildTarget, ImmutableList<String>>> depsFlagsBuilder =
+        ImmutableList.<Pair<BuildTarget, ImmutableList<String>>>builder()
+            .addAll(args.getFlaggedDeps());
+    args.getPlatformFlaggedDeps()
+        .getMatchingValues(rustPlatform.getFlavor().toString())
+        .forEach(platformDeps -> depsFlagsBuilder.addAll(platformDeps));
 
     return RustCompileUtils.createBinaryBuildRule(
         buildTarget,
@@ -121,7 +132,8 @@ public class RustBinaryDescription
         ImmutableSet.of("main.rs"),
         type.getCrateType(),
         allDeps.get(context.getActionGraphBuilder(), rustPlatform.getCxxPlatform()),
-        args.getNamedDeps());
+        args.getNamedDeps(),
+        depsFlagsBuilder.build());
   }
 
   @Override

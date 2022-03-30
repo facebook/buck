@@ -23,6 +23,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -51,6 +52,11 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
   @AddToRuleKey
   public abstract String getCrate();
 
+  /// Flags such as `noprelude` or `priv` that should accompany the crate's
+  /// `extern` argument.
+  @AddToRuleKey
+  public abstract ImmutableList<String> getFlags();
+
   /// Path to a dependency's .rlib (or whatever) file
   @AddToRuleKey
   public abstract SourcePath getRlib();
@@ -71,12 +77,13 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
   public static RustLibraryArg of(
       BuildTarget target,
       String crate,
+      ImmutableList<String> flags,
       SourcePath rlib,
       Optional<BuildTarget> directDependent,
       String rlibRelativePath,
       boolean extern_loc) {
     return ImmutableRustLibraryArg.ofImpl(
-        target, crate, rlib, directDependent, rlibRelativePath, extern_loc);
+        target, crate, flags, rlib, directDependent, rlibRelativePath, extern_loc);
   }
 
   @Override
@@ -92,7 +99,15 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
     Optional<BuildTarget> directDep = getDirectDependent();
     if (directDep.isPresent()) {
       String crate = getCrate();
-      consumer.accept(String.format("--extern=%s=%s", crate, getRlibRelativePath()));
+
+      String externQualifiers = "";
+      ImmutableList<String> flags = getFlags();
+      if (!flags.isEmpty()) {
+        externQualifiers = String.join(",", flags) + ":";
+      }
+
+      consumer.accept(
+          String.format("--extern=%s%s=%s", externQualifiers, crate, getRlibRelativePath()));
       if (getExternLoc()) {
         // assume targets never need json string quoting
         consumer.accept(

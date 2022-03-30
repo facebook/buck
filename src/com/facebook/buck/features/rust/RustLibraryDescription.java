@@ -114,7 +114,8 @@ public class RustLibraryDescription
       LinkableDepType depType,
       RustLibraryDescriptionArg args,
       Iterable<BuildRule> deps,
-      ImmutableMap<String, BuildTarget> depsAliases) {
+      ImmutableMap<String, BuildTarget> depsAliases,
+      ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags) {
     Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
         RustCompileUtils.getRootModuleAndSources(
             projectFilesystem,
@@ -147,6 +148,7 @@ public class RustLibraryDescription
         rustBuckConfig.getPreferStaticLibs(),
         deps,
         depsAliases,
+        depsFlags,
         rustBuckConfig.getIncremental(rustPlatform.getFlavor().getName()));
   }
 
@@ -163,6 +165,10 @@ public class RustLibraryDescription
             .addDeps(args.getDeps())
             .addDeps(args.getNamedDeps().values())
             .addPlatformDeps(args.getPlatformDeps())
+            .addDeps(FlaggedDeps.getDeps(args.getFlaggedDeps()))
+            .addPlatformDeps(
+                args.getPlatformFlaggedDeps()
+                    .map(platformDeps -> FlaggedDeps.getDeps(platformDeps)))
             .build();
 
     Function<RustPlatform, Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>>>
@@ -174,6 +180,16 @@ public class RustLibraryDescription
     String crate = args.getCrate().orElse(ruleToCrateName(buildTarget.getShortName()));
 
     RustToolchain rustToolchain = getRustToolchain(buildTarget.getTargetConfiguration());
+    RustPlatform rustPlatform =
+        RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
+            .resolve(graphBuilder, buildTarget.getTargetConfiguration());
+
+    ImmutableList.Builder<Pair<BuildTarget, ImmutableList<String>>> depsFlagsBuilder =
+        ImmutableList.<Pair<BuildTarget, ImmutableList<String>>>builder()
+            .addAll(args.getFlaggedDeps());
+    args.getPlatformFlaggedDeps()
+        .getMatchingValues(rustPlatform.getFlavor().toString())
+        .forEach(platformDeps -> depsFlagsBuilder.addAll(platformDeps));
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -188,9 +204,6 @@ public class RustLibraryDescription
       CrateType crateType;
 
       Linker.LinkableDepType depType;
-      RustPlatform rustPlatform =
-          RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
-              .resolve(graphBuilder, buildTarget.getTargetConfiguration());
       baseTarget = baseTarget.withoutFlavors(rustPlatform.getFlavor());
 
       if (args.getProcMacro()) {
@@ -230,7 +243,8 @@ public class RustLibraryDescription
           depType,
           args,
           allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
-          args.getNamedDeps());
+          args.getNamedDeps(),
+          depsFlagsBuilder.build());
     } else {
       // Common case - we're being invoked to satisfy some other rule's dependency.
       return new RustLibrary(buildTarget, projectFilesystem, params) {
@@ -260,7 +274,8 @@ public class RustLibraryDescription
             CrateType wantCrateType,
             RustPlatform rustPlatform,
             LinkableDepType depType,
-            Optional<String> alias) {
+            Optional<String> alias,
+            ImmutableList<String> ruleFlags) {
           CrateType crateType;
 
           // Determine a crate type from preferred linkage and deptype.
@@ -332,13 +347,15 @@ public class RustLibraryDescription
                   depType,
                   args,
                   allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
-                  args.getNamedDeps());
+                  args.getNamedDeps(),
+                  depsFlagsBuilder.build());
           SourcePath rlib = rule.getSourcePathToOutput();
           SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
           AbsPath rlibAbsolutePath = pathResolver.getAbsolutePath(rlib);
           return RustLibraryArg.of(
               buildTarget,
               alias.orElse(crate),
+              ruleFlags,
               rlib,
               directDependent,
               dependentFilesystem.relativize(rlibAbsolutePath).toString(),
@@ -386,7 +403,8 @@ public class RustLibraryDescription
                   LinkableDepType.SHARED,
                   args,
                   allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
-                  args.getNamedDeps());
+                  args.getNamedDeps(),
+                  depsFlagsBuilder.build());
           libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
           return libs.build();
         }
@@ -535,7 +553,8 @@ public class RustLibraryDescription
                   depType,
                   args,
                   allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
-                  args.getNamedDeps());
+                  args.getNamedDeps(),
+                  depsFlagsBuilder.build());
 
           SourcePath lib = rule.getSourcePathToOutput();
           SourcePathArg arg = SourcePathArg.of(lib);
@@ -577,7 +596,8 @@ public class RustLibraryDescription
                   LinkableDepType.SHARED,
                   args,
                   allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
-                  args.getNamedDeps());
+                  args.getNamedDeps(),
+                  depsFlagsBuilder.build());
           libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
           return libs.build();
         }

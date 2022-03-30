@@ -117,6 +117,7 @@ public class RustCompileUtils {
       boolean preferStatic,
       Iterable<BuildRule> deps,
       ImmutableMap<String, BuildTarget> depsAliases,
+      ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
       Optional<String> incremental) {
 
     return (RustCompileRule)
@@ -145,6 +146,7 @@ public class RustCompileUtils {
                     preferStatic,
                     deps,
                     depsAliases,
+                    depsFlags,
                     incremental));
   }
 
@@ -251,6 +253,7 @@ public class RustCompileUtils {
       boolean preferStatic,
       Iterable<BuildRule> depRules,
       ImmutableMap<String, BuildTarget> depsAliases,
+      ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
       Optional<String> incremental) {
     ImmutableList.Builder<Arg> args = ImmutableList.builder();
     ImmutableList.Builder<Arg> depArgs = ImmutableList.builder();
@@ -369,6 +372,7 @@ public class RustCompileUtils {
             crateType,
             depArgs,
             revAliasMap,
+            depsFlags,
             rustDepType,
             Optional.of(target),
             projectFilesystem);
@@ -431,6 +435,7 @@ public class RustCompileUtils {
               crateType,
               depArgs,
               revAliasMap,
+              ImmutableList.of(), /* depsFlags */
               rustDepType,
               Optional.empty(),
               projectFilesystem);
@@ -535,10 +540,12 @@ public class RustCompileUtils {
       CrateType crateType,
       ImmutableList.Builder<Arg> depArgs,
       Multimap<BuildTarget, String> revAliasMap,
+      ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
       LinkableDepType rustDepType,
       Optional<BuildTarget> directDependent,
       ProjectFilesystem dependentFilesystem) {
-    Collection<String> coll = revAliasMap.get(rule.getBuildTarget());
+    BuildTarget target = rule.getBuildTarget();
+    Collection<String> coll = revAliasMap.get(target);
     Stream<Optional<String>> aliases;
     if (coll.isEmpty()) {
       aliases = Stream.of(Optional.empty());
@@ -555,7 +562,8 @@ public class RustCompileUtils {
                         crateType,
                         rustPlatform,
                         rustDepType,
-                        alias))
+                        alias,
+                        FlaggedDeps.getFlagsForTarget(depsFlags, target)))
         .forEach(depArgs::add);
   }
 
@@ -633,7 +641,8 @@ public class RustCompileUtils {
       ImmutableSet<String> defaultRoots,
       CrateType crateType,
       Iterable<BuildRule> deps,
-      ImmutableMap<String, BuildTarget> depsAliases) {
+      ImmutableMap<String, BuildTarget> depsAliases,
+      ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags) {
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
     linkerArgs.addAll(linkerFlags);
 
@@ -743,6 +752,7 @@ public class RustCompileUtils {
                         preferStatic,
                         deps,
                         depsAliases,
+                        depsFlags,
                         rustBuckConfig.getIncremental(rustPlatform.getFlavor().getName())));
 
     // Add the binary as the first argument.

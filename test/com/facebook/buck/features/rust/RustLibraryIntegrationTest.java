@@ -86,6 +86,28 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
+  public void rustFlaggedDepsWithCorrectExternBuild() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "flagged_deps", tmp);
+    workspace.setUp();
+
+    workspace.runBuckBuild("//:foo_with_extern_dep#rlib").assertSuccess();
+  }
+
+  @Test
+  public void rustFlaggedDepsWithoutCorrectExternBuild() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "flagged_deps", tmp);
+    workspace.setUp();
+
+    ProcessResult shouldFail = workspace.runBuckBuild("//:foo_without_extern_dep#rlib");
+    shouldFail.assertFailure();
+    assertThat(
+        shouldFail.getStderr(),
+        containsString("failed to resolve: use of undeclared crate or module `dep`"));
+  }
+
+  @Test
   public void rustLibraryBuild() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);

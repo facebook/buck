@@ -86,6 +86,10 @@ public class RustTestDescription
             .addDeps(args.getDeps())
             .addDeps(args.getNamedDeps().values())
             .addPlatformDeps(args.getPlatformDeps())
+            .addDeps(FlaggedDeps.getDeps(args.getFlaggedDeps()))
+            .addPlatformDeps(
+                args.getPlatformFlaggedDeps()
+                    .map(platformDeps -> FlaggedDeps.getDeps(platformDeps)))
             .build();
 
     RustBinaryDescription.Type type =
@@ -99,6 +103,13 @@ public class RustTestDescription
         RustCompileUtils.getRustPlatform(
                 getRustToolchain(buildTarget.getTargetConfiguration()), buildTarget, args)
             .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
+
+    ImmutableList.Builder<Pair<BuildTarget, ImmutableList<String>>> depsFlagsBuilder =
+        ImmutableList.<Pair<BuildTarget, ImmutableList<String>>>builder()
+            .addAll(args.getFlaggedDeps());
+    args.getPlatformFlaggedDeps()
+        .getMatchingValues(rustPlatform.getFlavor().toString())
+        .forEach(platformDeps -> depsFlagsBuilder.addAll(platformDeps));
 
     ImmutableList.Builder<StringArg> testFlags = new ImmutableList.Builder<>();
     testFlags.addAll(rustPlatform.getRustTestFlags());
@@ -140,7 +151,8 @@ public class RustTestDescription
                         ImmutableSet.of("lib.rs", "main.rs"),
                         type.getCrateType(),
                         allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
-                        args.getNamedDeps()));
+                        args.getNamedDeps(),
+                        depsFlagsBuilder.build()));
 
     Tool testExe = testExeBuild.getExecutableCommand(OutputLabel.defaultLabel());
 

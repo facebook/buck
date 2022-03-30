@@ -1,0 +1,36 @@
+# When `"noprelude"` is provided for a target in `flagged_deps`, it can be
+# referenced but only if `extern crate <target>;` is declared.
+
+# This target starts with `extern crate dep;` so `:dep`'s contents may be
+# referenced. The call to `dep::foo()` will build successfully.
+rust_library(
+    name = "foo_with_extern_dep",
+    srcs = ["foo_with_extern_dep.rs"],
+    crate_root = "foo_with_extern_dep.rs",
+    crate = "foo_with_extern_dep",
+    rustc_flags = ["-Z", "unstable-options"],
+    flagged_deps = [
+        (":dep", ["noprelude"]),
+    ],
+)
+
+# This target has no `extern crate dep;` so while `:dep` is built as a
+# dependency its contents will not be available. The call to `dep::foo()` will
+# cause a build failure.
+rust_library(
+    name = "foo_without_extern_dep",
+    srcs = ["foo_without_extern_dep.rs"],
+    crate_root = "foo_without_extern_dep.rs",
+    crate = "foo_without_extern_dep",
+    rustc_flags = ["-Z", "unstable-options"],
+    flagged_deps = [
+        (":dep", ["noprelude"]),
+    ],
+)
+
+rust_library(
+    name = "dep",
+    srcs = ["dep.rs"],
+    crate = "dep",
+    crate_root = "dep.rs",
+)

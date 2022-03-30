@@ -23,6 +23,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
@@ -50,7 +51,8 @@ interface RustLinkable {
       CrateType crateType,
       RustPlatform rustPlatform,
       Linker.LinkableDepType depType,
-      Optional<String> alias);
+      Optional<String> alias,
+      ImmutableList<String> ruleFlags);
 
   /**
    * Return {@link BuildTarget} for linkable
