@@ -33,8 +33,11 @@ function getJavaPathForVersion() {
 }
 
 export BUCK_CLASSPATH=$(resolveList $BUCK_CLASSPATH)
+BUCK_CLASSPATH_EXTRA=$(resolveList "$BUCK_CLASSPATH_EXTRA")
 export CLASSPATH=$(resolveList $CLASSPATH)
 export BUCK_ISOLATED_ROOT=$PWD
+
+export BUCK_CLASSPATH_EXTRA
 
 export BUCK_PLUGIN_RESOURCES=$(resolve $BUCK_PLUGIN_RESOURCES)
 export BUCK_PLUGIN_ROOT=$(resolve $BUCK_PLUGIN_ROOT)

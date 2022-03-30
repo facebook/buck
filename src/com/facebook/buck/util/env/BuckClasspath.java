@@ -16,8 +16,10 @@
 
 package com.facebook.buck.util.env;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
 import java.io.File;
 import java.io.IOException;
@@ -34,10 +36,17 @@ import javax.annotation.Nullable;
 /** Current process classpath. Set by buckd or by launcher script. */
 public class BuckClasspath {
 
+  /*
+   * Env values limit when spawning external process.
+   * https://github.com/torvalds/linux/blob/master/include/uapi/linux/limits.h#L8
+   */
+  public static final int ENV_ARG_MAX = 131000;
+
   public static final String BOOTSTRAP_MAIN_CLASS =
       "com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper";
 
   public static final String ENV_VAR_NAME = "BUCK_CLASSPATH";
+  public static final String EXTRA_ENV_VAR_NAME = "EXTRA_BUCK_CLASSPATH";
   public static final String BOOTSTRAP_ENV_VAR_NAME = "CLASSPATH";
   public static final String TEST_ENV_VAR_NAME = "BUCK_TEST_CLASSPATH_FILE";
 
@@ -150,5 +159,33 @@ public class BuckClasspath {
         .map(Paths::get)
         .map(Path::toAbsolutePath)
         .collect(ImmutableList.toImmutableList());
+  }
+
+  /**
+   * Generate env map containing buck classpath. Will split the classpath into an EXTRA_* env value
+   * if it exceeds the linux limit.
+   *
+   * @param classpath to be exported.
+   * @return map containing env variables.
+   */
+  public static ImmutableMap<String, String> getClasspathEnv(Iterable<Path> classpath) {
+    String arg = asArgument(classpath);
+    int limit = arg.length() > ENV_ARG_MAX ? arg.lastIndexOf(File.pathSeparator, ENV_ARG_MAX) : -1;
+    if (limit > 0 && limit < arg.length()) {
+      return ImmutableMap.of(
+          ENV_VAR_NAME, arg.substring(0, limit),
+          EXTRA_ENV_VAR_NAME, arg.substring(limit + 1));
+    }
+    return ImmutableMap.of(ENV_VAR_NAME, arg);
+  }
+
+  /** Generate env map containing buck bootstrap classpath. */
+  public static ImmutableMap<String, String> getBootstrapClasspathEnv(
+      ImmutableList<Path> bootstrapClasspath) {
+    return ImmutableMap.of(BOOTSTRAP_ENV_VAR_NAME, asArgument(bootstrapClasspath));
+  }
+
+  public static String asArgument(Iterable<Path> classpath) {
+    return Joiner.on(File.pathSeparator).join(classpath);
   }
 }

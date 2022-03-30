@@ -36,6 +36,7 @@ public class EnvironmentFilter {
           "Apple_PubSub_Socket_Render", // OS X pubsub control variable.
           "BUCK_BUILD_ID", // Build ID passed in from Python.
           "BUCK_CLASSPATH", // Main classpath; set in Python
+          "BUCK_CLASSPATH_EXTRA", // Main classpath; set in Python
           "CHGHG", // Mercurial
           "CHGTIMEOUT", // Mercurial
           "CLASSPATH", // Bootstrap classpath; set in Python.

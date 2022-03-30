@@ -16,11 +16,6 @@
 
 package com.facebook.buck.cli.bootstrapper;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Paths;
 import java.util.Arrays;
 
 /**
@@ -39,7 +34,7 @@ import java.util.Arrays;
  */
 public final class ClassLoaderBootstrapper {
 
-  private static final ClassLoader classLoader = createClassLoader();
+  private static final ClassLoader classLoader = ClassLoaderFactory.withEnv().create();
 
   private ClassLoaderBootstrapper() {}
 
@@ -59,26 +54,5 @@ public final class ClassLoaderBootstrapper {
     } catch (ClassNotFoundException e) {
       throw new NoClassDefFoundError(name);
     }
-  }
-
-  @SuppressWarnings("PMD.BlacklistedSystemGetenv")
-  private static ClassLoader createClassLoader() {
-    // BUCK_CLASSPATH is not set by a user, no need to use EnvVariablesProvider.
-    String classPath = System.getenv("BUCK_CLASSPATH");
-    if (classPath == null) {
-      throw new RuntimeException("BUCK_CLASSPATH not set");
-    }
-
-    String[] strings = classPath.split(File.pathSeparator);
-    URL[] urls = new URL[strings.length];
-    for (int i = 0; i < urls.length; i++) {
-      try {
-        urls[i] = Paths.get(strings[i]).toUri().toURL();
-      } catch (MalformedURLException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    return new URLClassLoader(urls);
   }
 }

@@ -62,7 +62,6 @@ import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Joiner;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -74,7 +73,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -694,8 +692,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     String relativePluginRoot = relativizePathString(cellPrefixRoot, PLUGIN_ROOT);
     String relativePluginResources = relativizePathString(cellPrefixRoot, PLUGIN_RESOURCES);
     return ImmutableSortedMap.<String, String>naturalOrder()
-        .put("CLASSPATH", classpathArg(bootstrapClasspath))
-        .put("BUCK_CLASSPATH", classpathArg(classpath))
+        .putAll(BuckClasspath.getClasspathEnv(classpath))
+        .putAll(BuckClasspath.getBootstrapClasspathEnv(bootstrapClasspath))
         .put(
             "EXTRA_JAVA_ARGS",
             ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
@@ -869,9 +867,5 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
           return new ClassPath(filesBuilder.build(), pathsBuilder.build());
         },
         IOException.class);
-  }
-
-  private static String classpathArg(Iterable<Path> classpath) {
-    return Joiner.on(File.pathSeparator).join(classpath);
   }
 }
