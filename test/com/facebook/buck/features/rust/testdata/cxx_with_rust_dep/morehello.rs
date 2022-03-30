@@ -4,7 +4,5 @@ extern "C" {
 
 pub fn helloer() {
     println!("I'm saying \"hello\" again!");
-    unsafe {
-        evenmorehello()
-    };
+    unsafe { evenmorehello() };
 }
