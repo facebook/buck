@@ -16,15 +16,25 @@
 
 package com.facebook.buck.util.env;
 
+import static org.hamcrest.CoreMatchers.allOf;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsMapContaining.hasEntry;
+import static org.hamcrest.collection.IsMapContaining.hasKey;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 import org.junit.Test;
 
 public class BuckClasspathTest {
@@ -60,6 +70,33 @@ public class BuckClasspathTest {
     assumeTrue(System.getenv(BuckClasspath.ENV_VAR_NAME) != null);
     URLClassLoader classLoader = createClassLoader(BuckClasspath.getBootstrapClasspath());
     classLoader.loadClass(ImmutableList.class.getName());
+  }
+
+  @Test
+  public void testEnvHasBuckClasspath() {
+    String name = "testEnvHasBuckClasspath.jar";
+    ImmutableMap<String, String> env =
+        BuckClasspath.getClasspathEnv(Collections.singleton(Paths.get(name)));
+
+    assertThat(
+        env,
+        allOf(
+            hasEntry(is(BuckClasspath.ENV_VAR_NAME), containsString(name)),
+            not(hasKey(is(BuckClasspath.EXTRA_ENV_VAR_NAME)))));
+  }
+
+  @Test
+  public void testEnvHasBuckClasspathAndExtraClasspath() {
+    String name = "testEnvHasBuckClasspathAndExtraClasspath.jar";
+    ImmutableMap<String, String> env =
+        BuckClasspath.getClasspathEnv(
+            Collections.nCopies(BuckClasspath.ENV_ARG_MAX / name.length(), Paths.get(name)));
+
+    assertThat(
+        env,
+        allOf(
+            hasEntry(is(BuckClasspath.ENV_VAR_NAME), containsString(name)),
+            hasEntry(is(BuckClasspath.EXTRA_ENV_VAR_NAME), containsString(name))));
   }
 
   public URLClassLoader createClassLoader(ImmutableList<Path> classpath) {
