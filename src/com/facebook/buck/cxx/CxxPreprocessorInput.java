@@ -43,7 +43,7 @@ public abstract class CxxPreprocessorInput {
 
   public abstract ImmutableSet<FrameworkPath> getFrameworks();
 
-  public abstract ImmutableSet<FrameworkPath> getLibraries();
+  public abstract ImmutableSet<String> getSdkModules();
 
   // The build rules which produce headers found in the includes below.
 
@@ -80,7 +80,7 @@ public abstract class CxxPreprocessorInput {
       builder.putAllPreprocessorFlags(input.getPreprocessorFlags());
       builder.addAllIncludes(input.getIncludes());
       builder.addAllFrameworks(input.getFrameworks());
-      builder.addAllLibraries(input.getLibraries());
+      builder.addAllSdkModules(input.getSdkModules());
       builder.addAllRules(input.getRules());
     }
 

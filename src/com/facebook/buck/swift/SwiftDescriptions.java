@@ -77,6 +77,7 @@ public class SwiftDescriptions {
       output.setVersion(swiftVersion);
       output.setSerializeDebuggingOptions(swiftArgs.getSerializeDebuggingOptions());
       output.setUsesExplicitModules(swiftArgs.getUsesExplicitModules());
+      output.setSdkModules(swiftArgs.getSdkModules());
       output.setEnableCxxInterop(swiftArgs.getEnableCxxInterop());
       output.setModuleName(getModuleName(buildTarget, swiftArgs));
     } else {

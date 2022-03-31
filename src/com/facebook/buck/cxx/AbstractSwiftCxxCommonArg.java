@@ -16,9 +16,32 @@
 
 package com.facebook.buck.cxx;
 
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /** An interface to bridge Swift and Cxx preprocessor inputs. */
 public interface AbstractSwiftCxxCommonArg {
   Optional<String> getModuleName();
+
+  /**
+   * When set the target will use explicit module compilation. All dependencies will be passed in
+   * either with a Swift module map file for dependent swiftmodules or using
+   * `-fmodule-file=<name>=<path>` for dependent Clang modules. The build rules to compile the
+   * module outputs will be created for the SDK dependencies and the Clang module dependencies.
+   *
+   * <p>This should improve compilation time via sharing of cached module artifacts and reducing the
+   * amount of time spent resolving headers and swiftmodule files from search paths.
+   */
+  @Value.Default
+  default boolean getUsesExplicitModules() {
+    return false;
+  }
+
+  /**
+   * When `uses_explicit_modules=True` this list is used to compile the modular SDK dependencies for
+   * the target. It is a list of module names that are defined in the SDK, either as frameworks,
+   * swiftmodule files or Clang modules.
+   */
+  ImmutableList<String> getSdkModules();
 }

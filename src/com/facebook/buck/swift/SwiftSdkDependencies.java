@@ -59,8 +59,6 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
 
   private final ImmutableMap<String, SwiftModule> swiftModules;
 
-  private final ImmutableMap<String, String> linkNameMap;
-
   private final LoadingCache<CacheKey, ImmutableSet<ExplicitModuleOutput>>
       swiftBuildRuleDependencyCache;
 
@@ -119,15 +117,10 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                 + "/clang");
 
     ImmutableMap.Builder<String, ClangModule> clangModulesBuilder = ImmutableMap.builder();
-    ImmutableMap.Builder<String, String> linkNameBuilder = ImmutableMap.builder();
     for (ClangModule module : sdkDependencies.getClangDependencies()) {
       clangModulesBuilder.put(module.getName(), module);
-      if (module.getLinkName() != null) {
-        linkNameBuilder.put(module.getLinkName(), module.getName());
-      }
     }
     clangModules = clangModulesBuilder.build();
-    linkNameMap = linkNameBuilder.build();
 
     ImmutableMap.Builder<String, SwiftModule> modulesBuilder = ImmutableMap.builder();
     for (SwiftModule module : sdkDependencies.getSwiftDependencies()) {
@@ -174,21 +167,6 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
 
   public SwiftModule getSwiftModule(String moduleName) {
     return swiftModules.get(moduleName);
-  }
-
-  @Override
-  public String getModuleNameForLinkName(String linkName) {
-    // Link name should not include the lib prefix.
-    if (linkName.startsWith("lib")) {
-      linkName = linkName.substring(3);
-    }
-
-    if (linkNameMap.containsKey(linkName)) {
-      return linkNameMap.get(linkName);
-    } else {
-      // Default to the link name for the module name, this is the common case.
-      return linkName;
-    }
   }
 
   @Override

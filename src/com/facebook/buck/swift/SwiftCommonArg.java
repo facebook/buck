@@ -17,34 +17,19 @@
 package com.facebook.buck.swift;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.cxx.AbstractSwiftCxxCommonArg;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Common argument for swift rules */
-public interface SwiftCommonArg extends BuildRuleArg {
+public interface SwiftCommonArg extends AbstractSwiftCxxCommonArg, BuildRuleArg {
   Optional<String> getHeaderPathPrefix();
-
-  Optional<String> getModuleName();
 
   ImmutableList<StringWithMacros> getSwiftCompilerFlags();
 
   Optional<String> getSwiftVersion();
-
-  /**
-   * When set the target will use explicit module compilation. All dependencies will be passed in
-   * either with a Swift module map file for dependent swiftmodules or using
-   * `-fmodule-file=<name>=<path>` for dependent Clang modules. The build rules to compile the
-   * module outputs will be created for the SDK dependencies and the Clang module dependencies.
-   *
-   * <p>This should improve compilation time via sharing of cached module artifacts and reducing the
-   * amount of time spent resolving headers and swiftmodule files from search paths.
-   */
-  @Value.Default
-  default boolean getUsesExplicitModules() {
-    return false;
-  }
 
   @Value.Default
   default boolean getSerializeDebuggingOptions() {

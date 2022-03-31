@@ -105,7 +105,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -711,18 +710,14 @@ public class SwiftLibraryDescription
     Flavor pcmFlavor =
         getPcmFlavor(targetTriple, moduleMapCompileArgs, graphBuilder.getSourcePathResolver());
 
-    // Collect all Swift and Clang module dependencies of SDK dependencies of this target and its
-    // transitive dependencies.
-    ImmutableSet.Builder<FrameworkPath> frameworkPathBuilder = ImmutableSet.builder();
-    frameworkPathBuilder.addAll(args.getFrameworks());
-    frameworkPathBuilder.addAll(args.getLibraries());
+    // Collect all SDK module dependencies of this target and its transitive dependencies.
+    ImmutableSet.Builder<String> sdkModuleDeps = ImmutableSet.builder();
+    sdkModuleDeps.addAll(args.getSdkModules());
     for (CxxPreprocessorInput input : preprocessorInputs) {
-      frameworkPathBuilder.addAll(input.getFrameworks());
-      frameworkPathBuilder.addAll(input.getLibraries());
+      sdkModuleDeps.addAll(input.getSdkModules());
     }
     ImmutableSet<ExplicitModuleOutput> sdkDependencies =
-        getSdkSwiftmoduleDependencies(
-            graphBuilder, swiftPlatform, frameworkPathBuilder.build(), targetTriple);
+        getSdkSwiftmoduleDependencies(swiftPlatform, sdkModuleDeps.build(), targetTriple);
     depsBuilder.addAll(sdkDependencies);
 
     // Create PCM compilation rules for all modular dependencies.
@@ -759,9 +754,8 @@ public class SwiftLibraryDescription
   }
 
   private static ImmutableSet<ExplicitModuleOutput> getSdkSwiftmoduleDependencies(
-      ActionGraphBuilder graphBuilder,
       SwiftPlatform swiftPlatform,
-      Iterable<FrameworkPath> frameworks,
+      Iterable<String> sdkModules,
       AppleCompilerTargetTriple targetTriple) {
     Preconditions.checkState(
         swiftPlatform.getSdkDependencies().isPresent(),
@@ -776,18 +770,7 @@ public class SwiftLibraryDescription
     // _Concurrency is implicity added to all Swift compilation
     modules.add("_Concurrency");
 
-    // Dispatch is a separate module but not a framework. We don't have a way to model that in
-    // the apple rules so just always include it for now.
-    modules.add("Dispatch");
-
-    for (FrameworkPath frameworkPath : frameworks) {
-      if (frameworkPath.isSDKROOTFrameworkPath() || frameworkPath.isPlatformDirFrameworkPath()) {
-        String linkName =
-            frameworkPath.getName(
-                sp -> graphBuilder.getSourcePathResolver().getAbsolutePath(sp).getPath());
-        modules.add(sdkDependencyProvider.getModuleNameForLinkName(linkName));
-      }
-    }
+    modules.addAll(sdkModules);
 
     ImmutableSet.Builder<ExplicitModuleOutput> swiftDependenciesBuilder = ImmutableSet.builder();
     for (String module : modules.build()) {
@@ -1033,12 +1016,11 @@ public class SwiftLibraryDescription
                           cxxPlatform, lib, true, graphBuilder)
                       .values();
 
-              // get framework PCM dependencies
+              // get SDK PCM dependencies
               ImmutableSet.Builder<ExplicitModuleOutput> depsBuilder = ImmutableSet.builder();
               depsBuilder.addAll(pcmInputs);
               for (CxxPreprocessorInput input : preprocessorInputs) {
-                collectFrameworkPcmDependencies(
-                    depsBuilder, input, graphBuilder, swiftPlatform, targetTriple);
+                collectSdkPcmDependencies(depsBuilder, input, swiftPlatform, targetTriple);
               }
 
               return new SwiftModuleMapCompile(
@@ -1065,23 +1047,16 @@ public class SwiftLibraryDescription
         moduleName, moduleMapInput, rule.getSourcePathToOutput());
   }
 
-  private static void collectFrameworkPcmDependencies(
+  private static void collectSdkPcmDependencies(
       ImmutableSet.Builder<ExplicitModuleOutput> builder,
       CxxPreprocessorInput input,
-      ActionGraphBuilder graphBuilder,
       SwiftPlatform swiftPlatform,
       AppleCompilerTargetTriple targetTriple) {
     SwiftSdkDependenciesProvider sdkDepsProvider = swiftPlatform.getSdkDependencies().get();
-    Consumer<FrameworkPath> addDeps =
-        (frameworkPath) -> {
-          String linkName =
-              frameworkPath.getName(
-                  fp -> graphBuilder.getSourcePathResolver().getAbsolutePath(fp).getPath());
-          String moduleName = sdkDepsProvider.getModuleNameForLinkName(linkName);
-          builder.addAll(sdkDepsProvider.getSdkClangModuleDependencies(moduleName, targetTriple));
-        };
-    input.getFrameworks().forEach(addDeps);
-    input.getLibraries().forEach(addDeps);
+
+    for (String sdkModule : input.getSdkModules()) {
+      builder.addAll(sdkDepsProvider.getSdkClangModuleDependencies(sdkModule, targetTriple));
+    }
 
     // Always import Darwin, this is required for the C stdlib
     builder.addAll(sdkDepsProvider.getSdkClangModuleDependencies("Darwin", targetTriple));
@@ -1192,11 +1167,6 @@ public class SwiftLibraryDescription
 
     @Value.Default
     default boolean getEnableCxxInterop() {
-      return false;
-    }
-
-    @Value.Default
-    default boolean getUsesExplicitModules() {
       return false;
     }
   }

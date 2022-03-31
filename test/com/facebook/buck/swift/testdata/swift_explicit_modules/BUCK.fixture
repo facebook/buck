@@ -8,7 +8,7 @@ apple_library(
 apple_library(
     name = "b",
     srcs = ["b.swift"],
-    frameworks = ["$SDKROOT/System/Library/Frameworks/Foundation.framework"],
+    sdk_modules = ["Foundation"],
     uses_explicit_modules = True,
 )
 
@@ -16,7 +16,7 @@ apple_library(
     name = "c",
     exported_headers = ["c.h"],
     modular = True,
-    libraries = ["$SDKROOT/usr/lib/libz.dylib"],
+    sdk_modules = ["zlib"],
 )
 
 apple_library(
