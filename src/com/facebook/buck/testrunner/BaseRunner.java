@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter; // NOPMD can't depend on Guava
 import java.io.StringWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -266,6 +267,18 @@ public abstract class BaseRunner {
           if (!outputDirectory.exists()) {
             System.err.printf("The output directory did not exist: %s\n", outputDirectory);
             System.exit(1);
+          }
+          break;
+        case "--test-class-names-file":
+          File testClassNamesFile = new File(args[++i]);
+          if (!testClassNamesFile.exists()) {
+            System.err.printf("The test class names files did not exist: %s\n", testClassNamesFile);
+            System.exit(1);
+          }
+          try {
+            testClassNames.addAll(Files.readAllLines(testClassNamesFile.toPath()));
+          } catch (IOException e) {
+            throw new RuntimeException(e);
           }
           break;
         default:
