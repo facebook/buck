@@ -201,7 +201,6 @@ public class PreDexSplitDexMerge extends PreDexMerge {
             dxExecutorService,
             xzCompressionLevel,
             false,
-            false,
             Optional.empty(),
             getBuildTarget(),
             Optional.empty() /* minSdkVersion */));
@@ -305,7 +304,6 @@ public class PreDexSplitDexMerge extends PreDexMerge {
                       PreDexMerge.DX_MERGE_OPTIONS,
                       dxExecutorService,
                       xzCompressionLevel,
-                      false,
                       false,
                       Optional.empty(),
                       getBuildTarget(),

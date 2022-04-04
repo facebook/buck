@@ -50,7 +50,6 @@ public class D8Utils {
       Optional<Path> primaryDexClassNamesPath,
       Path androidJarPath,
       Collection<Path> classpathFiles,
-      Optional<String> bucketId,
       Optional<Integer> minSdkVersion)
       throws CompilationFailedException, IOException {
     Set<Path> inputs = new HashSet<>();
@@ -96,7 +95,6 @@ public class D8Utils {
                   }
                 });
 
-    bucketId.ifPresent(builder::setBucketId);
     minSdkVersion.ifPresent(builder::setMinApiLevel);
     primaryDexClassNamesPath.ifPresent(builder::addMainDexListFiles);
 
@@ -119,7 +117,6 @@ public class D8Utils {
             options,
             androidJarPath,
             classpathFiles,
-            bucketId,
             minSdkVersion);
       } else if (outputs != null && (outputs.length > 0)) {
         Files.move(outputs[0].toPath(), outputDexFile, StandardCopyOption.REPLACE_EXISTING);
@@ -137,7 +134,6 @@ public class D8Utils {
       Set<D8Options> options,
       Path androidJarPath,
       Collection<Path> classpathFiles,
-      Optional<String> bucketId,
       Optional<Integer> minSdkVersion)
       throws IOException, CompilationFailedException {
     Preconditions.checkState(outputs != null);
@@ -175,7 +171,6 @@ public class D8Utils {
           Optional.empty(),
           androidJarPath,
           classpathFiles,
-          bucketId,
           minSdkVersion);
     }
   }

@@ -144,7 +144,6 @@ public class MultiDexExecutableMain {
             Optional.of(primaryDexClassNamesPath),
             Paths.get(androidJar),
             ImmutableList.of(),
-            Optional.empty(),
             minSdkVersion);
       } catch (CompilationFailedException e) {
         throw new IOException(e);

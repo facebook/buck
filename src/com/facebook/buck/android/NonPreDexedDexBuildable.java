@@ -851,7 +851,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             dxExecutorService,
             xzCompressionLevel,
             desugarInterfaceMethods,
-            true,
             Optional.of(
                 additionalJarsForProguardAndDesugar.stream()
                     .map(

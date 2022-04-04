@@ -222,7 +222,6 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
                 options,
                 Optional.empty(),
                 getAbsolutePaths(desugarDeps, sourcePathResolverAdapter),
-                Optional.empty(),
                 minSdkVersion);
         steps.add(dx);
 

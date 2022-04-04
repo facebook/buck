@@ -52,7 +52,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -98,7 +97,6 @@ public class SmartDexingStep implements Step {
   private final EnumSet<D8Options> dxOptions;
   private final ListeningExecutorService executorService;
   private final int xzCompressionLevel;
-  private final boolean useDexBuckedId;
   private final Optional<Set<Path>> additonalDesugarDeps;
   private final BuildTarget buildTarget;
   private final Optional<Integer> minSdkVersion;
@@ -131,7 +129,6 @@ public class SmartDexingStep implements Step {
       ListeningExecutorService executorService,
       int xzCompressionLevel,
       boolean desugarInterfaceMethods,
-      boolean useDexBuckedId,
       Optional<Set<Path>> additonalDesugarDeps,
       BuildTarget buildTarget,
       Optional<Integer> minSdkVersion) {
@@ -158,7 +155,6 @@ public class SmartDexingStep implements Step {
     this.dxOptions = dxOptions;
     this.executorService = executorService;
     this.xzCompressionLevel = xzCompressionLevel;
-    this.useDexBuckedId = useDexBuckedId;
     this.additonalDesugarDeps = additonalDesugarDeps;
     this.buildTarget = buildTarget;
     this.minSdkVersion = minSdkVersion;
@@ -366,7 +362,6 @@ public class SmartDexingStep implements Step {
                                 allDexInputPaths, ImmutableSet.copyOf(outputInputsPair.getValue())),
                             additonalDesugarDeps.orElse(ImmutableSet.of()))
                         : null,
-                    useDexBuckedId,
                     minSdkVersion))
         .filter(dxPseudoRule -> !dxPseudoRule.checkIsCached())
         .map(
@@ -401,7 +396,6 @@ public class SmartDexingStep implements Step {
     @Nullable private String newInputsHash;
     private final int xzCompressionLevel;
     @Nullable private final Collection<Path> classpathFiles;
-    private final boolean useDexBuckedId;
     private final Optional<Integer> minSdkVersion;
 
     public DxPseudoRule(
@@ -416,7 +410,6 @@ public class SmartDexingStep implements Step {
         Optional<Path> primaryDexClassNamesPath,
         int xzCompressionLevel,
         @Nullable Collection<Path> classpathFiles,
-        boolean useDexBuckedId,
         Optional<Integer> minSdkVersion) {
       this.androidPlatformTarget = androidPlatformTarget;
       this.buildContext = buildContext;
@@ -429,7 +422,6 @@ public class SmartDexingStep implements Step {
       this.primaryDexClassNamesPath = primaryDexClassNamesPath;
       this.xzCompressionLevel = xzCompressionLevel;
       this.classpathFiles = classpathFiles;
-      this.useDexBuckedId = useDexBuckedId;
       this.minSdkVersion = minSdkVersion;
     }
 
@@ -492,7 +484,6 @@ public class SmartDexingStep implements Step {
           primaryDexClassNamesPath,
           xzCompressionLevel,
           classpathFiles,
-          useDexBuckedId,
           minSdkVersion);
       steps.add(WriteFileIsolatedStep.of(newInputsHash, outputHashPath, /* executable */ false));
     }
@@ -516,21 +507,9 @@ public class SmartDexingStep implements Step {
       Optional<Path> primaryDexClassNamesPath,
       int xzCompressionLevel,
       @Nullable Collection<Path> classpathFiles,
-      boolean useDexBuckedId,
       Optional<Integer> minSdkVersion) {
 
-    Optional<String> buckedId = Optional.empty();
     String output = outputPath.toString();
-    String fileName = Files.getNameWithoutExtension(output);
-    if (useDexBuckedId && fileName.startsWith("classes")) {
-      // We know what the output file name is ("classes.dex" or "classesN.dex") as these
-      // are generated in SplitZipStep and passed around as part of a multi-map - it is
-      // simply easier and cleaner to extract the dex file number to be used as unique
-      // identifier rather than creating another map and pass it around
-      String[] tokens = fileName.split("classes");
-      String id = tokens.length == 0 ? "" /* primary */ : tokens[1] /* secondary */;
-      buckedId = Optional.of(id);
-    }
 
     FileSystem fileSystem = filesystem.getFileSystem();
     if (DexStore.XZ.matchesPath(outputPath)) {
@@ -544,7 +523,6 @@ public class SmartDexingStep implements Step {
               dxOptions,
               primaryDexClassNamesPath,
               classpathFiles,
-              buckedId,
               minSdkVersion));
       // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
       // compression won't be effective.
@@ -583,7 +561,6 @@ public class SmartDexingStep implements Step {
               dxOptions,
               primaryDexClassNamesPath,
               classpathFiles,
-              buckedId,
               minSdkVersion));
       steps.add(
           new RepackZipEntriesStep(
@@ -616,7 +593,6 @@ public class SmartDexingStep implements Step {
               dxOptions,
               primaryDexClassNamesPath,
               classpathFiles,
-              buckedId,
               minSdkVersion));
       if (DexStore.JAR.matchesPath(outputPath)) {
         steps.add(

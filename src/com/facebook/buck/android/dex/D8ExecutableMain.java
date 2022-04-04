@@ -73,9 +73,6 @@ public class D8ExecutableMain {
   @Option(name = "--classpath-files")
   private String classpathFilesList;
 
-  @Option(name = "--bucket-id")
-  private String bucketIdString;
-
   @Option(name = "--min-sdk-version")
   private String minSdkVersionString;
 
@@ -121,7 +118,6 @@ public class D8ExecutableMain {
         Optional.ofNullable(minSdkVersionString).map(Integer::parseInt);
     Optional<Path> weightEstimatePath = Optional.ofNullable(weightEstimateOutput).map(Paths::get);
     Optional<Path> classNamesPath = Optional.ofNullable(classNamesOutput).map(Paths::get);
-    Optional<String> bucketId = Optional.ofNullable(bucketIdString);
 
     try {
       Collection<String> referencedResources =
@@ -134,7 +130,6 @@ public class D8ExecutableMain {
               primaryDexClassNamesPath,
               Paths.get(androidJar),
               classpathFiles,
-              bucketId,
               minSdkVersion);
 
       if (referencedResourcesPath.isPresent()) {

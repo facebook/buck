@@ -60,7 +60,6 @@ public class D8Step extends IsolatedStep {
   private final Set<D8Options> options;
   private final Optional<Path> primaryDexClassNamesPath;
   // used to differentiate different dexing buckets (if any)
-  private final Optional<String> bucketId;
   private final Optional<Integer> minSdkVersion;
 
   @Nullable private Collection<String> resourcesReferencedInCode;
@@ -85,7 +84,6 @@ public class D8Step extends IsolatedStep {
         options,
         Optional.empty(),
         null,
-        Optional.empty(),
         Optional.empty() /* minSdkVersion */);
   }
 
@@ -106,7 +104,6 @@ public class D8Step extends IsolatedStep {
       EnumSet<D8Options> options,
       Optional<Path> primaryDexClassNamesPath,
       @Nullable Collection<Path> classpathFiles,
-      Optional<String> bucketId,
       Optional<Integer> minSdkVersion) {
     super();
     this.filesystem = filesystem;
@@ -116,7 +113,6 @@ public class D8Step extends IsolatedStep {
     this.filesToDex = ImmutableSet.copyOf(filesToDex);
     this.options = Sets.immutableEnumSet(options);
     this.primaryDexClassNamesPath = primaryDexClassNamesPath.map(filesystem::resolve);
-    this.bucketId = bucketId;
     this.minSdkVersion = minSdkVersion;
   }
 
@@ -143,7 +139,6 @@ public class D8Step extends IsolatedStep {
                   : classpathFiles.stream()
                       .map(filesystem::getPathForRelativeExistingPath)
                       .collect(Collectors.toList()),
-              bucketId,
               minSdkVersion);
 
       return SUCCESS_EXIT_CODE;

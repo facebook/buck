@@ -280,7 +280,6 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             dxExecutorService,
             xzCompressionLevel,
             false,
-            false,
             Optional.empty(),
             getBuildTarget(),
             Optional.empty() /* minSdkVersion */));

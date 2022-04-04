@@ -156,7 +156,6 @@ public class D8StepTest {
               EnumSet.noneOf(D8Options.class),
               Optional.empty(),
               ImmutableSet.of(),
-              Optional.empty(),
               Optional.of(28));
 
       String expected =
@@ -196,7 +195,6 @@ public class D8StepTest {
               EnumSet.noneOf(D8Options.class),
               Optional.of(mainDexFilePath),
               ImmutableSet.of(),
-              Optional.empty(),
               Optional.empty());
 
       String expected =

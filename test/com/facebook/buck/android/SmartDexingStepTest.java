@@ -93,7 +93,6 @@ public class SmartDexingStepTest {
             Optional.empty(),
             XzStep.DEFAULT_COMPRESSION_LEVEL,
             null,
-            false,
             Optional.empty());
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
@@ -140,7 +139,6 @@ public class SmartDexingStepTest {
             Optional.of(primaryDexClassNames),
             XzStep.DEFAULT_COMPRESSION_LEVEL,
             null,
-            false,
             Optional.empty());
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
@@ -176,7 +174,6 @@ public class SmartDexingStepTest {
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         null,
-        false,
         Optional.empty());
 
     MoreAsserts.assertSteps(
@@ -218,7 +215,6 @@ public class SmartDexingStepTest {
         Optional.empty(),
         9,
         null,
-        false,
         Optional.empty());
 
     MoreAsserts.assertSteps(
@@ -259,7 +255,6 @@ public class SmartDexingStepTest {
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         null,
-        false,
         Optional.empty());
 
     assertEquals(
@@ -294,7 +289,6 @@ public class SmartDexingStepTest {
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         null,
-        false,
         Optional.of(28));
 
     assertEquals(
@@ -329,7 +323,6 @@ public class SmartDexingStepTest {
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         null,
-        false,
         /* min-sdk-version */ Optional.of(28));
 
     MoreAsserts.assertSteps(
@@ -368,7 +361,6 @@ public class SmartDexingStepTest {
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         null,
-        false,
         /* min-sdk-version */ Optional.of(28));
 
     String description = steps.build().get(0).getDescription(TestExecutionContext.newInstance());
@@ -395,7 +387,6 @@ public class SmartDexingStepTest {
         Optional.empty(),
         XzStep.DEFAULT_COMPRESSION_LEVEL,
         null,
-        false,
         Optional.empty());
   }
 }
