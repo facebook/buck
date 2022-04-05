@@ -342,7 +342,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
                     key.getName(),
                     true,
                     moduleMapInput,
-                    depsBuilder.build()));
+                    depsBuilder.build(),
+                    ImmutableSet.of())); // we don't track SDK headers, they are assumed immutable
 
     depsBuilder.add(
         ExplicitModuleOutput.ofClangModule(

@@ -53,7 +53,8 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
       String moduleName,
       boolean isSystemModule,
       ExplicitModuleInput moduleMapPath,
-      ImmutableSet<ExplicitModuleOutput> clangModuleDeps) {
+      ImmutableSet<ExplicitModuleOutput> clangModuleDeps,
+      ImmutableSet<SourcePath> headers) {
     super(
         buildTarget,
         projectFilesystem,
@@ -66,7 +67,8 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
             moduleName,
             isSystemModule,
             moduleMapPath,
-            clangModuleDeps));
+            clangModuleDeps,
+            headers));
   }
 
   @Nullable
@@ -85,6 +87,7 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
     @AddToRuleKey private final ExplicitModuleInput modulemapPath;
     @AddToRuleKey private final boolean isSystemModule;
     @AddToRuleKey private final ImmutableSet<ExplicitModuleOutput> clangModuleDeps;
+    @AddToRuleKey private final ImmutableSet<SourcePath> headers;
     @AddToRuleKey private final OutputPath output;
 
     Impl(
@@ -95,7 +98,8 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
         String moduleName,
         boolean isSystemModule,
         ExplicitModuleInput modulemapPath,
-        ImmutableSet<ExplicitModuleOutput> clangModuleDeps) {
+        ImmutableSet<ExplicitModuleOutput> clangModuleDeps,
+        ImmutableSet<SourcePath> headers) {
       this.targetTriple = targetTriple;
       this.swiftc = swiftc;
       this.swiftArgs = swiftArgs;
@@ -104,6 +108,7 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
       this.isSystemModule = isSystemModule;
       this.modulemapPath = modulemapPath;
       this.clangModuleDeps = clangModuleDeps;
+      this.headers = headers;
       this.output = new OutputPath(moduleName + ".pcm");
     }
 

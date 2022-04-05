@@ -795,6 +795,7 @@ public class SwiftLibraryDescription
         getModuleMapDepRules(preprocessorInputs, graphBuilder)) {
       BuildTarget pcmBuildTarget =
           moduleMapRule.getBuildTarget().withFlavors(cxxPlatform.getFlavor(), pcmFlavor);
+
       outputBuilder.add(
           createPcmCompile(
               graphBuilder,
@@ -804,6 +805,7 @@ public class SwiftLibraryDescription
               targetTriple,
               pcmBuildTarget,
               ExplicitModuleInput.of(moduleMapRule.getSourcePathToOutput()),
+              ImmutableSet.copyOf(moduleMapRule.getLinks().values()),
               moduleMapRule.getModuleName(),
               moduleMapCompileArgs,
               pcmFlavor));
@@ -863,7 +865,8 @@ public class SwiftLibraryDescription
                         graphBuilder
                             .requireRule(underlyingModuleCompileTarget)
                             .getSourcePathToOutput()),
-                    clangModuleDependencies));
+                    clangModuleDependencies,
+                    ImmutableSet.of()));
     return ImmutableList.of(
         ExplicitModuleOutput.ofClangModule(
             moduleName,
@@ -982,6 +985,7 @@ public class SwiftLibraryDescription
       AppleCompilerTargetTriple targetTriple,
       BuildTarget buildTarget,
       ExplicitModuleInput moduleMapInput,
+      ImmutableSet<SourcePath> headers,
       String moduleName,
       Iterable<Arg> moduleMapCompileFlags,
       Flavor pcmFlavor) {
@@ -1040,7 +1044,8 @@ public class SwiftLibraryDescription
                   moduleName,
                   false,
                   moduleMapInput,
-                  depsBuilder.build());
+                  depsBuilder.build(),
+                  headers);
             });
 
     return ExplicitModuleOutput.ofClangModule(
