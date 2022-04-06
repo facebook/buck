@@ -337,43 +337,42 @@ class FlagParser {
 
       // The behavior below matches the CxxPlatform behavior where it adds the cxx flags,
       // then the cxx#platform flags, then the flags for the target
+      String platformSpecificCFlags =
+          Streams.stream(
+                  Utils.distinctUntilChanged(
+                      Iterables.transform(
+                          Iterables.concat(
+                              platformConfig
+                                  .flatMap(CxxBuckConfig::getCflags)
+                                  .orElse(DEFAULT_CFLAGS),
+                              platformConfig
+                                  .flatMap(CxxBuckConfig::getCppflags)
+                                  .orElse(DEFAULT_CPPFLAGS),
+                              Iterables.concat(platformFlags.get(platform))),
+                          Escaper.BASH_ESCAPER::apply)))
+              .collect(Collectors.joining(" "));
+      String platformSpecificCxxFlags =
+          Streams.stream(
+                  Utils.distinctUntilChanged(
+                      Iterables.transform(
+                          Iterables.concat(
+                              platformConfig
+                                  .flatMap(CxxBuckConfig::getCxxflags)
+                                  .orElse(DEFAULT_CXXFLAGS),
+                              platformConfig
+                                  .flatMap(CxxBuckConfig::getCxxppflags)
+                                  .orElse(DEFAULT_CXXPPFLAGS),
+                              Iterables.concat(platformFlags.get(platform))),
+                          Escaper.BASH_ESCAPER::apply)))
+              .collect(Collectors.joining(" "));
+
       flagsBuilder
           .put(
               generateConfigKey("OTHER_CFLAGS", platform),
-              Streams.stream(
-                      Utils.distinctUntilChanged(
-                          Iterables.transform(
-                              Iterables.concat(
-                                  cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCflags)
-                                      .orElse(DEFAULT_CFLAGS),
-                                  cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCppflags)
-                                      .orElse(DEFAULT_CPPFLAGS),
-                                  targetCFlags,
-                                  Iterables.concat(platformFlags.get(platform))),
-                              Escaper.BASH_ESCAPER::apply)))
-                  .collect(Collectors.joining(" ")))
+              "$OTHER_CFLAGS " + platformSpecificCFlags)
           .put(
               generateConfigKey("OTHER_CPLUSPLUSFLAGS", platform),
-              Streams.stream(
-                      Utils.distinctUntilChanged(
-                          Iterables.transform(
-                              Iterables.concat(
-                                  cxxBuckConfig.getCxxflags().orElse(DEFAULT_CPPFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCxxflags)
-                                      .orElse(DEFAULT_CXXFLAGS),
-                                  cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS),
-                                  platformConfig
-                                      .flatMap(CxxBuckConfig::getCxxppflags)
-                                      .orElse(DEFAULT_CXXPPFLAGS),
-                                  targetCxxFlags,
-                                  Iterables.concat(platformFlags.get(platform))),
-                              Escaper.BASH_ESCAPER::apply)))
-                  .collect(Collectors.joining(" ")));
+              "$OTHER_CPLUSPLUSFLAGS " + platformSpecificCxxFlags);
     }
 
     ImmutableMultimap<String, ImmutableList<String>> platformLinkerFlags =

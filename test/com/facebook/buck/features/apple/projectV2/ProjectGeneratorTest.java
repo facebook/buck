@@ -2058,8 +2058,10 @@ public class ProjectGeneratorTest {
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
     assertEquals(
-        "-Wno-deprecated -Wno-conversion -Wno-nullability-completeness '-DDEBUG=1'",
+        "$OTHER_CFLAGS -Wno-nullability-completeness",
         settings.get("OTHER_CFLAGS[sdk=appletvos*][arch=armv7]"));
+
+    assertEquals("-Wno-deprecated -Wno-conversion '-DDEBUG=1'", settings.get("OTHER_CFLAGS"));
   }
 
   @Test
@@ -2431,10 +2433,10 @@ public class ProjectGeneratorTest {
     assertEquals("-fatal_warnings -ObjC", settings.get("OTHER_LDFLAGS"));
 
     assertEquals(
-        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
+        "$OTHER_CFLAGS -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
+        "$OTHER_CPLUSPLUSFLAGS -ffoo-iphone -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
         "-fatal_warnings -ObjC -lbaz-iphone",
@@ -2545,10 +2547,10 @@ public class ProjectGeneratorTest {
         ProjectGeneratorTestUtils.getBuildSettings(projectFilesystem, buildTarget, target, "Debug");
 
     assertEquals(
-        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -fbar-iphone",
+        "$OTHER_CFLAGS -fbar-iphone",
         settings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -fbar-iphone",
+        "$OTHER_CPLUSPLUSFLAGS -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertNull(settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
 
@@ -2560,10 +2562,10 @@ public class ProjectGeneratorTest {
             projectFilesystem, dependentBuildTarget, dependentTarget, "Debug");
 
     assertEquals(
-        "-Wno-deprecated -Wno-conversion '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
+        "$OTHER_CFLAGS -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertEquals(
-        "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
+        "$OTHER_CPLUSPLUSFLAGS -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
     assertNull(dependentSettings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
   }
