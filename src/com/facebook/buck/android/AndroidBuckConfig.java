@@ -362,4 +362,8 @@ public class AndroidBuckConfig {
   public int getSecondaryDexWeightLimit() {
     return delegate.getInteger("android", "secondary_dex_weight_limit").orElse(12 * 1024 * 1024);
   }
+
+  public boolean isGetAllTransitiveAndroidManifests() {
+    return delegate.getBooleanValue("android", "get_all_transitive_android_manifests", false);
+  }
 }

@@ -1,0 +1,39 @@
+android_manifest(
+    name = "android_manifest_with_res_dep",
+    skeleton = "AndroidManifestSkeleton.xml",
+    deps = [
+        ":res_with_res_dep",
+    ],
+)
+
+android_resource(
+    name = "res_with_res_dep",
+    deps = [
+        ":res_with_incompatible_manifest",
+    ],
+)
+
+android_resource(
+    name = "res_with_incompatible_manifest",
+    manifest = "IncompatibleManifest.xml",
+)
+
+android_manifest(
+    name = "android_manifest_with_java_library_dep",
+    skeleton = "AndroidManifestSkeleton.xml",
+    deps = [
+        ":java_library_with_android_dep",
+    ],
+)
+
+java_library(
+    name = "java_library_with_android_dep",
+    deps = [
+        ":android_library_with_incompatible_manifest",
+    ],
+)
+
+android_library(
+    name = "android_library_with_incompatible_manifest",
+    manifest = "IncompatibleManifest.xml",
+)

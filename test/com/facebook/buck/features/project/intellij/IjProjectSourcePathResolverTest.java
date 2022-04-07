@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBinaryBuilder;
 import com.facebook.buck.android.AndroidBinaryDescriptionArg;
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidBuildConfigBuilder;
 import com.facebook.buck.android.AndroidBuildConfigDescriptionArg;
 import com.facebook.buck.android.AndroidManifest;
@@ -78,6 +79,7 @@ import com.facebook.buck.shell.ExportFileDescriptionArg;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.support.cli.config.CliConfig;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.nio.file.Paths;
@@ -291,7 +293,9 @@ public class IjProjectSourcePathResolverTest {
                 AndroidManifestDescription,
                 AndroidManifest>(
                 new AndroidManifestDescription(
-                    new AndroidManifestFactory(buckConfig.getView(BuildBuckConfig.class))),
+                    new AndroidManifestFactory(
+                        buckConfig.getView(BuildBuckConfig.class),
+                        new AndroidBuckConfig(buckConfig, Platform.detect()))),
                 BuildTargetFactory.newInstance("//app:manifest")) {};
     builder
         .getArgForPopulating()

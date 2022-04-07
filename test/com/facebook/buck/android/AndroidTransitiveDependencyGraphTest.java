@@ -46,7 +46,9 @@ public class AndroidTransitiveDependencyGraphTest {
             .addDep(dep2.getBuildTarget())
             .build(graphBuilder);
     assertThat(
-        new AndroidTransitiveDependencyGraph(ImmutableSortedSet.of(dep1)).findManifestFiles(),
+        new AndroidTransitiveDependencyGraph(
+                ImmutableSortedSet.of(dep1), /* isGetAllTransitiveAndroidManifests */ false)
+            .findManifestFiles(),
         Matchers.containsInAnyOrder(
             FakeSourcePath.of("manifest1.xml"), FakeSourcePath.of("manifest3.xml")));
   }

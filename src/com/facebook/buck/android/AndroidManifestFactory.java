@@ -29,9 +29,13 @@ import com.google.common.collect.ImmutableSortedSet;
 public class AndroidManifestFactory {
 
   private final boolean shouldExecuteInSeparateProcess;
+  private final boolean isGetAllTransitiveAndroidManifests;
 
-  public AndroidManifestFactory(BuildBuckConfig buildBuckConfig) {
+  public AndroidManifestFactory(
+      BuildBuckConfig buildBuckConfig, AndroidBuckConfig androidBuckConfig) {
     this.shouldExecuteInSeparateProcess = buildBuckConfig.areExternalActionsEnabled();
+    this.isGetAllTransitiveAndroidManifests =
+        androidBuckConfig.isGetAllTransitiveAndroidManifests();
   }
 
   public AndroidManifest createBuildRule(
@@ -41,7 +45,8 @@ public class AndroidManifestFactory {
       ImmutableSortedSet<BuildTarget> deps,
       SourcePath skeleton) {
     AndroidTransitiveDependencyGraph transitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(resolver.getAllRules(deps));
+        new AndroidTransitiveDependencyGraph(
+            resolver.getAllRules(deps), isGetAllTransitiveAndroidManifests);
     ImmutableList<SourcePath> manifestFiles = transitiveDependencyGraph.findManifestFiles();
 
     return new AndroidManifest(

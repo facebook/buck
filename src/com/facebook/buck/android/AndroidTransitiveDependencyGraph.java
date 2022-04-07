@@ -20,46 +20,53 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
+import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Set;
 
 public class AndroidTransitiveDependencyGraph {
 
   private final ImmutableSortedSet<BuildRule> rulesToTraverseForTransitiveDeps;
+  private final boolean isGetAllTransitiveAndroidManifests;
 
   /**
    * @param deps A set of dependencies for a {@link BuildRule}, presumably one that is in the
    *     process of being constructed via its builder.
    */
-  AndroidTransitiveDependencyGraph(ImmutableSortedSet<BuildRule> deps) {
+  AndroidTransitiveDependencyGraph(
+      ImmutableSortedSet<BuildRule> deps, boolean isGetAllTransitiveAndroidManifests) {
     this.rulesToTraverseForTransitiveDeps = deps;
+    this.isGetAllTransitiveAndroidManifests = isGetAllTransitiveAndroidManifests;
   }
 
   public ImmutableList<SourcePath> findManifestFiles() {
 
     ImmutableList.Builder<SourcePath> manifestFiles = ImmutableList.builder();
 
-    new AbstractBreadthFirstTraversal<BuildRule>(rulesToTraverseForTransitiveDeps) {
+    new AbstractBreadthFirstTraversal<>(rulesToTraverseForTransitiveDeps) {
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
-        Set<BuildRule> deps;
         if (rule instanceof AndroidResource) {
           AndroidResource androidRule = (AndroidResource) rule;
           SourcePath manifestFile = androidRule.getManifestFile();
           if (manifestFile != null) {
             manifestFiles.add(manifestFile);
           }
-          deps = androidRule.getDepsForTransitiveClasspathEntries();
-        } else if (rule instanceof AndroidLibrary) {
+          return isGetAllTransitiveAndroidManifests
+              ? androidRule.getDeps()
+              : androidRule.getDepsForTransitiveClasspathEntries();
+        }
+
+        if (rule instanceof AndroidLibrary) {
           AndroidLibrary androidLibraryRule = (AndroidLibrary) rule;
           Optionals.addIfPresent(androidLibraryRule.getManifestFile(), manifestFiles);
-          deps = androidLibraryRule.getDepsForTransitiveClasspathEntries();
-        } else {
-          deps = ImmutableSet.of();
+          return androidLibraryRule.getDepsForTransitiveClasspathEntries();
         }
-        return deps;
+
+        return isGetAllTransitiveAndroidManifests && rule instanceof HasClasspathDeps
+            ? ((HasClasspathDeps) rule).getDepsForTransitiveClasspathEntries()
+            : ImmutableSet.of();
       }
     }.start();
 
