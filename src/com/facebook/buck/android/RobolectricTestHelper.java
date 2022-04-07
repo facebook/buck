@@ -38,7 +38,6 @@ class RobolectricTestHelper {
   static final String ROBOLECTRIC_DEPENDENCY_DIR = "robolectric.dependency.dir";
 
   private final MergeAssets binaryResources;
-  private final ImmutableSet<Path> externalResourcesPaths;
   private final SourcePath robolectricManifest;
   private final Optional<SourcePath> robolectricRuntimeDependency;
   private final ImmutableSortedSet<BuildRule> robolectricRuntimeDependencies;
@@ -47,14 +46,12 @@ class RobolectricTestHelper {
 
   RobolectricTestHelper(
       MergeAssets binaryResources,
-      ImmutableSet<Path> externalResourcesPaths,
       Optional<SourcePath> robolectricRuntimeDependency,
       ImmutableSortedSet<BuildRule> robolectricRuntimeDependencies,
       Optional<RobolectricRuntimeDependencies> robolectricRuntimeDependenciesRule,
       SourcePath robolectricManifest,
       ProjectFilesystem projectFilesystem) {
     this.binaryResources = binaryResources;
-    this.externalResourcesPaths = externalResourcesPaths;
     this.robolectricRuntimeDependency = robolectricRuntimeDependency;
     this.robolectricRuntimeDependencies = robolectricRuntimeDependencies;
     this.robolectricRuntimeDependenciesRule = robolectricRuntimeDependenciesRule;
@@ -106,7 +103,6 @@ class RobolectricTestHelper {
             .getAbsolutePath(binaryResources.getSourcePathToOutput())
             .getPath());
     builder.add(sourcePathResolverAdapter.getAbsolutePath(robolectricManifest).getPath());
-    externalResourcesPaths.stream().map(projectFilesystem::resolve).forEach(builder::add);
 
     robolectricRuntimeDependenciesRule.ifPresent(
         robolectricRuntimeDir -> {
@@ -146,7 +142,10 @@ class RobolectricTestHelper {
             throw new RuntimeException(
                 "Unable to get directory contents for " + robolectricRuntimeDir, e);
           }
-          relativePaths.stream().map(projectFilesystem::resolve).forEach(builder::add);
+          builder.addAll(
+              relativePaths.stream()
+                  .map(projectFilesystem::resolve)
+                  .collect(ImmutableSet.toImmutableSet()));
         });
 
     return builder.build();
