@@ -29,7 +29,6 @@ import stat
 import functools
 import pkgutil
 import token
-import symbol
 import operator
 import platform
 import collections
@@ -40,6 +39,7 @@ import textwrap
 from pkgutil import get_importer
 
 try:
+    import symbol
     import _imp
 except ImportError:
     # Python 3.2 compatibility
