@@ -52,6 +52,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.HasVersionUniverse;
@@ -115,7 +116,9 @@ public class RustLibraryDescription
       RustLibraryDescriptionArg args,
       Iterable<BuildRule> deps,
       ImmutableMap<String, BuildTarget> depsAliases,
-      ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags) {
+      ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
+      PatternMatchedCollection<ImmutableList<Pair<BuildTarget, ImmutableList<String>>>>
+          platformDepsFlags) {
     Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
         RustCompileUtils.getRootModuleAndSources(
             projectFilesystem,
@@ -149,6 +152,7 @@ public class RustLibraryDescription
         deps,
         depsAliases,
         depsFlags,
+        platformDepsFlags,
         rustBuckConfig.getIncremental(rustPlatform.getFlavor().getName()));
   }
 
@@ -183,13 +187,6 @@ public class RustLibraryDescription
     RustPlatform rustPlatform =
         RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
-
-    ImmutableList.Builder<Pair<BuildTarget, ImmutableList<String>>> depsFlagsBuilder =
-        ImmutableList.<Pair<BuildTarget, ImmutableList<String>>>builder()
-            .addAll(args.getFlaggedDeps());
-    args.getPlatformFlaggedDeps()
-        .getMatchingValues(rustPlatform.getFlavor().toString())
-        .forEach(platformDeps -> depsFlagsBuilder.addAll(platformDeps));
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -244,7 +241,8 @@ public class RustLibraryDescription
           args,
           allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
           args.getNamedDeps(),
-          depsFlagsBuilder.build());
+          args.getFlaggedDeps(),
+          args.getPlatformFlaggedDeps());
     } else {
       // Common case - we're being invoked to satisfy some other rule's dependency.
       return new RustLibrary(buildTarget, projectFilesystem, params) {
@@ -348,7 +346,8 @@ public class RustLibraryDescription
                   args,
                   allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
                   args.getNamedDeps(),
-                  depsFlagsBuilder.build());
+                  args.getFlaggedDeps(),
+                  args.getPlatformFlaggedDeps());
           SourcePath rlib = rule.getSourcePathToOutput();
           SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
           AbsPath rlibAbsolutePath = pathResolver.getAbsolutePath(rlib);
@@ -404,7 +403,8 @@ public class RustLibraryDescription
                   args,
                   allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
                   args.getNamedDeps(),
-                  depsFlagsBuilder.build());
+                  args.getFlaggedDeps(),
+                  args.getPlatformFlaggedDeps());
           libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
           return libs.build();
         }
@@ -554,7 +554,8 @@ public class RustLibraryDescription
                   args,
                   allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
                   args.getNamedDeps(),
-                  depsFlagsBuilder.build());
+                  args.getFlaggedDeps(),
+                  args.getPlatformFlaggedDeps());
 
           SourcePath lib = rule.getSourcePathToOutput();
           SourcePathArg arg = SourcePathArg.of(lib);
@@ -597,7 +598,8 @@ public class RustLibraryDescription
                   args,
                   allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
                   args.getNamedDeps(),
-                  depsFlagsBuilder.build());
+                  args.getFlaggedDeps(),
+                  args.getPlatformFlaggedDeps());
           libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
           return libs.build();
         }

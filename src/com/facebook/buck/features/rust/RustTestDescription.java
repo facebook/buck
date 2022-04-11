@@ -104,13 +104,6 @@ public class RustTestDescription
                 getRustToolchain(buildTarget.getTargetConfiguration()), buildTarget, args)
             .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
 
-    ImmutableList.Builder<Pair<BuildTarget, ImmutableList<String>>> depsFlagsBuilder =
-        ImmutableList.<Pair<BuildTarget, ImmutableList<String>>>builder()
-            .addAll(args.getFlaggedDeps());
-    args.getPlatformFlaggedDeps()
-        .getMatchingValues(rustPlatform.getFlavor().toString())
-        .forEach(platformDeps -> depsFlagsBuilder.addAll(platformDeps));
-
     ImmutableList.Builder<StringArg> testFlags = new ImmutableList.Builder<>();
     testFlags.addAll(rustPlatform.getRustTestFlags());
     if (args.isFramework()) {
@@ -152,7 +145,8 @@ public class RustTestDescription
                         type.getCrateType(),
                         allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
                         args.getNamedDeps(),
-                        depsFlagsBuilder.build()));
+                        args.getFlaggedDeps(),
+                        args.getPlatformFlaggedDeps()));
 
     Tool testExe = testExeBuild.getExecutableCommand(OutputLabel.defaultLabel());
 

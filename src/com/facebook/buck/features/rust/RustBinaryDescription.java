@@ -104,13 +104,6 @@ public class RustBinaryDescription
     ImmutableList<Arg> linkerFlags =
         RustCompileUtils.getLinkerFlags(context, buildTarget, rustPlatform, args);
 
-    ImmutableList.Builder<Pair<BuildTarget, ImmutableList<String>>> depsFlagsBuilder =
-        ImmutableList.<Pair<BuildTarget, ImmutableList<String>>>builder()
-            .addAll(args.getFlaggedDeps());
-    args.getPlatformFlaggedDeps()
-        .getMatchingValues(rustPlatform.getFlavor().toString())
-        .forEach(platformDeps -> depsFlagsBuilder.addAll(platformDeps));
-
     return RustCompileUtils.createBinaryBuildRule(
         buildTarget,
         context.getProjectFilesystem(),
@@ -133,7 +126,8 @@ public class RustBinaryDescription
         type.getCrateType(),
         allDeps.get(context.getActionGraphBuilder(), rustPlatform.getCxxPlatform()),
         args.getNamedDeps(),
-        depsFlagsBuilder.build());
+        args.getFlaggedDeps(),
+        args.getPlatformFlaggedDeps());
   }
 
   @Override

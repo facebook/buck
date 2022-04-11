@@ -55,6 +55,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
@@ -118,6 +119,8 @@ public class RustCompileUtils {
       Iterable<BuildRule> deps,
       ImmutableMap<String, BuildTarget> depsAliases,
       ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
+      PatternMatchedCollection<ImmutableList<Pair<BuildTarget, ImmutableList<String>>>>
+          platformDepsFlags,
       Optional<String> incremental) {
 
     return (RustCompileRule)
@@ -147,6 +150,7 @@ public class RustCompileUtils {
                     deps,
                     depsAliases,
                     depsFlags,
+                    platformDepsFlags,
                     incremental));
   }
 
@@ -254,6 +258,8 @@ public class RustCompileUtils {
       Iterable<BuildRule> depRules,
       ImmutableMap<String, BuildTarget> depsAliases,
       ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
+      PatternMatchedCollection<ImmutableList<Pair<BuildTarget, ImmutableList<String>>>>
+          platformDepsFlags,
       Optional<String> incremental) {
     ImmutableList.Builder<Arg> args = ImmutableList.builder();
     ImmutableList.Builder<Arg> depArgs = ImmutableList.builder();
@@ -357,6 +363,14 @@ public class RustCompileUtils {
 
     Optional<String> htmlRootUrlPrefix = rustConfig.getRustdocExternHtmlRootUrlPrefix();
 
+    // Resolve platform-specific flagged_deps now. We don't do this in `RustLibraryDescription`
+    // etc because the effective platform may be overridden by a dependent.
+    ImmutableList.Builder<Pair<BuildTarget, ImmutableList<String>>> depsFlagsBuilder =
+        ImmutableList.<Pair<BuildTarget, ImmutableList<String>>>builder().addAll(depsFlags);
+    platformDepsFlags
+        .getMatchingValues(rustPlatform.getFlavor().toString())
+        .forEach(platformDeps -> depsFlagsBuilder.addAll(platformDeps));
+
     // Find direct and transitive Rust deps. We do this in two passes, since a dependency that's
     // both direct and transitive needs to be listed on the command line in each form.
     //
@@ -372,7 +386,7 @@ public class RustCompileUtils {
             crateType,
             depArgs,
             revAliasMap,
-            depsFlags,
+            depsFlagsBuilder.build(),
             rustDepType,
             Optional.of(target),
             projectFilesystem);
@@ -642,7 +656,9 @@ public class RustCompileUtils {
       CrateType crateType,
       Iterable<BuildRule> deps,
       ImmutableMap<String, BuildTarget> depsAliases,
-      ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags) {
+      ImmutableList<Pair<BuildTarget, ImmutableList<String>>> depsFlags,
+      PatternMatchedCollection<ImmutableList<Pair<BuildTarget, ImmutableList<String>>>>
+          platformDepsFlags) {
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
     linkerArgs.addAll(linkerFlags);
 
@@ -753,6 +769,7 @@ public class RustCompileUtils {
                         deps,
                         depsAliases,
                         depsFlags,
+                        platformDepsFlags,
                         rustBuckConfig.getIncremental(rustPlatform.getFlavor().getName())));
 
     // Add the binary as the first argument.
