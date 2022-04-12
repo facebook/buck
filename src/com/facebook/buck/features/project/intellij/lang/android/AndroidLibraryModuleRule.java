@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.features.project.intellij.IjKotlinHelper;
 import com.facebook.buck.features.project.intellij.JavaLanguageLevelHelper;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
+import com.facebook.buck.features.project.intellij.Util;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.lang.java.JavaLibraryRuleHelper;
@@ -85,12 +86,14 @@ public class AndroidLibraryModuleRule extends AndroidModuleRule<AndroidLibraryDe
     if (manifestPath.isPresent()) {
       Path projectManifestPath = projectFilesystem.getPathForRelativePath(manifestPath.get());
       androidManifestParser
+          .parsePackage(projectManifestPath)
+          .filter(Util::isValidPackageName)
+          .ifPresent(builder::setPackageName);
+      androidManifestParser
           .parseMinSdkVersion(projectManifestPath)
           .ifPresent(builder::addMinSdkVersions);
       builder.addAllPermissions(androidManifestParser.parsePermissions(projectManifestPath));
     }
-
-    target.getConstructorArg().getResourceUnionPackage().ifPresent(builder::setPackageName);
 
     context.setCompilerOutputPath(moduleFactoryResolver.getCompilerOutputPath(target));
 

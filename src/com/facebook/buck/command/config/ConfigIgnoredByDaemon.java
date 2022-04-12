@@ -72,6 +72,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
             "android_generated_files_directory",
             "auto_generate_android_facet_sources",
             "buck_out_path_for_generated_files",
+            "default_android_manifest_package_name",
             "default_min_android_sdk_version",
             "enable_rust_module",
             "flatten_android_generated_files_path_with_hash",
@@ -84,6 +85,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
             "multi_cell_module_support",
             "project_root_exclusion_mode",
             "python_base_module_transform",
+            "shared_android_manifest_generation",
             "use_module_library"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "log",

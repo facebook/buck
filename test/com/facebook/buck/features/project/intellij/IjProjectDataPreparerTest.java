@@ -32,7 +32,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
-import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.features.project.intellij.lang.java.ParsingJavaPackageFinder;
 import com.facebook.buck.features.project.intellij.model.ContentRoot;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
@@ -73,7 +72,6 @@ public class IjProjectDataPreparerTest {
 
   private FakeProjectFilesystem filesystem;
   private JavaPackageFinder javaPackageFinder;
-  private AndroidManifestParser androidManifestParser;
 
   @Before
   public void setUp() {
@@ -81,7 +79,6 @@ public class IjProjectDataPreparerTest {
     javaPackageFinder =
         DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
             filesystem, ImmutableSet.of("/java/", "/javatests/"));
-    androidManifestParser = new AndroidManifestParser(new FakeProjectFilesystem());
   }
 
   @Test
@@ -105,11 +102,7 @@ public class IjProjectDataPreparerTest {
 
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder,
-            moduleGraph,
-            filesystem,
-            IjTestProjectConfig.create(),
-            androidManifestParser);
+            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
 
     ContentRoot contentRoot = dataPreparer.getContentRoots(baseModule).asList().get(0);
     assertEquals("file://$MODULE_DIR$", contentRoot.getUrl());
@@ -198,8 +191,7 @@ public class IjProjectDataPreparerTest {
                 javaPackageFinder),
             moduleGraph,
             mainFileSystem,
-            IjTestProjectConfig.create(),
-            androidManifestParser);
+            IjTestProjectConfig.create());
 
     ImmutableList<ContentRoot> contentRoots = dataPreparer.getContentRoots(depModule);
     assertEquals(1, contentRoots.size());
@@ -296,11 +288,7 @@ public class IjProjectDataPreparerTest {
 
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder,
-            moduleGraph,
-            filesystem,
-            IjTestProjectConfig.create(),
-            androidManifestParser);
+            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
 
     assertEquals(
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseInlineTestsTargetNode),
@@ -384,11 +372,7 @@ public class IjProjectDataPreparerTest {
         IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode));
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder,
-            moduleGraph,
-            filesystem,
-            IjTestProjectConfig.create(),
-            androidManifestParser);
+            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
 
     assertThat(
         dataPreparer.getModulesToBeWritten(),
@@ -437,11 +421,7 @@ public class IjProjectDataPreparerTest {
             ImmutableSet.of(guavaTargetNode, baseTargetNode, baseTestsTargetNode));
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder,
-            moduleGraph,
-            filesystem,
-            IjTestProjectConfig.create(),
-            androidManifestParser);
+            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
 
     // Libraries don't go into the index.
     assertEquals(
@@ -491,11 +471,7 @@ public class IjProjectDataPreparerTest {
             true);
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(
-            javaPackageFinder,
-            moduleGraph,
-            filesystem,
-            IjTestProjectConfig.create(),
-            androidManifestParser);
+            javaPackageFinder, moduleGraph, filesystem, IjTestProjectConfig.create());
     assertEquals(
         ImmutableSet.of(
             ModuleIndexEntry.of(
@@ -570,8 +546,7 @@ public class IjProjectDataPreparerTest {
             javaPackageFinder,
             moduleGraph,
             filesystemForExcludesTest,
-            IjTestProjectConfig.create(),
-            androidManifestParser);
+            IjTestProjectConfig.create());
 
     assertEquals(
         ImmutableSet.of(Paths.get("java/com/src/foo")),

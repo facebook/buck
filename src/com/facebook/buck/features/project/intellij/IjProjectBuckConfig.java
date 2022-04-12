@@ -153,6 +153,9 @@ public class IjProjectBuckConfig {
         .setGeneratingAndroidManifestEnabled(
             buckConfig.getBooleanValue(
                 INTELLIJ_BUCK_CONFIG_SECTION, "generate_android_manifest", false))
+        .setSharedAndroidManifestGenerationEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "shared_android_manifest_generation", false))
         .setGeneratingTargetInfoMapEnabled(
             buckConfig.getBooleanValue(
                 INTELLIJ_BUCK_CONFIG_SECTION, "generate_target_info_map", false))
@@ -167,6 +170,9 @@ public class IjProjectBuckConfig {
         .setExtraCompilerOutputModulesPath(
             buckConfig.getPath(
                 INTELLIJ_BUCK_CONFIG_SECTION, "extra_compiler_output_modules_path", false))
+        .setDefaultAndroidManifestPackageName(
+            buckConfig.getValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "default_android_manifest_package_name"))
         .setMinAndroidSdkVersion(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "default_min_android_sdk_version"))
         .setMultiCellModuleSupportEnabled(

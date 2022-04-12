@@ -24,7 +24,6 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -306,8 +305,7 @@ public class TargetInfoMapManagerTest {
       ProjectFilesystem filesystem, IjModuleGraph moduleGraph) {
     JavaPackageFinder javaPackageFinder =
         DefaultJavaPackageFinder.createDefaultJavaPackageFinder(filesystem, ImmutableSet.of());
-    AndroidManifestParser androidManifestParser = new AndroidManifestParser(filesystem);
     return new IjProjectTemplateDataPreparer(
-        javaPackageFinder, moduleGraph, filesystem, projectConfig(), androidManifestParser);
+        javaPackageFinder, moduleGraph, filesystem, projectConfig());
   }
 }

@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.features.project.intellij.aggregation.DefaultAggregationModuleFactory;
 import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
-import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.features.project.intellij.lang.java.ParsingJavaPackageFinder;
 import com.facebook.buck.features.project.intellij.model.IjLibraryFactory;
 import com.facebook.buck.features.project.intellij.model.IjModuleFactoryResolver;
@@ -120,7 +119,6 @@ public class IjProject {
             depsQueryResolver,
             projectConfig,
             javaPackageFinder);
-    AndroidManifestParser androidManifestParser = new AndroidManifestParser(projectFilesystem);
     IjModuleGraph moduleGraph =
         IjModuleGraphFactory.from(
             projectFilesystem,
@@ -139,11 +137,7 @@ public class IjProject {
             javaPackageFinder);
     IjProjectTemplateDataPreparer templateDataPreparer =
         new IjProjectTemplateDataPreparer(
-            parsingJavaPackageFinder,
-            moduleGraph,
-            projectFilesystem,
-            projectConfig,
-            androidManifestParser);
+            parsingJavaPackageFinder, moduleGraph, projectFilesystem, projectConfig);
     IntellijModulesListParser modulesParser = new IntellijModulesListParser();
     BuckOutPathConverter buckOutPathConverter = new BuckOutPathConverter(projectConfig);
     IjProjectWriter writer =
@@ -179,8 +173,7 @@ public class IjProject {
     }
 
     PregeneratedCodeWriter pregeneratedCodeWriter =
-        new PregeneratedCodeWriter(
-            templateDataPreparer, projectConfig, outFilesystem, androidManifestParser, cleaner);
+        new PregeneratedCodeWriter(templateDataPreparer, projectConfig, outFilesystem, cleaner);
     pregeneratedCodeWriter.write();
 
     if (projectConfig.getGeneratedFilesListFilename().isPresent()) {

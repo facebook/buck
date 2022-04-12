@@ -104,6 +104,8 @@ public abstract class IjProjectConfig {
 
   public abstract boolean isGeneratingAndroidManifestEnabled();
 
+  public abstract boolean isSharedAndroidManifestGenerationEnabled();
+
   public abstract boolean isGeneratingTargetInfoMapEnabled();
 
   public abstract boolean isGeneratingBinaryTargetInfoEnabled();
@@ -113,6 +115,8 @@ public abstract class IjProjectConfig {
   public abstract Optional<String> getOutputUrl();
 
   public abstract Optional<Path> getExtraCompilerOutputModulesPath();
+
+  public abstract Optional<String> getDefaultAndroidManifestPackageName();
 
   public abstract Optional<String> getMinAndroidSdkVersion();
 

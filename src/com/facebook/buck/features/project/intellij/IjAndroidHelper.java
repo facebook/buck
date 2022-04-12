@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.project.intellij;
 
-import com.facebook.buck.features.project.intellij.model.IjModuleAndroidFacet;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
@@ -54,10 +53,6 @@ public final class IjAndroidHelper {
     } else {
       return androidGenDirPath.resolve(moduleBasePath).resolve("gen");
     }
-  }
-
-  public static Path getGeneratedAndroidManifestPath(IjModuleAndroidFacet androidFacet) {
-    return androidFacet.getGeneratedSourcePath().resolve("AndroidManifest.xml");
   }
 
   private IjAndroidHelper() {}

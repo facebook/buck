@@ -57,4 +57,9 @@ public abstract class Util {
         .replace('(', '_')
         .replace(')', '_');
   }
+
+  /** A quick but not accurate way to determine if the name is a valid package name or not */
+  public static boolean isValidPackageName(String name) {
+    return name.matches("[0-9a-zA-Z._]+");
+  }
 }

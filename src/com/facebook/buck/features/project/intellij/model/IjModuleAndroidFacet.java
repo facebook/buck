@@ -17,14 +17,17 @@
 package com.facebook.buck.features.project.intellij.model;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
-import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
+import com.facebook.buck.features.project.intellij.IjAndroidHelper;
+import com.facebook.buck.features.project.intellij.Util;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidProjectType;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 
 /**
@@ -33,6 +36,8 @@ import org.immutables.value.Value;
  */
 @BuckStyleValueWithBuilder
 public abstract class IjModuleAndroidFacet {
+  public static final String ANDROID_MANIFEST = "AndroidManifest.xml";
+
   /** @return set of paths to all AndroidManifest.xml files. */
   public abstract ImmutableSet<Path> getManifestPaths();
 
@@ -80,17 +85,6 @@ public abstract class IjModuleAndroidFacet {
     }
   }
 
-  /** @return either the package name from facet or package name from the first manifest */
-  @Value.Lazy
-  public Optional<String> discoverPackageName(AndroidManifestParser androidManifestParser) {
-    Optional<String> packageName = getPackageName();
-    if (packageName.isPresent()) {
-      return packageName;
-    } else {
-      return getPackageFromFirstManifest(androidManifestParser);
-    }
-  }
-
   public Optional<Path> getFirstManifestPath() {
     ImmutableSet<Path> androidManifestPaths = getManifestPaths();
     if (androidManifestPaths.isEmpty()) {
@@ -100,53 +94,82 @@ public abstract class IjModuleAndroidFacet {
     }
   }
 
-  private Optional<String> getPackageFromFirstManifest(
-      AndroidManifestParser androidManifestParser) {
-    Optional<Path> firstManifest = getFirstManifestPath();
-    if (firstManifest.isPresent()) {
-      return androidManifestParser.parsePackage(firstManifest.get());
-    } else {
-      return Optional.empty();
-    }
-  }
-
   public abstract ImmutableSet<String> getMinSdkVersions();
 
   public abstract Path getGeneratedSourcePath();
 
   public abstract ImmutableSet<String> getPermissions();
 
-  /**
-   * AndroidManifest.xml can be generated when package name is known. Also, it's not generated when
-   * there is exactly one manifest from targets (this manifest will be used in IntelliJ project).
-   */
-  @Value.Lazy
-  public boolean hasValidAndroidManifest() {
-    ImmutableSet<Path> androidManifestPaths = getManifestPaths();
-    Optional<String> packageName = getPackageName();
-
-    // This is guaranteed during target parsing and creation
-    Preconditions.checkState(packageName.isPresent() || !androidManifestPaths.isEmpty());
-
-    return androidManifestPaths.size() == 1
-        || (!packageName.isPresent() && androidManifestPaths.size() > 1);
+  /** Get the package name from the facet. If empty, use the one from the project config */
+  public Optional<String> getPackageNameOrDefault(IjProjectConfig projectConfig) {
+    return getPackageName().isEmpty()
+        ? projectConfig.getDefaultAndroidManifestPackageName()
+        : getPackageName();
   }
 
-  @Value.Lazy
-  public Path getAndroidManifestPath() {
-    Path androidManifestPath;
-    if (hasValidAndroidManifest()) {
-      Optional<String> packageName = getPackageName();
-      Preconditions.checkState(packageName.isPresent());
-      androidManifestPath =
-          getGeneratedSourcePath()
-              .resolve(packageName.get().replace('.', File.separatorChar))
-              .resolve("AndroidManifest.xml");
+  /** Get the min SDK version from the facet. If empty, use the one from the project config */
+  public Optional<String> getMinSdkVersionOrDefault(IjProjectConfig projectConfig) {
+    return getMinSdkVersion().isEmpty()
+        ? projectConfig.getMinAndroidSdkVersion()
+        : getMinSdkVersion();
+  }
 
-    } else {
-      androidManifestPath = getManifestPaths().iterator().next();
+  /** Returns the path to the AndroidManifest.xml for this facet */
+  public Optional<Path> getAndroidManifestPath(
+      ProjectFilesystem filesystem, IjProjectConfig projectConfig) {
+    if (projectConfig.isGeneratingAndroidManifestEnabled() && shouldGenerateAndroidManifest()) {
+      // We are not able to generate AndroidManifest.xml if we don't have any information from the
+      // facet or the buckconfig. If this happens, we can use the default project-wide
+      // AndroidManifest.xml if available
+      if (projectConfig.getAndroidManifest().isPresent()
+          && isAndroidManifestEmpty()
+          && projectConfig.getDefaultAndroidManifestPackageName().isEmpty()
+          && projectConfig.getMinAndroidSdkVersion().isEmpty()) {
+        return projectConfig.getAndroidManifest();
+      }
+      return Optional.of(getGeneratedAndroidManifestPath(filesystem, projectConfig));
     }
-    return androidManifestPath;
+
+    Optional<Path> firstManifest = getFirstManifestPath();
+    if (firstManifest.isPresent()) {
+      return firstManifest;
+    } else {
+      return projectConfig.getAndroidManifest();
+    }
+  }
+
+  private boolean isAndroidManifestEmpty() {
+    return getPackageName().isEmpty() && getMinSdkVersion().isEmpty() && getPermissions().isEmpty();
+  }
+
+  private Path getGeneratedAndroidManifestPath(
+      ProjectFilesystem filesystem, IjProjectConfig projectConfig) {
+    if (projectConfig.isSharedAndroidManifestGenerationEnabled()) {
+      // The path to the AndroidManifest.xml depends on its content
+      Path manifestPath = Paths.get(IjAndroidHelper.getAndroidGenDir(filesystem, projectConfig));
+      Optional<String> packageName = getPackageNameOrDefault(projectConfig);
+      if (packageName.isPresent()) {
+        String packagePath = packageName.get().replace('.', File.separatorChar);
+        manifestPath = manifestPath.resolve(packagePath);
+      }
+      // Hashing min SDK version & permissions
+      String hashedFolder =
+          Util.hash(
+              getMinSdkVersionOrDefault(projectConfig).orElse("")
+                  + "_"
+                  + getPermissions().stream().sorted().collect(Collectors.joining("_")));
+      return manifestPath.resolve(hashedFolder).resolve(ANDROID_MANIFEST);
+    } else {
+      return getGeneratedSourcePath().resolve(ANDROID_MANIFEST);
+    }
+  }
+
+  /**
+   * We can skip the generation of AndroidManifest.xml if and only if we have one
+   * AndroidManifest.xml in this facet
+   */
+  public boolean shouldGenerateAndroidManifest() {
+    return getManifestPaths().size() != 1;
   }
 
   public static Builder builder() {

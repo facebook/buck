@@ -21,6 +21,7 @@ import com.facebook.buck.android.AndroidResourceDescriptionArg;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.features.project.intellij.ModuleBuildContext;
+import com.facebook.buck.features.project.intellij.Util;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.depsquery.IjDepsQueryResolver;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
@@ -89,19 +90,22 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
       resourceFolders = ImmutableSet.of();
     }
 
-    androidFacetBuilder.setPackageName(target.getConstructorArg().getPackage());
-
     moduleFactoryResolver
         .getResourceAndroidManifestPath(target)
         .ifPresent(
             manifestPath -> {
-              androidFacetBuilder.addManifestPaths(manifestPath);
+              androidManifestParser
+                  .parsePackage(manifestPath)
+                  .filter(Util::isValidPackageName)
+                  .ifPresent(androidFacetBuilder::setPackageName);
               androidManifestParser
                   .parseMinSdkVersion(manifestPath)
                   .ifPresent(androidFacetBuilder::addMinSdkVersions);
               androidFacetBuilder.addAllPermissions(
                   androidManifestParser.parsePermissions(manifestPath));
             });
+
+    androidFacetBuilder.setPackageName(target.getConstructorArg().getPackage());
 
     context.addDeps(resourceFolders, target.getBuildDeps(), DependencyType.PROD);
   }

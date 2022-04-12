@@ -19,7 +19,6 @@ package com.facebook.buck.features.project.intellij;
 import static com.facebook.buck.features.project.intellij.IjProjectPaths.getUrl;
 
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
-import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidResourceFolder;
 import com.facebook.buck.features.project.intellij.model.ContentRoot;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
@@ -84,7 +83,6 @@ public class IjProjectTemplateDataPreparer {
   private final IjProjectConfig projectConfig;
   private final IjProjectPaths projectPaths;
   private final IjSourceRootSimplifier sourceRootSimplifier;
-  private final AndroidManifestParser androidManifestParser;
   private final ImmutableSet<Path> referencedFolderPaths;
   private final ImmutableSet<Path> filesystemTraversalBoundaryPaths;
   private final ImmutableSet<IjModule> modulesToBeWritten;
@@ -95,8 +93,7 @@ public class IjProjectTemplateDataPreparer {
       JavaPackageFinder javaPackageFinder,
       IjModuleGraph moduleGraph,
       ProjectFilesystem projectFilesystem,
-      IjProjectConfig projectConfig,
-      AndroidManifestParser androidManifestParser) {
+      IjProjectConfig projectConfig) {
     this.javaPackageFinder = javaPackageFinder;
     this.moduleGraph = moduleGraph;
     this.projectFilesystem = projectFilesystem;
@@ -106,7 +103,6 @@ public class IjProjectTemplateDataPreparer {
     this.modulesToBeWritten = createModulesToBeWritten(moduleGraph);
     this.allLibraries = moduleGraph.getLibraries();
     this.projectLibrariesToBeWritten = moduleGraph.getProjectLibraries();
-    this.androidManifestParser = androidManifestParser;
     this.filesystemTraversalBoundaryPaths =
         createFilesystemTraversalBoundaryPathSet(modulesToBeWritten);
     this.referencedFolderPaths = createReferencedFolderPathsSet(modulesToBeWritten);
@@ -443,9 +439,10 @@ public class IjProjectTemplateDataPreparer {
 
   private void addAndroidManifestPath(
       Map<String, Object> androidProperties, IjModule module, IjModuleAndroidFacet androidFacet) {
-    Optional<Path> androidManifestPath = getAndroidManifestPath(androidFacet);
+    Optional<Path> androidManifestPath =
+        androidFacet.getAndroidManifestPath(projectFilesystem, projectConfig);
 
-    if (!androidManifestPath.isPresent()) {
+    if (androidManifestPath.isEmpty()) {
       return;
     }
 
@@ -453,26 +450,10 @@ public class IjProjectTemplateDataPreparer {
         projectPaths.getModuleRelativePath(
             projectPaths.getProjectRelativePath(androidManifestPath.get()), module);
 
-    if (!"AndroidManifest.xml".equals(manifestPath.toString())) {
+    if (!IjModuleAndroidFacet.ANDROID_MANIFEST.equals(manifestPath.toString())) {
       androidProperties.put(
           ANDROID_MANIFEST_TEMPLATE_PARAMETER,
           IjProjectPaths.getAndroidFacetRelativePath(manifestPath));
-    }
-  }
-
-  private Optional<Path> getAndroidManifestPath(IjModuleAndroidFacet androidFacet) {
-    if (projectConfig.isGeneratingAndroidManifestEnabled()) {
-      if (androidFacet.discoverPackageName(androidManifestParser).isPresent()) {
-        // AndroidManifest.xml is only generated when package name exists
-        return Optional.of(IjAndroidHelper.getGeneratedAndroidManifestPath(androidFacet));
-      }
-    }
-
-    Optional<Path> firstManifest = androidFacet.getFirstManifestPath();
-    if (firstManifest.isPresent()) {
-      return firstManifest;
-    } else {
-      return projectConfig.getAndroidManifest();
     }
   }
 
