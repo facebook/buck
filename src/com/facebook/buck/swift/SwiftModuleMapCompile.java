@@ -158,8 +158,19 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
 
       argsBuilder.add(modulemapPath.resolve(resolver));
 
+      // If this input is a framework we need to search above the
+      // current framework location, otherwise we include the
+      // modulemap root.
       Path moduleMapPath = Path.of(modulemapPath.resolve(resolver));
-      argsBuilder.add("-Xcc", "-I", "-Xcc", moduleMapPath.getParent().toString());
+      if (isFrameworkPath(moduleMapPath)) {
+        argsBuilder.add(
+            "-Xcc",
+            "-F",
+            "-Xcc",
+            moduleMapPath.subpath(0, moduleMapPath.getNameCount() - 3).toString());
+      } else {
+        argsBuilder.add("-Xcc", "-I", "-Xcc", moduleMapPath.getParent().toString());
+      }
 
       for (ExplicitModuleOutput dep : clangModuleDeps) {
         argsBuilder.addAll(dep.getClangArgs(resolver));
@@ -175,6 +186,16 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
               Optional.empty(),
               withDownwardApi,
               false));
+    }
+
+    private boolean isFrameworkPath(Path modulemapPath) {
+      int nameCount = modulemapPath.getNameCount();
+      if (nameCount < 4) {
+        return false;
+      }
+
+      return modulemapPath.getName(nameCount - 2).toString().equals("Modules")
+          && modulemapPath.getName(nameCount - 3).toString().endsWith(".framework");
     }
   }
 }
