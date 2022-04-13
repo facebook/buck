@@ -53,6 +53,7 @@ public class JarBuilder {
     SERVICES("META-INF/services/"),
     SPRING_SCHEMAS("META-INF/spring.schemas"),
     SPRING_HANDLERS("META-INF/spring.handlers"),
+    SPRING_FACTORIES("META-INF/spring.factories"),
     SPRING_TOOLING("META-INF/spring.tooling");
 
     private final Predicate<String> predicate;
