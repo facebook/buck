@@ -16,11 +16,20 @@
 
 package com.facebook.buck.remoteexecution;
 
-import build.bazel.remote.execution.v2.Platform;
 import com.facebook.buck.remoteexecution.proto.ActionHistoryInfo;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Pair;
 
 /** Provides rule's RE worker requirements for given target */
 public interface WorkerRequirementsProvider {
-  Pair<Platform, ActionHistoryInfo> resolveRequirements();
+  Pair<build.bazel.remote.execution.v2.Platform, ActionHistoryInfo> resolveRequirements();
+
+  /** Returns the correct RE platform depending on the host platform */
+  static String getDefaultPlatform() {
+    if (Platform.detect() == Platform.WINDOWS) {
+      return "windows";
+    } else {
+      return "linux-remote-execution";
+    }
+  }
 }

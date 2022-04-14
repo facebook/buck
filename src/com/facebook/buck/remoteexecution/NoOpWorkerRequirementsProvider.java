@@ -31,7 +31,7 @@ public class NoOpWorkerRequirementsProvider implements WorkerRequirementsProvide
             .addProperties(
                 Property.newBuilder()
                     .setName("platform")
-                    .setValue("linux-remote-execution")
+                    .setValue(WorkerRequirementsProvider.getDefaultPlatform())
                     .build())
             .build(),
         ActionHistoryInfo.newBuilder().setDisableRetryOnOom(true).build());

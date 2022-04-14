@@ -27,7 +27,9 @@ public final class OOMWorkerRequirementsProvider implements WorkerRequirementsPr
   public static final Platform PLATFORM_DEFAULT =
       Platform.newBuilder()
           .addProperties(
-              Property.newBuilder().setName("platform").setValue("linux-remote-execution").build())
+              Property.newBuilder()
+                  .setName("platform")
+                  .setValue(WorkerRequirementsProvider.getDefaultPlatform()))
           .build();
   public static final ActionHistoryInfo RETRY_ON_OOM_DEFAULT =
       ActionHistoryInfo.newBuilder().setDisableRetryOnOom(false).build();
