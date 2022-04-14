@@ -16,44 +16,13 @@
 
 package com.facebook.buck.intellij.ideabuck.ui.utils;
 
-import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
-import com.intellij.ide.util.PropertiesComponent;
-import com.intellij.notification.Notification;
-import com.intellij.notification.NotificationListener;
-import com.intellij.notification.NotificationType;
-import com.intellij.notification.Notifications;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.SystemNotifications;
-import javax.swing.event.HyperlinkEvent;
-import org.jetbrains.annotations.NotNull;
 
 public class BuckPluginNotifications {
   private static final String GROUP_DISPLAY_ID = "BuckNotification";
 
   private BuckPluginNotifications() {}
-
-  public static void notifyActionToolbar(final Project project) {
-    if (!PropertiesComponent.getInstance().isValueSet(GROUP_DISPLAY_ID)) {
-      Notifications.Bus.notify(
-          new Notification(
-              GROUP_DISPLAY_ID,
-              "Buck Plugin",
-              "<html><a href=''>Enable</a> the toolbar to easily access the buck plugin actions."
-                  + "<br>You can enable/disable it at any time by pressing on View > Toolbar "
-                  + "in the menu.</html>",
-              NotificationType.INFORMATION,
-              new NotificationListener() {
-                @Override
-                public void hyperlinkUpdate(
-                    @NotNull Notification notification, @NotNull HyperlinkEvent hyperlinkEvent) {
-                  BuckUIManager.getInstance(project).getBuckToolWindow().showMainToolbar();
-                }
-              }),
-          project);
-      PropertiesComponent.getInstance().setValue(GROUP_DISPLAY_ID, "true");
-    }
-  }
 
   public static void notifySystemCommandFinished(String commandName, boolean processExitStatus) {
     SystemNotifications.getInstance()

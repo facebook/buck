@@ -18,12 +18,10 @@ package com.facebook.buck.intellij.ideabuck.config;
 
 import com.facebook.buck.intellij.ideabuck.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
-import com.facebook.buck.intellij.ideabuck.ui.utils.BuckPluginNotifications;
 import com.facebook.buck.intellij.ideabuck.ws.BuckClientManager;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.BuckEventsHandler;
 import com.facebook.buck.intellij.ideabuck.ws.buckevents.consumers.BuckEventsConsumerFactory;
 import com.intellij.execution.ui.ConsoleViewContentType;
-import com.intellij.ide.ui.UISettings;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
@@ -62,10 +60,6 @@ public final class BuckModule implements ProjectComponent {
 
     // connect to the Buck client
     connect();
-
-    if (!UISettings.getInstance().SHOW_MAIN_TOOLBAR) {
-      BuckPluginNotifications.notifyActionToolbar(mProject);
-    }
 
     mBuckEventsConsumer = new BuckEventsConsumer(mProject);
   }
