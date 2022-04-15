@@ -77,6 +77,7 @@ public class AppleDsym extends AbstractBuildRule
   @AddToRuleKey private final Optional<Tool> dwarfdump;
   @AddToRuleKey private final boolean verifyDsym;
   @AddToRuleKey private final boolean dwarfdumpFailsDsymVerification;
+  @AddToRuleKey private final boolean registerDebugSymbols;
 
   @AddToRuleKey private final SourcePath unstrippedBinarySourcePath;
 
@@ -100,6 +101,7 @@ public class AppleDsym extends AbstractBuildRule
       ImmutableList<String> dsymutilExtraFlags,
       boolean verifyDsym,
       boolean dwarfdumpFailsDsymVerification,
+      boolean registerDebugSymbols,
       Optional<Tool> dwarfdump,
       Tool lldb,
       SourcePath unstrippedBinarySourcePath,
@@ -111,6 +113,7 @@ public class AppleDsym extends AbstractBuildRule
     super(buildTarget, projectFilesystem);
     this.dsymutil = dsymutil;
     this.dsymutilExtraFlags = dsymutilExtraFlags;
+    this.registerDebugSymbols = registerDebugSymbols;
     this.dwarfdump = dwarfdump;
     this.verifyDsym = verifyDsym;
     this.dwarfdumpFailsDsymVerification = dwarfdumpFailsDsymVerification;
@@ -288,14 +291,18 @@ public class AppleDsym extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
-    return ImmutableList.of(
-        new RegisterDebugSymbolsStep(
-            getProjectFilesystem(),
-            unstrippedBinarySourcePath,
-            lldb,
-            context.getSourcePathResolver(),
-            dsymOutputPath,
-            withDownwardApi));
+    if (registerDebugSymbols) {
+      return ImmutableList.of(
+          new RegisterDebugSymbolsStep(
+              getProjectFilesystem(),
+              unstrippedBinarySourcePath,
+              lldb,
+              context.getSourcePathResolver(),
+              dsymOutputPath,
+              withDownwardApi));
+    } else {
+      return ImmutableList.of();
+    }
   }
 
   @Override
