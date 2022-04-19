@@ -874,8 +874,9 @@ class CachingBuildRuleBuilder {
         outputHash = hashString.getLeftOption().map(HashCode::fromString);
 
         // Determine if this is rule is cacheable.
+        Optional<CacheResult> cacheResult = input.getCacheResult();
         shouldUploadToCache =
-            buildCacheArtifactUploader.shouldUploadToCache(success, outputSizeValue);
+            buildCacheArtifactUploader.shouldUploadToCache(success, cacheResult, outputSizeValue);
 
         // Upload it to the cache.
         if (shouldUploadToCache.equals(UploadToCacheResultType.CACHEABLE)) {

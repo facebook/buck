@@ -18,6 +18,8 @@ package com.facebook.buck.core.build.engine.cache.manager;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactUploader;
+import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.engine.buildinfo.OnDiskBuildInfo;
@@ -193,11 +195,16 @@ public class BuildCacheArtifactUploader {
 
   /** @return whether we should upload the given rules artifacts to cache. */
   public UploadToCacheResultType shouldUploadToCache(
-      BuildRuleSuccessType successType, long outputSize) {
+      BuildRuleSuccessType successType, Optional<CacheResult> cacheResult, long outputSize) {
 
     // The success type must allow cache uploading.
     if (!successType.shouldUploadResultingArtifact()) {
       return UploadToCacheResultType.UNCACHEABLE;
+    }
+
+    // If we failed to fetch with error, we won't upload again
+    if (cacheResult.isPresent() && cacheResult.get().getType() == CacheResultType.ERROR) {
+      return UploadToCacheResultType.UNCACHEABLE_DUE_TO_CACHE_ERROR;
     }
 
     // The cache must be writable.

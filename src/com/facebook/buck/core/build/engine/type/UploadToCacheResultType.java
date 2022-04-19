@@ -28,6 +28,9 @@ public enum UploadToCacheResultType {
   // The specific rule has been marked as un-cacheable.
   UNCACHEABLE_RULE,
 
+  // The rule is un-cacheable due to cache error, which might caused by server error
+  UNCACHEABLE_DUE_TO_CACHE_ERROR,
+
   // The rule could have been cached but was over the allowed output_size for the cache.
   CACHEABLE_OVER_SIZE_LIMIT,
 
