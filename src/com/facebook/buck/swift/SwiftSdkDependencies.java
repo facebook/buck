@@ -18,11 +18,9 @@ package com.facebook.buck.swift;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -65,9 +63,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
   private final LoadingCache<CacheKey, ImmutableSet<ExplicitModuleOutput>>
       clangBuildRuleDependencyCache;
 
-  private final BaseName swiftTargetBaseName;
-
-  private final BaseName clangTargetBaseName;
+  private final BuildTarget toolchainTarget;
 
   private final String ResourceDirPrefix = "$RESOURCEDIR/";
 
@@ -81,10 +77,10 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
       String sdkDependenciesPath,
       Tool swiftc,
       ImmutableList<Arg> swiftFlags,
-      AppleCompilerTargetTriple triple,
       SourcePath sdkPath,
       SourcePath platformPath,
-      SourcePath swiftResourceDir)
+      SourcePath swiftResourceDir,
+      BuildTarget toolchainBuildTarget)
       throws HumanReadableException {
     ObjectMapper objectMapper = new ObjectMapper();
     try {
@@ -96,25 +92,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
           "Failed to parse SDK dependencies info: " + ex.getLocalizedMessage());
     }
 
-    // Construct the target base names to use for this SDK and toolchain.
-    swiftTargetBaseName =
-        BaseName.of(
-            "//_swift_runtime/sdk/"
-                + sdkDependencies.getSdkVersion()
-                + "/"
-                + triple.getPlatformName()
-                + "/"
-                + triple.getArchitecture()
-                + "/swift");
-    clangTargetBaseName =
-        BaseName.of(
-            "//_swift_runtime/sdk/"
-                + sdkDependencies.getSdkVersion()
-                + "/"
-                + triple.getPlatformName()
-                + "/"
-                + triple.getArchitecture()
-                + "/clang");
+    toolchainTarget = toolchainBuildTarget;
 
     ImmutableMap.Builder<String, ClangModule> clangModulesBuilder = ImmutableMap.builder();
     for (ClangModule module : sdkDependencies.getClangDependencies()) {
@@ -207,9 +185,8 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
      * file that we can use as input in a `SwiftCompile` rule. These rules are created dynamically
      * based on information provided in the `swift_toolchain` rule via the `sdk_dependencies_path`
      * attribute. Each `SwiftInterfaceCompile` rule transitively depends on the output of its
-     * dependent `SwiftInterfaceCompile` rules to compile successfully. As these rules are
-     * independent of target configuration we create them as unconfigured targets and cache the
-     * transitive set of outputs for each framework dependency.
+     * dependent `SwiftInterfaceCompile` rules to compile successfully. We cache the transitive set
+     * of outputs for each framework dependency per toolchain.
      *
      * <p>An alternative approach would be to model the SDK dependencies with a new target type.
      * This solution seems initially appealing, but presents some problems: - every single `apple_*`
@@ -226,20 +203,14 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
      * away from Xcode toolchain selection, as we would then need to model a target SDK in the graph
      * more explicitly.
      */
-
-    // SwiftInterfaceCompile rules are already specific to target SDK version via the target name,
-    // the compiler target is not used.
-    int hashCode =
-        swiftc.getCommandPrefix(graphBuilder.getSourcePathResolver()).hashCode()
-            ^ Arg.stringify(swiftFlags, graphBuilder.getSourcePathResolver()).hashCode();
-    Flavor swiftFlavor = InternalFlavor.of(Integer.toHexString(hashCode));
-    UnconfiguredBuildTarget unconfiguredBuildTarget =
-        UnconfiguredBuildTarget.of(swiftTargetBaseName, key.getName());
+    Flavor moduleFlavor =
+        InternalFlavor.of(
+            String.format("swiftmodule-%s-%s", sdkDependencies.getSdkVersion(), module.getName()));
     BuildTarget buildTarget =
-        unconfiguredBuildTarget
+        toolchainTarget
+            .getUnconfiguredBuildTarget()
             .configure(UnconfiguredTargetConfiguration.INSTANCE)
-            .withFlavors(swiftFlavor);
-
+            .withFlavors(moduleFlavor);
     BuildRule rule =
         graphBuilder.computeIfAbsent(
             buildTarget,
@@ -311,18 +282,18 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
     }
 
     // Clang module compilation is specific to the compiler target, so include that in the
-    // target flavor.
-    int hashCode =
-        swiftc.getCommandPrefix(graphBuilder.getSourcePathResolver()).hashCode()
-            ^ Arg.stringify(swiftFlags, graphBuilder.getSourcePathResolver()).hashCode()
-            ^ key.getCompilerTarget().hashCode();
-    Flavor clangFlavor = InternalFlavor.of(Integer.toHexString(hashCode));
-    UnconfiguredBuildTarget unconfiguredBuildTarget =
-        UnconfiguredBuildTarget.of(clangTargetBaseName, key.getName());
+    // target flavor. The flags are constant per toolchain so do not contribute to the flavor.
+    String targetVersion = key.getCompilerTarget().split("-")[2];
+    Flavor moduleFlavor =
+        InternalFlavor.of(
+            String.format(
+                "pcm-%s-%s-%s",
+                sdkDependencies.getSdkVersion(), clangModule.getName(), targetVersion));
     BuildTarget buildTarget =
-        unconfiguredBuildTarget
+        toolchainTarget
+            .getUnconfiguredBuildTarget()
             .configure(UnconfiguredTargetConfiguration.INSTANCE)
-            .withFlavors(clangFlavor);
+            .withFlavors(moduleFlavor);
 
     ExplicitModuleInput moduleMapInput =
         replacePathPrefix(clangModule.getModulemapPath(), sdkPath, platformPath, swiftResourceDir);

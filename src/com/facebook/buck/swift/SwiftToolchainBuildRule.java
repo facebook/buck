@@ -92,7 +92,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
         .setPlatformPath(platformPath)
         .setSdkPath(sdkPath)
         .setResourceDir(resourceDir)
-        .setSdkDependencies(getSdkDependencies(graphBuilder, projectFilesystem, swiftTarget))
+        .setSdkDependencies(getSdkDependencies(graphBuilder, projectFilesystem))
         .setSwiftTarget(swiftTarget)
         .setSwiftRuntimePathsForBundling(runtimePathsForBundling)
         .setSwiftRuntimePathsForLinking(runtimePathsForLinking)
@@ -104,9 +104,7 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
   }
 
   private Optional<SwiftSdkDependencies> getSdkDependencies(
-      ActionGraphBuilder graphBuilder,
-      ProjectFilesystem projectFilesystem,
-      AppleCompilerTargetTriple swiftTarget) {
+      ActionGraphBuilder graphBuilder, ProjectFilesystem projectFilesystem) {
     if (sdkDependenciesPath.isEmpty()) {
       return Optional.empty();
     }
@@ -122,9 +120,9 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
             sdkDependenciesPath.get(),
             swiftc,
             swiftFlags,
-            swiftTarget,
             sdkPath,
             platformPath,
-            resourceDir.get()));
+            resourceDir.get(),
+            getBuildTarget()));
   }
 }

@@ -21,6 +21,10 @@ import static org.hamcrest.Matchers.equalTo;
 
 import com.facebook.buck.apple.common.AppleCompilerTargetTriple;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BaseName;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -42,15 +46,17 @@ import java.util.Optional;
 import org.junit.Test;
 
 public class SwiftSdkDependenciesTest {
+
+  private final BuildTarget toolchainTarget =
+      UnconfiguredBuildTarget.of(BaseName.of("//toolchain_base"), "toolchain_target")
+          .configure(UnconfiguredTargetConfiguration.INSTANCE);
+
   @Test
   public void testLoadSdkDependenciesJson() throws HumanReadableException {
     ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
     Path testDataPath = TestDataHelper.getTestDataScenario(this, "swift_sdk_dependencies");
     Path simulatorDeps = testDataPath.resolve("iphonesimulator_15.2_deps.json");
     Tool swiftc = VersionedTool.of("foo", FakeSourcePath.of("swiftc"), "1.0");
-    AppleCompilerTargetTriple triple =
-        AppleCompilerTargetTriple.of(
-            "x86_64", "apple", "ios", Optional.of("13.0"), Optional.empty());
 
     SwiftSdkDependencies sdkDependencies =
         new SwiftSdkDependencies(
@@ -59,10 +65,10 @@ public class SwiftSdkDependenciesTest {
             simulatorDeps.toString(),
             swiftc,
             ImmutableList.of(),
-            triple,
             PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/platform/path")),
-            PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")));
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")),
+            toolchainTarget);
 
     SwiftSdkDependencies.SwiftModule module = sdkDependencies.getSwiftModule("Foundation");
     assertThat(
@@ -97,10 +103,10 @@ public class SwiftSdkDependenciesTest {
             simulatorDeps.toString(),
             swiftc,
             ImmutableList.of(),
-            triple,
             PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/platform/path")),
-            PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")));
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")),
+            toolchainTarget);
 
     ImmutableSet<ExplicitModuleOutput> swiftmoduleDeps =
         sdkDependencies.getSdkModuleDependencies("SwiftOnoneSupport", triple);
@@ -141,10 +147,10 @@ public class SwiftSdkDependenciesTest {
             simulatorDeps.toString(),
             swiftc,
             ImmutableList.of(),
-            triple,
             PathSourcePath.of(fakeFilesystem, Paths.get("some/sdk/path")),
             PathSourcePath.of(fakeFilesystem, Paths.get("some/platform/path")),
-            PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")));
+            PathSourcePath.of(fakeFilesystem, Paths.get("some/resource/dir")),
+            toolchainTarget);
 
     // Get the SDK deps for a module with each of the path prefixes. This will trigger the path
     // prefixing logic for each of the cases.
