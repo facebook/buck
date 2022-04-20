@@ -357,8 +357,7 @@ public class RustLibraryDescription
               ruleFlags,
               rlib,
               directDependent,
-              dependentFilesystem.relativize(rlibAbsolutePath).toString(),
-              rustBuckConfig.getExternLocations());
+              dependentFilesystem.relativize(rlibAbsolutePath).toString());
         }
 
         @Override

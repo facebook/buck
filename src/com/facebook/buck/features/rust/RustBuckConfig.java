@@ -50,7 +50,6 @@ public class RustBuckConfig {
   private static final String PREFER_STATIC_LIBS = "prefer_static_libs";
   private static final String RUSTC_INCREMENTAL = "incremental";
   private static final String DEFAULT_EDITION = "default_edition";
-  private static final String EXTERN_LOCATIONS = "extern_locations";
   private static final String RUSTC_PLUGIN_PLATFORM = "rustc_plugin_platform";
   private static final String NATIVE_UNBUNDLE_DEPS = "native_unbundle_deps";
 
@@ -228,18 +227,6 @@ public class RustBuckConfig {
    */
   boolean getUnflavoredBinaries() {
     return delegate.getBooleanValue(SECTION, UNFLAVORED_BINARIES, false);
-  }
-
-  /**
-   * Get extern_locations option. This controls whether to pass `--extern-location` to rustc for
-   * each `--extern` so that when it reports an unused dependency it can refer to the actual Buck
-   * target and dependency in question. The location is a json object with `target` (unflavored
-   * build target) and `dep` (unflavored dependency for target) keys.
-   *
-   * @return Boolean of whether to pass --extern-location to rustc.
-   */
-  boolean getExternLocations() {
-    return delegate.getBooleanValue(SECTION, EXTERN_LOCATIONS, false);
   }
 
   /**

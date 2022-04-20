@@ -36,11 +36,6 @@ import java.util.function.Consumer;
  * referenced by. Indirect dependencies are not explicitly enumerated; instead the `-Ldependency`
  * option adds a search directory in which dependencies can be found (in practice with Buck builds,
  * there's one directory per dependency).
- *
- * <p>We also keep the target name we're adding the dependency for, and the target a dependent crate
- * comes from. This is so we can pass an `--extern-location` option to rustc which allows compiler
- * diagnostics for unused dependencies to directly reference the dependency which needs to be
- * removed.
  */
 @BuckStyleValue
 public abstract class RustLibraryArg implements Arg, HasSourcePath {
@@ -70,20 +65,15 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
   @AddToRuleKey
   public abstract String getRlibRelativePath();
 
-  /// True if the `extern_locations` option is set.
-  @AddToRuleKey
-  public abstract boolean getExternLoc();
-
   public static RustLibraryArg of(
       BuildTarget target,
       String crate,
       ImmutableList<String> flags,
       SourcePath rlib,
       Optional<BuildTarget> directDependent,
-      String rlibRelativePath,
-      boolean extern_loc) {
+      String rlibRelativePath) {
     return ImmutableRustLibraryArg.ofImpl(
-        target, crate, flags, rlib, directDependent, rlibRelativePath, extern_loc);
+        target, crate, flags, rlib, directDependent, rlibRelativePath);
   }
 
   @Override
@@ -108,15 +98,6 @@ public abstract class RustLibraryArg implements Arg, HasSourcePath {
 
       consumer.accept(
           String.format("--extern=%s%s=%s", externQualifiers, crate, getRlibRelativePath()));
-      if (getExternLoc()) {
-        // assume targets never need json string quoting
-        consumer.accept(
-            String.format(
-                "--extern-location=%s=json:{\"target\":\"%s\",\"dep\":\"%s\"}",
-                crate,
-                directDep.get().withoutFlavors().getFullyQualifiedName(),
-                getTarget().getFullyQualifiedName()));
-      }
     } else {
       consumer.accept(
           String.format("-Ldependency=%s", Paths.get(getRlibRelativePath()).getParent()));

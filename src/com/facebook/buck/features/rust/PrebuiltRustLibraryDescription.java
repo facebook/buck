@@ -42,11 +42,6 @@ import org.immutables.value.Value;
 public class PrebuiltRustLibraryDescription
     implements DescriptionWithTargetGraph<PrebuiltRustLibraryDescriptionArg>,
         VersionPropagator<PrebuiltRustLibraryDescriptionArg> {
-  private final RustBuckConfig rustBuckConfig;
-
-  public PrebuiltRustLibraryDescription(RustBuckConfig rustBuckConfig) {
-    this.rustBuckConfig = rustBuckConfig;
-  }
 
   @Override
   public Class<PrebuiltRustLibraryDescriptionArg> getConstructorArgType() {
@@ -88,8 +83,7 @@ public class PrebuiltRustLibraryDescription
             ruleFlags,
             args.getRlib(),
             directDependent,
-            dependentFilesystem.relativize(rlibAbsolutePath).toString(),
-            rustBuckConfig.getExternLocations());
+            dependentFilesystem.relativize(rlibAbsolutePath).toString());
       }
 
       @Override

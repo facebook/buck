@@ -16,7 +16,6 @@
 
 package com.facebook.buck.features.rust;
 
-import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -37,9 +36,8 @@ public class PrebuiltRustLibraryBuilder
   }
 
   public static PrebuiltRustLibraryBuilder from(String target) {
-    RustBuckConfig config = new RustBuckConfig(FakeBuckConfig.builder().build());
     return new PrebuiltRustLibraryBuilder(
-        new PrebuiltRustLibraryDescription(config), BuildTargetFactory.newInstance(target));
+        new PrebuiltRustLibraryDescription(), BuildTargetFactory.newInstance(target));
   }
 
   public PrebuiltRustLibraryBuilder setRlib(SourcePath rlib) {
