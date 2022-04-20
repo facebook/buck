@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright 2004-present Facebook. All Rights Reserved.
+# Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
