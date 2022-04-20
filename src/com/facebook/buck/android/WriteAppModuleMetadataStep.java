@@ -110,9 +110,9 @@ public class WriteAppModuleMetadataStep implements Step {
       }
       metadataLines.add(TARGETS_SECTION_HEADER);
       writeModuleToStringsMultimap(orderedModuleToTargetsMap, metadataLines);
-      if (apkModuleGraph.getBlacklistedModules().isPresent()) {
+      if (apkModuleGraph.getDenyListModules().isPresent()) {
         metadataLines.add(BLACKLIST_SECTION_HEADER);
-        writeBuildTargetList(apkModuleGraph.getBlacklistedModules().get(), metadataLines);
+        writeBuildTargetList(apkModuleGraph.getDenyListModules().get(), metadataLines);
       }
       metadataLines.add(DEPS_SECTION_HEADER);
       writeModuleToModulesMap(moduleToDepsMap, metadataLines);

@@ -82,7 +82,7 @@ public class APKModuleGraph implements AddsToRuleKey {
   @AddToRuleKey
   private final Optional<ImmutableMap<String, ImmutableList<String>>> appModuleDependencies;
 
-  @AddToRuleKey private final Optional<List<BuildTarget>> blacklistedModules;
+  @AddToRuleKey private final Optional<List<BuildTarget>> denylistModules;
   private final Map<APKModule, Set<BuildTarget>> buildTargetsMap = new HashMap<>();
   private final Set<UndeclaredDependency> undeclaredDependencies = new HashSet<>();
 
@@ -157,19 +157,19 @@ public class APKModuleGraph implements AddsToRuleKey {
    *     dependent <b>m1</b>. In other words, <b>m2</b> covers <b>m1</b>. Therefore, if a buck
    *     target is required by both these modules, we can safely place it in the minimal cover which
    *     is the APKModule <b>m2</b>.
-   * @param blacklistedModules A list of targets that will NOT be included in any module.
+   * @param denylistModules A list of targets that will NOT be included in any module.
    * @param targetGraph The full target graph of the build
    * @param target The root target to use to traverse the graph
    */
   public APKModuleGraph(
       Optional<ImmutableMap<String, ImmutableList<BuildTarget>>> seedConfigMap,
       Optional<ImmutableMap<String, ImmutableList<String>>> appModuleDependencies,
-      Optional<List<BuildTarget>> blacklistedModules,
+      Optional<List<BuildTarget>> denylistModules,
       TargetGraph targetGraph,
       BuildTarget target) {
     this.targetGraph = targetGraph;
     this.appModuleDependencies = appModuleDependencies;
-    this.blacklistedModules = blacklistedModules;
+    this.denylistModules = denylistModules;
     this.target = target;
     this.suppliedSeedConfigMap = seedConfigMap;
   }
@@ -288,8 +288,8 @@ public class APKModuleGraph implements AddsToRuleKey {
     return (module == null ? rootAPKModuleSupplier.get() : module);
   }
 
-  public Optional<List<BuildTarget>> getBlacklistedModules() {
-    return blacklistedModules;
+  public Optional<List<BuildTarget>> getDenyListModules() {
+    return denylistModules;
   }
 
   /**
@@ -428,8 +428,8 @@ public class APKModuleGraph implements AddsToRuleKey {
     if (targetGraph != TargetGraph.EMPTY) {
       Set<TargetNode<?>> rootNodes = new HashSet<>();
       rootNodes.add(targetGraph.get(target));
-      if (blacklistedModules.isPresent()) {
-        for (BuildTarget targetModule : blacklistedModules.get()) {
+      if (denylistModules.isPresent()) {
+        for (BuildTarget targetModule : denylistModules.get()) {
           rootNodes.add(targetGraph.get(targetModule));
           rootTargets.add(targetModule);
         }
