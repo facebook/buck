@@ -29,7 +29,8 @@ public final class OOMWorkerRequirementsProvider implements WorkerRequirementsPr
           .addProperties(
               Property.newBuilder()
                   .setName("platform")
-                  .setValue(WorkerRequirementsProvider.getDefaultPlatform()))
+                  .setValue(WorkerRequirementsProvider.getDefaultPlatform())
+                  .build())
           .build();
   public static final ActionHistoryInfo RETRY_ON_OOM_DEFAULT =
       ActionHistoryInfo.newBuilder().setDisableRetryOnOom(false).build();
