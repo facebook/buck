@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2013-2015, Facebook, Inc.
+Copyright (c) Meta Platforms, Inc. and affiliates.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
