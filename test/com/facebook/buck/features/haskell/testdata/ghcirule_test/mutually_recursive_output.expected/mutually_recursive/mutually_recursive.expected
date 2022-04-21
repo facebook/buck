@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2016-present, Facebook, Inc.
+# Copyright (c) Meta Platforms, Inc. and affiliates.
 # All rights reserved.
 #
 # This source code is licensed under the BSD-style license found in the
@@ -23,4 +23,3 @@ rm -rf /tmp/mutually_recursive-$$
 # StringTemplateStep adds a newline at the end of the generated script.
 # Using nuclide to edit .expected file might cause test failure.
 # .expected FILE MUST END WITH A NEWLINE
-
