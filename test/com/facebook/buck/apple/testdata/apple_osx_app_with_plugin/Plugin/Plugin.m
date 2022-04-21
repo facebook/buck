@@ -1,4 +1,4 @@
-// Copyright 2004-present Facebook. All Rights Reserved.
+// Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
 
 #import <Foundation/Foundation.h>
 
@@ -9,7 +9,7 @@
 @end
 
 int main(int argc, const char *argv[]) {
-    PluginClass *instance = [PluginClass new]; 
+    PluginClass *instance = [PluginClass new];
     exit(EXIT_FAILURE);
     return 0;
 }

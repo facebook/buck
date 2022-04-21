@@ -1,4 +1,4 @@
-// Copyright 2004-present Facebook. All Rights Reserved.
+// Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
 
 #pragma once
 
@@ -16,4 +16,3 @@ extern const struct HeaderA HeaderAA;
 #ifdef __cplusplus
 }
 #endif
-

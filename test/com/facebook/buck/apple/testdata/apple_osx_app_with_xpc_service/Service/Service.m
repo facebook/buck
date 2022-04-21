@@ -1,4 +1,4 @@
-// Copyright 2004-present Facebook. All Rights Reserved.
+// Copyright (c) Meta Platforms, Inc. and affiliates. All Rights Reserved.
 
 #import <Foundation/Foundation.h>
 
@@ -12,10 +12,10 @@ int main(int argc, const char *argv[]) {
     MyDelegateClass *myDelegate = [MyDelegateClass new];
     NSXPCListener *listener =
         [NSXPCListener serviceListener];
- 
+
     listener.delegate = myDelegate;
     [listener resume];
- 
+
     exit(EXIT_FAILURE);
     return 0;
 }
