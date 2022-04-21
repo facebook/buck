@@ -45,6 +45,6 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>10.14</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2016 Facebook. All rights reserved.</string>
+	<string>Copyright © Meta Platforms, Inc. and affiliates. All rights reserved.</string>
 </dict>
 </plist>
