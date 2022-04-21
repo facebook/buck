@@ -7,6 +7,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="rust_library" scope="COMPILE" />
+    <orderEntry type="module" module-name="rust__library" scope="COMPILE" />
   </component>
 </module>

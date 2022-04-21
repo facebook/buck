@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/module/nested_module/one_more/module_nested_module_one_more.iml" filepath="$PROJECT_DIR$/module/nested_module/one_more/module_nested_module_one_more.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/module/nested_module/one_more/module_nested__module_one__more.iml" filepath="$PROJECT_DIR$/module/nested_module/one_more/module_nested__module_one__more.iml" group="modules" />
       <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
     </modules>
   </component>

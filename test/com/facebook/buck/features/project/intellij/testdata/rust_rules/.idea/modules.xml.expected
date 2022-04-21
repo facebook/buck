@@ -3,9 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
-      <module fileurl="file://$PROJECT_DIR$/rust_binary/rust_binary.iml" filepath="$PROJECT_DIR$/rust_binary/rust_binary.iml" group="modules" />
-      <module fileurl="file://$PROJECT_DIR$/rust_library/rust_library.iml" filepath="$PROJECT_DIR$/rust_library/rust_library.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/rust_binary/rust__binary.iml" filepath="$PROJECT_DIR$/rust_binary/rust__binary.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/rust_library/rust__library.iml" filepath="$PROJECT_DIR$/rust_library/rust__library.iml" group="modules" />
     </modules>
   </component>
 </project>
-

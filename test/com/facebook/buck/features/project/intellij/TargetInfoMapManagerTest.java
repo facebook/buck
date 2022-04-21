@@ -61,12 +61,12 @@ public class TargetInfoMapManagerTest {
                     TargetInfoMapManager.MODULE_TYPE,
                     TargetInfoMapManager.GENERATED_SOURCES,
                     Collections.singletonList(filesystem.getPath("buck-out/annotation/base"))),
-                "//third_party/guava:guava",
+                "//third-party/guava:guava",
                 ImmutableSortedMap.of(
                     TargetInfoMapManager.BUCK_TYPE,
                     "java_library",
                     TargetInfoMapManager.INTELLIJ_FILE_PATH,
-                    filesystem.getPath("third_party/guava/third_party_guava.iml"),
+                    filesystem.getPath("third-party/guava/third_party_guava.iml"),
                     TargetInfoMapManager.INTELLIJ_NAME,
                     "third_party_guava",
                     TargetInfoMapManager.INTELLIJ_TYPE,
@@ -157,12 +157,12 @@ public class TargetInfoMapManagerTest {
                     TargetInfoMapManager.MODULE_TYPE,
                     TargetInfoMapManager.GENERATED_SOURCES,
                     Collections.singletonList(filesystem.getPath("buck-out/annotation/base"))),
-                "//third_party/guava:guava",
+                "//third-party/guava:guava",
                 ImmutableSortedMap.of(
                     TargetInfoMapManager.BUCK_TYPE,
                     "java_library",
                     TargetInfoMapManager.INTELLIJ_FILE_PATH,
-                    filesystem.getPath("third_party/guava/third_party_guava.iml"),
+                    filesystem.getPath("third-party/guava/third_party_guava.iml"),
                     TargetInfoMapManager.INTELLIJ_NAME,
                     "third_party_guava",
                     TargetInfoMapManager.INTELLIJ_TYPE,
@@ -193,12 +193,12 @@ public class TargetInfoMapManagerTest {
                     "java_com_example_base",
                     TargetInfoMapManager.INTELLIJ_TYPE,
                     TargetInfoMapManager.MODULE_TYPE),
-                "//third_party/guava:guava",
+                "//third-party/guava:guava",
                 ImmutableSortedMap.of(
                     TargetInfoMapManager.BUCK_TYPE,
                     "java_library",
                     TargetInfoMapManager.INTELLIJ_FILE_PATH,
-                    filesystem.getPath("third_party/guava/third_party_guava.iml"),
+                    filesystem.getPath("third-party/guava/third_party_guava.iml"),
                     TargetInfoMapManager.INTELLIJ_NAME,
                     "third_party_guava",
                     TargetInfoMapManager.INTELLIJ_TYPE,
@@ -210,8 +210,8 @@ public class TargetInfoMapManagerTest {
       throws IOException {
     TargetNode<?> guavaTargetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance("//third_party/guava:guava"))
-            .addSrc(Paths.get("third_party/guava/src/Collections.java"))
+                BuildTargetFactory.newInstance("//third-party/guava:guava"))
+            .addSrc(Paths.get("third-party/guava/src/Collections.java"))
             .build();
 
     TargetNode<?> baseTargetNode =

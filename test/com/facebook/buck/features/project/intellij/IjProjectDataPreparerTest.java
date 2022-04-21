@@ -85,8 +85,8 @@ public class IjProjectDataPreparerTest {
   public void testWriteModule() throws Exception {
     TargetNode<?> guavaTargetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance("//third_party/guava:guava"))
-            .addSrc(Paths.get("third_party/guava/src/Collections.java"))
+                BuildTargetFactory.newInstance("//third-party/guava:guava"))
+            .addSrc(Paths.get("third-party/guava/src/Collections.java"))
             .build();
 
     TargetNode<?> baseTargetNode =

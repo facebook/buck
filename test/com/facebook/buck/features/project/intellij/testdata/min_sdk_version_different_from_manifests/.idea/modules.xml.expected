@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/android_libs/android_libs.iml" filepath="$PROJECT_DIR$/android_libs/android_libs.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/android_libs/android__libs.iml" filepath="$PROJECT_DIR$/android_libs/android__libs.iml" group="modules" />
       <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
     </modules>
   </component>

@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/modules/dep/modules_dep.iml" filepath="$PROJECT_DIR$/modules/dep/modules_dep.iml" group="modules" />
-      <module fileurl="file://$PROJECT_DIR$/modules/dep_test/modules_dep_test.iml" filepath="$PROJECT_DIR$/modules/dep_test/modules_dep_test.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/modules/dep_test/modules_dep__test.iml" filepath="$PROJECT_DIR$/modules/dep_test/modules_dep__test.iml" group="modules" />
       <module fileurl="file://$PROJECT_DIR$/modules/lib/modules_lib.iml" filepath="$PROJECT_DIR$/modules/lib/modules_lib.iml" group="modules" />
       <module fileurl="file://$PROJECT_DIR$/modules/test/modules_test.iml" filepath="$PROJECT_DIR$/modules/test/modules_test.iml" group="modules" />
       <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />

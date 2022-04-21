@@ -48,7 +48,8 @@ public abstract class Util {
   }
 
   public static String normalizeIntelliJName(String name) {
-    return name.replace('.', '_')
+    return name.replace("_", "__")
+        .replace('.', '_')
         .replace('-', '_')
         .replace(':', '_')
         .replace(' ', '_')
