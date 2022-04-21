@@ -1,4 +1,4 @@
-// Copyright 2016 Facebook, Inc.
+// Copyright (c) Meta Platforms, Inc. and affiliates.
 #include <lib/lib.h>
 
 #include <iostream>
