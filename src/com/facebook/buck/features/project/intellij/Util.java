@@ -36,7 +36,9 @@ public abstract class Util {
     if (name.isEmpty()) {
       return "project_root";
     } else {
-      return Util.normalizeIntelliJName(name);
+      // For module names, replacing "_" with "__" will avoid the name conflict between
+      // foo/bar/BUCK module and foo_bar/BUCk module
+      return Util.normalizeIntelliJName(name.replace("_", "__"));
     }
   }
 
@@ -48,8 +50,7 @@ public abstract class Util {
   }
 
   public static String normalizeIntelliJName(String name) {
-    return name.replace("_", "__")
-        .replace('.', '_')
+    return name.replace('.', '_')
         .replace('-', '_')
         .replace(':', '_')
         .replace(' ', '_')
