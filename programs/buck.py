@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Copyright (c) Facebook, Inc. and its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -220,9 +220,10 @@ def main(argv, reporter):
                 with get_repo(project) as buck_repo:
                     required_java_version = buck_repo.get_buck_compiled_java_version()
                     java_path = get_java_path(required_java_version)
-                    _try_to_verify_java_version_off_thread(
-                        java_version_status_queue, java_path, required_java_version
-                    )
+                    if "--check-java" in argv:
+                        _try_to_verify_java_version_off_thread(
+                            java_version_status_queue, java_path, required_java_version
+                        )
 
                     return buck_repo.launch_buck(build_id, os.getcwd(), java_path, argv)
     finally:
