@@ -90,8 +90,9 @@ class ClassUsageRecorder(project: Project, module: ModuleDescriptor) {
       }
       descriptor is DescriptorWithContainerSource &&
           descriptor.containerSource is JvmPackagePartSource -> {
-        (descriptor.containerSource as JvmPackagePartSource).knownJvmBinaryClass?.location?.let(
-            ::addFile)
+        (descriptor.containerSource as JvmPackagePartSource)
+            .knownJvmBinaryClass
+            ?.location?.let(::addFile)
       }
     }
 
