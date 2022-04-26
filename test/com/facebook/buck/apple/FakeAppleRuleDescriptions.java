@@ -131,7 +131,6 @@ public class FakeAppleRuleDescriptions {
             "usr/bin/ibtool",
             "usr/bin/momc",
             "usr/bin/copySceneKitAssets",
-            "usr/bin/lldb",
             "usr/bin/xctest")
         .forEach(
             path -> {

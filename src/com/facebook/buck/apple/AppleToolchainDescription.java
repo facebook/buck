@@ -162,7 +162,6 @@ public class AppleToolchainDescription
             .setDsymutil(dsymutil)
             .setDwarfdump(dwarfdumpTool)
             .setLipo(resolveTool(args.getLipo(), actionGraphBuilder))
-            .setLldb(resolveTool(args.getLldb(), actionGraphBuilder))
             .setCodesignProvider(ToolProviders.getToolProvider(args.getCodesign(), false))
             .setCodesignAllocate(resolveMacOnlyTool(args.getCodesignAllocate(), actionGraphBuilder))
             .setCxxPlatform(
@@ -288,7 +287,7 @@ public class AppleToolchainDescription
     SourcePath getLipo();
 
     /** lldb binary. */
-    SourcePath getLldb();
+    Optional<SourcePath> getLldb();
 
     /** momc binary. */
     SourcePath getMomc();

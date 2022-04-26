@@ -146,7 +146,6 @@ public class AppleCxxPlatformsTest {
         root.resolve("usr/bin/ibtool"),
         root.resolve("usr/bin/momc"),
         root.resolve("usr/bin/copySceneKitAssets"),
-        root.resolve("usr/bin/lldb"),
         root.resolve("usr/bin/xctest"));
   }
 
@@ -232,9 +231,6 @@ public class AppleCxxPlatformsTest {
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/ibtool"),
         appleCxxPlatform.getIbtool().getCommandPrefix(resolver));
-    assertEquals(
-        ImmutableList.of("/Developer/usr/bin/lldb"),
-        appleCxxPlatform.getLldb().getCommandPrefix(resolver));
     assertEquals(
         ImmutableList.of("/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
         appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
@@ -399,9 +395,6 @@ public class AppleCxxPlatformsTest {
         ImmutableList.of("/Developer/usr/bin/ibtool"),
         appleCxxPlatform.getIbtool().getCommandPrefix(resolver));
     assertEquals(
-        ImmutableList.of("/Developer/usr/bin/lldb"),
-        appleCxxPlatform.getLldb().getCommandPrefix(resolver));
-    assertEquals(
         ImmutableList.of("/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
         appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
 
@@ -516,9 +509,6 @@ public class AppleCxxPlatformsTest {
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/ibtool"),
         appleCxxPlatform.getIbtool().getCommandPrefix(resolver));
-    assertEquals(
-        ImmutableList.of("/Developer/usr/bin/lldb"),
-        appleCxxPlatform.getLldb().getCommandPrefix(resolver));
     assertEquals(
         ImmutableList.of("/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil"),
         appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));

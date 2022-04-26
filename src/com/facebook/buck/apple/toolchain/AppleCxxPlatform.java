@@ -62,8 +62,6 @@ public abstract class AppleCxxPlatform implements FlavorConvertible {
 
   public abstract Optional<SourcePath> getWatchKitStubBinary();
 
-  public abstract Tool getLldb();
-
   public abstract ToolProvider getCodesignProvider();
 
   public abstract Optional<Tool> getCodesignAllocate();

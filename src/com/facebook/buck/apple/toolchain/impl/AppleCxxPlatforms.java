@@ -338,9 +338,6 @@ public class AppleCxxPlatforms {
     Tool lipo =
         getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "lipo", version);
 
-    Tool lldb =
-        getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "lldb", version);
-
     Optional<SourcePath> watchKitStubBinaryPath =
         targetSdk
             .getApplePlatform()
@@ -552,7 +549,6 @@ public class AppleCxxPlatforms {
         .setDwarfdump(dwarfdump)
         .setLipo(lipo)
         .setWatchKitStubBinary(watchKitStubBinaryPath)
-        .setLldb(lldb)
         .setCodesignAllocate(
             getOptionalTool(
                 "codesign_allocate", toolSearchPaths, xcodeToolFinder, version, filesystem))
