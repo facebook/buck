@@ -641,7 +641,6 @@ public class AppleDescriptions {
       ImmutableList<String> dsymutilExtraFlags,
       boolean verifyDsym,
       boolean dwarfdumpFailsDsymVerification,
-      boolean registerDebugSymbols,
       CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms,
       boolean shouldCacheStrips,
@@ -679,7 +678,6 @@ public class AppleDescriptions {
                           dsymutilExtraFlags,
                           verifyDsym,
                           dwarfdumpFailsDsymVerification,
-                          registerDebugSymbols,
                           shouldCacheStrips,
                           withDownwardApi);
                   return AppleDebuggableBinary.createWithDsym(
@@ -702,7 +700,6 @@ public class AppleDescriptions {
       ImmutableList<String> dsymutilExtraFlags,
       boolean verifyDsym,
       boolean dwarfdumpFailsDsymVerification,
-      boolean registerDebugSymbols,
       boolean isCacheable,
       boolean withDownwardApi) {
     return (AppleDsym)
@@ -731,9 +728,7 @@ public class AppleDescriptions {
                   dsymutilExtraFlags,
                   verifyDsym,
                   dwarfdumpFailsDsymVerification,
-                  registerDebugSymbols,
                   appleCxxPlatform.getDwarfdump(),
-                  appleCxxPlatform.getLldb(),
                   unstrippedBinaryRule.getSourcePathToOutput(),
                   unstrippedBinaryRule
                       .getAppleDebugSymbolDeps()
@@ -770,7 +765,6 @@ public class AppleDescriptions {
       ImmutableList<String> dsymutilExtraFlags,
       boolean verifyDsym,
       boolean dwarfdumpFailsDsymVerification,
-      boolean registerDebugSymbols,
       boolean dryRunCodeSigning,
       Optional<Boolean> trySkipCodeSigning,
       boolean cacheable,
@@ -955,7 +949,6 @@ public class AppleDescriptions {
               dsymutilExtraFlags,
               verifyDsym,
               dwarfdumpFailsDsymVerification,
-              registerDebugSymbols,
               cxxPlatformsProvider,
               appleCxxPlatforms,
               cacheStrips,

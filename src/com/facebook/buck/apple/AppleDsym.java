@@ -30,7 +30,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.attr.HasPostBuildSteps;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
@@ -61,15 +60,12 @@ import java.util.SortedSet;
 import java.util.stream.Stream;
 
 /** Creates dSYM bundle for the given _unstripped_ binary. */
-public class AppleDsym extends AbstractBuildRule
-    implements HasPostBuildSteps, SupportsInputBasedRuleKey {
+public class AppleDsym extends AbstractBuildRule implements SupportsInputBasedRuleKey {
 
   private static final Logger LOG = Logger.get(AppleDsym.class);
 
   public static final Flavor RULE_FLAVOR = InternalFlavor.of("apple-dsym");
   public static final String DSYM_DWARF_FILE_FOLDER = "Contents/Resources/DWARF/";
-
-  @AddToRuleKey private final Tool lldb;
 
   @AddToRuleKey private final Tool dsymutil;
   @AddToRuleKey private final ImmutableList<String> dsymutilExtraFlags;
@@ -77,7 +73,6 @@ public class AppleDsym extends AbstractBuildRule
   @AddToRuleKey private final Optional<Tool> dwarfdump;
   @AddToRuleKey private final boolean verifyDsym;
   @AddToRuleKey private final boolean dwarfdumpFailsDsymVerification;
-  @AddToRuleKey private final boolean registerDebugSymbols;
 
   @AddToRuleKey private final SourcePath unstrippedBinarySourcePath;
 
@@ -101,9 +96,7 @@ public class AppleDsym extends AbstractBuildRule
       ImmutableList<String> dsymutilExtraFlags,
       boolean verifyDsym,
       boolean dwarfdumpFailsDsymVerification,
-      boolean registerDebugSymbols,
       Optional<Tool> dwarfdump,
-      Tool lldb,
       SourcePath unstrippedBinarySourcePath,
       ImmutableSortedSet<SourcePath> additionalSymbolDeps,
       Path dsymOutputPath,
@@ -113,11 +106,9 @@ public class AppleDsym extends AbstractBuildRule
     super(buildTarget, projectFilesystem);
     this.dsymutil = dsymutil;
     this.dsymutilExtraFlags = dsymutilExtraFlags;
-    this.registerDebugSymbols = registerDebugSymbols;
     this.dwarfdump = dwarfdump;
     this.verifyDsym = verifyDsym;
     this.dwarfdumpFailsDsymVerification = dwarfdumpFailsDsymVerification;
-    this.lldb = lldb;
     this.unstrippedBinarySourcePath = unstrippedBinarySourcePath;
     this.additionalSymbolDeps = additionalSymbolDeps;
     this.dsymOutputPath = dsymOutputPath;
@@ -287,22 +278,6 @@ public class AppleDsym extends AbstractBuildRule
   @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), dsymOutputPath);
-  }
-
-  @Override
-  public ImmutableList<Step> getPostBuildSteps(BuildContext context) {
-    if (registerDebugSymbols) {
-      return ImmutableList.of(
-          new RegisterDebugSymbolsStep(
-              getProjectFilesystem(),
-              unstrippedBinarySourcePath,
-              lldb,
-              context.getSourcePathResolver(),
-              dsymOutputPath,
-              withDownwardApi));
-    } else {
-      return ImmutableList.of();
-    }
   }
 
   @Override

@@ -579,7 +579,6 @@ public class AppleLibraryDescription
         appleConfig.getDsymutilExtraFlags(),
         appleConfig.getVerifyDsym(),
         appleConfig.getDwarfdumpFailsDsymVerification(),
-        appleConfig.getRegisterDebugSymbols(),
         appleConfig.useDryRunCodeSigning(),
         Optional.empty(),
         appleConfig.cacheBundlesAndPackages(),
@@ -691,7 +690,6 @@ public class AppleLibraryDescription
         appleConfig.getDsymutilExtraFlags(),
         appleConfig.getVerifyDsym(),
         appleConfig.getDwarfdumpFailsDsymVerification(),
-        appleConfig.getRegisterDebugSymbols(),
         cxxPlatformsProvider,
         AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
             toolchainProvider, buildTarget.getTargetConfiguration()),

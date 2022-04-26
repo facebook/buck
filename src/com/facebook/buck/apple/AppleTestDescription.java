@@ -368,7 +368,6 @@ public class AppleTestDescription
                         appleConfig.getDsymutilExtraFlags(),
                         appleConfig.getVerifyDsym(),
                         appleConfig.getDwarfdumpFailsDsymVerification(),
-                        appleConfig.getRegisterDebugSymbols(),
                         appleConfig.useDryRunCodeSigning(),
                         args.getTrySkipCodeSigning(),
                         appleConfig.cacheBundlesAndPackages(),

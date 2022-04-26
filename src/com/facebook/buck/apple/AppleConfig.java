@@ -81,7 +81,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String VERIFY_DSYM = "verify_dsym";
   private static final String DWARFDUMP_FAILS_DSYM_VERIFICATION =
       "dwarfdump_fails_dsym_verification";
-  private static final String REGISTER_DEBUG_SYMBOLS = "register_debug_symbols";
 
   // TODO(T71284505): This is a temporary flag, remove after successful deployment
   private static final String BINARY_USES_FALLBACK_PLATFORM = "binary_uses_fallback_platform";
@@ -627,10 +626,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean getVerifyDsym() {
     return delegate.getBooleanValue(APPLE_SECTION, VERIFY_DSYM, false);
-  }
-
-  public boolean getRegisterDebugSymbols() {
-    return delegate.getBooleanValue(APPLE_SECTION, REGISTER_DEBUG_SYMBOLS, true);
   }
 
   /**
