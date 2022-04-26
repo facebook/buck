@@ -62,6 +62,9 @@ public class ApkBuilderExecutableMain {
   @Option(name = "--jar-files-that-may-contain-resources-list", required = true)
   private String jarFilesThatMayContainResourcesList;
 
+  @Option(name = "--zipalign_tool", required = true)
+  private String zipalignTool;
+
   public static void main(String[] args) throws IOException {
     ApkBuilderExecutableMain main = new ApkBuilderExecutableMain();
     CmdLineParser parser = new CmdLineParser(main);
@@ -101,6 +104,7 @@ public class ApkBuilderExecutableMain {
     Path keystorePropertiesPath = Paths.get(keystoreProperties);
 
     Path intermediateApk = Files.createTempFile("intermediate", "output.apk");
+    Path zipalignApk = Files.createTempFile("zipalign", "output.apk");
     KeystoreProperties keystoreProperties =
         KeystoreProperties.createFromPropertiesFile(keystorePath, keystorePropertiesPath);
 
@@ -116,16 +120,23 @@ public class ApkBuilderExecutableMain {
           keystorePath,
           keystoreProperties,
           null);
+      Process zipalignProcess =
+          new ProcessBuilder()
+              .command(zipalignTool, "-f", "4", intermediateApk.toString(), zipalignApk.toString())
+              .start();
+      zipalignProcess.waitFor();
+
       ImmutableList<ApkSigner.SignerConfig> signerConfigs =
           ApkSignerUtils.getSignerConfigs(keystoreProperties, Files.newInputStream(keystorePath));
       ApkSignerUtils.signApkFile(
-          intermediateApk.toFile(), Paths.get(outputApk).toFile(), signerConfigs);
+          zipalignApk.toFile(), Paths.get(outputApk).toFile(), signerConfigs);
     } catch (UnrecoverableKeyException
         | NoSuchAlgorithmException
         | ApkCreationException
         | SealedApkException
         | KeyStoreException
-        | DuplicateFileException e) {
+        | DuplicateFileException
+        | InterruptedException e) {
       throw new RuntimeException(e);
     }
 
