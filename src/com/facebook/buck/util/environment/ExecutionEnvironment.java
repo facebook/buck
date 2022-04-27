@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util.environment;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
@@ -47,4 +48,7 @@ public interface ExecutionEnvironment {
 
   /** @return The oncalls responsible for the invocation of Buck, if provided. */
   ImmutableSet<String> getOncalls();
+
+  /** @return K-V pairs that provides information about EDRs */
+  ImmutableMap<String, String> getEdrInfo();
 }

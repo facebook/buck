@@ -77,7 +77,8 @@ public class GCTimeSpentListenerTest {
             new Network(),
             Optional.of("fake-wifi-ssid"),
             ImmutableMap.of("BUCK_TTY", "1"),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            ImmutableMap.of());
     fakeListener = new FakeBuckEventListener();
     gcTimeSpentListenerInstance =
         new GCTimeSpentListener(buckEventBus, config, executionEnvironment);

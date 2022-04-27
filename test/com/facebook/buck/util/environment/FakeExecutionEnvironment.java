@@ -17,6 +17,7 @@
 package com.facebook.buck.util.environment;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import java.util.Optional;
@@ -64,7 +65,8 @@ public abstract class FakeExecutionEnvironment implements ExecutionEnvironment {
       Network likelyActiveNetwork,
       Optional<String> wifiSsid,
       Map<String, ? extends String> environment,
-      ImmutableSet<String> oncalls) {
+      ImmutableSet<String> oncalls,
+      ImmutableMap<String, String> edrInfo) {
     return ImmutableFakeExecutionEnvironment.ofImpl(
         hostname,
         username,
@@ -74,6 +76,7 @@ public abstract class FakeExecutionEnvironment implements ExecutionEnvironment {
         likelyActiveNetwork,
         wifiSsid,
         environment,
-        oncalls);
+        oncalls,
+        edrInfo);
   }
 }
