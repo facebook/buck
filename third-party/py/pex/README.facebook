@@ -16,3 +16,5 @@ Local modifications:
  - Make pexes work when being invoked from a version of python without site.USER_SITE
  - Fix concurrency when two instances of zip-safe pex invoked D21508334
  - Handle EACCES and EPERM in safe_copy
+ - Imported from collections.abc instead of collections to support Python 3.10
+ - Back-ported removal of MarkerEvaluation from pieces of commit ba5633b3c7b9317b87130a2ea671d8c008a673d6 and a718819d2849196e902808301c9a95724510c5c1

@@ -1,4 +1,3 @@
-import collections
 import io
 import os
 import errno
@@ -19,8 +18,10 @@ if sys.version_info < (2, 7):
         raise ImportError("unittest2 is required for tests on pre-2.7")
 
 try:
+    import collections.abc as collections_abc
     from test import support
 except ImportError:
+    import collections as collections_abc  # Fallback for  PY3.2.
     from test import test_support as support
 TESTFN = support.TESTFN
 
@@ -1395,7 +1396,7 @@ class _BasePathTest(object):
         P = self.cls
         p = P(BASE)
         it = p.glob("fileA")
-        self.assertIsInstance(it, collections.Iterator)
+        self.assertIsInstance(it, collections_abc.Iterator)
         _check(it, ["fileA"])
         _check(p.glob("fileB"), [])
         _check(p.glob("dir*/file*"), ["dirB/fileB", "dirC/fileC"])
@@ -1420,7 +1421,7 @@ class _BasePathTest(object):
         P = self.cls
         p = P(BASE)
         it = p.rglob("fileA")
-        self.assertIsInstance(it, collections.Iterator)
+        self.assertIsInstance(it, collections_abc.Iterator)
         # XXX cannot test because of symlink loops in the test setup
         #_check(it, ["fileA"])
         #_check(p.rglob("fileB"), ["dirB/fileB"])
