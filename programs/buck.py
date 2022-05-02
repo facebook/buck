@@ -45,6 +45,8 @@ from programs.java_version import get_java_major_version
 from programs.subprocutils import propagate_failure
 from programs.tracing import Tracing
 
+JPS_EXECUTABLE = "jps.exe"
+
 
 if sys.version_info < (2, 7):
     import platform
@@ -72,7 +74,20 @@ def killall_buck(reporter):
         reporter.status_message = message
         return ExitCode.COMMANDLINE_ERROR
 
-    for line in os.popen("jps -l"):
+    if os.name == "nt":
+        # ensure jps.exe is installed and can be found
+        full_jps_path, error = _find_jps_executable()
+        if full_jps_path == "":
+            message = error
+            logging.error(message)
+            reporter.status_message = message
+            return ExitCode.FATAL_BOOTSTRAP
+        # create the command line
+        jps_command_line = '"' + full_jps_path + '"' + " -l"
+    else:
+        jps_command_line = "jps -l"
+
+    for line in os.popen(jps_command_line):
         split = line.strip().split()
         if len(split) != 2:
             logging.warning("skipping irregular format line in jps -l: %s", repr(line))
@@ -102,6 +117,51 @@ def sosreport(reporter):
         return ExitCode.COMMANDLINE_ERROR
     # TODO: opt parse and pass project root to sosreport_main()
     return sosreport_main()
+
+
+def _find_jps_executable():
+    """
+    Returns the full path of the jps.exe executable as long as it can
+    be found in the most likely location.
+    If it can't be found, the function returns an emptry string together
+    with the error message
+    """
+    found_jdk = False
+    try:
+        # first, check if JAVA_HOME is set and file is there (common case)
+        java_bin_path = os.path.join("$JAVA_HOME", "bin")
+        full_jps_path = os.path.expandvars(os.path.join(java_bin_path, JPS_EXECUTABLE))
+        if os.path.isfile(full_jps_path):
+            return full_jps_path, ""
+        # second, manually check for JDK dirs
+        program_files_path = os.path.expandvars("$PROGRAMFILES")
+        java_path = os.path.join(program_files_path, "Java")
+        java_dir_list = os.listdir(java_path)
+        for entry in java_dir_list:
+            if entry.startswith("jdk"):
+                found_jdk = True
+                full_jps_path = os.path.join(java_path, entry, "bin", JPS_EXECUTABLE)
+                if os.path.isfile(full_jps_path):
+                    return full_jps_path, ""
+        # third, check if it exists anywhere else in the PATH
+        for path in os.environ["PATH"].split(os.pathsep):
+            full_jps_path = os.path.join(path, JPS_EXECUTABLE)
+            if os.path.isfile(full_jps_path):
+                return full_jps_path, ""
+        # return appropriate error if it wasn't found
+        if found_jdk:
+            return (
+                "",
+                'jps.exe could not be found on this system. Please run "choco install" to install it.',
+            )
+        else:
+            return (
+                "",
+                'Could not find a JDK on this system. Please run "choco install -y openjdk11" to install it.',
+            )
+
+    except OSError as error:
+        return "", "Unhandled error while searching for jps.exe: " + error
 
 
 def _get_java_version(java_path):
