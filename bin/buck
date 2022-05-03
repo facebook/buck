@@ -34,5 +34,5 @@ else
   PY_PATH_SEPARATOR=":"
 fi
 
-PYTHON=$(command -v python3 python2.7 python2 python | head -1)
+PYTHON=$(command -v "$BUCK_PYTHON" python3.9 python3 python2.7 python2 python | head -1)
 PYTHONPATH="$NAILGUN_DIR$PY_PATH_SEPARATOR$BUCK_DIR" exec "$PYTHON" "$BUCK_PY_PATH" "$@"
