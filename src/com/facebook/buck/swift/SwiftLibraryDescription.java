@@ -75,6 +75,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
@@ -97,6 +98,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hasher;
+import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -971,10 +974,23 @@ public class SwiftLibraryDescription
       AppleCompilerTargetTriple targetTriple,
       Iterable<Arg> moduleMapCompileFlags,
       SourcePathResolverAdapter resolver) {
-    ImmutableList<String> stringArgs = Arg.stringify(moduleMapCompileFlags, resolver);
-    String flagHashSuffix =
-        Integer.toHexString(targetTriple.getVersionedTriple().hashCode() ^ stringArgs.hashCode());
-    return InternalFlavor.of("swift-pcm-" + flagHashSuffix);
+    Hasher hasher = Hashing.murmur3_32().newHasher();
+
+    // We need to be careful not to hash any absolute path components here, so duplicate some of the
+    // SourcePath rule key logic from DefaultRuleKeyFactory.
+    for (Arg arg : moduleMapCompileFlags) {
+      if (arg instanceof SourcePathArg) {
+        hasher.putUnencodedChars(
+            resolver.getIdeallyRelativePath(((SourcePathArg) arg).getPath()).toString());
+      } else if (arg instanceof StringArg) {
+        hasher.putUnencodedChars(((StringArg) arg).getArg());
+      } else {
+        throw new HumanReadableException("Unexpected module map compile arg " + arg.toString());
+      }
+    }
+
+    hasher.putUnencodedChars(targetTriple.getVersionedTriple());
+    return InternalFlavor.of("swift-pcm-" + hasher.hash().toString());
   }
 
   private static ExplicitModuleOutput createPcmCompile(
