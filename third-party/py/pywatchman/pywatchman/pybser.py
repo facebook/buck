@@ -32,7 +32,6 @@ from __future__ import print_function
 # no unicode literals
 
 import binascii
-import collections
 import ctypes
 import struct
 import sys
@@ -40,6 +39,11 @@ import sys
 from . import (
     compat,
 )
+
+try:
+    import collections.abc as collections_abc
+except ImportError:
+    import collections as collections_abc  # Fallback for PY3.2.
 
 BSER_ARRAY = b'\x00'
 BSER_OBJECT = b'\x01'
@@ -177,8 +181,8 @@ class _bser_buffer(object):
             self.ensure_size(needed)
             struct.pack_into(b'=cd', self.buf, self.wpos, BSER_REAL, val)
             self.wpos += needed
-        elif isinstance(val, collections.Mapping) and \
-            isinstance(val, collections.Sized):
+        elif isinstance(val, collections_abc.Mapping) and \
+            isinstance(val, collections_abc.Sized):
             val_len = len(val)
             size = _int_size(val_len)
             needed = 2 + size
@@ -205,8 +209,8 @@ class _bser_buffer(object):
             for k, v in iteritems:
                 self.append_string(k)
                 self.append_recursive(v)
-        elif isinstance(val, collections.Iterable) and \
-            isinstance(val, collections.Sized):
+        elif isinstance(val, collections_abc.Iterable) and \
+            isinstance(val, collections_abc.Sized):
             val_len = len(val)
             size = _int_size(val_len)
             needed = 2 + size

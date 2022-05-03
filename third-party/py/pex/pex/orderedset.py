@@ -8,10 +8,14 @@
 # modifications
 #
 
-import collections
+
+try:
+    import collections.abc as collections_abc
+except ImportError:  # For PY3.2
+    import collections as collections_abc
 
 
-class OrderedSet(collections.MutableSet):
+class OrderedSet(collections_abc.MutableSet):
   KEY, PREV, NEXT = range(3)
 
   def __init__(self, iterable=None):
