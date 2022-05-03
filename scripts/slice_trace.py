@@ -16,8 +16,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import argparse
 import codecs
-import collections
-import json
 import math
 import os
 
