@@ -142,7 +142,13 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
           "-Xcc",
           "-Xclang",
           "-Xcc",
-          "-fmodules-embed-all-files");
+          "-fmodules-embed-all-files",
+          // Set the module file root as the cwd, this will make the pcm files match sizes when
+          // built on different machines with different repo paths.
+          "-Xcc",
+          "-Xclang",
+          "-Xcc",
+          "-fmodule-file-home-is-cwd");
 
       if (isSystemModule) {
         argsBuilder.add(
