@@ -25,6 +25,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
@@ -113,13 +115,24 @@ public class SwiftToolchainBuildRule extends NoopBuildRule {
           "swift_toolchain has sdk_dependencies_path but is missing resource_dir");
     }
 
+    // We use a minimal set of Swift flags for 2 reasons:
+    // 1. these will be passed directly to frontend invocations, so we cannot pass through all
+    //    driver args.
+    // 2. the swift interface compilation will ignore flags anyway.
+    ImmutableList.Builder<Arg> swiftFlagsBuilder = ImmutableList.builder();
+    swiftFlagsBuilder.add(
+        StringArg.of("-sdk"),
+        SourcePathArg.of(sdkPath),
+        StringArg.of("-resource-dir"),
+        SourcePathArg.of(resourceDir.get()));
+
     return Optional.of(
         new SwiftSdkDependencies(
             graphBuilder,
             projectFilesystem,
             sdkDependenciesPath.get(),
             swiftc,
-            swiftFlags,
+            swiftFlagsBuilder.build(),
             sdkPath,
             platformPath,
             resourceDir.get(),
