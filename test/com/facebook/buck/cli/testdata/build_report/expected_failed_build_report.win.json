@@ -6,10 +6,24 @@
       "type" : "BUILT_LOCALLY",
       "outputs" : {
         "DEFAULT" : [ "<OUTPUT_PREFIX>rule_with_output.txt" ]
+      },
+      "configured" : {
+        "builtin//platform:unconfigured" : {
+          "success" : "SUCCESS",
+          "type" : "BUILT_LOCALLY",
+          "outputs" : {
+            "DEFAULT" : [ "<OUTPUT_PREFIX>rule_with_output.txt" ]
+          }
+        }
       }
     },
     "//:failing_rule" : {
-      "success" : "FAIL"
+      "success" : "FAIL",
+      "configured" : {
+        "builtin//platform:unconfigured" : {
+          "success" : "FAIL"
+        }
+      }
     }
   },
   "failures" : {

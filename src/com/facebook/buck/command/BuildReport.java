@@ -21,6 +21,7 @@ import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -199,7 +200,7 @@ public class BuildReport {
 
   public String generateJsonBuildReport() throws IOException {
     Map<BuildRule, Optional<BuildResult>> ruleToResult = buildExecutionResult.getResults();
-    LinkedHashMap<String, Object> results = new LinkedHashMap<>();
+    LinkedHashMap<String, Map<String, Object>> results = new LinkedHashMap<>();
     LinkedHashMap<String, Object> failures = new LinkedHashMap<>();
     int numEntriesWritten = 0;
 
@@ -223,13 +224,8 @@ public class BuildReport {
         break;
       }
 
-      Map<String, Object> value = new LinkedHashMap<>();
-      value.put("success", result.map(r -> r.getStatus().toString()).orElse("UNKNOWN"));
-      if (isSuccess) {
-        value.put("type", success.get().name());
-        value.put("outputs", getMultipleOutputPaths(rule));
-      }
-      results.put(rule.getFullyQualifiedName(), value);
+      addRuleUnconfigured(results, rule, success, result, isSuccess);
+      addRuleConfigured(results, rule, success, result, isSuccess);
       numEntriesWritten++;
     }
 
@@ -270,6 +266,58 @@ public class BuildReport {
     return ObjectMappers.WRITER
         .withFeatures(SerializationFeature.INDENT_OUTPUT)
         .writeValueAsString(report);
+  }
+
+  private void addRuleUnconfigured(
+      Map<String, Map<String, Object>> results,
+      BuildRule rule,
+      Optional<BuildRuleSuccessType> success,
+      Optional<BuildResult> result,
+      boolean isSuccess) {
+    Map<String, Object> value = new LinkedHashMap<>();
+    value.put("success", result.map(r -> r.getStatus().toString()).orElse("UNKNOWN"));
+    if (isSuccess) {
+      value.put("type", success.get().name());
+      value.put("outputs", getMultipleOutputPaths(rule));
+    }
+    @Nullable Map<String, Object> prev = results.put(rule.getFullyQualifiedName(), value);
+    if (prev != null) {
+      @Nullable Object configured = prev.get("configured");
+      if (configured != null) {
+        value.put("configured", configured);
+      }
+    }
+  }
+
+  private void addRuleConfigured(
+      Map<String, Map<String, Object>> results,
+      BuildRule rule,
+      Optional<BuildRuleSuccessType> success,
+      Optional<BuildResult> result,
+      boolean isSuccess) {
+
+    Map<String, Object> unconfiguredRuleEntry =
+        results.computeIfAbsent(rule.getFullyQualifiedName(), (ignored) -> new LinkedHashMap<>());
+
+    @SuppressWarnings("unchecked")
+    Map<String, Object> ruleConfiguredSection =
+        (Map<String, Object>)
+            unconfiguredRuleEntry.computeIfAbsent("configured", (ignored) -> new LinkedHashMap<>());
+
+    Map<String, Object> configuredEntry = new LinkedHashMap<>();
+    configuredEntry.put("success", result.map(r -> r.getStatus().toString()).orElse("UNKNOWN"));
+    if (isSuccess) {
+      configuredEntry.put("type", success.get().name());
+      configuredEntry.put("outputs", getMultipleOutputPaths(rule));
+    }
+
+    if (ruleConfiguredSection.put(
+            rule.getBuildTarget().getTargetConfiguration().toString(), configuredEntry)
+        != null) {
+      throw new HumanReadableException(
+          "Duplicate configuration `%s` for rule `%s`",
+          rule.getBuildTarget().getTargetConfiguration().toString(), rule.getFullyQualifiedName());
+    }
   }
 
   /**

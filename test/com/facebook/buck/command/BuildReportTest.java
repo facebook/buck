@@ -28,7 +28,10 @@ import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -131,6 +134,27 @@ public class BuildReportTest {
     ruleToResult.put(rule7, Optional.of(rule7Failure));
     graphBuilder.addToIndex(rule7);
 
+    FakeBuildRule rule8 =
+        new FakeBuildRule(
+            BuildTargetFactory.newInstance(
+                "//fake:rule", UnconfiguredTargetConfiguration.INSTANCE));
+    rule8.setOutputFile("buck-out/gen/unconfiguredhash/fake/rule.txt");
+    graphBuilder.addToIndex(rule8);
+    ruleToResult.put(
+        rule8, Optional.of(BuildResult.success(rule8, BUILT_LOCALLY, CacheResult.miss())));
+
+    FakeBuildRule rule9 =
+        new FakeBuildRule(
+            BuildTargetFactory.newInstance(
+                "//fake:rule",
+                RuleBasedTargetConfiguration.of(
+                    BuildTargetFactory.newInstance(
+                        "//fake:config", ConfigurationForConfigurationTargets.INSTANCE))));
+    rule9.setOutputFile("buck-out/gen/configuredhash/fake/rule.txt");
+    graphBuilder.addToIndex(rule9);
+    ruleToResult.put(
+        rule9, Optional.of(BuildResult.success(rule9, BUILT_LOCALLY, CacheResult.miss())));
+
     buildExecutionResult =
         ImmutableBuildExecutionResult.ofImpl(
             ruleToResult, ImmutableSet.of(rule2Failure, rule7Failure));
@@ -178,6 +202,16 @@ public class BuildReportTest {
                     + "BUILT_LOCALLY "
                     + MorePaths.pathWithPlatformSeparators("named_output_22")),
             Pattern.quote("\u001B[31mFAIL\u001B[0m //fake:rule7"),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule "
+                    + "BUILT_LOCALLY "
+                    + MorePaths.pathWithPlatformSeparators(
+                        "buck-out/gen/unconfiguredhash/fake/rule.txt")),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule "
+                    + "BUILT_LOCALLY "
+                    + MorePaths.pathWithPlatformSeparators(
+                        "buck-out/gen/configuredhash/fake/rule.txt")),
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
@@ -214,6 +248,14 @@ public class BuildReportTest {
             "OK   //fake:rule6\\[named_2\\] BUILT_LOCALLY named_output_2",
             "OK   //fake:rule6\\[named_2\\] BUILT_LOCALLY named_output_22",
             "FAIL //fake:rule7",
+            "OK   //fake:rule BUILT_LOCALLY "
+                + Pattern.quote(
+                    MorePaths.pathWithPlatformSeparators(
+                        "buck-out/gen/unconfiguredhash/fake/rule.txt")),
+            "OK   //fake:rule BUILT_LOCALLY "
+                + Pattern.quote(
+                    MorePaths.pathWithPlatformSeparators(
+                        "buck-out/gen/configuredhash/fake/rule.txt")),
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
@@ -231,6 +273,16 @@ public class BuildReportTest {
         ObjectMappers.legacyCreate()
             .valueToTree(MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt"))
             .toString();
+    String unconfiguredPath =
+        ObjectMappers.legacyCreate()
+            .valueToTree(
+                MorePaths.pathWithPlatformSeparators("buck-out/gen/unconfiguredhash/fake/rule.txt"))
+            .toString();
+    String configuredPath =
+        ObjectMappers.legacyCreate()
+            .valueToTree(
+                MorePaths.pathWithPlatformSeparators("buck-out/gen/configuredhash/fake/rule.txt"))
+            .toString();
     String expectedReport =
         String.join(
             System.lineSeparator(),
@@ -242,17 +294,42 @@ public class BuildReportTest {
             "      \"type\" : \"BUILT_LOCALLY\",",
             "      \"outputs\" : {",
             "        \"DEFAULT\" : [ " + rule1TxtPath + " ]",
+            "      },",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"BUILT_LOCALLY\",",
+            "          \"outputs\" : {",
+            "            \"DEFAULT\" : [ " + rule1TxtPath + " ]",
+            "          }",
+            "        }",
             "      }",
             "    },",
             "    \"//fake:rule2\" : {",
-            "      \"success\" : \"FAIL\"",
+            "      \"success\" : \"FAIL\",",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"FAIL\"",
+            "        }",
+            "      }",
             "    },",
             "    \"//fake:rule3\" : {",
             "      \"success\" : \"SUCCESS\",",
-            "      \"type\" : \"FETCHED_FROM_CACHE\"",
+            "      \"type\" : \"FETCHED_FROM_CACHE\",",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"FETCHED_FROM_CACHE\"",
+            "        }",
+            "      }",
             "    },",
             "    \"//fake:rule4\" : {",
-            "      \"success\" : \"UNKNOWN\"",
+            "      \"success\" : \"UNKNOWN\",",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"UNKNOWN\"",
+            "        }",
+            "      }",
             "    },",
             "    \"//fake:rule5\" : {",
             "      \"success\" : \"SUCCESS\",",
@@ -260,6 +337,16 @@ public class BuildReportTest {
             "      \"outputs\" : {",
             "        \"DEFAULT\" : [ \"default_output\" ],",
             "        \"named_1\" : [ \"named_output_1\" ]",
+            "      },",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"BUILT_LOCALLY\",",
+            "          \"outputs\" : {",
+            "            \"DEFAULT\" : [ \"default_output\" ],",
+            "            \"named_1\" : [ \"named_output_1\" ]",
+            "          }",
+            "        }",
             "      }",
             "    },",
             "    \"//fake:rule6\" : {",
@@ -269,10 +356,49 @@ public class BuildReportTest {
             "        \"DEFAULT\" : [ \"default_output1\", \"default_output_2\" ],",
             "        \"named_1\" : [ \"named_output_1\" ],",
             "        \"named_2\" : [ \"named_output_2\", \"named_output_22\" ]",
+            "      },",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"BUILT_LOCALLY\",",
+            "          \"outputs\" : {",
+            "            \"DEFAULT\" : [ \"default_output1\", \"default_output_2\" ],",
+            "            \"named_1\" : [ \"named_output_1\" ],",
+            "            \"named_2\" : [ \"named_output_2\", \"named_output_22\" ]",
+            "          }",
+            "        }",
             "      }",
             "    },",
             "    \"//fake:rule7\" : {",
-            "      \"success\" : \"FAIL\"",
+            "      \"success\" : \"FAIL\",",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"FAIL\"",
+            "        }",
+            "      }",
+            "    },",
+            "    \"//fake:rule\" : {",
+            "      \"success\" : \"SUCCESS\",",
+            "      \"type\" : \"BUILT_LOCALLY\",",
+            "      \"outputs\" : {",
+            "        \"DEFAULT\" : [ " + configuredPath + " ]",
+            "      },",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"BUILT_LOCALLY\",",
+            "          \"outputs\" : {",
+            "            \"DEFAULT\" : [ " + unconfiguredPath + " ]",
+            "          }",
+            "        },",
+            "        \"//fake:config\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"BUILT_LOCALLY\",",
+            "          \"outputs\" : {",
+            "            \"DEFAULT\" : [ " + configuredPath + " ]",
+            "          }",
+            "        }",
+            "      }",
             "    }",
             "  },",
             "  \"failures\" : {",
@@ -306,7 +432,7 @@ public class BuildReportTest {
                     "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 "
                         + "BUILT_LOCALLY "
                         + MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt")),
-            "\tTruncated 6 rule\\(s\\)\\.\\.\\.",
+            "\tTruncated 8 rule\\(s\\)\\.\\.\\.",
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
@@ -341,6 +467,15 @@ public class BuildReportTest {
             "      \"type\" : \"BUILT_LOCALLY\",",
             "      \"outputs\" : {",
             "        \"DEFAULT\" : [ " + rule1TxtPath + " ]",
+            "      },",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"BUILT_LOCALLY\",",
+            "          \"outputs\" : {",
+            "            \"DEFAULT\" : [ " + rule1TxtPath + " ]",
+            "          }",
+            "        }",
             "      }",
             "    }",
             "  },",
