@@ -51,6 +51,7 @@ apple_toolchain(
     dsymutil = "xcode/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil",
     libtool = "xcode/Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool",
     lipo = "xcode/Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo",
+    lldb = "xcode/usr/bin/lldb",
     copy_scene_kit_assets = "true.sh",
     codesign = "true.sh",
     codesign_allocate = "true.sh",

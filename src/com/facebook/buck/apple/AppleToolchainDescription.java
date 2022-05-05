@@ -286,6 +286,9 @@ public class AppleToolchainDescription
     /** lipo binary. */
     SourcePath getLipo();
 
+    /** lldb binary. */
+    Optional<SourcePath> getLldb();
+
     /** momc binary. */
     SourcePath getMomc();
 
