@@ -51,6 +51,7 @@ import com.facebook.buck.rules.coercer.VersionMatchedCollection;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -95,6 +96,7 @@ public class PythonUtil {
     return ImmutableList.of(
         LocationMacroExpander.INSTANCE,
         new ExecutableMacroExpander<>(ExecutableMacro.class),
+        new ExecutableMacroExpander<>(ExecutableTargetMacro.class),
         AbsoluteOutputMacroExpander.INSTANCE,
         new QueryTargetsMacroExpander(targetGraph),
         new QueryTargetsAndOutputsMacroExpander(targetGraph));
