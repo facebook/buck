@@ -161,7 +161,7 @@ public class BuildReport {
                     report.append(
                         String.format(
                             "Rule %s FAILED because %s.%n",
-                            failureResult.getRule().getFullyQualifiedName(), message));
+                            failureResult.getRule().toStringWithConfiguration(), message));
                   }
 
                   @Override
@@ -174,7 +174,7 @@ public class BuildReport {
                     LOG.debug(
                         e,
                         "Error encountered while building %s.",
-                        failureResult.getRule().getFullyQualifiedName());
+                        failureResult.getRule().toStringWithConfiguration());
                   }
                 },
                 new HumanReadableExceptionAugmentor(ImmutableMap.of()))
@@ -195,7 +195,7 @@ public class BuildReport {
     return String.format(
         "%s %s%s%s%s",
         successIndicator,
-        target,
+        target.toStringWithConfiguration(),
         successType != null ? " " + successType : "",
         outputPath != null ? " " + outputPath : "",
         System.lineSeparator());

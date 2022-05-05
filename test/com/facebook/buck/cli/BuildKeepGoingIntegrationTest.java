@@ -86,8 +86,9 @@ public class BuildKeepGoingIntegrationTest {
             .toString();
     String expectedReport =
         linesToText(
-            "OK   //:rule_with_output BUILT_LOCALLY " + genruleOutputPath,
-            "OK   //:rule_without_output BUILT_LOCALLY",
+            "OK   //:rule_with_output (builtin//platform:unconfigured) BUILT_LOCALLY "
+                + genruleOutputPath,
+            "OK   //:rule_without_output (builtin//platform:unconfigured) BUILT_LOCALLY",
             "");
     assertThat(result.getStderr(), containsString(expectedReport));
   }
@@ -109,8 +110,9 @@ public class BuildKeepGoingIntegrationTest {
             .assertFailure();
     String expectedReport =
         linesToText(
-            "OK   //:rule_with_output BUILT_LOCALLY " + genruleOutputPath,
-            "FAIL //:failing_rule",
+            "OK   //:rule_with_output (builtin//platform:unconfigured) BUILT_LOCALLY "
+                + genruleOutputPath,
+            "FAIL //:failing_rule (builtin//platform:unconfigured)",
             "");
     assertThat(result.getStderr(), containsString(expectedReport));
     Path outputFile = workspace.getPath(genruleOutputPath);
@@ -132,16 +134,18 @@ public class BuildKeepGoingIntegrationTest {
     ProcessResult result1 = buildTwoGoodRulesAndAssertSuccess();
     String expectedReport1 =
         linesToText(
-            "OK   //:rule_with_output BUILT_LOCALLY " + genruleOutputPath,
-            "OK   //:rule_without_output BUILT_LOCALLY",
+            "OK   //:rule_with_output (builtin//platform:unconfigured) BUILT_LOCALLY "
+                + genruleOutputPath,
+            "OK   //:rule_without_output (builtin//platform:unconfigured) BUILT_LOCALLY",
             "");
     assertThat(result1.getStderr(), containsString(expectedReport1));
 
     ProcessResult result2 = buildTwoGoodRulesAndAssertSuccess();
     String expectedReport2 =
         linesToText(
-            "OK   //:rule_with_output MATCHING_RULE_KEY " + genruleOutputPath,
-            "OK   //:rule_without_output MATCHING_RULE_KEY",
+            "OK   //:rule_with_output (builtin//platform:unconfigured) MATCHING_RULE_KEY "
+                + genruleOutputPath,
+            "OK   //:rule_without_output (builtin//platform:unconfigured) MATCHING_RULE_KEY",
             "");
     assertThat(result2.getStderr(), containsString(expectedReport2));
 
@@ -150,8 +154,9 @@ public class BuildKeepGoingIntegrationTest {
     ProcessResult result3 = buildTwoGoodRulesAndAssertSuccess();
     String expectedReport3 =
         linesToText(
-            "OK   //:rule_with_output FETCHED_FROM_CACHE " + genruleOutputPath,
-            "OK   //:rule_without_output BUILT_LOCALLY",
+            "OK   //:rule_with_output (builtin//platform:unconfigured) FETCHED_FROM_CACHE "
+                + genruleOutputPath,
+            "OK   //:rule_without_output (builtin//platform:unconfigured) BUILT_LOCALLY",
             "");
     assertThat(result3.getStderr(), containsString(expectedReport3));
   }

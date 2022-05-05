@@ -67,6 +67,16 @@ public abstract class BuildTargetWithOutputs implements Comparable<BuildTargetWi
         : String.format("%s[%s]", getBuildTarget(), getOutputLabel());
   }
 
+  public String toStringWithConfiguration() {
+    return getOutputLabel().isDefault()
+        ? getBuildTarget().toStringWithConfiguration()
+        : String.format(
+            "%s[%s] (%s)",
+            getBuildTarget().getFullyQualifiedName(),
+            getOutputLabel(),
+            getBuildTarget().getTargetConfiguration());
+  }
+
   public static BuildTargetWithOutputs of(BuildTarget buildTarget, OutputLabel outputLabel) {
     return ImmutableBuildTargetWithOutputs.ofImpl(buildTarget, outputLabel);
   }

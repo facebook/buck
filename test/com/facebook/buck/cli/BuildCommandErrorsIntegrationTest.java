@@ -274,7 +274,7 @@ public class BuildCommandErrorsIntegrationTest {
         result.getStderr(),
         Matchers.stringContainsInOrder(
             " ** Summary of failures encountered during the build **",
-            "Rule //:target_name FAILED because",
+            "Rule //:target_name (builtin//platform:unconfigured) FAILED because",
             "java.lang.RuntimeException: failure message",
             "When building rule //:target_name (builtin//platform:unconfigured).",
             "Not all rules succeeded."));
@@ -290,7 +290,7 @@ public class BuildCommandErrorsIntegrationTest {
         result.getStderr(),
         Matchers.stringContainsInOrder(
             " ** Summary of failures encountered during the build **",
-            "Rule //:target_name FAILED because",
+            "Rule //:target_name (builtin//platform:unconfigured) FAILED because",
             "java.lang.RuntimeException: failure message",
             "When running <failing_step>.",
             "When building rule //:target_name (builtin//platform:unconfigured).",
@@ -307,7 +307,7 @@ public class BuildCommandErrorsIntegrationTest {
         result.getStderr(),
         Matchers.stringContainsInOrder(
             " ** Summary of failures encountered during the build **",
-            "Rule //:target_name FAILED because",
+            "Rule //:target_name (builtin//platform:unconfigured) FAILED because",
             "java.io.IOException: failure message",
             "When running <failing_step>.",
             "When building rule //:target_name (builtin//platform:unconfigured).",
@@ -323,7 +323,7 @@ public class BuildCommandErrorsIntegrationTest {
         result.getStderr(),
         Matchers.stringContainsInOrder(
             " ** Summary of failures encountered during the build **",
-            "Rule //:target_name FAILED because",
+            "Rule //:target_name (builtin//platform:unconfigured) FAILED because",
             "java.io.IOException: failure message",
             "When building rule //:target_name (builtin//platform:unconfigured).",
             "Not all rules succeeded."));

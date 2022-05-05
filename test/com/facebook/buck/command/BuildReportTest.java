@@ -166,57 +166,90 @@ public class BuildReportTest {
         linesToText(
             "(?s)"
                 + Pattern.quote(
-                    "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 "
+                    "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 ("
+                        + UnconfiguredTargetConfiguration.NAME
+                        + ") "
                         + "BUILT_LOCALLY "
                         + MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt")),
-            Pattern.quote("\u001B[31mFAIL\u001B[0m //fake:rule2"),
             Pattern.quote(
-                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE"),
-            Pattern.quote("\u001B[31mUNKNOWN\u001B[0m //fake:rule4"),
+                "\u001B[31mFAIL\u001B[0m //fake:rule2 ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ")"),
             Pattern.quote(
-                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule5 "
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ") FETCHED_FROM_CACHE"),
+            Pattern.quote(
+                "\u001B[31mUNKNOWN\u001B[0m //fake:rule4 ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ")"),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule5 ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ") "
                     + "BUILT_LOCALLY "
                     + MorePaths.pathWithPlatformSeparators("default_output")),
             Pattern.quote(
-                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule5[named_1] "
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule5[named_1] ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ") "
                     + "BUILT_LOCALLY "
                     + MorePaths.pathWithPlatformSeparators("named_output_1")),
             Pattern.quote(
-                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6 "
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6 ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ") "
                     + "BUILT_LOCALLY "
                     + MorePaths.pathWithPlatformSeparators("default_output1")),
             Pattern.quote(
-                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6 "
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6 ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ") "
                     + "BUILT_LOCALLY "
                     + MorePaths.pathWithPlatformSeparators("default_output_2")),
             Pattern.quote(
-                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6[named_1] "
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6[named_1] ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ") "
                     + "BUILT_LOCALLY "
                     + MorePaths.pathWithPlatformSeparators("named_output_1")),
             Pattern.quote(
-                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6[named_2] "
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6[named_2] ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ") "
                     + "BUILT_LOCALLY "
                     + MorePaths.pathWithPlatformSeparators("named_output_2")),
             Pattern.quote(
-                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6[named_2] "
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule6[named_2] ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ") "
                     + "BUILT_LOCALLY "
                     + MorePaths.pathWithPlatformSeparators("named_output_22")),
-            Pattern.quote("\u001B[31mFAIL\u001B[0m //fake:rule7"),
             Pattern.quote(
-                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule "
+                "\u001B[31mFAIL\u001B[0m //fake:rule7 ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ")"),
+            Pattern.quote(
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule ("
+                    + UnconfiguredTargetConfiguration.NAME
+                    + ") "
                     + "BUILT_LOCALLY "
                     + MorePaths.pathWithPlatformSeparators(
                         "buck-out/gen/unconfiguredhash/fake/rule.txt")),
             Pattern.quote(
-                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule "
+                "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule (//fake:config) "
                     + "BUILT_LOCALLY "
                     + MorePaths.pathWithPlatformSeparators(
                         "buck-out/gen/configuredhash/fake/rule.txt")),
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
-            "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
+            "Rule //fake:rule2 \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) FAILED because java.lang.RuntimeException: some",
             "\tat .*\\.",
-            "Rule //fake:rule7 FAILED because java.lang.RuntimeException: some",
+            "Rule //fake:rule7 \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) FAILED because java.lang.RuntimeException: some",
             "\tat .*\\.",
             "");
     String observedReport =
@@ -234,31 +267,53 @@ public class BuildReportTest {
   public void testGenerateVerboseBuildReportForConsole() {
     String expectedReport =
         linesToText(
-            "(?s)OK   //fake:rule1 BUILT_LOCALLY "
+            "(?s)OK   //fake:rule1 \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) BUILT_LOCALLY "
                 + Pattern.quote(
                     MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt")),
-            "FAIL //fake:rule2",
-            "OK   //fake:rule3 FETCHED_FROM_CACHE",
-            "UNKNOWN //fake:rule4",
-            "OK   //fake:rule5 BUILT_LOCALLY default_output",
-            "OK   //fake:rule5\\[named_1\\] BUILT_LOCALLY named_output_1",
-            "OK   //fake:rule6 BUILT_LOCALLY default_output1",
-            "OK   //fake:rule6 BUILT_LOCALLY default_output_2",
-            "OK   //fake:rule6\\[named_1\\] BUILT_LOCALLY named_output_1",
-            "OK   //fake:rule6\\[named_2\\] BUILT_LOCALLY named_output_2",
-            "OK   //fake:rule6\\[named_2\\] BUILT_LOCALLY named_output_22",
-            "FAIL //fake:rule7",
-            "OK   //fake:rule BUILT_LOCALLY "
+            "FAIL //fake:rule2 \\(" + UnconfiguredTargetConfiguration.NAME + "\\)",
+            "OK   //fake:rule3 \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) FETCHED_FROM_CACHE",
+            "UNKNOWN //fake:rule4 \\(" + UnconfiguredTargetConfiguration.NAME + "\\)",
+            "OK   //fake:rule5 \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) BUILT_LOCALLY default_output",
+            "OK   //fake:rule5\\[named_1\\] \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\)\\ BUILT_LOCALLY named_output_1",
+            "OK   //fake:rule6 \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) BUILT_LOCALLY default_output1",
+            "OK   //fake:rule6 \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) BUILT_LOCALLY default_output_2",
+            "OK   //fake:rule6\\[named_1\\] \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) BUILT_LOCALLY named_output_1",
+            "OK   //fake:rule6\\[named_2\\] \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) BUILT_LOCALLY named_output_2",
+            "OK   //fake:rule6\\[named_2\\] \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) BUILT_LOCALLY named_output_22",
+            "FAIL //fake:rule7 \\(" + UnconfiguredTargetConfiguration.NAME + "\\)",
+            "OK   //fake:rule \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) BUILT_LOCALLY "
                 + Pattern.quote(
                     MorePaths.pathWithPlatformSeparators(
                         "buck-out/gen/unconfiguredhash/fake/rule.txt")),
-            "OK   //fake:rule BUILT_LOCALLY "
+            "OK   //fake:rule \\(//fake:config\\) BUILT_LOCALLY "
                 + Pattern.quote(
                     MorePaths.pathWithPlatformSeparators(
                         "buck-out/gen/configuredhash/fake/rule.txt")),
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
-            "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
+            "Rule //fake:rule2 \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) FAILED because java.lang.RuntimeException: some",
             "\tat .*\\.",
             "");
     String observedReport =
@@ -557,13 +612,17 @@ public class BuildReportTest {
         linesToText(
             "(?s)"
                 + Pattern.quote(
-                    "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 "
+                    "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 ("
+                        + UnconfiguredTargetConfiguration.NAME
+                        + ") "
                         + "BUILT_LOCALLY "
                         + MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt")),
             "\tTruncated 8 rule\\(s\\)\\.\\.\\.",
             "",
             " \\*\\* Summary of failures encountered during the build \\*\\*",
-            "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some",
+            "Rule //fake:rule2 \\("
+                + UnconfiguredTargetConfiguration.NAME
+                + "\\) FAILED because java.lang.RuntimeException: some",
             "\tat .*",
             "\tTruncated 1 failure\\(s\\)\\.\\.\\.",
             "");
