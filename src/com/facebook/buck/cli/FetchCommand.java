@@ -173,10 +173,11 @@ public class FetchCommand extends BuildCommand {
                   params.getClock(),
                   getExecutionContext(),
                   isKeepGoing(),
+                  params.getBuckConfig().getView(BuildReportConfig.class).getMaxNumberOfEntries(),
                   params
                       .getBuckConfig()
                       .getView(BuildReportConfig.class)
-                      .getMaxNumberOfEntries())) {
+                      .getShouldPrintUnconfiguredSection())) {
         exitCode =
             build.executeAndPrintFailuresToEventBus(
                 buildTargets,

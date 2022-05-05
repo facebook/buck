@@ -35,6 +35,7 @@ public abstract class BuildReportConfig implements ConfigView<BuckConfig> {
   private static final String ENDPOINT_URL_FIELD = "endpoint_url";
   private static final String ENDPOINT_TIMEOUT_MS_FIELD = "endpoint_timeout_ms";
   private static final String MAX_NUMBER_OF_ENTRIES = "max_number_of_entries";
+  private static final String SHOULD_PRINT_UNCONFIGURED_SECTION = "print_unconfigured_section";
 
   private static final long DEFAULT_ENDPOINT_TIMEOUT_MS = 30 * 1000;
 
@@ -77,5 +78,10 @@ public abstract class BuildReportConfig implements ConfigView<BuckConfig> {
     return getDelegate()
         .getLong(BUILD_REPORT_SECTION, ENDPOINT_TIMEOUT_MS_FIELD)
         .orElse(DEFAULT_ENDPOINT_TIMEOUT_MS);
+  }
+
+  public boolean getShouldPrintUnconfiguredSection() {
+    return getDelegate()
+        .getBooleanValue(BUILD_REPORT_SECTION, SHOULD_PRINT_UNCONFIGURED_SECTION, true);
   }
 }

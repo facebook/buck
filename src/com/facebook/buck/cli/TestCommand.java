@@ -730,10 +730,11 @@ public class TestCommand extends BuildCommand {
                     params.getClock(),
                     getExecutionContext(),
                     isKeepGoing(),
+                    params.getBuckConfig().getView(BuildReportConfig.class).getMaxNumberOfEntries(),
                     params
                         .getBuckConfig()
                         .getView(BuildReportConfig.class)
-                        .getMaxNumberOfEntries())) {
+                        .getShouldPrintUnconfiguredSection())) {
 
           // Build all of the test rules and runtime deps.
           Iterable<BuildTarget> targets =

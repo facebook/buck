@@ -220,7 +220,7 @@ public class BuildReportTest {
             "\tat .*\\.",
             "");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE)
+        new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE, true)
             .generateForConsole(
                 new Console(
                     Verbosity.STANDARD_INFORMATION,
@@ -262,7 +262,7 @@ public class BuildReportTest {
             "\tat .*\\.",
             "");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE)
+        new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE, true)
             .generateForConsole(new TestConsole(Verbosity.COMMANDS));
     assertThat(observedReport, Matchers.matchesPattern(expectedReport));
   }
@@ -418,7 +418,135 @@ public class BuildReportTest {
             "  \"truncated\" : false",
             "}");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE)
+        new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE, true)
+            .generateJsonBuildReport();
+    assertEquals(expectedReport.replace("\\r\\n", "\\n"), observedReport.replace("\\r\\n", "\\n"));
+  }
+
+  @Test
+  public void testGenerateJsonBuildReportSkipUnconfigured() throws IOException {
+    String rule1TxtPath =
+        ObjectMappers.legacyCreate()
+            .valueToTree(MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt"))
+            .toString();
+    String unconfiguredPath =
+        ObjectMappers.legacyCreate()
+            .valueToTree(
+                MorePaths.pathWithPlatformSeparators("buck-out/gen/unconfiguredhash/fake/rule.txt"))
+            .toString();
+    String configuredPath =
+        ObjectMappers.legacyCreate()
+            .valueToTree(
+                MorePaths.pathWithPlatformSeparators("buck-out/gen/configuredhash/fake/rule.txt"))
+            .toString();
+    String expectedReport =
+        String.join(
+            System.lineSeparator(),
+            "{",
+            "  \"success\" : false,",
+            "  \"results\" : {",
+            "    \"//fake:rule1\" : {",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"BUILT_LOCALLY\",",
+            "          \"outputs\" : {",
+            "            \"DEFAULT\" : [ " + rule1TxtPath + " ]",
+            "          }",
+            "        }",
+            "      }",
+            "    },",
+            "    \"//fake:rule2\" : {",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"FAIL\"",
+            "        }",
+            "      }",
+            "    },",
+            "    \"//fake:rule3\" : {",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"FETCHED_FROM_CACHE\"",
+            "        }",
+            "      }",
+            "    },",
+            "    \"//fake:rule4\" : {",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"UNKNOWN\"",
+            "        }",
+            "      }",
+            "    },",
+            "    \"//fake:rule5\" : {",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"BUILT_LOCALLY\",",
+            "          \"outputs\" : {",
+            "            \"DEFAULT\" : [ \"default_output\" ],",
+            "            \"named_1\" : [ \"named_output_1\" ]",
+            "          }",
+            "        }",
+            "      }",
+            "    },",
+            "    \"//fake:rule6\" : {",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"BUILT_LOCALLY\",",
+            "          \"outputs\" : {",
+            "            \"DEFAULT\" : [ \"default_output1\", \"default_output_2\" ],",
+            "            \"named_1\" : [ \"named_output_1\" ],",
+            "            \"named_2\" : [ \"named_output_2\", \"named_output_22\" ]",
+            "          }",
+            "        }",
+            "      }",
+            "    },",
+            "    \"//fake:rule7\" : {",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"FAIL\"",
+            "        }",
+            "      }",
+            "    },",
+            "    \"//fake:rule\" : {",
+            "      \"configured\" : {",
+            "        \"" + UnconfiguredTargetConfiguration.NAME + "\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"BUILT_LOCALLY\",",
+            "          \"outputs\" : {",
+            "            \"DEFAULT\" : [ " + unconfiguredPath + " ]",
+            "          }",
+            "        },",
+            "        \"//fake:config\" : {",
+            "          \"success\" : \"SUCCESS\",",
+            "          \"type\" : \"BUILT_LOCALLY\",",
+            "          \"outputs\" : {",
+            "            \"DEFAULT\" : [ " + configuredPath + " ]",
+            "          }",
+            "        }",
+            "      }",
+            "    }",
+            "  },",
+            "  \"failures\" : {",
+            "    \"//fake:rule2\" : \""
+                + Throwables.getStackTraceAsString(runtimeException)
+                    .replace("\r\n", "\n")
+                    .replace("\t", "\\t")
+                    .replace("\n", "\\n")
+                + "\",",
+            "    \"//fake:rule7\" : \""
+                + Throwables.getStackTraceAsString(runtimeException)
+                    .replace("\r\n", "\n")
+                    .replace("\t", "\\t")
+                    .replace("\n", "\\n")
+                + "\"",
+            "  },",
+            "  \"truncated\" : false",
+            "}");
+    String observedReport =
+        new BuildReport(buildExecutionResult, resolver, cells, Integer.MAX_VALUE, false)
             .generateJsonBuildReport();
     assertEquals(expectedReport.replace("\\r\\n", "\\n"), observedReport.replace("\\r\\n", "\\n"));
   }
@@ -440,7 +568,7 @@ public class BuildReportTest {
             "\tTruncated 1 failure\\(s\\)\\.\\.\\.",
             "");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, cells, 1)
+        new BuildReport(buildExecutionResult, resolver, cells, 1, true)
             .generateForConsole(
                 new Console(
                     Verbosity.STANDARD_INFORMATION,
@@ -490,7 +618,7 @@ public class BuildReportTest {
             "  \"truncated\" : true",
             "}");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver, cells, 1).generateJsonBuildReport();
+        new BuildReport(buildExecutionResult, resolver, cells, 1, true).generateJsonBuildReport();
     assertEquals(expectedReport.replace("\\r\\n", "\\n"), observedReport.replace("\\r\\n", "\\n"));
   }
 }

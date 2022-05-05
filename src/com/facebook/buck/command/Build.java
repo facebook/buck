@@ -82,6 +82,7 @@ public class Build implements Closeable {
   private final BuildEngineBuildContext buildContext;
   private final int maxBuildReportEntries;
   private boolean symlinksCreated = false;
+  private final boolean printUnconfiguredBuildReport;
 
   public Build(
       ActionGraphBuilder graphBuilder,
@@ -92,7 +93,8 @@ public class Build implements Closeable {
       Clock clock,
       ExecutionContext executionContext,
       boolean isKeepGoing,
-      int maxBuildReportEntries) {
+      int maxBuildReportEntries,
+      boolean printUnconfiguredBuildReport) {
     this.graphBuilder = graphBuilder;
     this.cells = cells;
     this.executionContext = executionContext;
@@ -102,6 +104,7 @@ public class Build implements Closeable {
     this.clock = clock;
     this.buildContext = createBuildContext(isKeepGoing);
     this.maxBuildReportEntries = maxBuildReportEntries;
+    this.printUnconfiguredBuildReport = printUnconfiguredBuildReport;
   }
 
   private BuildEngineBuildContext createBuildContext(boolean isKeepGoing) {
@@ -351,7 +354,8 @@ public class Build implements Closeable {
             buildExecutionResult,
             graphBuilder.getSourcePathResolver(),
             cells,
-            maxBuildReportEntries);
+            maxBuildReportEntries,
+            printUnconfiguredBuildReport);
 
     if (buildContext.isKeepGoing()) {
       String buildReportText = buildReport.generateForConsole(console);
@@ -448,7 +452,8 @@ public class Build implements Closeable {
             e.createBuildExecutionResult(),
             graphBuilder.getSourcePathResolver(),
             cells,
-            maxBuildReportEntries);
+            maxBuildReportEntries,
+            printUnconfiguredBuildReport);
     try {
       String jsonBuildReport = buildReport.generateJsonBuildReport();
       eventBus.post(BuildEvent.buildReport(jsonBuildReport));

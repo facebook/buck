@@ -104,7 +104,10 @@ public class BuildExecutor {
             args.getClock(),
             executionContext,
             keepGoing,
-            args.getBuckConfig().getView(BuildReportConfig.class).getMaxNumberOfEntries());
+            args.getBuckConfig().getView(BuildReportConfig.class).getMaxNumberOfEntries(),
+            args.getBuckConfig()
+                .getView(BuildReportConfig.class)
+                .getShouldPrintUnconfiguredSection());
   }
 
   /**

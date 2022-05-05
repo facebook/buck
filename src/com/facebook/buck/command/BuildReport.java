@@ -59,6 +59,7 @@ public class BuildReport {
   private final SourcePathResolverAdapter pathResolver;
   private final Cells cells;
   private final int maxNumberOfEntries;
+  private final boolean printUnconfiguredSection;
 
   /**
    * @param buildExecutionResult the build result to generate the report for.
@@ -70,11 +71,13 @@ public class BuildReport {
       Build.BuildExecutionResult buildExecutionResult,
       SourcePathResolverAdapter pathResolver,
       Cells cells,
-      int maxNumberOfEntries) {
+      int maxNumberOfEntries,
+      boolean printUnconfiguredSection) {
     this.buildExecutionResult = buildExecutionResult;
     this.pathResolver = pathResolver;
     this.cells = cells;
     this.maxNumberOfEntries = maxNumberOfEntries;
+    this.printUnconfiguredSection = printUnconfiguredSection;
   }
 
   public String generateForConsole(Console console) {
@@ -224,7 +227,9 @@ public class BuildReport {
         break;
       }
 
-      addRuleUnconfigured(results, rule, success, result, isSuccess);
+      if (printUnconfiguredSection) {
+        addRuleUnconfigured(results, rule, success, result, isSuccess);
+      }
       addRuleConfigured(results, rule, success, result, isSuccess);
       numEntriesWritten++;
     }
