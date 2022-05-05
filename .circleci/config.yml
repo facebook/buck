@@ -197,7 +197,7 @@ macos_environment: &macos_environment
   TERM: "dumb"
   BUCK_NUM_THREADS: 3
   BUCK_PEX_LOCATION: "./new_buck.pex"
-  JAVA_HOME: "/usr/local/Cellar/openjdk@8/1.8.0+312"
+  JAVA_HOME: "/usr/local/Cellar/openjdk@8/1.8.0+322"
 
 windows_environment: &windows_environment
   PLATFORM: "windows"
