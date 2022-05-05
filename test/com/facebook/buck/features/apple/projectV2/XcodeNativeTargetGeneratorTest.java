@@ -162,7 +162,6 @@ public class XcodeNativeTargetGeneratorTest {
 
     FlagParser flagParser =
         new FlagParser(
-            projectFilesystem,
             cells,
             projectCell,
             appleConfig,
