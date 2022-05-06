@@ -1,0 +1,36 @@
+kotlin_library(
+    name = "lib",
+    srcs = glob(
+        [
+            "src/**/*.java",
+            "src/**/*.kt",
+        ],
+    ),
+    provided_deps = [
+        "//third-party/java/intellij:intellij-plugin-sdk",
+        "//third-party/java/kotlin:kotlin-compiler",
+        "//third-party/java/kotlin:kotlin-plugin",
+    ],
+    source = "1.8",
+    target = "1.8",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+kotlin_test(
+    name = "unit",
+    srcs = glob(
+        [
+            "tests/unit/**/*.java",
+            "tests/unit/**/*.kt",
+        ],
+    ),
+    source = "1.8",
+    target = "1.8",
+    deps = [
+        ":lib",
+        "//third-party/java/junit:junit",
+    ],
+)
+

@@ -67,6 +67,7 @@ kotlin_library(
     exported_deps = [
         ":api",
         "//tools/psi-grammar:grammar",
+        "//tools/test-detector:lib",
     ],
 )
 
