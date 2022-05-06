@@ -394,11 +394,12 @@ package main
 import (
 	"fmt"
 	"os"
-	"io"
 	"path/filepath"
 	"regexp"
-	"runtime/pprof"
 	"testing"
+{{if .ReleaseTag "go1.8"}}
+	internalTestDeps "testing/internal/testdeps"
+{{end}}
 {{if .ImportTest}}
 	{{if .NeedTest}}_test{{else}}_{{end}} {{.Package.ImportPath | printf "%q"}}
 {{end}}
@@ -420,20 +421,20 @@ var benchmarks = []testing.InternalBenchmark{
 	{"{{.Name}}", {{.Package}}.{{.Name}}},
 {{end}}
 }
+{{if .ReleaseTag "go1.18"}}
+var fuzzTargets = []testing.InternalFuzzTarget{
+}
+{{end}}
 var examples = []testing.InternalExample{
 {{range .Examples}}
 	{"{{.Name}}", {{.Package}}.{{.Name}}, {{.Output | printf "%q"}}{{if $.ReleaseTag "go1.7"}}, {{.Unordered}}{{end}}},
 {{end}}
 }
 
-// testDeps is a copy of the stdlib testing/testdeps.TestDeps but is included
-// here for older Go versions.
-type testDeps struct{}
-
 var matchPat string
 var matchRe *regexp.Regexp
 
-func (testDeps) MatchString(pat, str string) (result bool, err error) {
+func matchString(pat, str string) (result bool, err error) {
 	if matchRe == nil || matchPat != pat {
 		matchPat = pat
 		matchRe, err = regexp.Compile(matchPat)
@@ -443,32 +444,6 @@ func (testDeps) MatchString(pat, str string) (result bool, err error) {
 	}
 	return matchRe.MatchString(str), nil
 }
-
-func (testDeps) StartCPUProfile(w io.Writer) error {
-	return pprof.StartCPUProfile(w)
-}
-
-func (testDeps) StopCPUProfile() {
-	pprof.StopCPUProfile()
-}
-
-func (testDeps) WriteHeapProfile(w io.Writer) error {
-	return pprof.WriteHeapProfile(w)
-}
-
-func (testDeps) WriteProfileTo(name string, w io.Writer, debug int) error {
-	return pprof.Lookup(name).WriteTo(w, debug)
-}
-
-func (testDeps) ImportPath() string {
-	return {{.ImportPath | printf "%q"}}
-}
-
-func (testDeps) SetPanicOnExit0(_ bool) {}
-
-func (testDeps) StartTestLog(w io.Writer) {}
-
-func (testDeps) StopTestLog() error {return nil}
 
 {{if .CoverEnabled}}
 // Only updated by init functions, so no need for atomicity.
@@ -530,10 +505,12 @@ func main() {
 		CoveredPackages: {{printf "%q" .Covered}},
 	})
 {{end}}
-{{if .ReleaseTag "go1.8"}}
-	m := testing.MainStart(testDeps{}, tests, benchmarks, examples)
+{{if .ReleaseTag "go1.18"}}
+	m := testing.MainStart(internalTestDeps.TestDeps{}, tests, benchmarks, fuzzTargets, examples)
+{{else if .ReleaseTag "go1.8"}}
+	m := testing.MainStart(internalTestDeps.TestDeps{}, tests, benchmarks, examples)
 {{else}}
-	m := testing.MainStart(testDeps{}.MatchString, tests, benchmarks, examples)
+	m := testing.MainStart(matchString, tests, benchmarks, examples)
 {{end}}
 {{with .TestMain}}
 	{{.Package}}.{{.Name}}(m)
