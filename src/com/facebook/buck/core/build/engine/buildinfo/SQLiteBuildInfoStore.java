@@ -124,7 +124,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
 
   private Optional<String> readMetaDataFromSQLite(BuildTarget buildTarget, String key) {
     try {
-      selectStmt.setString(1, cellRelativeName(buildTarget));
+      selectStmt.setString(1, keyForTarget(buildTarget));
       selectStmt.setString(2, key);
       try (ResultSet rs = selectStmt.executeQuery()) {
         if (!rs.next()) {
@@ -153,7 +153,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
   @Override
   public synchronized ImmutableMap<String, String> getAllMetadata(BuildTarget buildTarget) {
     try {
-      selectAllStmt.setString(1, cellRelativeName(buildTarget));
+      selectAllStmt.setString(1, keyForTarget(buildTarget));
       try (ResultSet rs = selectAllStmt.executeQuery()) {
         ImmutableMap.Builder<String, String> result = ImmutableMap.builder();
         while (rs.next()) {
@@ -171,7 +171,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
       throws IOException {
     try {
       for (Map.Entry<String, String> e : metadata.entrySet()) {
-        updateStmt.setString(1, cellRelativeName(buildTarget));
+        updateStmt.setString(1, keyForTarget(buildTarget));
         updateStmt.setString(2, e.getKey());
         updateStmt.setString(3, e.getValue());
         updateStmt.addBatch();
@@ -190,7 +190,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
   @Override
   public synchronized void deleteMetadata(BuildTarget buildTarget) throws IOException {
     try {
-      deleteStmt.setString(1, cellRelativeName(buildTarget));
+      deleteStmt.setString(1, keyForTarget(buildTarget));
       deleteStmt.executeUpdate();
     } catch (SQLException e) {
       throw new IOException(e);
@@ -201,7 +201,7 @@ public class SQLiteBuildInfoStore implements BuildInfoStore {
     }
   }
 
-  private String cellRelativeName(BuildTarget buildTarget) {
-    return buildTarget.getCellRelativeName();
+  private String keyForTarget(BuildTarget buildTarget) {
+    return buildTarget.getCellRelativeUniqueIdentifier();
   }
 }
