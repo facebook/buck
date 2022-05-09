@@ -65,7 +65,7 @@ jobs:
       <<: *linux_environment
     working_directory: "/home/circleci/buck"
     machine:
-      image: ubuntu-2004:2004:202111-02
+      image: ubuntu-2004:202107-02
     steps:
       - checkout
       - run:
