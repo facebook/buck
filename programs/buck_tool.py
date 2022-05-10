@@ -135,6 +135,7 @@ EXPORTED_RESOURCES = [
     Resource("path_to_six_py", basename="six.py"),
     Resource("path_to_sh_binary_template"),
     Resource("path_to_isolated_trampoline"),
+    Resource("path_to_isolated_trampoline_win"),
     Resource("jacoco_agent_jar"),
     Resource("report_generator_jar"),
     Resource("dx"),

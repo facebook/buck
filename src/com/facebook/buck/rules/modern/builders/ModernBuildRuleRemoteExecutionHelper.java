@@ -37,6 +37,7 @@ import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.java.version.utils.JavaVersionUtils;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
+import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Directory;
@@ -110,17 +111,24 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
   private static final Logger LOG = Logger.get(ModernBuildRuleRemoteExecutionHelper.class);
 
-  private static final Path TRAMPOLINE =
+  private static final Path TRAMPOLINE_NIX =
       Paths.get(
           System.getProperty(
               "buck.path_to_isolated_trampoline",
               "src/com/facebook/buck/rules/modern/builders/trampoline.sh"));
 
+  private static final Path TRAMPOLINE_WIN =
+      Paths.get(
+          System.getProperty(
+              "buck.path_to_isolated_trampoline_win",
+              "src/com/facebook/buck/rules/modern/builders/trampoline.ps1"));
+
   private static final String PLUGIN_RESOURCES = System.getProperty("buck.module.resources");
   private static final String PLUGIN_ROOT = System.getProperty("pf4j.pluginsDir");
   // necessary for isolated buck to work correctly
   private static final String BASE_BUCK_OUT_DIR = BuckConstant.getBuckOutputPath().toString();
-  private static final Path TRAMPOLINE_PATH = Paths.get("__trampoline__.sh");
+  private static final Path TRAMPOLINE_PATH_NIX = Paths.get("__trampoline__.sh");
+  private static final Path TRAMPOLINE_PATH_WIN = Paths.get("__trampoline__.ps1");
   public static final Path METADATA_PATH = Paths.get(".buck.metadata");
   private static final String FILE_HASH_VERIFICATION = "hash.verify";
 
@@ -257,13 +265,24 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
     this.classPath = prepareClassPath(BuckClasspath::getClasspath);
     this.bootstrapClassPath = prepareClassPath(BuckClasspath::getBootstrapClasspath);
+
+    final Path trampolinePath;
+    final Path trampolineRemotePath;
+    if (WorkerRequirementsProvider.getDefaultPlatform() == "windows") {
+      trampolinePath = TRAMPOLINE_WIN;
+      trampolineRemotePath = TRAMPOLINE_PATH_WIN;
+    } else {
+      trampolinePath = TRAMPOLINE_NIX;
+      trampolineRemotePath = TRAMPOLINE_PATH_NIX;
+    }
+
     this.trampoline =
         MoreSuppliers.memoize(
             () -> {
-              Digest digest = protocol.computeDigest(Files.readAllBytes(TRAMPOLINE));
+              Digest digest = protocol.computeDigest(Files.readAllBytes(trampolinePath));
               return new RequiredFile(
-                  TRAMPOLINE_PATH,
-                  protocol.newFileNode(digest, TRAMPOLINE_PATH.getFileName().toString(), true),
+                  trampolineRemotePath,
+                  protocol.newFileNode(digest, trampolineRemotePath.getFileName().toString(), true),
                   new UploadDataSupplier() {
                     @Override
                     public Digest getDigest() {
@@ -272,7 +291,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
                     @Override
                     public InputStream get() throws IOException {
-                      return new FileInputStream(TRAMPOLINE.toFile());
+                      return new FileInputStream(trampolinePath.toFile());
                     }
 
                     @Override
@@ -280,7 +299,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                       try {
                         return String.format(
                             "MBR trampoline (path: %s size:%s).",
-                            TRAMPOLINE, Files.size(TRAMPOLINE));
+                            trampolinePath, Files.size(trampolinePath));
                       } catch (IOException e) {
                         return String.format("failed to describe (%s)", e.getMessage());
                       }
@@ -691,21 +710,28 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     // TODO(shivanker): Pass all user environment overrides to remote workers.
     String relativePluginRoot = relativizePathString(cellPrefixRoot, PLUGIN_ROOT);
     String relativePluginResources = relativizePathString(cellPrefixRoot, PLUGIN_RESOURCES);
-    return ImmutableSortedMap.<String, String>naturalOrder()
-        .putAll(BuckClasspath.getClasspathEnv(classpath))
-        .putAll(BuckClasspath.getBootstrapClasspathEnv(bootstrapClasspath))
-        .put(
-            "EXTRA_JAVA_ARGS",
-            ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
-                .filter(ModernBuildRuleRemoteExecutionHelper::isValidJVMArgument)
-                .collect(Collectors.joining(" ")))
-        .put("BUCK_JAVA_VERSION", String.valueOf(JavaVersionUtils.getMajorVersion()))
-        .put("BUCK_PLUGIN_ROOT", relativePluginRoot)
-        .put("BASE_BUCK_OUT_DIR", BASE_BUCK_OUT_DIR)
-        .put("BUCK_PLUGIN_RESOURCES", relativePluginResources)
-        // TODO(cjhopman): This shouldn't be done here, it's not a Buck thing.
-        .put("BUCK_DISTCC", "0")
-        .build();
+    var envOverrides =
+        ImmutableSortedMap.<String, String>naturalOrder()
+            .putAll(BuckClasspath.getClasspathEnv(classpath))
+            .putAll(BuckClasspath.getBootstrapClasspathEnv(bootstrapClasspath))
+            .put(
+                "EXTRA_JAVA_ARGS",
+                ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
+                    .filter(ModernBuildRuleRemoteExecutionHelper::isValidJVMArgument)
+                    .collect(Collectors.joining(" ")))
+            .put("BUCK_JAVA_VERSION", String.valueOf(JavaVersionUtils.getMajorVersion()))
+            .put("BUCK_PLUGIN_ROOT", relativePluginRoot)
+            .put("BASE_BUCK_OUT_DIR", BASE_BUCK_OUT_DIR)
+            .put("BUCK_PLUGIN_RESOURCES", relativePluginResources)
+            // TODO(cjhopman): This shouldn't be done here, it's not a Buck thing.
+            .put("BUCK_DISTCC", "0");
+
+    if (WorkerRequirementsProvider.getDefaultPlatform() == "windows") {
+      // This is needed to allow powershell to execute trampoline script.
+      envOverrides.put("PSExecutionPolicyPreference", "Bypass");
+    }
+
+    return envOverrides.build();
   }
 
   private static boolean isValidJVMArgument(String arg) {
@@ -720,13 +746,24 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     if (rootString.isEmpty()) {
       rootString = "./";
     }
-    return ImmutableList.of(
-        "./" + TRAMPOLINE_PATH.toString(),
-        rootString,
-        hash,
-        METADATA_PATH.toString(),
-        consoleParams.isAnsiEscapeSequencesEnabled(),
-        consoleParams.getVerbosity());
+
+    ImmutableList.Builder<String> builder = new ImmutableList.Builder<String>();
+    Path trampolinePath;
+    if (WorkerRequirementsProvider.getDefaultPlatform() == "windows") {
+      trampolinePath = TRAMPOLINE_PATH_WIN;
+      builder.add("powershell.exe");
+    } else {
+      trampolinePath = TRAMPOLINE_PATH_NIX;
+    }
+
+    builder.add("./" + trampolinePath.toString());
+    builder.add(rootString);
+    builder.add(hash);
+    builder.add(METADATA_PATH.toString());
+    builder.add(consoleParams.isAnsiEscapeSequencesEnabled());
+    builder.add(consoleParams.getVerbosity());
+
+    return builder.build();
   }
 
   private static class Node implements Comparable<Node> {

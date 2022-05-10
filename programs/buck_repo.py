@@ -39,6 +39,7 @@ RESOURCES = {
     "native_exopackage_fake_path": "assets/android/native-exopackage-fakes.apk",
     "path_to_sh_binary_template": "src/com/facebook/buck/shell/sh_binary_template",
     "path_to_isolated_trampoline": "src/com/facebook/buck/rules/modern/builders/trampoline.sh",
+    "path_to_isolated_trampoline_win": "src/com/facebook/buck/rules/modern/builders/trampoline.ps1",
     "report_generator_jar": "ant-out/report-generator.jar",
     "testrunner_classes": "ant-out/testrunner/classes",
     # python resources used by buck file parser.

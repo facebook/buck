@@ -83,3 +83,8 @@ file_alias(
     name = "trampoline",
     source = "trampoline.sh",
 )
+
+file_alias(
+    name = "trampoline_win",
+    source = "trampoline.ps1",
+)
