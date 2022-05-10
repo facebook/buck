@@ -394,8 +394,10 @@ public class CxxToolchainDescription
   }
 
   private ToolProvider getToolProvider(SourcePath path) {
-    // Only enable RE for tools that will execute on Linux
-    return ToolProviders.getToolProvider(path, Platform.detect() == Platform.LINUX);
+    // Only enable RE for tools that will execute on Linux or Windows
+    boolean useRemoteExecution =
+        (Platform.detect() == Platform.LINUX || Platform.detect() == Platform.WINDOWS);
+    return ToolProviders.getToolProvider(path, useRemoteExecution);
   }
 
   @Override
