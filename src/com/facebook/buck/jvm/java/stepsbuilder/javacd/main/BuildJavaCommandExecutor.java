@@ -17,11 +17,12 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd.main;
 
 import com.facebook.buck.cd.model.java.BuildJavaCommand;
+import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.build.execution.context.actionid.ActionId;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
 import com.facebook.buck.event.IsolatedEventBus;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.JavaStepsBuilder;
+import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
@@ -30,19 +31,16 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.io.OutputStream;
 
 /** Executes java compilation command. */
 class BuildJavaCommandExecutor {
 
   private BuildJavaCommandExecutor() {}
 
-  static void executeBuildJavaCommand(
+  static StepExecutionResult executeBuildJavaCommand(
       ClassLoaderCache classLoaderCache,
       ActionId actionId,
       BuildJavaCommand buildJavaCommand,
-      OutputStream eventsOutputStream,
-      DownwardProtocol downwardProtocol,
       IsolatedEventBus eventBus,
       Platform platform,
       ProcessExecutor processExecutor,
@@ -54,17 +52,17 @@ class BuildJavaCommandExecutor {
     AbsPath ruleCellRoot = javaStepsBuilder.getRuleCellRoot();
     ImmutableList<IsolatedStep> steps = javaStepsBuilder.getSteps();
 
-    StepExecutionUtils.executeSteps(
-        classLoaderCache,
-        eventBus,
-        eventsOutputStream,
-        downwardProtocol,
-        platform,
-        processExecutor,
-        console,
-        clock,
-        actionId,
-        ruleCellRoot,
-        steps);
+    try (IsolatedExecutionContext context =
+        StepExecutionUtils.createExecutionContext(
+            classLoaderCache,
+            eventBus,
+            platform,
+            processExecutor,
+            console,
+            clock,
+            actionId,
+            ruleCellRoot)) {
+      return StepExecutionUtils.executeSteps(steps, context);
+    }
   }
 }

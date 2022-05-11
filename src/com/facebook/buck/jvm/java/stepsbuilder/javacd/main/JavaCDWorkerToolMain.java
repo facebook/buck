@@ -122,6 +122,9 @@ public class JavaCDWorkerToolMain {
         ClassLoaderCache classLoaderCache = new ClassLoaderCache()) {
       // establish downward protocol type
       DOWNWARD_PROTOCOL_TYPE.writeDelimitedTo(eventsOutputStream);
+      Thread.setDefaultUncaughtExceptionHandler(
+          (t, e) -> handleExceptionAndTerminate(t, console, e));
+
       Logger logger = Logger.get("");
       logger.cleanHandlers();
       logger.addHandler(new ExternalLogHandler(eventsOutputStream, DOWNWARD_PROTOCOL));
@@ -203,17 +206,19 @@ public class JavaCDWorkerToolMain {
               ListenableFuture<Unit> executeCommandFuture =
                   LISTENING_EXECUTOR_SERVICE.submit(
                       () -> {
-                        BuildJavaCommandExecutor.executeBuildJavaCommand(
-                            classLoaderCache,
+                        StepExecutionUtils.sendResultEvent(
+                            BuildJavaCommandExecutor.executeBuildJavaCommand(
+                                classLoaderCache,
+                                executeCommandActionId,
+                                buildJavaCommand,
+                                eventBus,
+                                platform,
+                                processExecutor,
+                                console,
+                                clock),
                             executeCommandActionId,
-                            buildJavaCommand,
-                            eventsOutputStream,
                             DOWNWARD_PROTOCOL,
-                            eventBus,
-                            platform,
-                            processExecutor,
-                            console,
-                            clock);
+                            eventsOutputStream);
 
                         return Unit.UNIT;
                       });

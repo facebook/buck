@@ -50,6 +50,7 @@ import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.javacd.JavaStepsBuilder;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
+import com.facebook.buck.step.isolatedsteps.IsolatedStepsRunner;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
@@ -95,52 +96,50 @@ class PipeliningJavaCommandExecutor {
 
     PipelineState pipelineState = pipeliningCommand.getPipeliningState();
     try (JavacPipelineState javacPipelineState = getJavacPipelineState(pipelineState)) {
-
-      // context for reuse in the next command in the pipeline
-      Optional<IsolatedExecutionContext> contextOptional = Optional.empty();
       boolean hasAbiCommand = pipeliningCommand.hasAbiCommand();
       boolean hasLibraryCommand = pipeliningCommand.hasLibraryCommand();
       Iterator<ActionId> actionIdIterator = actionIds.iterator();
+      IsolatedExecutionContext executionContext = null;
 
-      if (hasAbiCommand) {
-        BasePipeliningCommand abiCommand = pipeliningCommand.getAbiCommand();
-        Pair<ImmutableList<IsolatedStep>, AbsPath> abiStepsPair =
-            getAbiSteps(abiCommand, javacToJarStepFactory, javacPipelineState, hasLibraryCommand);
-        ImmutableList<IsolatedStep> abiSteps = abiStepsPair.getFirst();
-        AbsPath ruleCellRoot = abiStepsPair.getSecond();
-        ActionId abiActionId = actionIdIterator.next();
+      try {
+        if (hasAbiCommand) {
+          BasePipeliningCommand abiCommand = pipeliningCommand.getAbiCommand();
+          Pair<ImmutableList<IsolatedStep>, AbsPath> abiStepsPair =
+              getAbiSteps(abiCommand, javacToJarStepFactory, javacPipelineState, hasLibraryCommand);
+          ImmutableList<IsolatedStep> abiSteps = abiStepsPair.getFirst();
+          AbsPath ruleCellRoot = abiStepsPair.getSecond();
+          ActionId abiActionId = actionIdIterator.next();
 
-        boolean closeExecutionContext = !hasLibraryCommand;
-        contextOptional =
-            StepExecutionUtils.executeSteps(
-                classLoaderCache,
-                eventBus,
-                eventsOutputStream,
-                downwardProtocol,
-                platform,
-                processExecutor,
-                console,
-                clock,
-                abiActionId,
-                ruleCellRoot,
-                abiSteps,
-                closeExecutionContext);
-      }
+          executionContext =
+              StepExecutionUtils.createExecutionContext(
+                  classLoaderCache,
+                  eventBus,
+                  platform,
+                  processExecutor,
+                  console,
+                  clock,
+                  abiActionId,
+                  ruleCellRoot);
+          StepExecutionUtils.sendResultEvent(
+              StepExecutionUtils.executeSteps(abiSteps, executionContext),
+              abiActionId,
+              downwardProtocol,
+              eventsOutputStream);
+        }
 
-      if (hasLibraryCommand) {
-        LibraryPipeliningCommand libraryCommand = pipeliningCommand.getLibraryCommand();
+        if (hasLibraryCommand) {
+          LibraryPipeliningCommand libraryCommand = pipeliningCommand.getLibraryCommand();
 
-        Pair<ImmutableList<IsolatedStep>, AbsPath> libraryStepsPair =
-            getLibrarySteps(
-                libraryCommand, javacToJarStepFactory, javacPipelineState, !hasAbiCommand);
-        ImmutableList<IsolatedStep> librarySteps = libraryStepsPair.getFirst();
-        AbsPath ruleCellRoot = libraryStepsPair.getSecond();
+          Pair<ImmutableList<IsolatedStep>, AbsPath> libraryStepsPair =
+              getLibrarySteps(
+                  libraryCommand, javacToJarStepFactory, javacPipelineState, !hasAbiCommand);
+          ImmutableList<IsolatedStep> librarySteps = libraryStepsPair.getFirst();
+          AbsPath ruleCellRoot = libraryStepsPair.getSecond();
 
-        Preconditions.checkState(actionIdIterator.hasNext());
-        ActionId libraryActionId = actionIdIterator.next();
-
-        if (contextOptional.isPresent()) {
-          try (IsolatedExecutionContext isolatedExecutionContext = contextOptional.get()) {
+          Preconditions.checkState(actionIdIterator.hasNext());
+          ActionId libraryActionId = actionIdIterator.next();
+          if (executionContext != null) {
+            // we're running a pipeline, so wait for next command signal.
             boolean ok =
                 waitForNextCommandSignal(
                     eventsOutputStream,
@@ -148,27 +147,35 @@ class PipeliningJavaCommandExecutor {
                     startNextCommandOptional,
                     libraryActionId);
             if (ok) {
-              StepExecutionUtils.executeSteps(
-                  isolatedExecutionContext,
-                  eventsOutputStream,
-                  downwardProtocol,
+              StepExecutionUtils.sendResultEvent(
+                  IsolatedStepsRunner.executeWithDefaultExceptionHandling(
+                      librarySteps, executionContext),
                   libraryActionId,
-                  librarySteps);
+                  downwardProtocol,
+                  eventsOutputStream);
             }
+          } else {
+            executionContext =
+                StepExecutionUtils.createExecutionContext(
+                    classLoaderCache,
+                    eventBus,
+                    platform,
+                    processExecutor,
+                    console,
+                    clock,
+                    libraryActionId,
+                    ruleCellRoot);
+            StepExecutionUtils.sendResultEvent(
+                IsolatedStepsRunner.executeWithDefaultExceptionHandling(
+                    librarySteps, executionContext),
+                libraryActionId,
+                downwardProtocol,
+                eventsOutputStream);
           }
-        } else {
-          StepExecutionUtils.executeSteps(
-              classLoaderCache,
-              eventBus,
-              eventsOutputStream,
-              downwardProtocol,
-              platform,
-              processExecutor,
-              console,
-              clock,
-              libraryActionId,
-              ruleCellRoot,
-              librarySteps);
+        }
+      } finally {
+        if (executionContext != null) {
+          executionContext.close();
         }
       }
     }

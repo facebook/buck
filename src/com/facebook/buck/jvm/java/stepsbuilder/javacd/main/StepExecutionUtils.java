@@ -40,7 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Optional;
+import javax.annotation.Nonnull;
 
 /** Common methods used by java and pipelining java command executors */
 class StepExecutionUtils {
@@ -49,90 +49,33 @@ class StepExecutionUtils {
 
   private StepExecutionUtils() {}
 
-  static void executeSteps(
+  static StepExecutionResult executeSteps(
+      ImmutableList<IsolatedStep> steps, IsolatedExecutionContext executionContext) {
+    return IsolatedStepsRunner.executeWithDefaultExceptionHandling(steps, executionContext);
+  }
+
+  @Nonnull
+  static IsolatedExecutionContext createExecutionContext(
       ClassLoaderCache classLoaderCache,
       IsolatedEventBus eventBus,
-      OutputStream eventsOutputStream,
-      DownwardProtocol downwardProtocol,
       Platform platform,
       ProcessExecutor processExecutor,
       Console console,
       Clock clock,
       ActionId actionId,
-      AbsPath ruleCellRoot,
-      ImmutableList<IsolatedStep> steps)
-      throws IOException {
-    executeSteps(
+      AbsPath ruleCellRoot) {
+    return IsolatedExecutionContext.of(
         classLoaderCache,
         eventBus,
-        eventsOutputStream,
-        downwardProtocol,
+        console,
         platform,
         processExecutor,
-        console,
-        clock,
-        actionId,
         ruleCellRoot,
-        steps,
-        true);
+        actionId,
+        clock);
   }
 
-  static Optional<IsolatedExecutionContext> executeSteps(
-      ClassLoaderCache classLoaderCache,
-      IsolatedEventBus eventBus,
-      OutputStream eventsOutputStream,
-      DownwardProtocol downwardProtocol,
-      Platform platform,
-      ProcessExecutor processExecutor,
-      Console console,
-      Clock clock,
-      ActionId actionId,
-      AbsPath ruleCellRoot,
-      ImmutableList<IsolatedStep> steps,
-      boolean closeExecutionContext)
-      throws IOException {
-
-    // create a new execution context
-    IsolatedExecutionContext executionContext =
-        IsolatedExecutionContext.of(
-            classLoaderCache,
-            eventBus,
-            console,
-            platform,
-            processExecutor,
-            ruleCellRoot,
-            actionId,
-            clock);
-
-    // use newly created execution context to execute steps
-    try {
-      executeSteps(executionContext, eventsOutputStream, downwardProtocol, actionId, steps);
-    } finally {
-      if (closeExecutionContext) {
-        executionContext.close();
-      }
-    }
-
-    // if need to close, then nothing to return,
-    // if no need to close, then return newly created execution context for future reuse
-    return closeExecutionContext ? Optional.empty() : Optional.of(executionContext);
-  }
-
-  static void executeSteps(
-      IsolatedExecutionContext executionContext,
-      OutputStream eventsOutputStream,
-      DownwardProtocol downwardProtocol,
-      ActionId actionId,
-      ImmutableList<IsolatedStep> steps)
-      throws IOException {
-    StepExecutionResult stepExecutionResult =
-        IsolatedStepsRunner.executeWithDefaultExceptionHandling(steps, executionContext);
-    ResultEvent resultEvent = getResultEvent(actionId, stepExecutionResult);
-    writeResultEvent(downwardProtocol, eventsOutputStream, resultEvent);
-  }
-
-  private static ResultEvent getResultEvent(
-      ActionId actionId, StepExecutionResult stepExecutionResult) {
+  static ResultEvent getResultEvent(ActionId actionId, StepExecutionResult stepExecutionResult) {
     int exitCode = stepExecutionResult.getExitCode();
     ResultEvent.Builder resultEventBuilder =
         ResultEvent.newBuilder().setActionId(actionId.getValue()).setExitCode(exitCode);
@@ -194,5 +137,15 @@ class StepExecutionUtils {
       throws IOException {
     downwardProtocol.write(
         EventTypeMessage.newBuilder().setEventType(eventType).build(), event, eventsOutputStream);
+  }
+
+  static void sendResultEvent(
+      StepExecutionResult stepExecutionResult,
+      ActionId actionId,
+      DownwardProtocol downwardProtocol,
+      OutputStream eventsOutputStream)
+      throws IOException {
+    ResultEvent resultEvent = getResultEvent(actionId, stepExecutionResult);
+    writeResultEvent(downwardProtocol, eventsOutputStream, resultEvent);
   }
 }
