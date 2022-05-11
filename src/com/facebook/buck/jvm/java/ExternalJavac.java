@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -113,8 +112,8 @@ public class ExternalJavac implements Javac {
         BuildTargetValue invokingRule,
         CompilerOutputPathsValue compilerOutputPathsValue,
         ImmutableList<String> options,
-        ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
-        ImmutableList<JavacPluginJsr199Fields> javacPlugins,
+        JavacPluginParams annotationProcessorParams,
+        JavacPluginParams pluginParams,
         ImmutableSortedSet<RelPath> javaSourceFilePaths,
         RelPath pathToSrcsList,
         RelPath workingDirectory,

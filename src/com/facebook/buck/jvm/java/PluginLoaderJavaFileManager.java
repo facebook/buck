@@ -16,27 +16,29 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
-import com.google.common.collect.ImmutableList;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 
 public class PluginLoaderJavaFileManager extends ForwardingStandardJavaFileManager
     implements StandardJavaFileManager {
 
+  private final JavacExecutionContext context;
   private final PluginFactory pluginFactory;
-  private final ImmutableList<JavacPluginJsr199Fields> javacPlugins;
+  private final JavacPluginParams javacPlugins;
 
   /**
    * Creates a new instance of ForwardingJavaFileManager.
    *
    * @param fileManager delegate to this file manager
+   * @param javacPlugins
    */
   protected PluginLoaderJavaFileManager(
+      JavacExecutionContext context,
       StandardJavaFileManager fileManager,
       PluginFactory pluginFactory,
-      ImmutableList<JavacPluginJsr199Fields> javacPlugins) {
+      JavacPluginParams javacPlugins) {
     super(fileManager);
+    this.context = context;
     this.pluginFactory = pluginFactory;
     this.javacPlugins = javacPlugins;
   }
@@ -44,8 +46,10 @@ public class PluginLoaderJavaFileManager extends ForwardingStandardJavaFileManag
   @Override
   public ClassLoader getClassLoader(Location location) {
     // We only provide the shared classloader if there are plugins defined.
-    if (StandardLocation.ANNOTATION_PROCESSOR_PATH.equals(location) && javacPlugins.size() > 0) {
-      return pluginFactory.getClassLoaderForProcessorGroups(javacPlugins);
+    if (StandardLocation.ANNOTATION_PROCESSOR_PATH.equals(location)
+        && javacPlugins.getPluginProperties().size() > 0) {
+      return pluginFactory.getClassLoaderForProcessorGroups(
+          javacPlugins, context.getRuleCellRoot());
     }
     return super.getClassLoader(location);
   }

@@ -16,17 +16,13 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.annotation.processing.Processor;
 
 class AnnotationProcessorFactory implements AutoCloseable {
@@ -52,15 +48,16 @@ class AnnotationProcessorFactory implements AutoCloseable {
     localClassLoaderCache.close();
   }
 
-  public List<Processor> createProcessors(ImmutableList<JavacPluginJsr199Fields> fields) {
-    return fields.stream()
-        .flatMap(this::createProcessorsWithCommonClasspath)
-        .collect(Collectors.toList());
-  }
-
-  private Stream<Processor> createProcessorsWithCommonClasspath(JavacPluginJsr199Fields fields) {
-    ClassLoader classLoader = getClassLoaderForProcessorGroup(fields);
-    return fields.getProcessorNamesList().stream().map(name -> createProcessor(classLoader, name));
+  public List<Processor> createProcessors(
+      JavacExecutionContext context, JavacPluginParams processorParams) {
+    ImmutableList.Builder<Processor> builder = ImmutableList.builder();
+    for (ResolvedJavacPluginProperties plugin : processorParams.getPluginProperties()) {
+      ClassLoader classLoader = getClassLoaderForProcessorGroup(plugin, context.getRuleCellRoot());
+      plugin.getProcessorNames().stream()
+          .map(name -> createProcessor(classLoader, name))
+          .forEach((v) -> builder.add(v));
+    }
+    return builder.build();
   }
 
   private Processor createProcessor(ClassLoader classLoader, String name) {
@@ -75,30 +72,20 @@ class AnnotationProcessorFactory implements AutoCloseable {
   }
 
   @VisibleForTesting
-  ClassLoader getClassLoaderForProcessorGroup(JavacPluginJsr199Fields processorGroup) {
+  ClassLoader getClassLoaderForProcessorGroup(
+      ResolvedJavacPluginProperties pluginParams, AbsPath relPathRoot) {
     ClassLoaderCache cache;
-    // We can avoid lots of overhead in large builds by reusing the same classloader for annotation
-    // processors. However, some annotation processors use static variables in a way that assumes
-    // there is only one instance running in the process at a time (or at all), and such annotation
-    // processors would break running inside of Buck. So we default to creating a new ClassLoader
-    // for each build rule, with an option to whitelist "safe" processors in .buckconfig.
-    if (processorGroup.getCanReuseClassLoader()) {
+    // We can avoid lots of overhead in large builds by reusing the same classloader for java
+    // plugins. However, some plugins use static variables in a way that assumes
+    // there is only one instance running in the process at a time (or at all), and such plugin
+    // would break running inside of Buck. So we default to creating a new ClassLoader
+    // if any plugins meets those requirements.
+    if (pluginParams.getCanReuseClassLoader()) {
       cache = globalClassLoaderCache;
     } else {
       cache = localClassLoaderCache;
     }
     return cache.getClassLoaderForClassPath(
-        compilerClassLoader,
-        processorGroup.getClasspathList().stream()
-            .map(this::toURL)
-            .collect(ImmutableList.toImmutableList()));
-  }
-
-  private URL toURL(JavacPluginJsr199Fields.URL url) {
-    try {
-      return new URL(url.getValue());
-    } catch (MalformedURLException e) {
-      throw new RuntimeException(e);
-    }
+        compilerClassLoader, pluginParams.toUrlClasspath(relPathRoot));
   }
 }

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.cd.serialization.java;
 
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.cd.serialization.RelPathSerializer;
 import com.facebook.buck.jvm.java.ResolvedJavacOptions;
@@ -40,8 +39,6 @@ public class ResolvedJavacOptionsSerializer {
     bootclasspath.ifPresent(builder::setBootclasspath);
     builder.setDebug(options.isDebug());
     builder.setVerbose(options.isVerbose());
-    builder.setJavaAnnotationProcessorParamsPresent(
-        options.isJavaAnnotationProcessorParamsPresent());
 
     ImmutableList<RelPath> bootclasspathList = options.getBootclasspathList();
     bootclasspathList.stream()
@@ -58,13 +55,6 @@ public class ResolvedJavacOptionsSerializer {
 
     for (String extraArg : options.getExtraArguments()) {
       builder.addExtraArguments(extraArg);
-    }
-
-    for (JavacPluginJsr199Fields item : options.getAnnotationProcessors()) {
-      builder.addAnnotationProcessors(item);
-    }
-    for (JavacPluginJsr199Fields item : options.getJavaPlugins()) {
-      builder.addJavaPlugins(item);
     }
 
     return builder.build();
@@ -90,10 +80,7 @@ public class ResolvedJavacOptionsSerializer {
         options.getVerbose(),
         JavacPluginParamsSerializer.deserialize(options.getJavaAnnotationProcessorParams()),
         JavacPluginParamsSerializer.deserialize(options.getStandardJavacPluginParams()),
-        options.getExtraArgumentsList(),
-        options.getAnnotationProcessorsList(),
-        options.getJavaPluginsList(),
-        options.getJavaAnnotationProcessorParamsPresent());
+        options.getExtraArgumentsList());
   }
 
   private static Optional<String> toOptionalString(String value) {

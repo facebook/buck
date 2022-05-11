@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -144,30 +143,6 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
     return pathParams;
   }
 
-  /** Get the javac plugin fields. */
-  public JavacPluginJsr199Fields getJavacPluginJsr199Fields(AbsPath root) {
-    JavacPluginJsr199Fields.Builder builder = JavacPluginJsr199Fields.newBuilder();
-    builder.setCanReuseClassLoader(getCanReuseClassLoader());
-    for (String processorName : getProcessorNames()) {
-      builder.addProcessorNames(processorName);
-    }
-
-    for (URL classpath : toURLs(getClasspath(), root)) {
-      builder.addClasspath(
-          JavacPluginJsr199Fields.URL.newBuilder().setValue(classpath.toString()).build());
-    }
-    return builder.build();
-  }
-
-  private static Iterable<URL> toURLs(ImmutableList<RelPath> list, AbsPath root) {
-    return () ->
-        list.stream()
-            .map(root::resolve)
-            .map(AbsPath::normalize)
-            .map(ResolvedJavacPluginProperties::toUrl)
-            .iterator();
-  }
-
   public static String getJoinedClasspath(
       ImmutableList<ResolvedJavacPluginProperties> resolvedProperties, AbsPath root) {
     return resolvedProperties.stream()
@@ -182,7 +157,7 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
         .collect(Collectors.joining(File.pathSeparator));
   }
 
-  private static URI toURI(URL url) {
+  static URI toURI(URL url) {
     try {
       return url.toURI();
     } catch (URISyntaxException e) {
@@ -190,7 +165,7 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
     }
   }
 
-  private static URL toUrl(AbsPath absPath) {
+  static URL toUrl(AbsPath absPath) {
     try {
       return absPath.toUri().toURL();
     } catch (MalformedURLException e) {
@@ -198,5 +173,15 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
       // We'd need to be unfortunate to get here. Bubble up a runtime exception.
       throw new RuntimeException(e);
     }
+  }
+
+  /** Resolves classpath to a list of URL */
+  public ImmutableList<URL> toUrlClasspath(AbsPath relPathRoot) {
+    ImmutableList.Builder<URL> builder = ImmutableList.builder();
+    for (RelPath relPath : getClasspath()) {
+      AbsPath path = relPathRoot.resolve(relPath).normalize();
+      builder.add(toUrl(path));
+    }
+    return builder.build();
   }
 }

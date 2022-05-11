@@ -21,7 +21,6 @@ import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.getDiagnosti
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -99,8 +98,8 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
   private final CompilerOutputPathsValue compilerOutputPathsValue;
   private final AbiGenerationMode abiCompatibilityMode;
   private final ImmutableList<String> options;
-  private final ImmutableList<JavacPluginJsr199Fields> annotationProcessors;
-  private final ImmutableList<JavacPluginJsr199Fields> javacPlugins;
+  private final JavacPluginParams annotationProcessorParams;
+  private final JavacPluginParams pluginParams;
   private final ImmutableSortedSet<RelPath> javaSourceFilePaths;
   private final RelPath pathToSrcsList;
   private final AbiGenerationMode abiGenerationMode;
@@ -118,8 +117,8 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
       BuildTargetValue invokingRule,
       CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableList<String> options,
-      ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
-      ImmutableList<JavacPluginJsr199Fields> javacPlugins,
+      JavacPluginParams annotationProcessorParams,
+      JavacPluginParams pluginParams,
       ImmutableSortedSet<RelPath> javaSourceFilePaths,
       RelPath pathToSrcsList,
       boolean trackClassUsage,
@@ -135,8 +134,8 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
     this.compilerOutputPathsValue = compilerOutputPathsValue;
     this.abiCompatibilityMode = abiCompatibilityMode;
     this.options = options;
-    this.annotationProcessors = annotationProcessors;
-    this.javacPlugins = javacPlugins;
+    this.annotationProcessorParams = annotationProcessorParams;
+    this.pluginParams = pluginParams;
     this.javaSourceFilePaths = javaSourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
     this.trackClassUsage = trackClassUsage;
@@ -568,11 +567,13 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                     libraryJarParameters.getRemoveEntryPredicate());
             addCloseable(inMemoryFileManager);
             fileManager =
-                new PluginLoaderJavaFileManager(inMemoryFileManager, pluginFactory, javacPlugins);
+                new PluginLoaderJavaFileManager(
+                    context, inMemoryFileManager, pluginFactory, pluginParams);
           } else {
             inMemoryFileManager = null;
             fileManager =
-                new PluginLoaderJavaFileManager(standardFileManager, pluginFactory, javacPlugins);
+                new PluginLoaderJavaFileManager(
+                    context, standardFileManager, pluginFactory, pluginParams);
           }
 
           Iterable<? extends JavaFileObject> compilationUnits;
@@ -660,7 +661,8 @@ class Jsr199JavacInvocation implements ResolvedJavac.Invocation {
                   invokingRule.getFullyQualifiedName());
           addCloseable(processorFactory);
 
-          javacTask.setProcessors(processorFactory.createProcessors(annotationProcessors));
+          javacTask.setProcessors(
+              processorFactory.createProcessors(context, annotationProcessorParams));
           lazyJavacTask = javacTask;
         } catch (IOException e) {
           LOG.error(e);

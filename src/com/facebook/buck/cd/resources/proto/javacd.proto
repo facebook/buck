@@ -225,23 +225,14 @@ message ResolvedJavacOptions {
     JavacPluginParams javaAnnotationProcessorParams = 6;
     JavacPluginParams standardJavacPluginParams = 7;
     repeated string extraArguments = 8;
-    repeated JavacPluginJsr199Fields annotationProcessors = 9;
-    repeated JavacPluginJsr199Fields javaPlugins = 10;
-    bool javaAnnotationProcessorParamsPresent = 11;
+
+    // reserved = 9;
+    // reserved = 10;
+    // reserved = 11;
 
     message JavacLanguageLevelOptions {
         string sourceLevel = 1;
         string targetLevel = 2;
-    }
-
-    message JavacPluginJsr199Fields {
-        bool canReuseClassLoader = 1;
-        repeated string processorNames = 2;
-        repeated URL classpath = 3;
-
-        message URL {
-            string value = 1;
-        }
     }
 
     message JavacPluginParams {
@@ -255,6 +246,7 @@ message ResolvedJavacOptions {
         bool supportsAbiGenerationFromSource = 3;
         repeated string processorNames = 4;
         repeated RelPath classpath = 5;
+        // Appears to only be used for the internal NullSafe.
         map<string, RelPath> pathParams = 6;
     }
 }

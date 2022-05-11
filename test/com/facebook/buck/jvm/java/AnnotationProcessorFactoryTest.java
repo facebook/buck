@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -77,9 +76,8 @@ public class AnnotationProcessorFactoryTest {
             new AnnotationProcessorFactory(null, baseClassLoader, classLoaderCache, buildTarget);
         AnnotationProcessorFactory factory2 =
             new AnnotationProcessorFactory(null, baseClassLoader, classLoaderCache, buildTarget)) {
-      JavacPluginJsr199Fields fields = processorGroup.getJavacPluginJsr199Fields(rootPath);
-      ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroup(fields);
-      ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroup(fields);
+      ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroup(processorGroup, rootPath);
+      ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroup(processorGroup, rootPath);
       return classLoader1 == classLoader2;
     } catch (IOException e) {
       throw new AssertionError(e);

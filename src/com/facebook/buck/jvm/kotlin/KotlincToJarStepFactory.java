@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.transform;
 
 import com.facebook.buck.cd.model.java.FilesystemParams;
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
@@ -75,7 +74,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -450,10 +448,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     ImmutableList<String> kaptPluginsClasspath =
         ImmutableList.copyOf(
             kaptAnnotationProcessors.stream()
-                .map(p -> p.getJavacPluginJsr199Fields(rootPath))
-                .map(JavacPluginJsr199Fields::getClasspathList)
+                .map(p -> p.toUrlClasspath(rootPath))
                 .flatMap(List::stream)
-                .map(KotlincToJarStepFactory::toURL)
                 .map(url -> AP_CLASSPATH_ARG + urlToFile(url))
                 .collect(Collectors.toList()));
 
@@ -615,10 +611,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
 
     ImmutableList<String> kspProcessorsClasspathList =
         kspAnnotationProcessors.stream()
-            .map(p -> p.getJavacPluginJsr199Fields(rootPath))
-            .map(JavacPluginJsr199Fields::getClasspathList)
+            .map(p -> p.toUrlClasspath(rootPath))
             .flatMap(List::stream)
-            .map(KotlincToJarStepFactory::toURL)
             .map(url -> urlToFile(url))
             .collect(ImmutableList.toImmutableList());
     String kspProcessorsClasspath =
@@ -809,14 +803,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     } catch (URISyntaxException e) {
       // In case of error, fall back to the original implementation.
       return url.getFile();
-    }
-  }
-
-  private static URL toURL(JavacPluginJsr199Fields.URL url) {
-    try {
-      return new URL(url.getValue());
-    } catch (MalformedURLException e) {
-      throw new RuntimeException(e);
     }
   }
 

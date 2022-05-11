@@ -27,6 +27,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -73,6 +74,15 @@ public abstract class JavacPluginParams implements AddsToRuleKey {
                 .collect(ImmutableList.toImmutableList()))
         .setParameters(getParameters())
         .build(resolver, ruleCellRoot);
+  }
+
+  /** Resolves classpath to a list of URL */
+  public ImmutableList<URL> toUrlClasspath(AbsPath relPathRoot) {
+    ImmutableList.Builder<URL> builder = ImmutableList.builder();
+    for (ResolvedJavacPluginProperties plugin : getPluginProperties()) {
+      builder.addAll(plugin.toUrlClasspath(relPathRoot));
+    }
+    return builder.build();
   }
 
   /** A customized Builder for JavacPluginParams. */

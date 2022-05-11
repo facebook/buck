@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -29,7 +28,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.util.ClassLoaderCache;
-import com.google.common.collect.ImmutableList;
+import java.util.List;
 import org.junit.Test;
 
 public class PluginFactoryTest {
@@ -83,12 +82,13 @@ public class PluginFactoryTest {
 
     try (PluginFactory factory1 = new PluginFactory(baseClassLoader, classLoaderCache);
         PluginFactory factory2 = new PluginFactory(baseClassLoader, classLoaderCache)) {
-      ImmutableList<JavacPluginJsr199Fields> pluginGroups =
-          ImmutableList.of(
-              controlPluginGroup.getJavacPluginJsr199Fields(rootPath),
-              variablePluginGroup.getJavacPluginJsr199Fields(rootPath));
-      ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroups(pluginGroups);
-      ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroups(pluginGroups);
+
+      JavacPluginParams pluginParams =
+          JavacPluginParams.builder()
+              .setPluginProperties(List.of(controlPluginGroup, variablePluginGroup))
+              .build();
+      ClassLoader classLoader1 = factory1.getClassLoaderForProcessorGroups(pluginParams, rootPath);
+      ClassLoader classLoader2 = factory2.getClassLoaderForProcessorGroups(pluginParams, rootPath);
       return classLoader1 == classLoader2;
     } catch (Exception e) {
       throw new AssertionError(e);

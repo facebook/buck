@@ -112,16 +112,6 @@ public final class JavaCDProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_javacd_api_v1_ResolvedJavacOptions_JavacLanguageLevelOptions_fieldAccessorTable;
   static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_descriptor;
-  static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_URL_descriptor;
-  static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_URL_fieldAccessorTable;
-  static final com.google.protobuf.Descriptors.Descriptor
     internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginParams_descriptor;
   static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -297,7 +287,7 @@ public final class JavaCDProto {
       "\010.RelPath\022\"\n\020workingDirectory\030\006 \001(\0132\010.Re" +
       "lPath\022\037\n\routputJarPath\030\007 \001(\0132\010.RelPath\"C" +
       "\n\013JavaAbiInfo\022\027\n\017buildTargetName\030\001 \001(\t\022\033" +
-      "\n\014contentPaths\030\002 \003(\0132\005.Path\"\336\n\n\024Resolved" +
+      "\n\014contentPaths\030\002 \003(\0132\005.Path\"\310\007\n\024Resolved" +
       "JavacOptions\022\025\n\rbootclasspath\030\001 \001(\t\022#\n\021b" +
       "ootclasspathList\030\002 \003(\0132\010.RelPath\022[\n\024lang" +
       "uageLevelOptions\030\003 \001(\0132=.javacd.api.v1.R" +
@@ -308,75 +298,64 @@ public final class JavaCDProto {
       "luginParams\022X\n\031standardJavacPluginParams" +
       "\030\007 \001(\01325.javacd.api.v1.ResolvedJavacOpti" +
       "ons.JavacPluginParams\022\026\n\016extraArguments\030" +
-      "\010 \003(\t\022Y\n\024annotationProcessors\030\t \003(\0132;.ja" +
-      "vacd.api.v1.ResolvedJavacOptions.JavacPl" +
-      "uginJsr199Fields\022P\n\013javaPlugins\030\n \003(\0132;." +
-      "javacd.api.v1.ResolvedJavacOptions.Javac" +
-      "PluginJsr199Fields\022,\n$javaAnnotationProc" +
-      "essorParamsPresent\030\013 \001(\010\032E\n\031JavacLanguag" +
-      "eLevelOptions\022\023\n\013sourceLevel\030\001 \001(\t\022\023\n\013ta" +
-      "rgetLevel\030\002 \001(\t\032\270\001\n\027JavacPluginJsr199Fie" +
-      "lds\022\033\n\023canReuseClassLoader\030\001 \001(\010\022\026\n\016proc" +
-      "essorNames\030\002 \003(\t\022R\n\tclasspath\030\003 \003(\0132?.ja" +
-      "vacd.api.v1.ResolvedJavacOptions.JavacPl" +
-      "uginJsr199Fields.URL\032\024\n\003URL\022\r\n\005value\030\001 \001" +
-      "(\t\032\204\001\n\021JavacPluginParams\022\022\n\nparameters\030\001" +
-      " \003(\t\022[\n\020pluginProperties\030\002 \003(\0132A.javacd." +
-      "api.v1.ResolvedJavacOptions.ResolvedJava" +
-      "cPluginProperties\032\330\002\n\035ResolvedJavacPlugi" +
-      "nProperties\022\033\n\023canReuseClassLoader\030\001 \001(\010" +
-      "\022\030\n\020doesNotAffectAbi\030\002 \001(\010\022\'\n\037supportsAb" +
-      "iGenerationFromSource\030\003 \001(\010\022\026\n\016processor" +
-      "Names\030\004 \003(\t\022\033\n\tclasspath\030\005 \003(\0132\010.RelPath" +
-      "\022e\n\npathParams\030\006 \003(\0132Q.javacd.api.v1.Res" +
-      "olvedJavacOptions.ResolvedJavacPluginPro" +
-      "perties.PathParamsEntry\032;\n\017PathParamsEnt" +
-      "ry\022\013\n\003key\030\001 \001(\t\022\027\n\005value\030\002 \001(\0132\010.RelPath" +
-      ":\0028\001\"\233\004\n\rJarParameters\022\023\n\013hashEntries\030\001 " +
-      "\001(\010\022\026\n\016mergeManifests\030\002 \001(\010\022\031\n\007jarPath\030\003" +
-      " \001(\0132\010.RelPath\022W\n\024removeEntryPredicate\030\004" +
-      " \001(\01329.javacd.api.v1.JarParameters.Remov" +
-      "eClassesPatternsMatcher\022\036\n\014entriesToJar\030" +
-      "\005 \003(\0132\010.RelPath\022&\n\024overrideEntriesToJar\030" +
-      "\006 \003(\0132\010.RelPath\022\021\n\tmainClass\030\007 \001(\t\022\036\n\014ma" +
-      "nifestFile\030\010 \001(\0132\010.RelPath\022A\n\022duplicates" +
-      "LogLevel\030\t \001(\0162%.javacd.api.v1.JarParame" +
-      "ters.LogLevel\0320\n\034RemoveClassesPatternsMa" +
-      "tcher\022\020\n\010patterns\030\001 \003(\t\"y\n\010LogLevel\022\013\n\007U" +
-      "NKNOWN\020\000\022\007\n\003OFF\020\001\022\n\n\006SEVERE\020\002\022\013\n\007WARNING" +
-      "\020\003\022\010\n\004INFO\020\004\022\n\n\006CONFIG\020\005\022\010\n\004FINE\020\006\022\t\n\005FI" +
-      "NER\020\007\022\n\n\006FINEST\020\010\022\007\n\003ALL\020\t\"\350\001\n\rResolvedJ" +
-      "avac\022C\n\rexternalJavac\030\001 \001(\0132*.javacd.api" +
-      ".v1.ResolvedJavac.ExternalJavacH\000\022?\n\013jsr" +
-      "199Javac\030\002 \001(\0132(.javacd.api.v1.ResolvedJ" +
-      "avac.JSR199JavacH\000\0329\n\rExternalJavac\022\021\n\ts" +
-      "hortName\030\001 \001(\t\022\025\n\rcommandPrefix\030\002 \003(\t\032\r\n" +
-      "\013JSR199JavacB\007\n\005javac\"\264\006\n\030UnusedDependen" +
-      "ciesParams\022S\n\004deps\030\001 \003(\0132E.javacd.api.v1" +
-      ".UnusedDependenciesParams.DependencyAndE" +
-      "xportedDepsPath\022[\n\014providedDeps\030\002 \003(\0132E." +
-      "javacd.api.v1.UnusedDependenciesParams.D" +
-      "ependencyAndExportedDepsPath\022\031\n\007depFile\030" +
-      "\003 \003(\0132\010.RelPath\022b\n\030unusedDependenciesAct" +
-      "ion\030\004 \001(\0162@.javacd.api.v1.UnusedDependen" +
-      "ciesParams.UnusedDependenciesAction\022\024\n\014e" +
-      "xportedDeps\030\005 \003(\t\022\025\n\rbuildozerPath\030\006 \001(\t" +
-      "\022\031\n\021onlyPrintCommands\030\007 \001(\010\022\034\n\024doUltrali" +
-      "ghtChecking\030\010 \001(\010\032\315\001\n\035DependencyAndExpor" +
-      "tedDepsPath\022O\n\ndependency\030\001 \001(\0132;.javacd" +
-      ".api.v1.UnusedDependenciesParams.BuildTa" +
-      "rgetAndPaths\022[\n\014exportedDeps\030\002 \003(\0132E.jav" +
-      "acd.api.v1.UnusedDependenciesParams.Depe" +
-      "ndencyAndExportedDepsPath\032h\n\023BuildTarget" +
-      "AndPaths\022\027\n\017buildTargetName\030\001 \001(\t\022\035\n\013ful" +
-      "lJarPath\030\002 \001(\0132\010.RelPath\022\031\n\007abiPath\030\003 \001(" +
-      "\0132\010.RelPath\"G\n\030UnusedDependenciesAction\022" +
-      "\013\n\007UNKNOWN\020\000\022\010\n\004FAIL\020\001\022\010\n\004WARN\020\002\022\n\n\006IGNO" +
-      "RE\020\003*f\n\021AbiGenerationMode\022\013\n\007UNKNOWN\020\000\022\t" +
-      "\n\005CLASS\020\001\022\n\n\006SOURCE\020\002\022\034\n\030MIGRATING_TO_SO" +
-      "URCE_ONLY\020\003\022\017\n\013SOURCE_ONLY\020\004B0\n\037com.face" +
-      "book.buck.cd.model.javaB\013JavaCDProtoP\001b\006" +
-      "proto3"
+      "\010 \003(\t\032E\n\031JavacLanguageLevelOptions\022\023\n\013so" +
+      "urceLevel\030\001 \001(\t\022\023\n\013targetLevel\030\002 \001(\t\032\204\001\n" +
+      "\021JavacPluginParams\022\022\n\nparameters\030\001 \003(\t\022[" +
+      "\n\020pluginProperties\030\002 \003(\0132A.javacd.api.v1" +
+      ".ResolvedJavacOptions.ResolvedJavacPlugi" +
+      "nProperties\032\330\002\n\035ResolvedJavacPluginPrope" +
+      "rties\022\033\n\023canReuseClassLoader\030\001 \001(\010\022\030\n\020do" +
+      "esNotAffectAbi\030\002 \001(\010\022\'\n\037supportsAbiGener" +
+      "ationFromSource\030\003 \001(\010\022\026\n\016processorNames\030" +
+      "\004 \003(\t\022\033\n\tclasspath\030\005 \003(\0132\010.RelPath\022e\n\npa" +
+      "thParams\030\006 \003(\0132Q.javacd.api.v1.ResolvedJ" +
+      "avacOptions.ResolvedJavacPluginPropertie" +
+      "s.PathParamsEntry\032;\n\017PathParamsEntry\022\013\n\003" +
+      "key\030\001 \001(\t\022\027\n\005value\030\002 \001(\0132\010.RelPath:\0028\001\"\233" +
+      "\004\n\rJarParameters\022\023\n\013hashEntries\030\001 \001(\010\022\026\n" +
+      "\016mergeManifests\030\002 \001(\010\022\031\n\007jarPath\030\003 \001(\0132\010" +
+      ".RelPath\022W\n\024removeEntryPredicate\030\004 \001(\01329" +
+      ".javacd.api.v1.JarParameters.RemoveClass" +
+      "esPatternsMatcher\022\036\n\014entriesToJar\030\005 \003(\0132" +
+      "\010.RelPath\022&\n\024overrideEntriesToJar\030\006 \003(\0132" +
+      "\010.RelPath\022\021\n\tmainClass\030\007 \001(\t\022\036\n\014manifest" +
+      "File\030\010 \001(\0132\010.RelPath\022A\n\022duplicatesLogLev" +
+      "el\030\t \001(\0162%.javacd.api.v1.JarParameters.L" +
+      "ogLevel\0320\n\034RemoveClassesPatternsMatcher\022" +
+      "\020\n\010patterns\030\001 \003(\t\"y\n\010LogLevel\022\013\n\007UNKNOWN" +
+      "\020\000\022\007\n\003OFF\020\001\022\n\n\006SEVERE\020\002\022\013\n\007WARNING\020\003\022\010\n\004" +
+      "INFO\020\004\022\n\n\006CONFIG\020\005\022\010\n\004FINE\020\006\022\t\n\005FINER\020\007\022" +
+      "\n\n\006FINEST\020\010\022\007\n\003ALL\020\t\"\350\001\n\rResolvedJavac\022C" +
+      "\n\rexternalJavac\030\001 \001(\0132*.javacd.api.v1.Re" +
+      "solvedJavac.ExternalJavacH\000\022?\n\013jsr199Jav" +
+      "ac\030\002 \001(\0132(.javacd.api.v1.ResolvedJavac.J" +
+      "SR199JavacH\000\0329\n\rExternalJavac\022\021\n\tshortNa" +
+      "me\030\001 \001(\t\022\025\n\rcommandPrefix\030\002 \003(\t\032\r\n\013JSR19" +
+      "9JavacB\007\n\005javac\"\264\006\n\030UnusedDependenciesPa" +
+      "rams\022S\n\004deps\030\001 \003(\0132E.javacd.api.v1.Unuse" +
+      "dDependenciesParams.DependencyAndExporte" +
+      "dDepsPath\022[\n\014providedDeps\030\002 \003(\0132E.javacd" +
+      ".api.v1.UnusedDependenciesParams.Depende" +
+      "ncyAndExportedDepsPath\022\031\n\007depFile\030\003 \003(\0132" +
+      "\010.RelPath\022b\n\030unusedDependenciesAction\030\004 " +
+      "\001(\0162@.javacd.api.v1.UnusedDependenciesPa" +
+      "rams.UnusedDependenciesAction\022\024\n\014exporte" +
+      "dDeps\030\005 \003(\t\022\025\n\rbuildozerPath\030\006 \001(\t\022\031\n\021on" +
+      "lyPrintCommands\030\007 \001(\010\022\034\n\024doUltralightChe" +
+      "cking\030\010 \001(\010\032\315\001\n\035DependencyAndExportedDep" +
+      "sPath\022O\n\ndependency\030\001 \001(\0132;.javacd.api.v" +
+      "1.UnusedDependenciesParams.BuildTargetAn" +
+      "dPaths\022[\n\014exportedDeps\030\002 \003(\0132E.javacd.ap" +
+      "i.v1.UnusedDependenciesParams.Dependency" +
+      "AndExportedDepsPath\032h\n\023BuildTargetAndPat" +
+      "hs\022\027\n\017buildTargetName\030\001 \001(\t\022\035\n\013fullJarPa" +
+      "th\030\002 \001(\0132\010.RelPath\022\031\n\007abiPath\030\003 \001(\0132\010.Re" +
+      "lPath\"G\n\030UnusedDependenciesAction\022\013\n\007UNK" +
+      "NOWN\020\000\022\010\n\004FAIL\020\001\022\010\n\004WARN\020\002\022\n\n\006IGNORE\020\003*f" +
+      "\n\021AbiGenerationMode\022\013\n\007UNKNOWN\020\000\022\t\n\005CLAS" +
+      "S\020\001\022\n\n\006SOURCE\020\002\022\034\n\030MIGRATING_TO_SOURCE_O" +
+      "NLY\020\003\022\017\n\013SOURCE_ONLY\020\004B0\n\037com.facebook.b" +
+      "uck.cd.model.javaB\013JavaCDProtoP\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -498,33 +477,21 @@ public final class JavaCDProto {
     internal_static_javacd_api_v1_ResolvedJavacOptions_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_ResolvedJavacOptions_descriptor,
-        new java.lang.String[] { "Bootclasspath", "BootclasspathList", "LanguageLevelOptions", "Debug", "Verbose", "JavaAnnotationProcessorParams", "StandardJavacPluginParams", "ExtraArguments", "AnnotationProcessors", "JavaPlugins", "JavaAnnotationProcessorParamsPresent", });
+        new java.lang.String[] { "Bootclasspath", "BootclasspathList", "LanguageLevelOptions", "Debug", "Verbose", "JavaAnnotationProcessorParams", "StandardJavacPluginParams", "ExtraArguments", });
     internal_static_javacd_api_v1_ResolvedJavacOptions_JavacLanguageLevelOptions_descriptor =
       internal_static_javacd_api_v1_ResolvedJavacOptions_descriptor.getNestedTypes().get(0);
     internal_static_javacd_api_v1_ResolvedJavacOptions_JavacLanguageLevelOptions_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_ResolvedJavacOptions_JavacLanguageLevelOptions_descriptor,
         new java.lang.String[] { "SourceLevel", "TargetLevel", });
-    internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_descriptor =
-      internal_static_javacd_api_v1_ResolvedJavacOptions_descriptor.getNestedTypes().get(1);
-    internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_descriptor,
-        new java.lang.String[] { "CanReuseClassLoader", "ProcessorNames", "Classpath", });
-    internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_URL_descriptor =
-      internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_descriptor.getNestedTypes().get(0);
-    internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_URL_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_URL_descriptor,
-        new java.lang.String[] { "Value", });
     internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginParams_descriptor =
-      internal_static_javacd_api_v1_ResolvedJavacOptions_descriptor.getNestedTypes().get(2);
+      internal_static_javacd_api_v1_ResolvedJavacOptions_descriptor.getNestedTypes().get(1);
     internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginParams_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginParams_descriptor,
         new java.lang.String[] { "Parameters", "PluginProperties", });
     internal_static_javacd_api_v1_ResolvedJavacOptions_ResolvedJavacPluginProperties_descriptor =
-      internal_static_javacd_api_v1_ResolvedJavacOptions_descriptor.getNestedTypes().get(3);
+      internal_static_javacd_api_v1_ResolvedJavacOptions_descriptor.getNestedTypes().get(2);
     internal_static_javacd_api_v1_ResolvedJavacOptions_ResolvedJavacPluginProperties_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_javacd_api_v1_ResolvedJavacOptions_ResolvedJavacPluginProperties_descriptor,

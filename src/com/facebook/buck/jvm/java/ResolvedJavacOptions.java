@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -49,11 +48,9 @@ public abstract class ResolvedJavacOptions {
 
   public abstract List<String> getExtraArguments();
 
-  public abstract ImmutableList<JavacPluginJsr199Fields> getAnnotationProcessors();
-
-  public abstract ImmutableList<JavacPluginJsr199Fields> getJavaPlugins();
-
-  public abstract boolean isJavaAnnotationProcessorParamsPresent();
+  public boolean isJavaAnnotationProcessorParamsPresent() {
+    return !getJavaAnnotationProcessorParams().isEmpty();
+  }
 
   /** Creates {@link ResolvedJavacOptions} */
   public static ResolvedJavacOptions of(
@@ -85,10 +82,7 @@ public abstract class ResolvedJavacOptions {
         javacOptions.isVerbose(),
         javaAnnotationProcessorParams,
         standardJavacPluginParams,
-        javacOptions.getExtraArguments(),
-        extractJavacPluginJsr199Fields(javaAnnotationProcessorParams, ruleCellRoot),
-        extractJavacPluginJsr199Fields(standardJavacPluginParams, ruleCellRoot),
-        !javaAnnotationProcessorParams.isEmpty());
+        javacOptions.getExtraArguments());
   }
 
   /** Creates {@link ResolvedJavacOptions} */
@@ -100,10 +94,7 @@ public abstract class ResolvedJavacOptions {
       boolean verbose,
       JavacPluginParams javaAnnotationProcessorParams,
       JavacPluginParams standardJavacPluginParams,
-      List<String> extraArguments,
-      List<JavacPluginJsr199Fields> annotationProcessors,
-      List<JavacPluginJsr199Fields> javaPlugins,
-      boolean javaAnnotationProcessorParamsPresent) {
+      List<String> extraArguments) {
     return ImmutableResolvedJavacOptions.ofImpl(
         bootclasspath,
         bootclasspathList,
@@ -112,17 +103,7 @@ public abstract class ResolvedJavacOptions {
         verbose,
         javaAnnotationProcessorParams,
         standardJavacPluginParams,
-        extraArguments,
-        annotationProcessors,
-        javaPlugins,
-        javaAnnotationProcessorParamsPresent);
-  }
-
-  private static ImmutableList<JavacPluginJsr199Fields> extractJavacPluginJsr199Fields(
-      JavacPluginParams javacPluginParams, AbsPath ruleCellRoot) {
-    return javacPluginParams.getPluginProperties().stream()
-        .map(p -> p.getJavacPluginJsr199Fields(ruleCellRoot))
-        .collect(ImmutableList.toImmutableList());
+        extraArguments);
   }
 
   /** Validates classpath */

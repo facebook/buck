@@ -16,11 +16,8 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.util.ClassLoaderCache;
-import com.google.common.collect.ImmutableList;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 // Counter part of AnnotationProcessorFactory
 public class PluginFactory implements AutoCloseable {
@@ -40,31 +37,20 @@ public class PluginFactory implements AutoCloseable {
   }
 
   ClassLoader getClassLoaderForProcessorGroups(
-      ImmutableList<JavacPluginJsr199Fields> pluginGroups) {
+      JavacPluginParams pluginParams, AbsPath relPathRoot) {
     ClassLoaderCache cache;
     // We can avoid lots of overhead in large builds by reusing the same classloader for java
     // plugins. However, some plugins use static variables in a way that assumes
     // there is only one instance running in the process at a time (or at all), and such plugin
     // would break running inside of Buck. So we default to creating a new ClassLoader
     // if any plugins meets those requirements.
-    if (pluginGroups.stream().allMatch(JavacPluginJsr199Fields::getCanReuseClassLoader)) {
+    if (pluginParams.getPluginProperties().stream()
+        .allMatch(ResolvedJavacPluginProperties::getCanReuseClassLoader)) {
       cache = globalClassLoaderCache;
     } else {
       cache = localClassLoaderCache;
     }
     return cache.getClassLoaderForClassPath(
-        compilerClassLoader,
-        pluginGroups.stream()
-            .flatMap(pluginGroup -> pluginGroup.getClasspathList().stream())
-            .map(this::toURL)
-            .collect(ImmutableList.toImmutableList()));
-  }
-
-  private URL toURL(JavacPluginJsr199Fields.URL url) {
-    try {
-      return new URL(url.getValue());
-    } catch (MalformedURLException e) {
-      throw new RuntimeException(e);
-    }
+        compilerClassLoader, pluginParams.toUrlClasspath(relPathRoot));
   }
 }

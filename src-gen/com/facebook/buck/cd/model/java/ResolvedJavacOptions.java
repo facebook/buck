@@ -21,8 +21,6 @@ private static final long serialVersionUID = 0L;
     bootclasspath_ = "";
     bootclasspathList_ = java.util.Collections.emptyList();
     extraArguments_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-    annotationProcessors_ = java.util.Collections.emptyList();
-    javaPlugins_ = java.util.Collections.emptyList();
   }
 
   @java.lang.Override
@@ -122,29 +120,6 @@ private static final long serialVersionUID = 0L;
             extraArguments_.add(s);
             break;
           }
-          case 74: {
-            if (!((mutable_bitField0_ & 0x00000100) != 0)) {
-              annotationProcessors_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields>();
-              mutable_bitField0_ |= 0x00000100;
-            }
-            annotationProcessors_.add(
-                input.readMessage(com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.parser(), extensionRegistry));
-            break;
-          }
-          case 82: {
-            if (!((mutable_bitField0_ & 0x00000200) != 0)) {
-              javaPlugins_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields>();
-              mutable_bitField0_ |= 0x00000200;
-            }
-            javaPlugins_.add(
-                input.readMessage(com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.parser(), extensionRegistry));
-            break;
-          }
-          case 88: {
-
-            javaAnnotationProcessorParamsPresent_ = input.readBool();
-            break;
-          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -165,12 +140,6 @@ private static final long serialVersionUID = 0L;
       }
       if (((mutable_bitField0_ & 0x00000080) != 0)) {
         extraArguments_ = extraArguments_.getUnmodifiableView();
-      }
-      if (((mutable_bitField0_ & 0x00000100) != 0)) {
-        annotationProcessors_ = java.util.Collections.unmodifiableList(annotationProcessors_);
-      }
-      if (((mutable_bitField0_ & 0x00000200) != 0)) {
-        javaPlugins_ = java.util.Collections.unmodifiableList(javaPlugins_);
       }
       this.unknownFields = unknownFields.build();
       makeExtensionsImmutable();
@@ -870,1591 +839,6 @@ private static final long serialVersionUID = 0L;
 
     @java.lang.Override
     public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacLanguageLevelOptions getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface JavacPluginJsr199FieldsOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>bool canReuseClassLoader = 1;</code>
-     */
-    boolean getCanReuseClassLoader();
-
-    /**
-     * <code>repeated string processorNames = 2;</code>
-     */
-    java.util.List<java.lang.String>
-        getProcessorNamesList();
-    /**
-     * <code>repeated string processorNames = 2;</code>
-     */
-    int getProcessorNamesCount();
-    /**
-     * <code>repeated string processorNames = 2;</code>
-     */
-    java.lang.String getProcessorNames(int index);
-    /**
-     * <code>repeated string processorNames = 2;</code>
-     */
-    com.google.protobuf.ByteString
-        getProcessorNamesBytes(int index);
-
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-     */
-    java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL> 
-        getClasspathList();
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-     */
-    com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL getClasspath(int index);
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-     */
-    int getClasspathCount();
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-     */
-    java.util.List<? extends com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URLOrBuilder> 
-        getClasspathOrBuilderList();
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-     */
-    com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URLOrBuilder getClasspathOrBuilder(
-        int index);
-  }
-  /**
-   * Protobuf type {@code javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields}
-   */
-  public  static final class JavacPluginJsr199Fields extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields)
-      JavacPluginJsr199FieldsOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use JavacPluginJsr199Fields.newBuilder() to construct.
-    private JavacPluginJsr199Fields(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private JavacPluginJsr199Fields() {
-      processorNames_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      classpath_ = java.util.Collections.emptyList();
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private JavacPluginJsr199Fields(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 8: {
-
-              canReuseClassLoader_ = input.readBool();
-              break;
-            }
-            case 18: {
-              java.lang.String s = input.readStringRequireUtf8();
-              if (!((mutable_bitField0_ & 0x00000002) != 0)) {
-                processorNames_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000002;
-              }
-              processorNames_.add(s);
-              break;
-            }
-            case 26: {
-              if (!((mutable_bitField0_ & 0x00000004) != 0)) {
-                classpath_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL>();
-                mutable_bitField0_ |= 0x00000004;
-              }
-              classpath_.add(
-                  input.readMessage(com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000002) != 0)) {
-          processorNames_ = processorNames_.getUnmodifiableView();
-        }
-        if (((mutable_bitField0_ & 0x00000004) != 0)) {
-          classpath_ = java.util.Collections.unmodifiableList(classpath_);
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return com.facebook.buck.cd.model.java.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return com.facebook.buck.cd.model.java.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.class, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder.class);
-    }
-
-    public interface URLOrBuilder extends
-        // @@protoc_insertion_point(interface_extends:javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL)
-        com.google.protobuf.MessageOrBuilder {
-
-      /**
-       * <code>string value = 1;</code>
-       */
-      java.lang.String getValue();
-      /**
-       * <code>string value = 1;</code>
-       */
-      com.google.protobuf.ByteString
-          getValueBytes();
-    }
-    /**
-     * Protobuf type {@code javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL}
-     */
-    public  static final class URL extends
-        com.google.protobuf.GeneratedMessageV3 implements
-        // @@protoc_insertion_point(message_implements:javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL)
-        URLOrBuilder {
-    private static final long serialVersionUID = 0L;
-      // Use URL.newBuilder() to construct.
-      private URL(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-        super(builder);
-      }
-      private URL() {
-        value_ = "";
-      }
-
-      @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
-        return this.unknownFields;
-      }
-      private URL(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        this();
-        if (extensionRegistry == null) {
-          throw new java.lang.NullPointerException();
-        }
-        int mutable_bitField0_ = 0;
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-            com.google.protobuf.UnknownFieldSet.newBuilder();
-        try {
-          boolean done = false;
-          while (!done) {
-            int tag = input.readTag();
-            switch (tag) {
-              case 0:
-                done = true;
-                break;
-              case 10: {
-                java.lang.String s = input.readStringRequireUtf8();
-
-                value_ = s;
-                break;
-              }
-              default: {
-                if (!parseUnknownField(
-                    input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
-            }
-          }
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          throw e.setUnfinishedMessage(this);
-        } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
-        } finally {
-          this.unknownFields = unknownFields.build();
-          makeExtensionsImmutable();
-        }
-      }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return com.facebook.buck.cd.model.java.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_URL_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return com.facebook.buck.cd.model.java.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_URL_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.class, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder.class);
-      }
-
-      public static final int VALUE_FIELD_NUMBER = 1;
-      private volatile java.lang.Object value_;
-      /**
-       * <code>string value = 1;</code>
-       */
-      public java.lang.String getValue() {
-        java.lang.Object ref = value_;
-        if (ref instanceof java.lang.String) {
-          return (java.lang.String) ref;
-        } else {
-          com.google.protobuf.ByteString bs = 
-              (com.google.protobuf.ByteString) ref;
-          java.lang.String s = bs.toStringUtf8();
-          value_ = s;
-          return s;
-        }
-      }
-      /**
-       * <code>string value = 1;</code>
-       */
-      public com.google.protobuf.ByteString
-          getValueBytes() {
-        java.lang.Object ref = value_;
-        if (ref instanceof java.lang.String) {
-          com.google.protobuf.ByteString b = 
-              com.google.protobuf.ByteString.copyFromUtf8(
-                  (java.lang.String) ref);
-          value_ = b;
-          return b;
-        } else {
-          return (com.google.protobuf.ByteString) ref;
-        }
-      }
-
-      private byte memoizedIsInitialized = -1;
-      @java.lang.Override
-      public final boolean isInitialized() {
-        byte isInitialized = memoizedIsInitialized;
-        if (isInitialized == 1) return true;
-        if (isInitialized == 0) return false;
-
-        memoizedIsInitialized = 1;
-        return true;
-      }
-
-      @java.lang.Override
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
-        if (!getValueBytes().isEmpty()) {
-          com.google.protobuf.GeneratedMessageV3.writeString(output, 1, value_);
-        }
-        unknownFields.writeTo(output);
-      }
-
-      @java.lang.Override
-      public int getSerializedSize() {
-        int size = memoizedSize;
-        if (size != -1) return size;
-
-        size = 0;
-        if (!getValueBytes().isEmpty()) {
-          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, value_);
-        }
-        size += unknownFields.getSerializedSize();
-        memoizedSize = size;
-        return size;
-      }
-
-      @java.lang.Override
-      public boolean equals(final java.lang.Object obj) {
-        if (obj == this) {
-         return true;
-        }
-        if (!(obj instanceof com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL)) {
-          return super.equals(obj);
-        }
-        com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL other = (com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL) obj;
-
-        if (!getValue()
-            .equals(other.getValue())) return false;
-        if (!unknownFields.equals(other.unknownFields)) return false;
-        return true;
-      }
-
-      @java.lang.Override
-      public int hashCode() {
-        if (memoizedHashCode != 0) {
-          return memoizedHashCode;
-        }
-        int hash = 41;
-        hash = (19 * hash) + getDescriptor().hashCode();
-        hash = (37 * hash) + VALUE_FIELD_NUMBER;
-        hash = (53 * hash) + getValue().hashCode();
-        hash = (29 * hash) + unknownFields.hashCode();
-        memoizedHashCode = hash;
-        return hash;
-      }
-
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseFrom(
-          java.nio.ByteBuffer data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseFrom(
-          java.nio.ByteBuffer data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseFrom(
-          com.google.protobuf.ByteString data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseFrom(
-          com.google.protobuf.ByteString data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
-      }
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseDelimitedFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
-      }
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-      }
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseFrom(
-          com.google.protobuf.CodedInputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parseFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
-      }
-
-      @java.lang.Override
-      public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder() {
-        return DEFAULT_INSTANCE.toBuilder();
-      }
-      public static Builder newBuilder(com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL prototype) {
-        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-      }
-      @java.lang.Override
-      public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
-      }
-
-      @java.lang.Override
-      protected Builder newBuilderForType(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        Builder builder = new Builder(parent);
-        return builder;
-      }
-      /**
-       * Protobuf type {@code javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL}
-       */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-          // @@protoc_insertion_point(builder_implements:javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL)
-          com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URLOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return com.facebook.buck.cd.model.java.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_URL_descriptor;
-        }
-
-        @java.lang.Override
-        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-            internalGetFieldAccessorTable() {
-          return com.facebook.buck.cd.model.java.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_URL_fieldAccessorTable
-              .ensureFieldAccessorsInitialized(
-                  com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.class, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder.class);
-        }
-
-        // Construct using com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.newBuilder()
-        private Builder() {
-          maybeForceBuilderInitialization();
-        }
-
-        private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-          super(parent);
-          maybeForceBuilderInitialization();
-        }
-        private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
-          }
-        }
-        @java.lang.Override
-        public Builder clear() {
-          super.clear();
-          value_ = "";
-
-          return this;
-        }
-
-        @java.lang.Override
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return com.facebook.buck.cd.model.java.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_URL_descriptor;
-        }
-
-        @java.lang.Override
-        public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL getDefaultInstanceForType() {
-          return com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.getDefaultInstance();
-        }
-
-        @java.lang.Override
-        public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL build() {
-          com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL result = buildPartial();
-          if (!result.isInitialized()) {
-            throw newUninitializedMessageException(result);
-          }
-          return result;
-        }
-
-        @java.lang.Override
-        public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL buildPartial() {
-          com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL result = new com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL(this);
-          result.value_ = value_;
-          onBuilt();
-          return result;
-        }
-
-        @java.lang.Override
-        public Builder clone() {
-          return super.clone();
-        }
-        @java.lang.Override
-        public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
-          return super.setField(field, value);
-        }
-        @java.lang.Override
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
-          return super.clearField(field);
-        }
-        @java.lang.Override
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-          return super.clearOneof(oneof);
-        }
-        @java.lang.Override
-        public Builder setRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, java.lang.Object value) {
-          return super.setRepeatedField(field, index, value);
-        }
-        @java.lang.Override
-        public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
-          return super.addRepeatedField(field, value);
-        }
-        @java.lang.Override
-        public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL) {
-            return mergeFrom((com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL)other);
-          } else {
-            super.mergeFrom(other);
-            return this;
-          }
-        }
-
-        public Builder mergeFrom(com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL other) {
-          if (other == com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.getDefaultInstance()) return this;
-          if (!other.getValue().isEmpty()) {
-            value_ = other.value_;
-            onChanged();
-          }
-          this.mergeUnknownFields(other.unknownFields);
-          onChanged();
-          return this;
-        }
-
-        @java.lang.Override
-        public final boolean isInitialized() {
-          return true;
-        }
-
-        @java.lang.Override
-        public Builder mergeFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws java.io.IOException {
-          com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL parsedMessage = null;
-          try {
-            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL) e.getUnfinishedMessage();
-            throw e.unwrapIOException();
-          } finally {
-            if (parsedMessage != null) {
-              mergeFrom(parsedMessage);
-            }
-          }
-          return this;
-        }
-
-        private java.lang.Object value_ = "";
-        /**
-         * <code>string value = 1;</code>
-         */
-        public java.lang.String getValue() {
-          java.lang.Object ref = value_;
-          if (!(ref instanceof java.lang.String)) {
-            com.google.protobuf.ByteString bs =
-                (com.google.protobuf.ByteString) ref;
-            java.lang.String s = bs.toStringUtf8();
-            value_ = s;
-            return s;
-          } else {
-            return (java.lang.String) ref;
-          }
-        }
-        /**
-         * <code>string value = 1;</code>
-         */
-        public com.google.protobuf.ByteString
-            getValueBytes() {
-          java.lang.Object ref = value_;
-          if (ref instanceof String) {
-            com.google.protobuf.ByteString b = 
-                com.google.protobuf.ByteString.copyFromUtf8(
-                    (java.lang.String) ref);
-            value_ = b;
-            return b;
-          } else {
-            return (com.google.protobuf.ByteString) ref;
-          }
-        }
-        /**
-         * <code>string value = 1;</code>
-         */
-        public Builder setValue(
-            java.lang.String value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  
-          value_ = value;
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string value = 1;</code>
-         */
-        public Builder clearValue() {
-          
-          value_ = getDefaultInstance().getValue();
-          onChanged();
-          return this;
-        }
-        /**
-         * <code>string value = 1;</code>
-         */
-        public Builder setValueBytes(
-            com.google.protobuf.ByteString value) {
-          if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-          
-          value_ = value;
-          onChanged();
-          return this;
-        }
-        @java.lang.Override
-        public final Builder setUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.setUnknownFields(unknownFields);
-        }
-
-        @java.lang.Override
-        public final Builder mergeUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.mergeUnknownFields(unknownFields);
-        }
-
-
-        // @@protoc_insertion_point(builder_scope:javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL)
-      }
-
-      // @@protoc_insertion_point(class_scope:javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL)
-      private static final com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL DEFAULT_INSTANCE;
-      static {
-        DEFAULT_INSTANCE = new com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL();
-      }
-
-      public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL getDefaultInstance() {
-        return DEFAULT_INSTANCE;
-      }
-
-      private static final com.google.protobuf.Parser<URL>
-          PARSER = new com.google.protobuf.AbstractParser<URL>() {
-        @java.lang.Override
-        public URL parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new URL(input, extensionRegistry);
-        }
-      };
-
-      public static com.google.protobuf.Parser<URL> parser() {
-        return PARSER;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Parser<URL> getParserForType() {
-        return PARSER;
-      }
-
-      @java.lang.Override
-      public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL getDefaultInstanceForType() {
-        return DEFAULT_INSTANCE;
-      }
-
-    }
-
-    private int bitField0_;
-    public static final int CANREUSECLASSLOADER_FIELD_NUMBER = 1;
-    private boolean canReuseClassLoader_;
-    /**
-     * <code>bool canReuseClassLoader = 1;</code>
-     */
-    public boolean getCanReuseClassLoader() {
-      return canReuseClassLoader_;
-    }
-
-    public static final int PROCESSORNAMES_FIELD_NUMBER = 2;
-    private com.google.protobuf.LazyStringList processorNames_;
-    /**
-     * <code>repeated string processorNames = 2;</code>
-     */
-    public com.google.protobuf.ProtocolStringList
-        getProcessorNamesList() {
-      return processorNames_;
-    }
-    /**
-     * <code>repeated string processorNames = 2;</code>
-     */
-    public int getProcessorNamesCount() {
-      return processorNames_.size();
-    }
-    /**
-     * <code>repeated string processorNames = 2;</code>
-     */
-    public java.lang.String getProcessorNames(int index) {
-      return processorNames_.get(index);
-    }
-    /**
-     * <code>repeated string processorNames = 2;</code>
-     */
-    public com.google.protobuf.ByteString
-        getProcessorNamesBytes(int index) {
-      return processorNames_.getByteString(index);
-    }
-
-    public static final int CLASSPATH_FIELD_NUMBER = 3;
-    private java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL> classpath_;
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-     */
-    public java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL> getClasspathList() {
-      return classpath_;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-     */
-    public java.util.List<? extends com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URLOrBuilder> 
-        getClasspathOrBuilderList() {
-      return classpath_;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-     */
-    public int getClasspathCount() {
-      return classpath_.size();
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL getClasspath(int index) {
-      return classpath_.get(index);
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URLOrBuilder getClasspathOrBuilder(
-        int index) {
-      return classpath_.get(index);
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (canReuseClassLoader_ != false) {
-        output.writeBool(1, canReuseClassLoader_);
-      }
-      for (int i = 0; i < processorNames_.size(); i++) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, processorNames_.getRaw(i));
-      }
-      for (int i = 0; i < classpath_.size(); i++) {
-        output.writeMessage(3, classpath_.get(i));
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (canReuseClassLoader_ != false) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBoolSize(1, canReuseClassLoader_);
-      }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < processorNames_.size(); i++) {
-          dataSize += computeStringSizeNoTag(processorNames_.getRaw(i));
-        }
-        size += dataSize;
-        size += 1 * getProcessorNamesList().size();
-      }
-      for (int i = 0; i < classpath_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(3, classpath_.get(i));
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields)) {
-        return super.equals(obj);
-      }
-      com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields other = (com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields) obj;
-
-      if (getCanReuseClassLoader()
-          != other.getCanReuseClassLoader()) return false;
-      if (!getProcessorNamesList()
-          .equals(other.getProcessorNamesList())) return false;
-      if (!getClasspathList()
-          .equals(other.getClasspathList())) return false;
-      if (!unknownFields.equals(other.unknownFields)) return false;
-      return true;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      hash = (37 * hash) + CANREUSECLASSLOADER_FIELD_NUMBER;
-      hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-          getCanReuseClassLoader());
-      if (getProcessorNamesCount() > 0) {
-        hash = (37 * hash) + PROCESSORNAMES_FIELD_NUMBER;
-        hash = (53 * hash) + getProcessorNamesList().hashCode();
-      }
-      if (getClasspathCount() > 0) {
-        hash = (37 * hash) + CLASSPATH_FIELD_NUMBER;
-        hash = (53 * hash) + getClasspathList().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields)
-        com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return com.facebook.buck.cd.model.java.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return com.facebook.buck.cd.model.java.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.class, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder.class);
-      }
-
-      // Construct using com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-          getClasspathFieldBuilder();
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        canReuseClassLoader_ = false;
-
-        processorNames_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        if (classpathBuilder_ == null) {
-          classpath_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
-        } else {
-          classpathBuilder_.clear();
-        }
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return com.facebook.buck.cd.model.java.JavaCDProto.internal_static_javacd_api_v1_ResolvedJavacOptions_JavacPluginJsr199Fields_descriptor;
-      }
-
-      @java.lang.Override
-      public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields getDefaultInstanceForType() {
-        return com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields build() {
-        com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields buildPartial() {
-        com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields result = new com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        result.canReuseClassLoader_ = canReuseClassLoader_;
-        if (((bitField0_ & 0x00000002) != 0)) {
-          processorNames_ = processorNames_.getUnmodifiableView();
-          bitField0_ = (bitField0_ & ~0x00000002);
-        }
-        result.processorNames_ = processorNames_;
-        if (classpathBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) != 0)) {
-            classpath_ = java.util.Collections.unmodifiableList(classpath_);
-            bitField0_ = (bitField0_ & ~0x00000004);
-          }
-          result.classpath_ = classpath_;
-        } else {
-          result.classpath_ = classpathBuilder_.build();
-        }
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields) {
-          return mergeFrom((com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields other) {
-        if (other == com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.getDefaultInstance()) return this;
-        if (other.getCanReuseClassLoader() != false) {
-          setCanReuseClassLoader(other.getCanReuseClassLoader());
-        }
-        if (!other.processorNames_.isEmpty()) {
-          if (processorNames_.isEmpty()) {
-            processorNames_ = other.processorNames_;
-            bitField0_ = (bitField0_ & ~0x00000002);
-          } else {
-            ensureProcessorNamesIsMutable();
-            processorNames_.addAll(other.processorNames_);
-          }
-          onChanged();
-        }
-        if (classpathBuilder_ == null) {
-          if (!other.classpath_.isEmpty()) {
-            if (classpath_.isEmpty()) {
-              classpath_ = other.classpath_;
-              bitField0_ = (bitField0_ & ~0x00000004);
-            } else {
-              ensureClasspathIsMutable();
-              classpath_.addAll(other.classpath_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.classpath_.isEmpty()) {
-            if (classpathBuilder_.isEmpty()) {
-              classpathBuilder_.dispose();
-              classpathBuilder_ = null;
-              classpath_ = other.classpath_;
-              bitField0_ = (bitField0_ & ~0x00000004);
-              classpathBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getClasspathFieldBuilder() : null;
-            } else {
-              classpathBuilder_.addAllMessages(other.classpath_);
-            }
-          }
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private boolean canReuseClassLoader_ ;
-      /**
-       * <code>bool canReuseClassLoader = 1;</code>
-       */
-      public boolean getCanReuseClassLoader() {
-        return canReuseClassLoader_;
-      }
-      /**
-       * <code>bool canReuseClassLoader = 1;</code>
-       */
-      public Builder setCanReuseClassLoader(boolean value) {
-        
-        canReuseClassLoader_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>bool canReuseClassLoader = 1;</code>
-       */
-      public Builder clearCanReuseClassLoader() {
-        
-        canReuseClassLoader_ = false;
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.LazyStringList processorNames_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-      private void ensureProcessorNamesIsMutable() {
-        if (!((bitField0_ & 0x00000002) != 0)) {
-          processorNames_ = new com.google.protobuf.LazyStringArrayList(processorNames_);
-          bitField0_ |= 0x00000002;
-         }
-      }
-      /**
-       * <code>repeated string processorNames = 2;</code>
-       */
-      public com.google.protobuf.ProtocolStringList
-          getProcessorNamesList() {
-        return processorNames_.getUnmodifiableView();
-      }
-      /**
-       * <code>repeated string processorNames = 2;</code>
-       */
-      public int getProcessorNamesCount() {
-        return processorNames_.size();
-      }
-      /**
-       * <code>repeated string processorNames = 2;</code>
-       */
-      public java.lang.String getProcessorNames(int index) {
-        return processorNames_.get(index);
-      }
-      /**
-       * <code>repeated string processorNames = 2;</code>
-       */
-      public com.google.protobuf.ByteString
-          getProcessorNamesBytes(int index) {
-        return processorNames_.getByteString(index);
-      }
-      /**
-       * <code>repeated string processorNames = 2;</code>
-       */
-      public Builder setProcessorNames(
-          int index, java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureProcessorNamesIsMutable();
-        processorNames_.set(index, value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated string processorNames = 2;</code>
-       */
-      public Builder addProcessorNames(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureProcessorNamesIsMutable();
-        processorNames_.add(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated string processorNames = 2;</code>
-       */
-      public Builder addAllProcessorNames(
-          java.lang.Iterable<java.lang.String> values) {
-        ensureProcessorNamesIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, processorNames_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated string processorNames = 2;</code>
-       */
-      public Builder clearProcessorNames() {
-        processorNames_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated string processorNames = 2;</code>
-       */
-      public Builder addProcessorNamesBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  checkByteStringIsUtf8(value);
-        ensureProcessorNamesIsMutable();
-        processorNames_.add(value);
-        onChanged();
-        return this;
-      }
-
-      private java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL> classpath_ =
-        java.util.Collections.emptyList();
-      private void ensureClasspathIsMutable() {
-        if (!((bitField0_ & 0x00000004) != 0)) {
-          classpath_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL>(classpath_);
-          bitField0_ |= 0x00000004;
-         }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URLOrBuilder> classpathBuilder_;
-
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL> getClasspathList() {
-        if (classpathBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(classpath_);
-        } else {
-          return classpathBuilder_.getMessageList();
-        }
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public int getClasspathCount() {
-        if (classpathBuilder_ == null) {
-          return classpath_.size();
-        } else {
-          return classpathBuilder_.getCount();
-        }
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL getClasspath(int index) {
-        if (classpathBuilder_ == null) {
-          return classpath_.get(index);
-        } else {
-          return classpathBuilder_.getMessage(index);
-        }
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public Builder setClasspath(
-          int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL value) {
-        if (classpathBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureClasspathIsMutable();
-          classpath_.set(index, value);
-          onChanged();
-        } else {
-          classpathBuilder_.setMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public Builder setClasspath(
-          int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder builderForValue) {
-        if (classpathBuilder_ == null) {
-          ensureClasspathIsMutable();
-          classpath_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          classpathBuilder_.setMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public Builder addClasspath(com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL value) {
-        if (classpathBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureClasspathIsMutable();
-          classpath_.add(value);
-          onChanged();
-        } else {
-          classpathBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public Builder addClasspath(
-          int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL value) {
-        if (classpathBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureClasspathIsMutable();
-          classpath_.add(index, value);
-          onChanged();
-        } else {
-          classpathBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public Builder addClasspath(
-          com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder builderForValue) {
-        if (classpathBuilder_ == null) {
-          ensureClasspathIsMutable();
-          classpath_.add(builderForValue.build());
-          onChanged();
-        } else {
-          classpathBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public Builder addClasspath(
-          int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder builderForValue) {
-        if (classpathBuilder_ == null) {
-          ensureClasspathIsMutable();
-          classpath_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          classpathBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public Builder addAllClasspath(
-          java.lang.Iterable<? extends com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL> values) {
-        if (classpathBuilder_ == null) {
-          ensureClasspathIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, classpath_);
-          onChanged();
-        } else {
-          classpathBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public Builder clearClasspath() {
-        if (classpathBuilder_ == null) {
-          classpath_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
-          onChanged();
-        } else {
-          classpathBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public Builder removeClasspath(int index) {
-        if (classpathBuilder_ == null) {
-          ensureClasspathIsMutable();
-          classpath_.remove(index);
-          onChanged();
-        } else {
-          classpathBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder getClasspathBuilder(
-          int index) {
-        return getClasspathFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URLOrBuilder getClasspathOrBuilder(
-          int index) {
-        if (classpathBuilder_ == null) {
-          return classpath_.get(index);  } else {
-          return classpathBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public java.util.List<? extends com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URLOrBuilder> 
-           getClasspathOrBuilderList() {
-        if (classpathBuilder_ != null) {
-          return classpathBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(classpath_);
-        }
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder addClasspathBuilder() {
-        return getClasspathFieldBuilder().addBuilder(
-            com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder addClasspathBuilder(
-          int index) {
-        return getClasspathFieldBuilder().addBuilder(
-            index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields.URL classpath = 3;</code>
-       */
-      public java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder> 
-           getClasspathBuilderList() {
-        return getClasspathFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URLOrBuilder> 
-          getClasspathFieldBuilder() {
-        if (classpathBuilder_ == null) {
-          classpathBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URL.Builder, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.URLOrBuilder>(
-                  classpath_,
-                  ((bitField0_ & 0x00000004) != 0),
-                  getParentForChildren(),
-                  isClean());
-          classpath_ = null;
-        }
-        return classpathBuilder_;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields)
-    }
-
-    // @@protoc_insertion_point(class_scope:javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields)
-    private static final com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields();
-    }
-
-    public static com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    private static final com.google.protobuf.Parser<JavacPluginJsr199Fields>
-        PARSER = new com.google.protobuf.AbstractParser<JavacPluginJsr199Fields>() {
-      @java.lang.Override
-      public JavacPluginJsr199Fields parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new JavacPluginJsr199Fields(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<JavacPluginJsr199Fields> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<JavacPluginJsr199Fields> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -3493,10 +1877,18 @@ private static final long serialVersionUID = 0L;
         int index);
 
     /**
+     * <pre>
+     * Appears to only be used for the internal NullSafe.
+     * </pre>
+     *
      * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
      */
     int getPathParamsCount();
     /**
+     * <pre>
+     * Appears to only be used for the internal NullSafe.
+     * </pre>
+     *
      * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
      */
     boolean containsPathParams(
@@ -3508,11 +1900,19 @@ private static final long serialVersionUID = 0L;
     java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
     getPathParams();
     /**
+     * <pre>
+     * Appears to only be used for the internal NullSafe.
+     * </pre>
+     *
      * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
      */
     java.util.Map<java.lang.String, com.facebook.buck.cd.model.common.RelPath>
     getPathParamsMap();
     /**
+     * <pre>
+     * Appears to only be used for the internal NullSafe.
+     * </pre>
+     *
      * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
      */
 
@@ -3520,6 +1920,10 @@ private static final long serialVersionUID = 0L;
         java.lang.String key,
         com.facebook.buck.cd.model.common.RelPath defaultValue);
     /**
+     * <pre>
+     * Appears to only be used for the internal NullSafe.
+     * </pre>
+     *
      * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
      */
 
@@ -3782,6 +2186,10 @@ private static final long serialVersionUID = 0L;
       return internalGetPathParams().getMap().size();
     }
     /**
+     * <pre>
+     * Appears to only be used for the internal NullSafe.
+     * </pre>
+     *
      * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
      */
 
@@ -3798,6 +2206,10 @@ private static final long serialVersionUID = 0L;
       return getPathParamsMap();
     }
     /**
+     * <pre>
+     * Appears to only be used for the internal NullSafe.
+     * </pre>
+     *
      * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
      */
 
@@ -3805,6 +2217,10 @@ private static final long serialVersionUID = 0L;
       return internalGetPathParams().getMap();
     }
     /**
+     * <pre>
+     * Appears to only be used for the internal NullSafe.
+     * </pre>
+     *
      * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
      */
 
@@ -3817,6 +2233,10 @@ private static final long serialVersionUID = 0L;
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
+     * <pre>
+     * Appears to only be used for the internal NullSafe.
+     * </pre>
+     *
      * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
      */
 
@@ -4751,6 +3171,10 @@ private static final long serialVersionUID = 0L;
         return internalGetPathParams().getMap().size();
       }
       /**
+       * <pre>
+       * Appears to only be used for the internal NullSafe.
+       * </pre>
+       *
        * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
        */
 
@@ -4767,6 +3191,10 @@ private static final long serialVersionUID = 0L;
         return getPathParamsMap();
       }
       /**
+       * <pre>
+       * Appears to only be used for the internal NullSafe.
+       * </pre>
+       *
        * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
        */
 
@@ -4774,6 +3202,10 @@ private static final long serialVersionUID = 0L;
         return internalGetPathParams().getMap();
       }
       /**
+       * <pre>
+       * Appears to only be used for the internal NullSafe.
+       * </pre>
+       *
        * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
        */
 
@@ -4786,6 +3218,10 @@ private static final long serialVersionUID = 0L;
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
       /**
+       * <pre>
+       * Appears to only be used for the internal NullSafe.
+       * </pre>
+       *
        * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
        */
 
@@ -4806,6 +3242,10 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
+       * <pre>
+       * Appears to only be used for the internal NullSafe.
+       * </pre>
+       *
        * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
        */
 
@@ -4825,6 +3265,10 @@ private static final long serialVersionUID = 0L;
         return internalGetMutablePathParams().getMutableMap();
       }
       /**
+       * <pre>
+       * Appears to only be used for the internal NullSafe.
+       * </pre>
+       *
        * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
        */
       public Builder putPathParams(
@@ -4837,6 +3281,10 @@ private static final long serialVersionUID = 0L;
         return this;
       }
       /**
+       * <pre>
+       * Appears to only be used for the internal NullSafe.
+       * </pre>
+       *
        * <code>map&lt;string, .RelPath&gt; pathParams = 6;</code>
        */
 
@@ -5079,85 +3527,6 @@ private static final long serialVersionUID = 0L;
     return extraArguments_.getByteString(index);
   }
 
-  public static final int ANNOTATIONPROCESSORS_FIELD_NUMBER = 9;
-  private java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields> annotationProcessors_;
-  /**
-   * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-   */
-  public java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields> getAnnotationProcessorsList() {
-    return annotationProcessors_;
-  }
-  /**
-   * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-   */
-  public java.util.List<? extends com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder> 
-      getAnnotationProcessorsOrBuilderList() {
-    return annotationProcessors_;
-  }
-  /**
-   * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-   */
-  public int getAnnotationProcessorsCount() {
-    return annotationProcessors_.size();
-  }
-  /**
-   * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-   */
-  public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields getAnnotationProcessors(int index) {
-    return annotationProcessors_.get(index);
-  }
-  /**
-   * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-   */
-  public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder getAnnotationProcessorsOrBuilder(
-      int index) {
-    return annotationProcessors_.get(index);
-  }
-
-  public static final int JAVAPLUGINS_FIELD_NUMBER = 10;
-  private java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields> javaPlugins_;
-  /**
-   * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-   */
-  public java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields> getJavaPluginsList() {
-    return javaPlugins_;
-  }
-  /**
-   * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-   */
-  public java.util.List<? extends com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder> 
-      getJavaPluginsOrBuilderList() {
-    return javaPlugins_;
-  }
-  /**
-   * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-   */
-  public int getJavaPluginsCount() {
-    return javaPlugins_.size();
-  }
-  /**
-   * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-   */
-  public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields getJavaPlugins(int index) {
-    return javaPlugins_.get(index);
-  }
-  /**
-   * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-   */
-  public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder getJavaPluginsOrBuilder(
-      int index) {
-    return javaPlugins_.get(index);
-  }
-
-  public static final int JAVAANNOTATIONPROCESSORPARAMSPRESENT_FIELD_NUMBER = 11;
-  private boolean javaAnnotationProcessorParamsPresent_;
-  /**
-   * <code>bool javaAnnotationProcessorParamsPresent = 11;</code>
-   */
-  public boolean getJavaAnnotationProcessorParamsPresent() {
-    return javaAnnotationProcessorParamsPresent_;
-  }
-
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -5195,15 +3564,6 @@ private static final long serialVersionUID = 0L;
     }
     for (int i = 0; i < extraArguments_.size(); i++) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 8, extraArguments_.getRaw(i));
-    }
-    for (int i = 0; i < annotationProcessors_.size(); i++) {
-      output.writeMessage(9, annotationProcessors_.get(i));
-    }
-    for (int i = 0; i < javaPlugins_.size(); i++) {
-      output.writeMessage(10, javaPlugins_.get(i));
-    }
-    if (javaAnnotationProcessorParamsPresent_ != false) {
-      output.writeBool(11, javaAnnotationProcessorParamsPresent_);
     }
     unknownFields.writeTo(output);
   }
@@ -5249,18 +3609,6 @@ private static final long serialVersionUID = 0L;
       size += dataSize;
       size += 1 * getExtraArgumentsList().size();
     }
-    for (int i = 0; i < annotationProcessors_.size(); i++) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(9, annotationProcessors_.get(i));
-    }
-    for (int i = 0; i < javaPlugins_.size(); i++) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(10, javaPlugins_.get(i));
-    }
-    if (javaAnnotationProcessorParamsPresent_ != false) {
-      size += com.google.protobuf.CodedOutputStream
-        .computeBoolSize(11, javaAnnotationProcessorParamsPresent_);
-    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -5301,12 +3649,6 @@ private static final long serialVersionUID = 0L;
     }
     if (!getExtraArgumentsList()
         .equals(other.getExtraArgumentsList())) return false;
-    if (!getAnnotationProcessorsList()
-        .equals(other.getAnnotationProcessorsList())) return false;
-    if (!getJavaPluginsList()
-        .equals(other.getJavaPluginsList())) return false;
-    if (getJavaAnnotationProcessorParamsPresent()
-        != other.getJavaAnnotationProcessorParamsPresent()) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -5346,17 +3688,6 @@ private static final long serialVersionUID = 0L;
       hash = (37 * hash) + EXTRAARGUMENTS_FIELD_NUMBER;
       hash = (53 * hash) + getExtraArgumentsList().hashCode();
     }
-    if (getAnnotationProcessorsCount() > 0) {
-      hash = (37 * hash) + ANNOTATIONPROCESSORS_FIELD_NUMBER;
-      hash = (53 * hash) + getAnnotationProcessorsList().hashCode();
-    }
-    if (getJavaPluginsCount() > 0) {
-      hash = (37 * hash) + JAVAPLUGINS_FIELD_NUMBER;
-      hash = (53 * hash) + getJavaPluginsList().hashCode();
-    }
-    hash = (37 * hash) + JAVAANNOTATIONPROCESSORPARAMSPRESENT_FIELD_NUMBER;
-    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
-        getJavaAnnotationProcessorParamsPresent());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -5486,8 +3817,6 @@ private static final long serialVersionUID = 0L;
       if (com.google.protobuf.GeneratedMessageV3
               .alwaysUseFieldBuilders) {
         getBootclasspathListFieldBuilder();
-        getAnnotationProcessorsFieldBuilder();
-        getJavaPluginsFieldBuilder();
       }
     }
     @java.lang.Override
@@ -5525,20 +3854,6 @@ private static final long serialVersionUID = 0L;
       }
       extraArguments_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       bitField0_ = (bitField0_ & ~0x00000080);
-      if (annotationProcessorsBuilder_ == null) {
-        annotationProcessors_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000100);
-      } else {
-        annotationProcessorsBuilder_.clear();
-      }
-      if (javaPluginsBuilder_ == null) {
-        javaPlugins_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000200);
-      } else {
-        javaPluginsBuilder_.clear();
-      }
-      javaAnnotationProcessorParamsPresent_ = false;
-
       return this;
     }
 
@@ -5599,25 +3914,6 @@ private static final long serialVersionUID = 0L;
         bitField0_ = (bitField0_ & ~0x00000080);
       }
       result.extraArguments_ = extraArguments_;
-      if (annotationProcessorsBuilder_ == null) {
-        if (((bitField0_ & 0x00000100) != 0)) {
-          annotationProcessors_ = java.util.Collections.unmodifiableList(annotationProcessors_);
-          bitField0_ = (bitField0_ & ~0x00000100);
-        }
-        result.annotationProcessors_ = annotationProcessors_;
-      } else {
-        result.annotationProcessors_ = annotationProcessorsBuilder_.build();
-      }
-      if (javaPluginsBuilder_ == null) {
-        if (((bitField0_ & 0x00000200) != 0)) {
-          javaPlugins_ = java.util.Collections.unmodifiableList(javaPlugins_);
-          bitField0_ = (bitField0_ & ~0x00000200);
-        }
-        result.javaPlugins_ = javaPlugins_;
-      } else {
-        result.javaPlugins_ = javaPluginsBuilder_.build();
-      }
-      result.javaAnnotationProcessorParamsPresent_ = javaAnnotationProcessorParamsPresent_;
       result.bitField0_ = to_bitField0_;
       onBuilt();
       return result;
@@ -5721,61 +4017,6 @@ private static final long serialVersionUID = 0L;
           extraArguments_.addAll(other.extraArguments_);
         }
         onChanged();
-      }
-      if (annotationProcessorsBuilder_ == null) {
-        if (!other.annotationProcessors_.isEmpty()) {
-          if (annotationProcessors_.isEmpty()) {
-            annotationProcessors_ = other.annotationProcessors_;
-            bitField0_ = (bitField0_ & ~0x00000100);
-          } else {
-            ensureAnnotationProcessorsIsMutable();
-            annotationProcessors_.addAll(other.annotationProcessors_);
-          }
-          onChanged();
-        }
-      } else {
-        if (!other.annotationProcessors_.isEmpty()) {
-          if (annotationProcessorsBuilder_.isEmpty()) {
-            annotationProcessorsBuilder_.dispose();
-            annotationProcessorsBuilder_ = null;
-            annotationProcessors_ = other.annotationProcessors_;
-            bitField0_ = (bitField0_ & ~0x00000100);
-            annotationProcessorsBuilder_ = 
-              com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                 getAnnotationProcessorsFieldBuilder() : null;
-          } else {
-            annotationProcessorsBuilder_.addAllMessages(other.annotationProcessors_);
-          }
-        }
-      }
-      if (javaPluginsBuilder_ == null) {
-        if (!other.javaPlugins_.isEmpty()) {
-          if (javaPlugins_.isEmpty()) {
-            javaPlugins_ = other.javaPlugins_;
-            bitField0_ = (bitField0_ & ~0x00000200);
-          } else {
-            ensureJavaPluginsIsMutable();
-            javaPlugins_.addAll(other.javaPlugins_);
-          }
-          onChanged();
-        }
-      } else {
-        if (!other.javaPlugins_.isEmpty()) {
-          if (javaPluginsBuilder_.isEmpty()) {
-            javaPluginsBuilder_.dispose();
-            javaPluginsBuilder_ = null;
-            javaPlugins_ = other.javaPlugins_;
-            bitField0_ = (bitField0_ & ~0x00000200);
-            javaPluginsBuilder_ = 
-              com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                 getJavaPluginsFieldBuilder() : null;
-          } else {
-            javaPluginsBuilder_.addAllMessages(other.javaPlugins_);
-          }
-        }
-      }
-      if (other.getJavaAnnotationProcessorParamsPresent() != false) {
-        setJavaAnnotationProcessorParamsPresent(other.getJavaAnnotationProcessorParamsPresent());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -6609,512 +4850,6 @@ private static final long serialVersionUID = 0L;
   checkByteStringIsUtf8(value);
       ensureExtraArgumentsIsMutable();
       extraArguments_.add(value);
-      onChanged();
-      return this;
-    }
-
-    private java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields> annotationProcessors_ =
-      java.util.Collections.emptyList();
-    private void ensureAnnotationProcessorsIsMutable() {
-      if (!((bitField0_ & 0x00000100) != 0)) {
-        annotationProcessors_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields>(annotationProcessors_);
-        bitField0_ |= 0x00000100;
-       }
-    }
-
-    private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder> annotationProcessorsBuilder_;
-
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields> getAnnotationProcessorsList() {
-      if (annotationProcessorsBuilder_ == null) {
-        return java.util.Collections.unmodifiableList(annotationProcessors_);
-      } else {
-        return annotationProcessorsBuilder_.getMessageList();
-      }
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public int getAnnotationProcessorsCount() {
-      if (annotationProcessorsBuilder_ == null) {
-        return annotationProcessors_.size();
-      } else {
-        return annotationProcessorsBuilder_.getCount();
-      }
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields getAnnotationProcessors(int index) {
-      if (annotationProcessorsBuilder_ == null) {
-        return annotationProcessors_.get(index);
-      } else {
-        return annotationProcessorsBuilder_.getMessage(index);
-      }
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public Builder setAnnotationProcessors(
-        int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields value) {
-      if (annotationProcessorsBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureAnnotationProcessorsIsMutable();
-        annotationProcessors_.set(index, value);
-        onChanged();
-      } else {
-        annotationProcessorsBuilder_.setMessage(index, value);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public Builder setAnnotationProcessors(
-        int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder builderForValue) {
-      if (annotationProcessorsBuilder_ == null) {
-        ensureAnnotationProcessorsIsMutable();
-        annotationProcessors_.set(index, builderForValue.build());
-        onChanged();
-      } else {
-        annotationProcessorsBuilder_.setMessage(index, builderForValue.build());
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public Builder addAnnotationProcessors(com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields value) {
-      if (annotationProcessorsBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureAnnotationProcessorsIsMutable();
-        annotationProcessors_.add(value);
-        onChanged();
-      } else {
-        annotationProcessorsBuilder_.addMessage(value);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public Builder addAnnotationProcessors(
-        int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields value) {
-      if (annotationProcessorsBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureAnnotationProcessorsIsMutable();
-        annotationProcessors_.add(index, value);
-        onChanged();
-      } else {
-        annotationProcessorsBuilder_.addMessage(index, value);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public Builder addAnnotationProcessors(
-        com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder builderForValue) {
-      if (annotationProcessorsBuilder_ == null) {
-        ensureAnnotationProcessorsIsMutable();
-        annotationProcessors_.add(builderForValue.build());
-        onChanged();
-      } else {
-        annotationProcessorsBuilder_.addMessage(builderForValue.build());
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public Builder addAnnotationProcessors(
-        int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder builderForValue) {
-      if (annotationProcessorsBuilder_ == null) {
-        ensureAnnotationProcessorsIsMutable();
-        annotationProcessors_.add(index, builderForValue.build());
-        onChanged();
-      } else {
-        annotationProcessorsBuilder_.addMessage(index, builderForValue.build());
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public Builder addAllAnnotationProcessors(
-        java.lang.Iterable<? extends com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields> values) {
-      if (annotationProcessorsBuilder_ == null) {
-        ensureAnnotationProcessorsIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, annotationProcessors_);
-        onChanged();
-      } else {
-        annotationProcessorsBuilder_.addAllMessages(values);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public Builder clearAnnotationProcessors() {
-      if (annotationProcessorsBuilder_ == null) {
-        annotationProcessors_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000100);
-        onChanged();
-      } else {
-        annotationProcessorsBuilder_.clear();
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public Builder removeAnnotationProcessors(int index) {
-      if (annotationProcessorsBuilder_ == null) {
-        ensureAnnotationProcessorsIsMutable();
-        annotationProcessors_.remove(index);
-        onChanged();
-      } else {
-        annotationProcessorsBuilder_.remove(index);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder getAnnotationProcessorsBuilder(
-        int index) {
-      return getAnnotationProcessorsFieldBuilder().getBuilder(index);
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder getAnnotationProcessorsOrBuilder(
-        int index) {
-      if (annotationProcessorsBuilder_ == null) {
-        return annotationProcessors_.get(index);  } else {
-        return annotationProcessorsBuilder_.getMessageOrBuilder(index);
-      }
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public java.util.List<? extends com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder> 
-         getAnnotationProcessorsOrBuilderList() {
-      if (annotationProcessorsBuilder_ != null) {
-        return annotationProcessorsBuilder_.getMessageOrBuilderList();
-      } else {
-        return java.util.Collections.unmodifiableList(annotationProcessors_);
-      }
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder addAnnotationProcessorsBuilder() {
-      return getAnnotationProcessorsFieldBuilder().addBuilder(
-          com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.getDefaultInstance());
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder addAnnotationProcessorsBuilder(
-        int index) {
-      return getAnnotationProcessorsFieldBuilder().addBuilder(
-          index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.getDefaultInstance());
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields annotationProcessors = 9;</code>
-     */
-    public java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder> 
-         getAnnotationProcessorsBuilderList() {
-      return getAnnotationProcessorsFieldBuilder().getBuilderList();
-    }
-    private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder> 
-        getAnnotationProcessorsFieldBuilder() {
-      if (annotationProcessorsBuilder_ == null) {
-        annotationProcessorsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-            com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder>(
-                annotationProcessors_,
-                ((bitField0_ & 0x00000100) != 0),
-                getParentForChildren(),
-                isClean());
-        annotationProcessors_ = null;
-      }
-      return annotationProcessorsBuilder_;
-    }
-
-    private java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields> javaPlugins_ =
-      java.util.Collections.emptyList();
-    private void ensureJavaPluginsIsMutable() {
-      if (!((bitField0_ & 0x00000200) != 0)) {
-        javaPlugins_ = new java.util.ArrayList<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields>(javaPlugins_);
-        bitField0_ |= 0x00000200;
-       }
-    }
-
-    private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder> javaPluginsBuilder_;
-
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields> getJavaPluginsList() {
-      if (javaPluginsBuilder_ == null) {
-        return java.util.Collections.unmodifiableList(javaPlugins_);
-      } else {
-        return javaPluginsBuilder_.getMessageList();
-      }
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public int getJavaPluginsCount() {
-      if (javaPluginsBuilder_ == null) {
-        return javaPlugins_.size();
-      } else {
-        return javaPluginsBuilder_.getCount();
-      }
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields getJavaPlugins(int index) {
-      if (javaPluginsBuilder_ == null) {
-        return javaPlugins_.get(index);
-      } else {
-        return javaPluginsBuilder_.getMessage(index);
-      }
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public Builder setJavaPlugins(
-        int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields value) {
-      if (javaPluginsBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureJavaPluginsIsMutable();
-        javaPlugins_.set(index, value);
-        onChanged();
-      } else {
-        javaPluginsBuilder_.setMessage(index, value);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public Builder setJavaPlugins(
-        int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder builderForValue) {
-      if (javaPluginsBuilder_ == null) {
-        ensureJavaPluginsIsMutable();
-        javaPlugins_.set(index, builderForValue.build());
-        onChanged();
-      } else {
-        javaPluginsBuilder_.setMessage(index, builderForValue.build());
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public Builder addJavaPlugins(com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields value) {
-      if (javaPluginsBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureJavaPluginsIsMutable();
-        javaPlugins_.add(value);
-        onChanged();
-      } else {
-        javaPluginsBuilder_.addMessage(value);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public Builder addJavaPlugins(
-        int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields value) {
-      if (javaPluginsBuilder_ == null) {
-        if (value == null) {
-          throw new NullPointerException();
-        }
-        ensureJavaPluginsIsMutable();
-        javaPlugins_.add(index, value);
-        onChanged();
-      } else {
-        javaPluginsBuilder_.addMessage(index, value);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public Builder addJavaPlugins(
-        com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder builderForValue) {
-      if (javaPluginsBuilder_ == null) {
-        ensureJavaPluginsIsMutable();
-        javaPlugins_.add(builderForValue.build());
-        onChanged();
-      } else {
-        javaPluginsBuilder_.addMessage(builderForValue.build());
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public Builder addJavaPlugins(
-        int index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder builderForValue) {
-      if (javaPluginsBuilder_ == null) {
-        ensureJavaPluginsIsMutable();
-        javaPlugins_.add(index, builderForValue.build());
-        onChanged();
-      } else {
-        javaPluginsBuilder_.addMessage(index, builderForValue.build());
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public Builder addAllJavaPlugins(
-        java.lang.Iterable<? extends com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields> values) {
-      if (javaPluginsBuilder_ == null) {
-        ensureJavaPluginsIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, javaPlugins_);
-        onChanged();
-      } else {
-        javaPluginsBuilder_.addAllMessages(values);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public Builder clearJavaPlugins() {
-      if (javaPluginsBuilder_ == null) {
-        javaPlugins_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000200);
-        onChanged();
-      } else {
-        javaPluginsBuilder_.clear();
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public Builder removeJavaPlugins(int index) {
-      if (javaPluginsBuilder_ == null) {
-        ensureJavaPluginsIsMutable();
-        javaPlugins_.remove(index);
-        onChanged();
-      } else {
-        javaPluginsBuilder_.remove(index);
-      }
-      return this;
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder getJavaPluginsBuilder(
-        int index) {
-      return getJavaPluginsFieldBuilder().getBuilder(index);
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder getJavaPluginsOrBuilder(
-        int index) {
-      if (javaPluginsBuilder_ == null) {
-        return javaPlugins_.get(index);  } else {
-        return javaPluginsBuilder_.getMessageOrBuilder(index);
-      }
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public java.util.List<? extends com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder> 
-         getJavaPluginsOrBuilderList() {
-      if (javaPluginsBuilder_ != null) {
-        return javaPluginsBuilder_.getMessageOrBuilderList();
-      } else {
-        return java.util.Collections.unmodifiableList(javaPlugins_);
-      }
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder addJavaPluginsBuilder() {
-      return getJavaPluginsFieldBuilder().addBuilder(
-          com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.getDefaultInstance());
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder addJavaPluginsBuilder(
-        int index) {
-      return getJavaPluginsFieldBuilder().addBuilder(
-          index, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.getDefaultInstance());
-    }
-    /**
-     * <code>repeated .javacd.api.v1.ResolvedJavacOptions.JavacPluginJsr199Fields javaPlugins = 10;</code>
-     */
-    public java.util.List<com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder> 
-         getJavaPluginsBuilderList() {
-      return getJavaPluginsFieldBuilder().getBuilderList();
-    }
-    private com.google.protobuf.RepeatedFieldBuilderV3<
-        com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder> 
-        getJavaPluginsFieldBuilder() {
-      if (javaPluginsBuilder_ == null) {
-        javaPluginsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-            com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields.Builder, com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199FieldsOrBuilder>(
-                javaPlugins_,
-                ((bitField0_ & 0x00000200) != 0),
-                getParentForChildren(),
-                isClean());
-        javaPlugins_ = null;
-      }
-      return javaPluginsBuilder_;
-    }
-
-    private boolean javaAnnotationProcessorParamsPresent_ ;
-    /**
-     * <code>bool javaAnnotationProcessorParamsPresent = 11;</code>
-     */
-    public boolean getJavaAnnotationProcessorParamsPresent() {
-      return javaAnnotationProcessorParamsPresent_;
-    }
-    /**
-     * <code>bool javaAnnotationProcessorParamsPresent = 11;</code>
-     */
-    public Builder setJavaAnnotationProcessorParamsPresent(boolean value) {
-      
-      javaAnnotationProcessorParamsPresent_ = value;
-      onChanged();
-      return this;
-    }
-    /**
-     * <code>bool javaAnnotationProcessorParamsPresent = 11;</code>
-     */
-    public Builder clearJavaAnnotationProcessorParamsPresent() {
-      
-      javaAnnotationProcessorParamsPresent_ = false;
       onChanged();
       return this;
     }

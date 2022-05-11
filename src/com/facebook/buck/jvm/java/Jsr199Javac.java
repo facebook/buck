@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -67,8 +66,8 @@ public abstract class Jsr199Javac implements Javac {
         BuildTargetValue invokingRule,
         CompilerOutputPathsValue compilerOutputPathsValue,
         ImmutableList<String> options,
-        ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
-        ImmutableList<JavacPluginJsr199Fields> javacPlugins,
+        JavacPluginParams annotationProcessorParams,
+        JavacPluginParams pluginParams,
         ImmutableSortedSet<RelPath> javaSourceFilePaths,
         RelPath pathToSrcsList,
         RelPath workingDirectory,
@@ -85,8 +84,8 @@ public abstract class Jsr199Javac implements Javac {
           invokingRule,
           compilerOutputPathsValue,
           options,
-          annotationProcessors,
-          javacPlugins,
+          annotationProcessorParams,
+          pluginParams,
           javaSourceFilePaths,
           pathToSrcsList,
           trackClassUsage,

@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
-import com.facebook.buck.cd.model.java.ResolvedJavacOptions.JavacPluginJsr199Fields;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
@@ -36,8 +35,8 @@ public class FakeJavac implements ResolvedJavac {
       BuildTargetValue invokingRule,
       CompilerOutputPathsValue compilerOutputPathsValue,
       ImmutableList<String> options,
-      ImmutableList<JavacPluginJsr199Fields> annotationProcessors,
-      ImmutableList<JavacPluginJsr199Fields> javacPlugins,
+      JavacPluginParams annotationProcessorParams,
+      JavacPluginParams pluginParams,
       ImmutableSortedSet<RelPath> javaSourceFilePaths,
       RelPath pathToSrcsList,
       RelPath workingDirectory,
