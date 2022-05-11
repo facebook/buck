@@ -150,12 +150,23 @@ public class NdkCxxPlatforms {
           "-Wl,--as-needed");
 
   private static final Pattern NDK_MAJOR_VERSION_PATTERN = Pattern.compile("^[rR]?(\\d+).*");
+  private static final Pattern NDK_MINOR_VERSION_PATTERN = Pattern.compile("^[rR]?\\d+\\.(\\d+).*");
 
   // Utility class, do not instantiate.
   private NdkCxxPlatforms() {}
 
   static int getNdkMajorVersion(String ndkVersion) {
     return Integer.parseInt(NDK_MAJOR_VERSION_PATTERN.matcher(ndkVersion).replaceAll("$1"));
+  }
+  
+  static int getNdkMinorVersion(String ndkVersion) {
+    Matcher minorMatch = NDK_MINOR_VERSION_PATTERN.matcher(ndkVersion);
+    
+    // ndkVersion does not always contain the minor version (e.g. r10e)
+    if(minorMatch.matches()){
+      return Integer.parseInt(minorMatch.replaceAll("$1"));
+    }
+    return 0
   }
 
   public static NdkCompilerType getDefaultCompilerTypeForNdk(String ndkVersion) {
@@ -172,6 +183,7 @@ public class NdkCxxPlatforms {
 
   public static String getDefaultClangVersionForNdk(String ndkVersion) {
     int ndkMajorVersion = getNdkMajorVersion(ndkVersion);
+    int ndkMinorVersion = getNdkMinorVersion(ndkVersion);
     if (ndkMajorVersion < 11) {
       return "3.5";
     } else if (ndkMajorVersion < 15) {
@@ -186,8 +198,12 @@ public class NdkCxxPlatforms {
       return "8.0.2";
     } else if (ndkMajorVersion < 21) {
       return "8.0.7";
-    } else {
+    } else if (ndkMajorVersion < 22 && ndkMinorVersion < 4 ) { // NDK up to r21d
       return "9.0.8";
+    } else if (ndkMajorVersion < 22 && ndkMinorVersion >= 4 ) { //NDK r21e
+      return "9.0.9";
+    } else { // NDK r22 and +
+      return "11.0.5";
     }
   }
 
@@ -901,10 +917,6 @@ public class NdkCxxPlatforms {
     // NDK builds enable stack protector and debug symbols by default.
     flags.add("-fstack-protector", "-g3");
 
-    if (toolchainPaths.isUnifiedHeaders()) {
-      flags.add("-D__ANDROID_API__=" + targetConfiguration.getTargetAppPlatformLevel());
-    }
-
     return flags.build();
   }
 
@@ -1137,6 +1149,7 @@ public class NdkCxxPlatforms {
                     "{gcc_compiler_version}", targetConfiguration.getCompiler().getGccVersion());
             s = s.replace("{hostname}", hostName);
             s = s.replace("{target_platform}", targetConfiguration.getTargetAppPlatform());
+            s = s.replace("{target_platform_level}", String.valueOf(targetConfiguration.getTargetAppPlatformLevel()));
             s = s.replace("{target_arch}", targetConfiguration.getTargetArch().toString());
             s = s.replace("{target_arch_abi}", targetConfiguration.getTargetArchAbi().toString());
           }
@@ -1197,7 +1210,13 @@ public class NdkCxxPlatforms {
 
     /** @return the path to arch-specific include files; only use with unified headers */
     Path getArchSpecificIncludes() {
-      return processDirectoryPathPattern("sysroot/usr/include/{toolchain_target}");
+      // <ndk_root>/sysroot and platforms directory has changed location see 
+      // https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md#Sysroot
+      if(ndkMajorVersion > 21) {
+          return processDirectoryPathPattern("toolchains/llvm/prebuilt/{hostname}/sysroot/usr/include/{toolchain_target}");
+      } else {
+        return processDirectoryPathPattern("sysroot/usr/include/{toolchain_target}");
+      }
     }
 
     /**
@@ -1206,13 +1225,26 @@ public class NdkCxxPlatforms {
      */
     Path getIncludeSysroot() {
       if (isUnifiedHeaders()) {
-        return processDirectoryPathPattern("sysroot");
+        // <ndk_root>/sysroot and platforms directory has changed location see 
+        // https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md#Sysroot
+        if(ndkMajorVersion > 21) {
+            return processDirectoryPathPattern("toolchains/llvm/prebuilt/{hostname}/sysroot");
+        } else {
+          return processDirectoryPathPattern("sysroot");
+        }
       }
       return getPlatformSysroot();
     }
 
     Path getPlatformSysroot() {
-      return processDirectoryPathPattern("platforms/{target_platform}/arch-{target_arch}");
+      // <ndk_root>/sysroot and platforms directory has changed location see 
+      // https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md#Sysroot
+      if(ndkMajorVersion > 21) {
+        return processDirectoryPathPattern("toolchains/llvm/prebuilt/{hostname}/sysroot");
+        //return processDirectoryPathPattern("toolchains/llvm/prebuilt/{hostname}/sysroot/usr/lib/{toolchain_target}/{target_platform_level}");
+      } else {
+        return processDirectoryPathPattern("platforms/{target_platform}/arch-{target_arch}");
+      }
     }
 
     Path getLibexecGccToolPath() {
