@@ -60,8 +60,13 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.protobuf.Message;
+import com.google.protobuf.util.JsonFormat;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -107,6 +112,13 @@ public class JavaCDWorkerToolMain {
                   "No recent javacd activity, dumping javacd thread stacks (`tr , '\\n'` to decode):%n %s",
                   threadDump),
           HANG_DETECTOR_TIMEOUT);
+
+  /**
+   * This is just a simple debugging tool. When started with this env var, javacd will write the
+   * command protos to buck-out/protos in json-encoded format.
+   */
+  private static final boolean ENABLE_DEBUG_PROTO_DUMPS =
+      EnvVariablesProvider.getSystemEnv().get("JAVACD_DUMP_PROTOS") != null;
 
   /** Main entrypoint of JavaCD worker tool. */
   public static void main(String[] args) {
@@ -202,6 +214,7 @@ public class JavaCDWorkerToolMain {
               BuildJavaCommand buildJavaCommand =
                   BuildJavaCommand.parseDelimitedFrom(commandsInputStream);
               LOG.debug("Start executing command with action id: %s", executeCommandActionId);
+              maybeWriteProtoForDebugging(executeCommandActionId, buildJavaCommand);
 
               ListenableFuture<Unit> executeCommandFuture =
                   LISTENING_EXECUTOR_SERVICE.submit(
@@ -242,6 +255,7 @@ public class JavaCDWorkerToolMain {
               PipeliningCommand pipeliningCommand =
                   PipeliningCommand.parseDelimitedFrom(commandsInputStream);
               LOG.debug("Start executing pipelining command with action ids: %s", actionIds);
+              maybeWriteProtoForDebugging(actionIds.get(0), pipeliningCommand);
 
               Optional<SettableFuture<ActionId>> startNextCommandOptional = Optional.empty();
               if (actionIds.size() > 1) {
@@ -306,6 +320,26 @@ public class JavaCDWorkerToolMain {
           }
         }
       }
+    }
+  }
+
+  private static void maybeWriteProtoForDebugging(ActionId actionId, Message message) {
+    if (!ENABLE_DEBUG_PROTO_DUMPS) {
+      return;
+    }
+
+    try {
+      String asJson = JsonFormat.printer().print(message);
+      Path protoOut =
+          Paths.get("buck-out/protos")
+              .resolve("./" + actionId.getValue().replace(':', '/').split(" ")[0])
+              .resolve("command_proto.json");
+
+      Files.createDirectories(protoOut.getParent());
+      Files.writeString(protoOut, asJson);
+    } catch (Exception e) {
+      System.err.println(e);
+      throw new RuntimeException(e);
     }
   }
 
