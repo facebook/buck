@@ -198,7 +198,7 @@ public class JavaStepsBuilder {
   }
 
   public static AbsPath getRootPath(FilesystemParams filesystemParams) {
-    return AbsPath.get(filesystemParams.getRootPath().getPath());
+    return AbsPathSerializer.deserialize(filesystemParams.getRootPath());
   }
 
   private static DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> creteDefaultStepsFactory(
