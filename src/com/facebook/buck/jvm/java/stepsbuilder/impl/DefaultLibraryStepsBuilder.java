@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
 import com.facebook.buck.jvm.java.stepsbuilder.LibraryStepsBuilder;
+import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.java.MakeMissingOutputsStep;
 import com.facebook.buck.step.isolatedsteps.java.UnusedDependenciesFinder;
 import com.google.common.collect.ImmutableList;
@@ -115,6 +116,10 @@ class DefaultLibraryStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
             abiCompatibilityMode,
             isRequiredForSourceOnlyAbi,
             compilerOutputPathsValue.getByType(buildTargetValue.getType()));
+
+    stepsBuilder.addAll(
+        MakeCleanDirectoryIsolatedStep.of(
+            compilerOutputPathsValue.getByType(buildTargetValue.getType()).getWorkingDirectory()));
 
     Class<T> extraParamsType = configuredCompiler.getExtraParamsType();
     configuredCompiler.createCompileToJarStep(

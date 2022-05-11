@@ -277,7 +277,7 @@ public class JavaCDIntegrationTest {
     waitTillEventsProcessed();
 
     List<String> actualStepEvents = eventBusListener.getStepEventLogMessages();
-    assertThat(actualStepEvents, hasSize(28));
+    assertThat(actualStepEvents, hasSize(32));
 
     List<String> simplePerfEvents = eventBusListener.getSimplePerfEvents();
     assertThat(simplePerfEvents, hasSize(4));

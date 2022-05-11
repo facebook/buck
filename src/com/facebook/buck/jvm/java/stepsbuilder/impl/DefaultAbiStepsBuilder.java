@@ -31,6 +31,7 @@ import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.ResolvedJavac;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
+import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -67,6 +68,11 @@ class DefaultAbiStepsBuilder<T extends CompileToJarStepFactory.ExtraParams>
       AbsPath buildCellRootPath,
       ResolvedJavac resolvedJavac,
       CompileToJarStepFactory.ExtraParams extraParams) {
+
+    stepsBuilder.addAll(
+        MakeCleanDirectoryIsolatedStep.of(
+            compilerOutputPathsValue.getByType(buildTargetValue.getType()).getWorkingDirectory()));
+
     CompilerParameters compilerParameters =
         JavaLibraryRules.getCompilerParameters(
             compileTimeClasspathPaths,

@@ -1507,7 +1507,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                 FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
                 new FakeBuildableContext());
 
-    assertEquals(24, steps.size());
     JavacStep javac = getJavacStep(steps);
     assertTrue(javac.getResolvedJavac() instanceof Jsr199Javac.ResolvedJsr199Javac);
   }
