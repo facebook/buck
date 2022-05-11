@@ -129,8 +129,10 @@ public class InstrumentationTestRunner {
           break;
         case "--output":
           outputDirectory = new File(args[++i]);
-          if (!outputDirectory.exists()) {
-            System.err.printf("The output directory did not exist: %s\n", outputDirectory);
+          if (!outputDirectory.exists() && !outputDirectory.mkdir()) {
+            System.err.printf(
+                "The output directory did not exist and failed to create it: %s\n",
+                outputDirectory);
             System.exit(1);
           }
           break;
