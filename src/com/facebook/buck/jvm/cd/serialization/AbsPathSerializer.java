@@ -17,9 +17,18 @@
 package com.facebook.buck.jvm.cd.serialization;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /** {@link AbsPath} to protobuf serializer */
 public class AbsPathSerializer {
+  private static final String EXPECT_RELATIVE_PATHS_ENV_VAR =
+      "JAVACD_ABSOLUTE_PATHS_ARE_RELATIVE_TO_CWD";
+
+  private static final boolean EXPECT_RELATIVE_PATHS =
+      EnvVariablesProvider.getSystemEnv().get(EXPECT_RELATIVE_PATHS_ENV_VAR) != null;
 
   private AbsPathSerializer() {}
 
@@ -37,6 +46,12 @@ public class AbsPathSerializer {
    * AbsPath}.
    */
   public static AbsPath deserialize(com.facebook.buck.cd.model.common.AbsPath absPath) {
-    return AbsPath.get(absPath.getPath());
+    Path path = Paths.get(absPath.getPath());
+    if (EXPECT_RELATIVE_PATHS) {
+      RelPath relPath = RelPath.of(path);
+      return AbsPath.of(Paths.get("")).resolve(relPath);
+    } else {
+      return AbsPath.of(path);
+    }
   }
 }
