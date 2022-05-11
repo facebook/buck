@@ -1,4 +1,6 @@
+load("//tools/build_rules:buck2.bzl", "enable_buck2_bootstrap_prebuilts")
 load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "buck_java_library")
+
 buck_java_library(
     name = "abi",
     srcs = glob(
@@ -38,14 +40,35 @@ buck_java_library(
     ],
 )
 
-buck_java_binary(
+alias(
     name = "api-stubber",
+    actual = ":api-stubber_prebuilt" if enable_buck2_bootstrap_prebuilts() else ":api-stubber-main",
+    visibility = ["PUBLIC"],
+)
+
+
+buck_java_binary(
+    name = "api-stubber-main",
     main_class = "com.facebook.buck.jvm.java.abi.ApiStubber",
     deps = [
         ":lib-api-stubber",
     ],
-    visibility = ["PUBLIC"],
 )
+
+[
+  export_file(
+      name = "api-stubber_prebuilt_jar",
+      src = "api-stubber_prebuilt.jar",
+  ),
+  command_alias(
+      name = "api-stubber_prebuilt",
+      exe = "fbsource//third-party/toolchains/jdk:java",
+      args = [
+        "-jar",
+        "$(location :api-stubber_prebuilt_jar)",
+      ],
+  )
+] if enable_buck2_bootstrap_prebuilts() else []
 
 buck_java_library(
     name = "lib-api-stubber",

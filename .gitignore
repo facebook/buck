@@ -35,6 +35,8 @@
 !/test/com/facebook/buck/log/testdata/
 !/test/com/facebook/buck/doctor/testdata/
 
+/src/com/facebook/buck/jvm/java/abi/api-stubber_prebuilt.jar
+
 # Compiled Python
 *.pyc
 *py.class
