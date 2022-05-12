@@ -232,7 +232,7 @@ class BuckProject:
     # keep in sync with get_buckd_transport_address
     def get_buckd_transport_file_path(self):
         if os.name == "nt":
-            return u"\\\\.\\pipe\\buckd_{0}".format(self.get_instance_hash())
+            return "\\\\.\\pipe\\buckd_{0}".format(self.get_instance_hash())
         else:
             return os.path.join(self.buckd_dir, "sock")
 
