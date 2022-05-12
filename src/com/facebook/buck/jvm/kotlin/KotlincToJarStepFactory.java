@@ -409,15 +409,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(kaptAnnotationGenFolder));
 
     ImmutableList<ResolvedJavacPluginProperties> kaptAnnotationProcessors =
-        javaAnnotationProcessorParams.isEmpty()
-            ? ImmutableList.of()
-            : javaAnnotationProcessorParams.getPluginProperties().stream()
-                .filter(
-                    prop ->
-                        prop.getProcessorNames().isEmpty()
-                            || !Iterables.getFirst(prop.getProcessorNames(), "")
-                                .startsWith(KSP_PROCESSOR_NAME_PREFIX))
-                .collect(ImmutableList.toImmutableList());
+        getKaptAnnotationProcessors(javaAnnotationProcessorParams);
 
     // No annotation processors for KAPT
     if (kaptAnnotationProcessors.isEmpty()) {
@@ -570,18 +562,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     RelPath kspAnnotationGenFolder = getKspAnnotationGenPath(buckPaths, invokingRule);
     steps.addAll(MakeCleanDirectoryIsolatedStep.of(kspAnnotationGenFolder));
 
-    // KSP Annotation processors are defined like Java's,
-    // but their name starts with KSP_PROCESSOR_NAME_PREFIX
     ImmutableList<ResolvedJavacPluginProperties> kspAnnotationProcessors =
-        annotationProcessorParams.isEmpty()
-            ? ImmutableList.of()
-            : annotationProcessorParams.getPluginProperties().stream()
-                .filter(prop -> !prop.getProcessorNames().isEmpty())
-                .filter(
-                    prop ->
-                        Iterables.getFirst(prop.getProcessorNames(), "")
-                            .startsWith(KSP_PROCESSOR_NAME_PREFIX))
-                .collect(ImmutableList.toImmutableList());
+        getKspAnnotationProcessors(annotationProcessorParams);
 
     if (kspAnnotationProcessors.isEmpty()) {
       return;
@@ -937,6 +919,37 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
 
   private static boolean isNotKspPlugin(String sourcePath) {
     return !isKspPlugin(sourcePath);
+  }
+
+  static ImmutableList<ResolvedJavacPluginProperties> getKaptAnnotationProcessors(
+      JavacPluginParams javaAnnotationProcessorParams) {
+    ImmutableList<ResolvedJavacPluginProperties> kaptAnnotationProcessors =
+        javaAnnotationProcessorParams.isEmpty()
+            ? ImmutableList.of()
+            : javaAnnotationProcessorParams.getPluginProperties().stream()
+                .filter(prop -> !isKSPProcessor(prop))
+                .collect(ImmutableList.toImmutableList());
+    return kaptAnnotationProcessors;
+  }
+
+  static ImmutableList<ResolvedJavacPluginProperties> getKspAnnotationProcessors(
+      JavacPluginParams annotationProcessorParams) {
+    ImmutableList<ResolvedJavacPluginProperties> kspAnnotationProcessors =
+        annotationProcessorParams.isEmpty()
+            ? ImmutableList.of()
+            : annotationProcessorParams.getPluginProperties().stream()
+                .filter(prop -> isKSPProcessor(prop))
+                .collect(ImmutableList.toImmutableList());
+    return kspAnnotationProcessors;
+  }
+
+  /**
+   * KSP Annotation processors are defined like Java's, but their name starts with
+   * KSP_PROCESSOR_NAME_PREFIX
+   */
+  private static boolean isKSPProcessor(ResolvedJavacPluginProperties prop) {
+    return !prop.getProcessorNames().isEmpty()
+        && Iterables.getFirst(prop.getProcessorNames(), "").startsWith(KSP_PROCESSOR_NAME_PREFIX);
   }
 
   public static RelPath getKaptAnnotationGenPath(BuckPaths buckPaths, BuildTarget buildTarget) {

@@ -33,6 +33,7 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
@@ -138,7 +139,12 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public boolean trackClassUsage(JavacOptions javacOptions) {
-    return kotlinBuckConfig.trackClassUsage();
+    JavacPluginParams annotationProcessorParams = javacOptions.getJavaAnnotationProcessorParams();
+    return kotlinBuckConfig.trackClassUsage()
+        // Kotlin track class usage currently doesn't work well with KAPT or KSP, especially if they
+        // read from resource files. So we disabled it for targets with KAPT or KSP.
+        // TODO(T120014575): Fix class usage tracker for KAPT/KSP cases and re-enable those targets
+        && annotationProcessorParams.getPluginProperties().isEmpty();
   }
 
   @Override
