@@ -41,9 +41,9 @@ apple_toolchain(
     platform_path = "xcode/Platforms/iPhoneSimulator.platform",
     sdk_path = "xcode/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk",
     sdk_name = "iphonesimulator",
-    version = "13.2",
+    version = "13.3",
     build_version = "17B102",
-    min_version = "13.2",
+    min_version = "13.3",
     actool = "xcode/usr/bin/actool",
     ibtool = "xcode/usr/bin/ibtool",
     momc = "xcode/usr/bin/momc",
@@ -67,7 +67,7 @@ swift_toolchain(
     platform_path = "xcode/Platforms/iPhoneSimulator.platform",
     sdk_path = "xcode/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk",
     resource_dir = "xcode/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift",
-    sdk_dependencies_path = "iphonesimulator_15.2_deps.json",
+    sdk_dependencies_path = "iphonesimulator_x86_64.json",
     swiftc = "swift.sh",
 )
 
