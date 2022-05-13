@@ -1,0 +1,6 @@
+libs
+buck-out
+.buckd
+BUCK
+venv
+third-party
