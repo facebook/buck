@@ -1,0 +1,35 @@
+kotlin_library(
+    name = "util",
+    srcs = [
+        "UnusedUtil.kt",
+        "Util.kt",
+    ],
+)
+
+kotlin_library(
+    name = "biz",
+    srcs = [
+        "JavaBusiness.java",
+        "KotlinBusiness.kt",
+    ],
+    deps = [
+        ":util",
+    ],
+)
+
+kotlin_library(
+    name = "biz_with_kapt",
+    srcs = [
+       "JavaBusiness.java",
+       "KotlinBusiness.kt",
+    ],
+    annotation_processing_tool = "kapt",
+    plugins = [
+        "//com/example/ap/kotlinap_kapt:ap",
+    ],
+    deps = [
+       ":util",
+        "//com/example/ap/kotlinannotation:annotation-lib",
+    ],
+)
+
