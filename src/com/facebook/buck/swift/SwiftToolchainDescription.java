@@ -145,7 +145,7 @@ public class SwiftToolchainDescription
     /** Runtime run paths. */
     ImmutableList<String> getRuntimeRunPaths();
 
-    /** If the toolchain supports the -prefix-serialized-debug-info flag. */
+    /** If the toolchain supports the -prefix-serialized-debugging-options flag. */
     @Value.Default
     default boolean getPrefixSerializedDebugInfo() {
       return false;

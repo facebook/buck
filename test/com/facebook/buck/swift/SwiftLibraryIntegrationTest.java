@@ -336,7 +336,7 @@ public class SwiftLibraryIntegrationTest {
   }
 
   @Test
-  public void testPrefixSerializedDebugInfo() {
+  public void testPrefixSerializedDebuggingOptions() {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-arm64");
@@ -346,7 +346,7 @@ public class SwiftLibraryIntegrationTest {
 
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
-            .setSections("[swift]", "prefix_serialized_debug_info = True")
+            .setSections("[swift]", "prefix_serialized_debugging_options = True")
             .build();
 
     SwiftLibraryDescription swiftLibraryDescription =
@@ -366,7 +366,7 @@ public class SwiftLibraryIntegrationTest {
     ImmutableList<String> compilerCommand =
         ImmutableList.copyOf(compileStep.getDescription(null).split(" "));
 
-    assertThat(compilerCommand, Matchers.hasItem("-prefix-serialized-debug-info"));
+    assertThat(compilerCommand, Matchers.hasItem("-prefix-serialized-debugging-options"));
   }
 
   @Test

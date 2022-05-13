@@ -45,7 +45,8 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String TRANSFORM_ERRORS_TO_ABSOLUTE_PATHS =
       "transform_errors_to_absolute_paths";
   public static final String USE_DEBUG_PREFIX_MAP = "use_debug_prefix_map";
-  public static final String PREFIX_SERIALIZED_DEBUG_INFO = "prefix_serialized_debug_info";
+  public static final String PREFIX_SERIALIZED_DEBUGGING_OPTIONS =
+      "prefix_serialized_debugging_options";
   public static final String ADD_XCTEST_IMPORT_PATHS = "add_xctest_import_paths";
   public static final String ALLOW_PRIVATE_SWIFT_DEPS = "allow_private_swift_deps";
   public static final String INCREMENTAL_BUILDS = "incremental";
@@ -181,11 +182,11 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * If true, use the -prefix-serialized-debug-info flag to remap paths in the serialized Swift
-   * debug info. This makes it possible to cache Swift compiler output.
+   * If true, use the -prefix-serialized-debugging-options flag to remap paths in the serialized
+   * Swift debug info. This makes it possible to cache Swift compiler output.
    */
-  public boolean getPrefixSerializedDebugInfo() {
-    return delegate.getBooleanValue(SECTION_NAME, PREFIX_SERIALIZED_DEBUG_INFO, false);
+  public boolean getPrefixSerializedDebuggingOptions() {
+    return delegate.getBooleanValue(SECTION_NAME, PREFIX_SERIALIZED_DEBUGGING_OPTIONS, false);
   }
 
   /**

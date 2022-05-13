@@ -150,7 +150,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
 
   @AddToRuleKey protected final boolean shouldEmitClangModuleBreadcrumbs;
 
-  @AddToRuleKey protected final boolean prefixSerializedDebugInfo;
+  @AddToRuleKey protected final boolean prefixSerializedDebuggingOptions;
 
   @AddToRuleKey private final boolean addXCTestImportPaths;
 
@@ -192,7 +192,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       ImmutableBiMap<Path, String> debugPrefixMap,
       boolean importUnderlyingModule,
       boolean withDownwardApi,
-      boolean hasPrefixSerializedDebugInfo,
+      boolean hasPrefixSerializedDebuggingOptions,
       boolean addXCTestImportPaths,
       boolean serializeDebuggingOptions,
       boolean usesExplicitModules,
@@ -273,8 +273,9 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.debugPrefixMap = debugPrefixMap;
     this.useDebugPrefixMap = swiftBuckConfig.getUseDebugPrefixMap();
     this.shouldEmitClangModuleBreadcrumbs = swiftBuckConfig.getEmitClangModuleBreadcrumbs();
-    this.prefixSerializedDebugInfo =
-        hasPrefixSerializedDebugInfo || swiftBuckConfig.getPrefixSerializedDebugInfo();
+    this.prefixSerializedDebuggingOptions =
+        hasPrefixSerializedDebuggingOptions
+            || swiftBuckConfig.getPrefixSerializedDebuggingOptions();
     this.serializeDebuggingOptions = serializeDebuggingOptions;
     this.moduleDeps = moduleDependencies;
 
@@ -511,10 +512,9 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
       argBuilder.add(frontendFlag, "-serialize-debugging-options");
     }
 
-    if (prefixSerializedDebugInfo) {
+    if (prefixSerializedDebuggingOptions) {
       // Apply path prefixes to swiftmodule debug info to make compiler output cacheable.
-      // NOTE: not yet supported in upstream Swift
-      argBuilder.add(frontendFlag, "-prefix-serialized-debug-info");
+      argBuilder.add(frontendFlag, "-prefix-serialized-debugging-options");
     }
 
     return argBuilder.build();

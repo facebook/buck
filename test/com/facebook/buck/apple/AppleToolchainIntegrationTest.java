@@ -213,7 +213,7 @@ public class AppleToolchainIntegrationTest {
                 + "swift flags: -resource-dir "
                 + resourceDirPath
                 + "%n"
-                + "swift flags: -prefix-serialized-debug-info%n"
+                + "swift flags: -prefix-serialized-debugging-options%n"
                 + "linker: input:%n"
                 + companionLibraryPath
                 + "/SwiftCompanionLibrary.o%n"
@@ -225,7 +225,7 @@ public class AppleToolchainIntegrationTest {
                 + "swift flags: -resource-dir "
                 + resourceDirPath
                 + "%n"
-                + "swift flags: -prefix-serialized-debug-info%n"
+                + "swift flags: -prefix-serialized-debugging-options%n"
                 + "linker: input:%n"
                 + anotherSwiftLibraryPath
                 + "/AnotherSwiftLibrary.o%n"
@@ -236,7 +236,7 @@ public class AppleToolchainIntegrationTest {
                 + "swift flags: -resource-dir "
                 + resourceDirPath
                 + "%n"
-                + "swift flags: -prefix-serialized-debug-info%n"
+                + "swift flags: -prefix-serialized-debugging-options%n"
                 + "linker: fpath: apple_toolchain/Developer/iPhoneOS.platform/iPhoneOS.sdk/Frameworks%n"
                 + "linker: frameworks: Foundation%n"
                 + "linker: lpath: /test/linking,@executable_path/linking,@loader_path/linking%n"

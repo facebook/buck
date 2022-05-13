@@ -19,7 +19,7 @@ parser.add_argument("-parse-as-library", action="store_true")
 parser.add_argument("-serialize-debugging-options", action="store_true")
 parser.add_argument("-test-arg1", action="store_true")
 parser.add_argument("-test-arg2", action="store_true")
-parser.add_argument("-prefix-serialized-debug-info", action="store_true")
+parser.add_argument("-prefix-serialized-debugging-options", action="store_true")
 parser.add_argument("-sdk")
 parser.add_argument("-resource-dir")
 
@@ -48,8 +48,8 @@ with open(options.output, "w") as output:
     if options.resource_dir:
         output.write(f"swift flags: -resource-dir {options.resource_dir}\n")
 
-    if options.prefix_serialized_debug_info:
-        output.write("swift flags: -prefix-serialized-debug-info\n")
+    if options.prefix_serialized_debugging_options:
+        output.write("swift flags: -prefix-serialized-debugging-options\n")
 
 with open(options.emit_module_path, "w") as module:
     module.write("Module: " + options.module_name + "\n")

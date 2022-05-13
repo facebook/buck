@@ -221,7 +221,7 @@ public class SwiftCompile extends SwiftCompileBase {
     //
     // - Debugging Options: In order for lldb to find and compile all the Obj-C modules, it
     //     needs to know the flags passed to the Clang importer and the paths where to find them.
-    //     Those paths are passed as absolute. When "-prefix-serialized-debug-info" is passed
+    //     Those paths are passed as absolute. When "-prefix-serialized-debugging-options" is passed
     //     the paths used in this debugging info have debug prefixes applied which allows the
     //     swiftmodule files to be relocateable. The inverse map has to be applied in LLDB for
     //     the debugger to be able to recreate the clang modules successfully.
@@ -229,7 +229,7 @@ public class SwiftCompile extends SwiftCompileBase {
     // See https://github.com/bazelbuild/rules_swift/tree/c29e0a07b4253047f9b3021db2bb5349bb7cff1f
     return !bridgingHeader.isPresent()
         && !shouldEmitClangModuleBreadcrumbs
-        && prefixSerializedDebugInfo
+        && prefixSerializedDebuggingOptions
         && useDebugPrefixMap;
   }
 
