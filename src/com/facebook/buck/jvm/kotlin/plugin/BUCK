@@ -1,7 +1,7 @@
 load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_java_binary")
 
 kotlin_library(
-    name = "plugin",
+    name = "dep-tracker-lib",
     srcs = [
         "ClassUsageRecorder.kt",
         "DependencyTrackerCommandLineProcessor.kt",
@@ -29,11 +29,11 @@ buck_java_library(
 )
 
 buck_java_binary(
-    name = "kotlinc-plugin",
+    name = "dep-tracker",
     visibility = [
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
     ],
     deps = [
-        ":plugin",
+        ":dep-tracker-lib",
     ],
 )

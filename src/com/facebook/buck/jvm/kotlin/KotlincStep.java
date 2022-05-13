@@ -194,7 +194,7 @@ public class KotlincStep extends IsolatedStep {
     builder.add(EXCLUDE_REFLECT);
 
     if (trackClassUsage) {
-      builder.add("-Xplugin=" + PluginLoader.KOTLINC_PLUGIN_JAR_PATH);
+      builder.add("-Xplugin=" + PluginLoader.DEP_TRACKER_KOTLINC_PLUGIN_JAR_PATH);
       builder.add("-P");
       builder.add(
           "plugin:buck_deps_tracker:out="

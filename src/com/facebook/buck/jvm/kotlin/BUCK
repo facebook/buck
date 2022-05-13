@@ -4,7 +4,7 @@ java_library_with_plugins(
     name = "kotlin",
     srcs = glob(["*.java"]),
     resources = [
-        "//src/com/facebook/buck/jvm/kotlin/plugin:kotlinc-plugin",
+        "//src/com/facebook/buck/jvm/kotlin/plugin:dep-tracker",
     ],
     tests = [
         "//test/com/facebook/buck/jvm/kotlin:kotlin",
