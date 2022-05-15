@@ -17,9 +17,9 @@ import os
 
 import requests
 from platforms.common import (
-    ReleaseException,
     copy_from_docker_windows,
     docker,
+    ReleaseException,
     temp_file_with_contents,
 )
 from releases import get_version_and_timestamp_from_release

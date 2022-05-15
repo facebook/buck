@@ -25,7 +25,7 @@ import sys
 import tempfile
 
 from platforms.chocolatey import build_chocolatey, publish_chocolatey
-from platforms.common import ReleaseException, docker, run
+from platforms.common import docker, ReleaseException, run
 from platforms.debian import build_deb
 from platforms.homebrew import (
     build_bottle,

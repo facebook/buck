@@ -19,8 +19,8 @@ import unittest
 from programs.buck_project import BuckProject
 from programs.buck_tool import (
     CommandLineArgs,
-    MovableTemporaryFile,
     install_signal_handlers,
+    MovableTemporaryFile,
 )
 
 
