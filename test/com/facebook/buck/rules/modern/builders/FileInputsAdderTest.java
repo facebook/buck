@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.builders;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.rules.modern.builders.FileInputsAdder.AbstractDelegate;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -106,6 +107,11 @@ public class FileInputsAdderTest {
               @Override
               public void addSymlink(AbsPath path, Path fixedTarget) {
                 computeDirectory(path).symlinks.put(path.getFileName().toString(), fixedTarget);
+              }
+
+              @Override
+              public RelPath getBuckOut() {
+                return tmp.getRoot().resolve("buck-out").relativize(tmp.getRoot());
               }
 
               Directory computeDirectory(AbsPath path) {

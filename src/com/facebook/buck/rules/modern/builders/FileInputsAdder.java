@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -71,8 +72,10 @@ class FileInputsAdder {
           : null;
     }
 
+    RelPath getBuckOut();
+
     @Nullable
-    Path getSymlinkTarget(Path path) throws IOException;
+    Path getSymlinkTarget(AbsPath path) throws IOException;
   }
 
   private final Set<AbsPath> addedInputs = new HashSet<>();
@@ -156,7 +159,7 @@ class FileInputsAdder {
       return target;
     }
 
-    Path symlinkTarget = delegate.getSymlinkTarget(path.getPath());
+    Path symlinkTarget = delegate.getSymlinkTarget(path);
     if (symlinkTarget != null) {
       AbsPath resolvedTarget = path.getParent().resolve(symlinkTarget).normalize();
 
@@ -195,8 +198,13 @@ class FileInputsAdder {
     }
 
     @Override
-    public Path getSymlinkTarget(Path path) throws IOException {
-      return Files.isSymbolicLink(path) ? Files.readSymbolicLink(path) : null;
+    public Path getSymlinkTarget(AbsPath path) throws IOException {
+      if (path.equals(getBuckOut().toAbsolutePath())) {
+        // On some platforms (e.g. windows) buck-out directory might be a symlink,
+        // however we don't want to treat it as such when sending actions to Remote execution.
+        return null;
+      }
+      return Files.isSymbolicLink(path.getPath()) ? Files.readSymbolicLink(path.getPath()) : null;
     }
   }
 }

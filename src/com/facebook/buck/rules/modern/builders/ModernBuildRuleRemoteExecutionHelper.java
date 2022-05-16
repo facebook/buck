@@ -432,13 +432,14 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
     ImmutableList.Builder<UploadDataSupplier> requiredDataBuilder = ImmutableList.builder();
 
+    RelPath buckOut = rule.getProjectFilesystem().getBuckPaths().getBuckOut();
     try (Scope ignored = PerfEvents.scope(eventBus, "constructing_inputs_tree")) {
       getSharedFilesData(requiredDataPredicate).forEach(requiredDataBuilder::add);
 
       allNodes.add(
           getSerializationTreeAndInputs(hash, requiredDataPredicate, requiredDataBuilder::add));
 
-      MerkleTreeNode inputsMerkleTree = resolveInputs(inputsMapBuilder.getInputs(rule));
+      MerkleTreeNode inputsMerkleTree = resolveInputs(inputsMapBuilder.getInputs(rule), buckOut);
 
       allNodes.add(inputsMerkleTree);
       getFileInputs(inputsMerkleTree, requiredDataPredicate, requiredDataBuilder::add);
@@ -574,14 +575,19 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   private final ConcurrentHashMap<Data, MerkleTreeNode> resolvedInputsCache =
       new ConcurrentHashMap<>();
 
-  private MerkleTreeNode resolveInputs(Data inputs) {
+  private MerkleTreeNode resolveInputs(Data inputs, RelPath buckOut) {
     MerkleTreeNode cached = resolvedInputsCache.get(inputs);
     if (cached != null) {
       return cached;
     }
 
     // Ensure the children are computed.
-    inputs.getChildren().forEach(this::resolveInputs);
+    inputs
+        .getChildren()
+        .forEach(
+            (childInputs) -> {
+              resolveInputs(childInputs, buckOut);
+            });
 
     return resolvedInputsCache.computeIfAbsent(
         inputs,
@@ -627,6 +633,11 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                             cellPathPrefix.relativize(path).getPath(),
                             protocol.newSymlinkNode(path.getFileName().toString(), fixedTarget));
                       }
+
+                      @Override
+                      public RelPath getBuckOut() {
+                        return buckOut;
+                      }
                     },
                     cellPathPrefix);
 
@@ -637,7 +648,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
             List<MerkleTreeNode> nodes = new ArrayList<>();
             nodes.add(nodeCache.createNode(files, symlinks, emptyDirectories));
 
-            inputs.getChildren().forEach(child -> nodes.add(resolveInputs(child)));
+            inputs.getChildren().forEach(child -> nodes.add(resolveInputs(child, buckOut)));
             return nodeCache.mergeNodes(nodes);
           } catch (IOException e) {
             throw new BuckUncheckedExecutionException(e);
