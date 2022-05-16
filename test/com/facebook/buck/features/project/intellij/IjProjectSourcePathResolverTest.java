@@ -71,6 +71,7 @@ import com.facebook.buck.jvm.java.KeystoreDescriptionArg;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.shell.ExportFileBuilder;
@@ -80,7 +81,7 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.nio.file.Paths;
 import org.junit.Before;
@@ -264,7 +265,7 @@ public class IjProjectSourcePathResolverTest {
   public void testFilegroup() {
     TargetNode<FileGroupDescriptionArg> node =
         FilegroupBuilder.createBuilder(BuildTargetFactory.newInstance("//files:group"))
-            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("file.txt")))
+            .setSrcs(SourceSet.ofUnnamedSources(ImmutableSet.of(FakeSourcePath.of("file.txt"))))
             .build(filesystem);
     assertOutputPathsEqual(node);
   }

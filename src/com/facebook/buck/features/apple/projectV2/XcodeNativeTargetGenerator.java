@@ -528,7 +528,8 @@ public class XcodeNativeTargetGenerator {
       TargetNode<FileGroupDescriptionArg> filegroupNode =
           (TargetNode<FileGroupDescriptionArg>) targetNode;
 
-      for (SourcePath filegroupSourcePath : filegroupNode.getConstructorArg().getSrcs()) {
+      for (SourcePath filegroupSourcePath :
+          filegroupNode.getConstructorArg().getSrcs().getPaths()) {
         nativeTargetBuilder.addFilegroupFiles(filegroupSourcePath);
       }
     }

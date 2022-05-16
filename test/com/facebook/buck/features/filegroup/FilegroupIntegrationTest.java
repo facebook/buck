@@ -107,4 +107,21 @@ public class FilegroupIntegrationTest {
 
     result.assertSuccess();
   }
+
+  @Test
+  public void testWithSubdirGlob() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "filegroup", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("build", "--show-output", "//test/:dir_strip_prefix");
+
+    String output = result.getStdout();
+    Path outputPath = workspace.getPath(output.split("\\s+")[1]);
+
+    assertEquals("another_file", workspace.getFileContents(outputPath.resolve("another_file.txt")));
+
+    result.assertSuccess();
+  }
 }
