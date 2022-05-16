@@ -154,14 +154,6 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
     return getFullyQualifiedName() + " (" + targetConfiguration + ")";
   }
 
-  /**
-   * This returns a unique identifier for the target within its cell, but does not include the cell
-   * name.
-   */
-  public String getCellRelativeUniqueIdentifier() {
-    return getCellRelativeName() + "(" + targetConfiguration + ")";
-  }
-
   public BuildTarget withShortName(String shortName) {
     return BuildTarget.of(unconfiguredBuildTarget.withShortName(shortName), targetConfiguration);
   }
