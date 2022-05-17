@@ -1,3 +1,5 @@
+load(":defs.bzl", "subdir_glob")
+
 filegroup(
     name = "dir_txt",
     srcs = glob(["dir/**/*.txt"]),
@@ -12,4 +14,8 @@ genrule(
 filegroup(
     name = "dir_with_genrule",
     srcs = glob(["dir/**/*.txt"]) + [":generate_dir"],
+)
+filegroup(
+    name = "dir_strip_prefix",
+    srcs = subdir_glob([("dir/subdir", "**/*")]),
 )
