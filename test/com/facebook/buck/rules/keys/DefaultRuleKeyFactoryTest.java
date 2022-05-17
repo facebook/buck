@@ -44,7 +44,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.filegroup.Filegroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics.Result;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
@@ -501,20 +500,18 @@ public class DefaultRuleKeyFactoryTest {
             filesystem,
             ruleFinder,
             "output_name",
-            SourceSet.ofUnnamedSources(
-                ImmutableSet.of(
-                    DefaultBuildTargetSourcePath.of(
-                        BuildTargetWithOutputs.of(srcTarget, OutputLabel.of("label_one"))))));
+            ImmutableSortedSet.of(
+                DefaultBuildTargetSourcePath.of(
+                    BuildTargetWithOutputs.of(srcTarget, OutputLabel.of("label_one")))));
     BuildRule rule2 =
         new Filegroup(
             buildTarget,
             filesystem,
             ruleFinder,
             "output_name",
-            SourceSet.ofUnnamedSources(
-                ImmutableSet.of(
-                    DefaultBuildTargetSourcePath.of(
-                        BuildTargetWithOutputs.of(srcTarget, OutputLabel.of("label_two"))))));
+            ImmutableSortedSet.of(
+                DefaultBuildTargetSourcePath.of(
+                    BuildTargetWithOutputs.of(srcTarget, OutputLabel.of("label_two")))));
 
     // Build the rule key.
     factory.build(rule1);

@@ -74,22 +74,6 @@ public abstract class FileBundler {
       PatternsMatcher entriesToExclude) {
 
     ImmutableMap<Path, AbsPath> relativeMap = pathResolver.createRelativeMap(basePath, toCopy);
-    copy(
-        filesystem,
-        buildCellRelativePathFactory,
-        steps,
-        destinationDir,
-        relativeMap,
-        entriesToExclude);
-  }
-
-  public void copy(
-      ProjectFilesystem filesystem,
-      BuildCellRelativePathFactory buildCellRelativePathFactory,
-      ImmutableList.Builder<Step> steps,
-      Path destinationDir,
-      ImmutableMap<Path, AbsPath> relativeMap,
-      PatternsMatcher entriesToExclude) {
 
     steps.add(MkdirStep.of(buildCellRelativePathFactory.from(destinationDir)));
 
