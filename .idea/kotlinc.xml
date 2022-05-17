@@ -3,4 +3,7 @@
   <component name="Kotlin2JvmCompilerArguments">
     <option name="jvmTarget" value="1.8" />
   </component>
+  <component name="KotlinCompilerSettings">
+    <option name="additionalArguments" value="-Xskip-metadata-version-check" />
+  </component>
 </project>
