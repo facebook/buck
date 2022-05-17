@@ -2,7 +2,7 @@ load("//tools/build_rules:java_rules.bzl", "buck_java_library", "buck_prebuilt_j
 
 buck_prebuilt_jar(
     name = "prebuilt",
-    binary_jar = "bundletool-1.8.0.jar",
+    binary_jar = "bundletool-1.10.0.jar",
 )
 
 buck_java_library(
