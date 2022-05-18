@@ -47,6 +47,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -319,14 +320,42 @@ class CxxPreprocessAndCompileStep implements Step {
     if (depFile.isPresent()) {
       Optional<String> depFileContent = filesystem.readFileIfItExists(depFile.get());
       if (depFileContent.isPresent()) {
-        filesystem.writeContentsToPath(
-            depFileContent
-                .get()
-                .replace(filesystem.getRootPath().toString() + File.separatorChar, ""),
-            depFile.get());
+        var normalizedDepFileContent =
+            changeHeadersAbsolutePathsToRelativePaths(depFileContent.get());
+        filesystem.writeContentsToPath(normalizedDepFileContent, depFile.get());
       }
     }
     return err;
+  }
+
+  private String changeHeadersAbsolutePathsToRelativePaths(String depFileContent) {
+    var rootPath = filesystem.getRootPath().toString() + File.separatorChar;
+
+    if (Platform.detect() == Platform.WINDOWS) {
+      // On Windows some compilers (e.g. msvc) might return paths with different case
+      // (i.e. lowercase or uppercase). Let's make sure we strip the root path while preserving
+      // case of all other symbols in the dep file.
+      var lines = MoreStrings.lines(depFileContent);
+      var lowerCaseRootPath = rootPath.toLowerCase(Locale.ROOT);
+      StringBuilder strippedDepFile = new StringBuilder();
+      for (var line : lines) {
+        var lowerCaseLine = line.toLowerCase(Locale.ROOT);
+        var index = lowerCaseLine.indexOf(lowerCaseRootPath);
+        if (index != -1) {
+          // append dep file line without the root path. We need to be careful here to preserve
+          // the leading whitespaces, hence adding [0, index] line first
+          strippedDepFile.append(line, 0, index);
+          strippedDepFile.append(line, index + lowerCaseRootPath.length(), line.length());
+        } else {
+          strippedDepFile.append(line);
+        }
+
+        strippedDepFile.append('\n');
+      }
+      return strippedDepFile.toString();
+    } else {
+      return depFileContent.replace(rootPath, "");
+    }
   }
 
   private static List<String> stripIncludeGuardSuggestions(List<String> errorLines) {
