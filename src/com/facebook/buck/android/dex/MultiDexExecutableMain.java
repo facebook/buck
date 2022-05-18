@@ -204,14 +204,13 @@ public class MultiDexExecutableMain {
 
         writeSecondaryDexJarAndMetadataFile(secondaryDexOutputJarPath, rawSecondaryDexPath);
 
-        // TODO(ianc) Find contained class in DEX.
         metadataLines.add(
             String.format(
                 "%s %s %s",
                 secondaryDexOutputJarPath.getFileName(),
                 com.google.common.io.Files.hash(secondaryDexOutputJarPath.toFile(), Hashing.sha1())
                     .toString(),
-                "Unknown.class"));
+                String.format("secondary.dex%d.Canary", i + 1)));
 
         if (compression.equals("xz")) {
           doXzCompression(secondaryDexOutputJarPath);
