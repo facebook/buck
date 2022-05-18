@@ -21,7 +21,6 @@ import com.facebook.buck.android.proguard.ProguardTranslatorFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -33,15 +32,12 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.jar.JarOutputStream;
-import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.kohsuke.args4j.CmdLineException;
@@ -202,16 +198,13 @@ public class MultiDexExecutableMain {
                 : secondaryDexSubdir.resolve(String.format("secondary-%s.dex.jar", i + 1));
         secondaryDexJarPaths.add(secondaryDexOutputJarPath);
 
-        writeSecondaryDexJarAndMetadataFile(secondaryDexOutputJarPath, rawSecondaryDexPath);
+        Path metadataPath =
+            secondaryDexOutputJarPath.resolveSibling(
+                secondaryDexOutputJarPath.getFileName() + ".meta");
+        D8Utils.writeSecondaryDexJarAndMetadataFile(
+            secondaryDexOutputJarPath, metadataPath, rawSecondaryDexPath, compression);
 
-        metadataLines.add(
-            String.format(
-                "%s %s %s",
-                secondaryDexOutputJarPath.getFileName(),
-                com.google.common.io.Files.hash(secondaryDexOutputJarPath.toFile(), Hashing.sha1())
-                    .toString(),
-                String.format("secondary.dex%d.Canary", i + 1)));
-
+        metadataLines.add(D8Utils.getSecondaryDexJarMetadataString(secondaryDexOutputJarPath, i));
         if (compression.equals("xz")) {
           doXzCompression(secondaryDexOutputJarPath);
         }
@@ -222,46 +215,6 @@ public class MultiDexExecutableMain {
       }
 
       Files.write(secondaryDexSubdir.resolve("metadata.txt"), metadataLines.build());
-    }
-  }
-
-  private void writeSecondaryDexJarAndMetadataFile(
-      Path secondaryDexOutputJarPath, Path createdSecondaryDexPath) throws IOException {
-    try (OutputStream secondaryDexJar =
-            new BufferedOutputStream(new FileOutputStream(secondaryDexOutputJarPath.toFile()));
-        JarOutputStream jarOutputStream = new JarOutputStream(secondaryDexJar);
-        InputStream secondaryDexInputStream =
-            new BufferedInputStream(new FileInputStream(createdSecondaryDexPath.toFile()))) {
-      if (compression.equals("xz") || compression.equals("xzs")) {
-        jarOutputStream.setLevel(Deflater.NO_COMPRESSION);
-      }
-      jarOutputStream.putNextEntry(new ZipEntry("classes.dex"));
-      ByteStreams.copy(secondaryDexInputStream, jarOutputStream);
-      jarOutputStream.closeEntry();
-    }
-
-    writeSecondaryDexMetadata(secondaryDexOutputJarPath);
-  }
-
-  private void writeSecondaryDexMetadata(Path secondaryDexOutputJarPath) throws IOException {
-    Path metadataPath =
-        secondaryDexOutputJarPath.resolveSibling(secondaryDexOutputJarPath.getFileName() + ".meta");
-    try (ZipFile zf = new ZipFile(secondaryDexOutputJarPath.toFile())) {
-      ZipEntry classesDexEntry = zf.getEntry("classes.dex");
-      if (classesDexEntry == null) {
-        throw new RuntimeException("could not find classes.dex in jar");
-      }
-
-      long uncompressedSize = classesDexEntry.getSize();
-      if (uncompressedSize == -1) {
-        throw new RuntimeException("classes.dex size should be known");
-      }
-
-      Files.write(
-          metadataPath,
-          Collections.singletonList(
-              String.format(
-                  "jar:%s dex:%s", Files.size(secondaryDexOutputJarPath), uncompressedSize)));
     }
   }
 

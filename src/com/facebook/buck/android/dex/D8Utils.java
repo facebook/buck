@@ -25,18 +25,31 @@ import com.android.tools.r8.OutputMode;
 import com.android.tools.r8.utils.InternalOptions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.hash.Hashing;
+import com.google.common.io.ByteStreams;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.jar.JarOutputStream;
 import java.util.stream.Stream;
+import java.util.zip.Deflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /** Runs d8. */
 public class D8Utils {
@@ -173,6 +186,59 @@ public class D8Utils {
           classpathFiles,
           minSdkVersion);
     }
+  }
+
+  static void writeSecondaryDexJarAndMetadataFile(
+      Path secondaryDexOutputJarPath,
+      Path secondaryDexOutputJarMetadataPath,
+      Path rawSecondaryDexPath,
+      String compression)
+      throws IOException {
+    try (OutputStream secondaryDexJar =
+            new BufferedOutputStream(new FileOutputStream(secondaryDexOutputJarPath.toFile()));
+        JarOutputStream jarOutputStream = new JarOutputStream(secondaryDexJar);
+        InputStream secondaryDexInputStream =
+            new BufferedInputStream(new FileInputStream(rawSecondaryDexPath.toFile()))) {
+      if (compression.equals("xz") || compression.equals("xzs")) {
+        jarOutputStream.setLevel(Deflater.NO_COMPRESSION);
+      }
+      jarOutputStream.putNextEntry(new ZipEntry("classes.dex"));
+      ByteStreams.copy(secondaryDexInputStream, jarOutputStream);
+      jarOutputStream.closeEntry();
+    }
+
+    writeSecondaryDexMetadata(secondaryDexOutputJarPath, secondaryDexOutputJarMetadataPath);
+  }
+
+  static void writeSecondaryDexMetadata(
+      Path secondaryDexOutputJarPath, Path secondaryDexOutputJarMetadataPath) throws IOException {
+    try (ZipFile zf = new ZipFile(secondaryDexOutputJarPath.toFile())) {
+      ZipEntry classesDexEntry = zf.getEntry("classes.dex");
+      if (classesDexEntry == null) {
+        throw new RuntimeException("could not find classes.dex in jar");
+      }
+
+      long uncompressedSize = classesDexEntry.getSize();
+      if (uncompressedSize == -1) {
+        throw new RuntimeException("classes.dex size should be known");
+      }
+
+      Files.write(
+          secondaryDexOutputJarMetadataPath,
+          Collections.singletonList(
+              String.format(
+                  "jar:%s dex:%s", Files.size(secondaryDexOutputJarPath), uncompressedSize)));
+    }
+  }
+
+  static String getSecondaryDexJarMetadataString(Path secondaryDexOutputJarPath, int index)
+      throws IOException {
+    return String.format(
+        "%s %s %s",
+        secondaryDexOutputJarPath.getFileName(),
+        com.google.common.io.Files.hash(secondaryDexOutputJarPath.toFile(), Hashing.sha1())
+            .toString(),
+        String.format("secondary.dex%d.Canary", index + 1));
   }
 
   public static class D8DiagnosticsHandler implements DiagnosticsHandler {
