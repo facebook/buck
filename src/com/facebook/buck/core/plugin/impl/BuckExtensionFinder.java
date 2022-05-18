@@ -24,6 +24,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import org.pf4j.Extension;
 import org.pf4j.ExtensionDescriptor;
+import org.pf4j.ExtensionFactory;
 import org.pf4j.ExtensionFinder;
 import org.pf4j.ExtensionWrapper;
 import org.pf4j.PluginManager;
@@ -79,6 +80,7 @@ class BuckExtensionFinder implements ExtensionFinder {
     throw new UnsupportedOperationException();
   }
 
+  @SuppressWarnings("unchecked")
   private <T> ExtensionWrapper<T> createExtensionWrapper(T extension) {
     int ordinal = 0;
     Class<?> extensionClass = extension.getClass();
@@ -86,6 +88,13 @@ class BuckExtensionFinder implements ExtensionFinder {
       ordinal = extensionClass.getAnnotation(Extension.class).ordinal();
     }
     ExtensionDescriptor descriptor = new ExtensionDescriptor(ordinal, extensionClass);
-    return new ExtensionWrapper<T>(descriptor, (cls) -> extension);
+    return new ExtensionWrapper<>(
+        descriptor,
+        new ExtensionFactory() {
+          @Override
+          public <A> A create(Class<A> aClass) {
+            return (A) extension;
+          }
+        });
   }
 }

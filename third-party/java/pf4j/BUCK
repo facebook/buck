@@ -2,11 +2,11 @@ load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
 
 buck_prebuilt_jar(
     name = "pf4j",
-    binary_jar = "pf4j-2.0.0-SNAPSHOT.jar",
+    binary_jar = "pf4j-3.6.0.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "pf4j-2.0.0-SNAPSHOT-sources.jar",
+    source_jar = "pf4j-3.6.0-sources.jar",
     visibility = ["PUBLIC"],
 )
 

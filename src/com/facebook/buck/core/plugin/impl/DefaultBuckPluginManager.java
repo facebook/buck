@@ -72,7 +72,7 @@ public class DefaultBuckPluginManager extends DefaultPluginManager implements Bu
   protected PluginRepository createPluginRepository() {
     CompoundPluginRepository repository =
         new CompoundPluginRepository()
-            .add(new DefaultPluginRepository(getPluginsRoot(), isDevelopment()))
+            .add(new DefaultPluginRepository(getPluginsRoot()))
             .add(new JarPluginRepository(getPluginsRoot()));
 
     @Nullable String externalPluginsRoot = System.getProperty("buck.externalPluginsDir");
@@ -80,7 +80,7 @@ public class DefaultBuckPluginManager extends DefaultPluginManager implements Bu
     if (externalPluginsRoot != null) {
       Path externalPluginsRootPath = Paths.get(externalPluginsRoot).toAbsolutePath();
       repository
-          .add(new DefaultPluginRepository(externalPluginsRootPath, isDevelopment()))
+          .add(new DefaultPluginRepository(externalPluginsRootPath))
           .add(new JarPluginRepository(externalPluginsRootPath));
     }
 
@@ -95,7 +95,17 @@ public class DefaultBuckPluginManager extends DefaultPluginManager implements Bu
   @Override
   protected VersionManager createVersionManager() {
     // Buck modules do not support versions
-    return (__, ___) -> true;
+    return new VersionManager() {
+      @Override
+      public boolean checkVersionConstraint(String s, String s1) {
+        return true;
+      }
+
+      @Override
+      public int compareVersions(String s, String s1) {
+        return 0;
+      }
+    };
   }
 
   @Override

@@ -75,7 +75,7 @@ third-party/java/okio/okio-1.13.0.jar
 third-party/java/oshi/oshi-core-5.8.7.jar
 third-party/java/opencensus/opencensus-api-0.24.0.jar
 third-party/java/opencensus/opencensus-contrib-grpc-metrics-0.24.0.jar
-third-party/java/pf4j/pf4j-2.0.0-SNAPSHOT.jar
+third-party/java/pf4j/pf4j-3.6.0.jar
 third-party/java/protobuf/protobuf-java-3.7.0.jar
 third-party/java/protobuf/protobuf-java-util-3.7.0.jar
 third-party/java/slf4j/slf4j-jdk14-1.7.5.jar
