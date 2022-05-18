@@ -17,6 +17,7 @@
 package com.facebook.buck.android.dex;
 
 import com.android.tools.r8.CompilationFailedException;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -82,6 +83,18 @@ public class D8ExecutableMain {
   @Option(name = "--class-names-path")
   private String classNamesOutput;
 
+  @Option(name = "--secondary-dex-metadata-file")
+  private String secondaryDexMetadataFile;
+
+  @Option(name = "--secondary-dex-metadata-line")
+  private String secondaryDexMetadataLine;
+
+  @Option(name = "--secondary-dex-compression")
+  private String secondaryDexCompression;
+
+  @Option(name = "--secondary-dex-index")
+  private String secondaryDexIndex;
+
   public static void main(String[] args) throws IOException {
     D8ExecutableMain main = new D8ExecutableMain();
     CmdLineParser parser = new CmdLineParser(main);
@@ -131,6 +144,26 @@ public class D8ExecutableMain {
               Paths.get(androidJar),
               classpathFiles,
               minSdkVersion);
+
+      if ("jar".equals(secondaryDexCompression)) {
+        Path outputPath =
+            Optional.ofNullable(secondaryOutputDex).map(Paths::get).orElse(Paths.get(outputDex));
+        Preconditions.checkNotNull(secondaryDexMetadataFile);
+        Path secondaryDexMetadataFilePath = Paths.get(secondaryDexMetadataFile);
+        Preconditions.checkState(
+            outputPath
+                .resolveSibling(outputPath.getFileName() + ".meta")
+                .toString()
+                .equals(secondaryDexMetadataFile));
+        D8Utils.writeSecondaryDexMetadata(outputPath, secondaryDexMetadataFilePath);
+        Preconditions.checkNotNull(secondaryDexMetadataLine);
+        Preconditions.checkNotNull(secondaryDexIndex);
+        Files.write(
+            Paths.get(secondaryDexMetadataLine),
+            Collections.singletonList(
+                D8Utils.getSecondaryDexJarMetadataString(
+                    outputPath, Integer.parseInt(secondaryDexIndex))));
+      }
 
       if (referencedResourcesPath.isPresent()) {
         Files.write(referencedResourcesPath.get(), referencedResources);
