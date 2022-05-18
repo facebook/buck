@@ -395,6 +395,15 @@ public class CxxLibraryDescription
       return SourceSortedSet.EMPTY;
     }
 
+    /**
+     * A temporary flag, needed only to test implementation of explicit modules in clang. Will be
+     * replaced with the usage of getUsesExplicitModules from AbstractSwiftCxxCommonArg later
+     */
+    @Value.Default
+    default boolean getUsesCxxExplicitModules() {
+      return false;
+    }
+
     @Value.Check
     @Override
     default void checkHeadersUsage() {
