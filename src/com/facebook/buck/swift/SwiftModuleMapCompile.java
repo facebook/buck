@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -60,6 +61,7 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
         projectFilesystem,
         ruleFinder,
         new SwiftModuleMapCompile.Impl(
+            buildTarget,
             targetTriple,
             swiftc,
             swiftArgs,
@@ -79,6 +81,7 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
 
   /** Inner class to implement logic for .modulemap compilation. */
   static class Impl implements Buildable {
+    @AddToRuleKey private final BuildTarget buildTarget;
     @AddToRuleKey private final String targetTriple;
     @AddToRuleKey private final Tool swiftc;
     @AddToRuleKey private final ImmutableList<Arg> swiftArgs;
@@ -91,6 +94,7 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
     @AddToRuleKey private final OutputPath output;
 
     Impl(
+        BuildTarget buildTarget,
         String targetTriple,
         Tool swiftc,
         ImmutableList<Arg> swiftArgs,
@@ -100,6 +104,7 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
         ExplicitModuleInput modulemapPath,
         ImmutableSet<ExplicitModuleOutput> clangModuleDeps,
         ImmutableSet<SourcePath> headers) {
+      this.buildTarget = buildTarget;
       this.targetTriple = targetTriple;
       this.swiftc = swiftc;
       this.swiftArgs = swiftArgs;
@@ -121,7 +126,18 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
       ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();
-      argsBuilder.addAll(Arg.stringify(swiftArgs, resolver));
+
+      // We need relative paths here otherwise the absolute paths will end up serialized in the pcm
+      // files, which will cause size differences and fail module validation.
+      for (Arg arg : swiftArgs) {
+        if (arg instanceof SourcePathArg) {
+          ((SourcePathArg) arg)
+              .appendToCommandLineRel(argsBuilder::add, buildTarget.getCell(), resolver, false);
+        } else {
+          arg.appendToCommandLine(argsBuilder::add, resolver);
+        }
+      }
+
       argsBuilder.add(
           "-emit-pcm",
           "-target",
@@ -154,7 +170,14 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
           "-Xcc",
           "-Xclang",
           "-Xcc",
-          "-fmodule-file-home-is-cwd");
+          "-fmodule-file-home-is-cwd",
+          // Unset the working directory to avoid serializing it as an absolute path.
+          "-Xcc",
+          "-working-directory=",
+          // Once we have an empty working directory the compiler provided headers such as float.h
+          // cannot be found, so add . to the header search paths.
+          "-Xcc",
+          "-I.");
 
       if (isSystemModule) {
         argsBuilder.add(
