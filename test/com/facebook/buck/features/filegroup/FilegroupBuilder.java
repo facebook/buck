@@ -18,8 +18,9 @@ package com.facebook.buck.features.filegroup;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.features.filegroup.FileGroupDescriptionArg.Builder;
-import com.facebook.buck.rules.coercer.SourceSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 public class FilegroupBuilder
     extends AbstractNodeBuilder<Builder, FileGroupDescriptionArg, FilegroupDescription, Filegroup> {
@@ -32,7 +33,7 @@ public class FilegroupBuilder
     return new FilegroupBuilder(target);
   }
 
-  public FilegroupBuilder setSrcs(SourceSet srcs) {
+  public FilegroupBuilder setSrcs(ImmutableSortedSet<SourcePath> srcs) {
     getArgForPopulating().setSrcs(srcs);
     return this;
   }

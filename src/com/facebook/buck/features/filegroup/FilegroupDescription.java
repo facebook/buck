@@ -17,6 +17,7 @@
 package com.facebook.buck.features.filegroup;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -24,8 +25,6 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.rules.coercer.SourceSet;
-import java.util.Optional;
 
 public class FilegroupDescription implements DescriptionWithTargetGraph<FileGroupDescriptionArg> {
 
@@ -52,7 +51,5 @@ public class FilegroupDescription implements DescriptionWithTargetGraph<FileGrou
   }
 
   @RuleArg
-  interface AbstractFileGroupDescriptionArg extends BuildRuleArg {
-    Optional<SourceSet> getSrcs();
-  }
+  interface AbstractFileGroupDescriptionArg extends BuildRuleArg, HasSrcs {}
 }
