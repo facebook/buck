@@ -1,0 +1,6 @@
+prebuilt_jar(
+    name = "apiguardian-api",
+    binary_jar = "apiguardian-api-1.1.2.jar",
+    visibility = ["PUBLIC"],
+    labels = ["lint_ignore"],
+)

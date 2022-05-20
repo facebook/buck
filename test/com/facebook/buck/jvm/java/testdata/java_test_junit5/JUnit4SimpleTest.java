@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.jvm.java;
+import static org.junit.Assert.assertEquals;
 
-public enum TestType {
-  // TODO(#9027074): Look these up reflectively.
-  JUNIT("com.facebook.buck.testrunner.JUnitMain"),
-  JUNIT5("com.facebook.buck.testrunner.JupiterMain"),
-  TESTNG("com.facebook.buck.testrunner.TestNGMain"),
-  ;
+import org.junit.Test;
 
-  private final String defaultRunner;
+public class JUnit4SimpleTest {
 
-  TestType(String defaultRunner) {
-    this.defaultRunner = defaultRunner;
-  }
-
-  public String getDefaultTestRunner() {
-    return defaultRunner;
+  @Test
+  public void test() {
+    assertEquals(42, 42);
   }
 }

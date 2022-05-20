@@ -34,3 +34,45 @@ prebuilt_jar(
     visibility = ["PUBLIC"],
     labels = ["lint_ignore"],
 )
+
+prebuilt_jar(
+    name = "junit-jupiter-api",
+    binary_jar = "junit-jupiter-api-5.8.2.jar",
+    visibility = ["PUBLIC"],
+    labels = ["lint_ignore"],
+)
+
+prebuilt_jar(
+    name = "junit-jupiter-engine",
+    binary_jar = "junit-jupiter-engine-5.8.2.jar",
+    visibility = ["PUBLIC"],
+    labels = ["lint_ignore"],
+)
+
+prebuilt_jar(
+    name = "junit-vintage-engine",
+    binary_jar = "junit-vintage-engine-5.8.2.jar",
+    visibility = ["PUBLIC"],
+    labels = ["lint_ignore"],
+)
+
+prebuilt_jar(
+    name = "junit-platform-commons",
+    binary_jar = "junit-platform-commons-1.8.2.jar",
+    visibility = ["PUBLIC"],
+    labels = ["lint_ignore"],
+)
+
+prebuilt_jar(
+    name = "junit-platform-engine",
+    binary_jar = "junit-platform-engine-1.8.2.jar",
+    visibility = ["PUBLIC"],
+    labels = ["lint_ignore"],
+)
+
+prebuilt_jar(
+    name = "junit-platform-launcher",
+    binary_jar = "junit-platform-launcher-1.8.2.jar",
+    visibility = ["PUBLIC"],
+    labels = ["lint_ignore"],
+)

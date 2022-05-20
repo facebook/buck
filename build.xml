@@ -231,7 +231,16 @@
     <include name="remote-apis/remote-apis.jar" />
     <include name="log4j2/log4j-api-2.17.1.jar" />
     <include name="log4j2/log4j-core-2.17.1.jar" />
-
+    <!-- junit5 -->
+    <include name="junit-jupiter/junit-jupiter-api-5.8.2.jar" />
+    <include name="junit-jupiter/junit-jupiter-engine-5.8.2.jar" />
+    <include name="junit-jupiter/junit-jupiter-params-5.8.2.jar" />
+    <include name="junit-jupiter/junit-vintage-engine-5.8.2.jar" />
+    <include name="junit-platform/junit-platform-commons-1.8.2.jar" />
+    <include name="junit-platform/junit-platform-engine-1.8.2.jar" />
+    <include name="junit-platform/junit-platform-launcher-1.8.2.jar" />
+    <include name="apiguardian/apiguardian-api-1.1.2.jar" />
+    <include name="opentest4j/opentest4j-1.2.0.jar" />
     <!-- maven interop -->
     <include name="aether/aether-api-1.0.2.v20150114.jar" />
     <include name="aether/aether-connector-basic-1.0.2.v20150114.jar" />
@@ -380,6 +389,15 @@
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
     <include name="junit/junit-4.13.jar" />
+    <include name="junit-jupiter/junit-jupiter-api-5.8.2.jar" />
+    <include name="junit-jupiter/junit-jupiter-engine-5.8.2.jar" />
+    <include name="junit-jupiter/junit-jupiter-params-5.8.2.jar" />
+    <include name="junit-jupiter/junit-vintage-engine-5.8.2.jar" />
+    <include name="junit-platform/junit-platform-commons-1.8.2.jar" />
+    <include name="junit-platform/junit-platform-engine-1.8.2.jar" />
+    <include name="junit-platform/junit-platform-launcher-1.8.2.jar" />
+    <include name="apiguardian/apiguardian-api-1.1.2.jar" />
+    <include name="opentest4j/opentest4j-1.2.0.jar" />
     <include name="testng/testng-6.8.jar" />
   </fileset>
 

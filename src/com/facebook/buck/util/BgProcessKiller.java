@@ -23,6 +23,8 @@ import com.sun.jna.Platform;
 import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessBuilder;
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.concurrent.GuardedBy;
 
 /**
@@ -110,7 +112,20 @@ public class BgProcessKiller {
   @SuppressWarnings("PMD.BlacklistedDefaultProcessMethod")
   public static synchronized Process startProcess(ProcessBuilder pb) throws IOException {
     checkArmedStatus();
+    logTrampoline(pb);
     return pb.start();
+  }
+
+  private static void logTrampoline(ProcessBuilder pb) {
+    List<String> commands = pb.command();
+    if (commands.stream().anyMatch(arg -> arg.contains("__trampoline__"))) {
+      List<Integer> argSizes = commands.stream().map(String::length).collect(Collectors.toList());
+      List<String> envSizes =
+          pb.environment().entrySet().stream()
+              .map(e -> e.getKey() + "=" + e.getValue().length())
+              .collect(Collectors.toList());
+      LOG.info("trampolineArgs args:%s, env:%s", argSizes, envSizes);
+    }
   }
 
   /**

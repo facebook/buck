@@ -1,0 +1,34 @@
+java_test(
+    test_type = "junit5",
+    name = "java_test_junit5_working",
+    srcs = [
+        "JUnit4SimpleTest.java",
+        "JUnit5SimpleTest.java",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "buck//third-party/java/opentest4j:opentest4j",
+        "buck//third-party/java/apiguardian:apiguardian-api",
+        "buck//third-party/java/junit:junit-jupiter-api",
+        "buck//third-party/java/junit:junit-jupiter-engine",
+        "buck//third-party/java/junit:junit-vintage-engine",
+        "buck//third-party/java/junit:junit-platform-commons",
+        "buck//third-party/java/junit:junit-platform-engine",
+        "buck//third-party/java/junit:junit-platform-launcher",
+    ],
+)
+
+java_test(
+    test_type = "junit5",
+    name = "java_test_junit5_missing_engine",
+    srcs = [
+        "JUnit4SimpleTest.java",
+        "JUnit5SimpleTest.java",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "buck//third-party/java/opentest4j:opentest4j",
+        "buck//third-party/java/apiguardian:apiguardian-api",
+        "buck//third-party/java/junit:junit-jupiter-api",
+    ],
+)

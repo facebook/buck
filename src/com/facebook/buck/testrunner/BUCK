@@ -31,9 +31,18 @@ buck_java_library(
         "DelegateRunnerWithTimeout.java",
         "JUnitMain.java",
         "JUnitRunner.java",
+        "JUnitOptions.java",
+        "JUnitSupport.java",
+        "JupiterMain.java",
+        "JupiterRunner.java",
         "JulLogFormatter.java",
         "SameThreadFailOnTimeout.java",
+        "SkipTestCondition.java",
+        "StandardOutputRecorder.java",
+        "TestRecorder.java",
     ],
+    resources = glob(['META-INF/**/*']),
+    resources_root = ".",
     source = "8",
     target = "8",
     tests = [
@@ -54,6 +63,13 @@ buck_java_library(
         "//src/com/facebook/buck/test/selectors:selectors",
         "//src/com/facebook/buck/util/concurrent:concurrent_for_junit_runner",
         "//third-party/java/junit:junit",
+        "//third-party/java/junit-jupiter:junit-jupiter-api",
+        "//third-party/java/junit-jupiter:junit-jupiter-engine",
+        "//third-party/java/junit-jupiter:junit-jupiter-params",
+        "//third-party/java/junit-jupiter:junit-vintage-engine",
+        "//third-party/java/junit-platform:junit-platform-commons",
+        "//third-party/java/junit-platform:junit-platform-engine",
+        "//third-party/java/junit-platform:junit-platform-launcher",
     ],
 )
 
@@ -117,7 +133,7 @@ zip_file(
     name = "testrunner-bin-fixed",
     out = "testrunner-bin-fixed.jar",
     entries_to_exclude = [
-        "^(?!com/facebook/buck/).*",
+        "^(?!com/facebook/buck/|META-INF/services/org.junit.jupiter).*",
     ],
     visibility = [
         "PUBLIC",

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.testrunner;
 
+import static com.facebook.buck.testrunner.CheckDependency.requiresClass;
+
 /**
  * Launcher for JUnit.
  *
@@ -40,8 +42,8 @@ public class JUnitMain {
 
   public static void main(String[] args) {
     // Ensure that both junit and hamcrest are on the classpath
-    CheckDependency.isPresent("junit", "org.junit.Test");
-    CheckDependency.isPresent("hamcrest", "org.hamcrest.Description");
+    requiresClass("junit", "org.junit.Test");
+    requiresClass("hamcrest", "org.hamcrest.Description");
 
     JUnitRunner runner = new JUnitRunner();
     runner.parseArgs(args);

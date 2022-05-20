@@ -40,8 +40,8 @@ public class TestNGMain {
 
   public static void main(String[] args) {
     // Ensure that both testng and hamcrest are on the classpath
-    CheckDependency.isPresent("testng", "org.testng.TestNG");
-    CheckDependency.isPresent("hamcrest", "org.hamcrest.Description");
+    CheckDependency.requiresClass("testng", "org.testng.TestNG");
+    CheckDependency.requiresClass("hamcrest", "org.hamcrest.Description");
 
     TestNGRunner runner = new TestNGRunner();
     runner.parseArgs(args);

@@ -56,6 +56,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -662,5 +664,51 @@ public class JavaTestIntegrationTest {
     workspace
         .runBuckCommand("test", "//:java_test_working_with_dependency_order_classpath")
         .assertSuccess();
+  }
+
+  @Test
+  public void testTypeJUnit5MissingDependencies() throws IOException {
+    ProcessResult processResult =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "java_test_junit5", temp)
+            .setUp()
+            .runBuckCommand("test", "//:java_test_junit5_missing_engine");
+
+    processResult.assertTestFailure();
+    assertTrue(
+        processResult
+            .getStderr()
+            .contains("Unable to locate junit-jupiter-engine on the classpath"));
+  }
+
+  @Test
+  public void testTypeJUnit5() throws IOException {
+    ProcessResult processResult =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "java_test_junit5", temp)
+            .setUp()
+            .runBuckCommand("test", "//:java_test_junit5_working");
+
+    processResult.assertSuccess();
+
+    // assert test executions are present
+    String[] outputLines = processResult.getStderr().split(System.lineSeparator());
+    assertTestOutput(outputLines, "JUnit4SimpleTest", 1, 0);
+    assertTestOutput(outputLines, "JUnit5SimpleTest", 1, 0);
+  }
+
+  private void assertTestOutput(String[] outputLines, String testName, int passed, int failed) {
+    Optional<String> test =
+        Stream.of(outputLines)
+            .filter(line -> line.contains(testName))
+            .map(String::trim)
+            .findFirst();
+    assertTrue(testName, test.isPresent());
+    // expected "PASS    <100ms  n Passed   0 Skipped   n Failed   $testName"
+    test.ifPresent(
+        output -> {
+          assertTrue(output.startsWith("PASS "));
+          assertTrue(output.contains(String.format(" %s Passed ", passed)));
+          assertTrue(output.contains(String.format(" %s Failed ", failed)));
+          assertTrue(output.endsWith(testName));
+        });
   }
 }

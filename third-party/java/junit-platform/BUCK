@@ -1,0 +1,42 @@
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+common_visibility = [
+    "//src/com/facebook/buck/testrunner:junit",
+    "//starlark/...",
+    "//test/...",
+    "//third-party/java/...",
+    "//tools/...",
+]
+
+buck_prebuilt_jar(
+    name = "junit-platform-commons",
+    binary_jar = "junit-platform-commons-1.8.2.jar",
+    source_jar = "junit-platform-commons-1.8.2-sources.jar",
+    visibility = common_visibility,
+    deps = [
+        "//third-party/java/apiguardian:apiguardian-api",
+    ],
+)
+
+buck_prebuilt_jar(
+    name = "junit-platform-engine",
+    binary_jar = "junit-platform-engine-1.8.2.jar",
+    source_jar = "junit-platform-engine-1.8.2-sources.jar",
+    visibility = common_visibility,
+    deps = [
+        "//third-party/java/junit-platform:junit-platform-commons",
+        "//third-party/java/opentest4j:opentest4j",
+        "//third-party/java/apiguardian:apiguardian-api",
+    ],
+)
+
+buck_prebuilt_jar(
+    name = "junit-platform-launcher",
+    binary_jar = "junit-platform-launcher-1.8.2.jar",
+    source_jar = "junit-platform-launcher-1.8.2-sources.jar",
+    visibility = common_visibility,
+    deps = [
+        "//third-party/java/junit-platform:junit-platform-engine",
+        "//third-party/java/opentest4j:opentest4j",
+    ],
+)

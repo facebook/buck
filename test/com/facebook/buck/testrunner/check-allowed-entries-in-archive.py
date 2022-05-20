@@ -47,8 +47,15 @@ com/facebook/buck/testrunner/InstrumentationMain.class
 com/facebook/buck/testrunner/InstrumentationTestRunner.class
 com/facebook/buck/testrunner/JUnitMain.class
 com/facebook/buck/testrunner/JUnitRunner.class
+com/facebook/buck/testrunner/JUnitOptions.class
+com/facebook/buck/testrunner/JUnitSupport.class
+com/facebook/buck/testrunner/JupiterMain.class
+com/facebook/buck/testrunner/JupiterRunner.class
 com/facebook/buck/testrunner/JulLogFormatter.class
 com/facebook/buck/testrunner/SameThreadFailOnTimeout.class
+com/facebook/buck/testrunner/SkipTestCondition.class
+com/facebook/buck/testrunner/StandardOutputRecorder.class
+com/facebook/buck/testrunner/TestRecorder.class
 com/facebook/buck/testrunner/TestNGMain.class
 com/facebook/buck/testrunner/TestNGRunner.class
 com/facebook/buck/testrunner/TestResult.class
@@ -57,6 +64,7 @@ com/facebook/buck/util/concurrent/MostExecutors.class
 com/facebook/buck/util/environment/Architecture.class
 com/facebook/buck/util/environment/Platform.class
 com/facebook/buck/util/environment/PlatformType.class
+META-INF/services/org.junit.jupiter.api.extension.Extension
 """
 
 

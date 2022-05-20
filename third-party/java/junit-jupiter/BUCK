@@ -1,0 +1,56 @@
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+common_visibility = [
+    "//src/com/facebook/buck/testrunner:junit",
+    "//starlark/...",
+    "//test/...",
+    "//third-party/java/...",
+    "//tools/...",
+]
+
+buck_prebuilt_jar(
+    name = "junit-jupiter-api",
+    binary_jar = "junit-jupiter-api-5.8.2.jar",
+    source_jar = "junit-jupiter-api-5.8.2-sources.jar",
+    visibility = common_visibility,
+    deps = [
+        "//third-party/java/junit-platform:junit-platform-commons",
+        "//third-party/java/opentest4j:opentest4j",
+        "//third-party/java/apiguardian:apiguardian-api",
+    ],
+)
+
+buck_prebuilt_jar(
+    name = "junit-jupiter-engine",
+    binary_jar = "junit-jupiter-engine-5.8.2.jar",
+    source_jar = "junit-jupiter-engine-5.8.2-sources.jar",
+    visibility = common_visibility,
+    deps = [
+        "//third-party/java/junit-platform:junit-platform-engine",
+        "//third-party/java/junit-jupiter:junit-jupiter-api",
+        "//third-party/java/apiguardian:apiguardian-api",
+    ],
+)
+
+buck_prebuilt_jar(
+    name = "junit-jupiter-params",
+    binary_jar = "junit-jupiter-params-5.8.2.jar",
+    source_jar = "junit-jupiter-params-5.8.2-sources.jar",
+    visibility = common_visibility,
+    deps = [
+        "//third-party/java/junit-jupiter:junit-jupiter-api",
+        "//third-party/java/apiguardian:apiguardian-api",
+    ],
+)
+
+buck_prebuilt_jar(
+    name = "junit-vintage-engine",
+    binary_jar = "junit-vintage-engine-5.8.2.jar",
+    source_jar = "junit-vintage-engine-5.8.2-sources.jar",
+    visibility = common_visibility,
+    deps = [
+        "//third-party/java/junit:junit",
+        "//third-party/java/junit-platform:junit-platform-engine",
+        "//third-party/java/apiguardian:apiguardian-api",
+    ],
+)

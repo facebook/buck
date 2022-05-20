@@ -1,0 +1,9 @@
+load("//tools/build_rules:java_rules.bzl", "buck_prebuilt_jar")
+
+buck_prebuilt_jar(
+    name = "apiguardian-api",
+    binary_jar = "apiguardian-api-1.1.2.jar",
+    source_jar = "apiguardian-api-1.1.2-sources.jar",
+    visibility = ["PUBLIC"],
+    deps = [],
+)
