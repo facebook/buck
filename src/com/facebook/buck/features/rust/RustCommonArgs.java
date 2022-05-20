@@ -47,6 +47,8 @@ public interface RustCommonArgs
 
   ImmutableList<StringWithMacros> getRustcFlags();
 
+  ImmutableList<StringWithMacros> getRustdocFlags();
+
   Optional<String> getCrate();
 
   Optional<String> getCrateRoot();
