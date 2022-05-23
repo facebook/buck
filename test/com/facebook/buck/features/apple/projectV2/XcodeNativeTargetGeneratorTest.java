@@ -58,6 +58,7 @@ import com.facebook.buck.features.filegroup.FilegroupBuilder;
 import com.facebook.buck.features.halide.HalideLibraryBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -446,7 +447,9 @@ public class XcodeNativeTargetGeneratorTest {
     tuxFileGroupTarget = BuildTargetFactory.newInstance("//baz:test");
     tuxFileGroupNode =
         FilegroupBuilder.createBuilder(tuxFileGroupTarget)
-            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("SomeFileGroupFile.txt")))
+            .setSrcs(
+                SourceSet.ofUnnamedSources(
+                    ImmutableSet.of(FakeSourcePath.of("SomeFileGroupFile.txt"))))
             .build();
 
     bazTestTarget = BuildTargetFactory.newInstance("//baz:test");

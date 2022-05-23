@@ -87,6 +87,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
@@ -885,7 +886,7 @@ public class IncrementalActionGraphScenarioTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:group");
     FilegroupBuilder builder =
         FilegroupBuilder.createBuilder(target)
-            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("file.txt")));
+            .setSrcs(SourceSet.ofUnnamedSources(ImmutableSet.of(FakeSourcePath.of("file.txt"))));
 
     ActionGraphAndBuilder result = createActionGraph(builder);
     ImmutableMap<BuildRule, RuleKey> ruleKeys = getRuleKeys(result);

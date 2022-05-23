@@ -17,12 +17,14 @@
 package com.facebook.buck.features.filegroup;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
@@ -106,5 +108,52 @@ public class FilegroupIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", "//empty/:use_empty");
 
     result.assertSuccess();
+  }
+
+  @Test
+  public void testWithSubdirGlob() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "filegroup", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("build", "--show-output", "//test/:dir_strip_prefix");
+    result.assertSuccess();
+
+    String output = result.getStdout();
+    Path outputPath = workspace.getPath(output.split("\\s+")[1]);
+
+    assertEquals("another_file", workspace.getFileContents(outputPath.resolve("another_file.txt")));
+  }
+
+  @Test
+  public void testEmptyNoSrcsSubgroupOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "filegroup", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("build", "--show-output", "//empty/:empty_no_srcs");
+    result.assertSuccess();
+
+    String output = result.getStdout();
+    Path outputPath = workspace.getPath(output.split("\\s+")[1]);
+
+    assertTrue(Files.exists(outputPath));
+  }
+
+  @Test
+  public void testEmptySubgroupOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "filegroup", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("build", "--show-output", "//empty/:empty");
+    result.assertSuccess();
+
+    String output = result.getStdout();
+    Path outputPath = workspace.getPath(output.split("\\s+")[1]);
+
+    assertTrue(Files.exists(outputPath));
   }
 }

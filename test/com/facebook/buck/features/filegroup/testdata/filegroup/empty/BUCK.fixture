@@ -3,6 +3,10 @@ filegroup(
     srcs = [],
 )
 
+filegroup(
+    name = "empty_no_srcs",
+)
+
 genrule(
     name = "use_empty",
     srcs = [":empty"],
