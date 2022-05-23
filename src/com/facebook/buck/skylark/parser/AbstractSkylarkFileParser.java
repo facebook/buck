@@ -755,7 +755,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * extension and returns {@link ExtensionData}
    *
    * @param load {@link LocalExtensionLoadState} representing loaded extension
-   * @returns {@link ExtensionData} for this extions.
+   * @returns {@link ExtensionData} for this extension.
    */
   @VisibleForTesting
   protected ExtensionData buildExtensionData(LocalExtensionLoadState load)
