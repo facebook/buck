@@ -83,17 +83,32 @@ public class D8ExecutableMain {
   @Option(name = "--class-names-path")
   private String classNamesOutput;
 
+  /**
+   * When using jar compression, the secondary dex directory consists of N secondary dex jars, each
+   * of which has a corresponding .meta file (the secondaryDexMetadataFile) containing a single line
+   * of the form:
+   *
+   * <p>jar:<size of secondary dex jar (in bytes)> dex:<size of uncompressed dex file (in bytes)>
+   *
+   * <p>It also contains a metadata.txt file, which consists on N lines, one for each secondary dex
+   * jar. Those lines consist of:
+   *
+   * <p><secondary dex jar file name> <hash of secondary dex jar> <canary class>
+   *
+   * <p>We write the line that needs to be added to metadata.txt for this secondary dex jar to
+   * secondaryDexMetadataLine, and we use the secondaryDexCanaryClassName for the <canary class>.
+   */
+  @Option(name = "--secondary-dex-compression")
+  private String secondaryDexCompression;
+
   @Option(name = "--secondary-dex-metadata-file")
   private String secondaryDexMetadataFile;
 
   @Option(name = "--secondary-dex-metadata-line")
   private String secondaryDexMetadataLine;
 
-  @Option(name = "--secondary-dex-compression")
-  private String secondaryDexCompression;
-
-  @Option(name = "--secondary-dex-index")
-  private String secondaryDexIndex;
+  @Option(name = "--secondary-dex-canary-class-name")
+  private String secondaryDexCanaryClassName;
 
   public static void main(String[] args) throws IOException {
     D8ExecutableMain main = new D8ExecutableMain();
@@ -157,12 +172,11 @@ public class D8ExecutableMain {
                 .equals(secondaryDexMetadataFile));
         D8Utils.writeSecondaryDexMetadata(outputPath, secondaryDexMetadataFilePath);
         Preconditions.checkNotNull(secondaryDexMetadataLine);
-        Preconditions.checkNotNull(secondaryDexIndex);
+        Preconditions.checkNotNull(secondaryDexCanaryClassName);
         Files.write(
             Paths.get(secondaryDexMetadataLine),
             Collections.singletonList(
-                D8Utils.getSecondaryDexJarMetadataString(
-                    outputPath, Integer.parseInt(secondaryDexIndex))));
+                D8Utils.getSecondaryDexJarMetadataString(outputPath, secondaryDexCanaryClassName)));
       }
 
       if (referencedResourcesPath.isPresent()) {

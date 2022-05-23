@@ -210,6 +210,11 @@ public class D8Utils {
     writeSecondaryDexMetadata(secondaryDexOutputJarPath, secondaryDexOutputJarMetadataPath);
   }
 
+  /**
+   * Write a secondary dex jar metadata file. This is a .meta file with a single line containing:
+   *
+   * <p>jar:<size of secondary dex jar (in bytes)> dex:<size of uncompressed dex file (in bytes)>
+   */
   static void writeSecondaryDexMetadata(
       Path secondaryDexOutputJarPath, Path secondaryDexOutputJarMetadataPath) throws IOException {
     try (ZipFile zf = new ZipFile(secondaryDexOutputJarPath.toFile())) {
@@ -231,14 +236,20 @@ public class D8Utils {
     }
   }
 
-  static String getSecondaryDexJarMetadataString(Path secondaryDexOutputJarPath, int index)
-      throws IOException {
+  /**
+   * The secondary dex directory contains a single metadata.txt file which has one line per
+   * secondary dex, consisting of:
+   *
+   * <p><secondary dex jar file name> <hash of secondary dex jar> <canary class>
+   */
+  static String getSecondaryDexJarMetadataString(
+      Path secondaryDexOutputJarPath, String canaryClassName) throws IOException {
     return String.format(
         "%s %s %s",
         secondaryDexOutputJarPath.getFileName(),
         com.google.common.io.Files.hash(secondaryDexOutputJarPath.toFile(), Hashing.sha1())
             .toString(),
-        String.format("secondary.dex%d.Canary", index + 1));
+        canaryClassName);
   }
 
   public static class D8DiagnosticsHandler implements DiagnosticsHandler {

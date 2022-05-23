@@ -204,7 +204,9 @@ public class MultiDexExecutableMain {
         D8Utils.writeSecondaryDexJarAndMetadataFile(
             secondaryDexOutputJarPath, metadataPath, rawSecondaryDexPath, compression);
 
-        metadataLines.add(D8Utils.getSecondaryDexJarMetadataString(secondaryDexOutputJarPath, i));
+        metadataLines.add(
+            D8Utils.getSecondaryDexJarMetadataString(
+                secondaryDexOutputJarPath, String.format("secondary.dex%d.Canary", i + 1)));
         if (compression.equals("xz")) {
           doXzCompression(secondaryDexOutputJarPath);
         }
