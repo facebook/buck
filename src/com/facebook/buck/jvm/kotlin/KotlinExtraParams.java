@@ -17,8 +17,15 @@
 package com.facebook.buck.jvm.kotlin;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
+import java.util.stream.Collectors;
 
 /** Extra params for creating Kotlin compile steps. */
 @BuckStyleValue
@@ -26,8 +33,38 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
 
   public abstract BuildContext getBuildContext();
 
+  public abstract AbsPath getResolvedStandardLibraryClassPath();
+
+  public abstract AbsPath getResolvedAnnotationProcessingClassPath();
+
+  public abstract ImmutableMap<AbsPath, ImmutableMap<String, String>>
+      getResolvedKotlinCompilerPlugins();
+
+  public abstract ImmutableSortedSet<AbsPath> getResolvedFriendPaths();
+
+  public abstract ImmutableSortedSet<AbsPath> getResolvedKotlinHomeLibraries();
+
   /** Resolve extra params. */
-  public static KotlinExtraParams of(BuildContext buildContext) {
-    return ImmutableKotlinExtraParams.ofImpl(buildContext);
+  public static KotlinExtraParams of(
+      BuildContext buildContext,
+      SourcePath standardLibraryClassPath,
+      SourcePath annotationProcessingClassPath,
+      ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins,
+      ImmutableList<SourcePath> friendPaths,
+      ImmutableSortedSet<SourcePath> kotlinHomeLibraries) {
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
+    return ImmutableKotlinExtraParams.ofImpl(
+        buildContext,
+        resolver.getAbsolutePath(standardLibraryClassPath),
+        resolver.getAbsolutePath(annotationProcessingClassPath),
+        kotlinCompilerPlugins.entrySet().stream()
+            .collect(
+                Collectors.toMap(
+                    // RelPath does not appear to work if path is a BuildTargetSourcePath in a
+                    // different cell than the kotlin_library rule being defined.
+                    e -> resolver.getAbsolutePath(e.getKey()),
+                    e -> e.getValue())),
+        resolver.getAllAbsolutePaths(friendPaths),
+        resolver.getAllAbsolutePaths(kotlinHomeLibraries));
   }
 }

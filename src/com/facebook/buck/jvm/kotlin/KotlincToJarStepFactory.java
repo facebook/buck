@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.FileExtensionMatcher;
 import com.facebook.buck.io.file.GlobPatternMatcher;
 import com.facebook.buck.io.file.PathMatcher;
@@ -172,7 +171,13 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
 
   @Override
   public KotlinExtraParams createExtraParams(BuildContext context, AbsPath rootPath) {
-    return KotlinExtraParams.of(context);
+    return KotlinExtraParams.of(
+        context,
+        standardLibraryClasspath,
+        annotationProcessingClassPath,
+        kotlinCompilerPlugins,
+        friendPaths,
+        kotlinHomeLibraries);
   }
 
   @Override
@@ -201,7 +206,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
         FilesystemParamsUtils.getIgnoredPaths(filesystemParams);
 
     BuildContext buildContext = extraParams.getBuildContext();
-    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
     ImmutableSortedSet<RelPath> declaredClasspathEntries = parameters.getClasspathEntries();
     ImmutableSortedSet<RelPath> sourceFilePaths = parameters.getSourceFilePaths();
@@ -245,21 +249,18 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
               .resolveRel(friendPathScratchDir.getFileName().toString().replace(",", "__"));
       Map<AbsPath, AbsPath> remappedClasspathEntries = new HashMap<>();
 
-      for (SourcePath friendPath : friendPaths) {
-        AbsPath friendAbsPath = resolver.getAbsolutePath(friendPath);
+      for (AbsPath friendPath : extraParams.getResolvedFriendPaths()) {
         // If this path has a comma, copy to a new location that doesn't have one.
-        if (friendAbsPath.getPath().toString().contains(",")) {
+        if (friendPath.getPath().toString().contains(",")) {
           if (remappedClasspathEntries.isEmpty()) {
             steps.add(MkdirIsolatedStep.of(friendPathScratchDir));
           }
-          AbsPath dest =
-              rootPath.resolve(friendPathScratchDir.resolve(friendAbsPath.getFileName()));
-          steps.add(
-              CopyIsolatedStep.of(friendAbsPath.getPath(), dest.getPath(), CopySourceMode.FILE));
-          remappedClasspathEntries.put(friendAbsPath, dest);
-          friendAbsPath = dest;
+          AbsPath dest = rootPath.resolve(friendPathScratchDir.resolve(friendPath.getFileName()));
+          steps.add(CopyIsolatedStep.of(friendPath.getPath(), dest.getPath(), CopySourceMode.FILE));
+          remappedClasspathEntries.put(friendPath, dest);
+          friendPath = dest;
         }
-        friendAbsPathsBuilder.add(friendAbsPath);
+        friendAbsPathsBuilder.add(friendPath);
       }
       ImmutableSortedSet<AbsPath> friendAbsPaths = friendAbsPathsBuilder.build();
 
@@ -275,10 +276,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
                       .map(AbsPath::normalize)
                       .map(p -> remappedClasspathEntries.getOrDefault(p, p))
                       .iterator())
-              .addAll(
-                  RichStream.from(kotlinHomeLibraries)
-                      .map(x -> resolver.getAbsolutePath(x))
-                      .iterator())
+              .addAll(extraParams.getResolvedKotlinHomeLibraries())
               .build();
 
       String friendPathsArg = getFriendsPath(friendAbsPaths);
@@ -298,6 +296,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
           buckPaths,
           ignoredPaths,
           buildContext,
+          extraParams.getResolvedStandardLibraryClassPath(),
+          extraParams.getResolvedAnnotationProcessingClassPath(),
           outputDirectory,
           sourceBuilder,
           sourcesOutput,
@@ -319,7 +319,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
           classesOutput,
           postKotlinCompilationSteps,
           allClasspaths,
-          resolver,
+          extraParams.getResolvedKotlinCompilerPlugins(),
           kotlinPluginGeneratedFullPath,
           buildTargetValueExtraParams.getCellRelativeBasePath(),
           sourceFilePaths,
@@ -335,7 +335,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
               .add(friendPathsArg)
               .addAll(
                   getKotlinCompilerPluginsArgs(
-                      resolver,
+                      extraParams.getResolvedKotlinCompilerPlugins(),
                       kotlinPluginGeneratedFullPath,
                       KotlincToJarStepFactory::isNotKspPlugin))
               .addAll(annotationProcessingOptionsBuilder.build())
@@ -401,6 +401,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       BuckPaths buckPaths,
       ImmutableSet<PathMatcher> ignoredPaths,
       BuildContext buildContext,
+      AbsPath resolvedKotlinStandardLibraryClassPath,
+      AbsPath resolvedAnnotationProcessingClassPath,
       RelPath outputDirectory,
       ImmutableSortedSet.Builder<RelPath> sourceBuilder,
       RelPath sourcesOutput,
@@ -465,17 +467,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       apOptions.put(splitParam[0], splitParam[1]);
     }
 
-    SourcePathResolverAdapter sourcePathResolver = buildContext.getSourcePathResolver();
-    Path annotationProcessorPath =
-        sourcePathResolver.getAbsolutePath(annotationProcessingClassPath).getPath();
-    Path standardLibraryPath =
-        sourcePathResolver.getAbsolutePath(standardLibraryClasspath).getPath();
     Path annotationProcessorsStatsFilePath = reportsOutput.getPath().resolve(AP_STATS_REPORT_FILE);
 
     Builder<String> kaptPluginOptionsBuilder =
         ImmutableList.<String>builder()
-            .add(AP_CLASSPATH_ARG + annotationProcessorPath)
-            .add(AP_CLASSPATH_ARG + standardLibraryPath)
+            .add(AP_CLASSPATH_ARG + resolvedAnnotationProcessingClassPath.getPath())
+            .add(AP_CLASSPATH_ARG + resolvedKotlinStandardLibraryClassPath.getPath())
             .addAll(kaptPluginsClasspath)
             .addAll(kaptProcessorsArg)
             .add(SOURCES_ARG + rootPath.resolve(sourcesOutput))
@@ -494,7 +491,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
     }
 
     annotationProcessingOptionsBuilder
-        .add(X_PLUGIN_ARG + annotationProcessorPath)
+        .add(X_PLUGIN_ARG + resolvedAnnotationProcessingClassPath)
         .add(PLUGIN)
         .add(
             KAPT3_PLUGIN
@@ -552,7 +549,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       RelPath classesOutput,
       Builder<IsolatedStep> postKotlinCompilationSteps,
       ImmutableSortedSet<AbsPath> allClasspaths,
-      SourcePathResolverAdapter resolver,
+      ImmutableMap<AbsPath, ImmutableMap<String, String>> resolvedKotlinCompilerPlugins,
       String kotlinPluginGeneratedOutFullPath,
       ForwardRelPath projectBaseDir,
       ImmutableSortedSet<RelPath> sourceFilePaths,
@@ -632,7 +629,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
 
     Builder<String> kspTriggerBuilder = ImmutableList.builder();
     kspTriggerBuilder
-        .addAll(getKspPluginsArgs(resolver, kotlinPluginGeneratedOutFullPath))
+        .addAll(getKspPluginsArgs(resolvedKotlinCompilerPlugins, kotlinPluginGeneratedOutFullPath))
         .add(PLUGIN, Joiner.on(",").join(kspPluginOptionsBuilder.build()));
 
     // Triggering only the KSP plugin.
@@ -857,27 +854,30 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
   }
 
   private ImmutableList<String> getKspPluginsArgs(
-      SourcePathResolverAdapter sourcePathResolverAdapter, String outputDir) {
+      ImmutableMap<AbsPath, ImmutableMap<String, String>> resolvedKotlinCompilerPlugins,
+      String outputDir) {
     return getKotlinCompilerPluginsArgs(
-        sourcePathResolverAdapter, outputDir, KotlincToJarStepFactory::isKspPlugin);
+        resolvedKotlinCompilerPlugins, outputDir, KotlincToJarStepFactory::isKspPlugin);
   }
 
   private ImmutableList<String> getKotlinCompilerPluginsArgs(
-      SourcePathResolverAdapter sourcePathResolverAdapter,
+      ImmutableMap<AbsPath, ImmutableMap<String, String>> resolvedKotlinCompilerPlugins,
       String outputDir,
       Predicate<String> filter) {
     Builder<String> pluginArgs = ImmutableList.builder();
-    for (SourcePath pluginPath : kotlinCompilerPlugins.keySet()) {
+    for (Map.Entry<AbsPath, ImmutableMap<String, String>> entry :
+        resolvedKotlinCompilerPlugins.entrySet()) {
+      AbsPath pluginPath = entry.getKey();
+      ImmutableMap<String, String> pluginOptions = entry.getValue();
+
       if (!filter.test(pluginPath.toString())) {
         continue;
       }
       // Add plugin basic string, e.g. "-Xplugins=<pluginPath>"
-      pluginArgs.add(getKotlincPluginBasicString(sourcePathResolverAdapter, pluginPath));
+      pluginArgs.add(X_PLUGIN_ARG + pluginPath);
 
       // If plugin options exist, add plugin option string,
       // e.g. "-P" and "<optionKey>=<optionValue>,<optionKey2>=<optionValue2>,..."
-      ImmutableMap<String, String> pluginOptions = kotlinCompilerPlugins.get(pluginPath);
-
       if (pluginOptions != null && !pluginOptions.isEmpty()) {
         Builder<String> pluginOptionStrings = ImmutableList.builder();
 
@@ -895,16 +895,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       }
     }
     return pluginArgs.build();
-  }
-
-  /**
-   * Ideally, we would not use getAbsolutePath() here, but getRelativePath() does not appear to work
-   * correctly if path is a BuildTargetSourcePath in a different cell than the kotlin_library() rule
-   * being defined.
-   */
-  private String getKotlincPluginBasicString(
-      SourcePathResolverAdapter sourcePathResolverAdapter, SourcePath path) {
-    return X_PLUGIN_ARG + sourcePathResolverAdapter.getAbsolutePath(path).toString();
   }
 
   private String getModuleName(BuildTargetValue invokingRule) {
