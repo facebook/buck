@@ -602,7 +602,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
         kspAnnotationProcessors.stream()
             .map(p -> p.toUrlClasspath(rootPath))
             .flatMap(List::stream)
-            .map(url -> urlToFile(url))
+            .map(KotlincToJarStepFactory::urlToFile)
             .collect(ImmutableList.toImmutableList());
     String kspProcessorsClasspath =
         Joiner.on(File.pathSeparatorChar).join(kspProcessorsClasspathList);
@@ -923,24 +923,20 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
 
   static ImmutableList<ResolvedJavacPluginProperties> getKaptAnnotationProcessors(
       JavacPluginParams javaAnnotationProcessorParams) {
-    ImmutableList<ResolvedJavacPluginProperties> kaptAnnotationProcessors =
-        javaAnnotationProcessorParams.isEmpty()
-            ? ImmutableList.of()
-            : javaAnnotationProcessorParams.getPluginProperties().stream()
-                .filter(prop -> !isKSPProcessor(prop))
-                .collect(ImmutableList.toImmutableList());
-    return kaptAnnotationProcessors;
+    return javaAnnotationProcessorParams.isEmpty()
+        ? ImmutableList.of()
+        : javaAnnotationProcessorParams.getPluginProperties().stream()
+            .filter(prop -> !isKSPProcessor(prop))
+            .collect(ImmutableList.toImmutableList());
   }
 
   static ImmutableList<ResolvedJavacPluginProperties> getKspAnnotationProcessors(
       JavacPluginParams annotationProcessorParams) {
-    ImmutableList<ResolvedJavacPluginProperties> kspAnnotationProcessors =
-        annotationProcessorParams.isEmpty()
-            ? ImmutableList.of()
-            : annotationProcessorParams.getPluginProperties().stream()
-                .filter(prop -> isKSPProcessor(prop))
-                .collect(ImmutableList.toImmutableList());
-    return kspAnnotationProcessors;
+    return annotationProcessorParams.isEmpty()
+        ? ImmutableList.of()
+        : annotationProcessorParams.getPluginProperties().stream()
+            .filter(KotlincToJarStepFactory::isKSPProcessor)
+            .collect(ImmutableList.toImmutableList());
   }
 
   /**
