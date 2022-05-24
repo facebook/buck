@@ -40,8 +40,6 @@ import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.BuildTargetValueExtraParams;
-import com.facebook.buck.jvm.java.BuildContextAwareCompileToJarStepFactory;
-import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
@@ -90,7 +88,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** Factory that creates Kotlin related compile build steps. */
-public class KotlincToJarStepFactory extends BuildContextAwareCompileToJarStepFactory {
+public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtraParams>
+    implements CompileToJarStepFactory.CreatesExtraParams<KotlinExtraParams> {
 
   private static final String PLUGIN = "-P";
   private static final String APT_MODE = "aptMode=";
@@ -167,6 +166,16 @@ public class KotlincToJarStepFactory extends BuildContextAwareCompileToJarStepFa
   }
 
   @Override
+  public Class<KotlinExtraParams> getExtraParamsType() {
+    return KotlinExtraParams.class;
+  }
+
+  @Override
+  public KotlinExtraParams createExtraParams(BuildContext context, AbsPath rootPath) {
+    return KotlinExtraParams.of(context);
+  }
+
+  @Override
   public void createCompileStep(
       FilesystemParams filesystemParams,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
@@ -176,7 +185,7 @@ public class KotlincToJarStepFactory extends BuildContextAwareCompileToJarStepFa
       Builder<IsolatedStep> steps,
       BuildableContext buildableContext,
       ResolvedJavac resolvedJavac,
-      BuildContextAwareExtraParams extraParams) {
+      KotlinExtraParams extraParams) {
 
     BuildTargetValueExtraParams buildTargetValueExtraParams =
         invokingRule
