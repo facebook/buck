@@ -213,7 +213,7 @@ public class DummyRDotJava extends AbstractBuildRule
         isolatedSteps,
         buildableContext,
         javac.resolve(sourcePathResolver, rootPath),
-        compileStepFactory.createExtraParams(sourcePathResolver, rootPath));
+        compileStepFactory.createExtraParams(context, rootPath));
     steps.addAll(isolatedSteps.build());
     buildableContext.recordArtifact(rDotJavaClassesFolder.getPath());
 

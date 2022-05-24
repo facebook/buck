@@ -117,6 +117,11 @@ public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtra
   }
 
   @Override
+  public Class<JavaExtraParams> getExtraParamsType() {
+    return JavaExtraParams.class;
+  }
+
+  @Override
   public void createCompileStep(
       FilesystemParams filesystemParams,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,

@@ -25,6 +25,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.java.BuildContextAwareCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
@@ -41,7 +42,7 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /** Factory that creates Groovy related compile build steps. */
-class GroovyToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareExtraParams> {
+class GroovyToJarStepFactory extends BuildContextAwareCompileToJarStepFactory {
 
   @AddToRuleKey private final Tool groovyc;
   @AddToRuleKey private final Optional<ImmutableList<String>> extraArguments;

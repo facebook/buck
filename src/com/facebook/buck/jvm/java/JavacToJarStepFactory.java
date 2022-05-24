@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -30,7 +31,8 @@ import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 /** Factory that creates Java related compile build steps. */
-public class JavacToJarStepFactory extends BaseJavacToJarStepFactory {
+public class JavacToJarStepFactory extends BaseJavacToJarStepFactory
+    implements CompileToJarStepFactory.CreatesExtraParams<JavaExtraParams> {
 
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
@@ -70,7 +72,9 @@ public class JavacToJarStepFactory extends BaseJavacToJarStepFactory {
   }
 
   /** Creates {@link JavaExtraParams}. */
-  public JavaExtraParams createExtraParams(SourcePathResolverAdapter resolver, AbsPath rootPath) {
+  @Override
+  public JavaExtraParams createExtraParams(BuildContext context, AbsPath rootPath) {
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     JavacOptions buildTimeOptions = getBuildTimeOptions();
     ResolvedJavacOptions resolvedJavacOptions =
         ResolvedJavacOptions.of(buildTimeOptions, resolver, rootPath);

@@ -40,6 +40,7 @@ import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.BuildTargetValueExtraParams;
+import com.facebook.buck.jvm.java.BuildContextAwareCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
@@ -89,7 +90,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /** Factory that creates Kotlin related compile build steps. */
-public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareExtraParams> {
+public class KotlincToJarStepFactory extends BuildContextAwareCompileToJarStepFactory {
 
   private static final String PLUGIN = "-P";
   private static final String APT_MODE = "aptMode=";
@@ -362,6 +363,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
     }
 
     prepareJavaCompilationIfNeeded(
+        buildContext,
         invokingRule,
         rootPath,
         steps,
@@ -371,7 +373,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
         parameters,
         buildableContext,
         resolvedJavac,
-        resolver,
         declaredClasspathEntries,
         outputDirectory,
         hasKotlinSources,
@@ -687,6 +688,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
    * compiles any Java files generated from annotation processors using KAPT and KSP.
    */
   private void prepareJavaCompilationIfNeeded(
+      BuildContext buildContext,
       BuildTargetValue invokingRule,
       AbsPath rootPath,
       Builder<IsolatedStep> steps,
@@ -696,7 +698,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
       CompilerParameters parameters,
       BuildableContext buildableContext,
       ResolvedJavac resolvedJavac,
-      SourcePathResolverAdapter resolver,
       ImmutableSortedSet<RelPath> declaredClasspathEntries,
       RelPath outputDirectory,
       boolean hasKotlinSources,
@@ -755,7 +756,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<BuildContex
         steps,
         buildableContext,
         resolvedJavac,
-        javacToJarStepFactory.createExtraParams(resolver, rootPath));
+        javacToJarStepFactory.createExtraParams(buildContext, rootPath));
   }
 
   @Override

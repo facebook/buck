@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.cd.model.java.FilesystemParams;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -223,14 +224,8 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
     return false;
   }
 
-  /** Returns an extra params type. */
-  @SuppressWarnings("unchecked")
-  public Class<T> getExtraParamsType() {
-    if (supportsCompilationDaemon()) {
-      return (Class<T>) JavaExtraParams.class;
-    }
-    return (Class<T>) BuildContextAwareExtraParams.class;
-  }
+  /** Returns the extra params type the factory accepts when creating compile steps */
+  public abstract Class<T> getExtraParamsType();
 
   public ImmutableList<RelPath> getDepFilePaths(
       @SuppressWarnings("unused") ProjectFilesystem filesystem,
@@ -254,6 +249,19 @@ public abstract class CompileToJarStepFactory<T extends CompileToJarStepFactory.
    * Eventually we would need to get rid of BuildContext for other JVM languages.
    */
   public interface ExtraParams {}
+
+  /**
+   * Marker interface for sub-classes of {@link CompileToJarStepFactory}, indicating that it can
+   * create the extra parameters necessary to create the compile steps "from scratch" (as opposed to
+   * deserializing them).
+   *
+   * <p>For step factories that support compiler daemons, there will be a version of the factory
+   * that can only create compile steps (used when deserializing commands in the daemon), and one
+   * that can do both (used to create commands).
+   */
+  public interface CreatesExtraParams<T extends ExtraParams> {
+    T createExtraParams(BuildContext buildContext, AbsPath rootPath);
+  }
 
   protected AbsPath getRootPath(FilesystemParams filesystemParams) {
     return AbsPath.get(filesystemParams.getRootPath().getPath());

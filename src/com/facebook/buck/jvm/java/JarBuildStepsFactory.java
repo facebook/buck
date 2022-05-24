@@ -389,6 +389,17 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         && AbiGenerationModeUtils.usesDependencies(abiGenerationMode);
   }
 
+  @SuppressWarnings("unchecked")
+  private T createExtraParams(BuildContext buildContext, AbsPath rootPath) {
+    if (configuredCompiler instanceof CompileToJarStepFactory.CreatesExtraParams) {
+      return ((CompileToJarStepFactory.CreatesExtraParams<T>) configuredCompiler)
+          .createExtraParams(buildContext, rootPath);
+    } else {
+      throw new UnsupportedOperationException(
+          "Configured compiler factory cannot create extra params.");
+    }
+  }
+
   /** Adds build steps for ABI jar. */
   public void addBuildStepsForAbiJar(
       BuildContext context,
@@ -460,20 +471,6 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
         buildCellRootPath,
         resolvedJavac,
         extraParams);
-  }
-
-  private T createExtraParams(BuildContext context, AbsPath rootPath) {
-    CompileToJarStepFactory.ExtraParams extraParams;
-    if (configuredCompiler.supportsCompilationDaemon()) {
-      JavacToJarStepFactory javacToJarStepFactory = (JavacToJarStepFactory) configuredCompiler;
-      SourcePathResolverAdapter sourcePathResolver = context.getSourcePathResolver();
-      extraParams = javacToJarStepFactory.createExtraParams(sourcePathResolver, rootPath);
-    } else {
-      extraParams = BuildContextAwareExtraParams.of(context);
-    }
-
-    Class<T> extraParamsType = configuredCompiler.getExtraParamsType();
-    return extraParamsType.cast(extraParams);
   }
 
   /** Adds build steps for library jar */
@@ -715,8 +712,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
     AbsPath rootPath = filesystem.getRootPath();
 
     ResolvedJavac resolvedJavac = javac.resolve(sourcePathResolver, rootPath);
-    JavaExtraParams extraParams =
-        javacToJarStepFactory.createExtraParams(sourcePathResolver, rootPath);
+    JavaExtraParams extraParams = javacToJarStepFactory.createExtraParams(context, rootPath);
 
     return javacToJarStepFactory.createPipelineState(
         buildTargetValue,

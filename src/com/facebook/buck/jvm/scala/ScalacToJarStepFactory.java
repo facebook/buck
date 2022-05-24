@@ -31,6 +31,7 @@ import com.facebook.buck.io.file.FileExtensionMatcher;
 import com.facebook.buck.io.file.PathMatcher;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.core.BuildTargetValue;
+import com.facebook.buck.jvm.java.BuildContextAwareCompileToJarStepFactory;
 import com.facebook.buck.jvm.java.BuildContextAwareExtraParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
@@ -50,7 +51,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 
 /** Factory that creates Scala related compile build steps. */
-public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContextAwareExtraParams> {
+public class ScalacToJarStepFactory extends BuildContextAwareCompileToJarStepFactory {
 
   private static final PathMatcher JAVA_PATH_MATCHER = FileExtensionMatcher.of("java");
   private static final PathMatcher SCALA_PATH_MATCHER = FileExtensionMatcher.of("scala");
@@ -172,7 +173,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory<BuildContext
           steps,
           buildableContext,
           resolvedJavac,
-          javacToJarStepFactory.createExtraParams(sourcePathResolver, rootPath));
+          javacToJarStepFactory.createExtraParams(context, rootPath));
     }
   }
 }

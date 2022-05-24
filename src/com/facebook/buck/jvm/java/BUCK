@@ -415,6 +415,7 @@ java_immutables_library(
     name = "steps",
     srcs = [
         "BaseJavacToJarStepFactory.java",
+        "BuildContextAwareCompileToJarStepFactory.java",
         "BuildContextAwareExtraParams.java",
         "CalculateClassAbiStep.java",
         "ClasspathChecker.java",
