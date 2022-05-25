@@ -21,11 +21,8 @@ import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
-import com.facebook.buck.slb.NoHealthyServersException;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
@@ -44,20 +41,15 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
 
   private final ArtifactCache delegate;
   private final int maxFetchRetries;
-  private final BuckEventBus buckEventBus;
   private final ArtifactCacheMode cacheMode;
 
   public RetryingCacheDecorator(
-      ArtifactCacheMode cacheMode,
-      ArtifactCache delegate,
-      int maxFetchRetries,
-      BuckEventBus buckEventBus) {
+      ArtifactCacheMode cacheMode, ArtifactCache delegate, int maxFetchRetries) {
     Preconditions.checkArgument(maxFetchRetries > 0);
 
     this.cacheMode = cacheMode;
     this.delegate = delegate;
     this.maxFetchRetries = maxFetchRetries;
-    this.buckEventBus = buckEventBus;
   }
 
   @Override
@@ -88,13 +80,10 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
           if (result.getType() != CacheResultType.ERROR) {
             return result;
           }
+          LOG.warn(
+              "Failed to fetch %s over %s after %d attempts.",
+              ruleKey, cacheMode.name(), maxFetchRetries);
           String msg = String.join("\n", allCacheErrors);
-          if (!msg.contains(NoHealthyServersException.class.getName())) {
-            buckEventBus.post(
-                ConsoleEvent.warning(
-                    "Failed to fetch %s over %s after %d attempts.",
-                    ruleKey, cacheMode.name(), maxFetchRetries));
-          }
           return result.withCacheError(Optional.of(msg));
         },
         MoreExecutors.directExecutor());

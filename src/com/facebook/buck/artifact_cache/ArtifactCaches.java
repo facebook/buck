@@ -529,7 +529,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             cacheMode,
             clientCertificateHandler);
 
-    return new RetryingCacheDecorator(cacheMode, cache, config.getMaxFetchRetries(), buckEventBus);
+    return new RetryingCacheDecorator(cacheMode, cache, config.getMaxFetchRetries());
   }
 
   private static ArtifactCache createHttpArtifactCache(
