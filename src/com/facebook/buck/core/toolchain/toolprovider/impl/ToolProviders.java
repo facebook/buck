@@ -17,7 +17,6 @@
 package com.facebook.buck.core.toolchain.toolprovider.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -56,19 +55,22 @@ public class ToolProviders {
         "Expected BuildTargetSourcePath, got %s (%s).",
         sourcePath.getClass().getName(),
         sourcePath);
-    BuildTarget target = ((BuildTargetSourcePath) sourcePath).getTarget();
+    BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
     return new ToolProvider() {
       @Override
       public Tool resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
-        BuildRule rule = resolver.getRule(target);
+        BuildRule rule = resolver.getRule(buildTargetSourcePath.getTarget());
         Verify.verify(rule instanceof BinaryBuildRule);
-        Tool tool = ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel());
+        Tool tool =
+            ((BinaryBuildRule) rule)
+                .getExecutableCommand(
+                    buildTargetSourcePath.getTargetWithOutputs().getOutputLabel());
         return new RemoteExecutionEnabledTool(tool, remoteExecutionEnabled);
       }
 
       @Override
       public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-        return ImmutableList.of(target);
+        return ImmutableList.of(buildTargetSourcePath.getTarget());
       }
     };
   }
