@@ -133,6 +133,11 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
             .orElse(0);
 
     for (SubCommand subCommand : subCommands.value()) {
+      if (Buck2OnlyCommand.class.isAssignableFrom(subCommand.impl())) {
+        // skip printing help for buck2 only commands
+        continue;
+      }
+
       Command command;
       try {
         command = (Command) subCommand.impl().newInstance();
