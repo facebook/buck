@@ -32,6 +32,7 @@ public class BuckCommand extends AbstractContainerCommand {
   @SubCommands({
     @SubCommand(name = "audit", impl = AuditCommand.class),
     @SubCommand(name = "build", impl = BuildCommand.class),
+    @SubCommand(name = "bxl", impl = BxlCommand.class),
     @SubCommand(name = "cache", impl = CacheCommand.class),
     // TODO(nga): rename to `cache delete`
     @SubCommand(name = "cachedelete", impl = CacheDeleteCommand.class),
