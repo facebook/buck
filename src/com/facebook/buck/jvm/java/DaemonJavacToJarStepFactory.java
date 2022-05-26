@@ -36,7 +36,6 @@ import com.facebook.buck.jvm.core.BaseJavaAbiInfo;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
-import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.SymlinkIsolatedStep;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +48,7 @@ import javax.annotation.Nullable;
  * Java implementation of compile to jar steps factory that doesn't depend on an internal build
  * graph datastructures, intended to be used from the Daemon worker.
  */
-public class DaemonJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraParams> {
+public class DaemonJavacToJarStepFactory extends BaseJavacToJarStepFactory {
 
   private static final Logger LOG = Logger.get(DaemonJavacToJarStepFactory.class);
 
@@ -116,41 +115,6 @@ public class DaemonJavacToJarStepFactory extends CompileToJarStepFactory<JavaExt
     return pipelineStateBuilder.build();
   }
 
-  @Override
-  public Class<JavaExtraParams> getExtraParamsType() {
-    return JavaExtraParams.class;
-  }
-
-  @Override
-  public void createCompileStep(
-      FilesystemParams filesystemParams,
-      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
-      BuildTargetValue invokingRule,
-      CompilerOutputPathsValue compilerOutputPathsValue,
-      CompilerParameters parameters,
-      ImmutableList.Builder<IsolatedStep> steps,
-      BuildableContext buildableContext,
-      ResolvedJavac resolvedJavac,
-      JavaExtraParams extraParams) {
-
-    CompilerOutputPaths outputPath = compilerOutputPathsValue.getByType(invokingRule.getType());
-    addAnnotationGenFolderStep(steps, buildableContext, outputPath.getAnnotationPath());
-
-    ResolvedJavacOptions resolvedJavacOptions = extraParams.getResolvedJavacOptions();
-    steps.add(
-        new JavacStep(
-            resolvedJavac,
-            resolvedJavacOptions,
-            invokingRule,
-            getConfiguredBuckOut(filesystemParams),
-            compilerOutputPathsValue,
-            parameters,
-            null,
-            null,
-            withDownwardApi,
-            cellToPathMappings));
-  }
-
   /** Creates pipelined compile to jar steps and adds them into a {@code steps} builder */
   public void createPipelinedCompileToJarStep(
       FilesystemParams filesystemParams,
@@ -200,14 +164,6 @@ public class DaemonJavacToJarStepFactory extends CompileToJarStepFactory<JavaExt
 
     jarParameters.ifPresent(
         parameters -> addJarCreationSteps(compilerParameters, steps, buildableContext, parameters));
-  }
-
-  private void addAnnotationGenFolderStep(
-      ImmutableList.Builder<IsolatedStep> steps,
-      BuildableContext buildableContext,
-      RelPath annotationGenFolder) {
-    steps.addAll(MakeCleanDirectoryIsolatedStep.of(annotationGenFolder));
-    buildableContext.recordArtifact(annotationGenFolder.getPath());
   }
 
   @Override
@@ -306,9 +262,5 @@ public class DaemonJavacToJarStepFactory extends CompileToJarStepFactory<JavaExt
 
   public SpoolMode getSpoolMode() {
     return spoolMode;
-  }
-
-  private RelPath getConfiguredBuckOut(FilesystemParams filesystemParams) {
-    return RelPath.get(filesystemParams.getConfiguredBuckOut().getPath());
   }
 }
