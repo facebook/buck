@@ -17,7 +17,7 @@
 package com.facebook.buck.jvm.java.stepsbuilder.javacd;
 
 import com.facebook.buck.cd.model.java.BaseCommandParams.SpoolMode;
-import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
+import com.facebook.buck.jvm.java.DaemonJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilderFactory;
@@ -35,7 +35,7 @@ public class JavaCDStepsBuilderFactory implements JavaCompileStepsBuilderFactory
   private final JavaCDParams javaCDParams;
 
   public JavaCDStepsBuilderFactory(
-      BaseJavacToJarStepFactory configuredCompiler, JavaCDParams javaCDParams) {
+      DaemonJavacToJarStepFactory configuredCompiler, JavaCDParams javaCDParams) {
     this.hasAnnotationProcessing = configuredCompiler.hasAnnotationProcessing();
     this.spoolMode = configuredCompiler.getSpoolMode();
     this.withDownwardApi = configuredCompiler.isWithDownwardApi();

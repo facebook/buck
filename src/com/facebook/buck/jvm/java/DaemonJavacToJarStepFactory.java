@@ -46,16 +46,16 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
- * Base java implementation of compile to jar steps factory that doesn't depend on an internal build
- * graph datastructures.
+ * Java implementation of compile to jar steps factory that doesn't depend on an internal build
+ * graph datastructures, intended to be used from the Daemon worker.
  */
-public class BaseJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraParams> {
+public class DaemonJavacToJarStepFactory extends CompileToJarStepFactory<JavaExtraParams> {
 
-  private static final Logger LOG = Logger.get(BaseJavacToJarStepFactory.class);
+  private static final Logger LOG = Logger.get(DaemonJavacToJarStepFactory.class);
 
   @AddToRuleKey private final SpoolMode spoolMode;
 
-  public BaseJavacToJarStepFactory(
+  public DaemonJavacToJarStepFactory(
       SpoolMode spoolMode, boolean hasAnnotationProcessing, boolean withDownwardApi) {
     super(hasAnnotationProcessing, withDownwardApi);
     this.spoolMode = spoolMode;

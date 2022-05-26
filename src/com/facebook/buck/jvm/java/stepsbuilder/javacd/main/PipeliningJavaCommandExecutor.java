@@ -40,10 +40,10 @@ import com.facebook.buck.jvm.cd.serialization.java.JarParametersSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.ResolvedJavacOptionsSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.ResolvedJavacSerializer;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.DaemonJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.JavacPipelineState;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaLibraryRules;
@@ -91,8 +91,8 @@ class PipeliningJavaCommandExecutor {
       Optional<SettableFuture<ActionId>> startNextCommandOptional)
       throws IOException {
 
-    BaseJavacToJarStepFactory javacToJarStepFactory =
-        JavaStepsBuilder.getBaseJavacToJarStepFactory(pipeliningCommand.getBaseCommandParams());
+    DaemonJavacToJarStepFactory javacToJarStepFactory =
+        JavaStepsBuilder.getDaemonJavacToJarStepFactory(pipeliningCommand.getBaseCommandParams());
 
     PipelineState pipelineState = pipeliningCommand.getPipeliningState();
     try (JavacPipelineState javacPipelineState = getJavacPipelineState(pipelineState)) {
@@ -245,7 +245,7 @@ class PipeliningJavaCommandExecutor {
 
   private static Pair<ImmutableList<IsolatedStep>, AbsPath> getAbiSteps(
       BasePipeliningCommand abiCommand,
-      BaseJavacToJarStepFactory baseJavacToJarStepFactory,
+      DaemonJavacToJarStepFactory daemonJavacToJarStepFactory,
       JavacPipelineState javacPipelineState,
       boolean createLibraryOutputDirectories) {
 
@@ -260,7 +260,7 @@ class PipeliningJavaCommandExecutor {
     ImmutableList.Builder<IsolatedStep> stepsBuilder = ImmutableList.builder();
 
     appendWithCreateDirectorySteps(
-        baseJavacToJarStepFactory,
+        daemonJavacToJarStepFactory,
         resourcesMap,
         stepsBuilder,
         javacPipelineState,
@@ -268,14 +268,14 @@ class PipeliningJavaCommandExecutor {
 
     if (createLibraryOutputDirectories) {
       appendWithCreateDirectorySteps(
-          baseJavacToJarStepFactory,
+          daemonJavacToJarStepFactory,
           resourcesMap,
           stepsBuilder,
           javacPipelineState,
           compilerOutputPathsValue.getLibraryCompilerOutputPath());
     }
 
-    baseJavacToJarStepFactory.createPipelinedCompileToJarStep(
+    daemonJavacToJarStepFactory.createPipelinedCompileToJarStep(
         filesystemParams,
         RelPathSerializer.toCellToPathMapping(abiCommand.getCellToPathMappingsMap()),
         buildTargetValue,
@@ -293,7 +293,7 @@ class PipeliningJavaCommandExecutor {
 
   private static Pair<ImmutableList<IsolatedStep>, AbsPath> getLibrarySteps(
       LibraryPipeliningCommand libraryCommand,
-      BaseJavacToJarStepFactory baseJavacToJarStepFactory,
+      DaemonJavacToJarStepFactory daemonJavacToJarStepFactory,
       JavacPipelineState javacPipelineState,
       boolean createLibraryOutputDirectories) {
 
@@ -312,14 +312,14 @@ class PipeliningJavaCommandExecutor {
 
     if (createLibraryOutputDirectories) {
       appendWithCreateDirectorySteps(
-          baseJavacToJarStepFactory,
+          daemonJavacToJarStepFactory,
           resourcesMap,
           stepsBuilder,
           javacPipelineState,
           compilerOutputPathsValue.getLibraryCompilerOutputPath());
     }
 
-    baseJavacToJarStepFactory.createPipelinedCompileToJarStep(
+    daemonJavacToJarStepFactory.createPipelinedCompileToJarStep(
         filesystemParams,
         cellToPathMappings,
         buildTargetValue,
@@ -372,7 +372,7 @@ class PipeliningJavaCommandExecutor {
   }
 
   private static void appendWithCreateDirectorySteps(
-      BaseJavacToJarStepFactory baseJavacToJarStepFactory,
+      DaemonJavacToJarStepFactory daemonJavacToJarStepFactory,
       ImmutableMap<RelPath, RelPath> resourcesMap,
       ImmutableList.Builder<IsolatedStep> stepsBuilder,
       JavacPipelineState javacPipelineState,
@@ -381,7 +381,7 @@ class PipeliningJavaCommandExecutor {
     boolean emptySources = compilerParameters.getSourceFilePaths().isEmpty();
 
     stepsBuilder.addAll(
-        baseJavacToJarStepFactory.getCompilerSetupIsolatedSteps(
+        daemonJavacToJarStepFactory.getCompilerSetupIsolatedSteps(
             resourcesMap, compilerOutputPaths, emptySources));
     stepsBuilder.addAll(MakeCleanDirectoryIsolatedStep.of(compilerOutputPaths.getAnnotationPath()));
   }

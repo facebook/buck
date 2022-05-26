@@ -231,7 +231,7 @@ public class CalculateSourceAbi
 
       ImmutableList.Builder<IsolatedStep> stepsBuilder = ImmutableList.builder();
 
-      ((BaseJavacToJarStepFactory) jarBuildStepsFactory.getConfiguredCompiler())
+      ((DaemonJavacToJarStepFactory) jarBuildStepsFactory.getConfiguredCompiler())
           .createPipelinedCompileToJarStep(
               filesystemParams,
               RelPathSerializer.toCellToPathMapping(

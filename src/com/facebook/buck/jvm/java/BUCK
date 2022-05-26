@@ -414,13 +414,13 @@ java_library_with_plugins(
 java_immutables_library(
     name = "steps",
     srcs = [
-        "BaseJavacToJarStepFactory.java",
         "BuildContextAwareCompileToJarStepFactory.java",
         "BuildContextAwareExtraParams.java",
         "CalculateClassAbiStep.java",
         "ClasspathChecker.java",
         "CompileToJarStepFactory.java",
         "CopyResourcesStep.java",
+        "DaemonJavacToJarStepFactory.java",
         "DiffAbisStep.java",
         "FilesystemParamsUtils.java",
         "GenerateCodeCoverageReportStep.java",

@@ -37,7 +37,7 @@ import com.facebook.buck.jvm.cd.serialization.java.JavaAbiInfoSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.ResolvedJavacOptionsSerializer;
 import com.facebook.buck.jvm.cd.serialization.java.ResolvedJavacSerializer;
 import com.facebook.buck.jvm.core.BuildTargetValue;
-import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
+import com.facebook.buck.jvm.java.DaemonJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.jvm.java.stepsbuilder.AbiStepsBuilder;
 import com.facebook.buck.jvm.java.stepsbuilder.JavaCompileStepsBuilder;
@@ -203,15 +203,15 @@ public class JavaStepsBuilder {
 
   private static DefaultJavaCompileStepsBuilderFactory<JavaExtraParams> creteDefaultStepsFactory(
       BuildJavaCommand buildJavaCommand) {
-    BaseJavacToJarStepFactory baseJavacToJarStepFactory =
-        getBaseJavacToJarStepFactory(buildJavaCommand.getBaseCommandParams());
-    return new DefaultJavaCompileStepsBuilderFactory<>(baseJavacToJarStepFactory);
+    DaemonJavacToJarStepFactory daemonJavacToJarStepFactory =
+        getDaemonJavacToJarStepFactory(buildJavaCommand.getBaseCommandParams());
+    return new DefaultJavaCompileStepsBuilderFactory<>(daemonJavacToJarStepFactory);
   }
 
-  /** Returns {@link BaseJavacToJarStepFactory} */
-  public static BaseJavacToJarStepFactory getBaseJavacToJarStepFactory(
+  /** Returns {@link DaemonJavacToJarStepFactory} */
+  public static DaemonJavacToJarStepFactory getDaemonJavacToJarStepFactory(
       BaseCommandParams baseCommandParams) {
-    return new BaseJavacToJarStepFactory(
+    return new DaemonJavacToJarStepFactory(
         baseCommandParams.getSpoolMode(),
         baseCommandParams.getHasAnnotationProcessing(),
         baseCommandParams.getWithDownwardApi());

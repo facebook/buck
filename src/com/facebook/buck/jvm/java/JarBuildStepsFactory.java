@@ -384,7 +384,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   }
 
   public boolean useRulePipelining() {
-    return configuredCompiler instanceof BaseJavacToJarStepFactory
+    return configuredCompiler instanceof DaemonJavacToJarStepFactory
         && AbiGenerationModeUtils.isSourceAbi(abiGenerationMode)
         && AbiGenerationModeUtils.usesDependencies(abiGenerationMode);
   }
@@ -754,8 +754,8 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
   public Function<PipelineState, CompilationDaemonStep> getCompilationStepCreatorFunction(
       ProjectFilesystem projectFilesystem) {
     return (state) -> {
-      BaseJavacToJarStepFactory configuredCompiler =
-          (BaseJavacToJarStepFactory) getConfiguredCompiler();
+      DaemonJavacToJarStepFactory configuredCompiler =
+          (DaemonJavacToJarStepFactory) getConfiguredCompiler();
       return new JavaCDPipeliningWorkerToolStep(
           state,
           hasAnnotationProcessing(),

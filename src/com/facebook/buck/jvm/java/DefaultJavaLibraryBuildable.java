@@ -329,7 +329,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     ImmutableList.Builder<IsolatedStep> stepsBuilder = ImmutableList.builder();
 
-    ((BaseJavacToJarStepFactory) jarBuildStepsFactory.getConfiguredCompiler())
+    ((DaemonJavacToJarStepFactory) jarBuildStepsFactory.getConfiguredCompiler())
         .createPipelinedCompileToJarStep(
             filesystemParams,
             cellToPathMappings,

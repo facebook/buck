@@ -31,7 +31,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 /** Factory that creates Java related compile build steps. */
-public class JavacToJarStepFactory extends BaseJavacToJarStepFactory
+public class JavacToJarStepFactory extends DaemonJavacToJarStepFactory
     implements CompileToJarStepFactory.CreatesExtraParams<JavaExtraParams> {
 
   @AddToRuleKey private final JavacOptions javacOptions;
