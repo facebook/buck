@@ -110,3 +110,15 @@ buck_java_library(
         "//third-party/java/protobuf:protobuf",
     ],
 )
+
+buck_java_library(
+    name = "installer-proto",
+    srcs = glob(["**/install/model/**/*.java"]),
+    visibility = ["PUBLIC"],
+
+    deps = ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
+    exported_deps = [
+        "//third-party/java/protobuf:protobuf",
+        "//third-party/java/remote-apis:remote-apis",
+    ],
+)
