@@ -32,7 +32,7 @@ buck_prebuilt_jar(
     binary_jar = "common-%s.jar" % version,
     source_jar = "common-%s-sources.jar" % version,
     visibility = [
-        "//src/com/facebook/buck/android:",
+        "PUBLIC",
     ],
 )
 
