@@ -42,6 +42,8 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
   public abstract ImmutableMap<AbsPath, ImmutableMap<String, String>>
       getResolvedKotlinCompilerPlugins();
 
+  public abstract ImmutableMap<String, AbsPath> getResolvedKosabiPluginOptionPath();
+
   public abstract ImmutableSortedSet<AbsPath> getResolvedFriendPaths();
 
   public abstract ImmutableSortedSet<AbsPath> getResolvedKotlinHomeLibraries();
@@ -55,6 +57,7 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
       SourcePath standardLibraryClassPath,
       SourcePath annotationProcessingClassPath,
       ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins,
+      ImmutableMap<String, SourcePath> kosabiPluginOptions,
       ImmutableList<SourcePath> friendPaths,
       ImmutableSortedSet<SourcePath> kotlinHomeLibraries,
       JavacOptions javacOptions) {
@@ -70,6 +73,9 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
                     // different cell than the kotlin_library rule being defined.
                     e -> resolver.getAbsolutePath(e.getKey()),
                     e -> e.getValue())),
+        kosabiPluginOptions.entrySet().stream()
+            .collect(
+                Collectors.toMap(e -> e.getKey(), e -> resolver.getAbsolutePath(e.getValue()))),
         resolver.getAllAbsolutePaths(friendPaths),
         resolver.getAllAbsolutePaths(kotlinHomeLibraries),
         ResolvedJavacOptions.of(javacOptions, resolver, rootPath));

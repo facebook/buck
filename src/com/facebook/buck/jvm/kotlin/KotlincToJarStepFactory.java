@@ -46,6 +46,7 @@ import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.FilesystemParamsUtils;
+import com.facebook.buck.jvm.java.JarParameters;
 import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginParams;
@@ -87,6 +88,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /** Factory that creates Kotlin related compile build steps. */
 public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtraParams>
@@ -137,7 +139,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> kotlinHomeLibraries;
   @AddToRuleKey private final boolean shouldGenerateAnnotationProcessingStats;
 
-  @AddToRuleKey private final ImmutableMap<String, SourcePath> nameToPluginOptionsMappings;
+  @AddToRuleKey private final ImmutableMap<String, SourcePath> kosabiPluginOptionsMappings;
 
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
@@ -153,7 +155,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       JavacOptions javacOptions,
       boolean withDownwardApi,
       boolean shouldGenerateAnnotationProcessingStats,
-      ImmutableMap<String, SourcePath> nameToPluginOptionsMappings) {
+      ImmutableMap<String, SourcePath> kosabiPluginOptionsMappings) {
     super(CompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
     this.javacOptions = javacOptions;
     this.kotlinc = kotlinc;
@@ -167,7 +169,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
     this.jvmTarget = jvmTarget;
     this.extraClasspathProvider = extraClasspathProvider;
     this.shouldGenerateAnnotationProcessingStats = shouldGenerateAnnotationProcessingStats;
-    this.nameToPluginOptionsMappings = nameToPluginOptionsMappings;
+    this.kosabiPluginOptionsMappings = kosabiPluginOptionsMappings;
   }
 
   @Override
@@ -183,6 +185,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
         standardLibraryClasspath,
         annotationProcessingClassPath,
         kotlinCompilerPlugins,
+        kosabiPluginOptionsMappings,
         friendPaths,
         kotlinHomeLibraries,
         javacOptions);
@@ -329,6 +332,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
           postKotlinCompilationSteps,
           allClasspaths,
           extraParams.getResolvedKotlinCompilerPlugins(),
+          extraParams.getResolvedKosabiPluginOptionPath(),
           kotlinPluginGeneratedFullPath,
           buildTargetValueExtraParams.getCellRelativeBasePath(),
           sourceFilePaths,
@@ -376,7 +380,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
               parameters.shouldTrackClassUsage(),
               RelPath.get(filesystemParams.getConfiguredBuckOut().getPath()),
               cellToPathMappings,
-              nameToPluginOptionsMappings));
+              extraParams.getResolvedKosabiPluginOptionPath()));
 
       steps.addAll(postKotlinCompilationSteps.build());
     }
@@ -427,6 +431,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       Builder<String> annotationProcessingOptionsBuilder,
       Builder<IsolatedStep> postKotlinCompilationSteps,
       JavacPluginParams javaAnnotationProcessorParams) {
+
+    // We don't need the Kapt processor to run for source-only-abi
+    if (invokingRule.isSourceOnlyAbi()) {
+      return;
+    }
 
     if (!annotationProcessingTool.equals(AnnotationProcessingTool.KAPT)) {
       return;
@@ -566,6 +575,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       Builder<IsolatedStep> postKotlinCompilationSteps,
       ImmutableSortedSet<AbsPath> allClasspaths,
       ImmutableMap<AbsPath, ImmutableMap<String, String>> resolvedKotlinCompilerPlugins,
+      ImmutableMap<String, AbsPath> resolvedKosabiPluginOptionPath,
       String kotlinPluginGeneratedOutFullPath,
       ForwardRelPath projectBaseDir,
       ImmutableSortedSet<RelPath> sourceFilePaths,
@@ -575,6 +585,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       JavacPluginParams annotationProcessorParams,
       ImmutableSortedSet.Builder<RelPath> sourceBuilderWithKspOutputs) {
+
+    // Kosabi doesn't support the ksp processors now
+    if (invokingRule.isSourceOnlyAbi()) {
+      return;
+    }
 
     // The other option is to use JAVAC, and we don't want to use KSP in that case.
     if (!annotationProcessingTool.equals(AnnotationProcessingTool.KAPT)) {
@@ -666,7 +681,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
             false,
             configuredBuckOut,
             cellToPathMappings,
-            nameToPluginOptionsMappings));
+            resolvedKosabiPluginOptionPath));
 
     steps.add(
         CopyIsolatedStep.forDirectory(
@@ -778,6 +793,35 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
           CompilerOutputPaths.getKotlinDepFilePath(outputPath.getOutputJarDirPath());
       buildableContext.recordArtifact(depFilePath.getPath());
     }
+  }
+
+  @Override
+  protected void createCompileToJarStepImpl(
+      FilesystemParams filesystemParams,
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      BuildTargetValue target,
+      CompilerOutputPathsValue compilerOutputPathsValue,
+      CompilerParameters compilerParameters,
+      @Nullable JarParameters abiJarParameters,
+      @Nullable JarParameters libraryJarParameters,
+      Builder<IsolatedStep> steps,
+      BuildableContext buildableContext,
+      ResolvedJavac resolvedJavac,
+      KotlinExtraParams extraParams) {
+    //  We override a method only to make abiJarParameters `null`,
+    //  but this is what's done in javac and there are some invariants downstream
+    super.createCompileToJarStepImpl(
+        filesystemParams,
+        cellToPathMappings,
+        target,
+        compilerOutputPathsValue,
+        compilerParameters,
+        null,
+        libraryJarParameters,
+        steps,
+        buildableContext,
+        resolvedJavac,
+        extraParams);
   }
 
   /**

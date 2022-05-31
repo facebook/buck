@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.android.RobolectricTestBuilder.DEFAULT_ANDROID_COMPILER_FACTORY;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidLibraryBuilder;
@@ -49,6 +48,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class KosabiTest {
+
   private final String KOSABI_JVM_ABI_GEN_PLUGIN_NAME = "JVM_ABI";
   private final String KOSABI_STUBS_GEN_PLUGIN_NAME = "STUBS_GEN";
   private final String KOSABI_JVM_ABI_GEN_PLUGIN_TARGET = "//:" + KOSABI_JVM_ABI_GEN_PLUGIN_NAME;
@@ -96,24 +96,6 @@ public class KosabiTest {
             .withToolchain(JavacOptionsProvider.DEFAULT_NAME, javacOptionsProvider)
             .withToolchain(JavaToolchain.DEFAULT_NAME, javacToolchain)
             .build();
-  }
-
-  @Test
-  public void testPluginOptionsMappings() {
-    // Create a register a mock Android library
-    BuildTarget library = BuildTargetFactory.newInstance("//:lib");
-    AndroidLibraryBuilder.createBuilder(library, JavaBuckConfig.of(buckConfig))
-        .build(projectFilesystem);
-
-    ImmutableMap<String, SourcePath> pluginOptionsMappings =
-        Kosabi.getPluginOptionsMappings(library.getTargetConfiguration(), kosabiConfig);
-
-    assertEquals(
-        KOSABI_JVM_ABI_GEN_PLUGIN_TARGET,
-        pluginOptionsMappings.get(KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN).toString());
-    assertEquals(
-        KOSABI_STUBS_GEN_PLUGIN_TARGET,
-        pluginOptionsMappings.get(KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN).toString());
   }
 
   @Test

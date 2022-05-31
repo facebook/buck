@@ -22,7 +22,6 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.DefaultClassUsageFileWriter;
@@ -67,7 +66,7 @@ public class KotlincStep extends IsolatedStep {
   private final boolean trackClassUsage;
   private final RelPath configuredBuckOut;
   private final ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings;
-  private final ImmutableMap<String, SourcePath> pluginNameToAbsPathMappings;
+  private final ImmutableMap<String, AbsPath> resolvedKosabiPluginOptionPath;
 
   KotlincStep(
       BuildTargetValue invokingRule,
@@ -83,7 +82,7 @@ public class KotlincStep extends IsolatedStep {
       boolean trackClassUsage,
       RelPath configuredBuckOut,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
-      ImmutableMap<String, SourcePath> pluginNameToAbsPathMappings) {
+      ImmutableMap<String, AbsPath> resolvedKosabiPluginOptionPath) {
     this.invokingRule = invokingRule;
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
@@ -97,7 +96,7 @@ public class KotlincStep extends IsolatedStep {
     this.trackClassUsage = trackClassUsage;
     this.configuredBuckOut = configuredBuckOut;
     this.cellToPathMappings = cellToPathMappings;
-    this.pluginNameToAbsPathMappings = pluginNameToAbsPathMappings;
+    this.resolvedKosabiPluginOptionPath = resolvedKosabiPluginOptionPath;
   }
 
   @Override
@@ -157,10 +156,6 @@ public class KotlincStep extends IsolatedStep {
     return ruleCellRoot.resolve(outputJarDirPath.resolve("kotlin-used-classes-tmp.json"));
   }
 
-  private static AbsPath getTempDepFilePathKosabi(RelPath outputJarDirPath, AbsPath ruleCellRoot) {
-    return ruleCellRoot.resolve(outputJarDirPath.resolve("out"));
-  }
-
   @VisibleForTesting
   Kotlinc getKotlinc() {
     return kotlinc;
@@ -193,22 +188,21 @@ public class KotlincStep extends IsolatedStep {
 
     if (!buildClasspathEntries.isEmpty()) {
       if (invokingRule.isSourceOnlyAbi()) {
-        if (pluginNameToAbsPathMappings.containsKey(
+        if (resolvedKosabiPluginOptionPath.containsKey(
             KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN)) {
-          SourcePath stubPlugin =
-              pluginNameToAbsPathMappings.get(KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN);
-          builder.add("-Xplugin=" + ruleCellRoot.resolve(stubPlugin.toString()).toString());
+          AbsPath stubPlugin =
+              resolvedKosabiPluginOptionPath.get(KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN);
+          builder.add("-Xplugin=" + stubPlugin);
         }
-        if (pluginNameToAbsPathMappings.containsKey(
+        if (resolvedKosabiPluginOptionPath.containsKey(
             KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN)) {
-          SourcePath jvmAbiPlugin =
-              pluginNameToAbsPathMappings.get(KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN);
-          builder.add("-Xplugin=" + ruleCellRoot.resolve(jvmAbiPlugin.toString()).toString());
+          AbsPath jvmAbiPlugin =
+              resolvedKosabiPluginOptionPath.get(KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN);
+          builder.add("-Xplugin=" + jvmAbiPlugin);
         }
         builder.add("-P");
         builder.add(
-            "plugin:com.facebook.jvm.abi.gen.fork:outputDir="
-                + getTempDepFilePathKosabi(outputPaths.getOutputJarDirPath(), ruleCellRoot));
+            "plugin:com.facebook.jvm.abi.gen:outputDir=" + outputPaths.getOutputJarDirPath());
       }
       if (invokingRule.isSourceAbi()) {
         throw new Error("Source ABI flavor is not supported for Kotlin targets");

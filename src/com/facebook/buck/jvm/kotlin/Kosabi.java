@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 
 /** Kosabi build rule by enabling and configuring Kosabi kotlinc plugin. */
 public class Kosabi {
@@ -51,6 +52,13 @@ public class Kosabi {
   /** Helper method to get the Kosabi plugins. */
   public static ImmutableMap<String, SourcePath> getPluginOptionsMappings(
       TargetConfiguration targetConfiguration, KosabiConfig kosabiConfig) {
+    Optional<BuildTarget> buildTarget = targetConfiguration.getConfigurationTarget();
+
+    // if no flavour can be detected, we will not add the plugins
+    if (buildTarget.isEmpty() || !hasSupportedFlavor(buildTarget.get().getFlavors())) {
+      return ImmutableMap.<String, SourcePath>builder().build();
+    }
+
     ImmutableMap.Builder<String, SourcePath> builder = ImmutableMap.builder();
     kosabiConfig
         .getStubsGenPlugin(targetConfiguration)
