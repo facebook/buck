@@ -98,7 +98,7 @@ public class MergeAndroidResourcesExecutableMain {
         bannedDuplicateResourceTypesList != null
             ? EnumSet.copyOf(
                 Files.readAllLines(Paths.get(bannedDuplicateResourceTypesList)).stream()
-                    .map(RDotTxtEntry.RType::valueOf)
+                    .map(type -> RDotTxtEntry.RType.valueOf(type.toUpperCase()))
                     .collect(Collectors.toList()))
             : EnumSet.noneOf(RDotTxtEntry.RType.class);
     ImmutableList<Path> overrideSymbols =
