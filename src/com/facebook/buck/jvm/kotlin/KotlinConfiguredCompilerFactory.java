@@ -16,6 +16,8 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.usesDependencies;
+
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -97,7 +99,9 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
         javacOptions,
         downwardApiConfig.isEnabledForKotlin(),
-        kotlinBuckConfig.shouldGenerateAnnotationProcessingStats());
+        kotlinBuckConfig.shouldGenerateAnnotationProcessingStats(),
+        Kosabi.getPluginOptionsMappings(
+            targetConfiguration, KosabiConfig.of(kotlinBuckConfig.getDelegate())));
   }
 
   @Override
@@ -134,6 +138,11 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   @Override
   public boolean shouldGenerateSourceAbi() {
     return AbiGenerationModeUtils.isSourceAbi(kotlinBuckConfig.getAbiGenerationMode());
+  }
+
+  @Override
+  public boolean shouldGenerateSourceOnlyAbi() {
+    return shouldGenerateSourceAbi() && !usesDependencies(kotlinBuckConfig.getAbiGenerationMode());
   }
 
   @Override

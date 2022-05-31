@@ -137,6 +137,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> kotlinHomeLibraries;
   @AddToRuleKey private final boolean shouldGenerateAnnotationProcessingStats;
 
+  @AddToRuleKey private final ImmutableMap<String, SourcePath> nameToPluginOptionsMappings;
+
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableSortedSet<SourcePath> kotlinHomeLibraries,
@@ -150,7 +152,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       ExtraClasspathProvider extraClasspathProvider,
       JavacOptions javacOptions,
       boolean withDownwardApi,
-      boolean shouldGenerateAnnotationProcessingStats) {
+      boolean shouldGenerateAnnotationProcessingStats,
+      ImmutableMap<String, SourcePath> nameToPluginOptionsMappings) {
     super(CompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
     this.javacOptions = javacOptions;
     this.kotlinc = kotlinc;
@@ -164,6 +167,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
     this.jvmTarget = jvmTarget;
     this.extraClasspathProvider = extraClasspathProvider;
     this.shouldGenerateAnnotationProcessingStats = shouldGenerateAnnotationProcessingStats;
+    this.nameToPluginOptionsMappings = nameToPluginOptionsMappings;
   }
 
   @Override
@@ -371,7 +375,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
               withDownwardApi,
               parameters.shouldTrackClassUsage(),
               RelPath.get(filesystemParams.getConfiguredBuckOut().getPath()),
-              cellToPathMappings));
+              cellToPathMappings,
+              nameToPluginOptionsMappings));
 
       steps.addAll(postKotlinCompilationSteps.build());
     }
@@ -660,7 +665,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
             withDownwardApi,
             false,
             configuredBuckOut,
-            cellToPathMappings));
+            cellToPathMappings,
+            nameToPluginOptionsMappings));
 
     steps.add(
         CopyIsolatedStep.forDirectory(

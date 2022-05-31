@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.DefaultClassUsageFileWriter;
@@ -66,6 +67,7 @@ public class KotlincStep extends IsolatedStep {
   private final boolean trackClassUsage;
   private final RelPath configuredBuckOut;
   private final ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings;
+  private final ImmutableMap<String, SourcePath> pluginNameToAbsPathMappings;
 
   KotlincStep(
       BuildTargetValue invokingRule,
@@ -80,7 +82,8 @@ public class KotlincStep extends IsolatedStep {
       boolean withDownwardApi,
       boolean trackClassUsage,
       RelPath configuredBuckOut,
-      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings) {
+      ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
+      ImmutableMap<String, SourcePath> pluginNameToAbsPathMappings) {
     this.invokingRule = invokingRule;
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
@@ -94,6 +97,7 @@ public class KotlincStep extends IsolatedStep {
     this.trackClassUsage = trackClassUsage;
     this.configuredBuckOut = configuredBuckOut;
     this.cellToPathMappings = cellToPathMappings;
+    this.pluginNameToAbsPathMappings = pluginNameToAbsPathMappings;
   }
 
   @Override
@@ -153,6 +157,10 @@ public class KotlincStep extends IsolatedStep {
     return ruleCellRoot.resolve(outputJarDirPath.resolve("kotlin-used-classes-tmp.json"));
   }
 
+  private static AbsPath getTempDepFilePathKosabi(RelPath outputJarDirPath, AbsPath ruleCellRoot) {
+    return ruleCellRoot.resolve(outputJarDirPath.resolve("out"));
+  }
+
   @VisibleForTesting
   Kotlinc getKotlinc() {
     return kotlinc;
@@ -184,10 +192,32 @@ public class KotlincStep extends IsolatedStep {
     }
 
     if (!buildClasspathEntries.isEmpty()) {
-      builder.add(
-          CLASSPATH_FLAG,
-          Joiner.on(File.pathSeparator)
-              .join(transform(buildClasspathEntries, path -> path.getPath().toString())));
+      if (invokingRule.isSourceOnlyAbi()) {
+        if (pluginNameToAbsPathMappings.containsKey(
+            KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN)) {
+          SourcePath stubPlugin =
+              pluginNameToAbsPathMappings.get(KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN);
+          builder.add("-Xplugin=" + ruleCellRoot.resolve(stubPlugin.toString()).toString());
+        }
+        if (pluginNameToAbsPathMappings.containsKey(
+            KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN)) {
+          SourcePath jvmAbiPlugin =
+              pluginNameToAbsPathMappings.get(KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN);
+          builder.add("-Xplugin=" + ruleCellRoot.resolve(jvmAbiPlugin.toString()).toString());
+        }
+        builder.add("-P");
+        builder.add(
+            "plugin:com.facebook.jvm.abi.gen.fork:outputDir="
+                + getTempDepFilePathKosabi(outputPaths.getOutputJarDirPath(), ruleCellRoot));
+      }
+      if (invokingRule.isSourceAbi()) {
+        throw new Error("Source ABI flavor is not supported for Kotlin targets");
+      } else {
+        builder.add(
+            CLASSPATH_FLAG,
+            Joiner.on(File.pathSeparator)
+                .join(transform(buildClasspathEntries, path -> path.getPath().toString())));
+      }
     }
 
     builder.add(INCLUDE_RUNTIME_FLAG);

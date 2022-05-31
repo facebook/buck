@@ -52,6 +52,8 @@ import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.Nullsafe;
 import com.facebook.buck.jvm.java.nullsafe.NullsafeConfig;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.jvm.kotlin.Kosabi;
+import com.facebook.buck.jvm.kotlin.KosabiConfig;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreFunctions;
 import com.facebook.buck.versions.VersionPropagator;
@@ -249,6 +251,9 @@ public class AndroidLibraryDescription
 
     Nullsafe.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, buildTarget, NullsafeConfig.of(javaBuckConfig.getDelegate()));
+
+    Kosabi.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, buildTarget, KosabiConfig.of(javaBuckConfig.getDelegate()));
   }
 
   public interface CoreArg
