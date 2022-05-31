@@ -24,6 +24,7 @@ import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.TestIdentifier;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
@@ -97,7 +98,7 @@ public class InstrumentationTestRunner {
   }
 
   @SuppressWarnings("PMD.BlacklistedSystemGetenv")
-  public static InstrumentationTestRunner fromArgs(String... args) {
+  public static InstrumentationTestRunner fromArgs(String... args) throws IOException {
     File outputDirectory = null;
     String adbExecutablePath = null;
     String apkUnderTestPath = null;
@@ -119,13 +120,13 @@ public class InstrumentationTestRunner {
     for (int i = 0; i < args.length; i++) {
       switch (args[i]) {
         case "--test-package-name":
-          packageName = args[++i];
+          packageName = getArgValue(args[++i]);
           break;
         case "--target-package-name":
-          targetPackageName = args[++i];
+          targetPackageName = getArgValue(args[++i]);
           break;
         case "--test-runner":
-          testRunner = args[++i];
+          testRunner = getArgValue(args[++i]);
           break;
         case "--output":
           outputDirectory = new File(args[++i]);
@@ -262,6 +263,19 @@ public class InstrumentationTestRunner {
         autoRunOnConnectedDevice,
         extraInstrumentationArguments,
         extraFilesToPull);
+  }
+
+  /**
+   * Method that either returns the given string as-is, or if the given string begins with a '@',
+   * reads a single string from the specified file.
+   */
+  private static String getArgValue(String input) throws IOException {
+    if (!input.startsWith("@")) {
+      return input;
+    }
+
+    Path inputPath = Paths.get(input.substring(1));
+    return new String(Files.readAllBytes(inputPath));
   }
 
   public void run() throws Throwable {
