@@ -20,6 +20,7 @@ import com.android.apksig.ApkSigner;
 import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -135,9 +136,13 @@ public class ApkBuilderExecutableMain {
         | ApkCreationException
         | SealedApkException
         | KeyStoreException
-        | DuplicateFileException
         | InterruptedException e) {
       throw new RuntimeException(e);
+    } catch (DuplicateFileException e) {
+      throw new HumanReadableException(
+          String.format(
+              "Found duplicate file for APK: %1$s\nOrigin 1: %2$s\nOrigin 2: %3$s",
+              e.getArchivePath(), e.getFile1(), e.getFile2()));
     }
 
     System.exit(0);
