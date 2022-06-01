@@ -29,11 +29,14 @@ public class AndroidManifestReaderExecutableMain {
   @Option(name = "--manifest-path", required = true)
   private String manifestPath;
 
-  @Option(name = "--command", required = true)
-  private String command;
+  @Option(name = "--target-package-output")
+  private String targetPackageOutputPath;
 
-  @Option(name = "--output-path", required = true)
-  private String outputPath;
+  @Option(name = "--package-output")
+  private String packageOutputPath;
+
+  @Option(name = "--instrumentation-test-runner-output")
+  private String instrumentationTestRunnerOutputPath;
 
   public static void main(String[] args) throws IOException {
     AndroidManifestReaderExecutableMain main = new AndroidManifestReaderExecutableMain();
@@ -53,10 +56,19 @@ public class AndroidManifestReaderExecutableMain {
     AndroidManifestReader androidManifestReader =
         DefaultAndroidManifestReader.forPath(Paths.get(manifestPath));
 
-    if (command.equals("get_package")) {
-      Files.write(Paths.get(outputPath), androidManifestReader.getPackage().getBytes());
-    } else {
-      throw new IllegalArgumentException("Unknown command: " + command);
+    if (targetPackageOutputPath != null) {
+      Files.write(
+          Paths.get(targetPackageOutputPath), androidManifestReader.getTargetPackage().getBytes());
+    }
+
+    if (packageOutputPath != null) {
+      Files.write(Paths.get(packageOutputPath), androidManifestReader.getPackage().getBytes());
+    }
+
+    if (instrumentationTestRunnerOutputPath != null) {
+      Files.write(
+          Paths.get(instrumentationTestRunnerOutputPath),
+          androidManifestReader.getInstrumentationTestRunner().getBytes());
     }
 
     System.exit(0);
