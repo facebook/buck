@@ -55,7 +55,7 @@ class AbiFilteringClassVisitor extends ClassVisitor {
       ClassVisitor cv,
       List<String> methodsWithRetainedBody,
       @Nullable Set<String> referencedClassNames) {
-    super(Opcodes.ASM7, cv);
+    super(Opcodes.ASM9, cv);
     this.methodsWithRetainedBody = methodsWithRetainedBody;
     this.referencedClassNames = referencedClassNames;
   }
@@ -147,7 +147,7 @@ class AbiFilteringClassVisitor extends ClassVisitor {
     // None of these are actually harmful to the ABI, so we allow synthetic methods through.
     // http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7.8
     return new SkipCodeMethodVisitor(
-        Opcodes.ASM7, super.visitMethod(access, name, desc, signature, exceptions));
+        Opcodes.ASM9, super.visitMethod(access, name, desc, signature, exceptions));
   }
 
   @Override

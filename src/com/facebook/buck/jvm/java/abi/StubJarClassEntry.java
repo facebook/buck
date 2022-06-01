@@ -58,7 +58,7 @@ class StubJarClassEntry extends StubJarEntry {
     if (isKotlinModule) {
       // Visit the class (skipping code) without filtering, to gather its annotations and class
       // relationships
-      ClassNode classMetadata = new ClassNode(Opcodes.ASM7);
+      ClassNode classMetadata = new ClassNode(Opcodes.ASM9);
       input.visitClass(path, classMetadata, true);
 
       AnnotationNode kotlinMetadataAnnotation = findKotlinMetadataAnnotation(classMetadata);
@@ -75,7 +75,7 @@ class StubJarClassEntry extends StubJarEntry {
     //
     // If this class is within a Kotlin inline function's scope its ABI is unfiltered, because it
     // will be copied in its entirety in the calling context.
-    ClassNode stub = new ClassNode(Opcodes.ASM7);
+    ClassNode stub = new ClassNode(Opcodes.ASM9);
     ClassReferenceTracker referenceTracker = new ClassReferenceTracker(stub);
     ClassVisitor visitor = referenceTracker;
     if (!isWithinInlineFunctionScope) {
@@ -204,7 +204,7 @@ class StubJarClassEntry extends StubJarEntry {
     private final List<String> nestMembers = new ArrayList<>();
 
     private InnerClassSortingClassVisitor(String className, ClassVisitor cv) {
-      super(Opcodes.ASM7, cv);
+      super(Opcodes.ASM9, cv);
       this.className = className;
     }
 

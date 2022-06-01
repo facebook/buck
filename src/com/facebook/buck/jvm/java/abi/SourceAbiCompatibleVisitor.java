@@ -40,7 +40,7 @@ public class SourceAbiCompatibleVisitor extends ClassVisitor {
   @Nullable private String name;
 
   public SourceAbiCompatibleVisitor(ClassVisitor cv, AbiGenerationMode compatibilityMode) {
-    super(Opcodes.ASM7, cv);
+    super(Opcodes.ASM9, cv);
     this.compatibilityMode = compatibilityMode;
   }
 

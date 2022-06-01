@@ -28,7 +28,8 @@ public enum JavaVersion {
   VERSION_8("8"),
   VERSION_9("9"),
   VERSION_10("10"),
-  VERSION_11("11");
+  VERSION_11("11"),
+  VERSION_17("17");
 
   private final String version;
 
