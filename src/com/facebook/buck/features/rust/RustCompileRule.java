@@ -249,6 +249,8 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
           filesystem.getRootPath().resolve(outputPathResolver.getTempPath("dep-argsfile.txt"));
       AbsPath fileListPath =
           filesystem.getRootPath().resolve(outputPathResolver.getTempPath("filelist.txt"));
+      AbsPath symlinkTreeRoot =
+          filesystem.getRootPath().resolve(outputPathResolver.getTempPath("symlink-tree-root"));
 
       ImmutableList.Builder<Step> steps = new ImmutableList.Builder<>();
       steps.add(
@@ -293,9 +295,6 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       //
       // NOTE: this means that all logical args should be a single string on the command
       // line (ie "-Lfoo", not ["-L", "foo"])
-      RelPath symlinkTreeRoot =
-          BuildTargetPaths.getGenPath(
-              filesystem.getBuckPaths(), buildTarget, "%s/symlink-tree-root");
       ImmutableSet.Builder<String> dedupArgs = ImmutableSet.builder();
       ImmutableMap.Builder<Path, Path> builder = new ImmutableMap.Builder<>();
       for (Arg arg : depArgs) {
@@ -316,7 +315,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       steps.addAll(
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
-                  buildContext.getBuildCellRootPath(), filesystem, symlinkTreeRoot)));
+                  buildContext.getBuildCellRootPath(), filesystem, symlinkTreeRoot.getPath())));
       steps.add(
           new SymlinkTreeMergeStep(
               "rust_rlib",
