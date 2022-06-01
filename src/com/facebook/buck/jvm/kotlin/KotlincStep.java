@@ -52,6 +52,8 @@ public class KotlincStep extends IsolatedStep {
   private static final String DESTINATION_FLAG = "-d";
   private static final String INCLUDE_RUNTIME_FLAG = "-include-runtime";
   private static final String EXCLUDE_REFLECT = "-no-reflect";
+  private static final String X_PLUGIN_ARG = "-Xplugin=";
+  private static final String PLUGIN = "-P";
 
   private final Kotlinc kotlinc;
   private final ImmutableSortedSet<AbsPath> combinedClassPathEntries;
@@ -192,19 +194,18 @@ public class KotlincStep extends IsolatedStep {
             KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN)) {
           AbsPath stubPlugin =
               resolvedKosabiPluginOptionPath.get(KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN);
-          builder.add("-Xplugin=" + stubPlugin);
+          builder.add(X_PLUGIN_ARG + stubPlugin);
         }
         if (resolvedKosabiPluginOptionPath.containsKey(
             KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN)) {
           AbsPath jvmAbiPlugin =
               resolvedKosabiPluginOptionPath.get(KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN);
-          builder.add("-Xplugin=" + jvmAbiPlugin);
+          builder.add(X_PLUGIN_ARG + jvmAbiPlugin);
         }
-        builder.add("-P");
+        builder.add(PLUGIN);
         builder.add(
             "plugin:com.facebook.jvm.abi.gen:outputDir=" + outputPaths.getOutputJarDirPath());
-      }
-      if (invokingRule.isSourceAbi()) {
+      } else if (invokingRule.isSourceAbi()) {
         throw new Error("Source ABI flavor is not supported for Kotlin targets");
       } else {
         builder.add(
@@ -218,8 +219,8 @@ public class KotlincStep extends IsolatedStep {
     builder.add(EXCLUDE_REFLECT);
 
     if (trackClassUsage) {
-      builder.add("-Xplugin=" + PluginLoader.DEP_TRACKER_KOTLINC_PLUGIN_JAR_PATH);
-      builder.add("-P");
+      builder.add(X_PLUGIN_ARG + PluginLoader.DEP_TRACKER_KOTLINC_PLUGIN_JAR_PATH);
+      builder.add(PLUGIN);
       builder.add(
           "plugin:buck_deps_tracker:out="
               + getTempDepFilePath(outputPaths.getOutputJarDirPath(), ruleCellRoot));
