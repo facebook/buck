@@ -1,5 +1,5 @@
 {
-    "sdk_version": "15.4",
+    "sdk_version": "15.5",
     "swift": [
         {
             "is_framework": false,
@@ -34,7 +34,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "ARKit"
             ]
@@ -60,7 +60,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "AVFoundation"
             ]
@@ -81,7 +81,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Accelerate"
             ]
@@ -100,7 +100,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Accessibility"
             ]
@@ -119,7 +119,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "AssetsLibrary"
             ]
@@ -137,7 +137,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CallKit"
             ]
@@ -163,7 +163,7 @@
                 "UIKit",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CarPlay"
             ]
@@ -183,7 +183,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CloudKit"
             ]
@@ -197,7 +197,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -210,7 +210,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Compression"
             ]
@@ -228,7 +228,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Contacts"
             ]
@@ -245,7 +245,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreAudio"
             ]
@@ -271,7 +271,7 @@
                 "UIKit",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreAudioKit"
             ]
@@ -290,7 +290,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreData"
             ]
@@ -306,7 +306,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreFoundation"
             ]
@@ -323,7 +323,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreGraphics"
             ]
@@ -343,7 +343,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreImage"
             ]
@@ -361,7 +361,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreLocation"
             ]
@@ -379,7 +379,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreMIDI"
             ]
@@ -399,7 +399,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreML"
             ]
@@ -420,7 +420,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreAudioTypes",
                 "CoreMedia",
@@ -440,7 +440,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreNFC"
             ]
@@ -458,7 +458,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "LocalAuthentication",
                 "Security"
@@ -477,7 +477,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CryptoTokenKit"
             ]
@@ -489,7 +489,7 @@
             "swift_deps": [
                 "Swift"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Darwin",
                 "SwiftOverlayShims",
@@ -509,7 +509,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "DataDetection"
             ]
@@ -522,7 +522,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "DeveloperToolsSupport"
             ]
@@ -538,7 +538,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -552,7 +552,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Dispatch"
             ]
@@ -567,7 +567,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -581,7 +581,7 @@
                 "SwiftUI",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -602,7 +602,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreServices"
             ]
@@ -621,7 +621,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "FileProvider"
             ]
@@ -640,7 +640,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Foundation"
             ]
@@ -666,7 +666,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "GLKit"
             ]
@@ -695,7 +695,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "GameplayKit"
             ]
@@ -717,7 +717,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -734,7 +734,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "HealthKit"
             ]
@@ -758,7 +758,7 @@
                 "UIKit",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "HomeKit"
             ]
@@ -778,7 +778,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Intents"
             ]
@@ -794,7 +794,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -809,7 +809,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -832,7 +832,7 @@
                 "UIKit",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "MapKit"
             ]
@@ -862,7 +862,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "MediaPlayer"
             ]
@@ -880,7 +880,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Metal"
             ]
@@ -906,7 +906,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "MetalKit"
             ]
@@ -925,7 +925,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "MetricKit"
             ]
@@ -945,7 +945,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "ModelIO"
             ]
@@ -961,7 +961,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -977,7 +977,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "NaturalLanguage"
             ]
@@ -996,7 +996,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "NearbyInteraction"
             ]
@@ -1014,7 +1014,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Network",
                 "Security"
@@ -1034,7 +1034,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "OSLog"
             ]
@@ -1048,7 +1048,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "ObjectiveC"
             ]
@@ -1073,7 +1073,7 @@
                 "UIKit",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "PassKit"
             ]
@@ -1097,7 +1097,7 @@
                 "UIKit",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "PencilKit"
             ]
@@ -1126,7 +1126,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Photos"
             ]
@@ -1158,7 +1158,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "PhotosUI"
             ]
@@ -1178,7 +1178,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "QuartzCore"
             ]
@@ -1203,7 +1203,7 @@
                 "UniformTypeIdentifiers",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "PDFKit",
                 "QuickLook"
@@ -1233,7 +1233,7 @@
                 "os",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "AVFAudio",
                 "AudioToolbox",
@@ -1263,7 +1263,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "MultipeerConnectivity"
             ]
@@ -1290,7 +1290,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "SceneKit"
             ]
@@ -1314,7 +1314,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "ShazamKit"
             ]
@@ -1342,7 +1342,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "SoundAnalysis"
             ]
@@ -1369,7 +1369,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Speech"
             ]
@@ -1396,7 +1396,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "SpriteKit"
             ]
@@ -1422,7 +1422,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Security",
                 "StoreKit"
@@ -1473,7 +1473,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "SwiftUI"
             ]
@@ -1487,7 +1487,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -1501,7 +1501,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -1524,7 +1524,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "UIKit"
             ]
@@ -1542,7 +1542,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "UniformTypeIdentifiers"
             ]
@@ -1566,7 +1566,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "Vision"
             ]
@@ -1590,7 +1590,7 @@
                 "UIKit",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "WebKit"
             ]
@@ -1614,7 +1614,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "WidgetKit"
             ]
@@ -1663,7 +1663,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "os"
             ]
@@ -1677,7 +1677,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "simd"
             ]
@@ -1709,7 +1709,7 @@
                 "_Concurrency",
                 "simd"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "AVKit"
             ]
@@ -1734,7 +1734,7 @@
                 "UIKit",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "AuthenticationServices"
             ]
@@ -1754,7 +1754,7 @@
                 "Swift",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "_CoreData_CloudKit"
             ]
@@ -1779,7 +1779,7 @@
                 "UIKit",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": [
                 "CoreLocationUI",
                 "_CoreLocationUI_SwiftUI"
@@ -1798,7 +1798,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -1811,7 +1811,7 @@
                 "SwiftUI",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -1824,7 +1824,7 @@
                 "SwiftUI",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -1839,7 +1839,7 @@
                 "SwiftUI",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -1852,7 +1852,7 @@
                 "SwiftUI",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -1865,7 +1865,7 @@
                 "SwiftUI",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -1878,7 +1878,7 @@
                 "SwiftUI",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -1893,7 +1893,7 @@
                 "_Concurrency",
                 "os"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         },
         {
@@ -1906,7 +1906,7 @@
                 "System",
                 "_Concurrency"
             ],
-            "target": "x86_64-apple-ios15.4-simulator",
+            "target": "x86_64-apple-ios15.5-simulator",
             "clang_deps": []
         }
     ],
