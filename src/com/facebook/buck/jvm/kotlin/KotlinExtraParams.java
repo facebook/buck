@@ -22,8 +22,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
-import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.ResolvedJavacOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -48,19 +46,15 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
 
   public abstract ImmutableSortedSet<AbsPath> getResolvedKotlinHomeLibraries();
 
-  public abstract ResolvedJavacOptions getResolvedJavacOptions();
-
   /** Resolve extra params. */
   public static KotlinExtraParams of(
       BuildContext buildContext,
-      AbsPath rootPath,
       SourcePath standardLibraryClassPath,
       SourcePath annotationProcessingClassPath,
       ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins,
       ImmutableMap<String, SourcePath> kosabiPluginOptions,
       ImmutableList<SourcePath> friendPaths,
-      ImmutableSortedSet<SourcePath> kotlinHomeLibraries,
-      JavacOptions javacOptions) {
+      ImmutableSortedSet<SourcePath> kotlinHomeLibraries) {
     SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     return ImmutableKotlinExtraParams.ofImpl(
         buildContext,
@@ -77,7 +71,6 @@ public abstract class KotlinExtraParams implements CompileToJarStepFactory.Extra
             .collect(
                 Collectors.toMap(e -> e.getKey(), e -> resolver.getAbsolutePath(e.getValue()))),
         resolver.getAllAbsolutePaths(friendPaths),
-        resolver.getAllAbsolutePaths(kotlinHomeLibraries),
-        ResolvedJavacOptions.of(javacOptions, resolver, rootPath));
+        resolver.getAllAbsolutePaths(kotlinHomeLibraries));
   }
 }
