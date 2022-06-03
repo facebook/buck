@@ -313,9 +313,7 @@ public class PythonLibraryDescription
               name.getParent() == null
                   ? name.getFileSystem().getPath(pyFilename)
                   : name.getParent().resolve(pyFilename);
-          if (sourcesOverriddenWithTypeStubs.remove(pyName) == null) {
-            throw new HumanReadableException("type stubs must have corresponding `.py` in `srcs`");
-          }
+          sourcesOverriddenWithTypeStubs.remove(pyName);
           sourcesOverriddenWithTypeStubs.put(name, src);
         });
     return sourcesOverriddenWithTypeStubs;

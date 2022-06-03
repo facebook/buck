@@ -592,14 +592,12 @@ public class PythonLibraryDescriptionTest {
                     .withAppendedFlavors(
                         PythonTestUtils.PYTHON_PLATFORM.getFlavor(),
                         CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()));
-    try {
-      library.getPythonModulesForTyping(
-          PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
-      fail("should fail");
-    } catch (UncheckedExecutionException e) {
-      assertThat(e.getCause().getCause(), Matchers.instanceOf(HumanReadableException.class));
-      assertThat(
-          e.getCause().getCause().getMessage(), Matchers.containsString("must have corresponding"));
-    }
+    assertThat(
+        library.getPythonModulesForTyping(
+            PythonTestUtils.PYTHON_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        Matchers.equalTo(
+            Optional.of(
+                PythonMappedComponents.of(
+                    ImmutableSortedMap.of(Paths.get("lib.pyi"), FakeSourcePath.of("lib.pyi"))))));
   }
 }
