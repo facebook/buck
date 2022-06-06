@@ -134,7 +134,6 @@ public class MultiDexExecutableMain {
         D8Utils.runD8Command(
             new D8Utils.D8DiagnosticsHandler(),
             d8OutputDir,
-            Optional.empty(),
             filesToDex,
             getD8Options(),
             Optional.of(primaryDexClassNamesPath),

@@ -153,7 +153,6 @@ public class D8ExecutableMain {
           D8Utils.runD8Command(
               new D8Utils.D8DiagnosticsHandler(),
               d8Output,
-              Optional.empty(),
               filesToDex,
               getD8Options(),
               primaryDexClassNamesPath,

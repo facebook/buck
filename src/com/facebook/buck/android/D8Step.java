@@ -129,7 +129,6 @@ public class D8Step extends IsolatedStep {
           D8Utils.runD8Command(
               diagnosticsHandler,
               outputDexFile,
-              Optional.empty(),
               filesToDex.stream().map(filesystem::resolve).collect(Collectors.toList()),
               options,
               primaryDexClassNamesPath,
