@@ -44,9 +44,6 @@ public class D8ExecutableMain {
   @Option(name = "--output-dex-file", required = true)
   private String outputDex;
 
-  @Option(name = "--secondary-output-dex-file")
-  private String secondaryOutputDex;
-
   @Option(name = "--files-to-dex-list", required = true)
   private String filesToDexList;
 
@@ -147,12 +144,16 @@ public class D8ExecutableMain {
     Optional<Path> weightEstimatePath = Optional.ofNullable(weightEstimateOutput).map(Paths::get);
     Optional<Path> classNamesPath = Optional.ofNullable(classNamesOutput).map(Paths::get);
 
+    Path outputPath = Paths.get(outputDex);
+    Path d8Output =
+        primaryDexClassNamesPath.isPresent() ? Files.createTempDirectory("dexTmpDir") : outputPath;
+
     try {
       Collection<String> referencedResources =
           D8Utils.runD8Command(
               new D8Utils.D8DiagnosticsHandler(),
-              Paths.get(outputDex),
-              Optional.ofNullable(secondaryOutputDex).map(Paths::get),
+              d8Output,
+              Optional.empty(),
               filesToDex,
               getD8Options(),
               primaryDexClassNamesPath,
@@ -160,23 +161,40 @@ public class D8ExecutableMain {
               classpathFiles,
               minSdkVersion);
 
-      if ("jar".equals(secondaryDexCompression)) {
-        Path outputPath =
-            Optional.ofNullable(secondaryOutputDex).map(Paths::get).orElse(Paths.get(outputDex));
-        Preconditions.checkNotNull(secondaryDexMetadataFile);
-        Path secondaryDexMetadataFilePath = Paths.get(secondaryDexMetadataFile);
+      Preconditions.checkState(
+          primaryDexClassNamesPath.isPresent() || secondaryDexCompression == null);
+      if (primaryDexClassNamesPath.isPresent()) {
+        Path classesDotDex = d8Output.resolve("classes.dex");
         Preconditions.checkState(
-            outputPath
-                .resolveSibling(outputPath.getFileName() + ".meta")
-                .toString()
-                .equals(secondaryDexMetadataFile));
-        D8Utils.writeSecondaryDexMetadata(outputPath, secondaryDexMetadataFilePath);
-        Preconditions.checkNotNull(secondaryDexMetadataLine);
-        Preconditions.checkNotNull(secondaryDexCanaryClassName);
-        Files.write(
-            Paths.get(secondaryDexMetadataLine),
-            Collections.singletonList(
-                D8Utils.getSecondaryDexJarMetadataString(outputPath, secondaryDexCanaryClassName)));
+            classesDotDex.toFile().exists(), "D8 command must produce a classes.dex");
+
+        if ("jar".equals(secondaryDexCompression)) {
+          Preconditions.checkState(outputDex.endsWith(".dex.jar"));
+          Preconditions.checkNotNull(secondaryDexMetadataFile);
+          Path secondaryDexMetadataFilePath = Paths.get(secondaryDexMetadataFile);
+          Preconditions.checkState(
+              outputPath
+                  .resolveSibling(outputPath.getFileName() + ".meta")
+                  .toString()
+                  .equals(secondaryDexMetadataFile));
+          D8Utils.writeSecondaryDexJarAndMetadataFile(
+              outputPath, secondaryDexMetadataFilePath, classesDotDex, "jar");
+
+          Preconditions.checkNotNull(secondaryDexMetadataLine);
+          Preconditions.checkNotNull(secondaryDexCanaryClassName);
+          Files.write(
+              Paths.get(secondaryDexMetadataLine),
+              Collections.singletonList(
+                  D8Utils.getSecondaryDexJarMetadataString(
+                      outputPath, secondaryDexCanaryClassName)));
+        } else {
+          Preconditions.checkState(
+              outputDex.endsWith(".dex"),
+              String.format(
+                  "Expect the outputDex to end with '.dex' if not '.dex.jar', but it is %s",
+                  outputDex));
+          Files.move(classesDotDex, outputPath);
+        }
       }
 
       if (referencedResourcesPath.isPresent()) {
@@ -230,6 +248,10 @@ public class D8ExecutableMain {
     }
     if (noDesugar) {
       d8OptionsBuilder.add(D8Options.NO_DESUGAR);
+    }
+    if (primaryDexClassNamesList != null) {
+      // Only add the specified classes
+      d8OptionsBuilder.add(D8Options.MINIMIZE_PRIMARY_DEX);
     }
 
     return d8OptionsBuilder.build();
