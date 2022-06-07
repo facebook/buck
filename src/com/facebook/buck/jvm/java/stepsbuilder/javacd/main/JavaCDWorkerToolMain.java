@@ -37,17 +37,14 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.monitoring.HangMonitor;
-import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.types.Unit;
-import com.facebook.buck.util.unit.SizeUnit;
 import com.facebook.buck.workertool.model.CommandTypeMessage;
 import com.facebook.buck.workertool.model.ExecuteCommand;
 import com.facebook.buck.workertool.model.ShutdownCommand;
@@ -76,7 +73,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /** JavaCD main class */
 public class JavaCDWorkerToolMain {
@@ -135,7 +131,7 @@ public class JavaCDWorkerToolMain {
       // establish downward protocol type
       DOWNWARD_PROTOCOL_TYPE.writeDelimitedTo(eventsOutputStream);
       Thread.setDefaultUncaughtExceptionHandler(
-          (t, e) -> handleExceptionAndTerminate(t, console, e));
+          (t, e) -> MainUtils.handleExceptionAndTerminate(t, console, e));
 
       Logger logger = Logger.get("");
       logger.cleanHandlers();
@@ -144,7 +140,7 @@ public class JavaCDWorkerToolMain {
       handleCommands(workerToolParsedEnvs, console, eventsOutputStream, classLoaderCache);
 
     } catch (Exception e) {
-      handleExceptionAndTerminate(Thread.currentThread(), console, e);
+      MainUtils.handleExceptionAndTerminate(Thread.currentThread(), console, e);
     }
     System.exit(0);
   }
@@ -155,23 +151,6 @@ public class JavaCDWorkerToolMain {
         System.out,
         System.err,
         new Ansi(parsedEnvVars.isAnsiTerminal()));
-  }
-
-  private static void handleExceptionAndTerminate(
-      Thread thread, Console console, Throwable throwable) {
-    // Remove an existing `ExternalLogHandler` handler that depend on the closed event pipe stream.
-    Logger logger = Logger.get("");
-    logger.cleanHandlers();
-
-    String errorMessage = ErrorLogger.getUserFriendlyMessage(throwable);
-    // this method logs the message with log.warn that would be noop as all logger handlers have
-    // been cleaned and prints the message into a std err.
-    console.printErrorText(
-        "Failed to execute java compilation action. Thread: "
-            + thread
-            + System.lineSeparator()
-            + errorMessage);
-    System.exit(1);
   }
 
   private static void handleCommands(
@@ -366,32 +345,9 @@ public class JavaCDWorkerToolMain {
     int largestPoolSize = THREAD_POOL.getLargestPoolSize();
     long taskCount = THREAD_POOL.getTaskCount();
 
-    PerfStatsTracking.MemoryPerfStatsEvent memory = PerfStatsTracking.getMemoryPerfStatsEvent();
-    long totalMemoryBytes = memory.getTotalMemoryBytes();
-    long freeMemoryBytes = memory.getFreeMemoryBytes();
-    long usedMemory = SizeUnit.BYTES.toMegabytes(totalMemoryBytes - freeMemoryBytes);
-    long freeMemory = SizeUnit.BYTES.toMegabytes(freeMemoryBytes);
-    long totalMemory = SizeUnit.BYTES.toMegabytes(totalMemoryBytes);
-    long maxMemory = SizeUnit.BYTES.toMegabytes(memory.getMaxMemoryBytes());
-    long timeSpendInGc = TimeUnit.MILLISECONDS.toSeconds(memory.getTimeSpentInGcMs());
-    String pools =
-        memory.getCurrentMemoryBytesUsageByPool().entrySet().stream()
-            .map(e -> e.getKey() + "=" + SizeUnit.BYTES.toMegabytes(e.getValue()))
-            .collect(Collectors.joining(", "));
-
+    MainUtils.logCurrentJavacdState();
     LOG.info(
-        "Javacd state: executing tasks: %s, completed tasks: %s, largest pool size: %s, task count: %s. Available processors: %s, Time spend in GC: %s seconds, "
-            + "Used Memory: %s, Free Memory: %s, Total Memory: %s, Max Memory: %s, Pools: %s",
-        activeCount,
-        completedTaskCount,
-        largestPoolSize,
-        taskCount,
-        AVAILABLE_PROCESSORS,
-        timeSpendInGc,
-        usedMemory,
-        freeMemory,
-        totalMemory,
-        maxMemory,
-        pools);
+        "Javacd task state: executing tasks: %s, completed tasks: %s, largest pool size: %s, task count: %s.",
+        activeCount, completedTaskCount, largestPoolSize, taskCount);
   }
 }
