@@ -1,4 +1,5 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load("//tools/build_rules:buck2.bzl", "enable_buck2_bootstrap_prebuilts")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "buck_java_binary")
 
 java_immutables_library(
     name = "main_lib",
@@ -32,6 +33,40 @@ java_immutables_library(
         "//src/com/facebook/buck/util/perf:perf",
         "//src/com/facebook/buck/util/unit:unit",
         "//src/com/facebook/buck/workertool/utils:utils",
+        "//third-party/java/args4j:args4j",
         "//third-party/java/guava:guava",
     ],
 )
+
+alias(
+    name = "javacd_tool",
+    actual = ":javacd_tool_prebuilt" if enable_buck2_bootstrap_prebuilts() else ":javacd_tool-main",
+    visibility = ["PUBLIC"],
+)
+
+buck_java_binary(
+    name = "javacd_tool-main",
+    main_class = "com.facebook.buck.jvm.java.stepsbuilder.javacd.main.JavaCDMain",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":main_lib",
+    ],
+)
+
+[
+  export_file(
+      name = "javacd_tool_prebuilt_jar",
+      src = "javacd_tool_prebuilt.jar",
+  ),
+  command_alias(
+      name = "javacd_tool_prebuilt",
+      exe = "fbsource//third-party/toolchains/jdk:java",
+      args = [
+        "-jar",
+        "$(location :javacd_tool_prebuilt_jar)",
+      ],
+      visibility = ["PUBLIC"],
+  )
+] if enable_buck2_bootstrap_prebuilts() else []

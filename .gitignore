@@ -36,6 +36,7 @@
 !/test/com/facebook/buck/doctor/testdata/
 
 /src/com/facebook/buck/jvm/java/abi/api-stubber_prebuilt.jar
+/src/com/facebook/buck/jvm/java/stepsbuilder/javacd/main/javacd_tool_prebuilt.jar
 
 # Compiled Python
 *.pyc
