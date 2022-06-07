@@ -49,7 +49,8 @@ public class AbsPathSerializer {
     Path path = Paths.get(absPath.getPath());
     if (EXPECT_RELATIVE_PATHS) {
       RelPath relPath = RelPath.of(path);
-      return AbsPath.of(Paths.get("")).resolve(relPath);
+
+      return AbsPath.of(Paths.get("").toAbsolutePath()).resolve(relPath);
     } else {
       return AbsPath.of(path);
     }
