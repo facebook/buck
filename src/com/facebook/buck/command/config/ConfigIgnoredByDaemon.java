@@ -118,6 +118,8 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
     ignoreFieldsForDaemonRestartBuilder.put(
         "version_control", ImmutableSet.of("generate_statistics"));
     ignoreFieldsForDaemonRestartBuilder.put("depsawareexecutor", ImmutableSet.of("type"));
+    ignoreFieldsForDaemonRestartBuilder.put("buck2", ImmutableSet.of());
+    ignoreFieldsForDaemonRestartBuilder.put("buck2_re_client", ImmutableSet.of());
     return ignoreFieldsForDaemonRestartBuilder.build();
   }
 
