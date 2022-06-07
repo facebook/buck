@@ -98,7 +98,6 @@ public class JavaCDWorkerToolMain {
 
   private static final ScheduledExecutorService MONITORING_THREAD_POOL =
       Executors.newSingleThreadScheduledExecutor();
-  private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
 
   private static final Duration HANG_DETECTOR_TIMEOUT = Duration.ofMinutes(5);
   private static final HangMonitor.AutoStartInstance HANG_MONITOR =
