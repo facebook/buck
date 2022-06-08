@@ -57,6 +57,7 @@ import com.facebook.buck.step.isolatedsteps.common.CopyIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MakeCleanDirectoryIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.MkdirIsolatedStep;
 import com.facebook.buck.step.isolatedsteps.common.ZipIsolatedStep;
+import com.facebook.buck.step.isolatedsteps.java.JarDirectoryStep;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.base.Joiner;
@@ -829,20 +830,37 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       BuildableContext buildableContext,
       ResolvedJavac resolvedJavac,
       KotlinExtraParams extraParams) {
-    //  We override a method only to make abiJarParameters `null`,
-    //  but this is what's done in javac and there are some invariants downstream
-    super.createCompileToJarStepImpl(
-        filesystemParams,
-        cellToPathMappings,
-        target,
-        compilerOutputPathsValue,
-        compilerParameters,
-        null,
-        libraryJarParameters,
-        steps,
-        buildableContext,
-        resolvedJavac,
-        extraParams);
+    // abiJarParameters present in Kotlin source-only-abi
+    // If we don't have abiJarParameters it's OK to delegate execution to the super class
+    if (abiJarParameters == null) {
+      super.createCompileToJarStepImpl(
+          filesystemParams,
+          cellToPathMappings,
+          target,
+          compilerOutputPathsValue,
+          compilerParameters,
+          null,
+          libraryJarParameters,
+          steps,
+          buildableContext,
+          resolvedJavac,
+          extraParams);
+    } else {
+      // We need to process JarDirectoryStep differently if we have abiJarParameters
+      // b/c of different paths
+      createCompileStep(
+          filesystemParams,
+          cellToPathMappings,
+          target,
+          compilerOutputPathsValue,
+          compilerParameters,
+          steps,
+          buildableContext,
+          resolvedJavac,
+          extraParams);
+
+      steps.add(new JarDirectoryStep(abiJarParameters));
+    }
   }
 
   /**
