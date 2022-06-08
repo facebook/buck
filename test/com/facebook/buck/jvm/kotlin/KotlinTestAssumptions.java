@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeNoException;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.util.environment.Platform;
 import javax.annotation.Nullable;
 import org.junit.Assume;
@@ -34,7 +35,8 @@ public abstract class KotlinTestAssumptions {
   public static void assumeCompilerAvailable(@Nullable BuckConfig config) {
     Throwable exception = null;
     try {
-      new KotlinBuckConfig(config == null ? FakeBuckConfig.empty() : config).getPathToCompilerJar();
+      new KotlinBuckConfig(config == null ? FakeBuckConfig.empty() : config)
+          .getPathToCompilerJar(UnconfiguredTargetConfiguration.INSTANCE);
     } catch (HumanReadableException e) {
       exception = e;
     }

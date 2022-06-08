@@ -20,11 +20,13 @@ import static java.io.File.pathSeparator;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -63,6 +65,9 @@ public class KotlinBuckConfigTest {
     tmp.newExecutableFile("faux_kotlin_home/libexec/bin/kotlinc");
     tmp.newExecutableFile("faux_kotlin_home/libexec/lib/kotlin-compiler.jar");
     tmp.newExecutableFile("faux_kotlin_home/libexec/lib/kotlin-stdlib.jar");
+
+    tmp.newFolder("overrides");
+    tmp.newExecutableFile("overrides/kotlin-compiler.jar");
 
     testDataDirectory = tmp.getRoot().getPath();
     defaultFilesystem = TestProjectFilesystems.createProjectFilesystem(testDataDirectory);
@@ -187,6 +192,48 @@ public class KotlinBuckConfigTest {
   }
 
   @Test
+  public void testFindsKotlinCompilerJarInConfigWithOverride() throws HumanReadableException {
+    Path overrides = testDataDirectory.resolve("overrides").normalize();
+    Path kotlinCompilerOverride = overrides.resolve("kotlin-compiler.jar");
+
+    KotlinBuckConfig kotlinBuckConfig =
+        FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
+            .setSections(
+                ImmutableMap.of(
+                    "kotlin",
+                    ImmutableMap.of(
+                        "kotlin_home", "./faux_kotlin_home",
+                        "toolchain_compiler_jar", "overrides/kotlin-compiler.jar")))
+            .build()
+            .getView(KotlinBuckConfig.class);
+
+    assertEquals(
+        kotlinBuckConfig.getPathToCompilerJar(UnconfiguredTargetConfiguration.INSTANCE).toString(),
+        kotlinCompilerOverride.toString());
+  }
+
+  @Test
+  public void testFindsKotlinCompilerJarInConfigWithNonexistentOverride()
+      throws HumanReadableException {
+    KotlinBuckConfig kotlinBuckConfig =
+        FakeBuckConfig.builder()
+            .setFilesystem(defaultFilesystem)
+            .setSections(
+                ImmutableMap.of(
+                    "kotlin",
+                    ImmutableMap.of(
+                        "kotlin_home", "./faux_kotlin_home",
+                        "toolchain_compiler_jar", "overrides/nonexistent.jar")))
+            .build()
+            .getView(KotlinBuckConfig.class);
+
+    assertThrows(
+        HumanReadableException.class,
+        () -> kotlinBuckConfig.getPathToCompilerJar(UnconfiguredTargetConfiguration.INSTANCE));
+  }
+
+  @Test
   public void testFindsKotlinCompilerJarInConfigWithAbsolutePath() throws HumanReadableException {
 
     Path kotlinRuntime =
@@ -211,7 +258,10 @@ public class KotlinBuckConfigTest {
             .getView(KotlinBuckConfig.class);
 
     Path compilerJar =
-        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToCompilerJar()).getPath();
+        PATH_RESOLVER
+            .getAbsolutePath(
+                kotlinBuckConfig.getPathToCompilerJar(UnconfiguredTargetConfiguration.INSTANCE))
+            .getPath();
     assertEquals(kotlinRuntime, compilerJar);
   }
 
@@ -244,7 +294,10 @@ public class KotlinBuckConfigTest {
             .getView(KotlinBuckConfig.class);
 
     Path compilerJar =
-        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToCompilerJar()).getPath();
+        PATH_RESOLVER
+            .getAbsolutePath(
+                kotlinBuckConfig.getPathToCompilerJar(UnconfiguredTargetConfiguration.INSTANCE))
+            .getPath();
     assertEquals(kotlinRuntime, compilerJar);
   }
 
@@ -269,7 +322,10 @@ public class KotlinBuckConfigTest {
             .getView(KotlinBuckConfig.class);
 
     Path compilerJar =
-        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToCompilerJar()).getPath();
+        PATH_RESOLVER
+            .getAbsolutePath(
+                kotlinBuckConfig.getPathToCompilerJar(UnconfiguredTargetConfiguration.INSTANCE))
+            .getPath();
     assertThat(compilerJar.toString(), Matchers.containsString(testDataDirectory.toString()));
   }
 
@@ -298,7 +354,10 @@ public class KotlinBuckConfigTest {
             .getView(KotlinBuckConfig.class);
 
     Path runtimeJar =
-        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToStdlibJar()).getPath();
+        PATH_RESOLVER
+            .getAbsolutePath(
+                kotlinBuckConfig.getPathToStdlibJar(UnconfiguredTargetConfiguration.INSTANCE))
+            .getPath();
     assertEquals(kotlinRuntime, runtimeJar);
   }
 
@@ -332,7 +391,10 @@ public class KotlinBuckConfigTest {
             .getView(KotlinBuckConfig.class);
 
     Path runtimeJar =
-        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToStdlibJar()).getPath();
+        PATH_RESOLVER
+            .getAbsolutePath(
+                kotlinBuckConfig.getPathToStdlibJar(UnconfiguredTargetConfiguration.INSTANCE))
+            .getPath();
     assertEquals(kotlinRuntime, runtimeJar);
   }
 
@@ -352,7 +414,10 @@ public class KotlinBuckConfigTest {
             .getView(KotlinBuckConfig.class);
 
     Path runtimeJar =
-        PATH_RESOLVER.getAbsolutePath(kotlinBuckConfig.getPathToStdlibJar()).getPath();
+        PATH_RESOLVER
+            .getAbsolutePath(
+                kotlinBuckConfig.getPathToStdlibJar(UnconfiguredTargetConfiguration.INSTANCE))
+            .getPath();
     assertNotNull(runtimeJar);
     assertTrue(runtimeJar.endsWith("faux_kotlin_home/libexec/lib/kotlin-stdlib.jar"));
   }

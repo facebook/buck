@@ -169,7 +169,11 @@ public class KotlinTestDescription
         Optional.of(
             resolver ->
                 ImmutableList.of(
-                    resolver.getAbsolutePath(kotlinBuckConfig.getPathToStdlibJar()).getPath())),
+                    resolver
+                        .getAbsolutePath(
+                            kotlinBuckConfig.getPathToStdlibJar(
+                                buildTarget.getTargetConfiguration()))
+                        .getPath())),
         args.getLabels(),
         args.getContacts(),
         args.getTestType().orElse(TestType.JUNIT),
