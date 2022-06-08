@@ -54,6 +54,7 @@ public class KotlincStep extends IsolatedStep {
   private static final String EXCLUDE_REFLECT = "-no-reflect";
   private static final String X_PLUGIN_ARG = "-Xplugin=";
   private static final String PLUGIN = "-P";
+  private static final int EXPECTED_SOURCE_ONLY_ABI_EXIT_CODE = 2;
 
   private final Kotlinc kotlinc;
   private final ImmutableSortedSet<AbsPath> combinedClassPathEntries;
@@ -133,7 +134,21 @@ public class KotlincStep extends IsolatedStep {
 
       String firstOrderStderr = stderr.getContentsAsString(StandardCharsets.UTF_8);
       Optional<String> returnedStderr;
-      if (declaredDepsBuildResult != StepExecutionResults.SUCCESS_EXIT_CODE) {
+
+      // We're generating Kotlin source-only-abi with Kosabi, a set of Kotlin compiler plugins.
+      // see `Kosabi.java`
+      //
+      // `jvm-abi-gen` is one of Kosabi plugins responsible for ABI class files generation.
+      // `jvm-abi-gen` could pass only the Kotlin Frontend Compiler stage, thus it's intentionally
+      // throws an Internal Compiler Error and exits with the corresponding exit code.
+      //
+      // EXPECTED_SOURCE_ONLY_ABI_EXIT_CODE is Kotlin compiler Internal Error code.
+      // We should treat Internal Compiler Error in source-only-abi as an abi-generation Success.
+      if (declaredDepsBuildResult == EXPECTED_SOURCE_ONLY_ABI_EXIT_CODE
+          && invokingRule.isSourceOnlyAbi()) {
+        declaredDepsBuildResult = StepExecutionResults.SUCCESS_EXIT_CODE;
+        returnedStderr = Optional.empty();
+      } else if (declaredDepsBuildResult != StepExecutionResults.SUCCESS_EXIT_CODE) {
         returnedStderr = Optional.of(firstOrderStderr);
       } else {
         returnedStderr = Optional.empty();
