@@ -21,6 +21,8 @@ import com.android.sdklib.build.ApkCreationException;
 import com.android.sdklib.build.DuplicateFileException;
 import com.android.sdklib.build.SealedApkException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.util.zip.RepackZipEntries;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -65,6 +67,9 @@ public class ApkBuilderExecutableMain {
 
   @Option(name = "--zipalign_tool", required = true)
   private String zipalignTool;
+
+  @Option(name = "--compress-resources-dot-arsc")
+  private boolean compressResourcesDotArsc;
 
   public static void main(String[] args) throws IOException {
     ApkBuilderExecutableMain main = new ApkBuilderExecutableMain();
@@ -121,6 +126,16 @@ public class ApkBuilderExecutableMain {
           keystorePath,
           keystoreProperties,
           null);
+      if (compressResourcesDotArsc) {
+        Path intermediateApkWithCompressedResources =
+            Files.createTempFile("intermediate", "output_with_compressed_resources.apk");
+        RepackZipEntries.repack(
+            intermediateApk,
+            intermediateApkWithCompressedResources,
+            ImmutableSet.of("resources.arsc"),
+            ZipCompressionLevel.MAX);
+        intermediateApk = intermediateApkWithCompressedResources;
+      }
       Process zipalignProcess =
           new ProcessBuilder()
               .command(zipalignTool, "-f", "4", intermediateApk.toString(), zipalignApk.toString())
