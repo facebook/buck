@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils.usesDependencies;
-
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -36,7 +34,6 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.jvm.java.abi.AbiGenerationModeUtils;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.CoreArg;
 import com.google.common.collect.ImmutableList;
@@ -137,12 +134,27 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public boolean shouldGenerateSourceAbi() {
-    return AbiGenerationModeUtils.isNotClassAbi(kotlinBuckConfig.getAbiGenerationMode());
+    // Kotlin does not support source-abi
+    return false;
   }
 
   @Override
   public boolean shouldGenerateSourceOnlyAbi() {
-    return shouldGenerateSourceAbi() && !usesDependencies(kotlinBuckConfig.getAbiGenerationMode());
+    // Kotlin supports source-only-abi via Kosabi, a group of compiler plugins (stubsgen,
+    // jvm-abi-gen)
+    //
+    // Several aspects impact flavor choice:
+    // 1. bcfg used by `KotlinBuckConfig` (class is a default)
+    //   1a. For roll-out we want to keep a default behaviour in bcfg.
+    //   1b. We don't want to change bcfg to have easy opt-in/out for each rule.
+    // 2. Rule args `abi_generation_mode = ...`
+    //   2a. We will turn source-only-abi on/off for each rule separately passing
+    // `abi_generation_mode = source_only`.
+    //
+    // We're not using a config based declaration
+    // `usesDependencies(kotlinBuckConfig.getAbiGenerationMode())`
+    // b/c it's going to be always false for Kotlin.
+    return true;
   }
 
   @Override
