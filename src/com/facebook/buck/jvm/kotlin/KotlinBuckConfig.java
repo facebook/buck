@@ -72,14 +72,13 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
 
   public ImmutableSortedSet<SourcePath> getKotlinHomeLibraries(
       TargetConfiguration targetConfiguration) {
-    return ImmutableSortedSet.copyOf(
-        ImmutableSortedSet.of(
-            getPathToStdlibJar(targetConfiguration),
-            getPathToReflectJar(targetConfiguration),
-            getPathToScriptRuntimeJar(targetConfiguration),
-            getPathToCompilerJar(targetConfiguration),
-            getPathToTrove4jJar(targetConfiguration),
-            getPathToAnnotationsJar(targetConfiguration)));
+    return ImmutableSortedSet.of(
+        getPathToStdlibJar(targetConfiguration),
+        getPathToReflectJar(targetConfiguration),
+        getPathToScriptRuntimeJar(targetConfiguration),
+        getPathToCompilerJar(targetConfiguration),
+        getPathToTrove4jJar(targetConfiguration),
+        getPathToAnnotationsJar(targetConfiguration));
   }
 
   public boolean shouldCompileAgainstAbis() {
