@@ -42,6 +42,7 @@ public interface Kotlinc extends Tool {
       IsolatedExecutionContext context,
       BuildTargetValue invokingRule,
       ImmutableList<String> options,
+      ImmutableSortedSet<AbsPath> kotlinHomeLibraries,
       ImmutableSortedSet<RelPath> kotlinSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,

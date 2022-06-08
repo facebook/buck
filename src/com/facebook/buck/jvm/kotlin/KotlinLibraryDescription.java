@@ -195,6 +195,8 @@ public class KotlinLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     javacFactory.addParseTimeDeps(
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
+    extraDepsBuilder.addAll(
+        kotlinBuckConfig.getKotlinHomeLibraryTargets(buildTarget.getTargetConfiguration()));
   }
 
   public enum AnnotationProcessingTool {

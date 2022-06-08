@@ -1,0 +1,5 @@
+prebuilt_jar(
+    name = "compiler",
+    binary_jar = "kotlin-compiler.jar",
+    visibility = ["PUBLIC"],
+)

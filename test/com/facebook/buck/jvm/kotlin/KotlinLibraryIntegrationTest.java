@@ -83,6 +83,26 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
+  public void shouldCompileKotlinClassWithOverriddenCompiler() throws Exception {
+    workspace.copyFile(
+        "kotlinc/libexec/lib/kotlin-compiler.jar", "toolchain_override/kotlin-compiler.jar");
+    workspace.addBuckConfigLocalOption(
+        "kotlin", "toolchain_compiler_jar", "//toolchain_override:compiler");
+
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldFailToCompileGivenABadCompilerOverride() throws Exception {
+    workspace.addBuckConfigLocalOption(
+        "kotlin", "toolchain_compiler_jar", "//toolchain_override:nonexistent");
+
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/good:example");
+    buildResult.assertFailure("Should fail to find compiler JAR");
+  }
+
+  @Test
   public void compileKotlinClassWithAnnotationProcessorThatGeneratesJavaCode() throws Exception {
     buildKotlinLibraryThatContainsNoJavaCodeButMustCompileGeneratedJavaCode();
   }

@@ -58,6 +58,7 @@ public class KotlincStep extends IsolatedStep {
 
   private final Kotlinc kotlinc;
   private final ImmutableSortedSet<AbsPath> combinedClassPathEntries;
+  private final ImmutableSortedSet<AbsPath> kotlinHomeLibraries;
   private final Path outputDirectory;
   private final ImmutableList<String> extraArguments;
   private final ImmutableList<String> verboseModeOnlyExtraArguments;
@@ -78,6 +79,7 @@ public class KotlincStep extends IsolatedStep {
       ImmutableSortedSet<RelPath> sourceFilePaths,
       Path pathToSrcsList,
       ImmutableSortedSet<AbsPath> combinedClassPathEntries,
+      ImmutableSortedSet<AbsPath> kotlinHomeLibraries,
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
       ImmutableList<String> verboseModeOnlyExtraArguments,
@@ -94,6 +96,7 @@ public class KotlincStep extends IsolatedStep {
     this.pathToSrcsList = pathToSrcsList;
     this.kotlinc = kotlinc;
     this.combinedClassPathEntries = combinedClassPathEntries;
+    this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.extraArguments = extraArguments;
     this.verboseModeOnlyExtraArguments = verboseModeOnlyExtraArguments;
     this.outputPaths = outputPaths;
@@ -126,6 +129,7 @@ public class KotlincStep extends IsolatedStep {
               firstOrderContext,
               invokingRule,
               getOptions(context, combinedClassPathEntries),
+              kotlinHomeLibraries,
               sourceFilePaths,
               pathToSrcsList,
               Optional.of(outputPaths.getWorkingDirectory().getPath()),

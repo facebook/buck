@@ -22,9 +22,6 @@ import com.facebook.buck.core.build.execution.context.IsolatedExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
-import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckTracingEventBusBridge;
 import com.facebook.buck.event.api.BuckTracing;
@@ -34,38 +31,20 @@ import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Function;
 
 public class JarBackedReflectedKotlinc implements Kotlinc {
 
   private static final String COMPILER_CLASS = "org.jetbrains.kotlin.cli.jvm.K2JVMCompiler";
   private static final String EXIT_CODE_CLASS = "org.jetbrains.kotlin.cli.common.ExitCode";
   private static final KotlincVersion VERSION = ImmutableKotlincVersion.ofImpl("in memory");
-
-  private static final Function<Path, URL> PATH_TO_URL =
-      p -> {
-        try {
-          return p.toUri().toURL();
-        } catch (MalformedURLException e) {
-          throw new RuntimeException(e);
-        }
-      };
-
-  @AddToRuleKey private final ImmutableSet<SourcePath> compilerClassPath;
-
-  JarBackedReflectedKotlinc(ImmutableSet<SourcePath> compilerClassPath) {
-    this.compilerClassPath = compilerClassPath;
-  }
 
   @Override
   public KotlincVersion getVersion() {
@@ -100,6 +79,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
       IsolatedExecutionContext context,
       BuildTargetValue invokingRule,
       ImmutableList<String> options,
+      ImmutableSortedSet<AbsPath> kotlinHomeLibraries,
       ImmutableSortedSet<RelPath> kotlinSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
@@ -130,7 +110,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
               context.getActionId(),
               invokingRule.getFullyQualifiedName()));
 
-      Object compilerShim = loadCompilerShim(context);
+      Object compilerShim = loadCompilerShim(context, kotlinHomeLibraries);
 
       Method compile = compilerShim.getClass().getMethod("exec", PrintStream.class, String[].class);
 
@@ -155,7 +135,9 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
     }
   }
 
-  private Object loadCompilerShim(IsolatedExecutionContext context) throws IOException {
+  private Object loadCompilerShim(
+      IsolatedExecutionContext context, ImmutableSortedSet<AbsPath> kotlinHomeLibraries)
+      throws IOException {
     ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
     try (classLoaderCache) {
       classLoaderCache.addRef();
@@ -163,14 +145,15 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
           classLoaderCache.getClassLoaderForClassPath(
               SynchronizedToolProvider.getSystemToolClassLoader(),
               ImmutableList.copyOf(
-                  compilerClassPath.stream()
+                  kotlinHomeLibraries.stream()
                       .map(
-                          p ->
-                              context
-                                  .getRuleCellRoot()
-                                  .resolve(((PathSourcePath) p).getRelativePath())
-                                  .getPath())
-                      .map(PATH_TO_URL)
+                          absPath -> {
+                            try {
+                              return absPath.getPath().toUri().toURL();
+                            } catch (MalformedURLException e) {
+                              throw new RuntimeException(e);
+                            }
+                          })
                       .iterator()));
 
       return classLoader.loadClass(COMPILER_CLASS).newInstance();

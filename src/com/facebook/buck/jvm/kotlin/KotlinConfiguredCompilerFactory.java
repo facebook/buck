@@ -84,7 +84,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       ToolchainProvider toolchainProvider) {
     CoreArg kotlinArgs = Objects.requireNonNull((CoreArg) args);
     return new KotlincToJarStepFactory(
-        kotlinBuckConfig.getKotlinc(targetConfiguration),
+        kotlinBuckConfig.getKotlinc(),
         kotlinBuckConfig.getKotlinHomeLibraries(targetConfiguration),
         kotlinBuckConfig.getPathToStdlibJar(targetConfiguration),
         kotlinBuckConfig.getPathToAnnotationProcessingJar(targetConfiguration),

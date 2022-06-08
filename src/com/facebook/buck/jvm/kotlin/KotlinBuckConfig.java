@@ -21,18 +21,19 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -45,6 +46,29 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
   public static final String PROPERTY_GENERATE_ANNOTATION_PROCESSING_STATS =
       "generate_annotation_processing_stats";
 
+  /**
+   * Libraries that are found in KOTLIN_HOME (under their {@link KotlinHomeLibrary#jarName}), but
+   * can be overridden by a config in the [kotlin] section, (field {@link
+   * KotlinHomeLibrary#fieldName}).
+   */
+  public enum KotlinHomeLibrary {
+    ANNOTATIONS("toolchain_annotations_jar", "annotations-13.0.jar"),
+    COMPILER("toolchain_compiler_jar", "kotlin-compiler.jar"),
+    KAPT("toolchain_kapt_jar", "kotlin-annotation-processing.jar"),
+    REFLECT("toolchain_reflect_jar", "kotlin-reflect.jar"),
+    SCRIPT_RUNTIME("toolchain_script_runtime_jar", "kotlin-script-runtime.jar"),
+    STDLIB("toolchain_stdlib_jar", "kotlin-stdlib.jar"),
+    TROVE4J("toolchain_trove4j_jar", "trove4j.jar");
+
+    KotlinHomeLibrary(String fieldName, String jarName) {
+      this.fieldName = fieldName;
+      this.jarName = jarName;
+    }
+
+    public final String fieldName;
+    public final String jarName;
+  }
+
   private static final Path DEFAULT_KOTLIN_COMPILER = Paths.get("kotlinc");
 
   private final BuckConfig delegate;
@@ -54,19 +78,11 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
     this.delegate = delegate;
   }
 
-  public Kotlinc getKotlinc(TargetConfiguration targetConfiguration) {
+  public Kotlinc getKotlinc() {
     if (isExternalCompilation()) {
       return new ExternalKotlinc(getPathToCompilerBinary());
     } else {
-      ImmutableSet<SourcePath> classpathEntries =
-          ImmutableSet.of(
-              getPathToStdlibJar(targetConfiguration),
-              getPathToReflectJar(targetConfiguration),
-              getPathToScriptRuntimeJar(targetConfiguration),
-              getPathToAnnotationsJar(targetConfiguration),
-              getPathToCompilerJar(targetConfiguration));
-
-      return new JarBackedReflectedKotlinc(classpathEntries);
+      return new JarBackedReflectedKotlinc();
     }
   }
 
@@ -79,6 +95,24 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
         getPathToCompilerJar(targetConfiguration),
         getPathToTrove4jJar(targetConfiguration),
         getPathToAnnotationsJar(targetConfiguration));
+  }
+
+  /**
+   * KOTLIN_HOME libraries can be overridden with either paths or targets. This function returns the
+   * set of targets that need to be built to make all such libraries available.
+   */
+  public ImmutableSortedSet<BuildTarget> getKotlinHomeLibraryTargets(
+      TargetConfiguration targetConfiguration) {
+    ImmutableSortedSet.Builder<BuildTarget> targets =
+        new ImmutableSortedSet.Builder<>(Comparator.naturalOrder());
+
+    for (KotlinHomeLibrary library : KotlinHomeLibrary.values()) {
+      delegate
+          .getMaybeBuildTarget(SECTION, library.fieldName, targetConfiguration)
+          .ifPresent(targets::add);
+    }
+
+    return targets.build();
   }
 
   public boolean shouldCompileAgainstAbis() {
@@ -108,30 +142,34 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
   }
 
   private SourcePath getPathToJar(
-      TargetConfiguration targetConfiguration, String configName, String jarName) {
+      TargetConfiguration targetConfiguration, KotlinHomeLibrary library) {
     Optional<SourcePath> jarOverride =
-        delegate.getSourcePath(SECTION, configName, targetConfiguration);
+        delegate.getSourcePath(SECTION, library.fieldName, targetConfiguration);
     if (jarOverride.isPresent()) {
       return jarOverride.get();
     }
 
-    Path reflect = getKotlinHome().resolve(jarName + ".jar");
+    Path reflect = getKotlinHome().resolve(library.jarName);
     if (Files.isRegularFile(reflect)) {
       return getSourcePathFromAbsolutePath(reflect);
     }
 
-    reflect = getKotlinHome().resolve(Paths.get("lib", jarName + ".jar"));
+    reflect = getKotlinHome().resolve(Paths.get("lib", library.jarName));
     if (Files.isRegularFile(reflect)) {
       return getSourcePathFromAbsolutePath(reflect);
     }
 
-    reflect = getKotlinHome().resolve(Paths.get("libexec", "lib", jarName + ".jar"));
+    reflect = getKotlinHome().resolve(Paths.get("libexec", "lib", library.jarName));
     if (Files.isRegularFile(reflect)) {
       return getSourcePathFromAbsolutePath(reflect);
     }
 
     throw new HumanReadableException(
-        "Could not resolve " + jarName + " JAR location (kotlin home:" + getKotlinHome() + ").");
+        "Could not resolve "
+            + library.jarName
+            + " JAR location (kotlin home:"
+            + getKotlinHome()
+            + ").");
   }
 
   private SourcePath getSourcePathFromAbsolutePath(Path path) {
@@ -149,7 +187,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    * @return the Kotlin runtime jar path
    */
   SourcePath getPathToStdlibJar(TargetConfiguration targetConfiguration) {
-    return getPathToJar(targetConfiguration, "toolchain_stdlib_jar", "kotlin-stdlib");
+    return getPathToJar(targetConfiguration, KotlinHomeLibrary.STDLIB);
   }
 
   /**
@@ -158,7 +196,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    * @return the Kotlin reflection jar path
    */
   SourcePath getPathToReflectJar(TargetConfiguration targetConfiguration) {
-    return getPathToJar(targetConfiguration, "toolchain_reflect_jar", "kotlin-reflect");
+    return getPathToJar(targetConfiguration, KotlinHomeLibrary.REFLECT);
   }
 
   /**
@@ -167,8 +205,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    * @return the Kotlin script runtime jar path
    */
   SourcePath getPathToScriptRuntimeJar(TargetConfiguration targetConfiguration) {
-    return getPathToJar(
-        targetConfiguration, "toolchain_script_runtime_jar", "kotlin-script-runtime");
+    return getPathToJar(targetConfiguration, KotlinHomeLibrary.SCRIPT_RUNTIME);
   }
 
   /**
@@ -177,7 +214,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    * @return the Kotlin compiler jar path
    */
   SourcePath getPathToCompilerJar(TargetConfiguration targetConfiguration) {
-    return getPathToJar(targetConfiguration, "toolchain_compiler_jar", "kotlin-compiler");
+    return getPathToJar(targetConfiguration, KotlinHomeLibrary.COMPILER);
   }
 
   /**
@@ -186,7 +223,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    * @return the trove4j jar path
    */
   SourcePath getPathToTrove4jJar(TargetConfiguration targetConfiguration) {
-    return getPathToJar(targetConfiguration, "toolchain_trove4j_jar", "trove4j");
+    return getPathToJar(targetConfiguration, KotlinHomeLibrary.TROVE4J);
   }
 
   /**
@@ -195,7 +232,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    * @return the annotations jar path
    */
   SourcePath getPathToAnnotationsJar(TargetConfiguration targetConfiguration) {
-    return getPathToJar(targetConfiguration, "toolchain_annotations_jar", "annotations-13.0");
+    return getPathToJar(targetConfiguration, KotlinHomeLibrary.ANNOTATIONS);
   }
 
   /**
@@ -204,7 +241,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    * @return the Kotlin annotation processing jar path
    */
   SourcePath getPathToAnnotationProcessingJar(TargetConfiguration targetConfiguration) {
-    return getPathToJar(targetConfiguration, "toolchain_kapt_jar", "kotlin-annotation-processing");
+    return getPathToJar(targetConfiguration, KotlinHomeLibrary.KAPT);
   }
 
   /**
