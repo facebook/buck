@@ -44,6 +44,14 @@ public class AbiGenerationModeUtils {
     return abiGenerationMode != AbiGenerationMode.CLASS;
   }
 
+  public static boolean isSourceAbi(AbiGenerationMode abiGenerationMode) {
+    return abiGenerationMode == AbiGenerationMode.SOURCE;
+  }
+
+  public static boolean isSourceOnlyAbi(AbiGenerationMode abiGenerationMode) {
+    return abiGenerationMode == AbiGenerationMode.SOURCE_ONLY;
+  }
+
   public static boolean usesDependencies(AbiGenerationMode abiGenerationMode) {
     return abiGenerationMode != AbiGenerationMode.SOURCE_ONLY;
   }

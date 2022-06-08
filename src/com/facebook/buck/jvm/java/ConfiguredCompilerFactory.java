@@ -73,6 +73,13 @@ public abstract class ConfiguredCompilerFactory {
     return false;
   }
 
+  // In some configurations (Java) a rule can produce a source-only-abi
+  // than it also can produce a source-abi
+  // In other configurations (Kotlin) source-abi is not available
+  public boolean sourceAbiIsAvailableIfSourceOnlyAbiIsAvailable() {
+    return false;
+  }
+
   public boolean shouldGenerateSourceOnlyAbi() {
     return false;
   }

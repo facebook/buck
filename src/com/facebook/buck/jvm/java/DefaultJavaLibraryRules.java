@@ -260,7 +260,7 @@ public abstract class DefaultJavaLibraryRules {
   BuildTarget getAbiJar() {
     if (willProduceCompareAbis()) {
       return JavaAbis.getVerifiedSourceAbiJar(getLibraryTarget());
-    } else if (willProduceSourceAbi()) {
+    } else if (willProduceSourceAbi() || willProduceSourceOnlyAbi()) {
       return JavaAbis.getSourceAbiJar(getLibraryTarget());
     } else if (willProduceClassAbi()) {
       return JavaAbis.getClassAbiJar(getLibraryTarget());
@@ -330,7 +330,7 @@ public abstract class DefaultJavaLibraryRules {
       return result;
     }
 
-    if (!shouldBuildSourceAbi()) {
+    if (!shouldBuildSourceAbi() && !shouldBuildSourceOnlyAbi()) {
       return AbiGenerationMode.CLASS;
     }
 
@@ -372,16 +372,17 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   private boolean willProduceSourceAbi() {
-    return willProduceAbiJar() && AbiGenerationModeUtils.isNotClassAbi(getAbiGenerationMode());
+    return willProduceAbiJar() && AbiGenerationModeUtils.isSourceAbi(getAbiGenerationMode())
+        || willProduceSourceOnlyAbi() && sourceAbiIsAvailableIfSourceOnlyAbiIsAvailable();
   }
 
   private boolean willProduceSourceOnlyAbi() {
-    return willProduceSourceAbi()
-        && !AbiGenerationModeUtils.usesDependencies(getAbiGenerationMode());
+    return willProduceAbiJar() && AbiGenerationModeUtils.isSourceOnlyAbi(getAbiGenerationMode());
   }
 
   private boolean willProduceClassAbi() {
-    return willProduceAbiJar() && (!willProduceSourceAbi() || willProduceCompareAbis());
+    return willProduceAbiJar()
+        && ((!willProduceSourceAbi() && !willProduceSourceOnlyAbi()) || willProduceCompareAbis());
   }
 
   private boolean willProduceCompareAbis() {
@@ -389,8 +390,16 @@ public abstract class DefaultJavaLibraryRules {
         && getSourceAbiVerificationMode() != JavaBuckConfig.SourceAbiVerificationMode.OFF;
   }
 
+  private boolean sourceAbiIsAvailableIfSourceOnlyAbiIsAvailable() {
+    return getConfiguredCompilerFactory().sourceAbiIsAvailableIfSourceOnlyAbiIsAvailable();
+  }
+
   private boolean shouldBuildSourceAbi() {
     return getConfiguredCompilerFactory().shouldGenerateSourceAbi() && !getSrcs().isEmpty();
+  }
+
+  private boolean shouldBuildSourceOnlyAbi() {
+    return getConfiguredCompilerFactory().shouldGenerateSourceOnlyAbi() && !getSrcs().isEmpty();
   }
 
   private boolean pluginsSupportSourceOnlyAbis() {
