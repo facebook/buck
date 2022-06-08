@@ -21,22 +21,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.zip.CustomZipEntry;
-import com.facebook.buck.util.zip.CustomZipOutputStream;
+import com.facebook.buck.util.zip.RepackZipEntries;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
-import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * A command that creates a copy of a ZIP archive, making sure that certain user-specified entries
@@ -91,37 +80,9 @@ public class RepackZipEntriesStep implements Step {
   public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     Path inputFile = filesystem.getPathForRelativePath(inputPath);
     Path outputFile = filesystem.getPathForRelativePath(outputPath);
-    try (ZipInputStream in =
-            new ZipInputStream(new BufferedInputStream(Files.newInputStream(inputFile)));
-        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(outputFile)) {
-      for (ZipEntry entry = in.getNextEntry(); entry != null; entry = in.getNextEntry()) {
-        CustomZipEntry customEntry = new CustomZipEntry(entry);
-        if (entries.contains(customEntry.getName())) {
-          customEntry.setCompressionLevel(compressionLevel.getValue());
-        }
+    RepackZipEntries.repack(inputFile, outputFile, entries, compressionLevel);
 
-        InputStream toUse;
-        // If we're using STORED files, we must pre-calculate the CRC.
-        if (customEntry.getMethod() == ZipEntry.STORED) {
-          try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-            ByteStreams.copy(in, bos);
-            byte[] bytes = bos.toByteArray();
-            customEntry.setCrc(Hashing.crc32().hashBytes(bytes).padToLong());
-            customEntry.setSize(bytes.length);
-            customEntry.setCompressedSize(bytes.length);
-            toUse = new ByteArrayInputStream(bytes);
-          }
-        } else {
-          toUse = in;
-        }
-
-        out.putNextEntry(customEntry);
-        ByteStreams.copy(toUse, out);
-        out.closeEntry();
-      }
-
-      return StepExecutionResults.SUCCESS;
-    }
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override
