@@ -84,8 +84,6 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
   private final boolean cacheable;
   private final boolean incremental;
 
-  @CustomFieldBehavior(RemoteExecutionEnabled.class)
-  private final boolean remoteExecutionEnabled;
   // Stored here so we can access it without an OutputPathResolver.
   private final Path output;
   private final ImmutableMap<String, Path> extraOutputs;
@@ -209,7 +207,6 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     this.output = output;
     this.ruleScheduleInfo = ruleScheduleInfo;
     this.incremental = linkStrategy.isIncremental();
-    this.remoteExecutionEnabled = !this.incremental;
     this.cacheable = cacheable;
     this.extraOutputs = extraOutputs;
     this.pathNormalizationPrefix =
@@ -267,6 +264,10 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
 
   /** Buildable implementation of CxxLink. */
   public static class Impl implements Buildable {
+    @AddToRuleKey
+    @CustomFieldBehavior(RemoteExecutionEnabled.class)
+    private final boolean remoteExecutionEnabled;
+
     @AddToRuleKey private final Linker linker;
     @AddToRuleKey private final ImmutableList<Arg> args;
     @AddToRuleKey private final Optional<LinkOutputPostprocessor> postprocessor;
@@ -328,6 +329,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       this.linkStrategy = linkStrategy;
       this.debugStrategy = debugSymbolLinkStrategy;
       this.filteredFocusedTargets = filteredFocusedTargets;
+      this.remoteExecutionEnabled = !linkStrategy.isIncremental();
     }
 
     public boolean isLinkerMapEnabled() {

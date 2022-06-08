@@ -21,6 +21,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -40,6 +41,7 @@ import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
+import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -146,6 +148,9 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
 
   /** internal buildable implementation */
   static class Impl implements Buildable {
+    @AddToRuleKey
+    @CustomFieldBehavior(RemoteExecutionEnabled.class)
+    private final boolean executeRemotely;
 
     @AddToRuleKey private final Archiver archiver;
     @AddToRuleKey private final ImmutableList<Arg> archiverFlags;
@@ -173,6 +178,9 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       this.output = new OutputPath(outputFileName);
       this.inputs = inputs;
       this.withDownwardApi = withDownwardApi;
+      // Do not run archive step remotely for thin archives because that's pointless work
+      // when buck1 materializes everything locally anyway.
+      this.executeRemotely = contents != ArchiveContents.THIN;
     }
 
     @Override
