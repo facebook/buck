@@ -750,6 +750,19 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
             "Unexpected annotationProcessingTool " + annotationProcessingTool);
     }
 
+    // Kotlin source-only-abi is only available for pure-kotlin targets
+    // It's not applicable for:
+    // - Java targets
+    // - Mixed targets
+    //
+    // Buck doesn't check if it runs source-only-abi for non-pure-kotlin targets,
+    // source-only-abi applicability for target should be verified externally.
+    //
+    // source-only-abi.jar packing happens via [KotlincToJarStepFactory::createCompileToJarStepImpl]
+    if (invokingRule.isSourceOnlyAbi()) {
+      return;
+    }
+
     // Note that this filters out only .kt files, so this keeps both .java and .src.zip files.
     ImmutableSortedSet<RelPath> javaSourceFiles =
         sourceBuilder.build().stream()
