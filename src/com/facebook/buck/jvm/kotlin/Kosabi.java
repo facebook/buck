@@ -16,16 +16,12 @@
 
 package com.facebook.buck.jvm.kotlin;
 
-import static com.facebook.buck.jvm.core.JavaAbis.SOURCE_ONLY_ABI_FLAVOR;
-
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
-import java.util.Optional;
 
 /** Kosabi build rule by enabling and configuring Kosabi kotlinc plugin. */
 public class Kosabi {
@@ -35,29 +31,26 @@ public class Kosabi {
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder,
       BuildTarget buildTarget,
       KosabiConfig kosabiConfig) {
-    if (hasSupportedFlavor(buildTarget.getFlavors())) {
-      kosabiConfig
-          .getStubsGenPlugin(buildTarget.getTargetConfiguration())
-          .filter(BuildTargetSourcePath.class::isInstance)
-          .map(sourcePath -> ((BuildTargetSourcePath) sourcePath).getTarget())
-          .ifPresent(targetGraphOnlyDepsBuilder::add);
-      kosabiConfig
-          .getJvmAbiGenPlugin(buildTarget.getTargetConfiguration())
-          .filter(BuildTargetSourcePath.class::isInstance)
-          .map(sourcePath -> ((BuildTargetSourcePath) sourcePath).getTarget())
-          .ifPresent(targetGraphOnlyDepsBuilder::add);
-    }
+
+    // If we're building a target A that depends on B we can't figure out if B
+    // is a full build or an abi build. Thus we're adding a dependencies for every build.
+    //
+    // A -> B#source-only-abi -> C
+    kosabiConfig
+        .getStubsGenPlugin(buildTarget.getTargetConfiguration())
+        .filter(BuildTargetSourcePath.class::isInstance)
+        .map(sourcePath -> ((BuildTargetSourcePath) sourcePath).getTarget())
+        .ifPresent(targetGraphOnlyDepsBuilder::add);
+    kosabiConfig
+        .getJvmAbiGenPlugin(buildTarget.getTargetConfiguration())
+        .filter(BuildTargetSourcePath.class::isInstance)
+        .map(sourcePath -> ((BuildTargetSourcePath) sourcePath).getTarget())
+        .ifPresent(targetGraphOnlyDepsBuilder::add);
   }
 
   /** Helper method to get the Kosabi plugins. */
   public static ImmutableMap<String, SourcePath> getPluginOptionsMappings(
       TargetConfiguration targetConfiguration, KosabiConfig kosabiConfig) {
-    Optional<BuildTarget> buildTarget = targetConfiguration.getConfigurationTarget();
-
-    // if no flavour can be detected, we will not add the plugins
-    if (buildTarget.isEmpty() || !hasSupportedFlavor(buildTarget.get().getFlavors())) {
-      return ImmutableMap.<String, SourcePath>builder().build();
-    }
 
     ImmutableMap.Builder<String, SourcePath> builder = ImmutableMap.builder();
     kosabiConfig
@@ -67,15 +60,11 @@ public class Kosabi {
         .getJvmAbiGenPlugin(targetConfiguration)
         .ifPresent(plugin -> builder.put(KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN, plugin));
     ImmutableMap<String, SourcePath> sourcePathImmutableMap = builder.build();
-    // Kosabi need these two plugins to work
+    // Kosabi needs both plugins to work correctly
     if (sourcePathImmutableMap.size() == 2) {
       return sourcePathImmutableMap;
     } else {
       return ImmutableMap.<String, SourcePath>builder().build();
     }
-  }
-
-  private static boolean hasSupportedFlavor(FlavorSet flavors) {
-    return flavors.getSet().contains(SOURCE_ONLY_ABI_FLAVOR);
   }
 }
