@@ -35,7 +35,6 @@ import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.jvm.kotlin.Kosabi;
@@ -124,15 +123,12 @@ public class KosabiTest {
   }
 
   @Test
-  public void testFlavorIntegration() {
+  public void testAndroidLibraryIntegration() {
     // Create a register a mock Android library
     BuildTarget library = BuildTargetFactory.newInstance("//:androidLib");
     AndroidLibraryBuilder.createBuilder(library, JavaBuckConfig.of(buckConfig))
         .build(projectFilesystem);
 
-    // Now we add flavor to the mock library and check that AndroidLibraryDescription
-    // properly handles the flavor
-    BuildTarget flavored = library.withFlavors(JavaAbis.SOURCE_ONLY_ABI_FLAVOR);
     AndroidLibraryDescription androidLibraryDescription =
         new AndroidLibraryDescription(
             JavaBuckConfig.of(buckConfig),
@@ -146,7 +142,7 @@ public class KosabiTest {
     AndroidLibraryDescriptionArg arg =
         AndroidLibraryDescriptionArg.builder().setName("plugins").build();
     androidLibraryDescription.findDepsForTargetFromConstructorArgs(
-        flavored,
+        library,
         cellPathResolver.getCellNameResolver(),
         arg,
         ImmutableList.builder(),
