@@ -361,6 +361,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
 
       extraArguments.addAll(extraKotlincArguments);
 
+      // minified classpath required fo so-abi
+      ImmutableSortedSet<AbsPath> sourceOnlyAbiClasspath =
+          ImmutableSortedSet.orderedBy(Comparator.comparing(AbsPath::getPath))
+              .addAll(extraParams.getResolvedKotlinHomeLibraries())
+              .build();
+
       steps.add(
           new KotlincStep(
               invokingRule,
@@ -376,7 +382,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
               parameters.shouldTrackClassUsage(),
               RelPath.get(filesystemParams.getConfiguredBuckOut().getPath()),
               cellToPathMappings,
-              extraParams.getResolvedKosabiPluginOptionPath()));
+              extraParams.getResolvedKosabiPluginOptionPath(),
+              sourceOnlyAbiClasspath));
 
       steps.addAll(postKotlinCompilationSteps.build());
     }
@@ -671,7 +678,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
             false,
             configuredBuckOut,
             cellToPathMappings,
-            resolvedKosabiPluginOptionPath));
+            resolvedKosabiPluginOptionPath,
+            ImmutableSortedSet.of()));
 
     steps.add(
         CopyIsolatedStep.forDirectory(

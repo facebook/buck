@@ -69,6 +69,7 @@ public class KotlincStep extends IsolatedStep {
   private final RelPath configuredBuckOut;
   private final ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings;
   private final ImmutableMap<String, AbsPath> resolvedKosabiPluginOptionPath;
+  private final ImmutableSortedSet<AbsPath> sourceOnlyAbiClasspath;
 
   KotlincStep(
       BuildTargetValue invokingRule,
@@ -84,7 +85,8 @@ public class KotlincStep extends IsolatedStep {
       boolean trackClassUsage,
       RelPath configuredBuckOut,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
-      ImmutableMap<String, AbsPath> resolvedKosabiPluginOptionPath) {
+      ImmutableMap<String, AbsPath> resolvedKosabiPluginOptionPath,
+      ImmutableSortedSet<AbsPath> sourceOnlyAbiClasspath) {
     this.invokingRule = invokingRule;
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
@@ -99,6 +101,7 @@ public class KotlincStep extends IsolatedStep {
     this.configuredBuckOut = configuredBuckOut;
     this.cellToPathMappings = cellToPathMappings;
     this.resolvedKosabiPluginOptionPath = resolvedKosabiPluginOptionPath;
+    this.sourceOnlyAbiClasspath = sourceOnlyAbiClasspath;
   }
 
   @Override
@@ -188,31 +191,27 @@ public class KotlincStep extends IsolatedStep {
       builder.add(DESTINATION_FLAG, ruleCellRoot.resolve(outputDirectory).toString());
     }
 
-    if (!buildClasspathEntries.isEmpty()) {
-      if (invokingRule.isSourceOnlyAbi()) {
-        if (resolvedKosabiPluginOptionPath.containsKey(
-            KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN)) {
-          AbsPath stubPlugin =
-              resolvedKosabiPluginOptionPath.get(KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN);
-          builder.add(X_PLUGIN_ARG + stubPlugin);
-        }
-        if (resolvedKosabiPluginOptionPath.containsKey(
-            KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN)) {
-          AbsPath jvmAbiPlugin =
-              resolvedKosabiPluginOptionPath.get(KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN);
-          builder.add(X_PLUGIN_ARG + jvmAbiPlugin);
-        }
-        builder.add(PLUGIN);
-        builder.add(
-            "plugin:com.facebook.jvm.abi.gen:outputDir=" + outputPaths.getOutputJarDirPath());
-      } else if (invokingRule.isSourceAbi()) {
-        throw new Error("Source ABI flavor is not supported for Kotlin targets");
-      } else {
-        builder.add(
-            CLASSPATH_FLAG,
-            Joiner.on(File.pathSeparator)
-                .join(transform(buildClasspathEntries, path -> path.getPath().toString())));
+    if (invokingRule.isSourceOnlyAbi()) {
+      if (resolvedKosabiPluginOptionPath.containsKey(
+          KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN)) {
+        AbsPath stubPlugin =
+            resolvedKosabiPluginOptionPath.get(KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN);
+        builder.add(X_PLUGIN_ARG + stubPlugin);
       }
+      if (resolvedKosabiPluginOptionPath.containsKey(
+          KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN)) {
+        AbsPath jvmAbiPlugin =
+            resolvedKosabiPluginOptionPath.get(KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN);
+        builder.add(X_PLUGIN_ARG + jvmAbiPlugin);
+      }
+      builder.add(PLUGIN);
+      builder.add("plugin:com.facebook.jvm.abi.gen:outputDir=" + outputPaths.getClassesDir());
+
+      addClasspath(builder, this.sourceOnlyAbiClasspath);
+    } else if (invokingRule.isSourceAbi()) {
+      throw new Error("Source ABI flavor is not supported for Kotlin targets");
+    } else if (!buildClasspathEntries.isEmpty()) {
+      addClasspath(builder, buildClasspathEntries);
     }
 
     builder.add(INCLUDE_RUNTIME_FLAG);
@@ -244,6 +243,13 @@ public class KotlincStep extends IsolatedStep {
     }
 
     return builder.build();
+  }
+
+  private void addClasspath(ImmutableList.Builder<String> builder, Iterable<AbsPath> pathElements) {
+    builder.add(
+        CLASSPATH_FLAG,
+        Joiner.on(File.pathSeparator)
+            .join(transform(pathElements, path -> path.getPath().toString())));
   }
 
   /** @return The classpath entries used to invoke javac. */
