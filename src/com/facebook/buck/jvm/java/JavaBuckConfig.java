@@ -281,7 +281,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
    * only has meaning when {@link #getAbiGenerationMode()} is one of the source modes.
    */
   public SourceAbiVerificationMode getSourceAbiVerificationMode() {
-    if (!AbiGenerationModeUtils.isSourceAbi(getAbiGenerationMode())) {
+    if (!AbiGenerationModeUtils.isNotClassAbi(getAbiGenerationMode())) {
       return SourceAbiVerificationMode.OFF;
     }
 

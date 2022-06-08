@@ -385,7 +385,7 @@ public class JarBuildStepsFactory<T extends CompileToJarStepFactory.ExtraParams>
 
   public boolean useRulePipelining() {
     return configuredCompiler instanceof DaemonJavacToJarStepFactory
-        && AbiGenerationModeUtils.isSourceAbi(abiGenerationMode)
+        && AbiGenerationModeUtils.isNotClassAbi(abiGenerationMode)
         && AbiGenerationModeUtils.usesDependencies(abiGenerationMode);
   }
 

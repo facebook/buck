@@ -137,7 +137,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public boolean shouldGenerateSourceAbi() {
-    return AbiGenerationModeUtils.isSourceAbi(kotlinBuckConfig.getAbiGenerationMode());
+    return AbiGenerationModeUtils.isNotClassAbi(kotlinBuckConfig.getAbiGenerationMode());
   }
 
   @Override

@@ -372,7 +372,7 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   private boolean willProduceSourceAbi() {
-    return willProduceAbiJar() && AbiGenerationModeUtils.isSourceAbi(getAbiGenerationMode());
+    return willProduceAbiJar() && AbiGenerationModeUtils.isNotClassAbi(getAbiGenerationMode());
   }
 
   private boolean willProduceSourceOnlyAbi() {

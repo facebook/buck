@@ -191,7 +191,7 @@ public class DaemonJavacToJarStepFactory extends BaseJavacToJarStepFactory {
     // (2) The target must have 0 postprocessing steps.
     // (3) Tha compile API must be JSR 199.
     boolean isSpoolingToJarEnabled =
-        AbiGenerationModeUtils.isSourceAbi(compilerParameters.getAbiGenerationMode())
+        AbiGenerationModeUtils.isNotClassAbi(compilerParameters.getAbiGenerationMode())
             || (this.spoolMode == SpoolMode.DIRECT_TO_JAR
                 && resolvedJavac instanceof Jsr199Javac.ResolvedJsr199Javac);
 

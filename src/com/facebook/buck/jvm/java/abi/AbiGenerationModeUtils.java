@@ -40,7 +40,7 @@ public class AbiGenerationModeUtils {
     return DIAGNOSTICS_MAP.get(abiGenerationMode);
   }
 
-  public static boolean isSourceAbi(AbiGenerationMode abiGenerationMode) {
+  public static boolean isNotClassAbi(AbiGenerationMode abiGenerationMode) {
     return abiGenerationMode != AbiGenerationMode.CLASS;
   }
 
