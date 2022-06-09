@@ -46,6 +46,8 @@ public class AndroidApkModularIntegrationTest extends AbiCompilationModeTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             new AndroidApkModularIntegrationTest(), "android_project", tmpFolder);
+    workspace.addBuckConfigLocalOption(
+        "build", "are_external_actions_enabled", Boolean.FALSE.toString());
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
