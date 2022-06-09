@@ -1753,6 +1753,12 @@ public final class MainRunner {
           depsAwareExecutorSupplier) {
 
     ParserConfig.BuildFileSearchMethod searchMethod = parserConfig.getBuildFileSearchMethod();
+    if (ParserConfig.BuildFileSearchMethod.WATCHMAN == searchMethod
+        && watchman instanceof WatchmanFactory.NullWatchman) {
+      LOG.info("Watchman is not set. Disable Watchman crawler");
+      searchMethod = ParserConfig.BuildFileSearchMethod.FILESYSTEM_CRAWL;
+    }
+
     switch (searchMethod) {
       case FILESYSTEM_CRAWL:
         return TargetSpecResolver.createWithFileSystemCrawler(
