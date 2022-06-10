@@ -77,7 +77,7 @@ def run(
     capture_output=False,
     input=None,
     check=True,
-    **subprocess_run_kwargs
+    **subprocess_run_kwargs,
 ):
     """Wrapper for subprocess.run() that sets some sane defaults"""
     logging.info("Running {} in {}".format(" ".join(command), cwd or os.getcwd()))
@@ -93,7 +93,7 @@ def run(
         stdout=subprocess.PIPE if capture_output else None,
         check=check,
         env=env,
-        **subprocess_run_kwargs
+        **subprocess_run_kwargs,
     )
 
 

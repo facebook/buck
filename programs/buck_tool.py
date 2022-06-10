@@ -90,7 +90,7 @@ class MovableTemporaryFile(object):
             self._temp_file = tempfile.NamedTemporaryFile(
                 *self._named_temporary_args,
                 delete=False,
-                **self._named_temporary_kwargs
+                **self._named_temporary_kwargs,
             )
             self.file = self._temp_file.__enter__()
         return self
