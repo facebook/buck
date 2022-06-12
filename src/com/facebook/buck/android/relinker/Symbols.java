@@ -21,6 +21,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -195,6 +196,7 @@ public class Symbols {
         ProcessExecutorParams.builder()
             .setCommand(args)
             .setRedirectError(ProcessBuilder.Redirect.INHERIT)
+            .setEnvironment(EnvVariablesProvider.getSystemEnv())
             .build();
     try (LaunchedProcess launchedProcess = executor.launchProcess(params);
         BufferedReader output =
