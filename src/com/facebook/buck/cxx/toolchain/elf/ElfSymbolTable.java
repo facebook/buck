@@ -150,7 +150,7 @@ public class ElfSymbolTable {
               return bind;
             }
           }
-          throw new IllegalArgumentException();
+          throw new IllegalArgumentException(String.format("Illegal symbol table value %d", val));
         }
       }
 
