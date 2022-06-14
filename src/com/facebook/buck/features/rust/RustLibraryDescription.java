@@ -505,7 +505,11 @@ public class RustLibraryDescription
 
           switch (depType) {
             case SHARED:
-              crateType = CrateType.CDYLIB;
+              if (rustBuckConfig.getNativeUnbundleDeps()) {
+                crateType = CrateType.DYLIB;
+              } else {
+                crateType = CrateType.CDYLIB;
+              }
               break;
 
             case STATIC_PIC:
@@ -578,6 +582,9 @@ public class RustLibraryDescription
           Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
               getRustcArgsEnv.apply(rustPlatform);
 
+          CrateType crateType =
+              rustBuckConfig.getNativeUnbundleDeps() ? CrateType.DYLIB : CrateType.CDYLIB;
+
           BuildRule sharedLibraryBuildRule =
               requireLibraryBuild(
                   buildTarget,
@@ -591,7 +598,7 @@ public class RustLibraryDescription
                   /* linkerArgs */ ImmutableList.of(),
                   /* linkerInputs */ ImmutableList.of(),
                   crate,
-                  CrateType.CDYLIB,
+                  crateType,
                   args.getEdition(),
                   LinkableDepType.SHARED,
                   args,

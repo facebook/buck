@@ -63,14 +63,16 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
-  public void rustNoBundlingBuild() throws IOException, InterruptedException {
+  public void rustNoBundlingStaticBuild() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "native_unbundle_deps", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
-    workspace.runBuckBuild("//:cxx_root", "-c", "rust.native_unbundle_deps=True").assertSuccess();
+    workspace
+        .runBuckBuild("//:cxx_root_static", "-c", "rust.native_unbundle_deps=True")
+        .assertSuccess();
 
     AbsPath ruleGenPath =
         tmp.getRoot()
@@ -78,6 +80,51 @@ public class RustLibraryIntegrationTest {
                 BuildTargetPaths.getGenPath(
                     filesystem.getBuckPaths(),
                     BuildTargetFactory.newInstance("//:left#default,rlib"),
+                    "%s"));
+    Path ruleOutput =
+        Files.find(
+                ruleGenPath.getPath(),
+                1,
+                (p, attrs) ->
+                    !attrs.isDirectory() && p.getFileName().toString().contains("libleft"))
+            .findFirst()
+            .get();
+
+    String[] nmOutput =
+        workspace
+            .runCommand("nm", ruleOutput.toString())
+            .getStdout()
+            .get()
+            .lines()
+            .toArray(String[]::new);
+    // Assert that the bottom::bar symbol is undefined
+    assertTrue(anyContains(nmOutput, ".* U .*bottom.*bar.*"));
+
+    // Assert that the foo_left symbol is defined
+    assertTrue(anyContains(nmOutput, ".* T .*foo_left.*"));
+
+    // Assert that libleft has no knowledge of libright
+    assertFalse(anyContains(nmOutput, ".*foo_right.*"));
+  }
+
+  @Test
+  public void rustNoBundlingSharedBuild() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "native_unbundle_deps", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    workspace
+        .runBuckBuild("//:cxx_root_shared", "-c", "rust.native_unbundle_deps=True")
+        .assertSuccess();
+
+    AbsPath ruleGenPath =
+        tmp.getRoot()
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(),
+                    BuildTargetFactory.newInstance("//:left#default,dylib"),
                     "%s"));
     Path ruleOutput =
         Files.find(

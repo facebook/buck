@@ -1,8 +1,15 @@
-
 cxx_binary(
-    name = "cxx_root",
+    name = "cxx_root_static",
     srcs = ["main.cpp"],
     link_style = "static",
+    deps = [":left", ":right"],
+)
+
+
+cxx_binary(
+    name = "cxx_root_shared",
+    srcs = ["main.cpp"],
+    link_style = "shared",
     deps = [":left", ":right"],
 )
 
