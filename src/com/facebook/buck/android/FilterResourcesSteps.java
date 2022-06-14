@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.resources.filter.DrawableFinder;
 import com.facebook.buck.android.resources.filter.FilteredDirectoryCopier;
+import com.facebook.buck.android.resources.filter.FilteringPredicate;
 import com.facebook.buck.android.resources.filter.ResourceFilters;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -42,14 +43,12 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
@@ -60,12 +59,6 @@ import javax.annotation.Nullable;
 public class FilterResourcesSteps {
 
   private static final Logger LOG = Logger.get(FilterResourcesSteps.class);
-
-  @VisibleForTesting
-  static final Pattern NON_ENGLISH_STRINGS_FILE_PATH =
-      Pattern.compile("\\b|.*/res/values-([a-z]{2})(?:-r([A-Z]{2}))*/.*.xml");
-
-  static final String DEFAULT_STRINGS_FILE_NAME = "strings.xml";
 
   private final ProjectFilesystem filesystem;
   private final ImmutableBiMap<Path, Path> inResDirToOutResDirMap;
@@ -179,57 +172,16 @@ public class FilterResourcesSteps {
 
   @VisibleForTesting
   Predicate<Path> getFilteringPredicate(StepExecutionContext context) throws IOException {
-    List<Predicate<Path>> pathPredicates = new ArrayList<>();
-
-    if (filterByDensity) {
-      Objects.requireNonNull(targetDensities);
-      Set<Path> rootResourceDirs = inResDirToOutResDirMap.keySet();
-
-      pathPredicates.add(
-          ResourceFilters.createDensityFilter(filesystem.getRootPath(), targetDensities));
-
-      Set<Path> drawables =
-          DrawableFinder.findDrawables(rootResourceDirs, filesystem.getRootPath());
-      pathPredicates.add(
-          ResourceFilters.createImageDensityFilter(
-              drawables, targetDensities, /* canDownscale */ canDownscale(context)));
-    }
-
-    boolean localeFilterEnabled = !locales.isEmpty();
-    if (localeFilterEnabled || enableStringWhitelisting) {
-      pathPredicates.add(
-          path -> {
-            String filePath = PathFormatter.pathWithUnixSeparators(path);
-            Matcher matcher = NON_ENGLISH_STRINGS_FILE_PATH.matcher(filePath);
-            if (!matcher.matches() || !filePath.endsWith(DEFAULT_STRINGS_FILE_NAME)) {
-              return true;
-            }
-            String locale = matcher.group(1);
-            if (matcher.group(2) != null) {
-              locale += "_" + matcher.group(2);
-            }
-            if (enableStringWhitelisting) {
-              return isPathWhitelisted(path, locale);
-            } else {
-              Preconditions.checkState(localeFilterEnabled);
-              return locales.contains(locale);
-            }
-          });
-    }
-    return pathPredicates.stream().reduce(p -> true, Predicate::and);
-  }
-
-  private boolean isPathWhitelisted(Path path, String locale) {
-    if (packagedLocales.contains(locale)) {
-      return true;
-    }
-    for (Path whitelistedStringDir : whitelistedStringDirs) {
-      if (path.startsWith(whitelistedStringDir)) {
-        return true;
-      }
-    }
-
-    return false;
+    return FilteringPredicate.getFilteringPredicate(
+        filesystem.getRootPath(),
+        inResDirToOutResDirMap,
+        filterByDensity,
+        targetDensities,
+        canDownscale(context),
+        locales,
+        packagedLocales,
+        enableStringWhitelisting,
+        whitelistedStringDirs);
   }
 
   /**

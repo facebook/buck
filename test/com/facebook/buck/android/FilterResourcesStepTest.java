@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.FilterResourcesSteps.ImageScaler;
+import com.facebook.buck.android.resources.filter.FilteringPredicate;
 import com.facebook.buck.android.resources.filter.ResourceFilters;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -476,17 +477,17 @@ public class FilterResourcesStepTest {
   }
 
   private static void assertMatchesRegex(String path, String language, String country) {
-    Matcher matcher = FilterResourcesSteps.NON_ENGLISH_STRINGS_FILE_PATH.matcher(path);
+    Matcher matcher = FilteringPredicate.NON_ENGLISH_STRINGS_FILE_PATH.matcher(path);
     assertTrue(matcher.matches());
     assertEquals(language, matcher.group(1));
     assertEquals(country, matcher.group(2));
   }
 
   private static void assertNotMatchesRegex(String path) {
-    assertFalse(FilterResourcesSteps.NON_ENGLISH_STRINGS_FILE_PATH.matcher(path).matches());
+    assertFalse(FilteringPredicate.NON_ENGLISH_STRINGS_FILE_PATH.matcher(path).matches());
   }
 
-  private static Predicate<Path> getTestPathPredicate(
+  private Predicate<Path> getTestPathPredicate(
       boolean enableStringWhitelisting,
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
@@ -494,7 +495,7 @@ public class FilterResourcesStepTest {
       throws IOException {
     FilterResourcesSteps step =
         new FilterResourcesSteps(
-            null,
+            new FakeProjectFilesystem(tmpFolder.getRoot()),
             /* inResDirToOutResDirMap */ ImmutableBiMap.of(),
             /* filterByDensity */ false,
             /* enableStringWhitelisting */ enableStringWhitelisting,
