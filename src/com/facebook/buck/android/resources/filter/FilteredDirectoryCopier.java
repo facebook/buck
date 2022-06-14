@@ -16,8 +16,9 @@
 
 package com.facebook.buck.android.resources.filter;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.CopySourceMode;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -42,36 +43,38 @@ public class FilteredDirectoryCopier {
   private FilteredDirectoryCopier() {}
 
   public static void copyDirs(
-      ProjectFilesystem filesystem, Map<Path, Path> sourcesToDestinations, Predicate<Path> pred)
+      AbsPath projectRoot, Map<Path, Path> sourcesToDestinations, Predicate<Path> pred)
       throws IOException {
     for (Map.Entry<Path, Path> e : sourcesToDestinations.entrySet()) {
-      copyDir(filesystem, e.getKey(), e.getValue(), pred);
+      copyDir(projectRoot, e.getKey(), e.getValue(), pred);
     }
   }
 
-  private static void copyDir(
-      ProjectFilesystem filesystem, Path srcDir, Path destDir, Predicate<Path> pred)
+  private static void copyDir(AbsPath projectRoot, Path srcDir, Path destDir, Predicate<Path> pred)
       throws IOException {
 
     // Remove existing contents if any.
-    if (filesystem.exists(destDir)) {
-      filesystem.deleteRecursivelyIfExists(destDir);
+    if (ProjectFilesystemUtils.exists(projectRoot, destDir)) {
+      ProjectFilesystemUtils.deleteRecursivelyIfExists(projectRoot, destDir);
     }
-    filesystem.mkdirs(destDir);
+    ProjectFilesystemUtils.mkdirs(projectRoot, destDir);
 
-    filesystem.walkRelativeFileTree(
+    ProjectFilesystemUtils.walkRelativeFileTree(
+        projectRoot,
         srcDir,
-        new SimpleFileVisitor<Path>() {
+        ProjectFilesystemUtils.getDefaultVisitOptions(),
+        new SimpleFileVisitor<>() {
           @Override
           public FileVisitResult visitFile(Path srcPath, BasicFileAttributes attributes)
               throws IOException {
             if (pred.test(srcPath)) {
               Path destPath = destDir.resolve(srcDir.relativize(srcPath));
-              filesystem.createParentDirs(destPath);
-              filesystem.copy(srcPath, destPath, CopySourceMode.FILE);
+              ProjectFilesystemUtils.createParentDirs(projectRoot, destPath);
+              ProjectFilesystemUtils.copy(projectRoot, srcPath, destPath, CopySourceMode.FILE);
             }
             return FileVisitResult.CONTINUE;
           }
-        });
+        },
+        ProjectFilesystemUtils.getEmptyIgnoreFilter());
   }
 }

@@ -24,10 +24,11 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.android.FilterResourcesSteps.ImageScaler;
 import com.facebook.buck.android.resources.filter.ResourceFilters;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -38,9 +39,12 @@ import java.util.Iterator;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import org.hamcrest.Matchers;
+import org.junit.Rule;
 import org.junit.Test;
 
 public class FilterResourcesStepTest {
+
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private Path getDrawableFile(String dir, String qualifier, String filename) {
     return Paths.get(dir, String.format("drawable-%s", qualifier), filename);
@@ -56,7 +60,7 @@ public class FilterResourcesStepTest {
             Paths.get("second-path/res"), baseDestination.resolve("2"),
             Paths.get("third-path/res"), baseDestination.resolve("3"));
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmpFolder.getRoot());
 
     Path scaleSource = getDrawableFile(first, "xhdpi", "other.png");
     filesystem.createNewFile(scaleSource);
@@ -64,7 +68,9 @@ public class FilterResourcesStepTest {
     // Create our drawables.
     for (Path dir : inResDirToOutResDirMap.keySet()) {
       for (String qualifier : ImmutableSet.of("mdpi", "hdpi", "xhdpi")) {
-        filesystem.createNewFile(getDrawableFile(dir.toString(), qualifier, "some.png"));
+        Path drawableFile = getDrawableFile(dir.toString(), qualifier, "some.png");
+        ProjectFilesystemUtils.createParentDirs(tmpFolder.getRoot(), drawableFile);
+        ProjectFilesystemUtils.createNewFile(tmpFolder.getRoot(), drawableFile);
       }
     }
 
@@ -115,7 +121,9 @@ public class FilterResourcesStepTest {
             .getExitCode(),
         Matchers.is(0));
 
-    assertTrue(filesystem.isFile(baseDestination.resolve("1/drawable-mdpi/some.png")));
+    assertTrue(
+        ProjectFilesystemUtils.isFile(
+            tmpFolder.getRoot(), baseDestination.resolve("1/drawable-mdpi/some.png")));
   }
 
   @Test
@@ -207,16 +215,23 @@ public class FilterResourcesStepTest {
     Path resDir = Paths.get("res");
     Path resOutDir = Paths.get("res-out");
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.mkdirs(resDir);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmpFolder.getRoot());
     for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
       if (folderName.equals("drawable")) {
         continue;
       }
 
-      filesystem.createNewFile(
+      ProjectFilesystemUtils.createParentDirs(
+          tmpFolder.getRoot(),
           resDir.resolve(String.format("%s-%s", folderName, targetDensity)).resolve(file));
-      filesystem.createNewFile(
+      ProjectFilesystemUtils.createNewFile(
+          tmpFolder.getRoot(),
+          resDir.resolve(String.format("%s-%s", folderName, targetDensity)).resolve(file));
+      ProjectFilesystemUtils.createParentDirs(
+          tmpFolder.getRoot(),
+          resDir.resolve(String.format("%s-%s", folderName, excludedDensity)).resolve(file));
+      ProjectFilesystemUtils.createNewFile(
+          tmpFolder.getRoot(),
           resDir.resolve(String.format("%s-%s", folderName, excludedDensity)).resolve(file));
     }
 
@@ -238,13 +253,13 @@ public class FilterResourcesStepTest {
       if (folderName.equals("drawable")) {
         continue;
       }
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathExists(
+      assertTrue(
+          ProjectFilesystemUtils.exists(
+              tmpFolder.getRoot(),
               resOutDir.resolve(String.format("%s-%s", folderName, targetDensity)).resolve(file)));
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(
+      assertFalse(
+          ProjectFilesystemUtils.exists(
+              tmpFolder.getRoot(),
               resOutDir
                   .resolve(String.format("%s-%s", folderName, excludedDensity))
                   .resolve(file)));
@@ -259,11 +274,18 @@ public class FilterResourcesStepTest {
     Path resDir = Paths.get("res");
     Path resOutDir = Paths.get("res-out");
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.mkdirs(resDir);
-    filesystem.createNewFile(
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmpFolder.getRoot());
+    ProjectFilesystemUtils.createParentDirs(
+        tmpFolder.getRoot(),
         resDir.resolve(String.format("drawable-%s", targetDensity)).resolve(file));
-    filesystem.createNewFile(
+    ProjectFilesystemUtils.createNewFile(
+        tmpFolder.getRoot(),
+        resDir.resolve(String.format("drawable-%s", targetDensity)).resolve(file));
+    ProjectFilesystemUtils.createParentDirs(
+        tmpFolder.getRoot(),
+        resDir.resolve(String.format("drawable-%s", excludedDensity)).resolve(file));
+    ProjectFilesystemUtils.createNewFile(
+        tmpFolder.getRoot(),
         resDir.resolve(String.format("drawable-%s", excludedDensity)).resolve(file));
 
     FilterResourcesSteps filterResourcesSteps =
@@ -280,13 +302,13 @@ public class FilterResourcesStepTest {
     filterResourcesSteps.getCopyStep().execute(null);
     filterResourcesSteps.getScaleStep().execute(null);
 
-    assertThat(
-        filesystem,
-        ProjectFilesystemMatchers.pathExists(
+    assertTrue(
+        ProjectFilesystemUtils.exists(
+            tmpFolder.getRoot(),
             resOutDir.resolve(String.format("drawable-%s", targetDensity)).resolve(file)));
-    assertThat(
-        filesystem,
-        ProjectFilesystemMatchers.pathDoesNotExist(
+    assertFalse(
+        ProjectFilesystemUtils.exists(
+            tmpFolder.getRoot(),
             resOutDir.resolve(String.format("drawable-%s", excludedDensity)).resolve(file)));
   }
 
@@ -295,19 +317,25 @@ public class FilterResourcesStepTest {
       throws IOException, InterruptedException {
     ResourceFilters.Density targetDensity = ResourceFilters.Density.MDPI;
     ResourceFilters.Density providedDensity = ResourceFilters.Density.TVDPI;
-    final String file = "somefile";
+    final String file = "somefile.xml";
     Path resDir = Paths.get("res/foo/bar");
     Path resOutDir = Paths.get("res-out");
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.mkdirs(resDir);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmpFolder.getRoot());
     for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
       if (folderName.equals("drawable") || folderName.equals("values")) {
         continue;
       }
 
-      filesystem.createNewFile(resDir.resolve(folderName).resolve(file));
-      filesystem.createNewFile(
+      ProjectFilesystemUtils.createParentDirs(
+          tmpFolder.getRoot(), resDir.resolve(folderName).resolve(file));
+      ProjectFilesystemUtils.createNewFile(
+          tmpFolder.getRoot(), resDir.resolve(folderName).resolve(file));
+      ProjectFilesystemUtils.createParentDirs(
+          tmpFolder.getRoot(),
+          resDir.resolve(String.format("%s-%s", folderName, providedDensity)).resolve(file));
+      ProjectFilesystemUtils.createNewFile(
+          tmpFolder.getRoot(),
           resDir.resolve(String.format("%s-%s", folderName, providedDensity)).resolve(file));
     }
 
@@ -329,16 +357,16 @@ public class FilterResourcesStepTest {
       if (folderName.equals("drawable") || folderName.equals("values")) {
         continue;
       }
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathExists(resOutDir.resolve(folderName).resolve(file)));
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(
+      assertTrue(
+          ProjectFilesystemUtils.exists(
+              tmpFolder.getRoot(), resOutDir.resolve(folderName).resolve(file)));
+      assertFalse(
+          ProjectFilesystemUtils.exists(
+              tmpFolder.getRoot(),
               resOutDir.resolve(String.format("%s-%s", folderName, targetDensity))));
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(
+      assertFalse(
+          ProjectFilesystemUtils.exists(
+              tmpFolder.getRoot(),
               resOutDir
                   .resolve(String.format("%s-%s", folderName, providedDensity))
                   .resolve(file)));
@@ -353,15 +381,21 @@ public class FilterResourcesStepTest {
     Path resDir = Paths.get("res/foo/bar");
     Path resOutDir = Paths.get("res-out");
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.mkdirs(resDir);
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmpFolder.getRoot());
     for (String folderName : ResourceFilters.SUPPORTED_RESOURCE_DIRECTORIES) {
       if (folderName.equals("drawable") || folderName.equals("values")) {
         continue;
       }
 
-      filesystem.createNewFile(resDir.resolve(folderName).resolve(file));
-      filesystem.createNewFile(
+      ProjectFilesystemUtils.createParentDirs(
+          tmpFolder.getRoot(), resDir.resolve(folderName).resolve(file));
+      ProjectFilesystemUtils.createNewFile(
+          tmpFolder.getRoot(), resDir.resolve(folderName).resolve(file));
+      ProjectFilesystemUtils.createParentDirs(
+          tmpFolder.getRoot(),
+          resDir.resolve(String.format("%s-%s", folderName, targetDensityIncluded)).resolve(file));
+      ProjectFilesystemUtils.createNewFile(
+          tmpFolder.getRoot(),
           resDir.resolve(String.format("%s-%s", folderName, targetDensityIncluded)).resolve(file));
     }
 
@@ -383,18 +417,18 @@ public class FilterResourcesStepTest {
       if (folderName.equals("drawable") || folderName.equals("values")) {
         continue;
       }
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathExists(resOutDir.resolve(folderName).resolve(file)));
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathExists(
+      assertTrue(
+          ProjectFilesystemUtils.exists(
+              tmpFolder.getRoot(), resOutDir.resolve(folderName).resolve(file)));
+      assertTrue(
+          ProjectFilesystemUtils.exists(
+              tmpFolder.getRoot(),
               resOutDir
                   .resolve(String.format("%s-%s", folderName, targetDensityIncluded))
                   .resolve(file)));
-      assertThat(
-          filesystem,
-          ProjectFilesystemMatchers.pathDoesNotExist(
+      assertFalse(
+          ProjectFilesystemUtils.exists(
+              tmpFolder.getRoot(),
               resOutDir.resolve(String.format("%s-%s", folderName, targetDensityExcluded))));
     }
   }
@@ -406,10 +440,16 @@ public class FilterResourcesStepTest {
     Path resDir = Paths.get("res/foo/bar");
     Path resOutDir = Paths.get("res-out");
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    filesystem.mkdirs(resDir);
-    filesystem.createNewFile(resDir.resolve("values").resolve(file));
-    filesystem.createNewFile(
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(tmpFolder.getRoot());
+    ProjectFilesystemUtils.createParentDirs(
+        tmpFolder.getRoot(), resDir.resolve("values").resolve(file));
+    ProjectFilesystemUtils.createNewFile(
+        tmpFolder.getRoot(), resDir.resolve("values").resolve(file));
+    ProjectFilesystemUtils.createParentDirs(
+        tmpFolder.getRoot(),
+        resDir.resolve(String.format("values-%s", targetDensity)).resolve(file));
+    ProjectFilesystemUtils.createNewFile(
+        tmpFolder.getRoot(),
         resDir.resolve(String.format("values-%s", targetDensity)).resolve(file));
 
     FilterResourcesSteps filterResourcesSteps =
@@ -426,12 +466,12 @@ public class FilterResourcesStepTest {
     filterResourcesSteps.getCopyStep().execute(null);
     filterResourcesSteps.getScaleStep().execute(null);
 
-    assertThat(
-        filesystem,
-        ProjectFilesystemMatchers.pathExists(resOutDir.resolve("values").resolve(file)));
-    assertThat(
-        filesystem,
-        ProjectFilesystemMatchers.pathExists(
+    assertTrue(
+        ProjectFilesystemUtils.exists(
+            tmpFolder.getRoot(), resOutDir.resolve("values").resolve(file)));
+    assertTrue(
+        ProjectFilesystemUtils.exists(
+            tmpFolder.getRoot(),
             resOutDir.resolve(String.format("values-%s", targetDensity)).resolve(file)));
   }
 

@@ -129,7 +129,7 @@ public class FilterResourcesSteps {
           canDownscale(context), imageScaler != null);
       // Create filtered copies of all resource directories. These will be passed to aapt instead.
       FilteredDirectoryCopier.copyDirs(
-          filesystem, inResDirToOutResDirMap, getFilteringPredicate(context));
+          filesystem.getRootPath(), inResDirToOutResDirMap, getFilteringPredicate(context));
       return StepExecutionResults.SUCCESS;
     }
 
@@ -188,7 +188,8 @@ public class FilterResourcesSteps {
       pathPredicates.add(
           ResourceFilters.createDensityFilter(filesystem.getRootPath(), targetDensities));
 
-      Set<Path> drawables = DrawableFinder.findDrawables(rootResourceDirs, filesystem);
+      Set<Path> drawables =
+          DrawableFinder.findDrawables(rootResourceDirs, filesystem.getRootPath());
       pathPredicates.add(
           ResourceFilters.createImageDensityFilter(
               drawables, targetDensities, /* canDownscale */ canDownscale(context)));
@@ -244,7 +245,7 @@ public class FilterResourcesSteps {
 
     // Go over all the images that remain after filtering.
     Collection<Path> drawables =
-        DrawableFinder.findDrawables(inResDirToOutResDirMap.values(), filesystem);
+        DrawableFinder.findDrawables(inResDirToOutResDirMap.values(), filesystem.getRootPath());
     for (Path drawable : drawables) {
       String drawableFileName = drawable.getFileName().toString();
       if (drawableFileName.endsWith(".xml")) {

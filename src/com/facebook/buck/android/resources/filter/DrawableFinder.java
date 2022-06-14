@@ -16,7 +16,8 @@
 
 package com.facebook.buck.android.resources.filter;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -38,13 +39,15 @@ public class DrawableFinder {
   /** Utility class: do not instantiate. */
   private DrawableFinder() {}
 
-  public static ImmutableSet<Path> findDrawables(
-      Collection<Path> dirs, ProjectFilesystem filesystem) throws IOException {
+  public static ImmutableSet<Path> findDrawables(Collection<Path> dirs, AbsPath projectRoot)
+      throws IOException {
     ImmutableSet.Builder<Path> drawableBuilder = ImmutableSet.builder();
     for (Path dir : dirs) {
-      filesystem.walkRelativeFileTree(
+      ProjectFilesystemUtils.walkRelativeFileTree(
+          projectRoot,
           dir,
-          new SimpleFileVisitor<Path>() {
+          ProjectFilesystemUtils.getDefaultVisitOptions(),
+          new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
               String unixPath = PathFormatter.pathWithUnixSeparators(path);
@@ -55,7 +58,8 @@ public class DrawableFinder {
               }
               return FileVisitResult.CONTINUE;
             }
-          });
+          },
+          ProjectFilesystemUtils.getEmptyIgnoreFilter());
     }
     return drawableBuilder.build();
   }
