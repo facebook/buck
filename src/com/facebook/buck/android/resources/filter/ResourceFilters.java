@@ -17,7 +17,8 @@
 package com.facebook.buck.android.resources.filter;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -277,7 +278,7 @@ public class ResourceFilters {
    * Density#NO_QUALIFIER} when the target does not exists.
    */
   public static Predicate<Path> createDensityFilter(
-      ProjectFilesystem filesystem, Set<Density> targetDensities) {
+      AbsPath projectRoot, Set<Density> targetDensities) {
     return resourceFile -> {
       Path resourceFolder = getResourceFolder(resourceFile);
       if (resourceFolder.getFileName().toString().startsWith("drawable")) {
@@ -305,7 +306,7 @@ public class ResourceFilters {
                           resourceFolder
                               .resolveSibling(String.format("%s-%s", resourceType, target))
                               .resolve(resourceFolder.relativize(resourceFile));
-                      return !filesystem.exists(targetResourceFile);
+                      return !ProjectFilesystemUtils.exists(projectRoot, targetResourceFile);
                     });
       }
       return false;

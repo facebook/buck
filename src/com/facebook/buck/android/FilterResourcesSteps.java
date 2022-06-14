@@ -204,7 +204,8 @@ public class FilterResourcesSteps {
       Objects.requireNonNull(targetDensities);
       Set<Path> rootResourceDirs = inResDirToOutResDirMap.keySet();
 
-      pathPredicates.add(ResourceFilters.createDensityFilter(filesystem, targetDensities));
+      pathPredicates.add(
+          ResourceFilters.createDensityFilter(filesystem.getRootPath(), targetDensities));
 
       Objects.requireNonNull(drawableFinder);
       Set<Path> drawables = drawableFinder.findDrawables(rootResourceDirs, filesystem);

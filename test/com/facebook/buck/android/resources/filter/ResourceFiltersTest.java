@@ -325,7 +325,7 @@ public class ResourceFiltersTest {
     Path candidate = Paths.get("drawable-ldpi/somefile");
     Predicate<Path> predicate =
         ResourceFilters.createDensityFilter(
-            new FakeProjectFilesystem(), ImmutableSet.of(Density.MDPI));
+            new FakeProjectFilesystem().getRootPath(), ImmutableSet.of(Density.MDPI));
     assertThat(predicate.test(candidate), Matchers.is(true));
   }
 
@@ -343,7 +343,8 @@ public class ResourceFiltersTest {
       filesystem.createNewFile(exclude);
 
       Predicate<Path> predicate =
-          ResourceFilters.createDensityFilter(filesystem, ImmutableSet.of(Density.MDPI));
+          ResourceFilters.createDensityFilter(
+              filesystem.getRootPath(), ImmutableSet.of(Density.MDPI));
       assertThat(predicate.test(exclude), Matchers.is(false));
       assertThat(predicate.test(include), Matchers.is(true));
     }
@@ -363,7 +364,8 @@ public class ResourceFiltersTest {
       filesystem.createNewFile(exclude);
 
       Predicate<Path> predicate =
-          ResourceFilters.createDensityFilter(filesystem, ImmutableSet.of(Density.MDPI));
+          ResourceFilters.createDensityFilter(
+              filesystem.getRootPath(), ImmutableSet.of(Density.MDPI));
       assertThat(predicate.test(exclude), Matchers.is(false));
       assertThat(predicate.test(include), Matchers.is(true));
     }
