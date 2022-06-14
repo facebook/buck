@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "buck_java_library")
 
 buck_java_library(
     name = "filter",
@@ -10,7 +10,19 @@ buck_java_library(
         "//src/com/facebook/buck/io/filesystem/impl:utils",
         "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/util/string:string",
+        "//third-party/java/args4j:args4j",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+)
+
+buck_java_binary(
+    name = "filter_resources_binary",
+    main_class = "com.facebook.buck.android.resources.filter.FilterResourcesExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":filter",
     ],
 )
