@@ -18,7 +18,11 @@ package com.facebook.buck.features.rust;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.android.packageable.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -28,9 +32,13 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.CxxGenruleBuilder;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.stream.RichStream;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -108,5 +116,43 @@ public class RustLibraryDescriptionTest {
             .map(dep -> ((RustCompileRule) dep).getRustPlatform().getFlavor())
             .toImmutableSet(),
         Matchers.hasItems(RustTestUtils.PLUGIN_FLAVOR));
+  }
+
+  @Test
+  public void androidPackageableGetRequiredPackageables() {
+    RustLibraryBuilder depBuilder = RustLibraryBuilder.from("//:dep");
+    RustLibraryBuilder ruleBuilder =
+        RustLibraryBuilder.from("//:rule").setDeps(ImmutableSortedSet.of(depBuilder.getTarget()));
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(ruleBuilder.build(), depBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    RustLibrary rule = (RustLibrary) graphBuilder.requireRule(ruleBuilder.getTarget());
+
+    Iterable<AndroidPackageable> packageables =
+        rule.getRequiredPackageables(graphBuilder, Suppliers.ofInstance(ImmutableList.of()));
+    assertEquals(
+        ImmutableSet.copyOf(packageables),
+        ImmutableSet.of(graphBuilder.getRule(depBuilder.getTarget())));
+  }
+
+  @Test
+  public void androidPackageableAddToCollector() {
+    RustLibraryBuilder ruleBuilder = RustLibraryBuilder.from("//:rule");
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(ruleBuilder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+
+    RustLibrary rule = (RustLibrary) graphBuilder.requireRule(ruleBuilder.getTarget());
+    BuildTarget target = ruleBuilder.getTarget();
+
+    AndroidPackageableCollector collector = new AndroidPackageableCollector(target);
+    rule.addToCollector(graphBuilder, collector);
+
+    AndroidPackageableCollection collection = collector.build();
+    NativeLinkableGroup[] nativeLinkablesAssets =
+        collection.getNativeLinkablesAssets().values().toArray(NativeLinkableGroup[]::new);
+
+    assertEquals(nativeLinkablesAssets.length, 1);
+    assertEquals(nativeLinkablesAssets[0], (NativeLinkableGroup) rule);
   }
 }
