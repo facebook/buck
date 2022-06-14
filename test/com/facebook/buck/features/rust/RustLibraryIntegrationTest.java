@@ -18,9 +18,8 @@ package com.facebook.buck.features.rust;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -35,6 +34,8 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,6 +47,19 @@ public class RustLibraryIntegrationTest {
   @Before
   public void ensureRustIsAvailable() {
     RustAssumptions.assumeRustIsConfigured();
+  }
+
+  private static boolean anyContains(String[] lines, String match) {
+    Pattern p = Pattern.compile(match);
+    for (String line : lines) {
+      System.out.println("Testing: " + line);
+      Matcher m = p.matcher(line);
+      if (m.matches()) {
+        System.out.println("Matches!");
+        return true;
+      }
+    }
+    return false;
   }
 
   @Test
@@ -74,15 +88,22 @@ public class RustLibraryIntegrationTest {
             .findFirst()
             .get();
 
-    String nmOutput = workspace.runCommand("nm", "-j", ruleOutput.toString()).getStdout().get();
-    assertFalse(nmOutput.isEmpty());
+    String[] nmOutput =
+        workspace
+            .runCommand("nm", ruleOutput.toString())
+            .getStdout()
+            .get()
+            .lines()
+            .toArray(String[]::new);
 
-    // With native_unbundle_deps=True, `:left`(and :right too) rule output shouldn't have anything
-    // else bundled in
-    // it.
-    assertSame(nmOutput.lines().count(), 6L);
-    assertEquals("__ZN6bottom3bar17h7a15b7f2b46af511E", nmOutput.lines().toArray()[2].toString());
-    assertEquals("_foo_left", nmOutput.lines().toArray()[3].toString());
+    // Assert that the bottom::bar symbol is undefined
+    assertTrue(anyContains(nmOutput, ".* U .*bottom.*bar.*"));
+
+    // Assert that the foo_left symbol is defined
+    assertTrue(anyContains(nmOutput, ".* T .*foo_left.*"));
+
+    // Assert that libleft has no knowledge of libright
+    assertFalse(anyContains(nmOutput, ".*foo_right.*"));
   }
 
   @Test
@@ -91,6 +112,8 @@ public class RustLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "flagged_deps", tmp);
     workspace.setUp();
 
+    // Requires nightly or it will complain about `-Z unstable-options`
+    // If it's loading `rustup`'s `rustc` set your default toolchain to nightly
     workspace.runBuckBuild("//:foo_with_extern_dep#rlib").assertSuccess();
   }
 
@@ -100,6 +123,8 @@ public class RustLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "flagged_deps", tmp);
     workspace.setUp();
 
+    // Requires nightly or it will complain about `-Z unstable-options`
+    // If it's loading `rustup`'s `rustc` set your default toolchain to nightly
     ProcessResult shouldFail = workspace.runBuckBuild("//:foo_without_extern_dep#rlib");
     shouldFail.assertFailure();
     assertThat(
@@ -113,6 +138,8 @@ public class RustLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "flagged_deps", tmp);
     workspace.setUp();
 
+    // Requires nightly or it will complain about `-Z unstable-options`
+    // If it's loading `rustup`'s `rustc` set your default toolchain to nightly
     workspace.runBuckBuild("//:foo_with_extern_dep_platform#rlib").assertSuccess();
   }
 
@@ -122,6 +149,8 @@ public class RustLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "flagged_deps", tmp);
     workspace.setUp();
 
+    // Requires nightly or it will complain about `-Z unstable-options`
+    // If it's loading `rustup`'s `rustc` set your default toolchain to nightly
     ProcessResult shouldFail = workspace.runBuckBuild("//:foo_without_extern_dep_platform#rlib");
     shouldFail.assertFailure();
     assertThat(
