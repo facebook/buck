@@ -33,7 +33,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.FilteredDirectoryCopier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
@@ -83,7 +82,6 @@ public class FilterResourcesSteps {
   private final ImmutableSet<Path> whitelistedStringDirs;
   private final ImmutableSet<String> packagedLocales;
   private final ImmutableSet<String> locales;
-  private final FilteredDirectoryCopier filteredDirectoryCopier;
   private final CopyStep copyStep = new CopyStep();
   private final ScaleStep scaleStep = new ScaleStep();
   @Nullable private final Set<ResourceFilters.Density> targetDensities;
@@ -102,7 +100,6 @@ public class FilterResourcesSteps {
    * @param locales set of locales that the localized strings.xml files within {@code values-*}
    *     directories should be filtered by. This is useful if there are multiple apps that support a
    *     different set of locales that share a module. If empty, no filtering is performed.
-   * @param filteredDirectoryCopier refer {@link FilteredDirectoryCopier}
    * @param targetDensities densities we're interested in keeping (e.g. {@code mdpi}, {@code hdpi}
    *     etc.) Only applicable if filterByDensity is true
    * @param drawableFinder refer {@link DrawableFinder}. Only applicable if filterByDensity is true.
@@ -119,7 +116,6 @@ public class FilterResourcesSteps {
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> packagedLocales,
       ImmutableSet<String> locales,
-      FilteredDirectoryCopier filteredDirectoryCopier,
       @Nullable Set<ResourceFilters.Density> targetDensities,
       @Nullable DrawableFinder drawableFinder,
       @Nullable ImageScaler imageScaler) {
@@ -134,7 +130,6 @@ public class FilterResourcesSteps {
     this.whitelistedStringDirs = whitelistedStringDirs;
     this.packagedLocales = packagedLocales;
     this.locales = locales;
-    this.filteredDirectoryCopier = filteredDirectoryCopier;
     this.targetDensities = targetDensities;
     this.drawableFinder = drawableFinder;
     this.imageScaler = imageScaler;
@@ -147,7 +142,7 @@ public class FilterResourcesSteps {
           "FilterResourcesSteps: canDownscale: %s. imageScalar non-null: %s.",
           canDownscale(context), imageScaler != null);
       // Create filtered copies of all resource directories. These will be passed to aapt instead.
-      filteredDirectoryCopier.copyDirs(
+      DefaultFilteredDirectoryCopier.copyDirs(
           filesystem, inResDirToOutResDirMap, getFilteringPredicate(context));
       return StepExecutionResults.SUCCESS;
     }
@@ -539,7 +534,6 @@ public class FilterResourcesSteps {
           whitelistedStringDirs,
           packagedLocales,
           locales,
-          DefaultFilteredDirectoryCopier.getInstance(),
           resourceFilter.getDensities(),
           DefaultDrawableFinder.getInstance(),
           resourceFilter.shouldDownscale()

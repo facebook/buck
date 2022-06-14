@@ -15,7 +15,6 @@ IO_SRCS = [
     "AnsiEnvironmentChecking.java",
     "DefaultFilteredDirectoryCopier.java",
     "DirectoryCleaner.java",
-    "FilteredDirectoryCopier.java",
     "ListeningCharsetDecoder.java",
     "ListeningCharsetEncoder.java",
     "NamedTemporaryDirectory.java",

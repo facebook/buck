@@ -37,19 +37,11 @@ import java.util.function.Predicate;
  *   <li>Empty directories will not be created.
  * </ul>
  */
-public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
-
-  private static final DefaultFilteredDirectoryCopier instance =
-      new DefaultFilteredDirectoryCopier();
-
-  public static DefaultFilteredDirectoryCopier getInstance() {
-    return instance;
-  }
+public class DefaultFilteredDirectoryCopier {
 
   private DefaultFilteredDirectoryCopier() {}
 
-  @Override
-  public void copyDirs(
+  public static void copyDirs(
       ProjectFilesystem filesystem, Map<Path, Path> sourcesToDestinations, Predicate<Path> pred)
       throws IOException {
     for (Map.Entry<Path, Path> e : sourcesToDestinations.entrySet()) {
@@ -57,8 +49,8 @@ public class DefaultFilteredDirectoryCopier implements FilteredDirectoryCopier {
     }
   }
 
-  @Override
-  public void copyDir(ProjectFilesystem filesystem, Path srcDir, Path destDir, Predicate<Path> pred)
+  private static void copyDir(
+      ProjectFilesystem filesystem, Path srcDir, Path destDir, Predicate<Path> pred)
       throws IOException {
 
     // Remove existing contents if any.

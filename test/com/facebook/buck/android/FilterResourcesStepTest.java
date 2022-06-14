@@ -28,7 +28,6 @@ import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -78,7 +77,6 @@ public class FilterResourcesStepTest {
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(ResourceFilters.Density.MDPI),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             new ImageScaler() {
@@ -232,7 +230,6 @@ public class FilterResourcesStepTest {
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
@@ -280,7 +277,6 @@ public class FilterResourcesStepTest {
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
@@ -327,7 +323,6 @@ public class FilterResourcesStepTest {
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
@@ -383,7 +378,6 @@ public class FilterResourcesStepTest {
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensityIncluded, targetDensityExcluded),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
@@ -432,7 +426,6 @@ public class FilterResourcesStepTest {
             /* whitelistedStringDirs */ ImmutableSet.of(),
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
-            DefaultFilteredDirectoryCopier.getInstance(),
             ImmutableSet.of(targetDensity),
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
@@ -474,7 +467,6 @@ public class FilterResourcesStepTest {
             /* whitelistedStringDirs */ whitelistedStringDirs,
             /* packaged locales */ packagedLocales,
             /* locales */ locales,
-            DefaultFilteredDirectoryCopier.getInstance(),
             /* targetDensities */ null,
             FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
