@@ -323,7 +323,11 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
           "-Xcc",
           "-fno-implicit-modules",
           "-Xcc",
-          "-fno-implicit-module-maps");
+          "-fno-implicit-module-maps",
+          "-Xcc",
+          "-Xclang",
+          "-Xcc",
+          "-fno-validate-pch");
 
       Path swiftModuleMapPath =
           getProjectFilesystem().getRootPath().resolve(this.swiftModuleMapPath.get()).getPath();

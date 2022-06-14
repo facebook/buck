@@ -177,7 +177,13 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
           // Once we have an empty working directory the compiler provided headers such as float.h
           // cannot be found, so add . to the header search paths.
           "-Xcc",
-          "-I.");
+          "-I.",
+          // We need to disable PCH validation as we cannot pass through the language options
+          // correctly (eg -fapplication-extension).
+          "-Xcc",
+          "-Xclang",
+          "-Xcc",
+          "-fno-validate-pch");
 
       if (isSystemModule) {
         argsBuilder.add(
