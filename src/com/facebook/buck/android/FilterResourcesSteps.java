@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.resources.filter.DrawableFinder;
 import com.facebook.buck.android.resources.filter.FilteredDirectoryCopier;
 import com.facebook.buck.android.resources.filter.ResourceFilters;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -39,11 +40,8 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -60,12 +58,6 @@ import javax.annotation.Nullable;
  * while filtering out certain resources.
  */
 public class FilterResourcesSteps {
-
-  private static final Pattern DRAWABLE_PATH_PATTERN =
-      Pattern.compile(".*drawable.*/.*(png|jpg|jpeg|gif|webp|xml)", Pattern.CASE_INSENSITIVE);
-  // Android doesn't scale these, so we don't need to scale or filter them either.
-  private static final Pattern DRAWABLE_EXCLUDE_PATTERN =
-      Pattern.compile(".*-nodpi.*", Pattern.CASE_INSENSITIVE);
 
   private static final Logger LOG = Logger.get(FilterResourcesSteps.class);
 
@@ -85,7 +77,6 @@ public class FilterResourcesSteps {
   private final CopyStep copyStep = new CopyStep();
   private final ScaleStep scaleStep = new ScaleStep();
   @Nullable private final Set<ResourceFilters.Density> targetDensities;
-  @Nullable private final DrawableFinder drawableFinder;
   @Nullable private final ImageScaler imageScaler;
 
   /**
@@ -102,10 +93,8 @@ public class FilterResourcesSteps {
    *     different set of locales that share a module. If empty, no filtering is performed.
    * @param targetDensities densities we're interested in keeping (e.g. {@code mdpi}, {@code hdpi}
    *     etc.) Only applicable if filterByDensity is true
-   * @param drawableFinder refer {@link DrawableFinder}. Only applicable if filterByDensity is true.
    * @param imageScaler if not null, use the {@link ImageScaler} to downscale higher-density
    *     drawables for which we weren't able to find an image file of the proper density (as opposed
-   *     to allowing Android to do it at runtime). Only applicable if filterByDensity. is true.
    */
   @VisibleForTesting
   FilterResourcesSteps(
@@ -117,11 +106,9 @@ public class FilterResourcesSteps {
       ImmutableSet<String> packagedLocales,
       ImmutableSet<String> locales,
       @Nullable Set<ResourceFilters.Density> targetDensities,
-      @Nullable DrawableFinder drawableFinder,
       @Nullable ImageScaler imageScaler) {
 
-    Preconditions.checkArgument(
-        !filterByDensity || (targetDensities != null && drawableFinder != null));
+    Preconditions.checkArgument(!filterByDensity || targetDensities != null);
 
     this.filesystem = filesystem;
     this.inResDirToOutResDirMap = inResDirToOutResDirMap;
@@ -131,7 +118,6 @@ public class FilterResourcesSteps {
     this.packagedLocales = packagedLocales;
     this.locales = locales;
     this.targetDensities = targetDensities;
-    this.drawableFinder = drawableFinder;
     this.imageScaler = imageScaler;
   }
 
@@ -202,8 +188,7 @@ public class FilterResourcesSteps {
       pathPredicates.add(
           ResourceFilters.createDensityFilter(filesystem.getRootPath(), targetDensities));
 
-      Objects.requireNonNull(drawableFinder);
-      Set<Path> drawables = drawableFinder.findDrawables(rootResourceDirs, filesystem);
+      Set<Path> drawables = DrawableFinder.findDrawables(rootResourceDirs, filesystem);
       pathPredicates.add(
           ResourceFilters.createImageDensityFilter(
               drawables, targetDensities, /* canDownscale */ canDownscale(context)));
@@ -258,9 +243,8 @@ public class FilterResourcesSteps {
     ResourceFilters.Density targetDensity = ResourceFilters.Density.ORDERING.max(targetDensities);
 
     // Go over all the images that remain after filtering.
-    Objects.requireNonNull(drawableFinder);
     Collection<Path> drawables =
-        drawableFinder.findDrawables(inResDirToOutResDirMap.values(), filesystem);
+        DrawableFinder.findDrawables(inResDirToOutResDirMap.values(), filesystem);
     for (Path drawable : drawables) {
       String drawableFileName = drawable.getFileName().toString();
       if (drawableFileName.endsWith(".xml")) {
@@ -324,43 +308,6 @@ public class FilterResourcesSteps {
           filesystem.deleteFileAtPath(parent);
         }
       }
-    }
-  }
-
-  public interface DrawableFinder {
-    ImmutableSet<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
-        throws IOException;
-  }
-
-  public static class DefaultDrawableFinder implements DrawableFinder {
-
-    private static final DefaultDrawableFinder instance = new DefaultDrawableFinder();
-
-    public static DefaultDrawableFinder getInstance() {
-      return instance;
-    }
-
-    @Override
-    public ImmutableSet<Path> findDrawables(Collection<Path> dirs, ProjectFilesystem filesystem)
-        throws IOException {
-      ImmutableSet.Builder<Path> drawableBuilder = ImmutableSet.builder();
-      for (Path dir : dirs) {
-        filesystem.walkRelativeFileTree(
-            dir,
-            new SimpleFileVisitor<Path>() {
-              @Override
-              public FileVisitResult visitFile(Path path, BasicFileAttributes attributes) {
-                String unixPath = PathFormatter.pathWithUnixSeparators(path);
-                if (DRAWABLE_PATH_PATTERN.matcher(unixPath).matches()
-                    && !DRAWABLE_EXCLUDE_PATTERN.matcher(unixPath).matches()) {
-                  // The path is normalized so that the value can be matched against patterns.
-                  drawableBuilder.add(path);
-                }
-                return FileVisitResult.CONTINUE;
-              }
-            });
-      }
-      return drawableBuilder.build();
     }
   }
 
@@ -535,7 +482,6 @@ public class FilterResourcesSteps {
           packagedLocales,
           locales,
           resourceFilter.getDensities(),
-          DefaultDrawableFinder.getInstance(),
           resourceFilter.shouldDownscale()
               ? new ImageMagickScaler(filesystem.getRootPath(), withDownwardApi)
               : null);

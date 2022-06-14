@@ -78,7 +78,6 @@ public class FilterResourcesStepTest {
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             ImmutableSet.of(ResourceFilters.Density.MDPI),
-            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             new ImageScaler() {
               @Override
               public boolean isAvailable(StepExecutionContext context) {
@@ -231,7 +230,6 @@ public class FilterResourcesStepTest {
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             ImmutableSet.of(targetDensity),
-            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
     filterResourcesSteps.getCopyStep().execute(null);
     filterResourcesSteps.getScaleStep().execute(null);
@@ -278,7 +276,6 @@ public class FilterResourcesStepTest {
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             ImmutableSet.of(targetDensity),
-            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
     filterResourcesSteps.getCopyStep().execute(null);
     filterResourcesSteps.getScaleStep().execute(null);
@@ -324,7 +321,6 @@ public class FilterResourcesStepTest {
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             ImmutableSet.of(targetDensity),
-            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
     filterResourcesSteps.getCopyStep().execute(null);
     filterResourcesSteps.getScaleStep().execute(null);
@@ -379,7 +375,6 @@ public class FilterResourcesStepTest {
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             ImmutableSet.of(targetDensityIncluded, targetDensityExcluded),
-            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
     filterResourcesSteps.getCopyStep().execute(null);
     filterResourcesSteps.getScaleStep().execute(null);
@@ -427,7 +422,6 @@ public class FilterResourcesStepTest {
             /* packaged locales */ ImmutableSet.of(),
             /* locales */ ImmutableSet.of(),
             ImmutableSet.of(targetDensity),
-            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
     filterResourcesSteps.getCopyStep().execute(null);
     filterResourcesSteps.getScaleStep().execute(null);
@@ -468,7 +462,6 @@ public class FilterResourcesStepTest {
             /* packaged locales */ packagedLocales,
             /* locales */ locales,
             /* targetDensities */ null,
-            FilterResourcesSteps.DefaultDrawableFinder.getInstance(),
             /* imageScaler */ null);
 
     return step.getFilteringPredicate(TestExecutionContext.newInstance());

@@ -8,6 +8,7 @@ buck_java_library(
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/io/filesystem/impl:utils",
+        "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/util/string:string",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
