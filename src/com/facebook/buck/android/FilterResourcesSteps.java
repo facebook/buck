@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.resources.filter.FilteredDirectoryCopier;
 import com.facebook.buck.android.resources.filter.ResourceFilters;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -31,7 +32,6 @@ import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.facebook.buck.util.Escaper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -142,7 +142,7 @@ public class FilterResourcesSteps {
           "FilterResourcesSteps: canDownscale: %s. imageScalar non-null: %s.",
           canDownscale(context), imageScaler != null);
       // Create filtered copies of all resource directories. These will be passed to aapt instead.
-      DefaultFilteredDirectoryCopier.copyDirs(
+      FilteredDirectoryCopier.copyDirs(
           filesystem, inResDirToOutResDirMap, getFilteringPredicate(context));
       return StepExecutionResults.SUCCESS;
     }

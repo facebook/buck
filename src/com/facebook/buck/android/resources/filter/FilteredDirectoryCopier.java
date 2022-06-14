@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.android.resources.filter;
 
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -37,9 +37,9 @@ import java.util.function.Predicate;
  *   <li>Empty directories will not be created.
  * </ul>
  */
-public class DefaultFilteredDirectoryCopier {
+public class FilteredDirectoryCopier {
 
-  private DefaultFilteredDirectoryCopier() {}
+  private FilteredDirectoryCopier() {}
 
   public static void copyDirs(
       ProjectFilesystem filesystem, Map<Path, Path> sourcesToDestinations, Predicate<Path> pred)

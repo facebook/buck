@@ -13,7 +13,6 @@ buck_java_library(
 IO_SRCS = [
     "DirectoryCleanerArgs.java",
     "AnsiEnvironmentChecking.java",
-    "DefaultFilteredDirectoryCopier.java",
     "DirectoryCleaner.java",
     "ListeningCharsetDecoder.java",
     "ListeningCharsetEncoder.java",
