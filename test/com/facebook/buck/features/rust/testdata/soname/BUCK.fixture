@@ -1,0 +1,7 @@
+rust_library(
+    name = "foo",
+    srcs = ["foo.rs"],
+    crate = "foo",
+)
+
+

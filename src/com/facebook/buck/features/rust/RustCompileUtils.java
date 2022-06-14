@@ -269,8 +269,8 @@ public class RustCompileUtils {
     CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
     String filename = crateType.filenameFor(target, crateName, cxxPlatform);
 
-    // Use the C linker configuration for CDYLIB
-    if (crateType == CrateType.CDYLIB) {
+    // Add SONAME field for shared linkage crate types
+    if (crateType == CrateType.CDYLIB || crateType == CrateType.DYLIB) {
       Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
       linkerArgs.addAll(StringArg.from(linker.soname(filename)));
     }

@@ -491,4 +491,92 @@ public class RustLibraryIntegrationTest {
 
     workspace.runBuckBuild("//:env-library#rlib").assertSuccess();
   }
+
+  @Test
+  public void sharedLibraryCdylibSoname() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "soname", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    workspace.runBuckBuild("//:foo#default,shared").assertSuccess();
+
+    AbsPath ruleGenPath =
+        tmp.getRoot()
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(),
+                    BuildTargetFactory.newInstance("//:foo#default,shared"),
+                    "%s"));
+
+    String ruleOutput =
+        Files.find(
+                ruleGenPath.getPath(),
+                1,
+                (p, attrs) -> !attrs.isDirectory() && p.getFileName().toString().contains("libfoo"))
+            .findFirst()
+            .get()
+            .toString();
+
+    if (!ruleOutput.endsWith(".so")) {
+      // .dll and .dylib can't be tested this way
+      assertTrue(true);
+    } else {
+      String[] objdumpOutput =
+          workspace
+              .runCommand("objdump", "-x", ruleOutput.toString())
+              .getStdout()
+              .get()
+              .lines()
+              .toArray(String[]::new);
+
+      // Assert that SONAME is set to `libfoo-<hash>.so`
+      assertTrue(anyContains(objdumpOutput, "\\s*SONAME\\s*libfoo.*\\.(?:so|dylib)"));
+    }
+  }
+
+  @Test
+  public void sharedLibraryDylibSoname() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "soname", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    workspace.runBuckBuild("//:foo#default,dylib").assertSuccess();
+
+    AbsPath ruleGenPath =
+        tmp.getRoot()
+            .resolve(
+                BuildTargetPaths.getGenPath(
+                    filesystem.getBuckPaths(),
+                    BuildTargetFactory.newInstance("//:foo#default,dylib"),
+                    "%s"));
+
+    String ruleOutput =
+        Files.find(
+                ruleGenPath.getPath(),
+                1,
+                (p, attrs) -> !attrs.isDirectory() && p.getFileName().toString().contains("libfoo"))
+            .findFirst()
+            .get()
+            .toString();
+
+    if (!ruleOutput.endsWith(".so")) {
+      // .dll and .dylib can't be tested this way
+      assertTrue(true);
+    } else {
+      String[] objdumpOutput =
+          workspace
+              .runCommand("objdump", "-x", ruleOutput.toString())
+              .getStdout()
+              .get()
+              .lines()
+              .toArray(String[]::new);
+
+      // Assert that SONAME is set to `libfoo-<hash>.so`
+      assertTrue(anyContains(objdumpOutput, "\\s*SONAME\\s*libfoo.*\\.(?:so|dylib)"));
+    }
+  }
 }
