@@ -227,6 +227,7 @@ java_test(
         "//src/com/facebook/buck/android/dex:dex",
         "//src/com/facebook/buck/android/proguard:translator",
         "//src/com/facebook/buck/android/resources:merge_android_resources",
+        "//src/com/facebook/buck/android/resources/filter:filter",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/cli:cli",

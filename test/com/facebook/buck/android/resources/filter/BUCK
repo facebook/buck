@@ -1,0 +1,14 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "filter",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/android/resources/filter:filter",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

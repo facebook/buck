@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.FilterResourcesSteps.ImageScaler;
+import com.facebook.buck.android.resources.filter.ResourceFilters;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
