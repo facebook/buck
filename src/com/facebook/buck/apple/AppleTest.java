@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -324,6 +325,17 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .build();
 
     ImmutableSet.Builder<Path> requiredPathsBuilder = ImmutableSet.builder();
+    // Extract any required paths from env.
+    testSpecificEnvironmentVariables.ifPresent(
+        env -> {
+          for (Arg arg : env.values()) {
+            BuildableSupport.deriveInputs(arg)
+                .map(
+                    sourcePath ->
+                        buildContext.getSourcePathResolver().getAbsolutePath(sourcePath).getPath())
+                .forEach(requiredPathsBuilder::add);
+          }
+        });
     requiredPathsBuilder.add(resolvedTestBundleDirectory.getPath());
     if (testHostAppBundlePath.isPresent()) {
       requiredPathsBuilder.add(testHostAppBundlePath.get().getPath());
