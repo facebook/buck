@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain.elf;
 
 import com.google.common.collect.ImmutableList;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 // CHECKSTYLE.OFF: LocalVariableName
 // CHECKSTYLE.OFF: ParameterName
@@ -123,12 +124,29 @@ public class ElfSymbolTable {
       }
 
       public static Info parse(ByteBuffer buffer) {
-        int st_info = buffer.get();
+        int st_info = 0xFF & buffer.get();
         return new Info(Bind.ofIntValue(st_info >> 4), Type.ofIntValue(st_info & 0xF));
       }
 
       public void write(ByteBuffer buffer) {
         buffer.put((byte) ((st_bind.value << 4) + (st_type.value & 0xF)));
+      }
+
+      @Override
+      public boolean equals(Object o) {
+        if (this == o) {
+          return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+          return false;
+        }
+        Info info = (Info) o;
+        return st_bind == info.st_bind && st_type == info.st_type;
+      }
+
+      @Override
+      public int hashCode() {
+        return Objects.hash(st_bind, st_type);
       }
 
       public enum Bind {

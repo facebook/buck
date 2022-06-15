@@ -23,6 +23,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -38,6 +39,17 @@ public class ElfSymbolTableTest {
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "samples", tmp);
     workspace.setUp();
+  }
+
+  @Test
+  public void parseSymInfo() {
+    // Verify parsing STB_GNU_UNIQUE (which can sometimes can signed extended incorrectly).
+    assertThat(
+        ElfSymbolTable.Entry.Info.parse(ByteBuffer.wrap(new byte[] {(byte) 0xa0})),
+        Matchers.equalTo(
+            new ElfSymbolTable.Entry.Info(
+                ElfSymbolTable.Entry.Info.Bind.STB_GNU_UNIQUE,
+                ElfSymbolTable.Entry.Info.Type.STT_NOTYPE)));
   }
 
   @Test
