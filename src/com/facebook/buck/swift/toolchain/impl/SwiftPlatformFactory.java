@@ -51,6 +51,7 @@ public class SwiftPlatformFactory {
       Tool swiftc,
       Optional<VersionedTool> swiftStdLibTool,
       boolean shouldLinkSystemSwift,
+      boolean shouldEmbedBitcode,
       AppleCompilerTargetTriple swiftTarget) {
     String platformName = sdk.getApplePlatform().getName();
     Set<Path> toolchainPaths = sdkPaths.getToolchainPaths();
@@ -71,11 +72,13 @@ public class SwiftPlatformFactory {
     ImmutableList.Builder<String> swiftFlagsBuilder = ImmutableList.builder();
     swiftFlagsBuilder.add("-sdk", sdkPaths.getSdkPath().toString());
 
-    if (sdk.getApplePlatform() == ApplePlatform.WATCHOS
-        || sdk.getApplePlatform() == ApplePlatform.APPLETVOS) {
+    if (shouldEmbedBitcode
+        && (sdk.getApplePlatform() == ApplePlatform.WATCHOS
+            || sdk.getApplePlatform() == ApplePlatform.APPLETVOS)) {
       // Watch and TV binaries need to embed bitcode to pass app store submission. It is sufficient
       // to only compile as bitcode, the linker will generate the object code from the bitcode as
       // well as embedding the bitcode in the linked binary.
+
       swiftFlagsBuilder.add("-emit-bc");
     }
     builder.setSwiftFlags(

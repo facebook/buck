@@ -106,6 +106,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
+            false,
             triple);
     assertThat(swiftPlatform.getSwiftStdlibTool().get(), equalTo(swiftStdTool));
     assertThat(swiftPlatform.getSwiftc(), equalTo(swiftcTool));
@@ -127,6 +128,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
+            false,
             triple);
     assertThat(
         swiftPlatform.getSwiftTarget().getVersionedTriple(),
@@ -144,6 +146,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
+            false,
             AppleCompilerTargetTriple.of(
                 "x86_64", "apple", "ios", Optional.of("9.3"), Optional.empty()));
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), empty());
@@ -168,6 +171,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
+            false,
             AppleCompilerTargetTriple.of(
                 "x86_64", "apple", "ios", Optional.of("9.3"), Optional.empty()));
     assertThat(swiftPlatform.getSwiftRuntimePathsForBundling(), hasSize(1));

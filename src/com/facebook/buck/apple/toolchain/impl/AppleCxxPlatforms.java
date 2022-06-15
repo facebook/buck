@@ -229,11 +229,8 @@ public class AppleCxxPlatforms {
       cflagsBuilder.add("-isystem", headerSearchPath);
     }
 
-    if (targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
-      cflagsBuilder.add("-fembed-bitcode");
-    }
-
     // Populate Xcode version keys from Xcode's own Info.plist if available.
+    Optional<String> xcodeVersion = Optional.empty();
     Optional<String> xcodeBuildVersion = Optional.empty();
     Optional<Path> developerPath = sdkPaths.getDeveloperPath();
     if (developerPath.isPresent()) {
@@ -245,7 +242,7 @@ public class AppleCxxPlatforms {
 
           NSObject xcodeVersionObject = parsedXcodeInfoPlist.objectForKey("DTXcode");
           if (xcodeVersionObject != null) {
-            Optional<String> xcodeVersion = Optional.of(xcodeVersionObject.toString());
+            xcodeVersion = Optional.of(xcodeVersionObject.toString());
             platformBuilder.setXcodeVersion(xcodeVersion);
           }
         } catch (IOException e) {
@@ -266,6 +263,11 @@ public class AppleCxxPlatforms {
 
     ImmutableList.Builder<String> versions = ImmutableList.builder();
     versions.add(targetSdk.getVersion());
+
+    boolean shouldEmbedBitcode = shouldEmbedBitcode(xcodeVersion);
+    if (shouldEmbedBitcode && targetSdk.getApplePlatform().equals(ApplePlatform.WATCHOS)) {
+      cflagsBuilder.add("-fembed-bitcode");
+    }
 
     ImmutableList<String> toolchainVersions =
         targetSdk.getToolchains().stream()
@@ -526,6 +528,7 @@ public class AppleCxxPlatforms {
             targetSdk,
             swiftSdkPathsBuilder.build(),
             appleConfig.shouldLinkSystemSwift(),
+            shouldEmbedBitcode,
             swiftOverrideSearchPathBuilder.addAll(toolSearchPaths).build(),
             xcodeToolFinder,
             filesystem);
@@ -555,6 +558,17 @@ public class AppleCxxPlatforms {
         .setCodesignProvider(appleConfig.getCodesignProvider());
 
     return platformBuilder.build();
+  }
+
+  private static boolean shouldEmbedBitcode(Optional<String> xcodeVersion) {
+    if (xcodeVersion.isEmpty()) return true;
+
+    try {
+      // Bitcode is no longer required from Xcode 14
+      return Integer.parseInt(xcodeVersion.get()) < 1400;
+    } catch (NumberFormatException e) {
+      return true;
+    }
   }
 
   private static AppleCompilerTargetTriple getAppleTargetTripleForSdk(
@@ -624,6 +638,7 @@ public class AppleCxxPlatforms {
       AppleSdk sdk,
       AppleSdkPaths sdkPaths,
       boolean shouldLinkSystemSwift,
+      boolean shouldEmbedBitcode,
       ImmutableList<Path> toolSearchPaths,
       XcodeToolFinder xcodeToolFinder,
       ProjectFilesystem filesystem) {
@@ -661,7 +676,13 @@ public class AppleCxxPlatforms {
     return swiftc.map(
         tool ->
             SwiftPlatformFactory.build(
-                sdk, sdkPaths, tool, swiftStdLibTool, shouldLinkSystemSwift, swiftTarget));
+                sdk,
+                sdkPaths,
+                tool,
+                swiftStdLibTool,
+                shouldLinkSystemSwift,
+                shouldEmbedBitcode,
+                swiftTarget));
   }
 
   private static void applySourceLibrariesParamIfNeeded(

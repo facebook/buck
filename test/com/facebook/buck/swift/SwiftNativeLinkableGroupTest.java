@@ -130,6 +130,7 @@ public class SwiftNativeLinkableGroupTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
+            false,
             AppleCompilerTargetTriple.of(
                 "x86_64", "apple", "ios", Optional.of("9.3"), Optional.empty()));
 
@@ -172,6 +173,7 @@ public class SwiftNativeLinkableGroupTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
+            false,
             AppleCompilerTargetTriple.of(
                 "x86_64", "apple", "ios", Optional.of("9.3"), Optional.empty()));
 
