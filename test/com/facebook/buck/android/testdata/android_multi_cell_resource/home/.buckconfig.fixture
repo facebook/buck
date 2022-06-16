@@ -1,2 +1,5 @@
 [repositories]
   away_cell = ../away
+
+[build]
+  are_external_actions_enabled = false
