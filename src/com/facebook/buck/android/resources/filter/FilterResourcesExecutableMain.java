@@ -46,6 +46,9 @@ public class FilterResourcesExecutableMain {
   @Option(name = "--not-filtered-string-dirs")
   private String notFilteredStringDirsFile;
 
+  @Option(name = "--locales")
+  private String localesString;
+
   @Option(name = "--packaged-locales")
   private String packagedLocalesString;
 
@@ -76,6 +79,8 @@ public class FilterResourcesExecutableMain {
                 .map(ResourceFilters.Density::from)
                 .collect(ImmutableSet.toImmutableSet())
             : ImmutableSet.of();
+    ImmutableSet<String> locales =
+        localesString != null ? ImmutableSet.copyOf(localesString.split(",")) : ImmutableSet.of();
     ImmutableSet<String> packagedLocales =
         packagedLocalesString != null
             ? ImmutableSet.copyOf(packagedLocalesString.split(","))
@@ -93,10 +98,10 @@ public class FilterResourcesExecutableMain {
             inResDirToOutResDirMap,
             !targetDensitiesSet.isEmpty(),
             targetDensitiesSet,
-            // TODO(T122759074) Support these filters too
+            // TODO(T122759074) Do we need to support canDownscale or not?
             /* canDownscale */ false,
-            /* locales */ ImmutableSet.of("NONE"),
-            /* packagedLocales */ packagedLocales,
+            locales,
+            packagedLocales,
             enableStringsAsAssetsFiltering,
             notFilteredStringDirs);
 
