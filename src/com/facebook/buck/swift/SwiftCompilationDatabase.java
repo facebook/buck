@@ -117,6 +117,7 @@ public class SwiftCompilationDatabase extends SwiftCompileBase {
     buildableContext.recordArtifact(outputCommandPath.getPath());
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    getEmitSwiftModuleMapStep(context.getSourcePathResolver()).map(steps::add);
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
