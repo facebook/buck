@@ -22,6 +22,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -36,8 +37,17 @@ public class FilterResourcesExecutableMain {
   @Option(name = "--in-res-dir-to-out-res-dir-map", required = true)
   private String inResDirToOutResDirMapPath;
 
-  @Option(name = "--target-densities", required = true)
+  @Option(name = "--target-densities")
   private String targetDensities;
+
+  @Option(name = "--enable-string-as-assets-filtering")
+  private boolean enableStringsAsAssetsFiltering;
+
+  @Option(name = "--not-filtered-string-dirs")
+  private String notFilteredStringDirsFile;
+
+  @Option(name = "--packaged-locales")
+  private String packagedLocalesString;
 
   public static void main(String[] args) throws IOException {
     FilterResourcesExecutableMain main = new FilterResourcesExecutableMain();
@@ -61,21 +71,34 @@ public class FilterResourcesExecutableMain {
             new TypeReference<Map<String, ImmutableBiMap<Path, Path>>>() {});
     ImmutableBiMap<Path, Path> inResDirToOutResDirMap = rawMap.get("res_dir_map");
     ImmutableSet<ResourceFilters.Density> targetDensitiesSet =
-        Arrays.stream(targetDensities.split(","))
-            .map(ResourceFilters.Density::from)
-            .collect(ImmutableSet.toImmutableSet());
+        targetDensities != null
+            ? Arrays.stream(targetDensities.split(","))
+                .map(ResourceFilters.Density::from)
+                .collect(ImmutableSet.toImmutableSet())
+            : ImmutableSet.of();
+    ImmutableSet<String> packagedLocales =
+        packagedLocalesString != null
+            ? ImmutableSet.copyOf(packagedLocalesString.split(","))
+            : ImmutableSet.of();
+    ImmutableSet<Path> notFilteredStringDirs =
+        notFilteredStringDirsFile != null
+            ? Files.readAllLines(Paths.get(notFilteredStringDirsFile)).stream()
+                .map(Paths::get)
+                .collect(ImmutableSet.toImmutableSet())
+            : ImmutableSet.of();
+
     Predicate<Path> filteringPredicate =
         FilteringPredicate.getFilteringPredicate(
             root,
             inResDirToOutResDirMap,
-            !targetDensities.isEmpty(),
+            !targetDensitiesSet.isEmpty(),
             targetDensitiesSet,
             // TODO(T122759074) Support these filters too
             /* canDownscale */ false,
             /* locales */ ImmutableSet.of("NONE"),
-            /* packagedLocales */ ImmutableSet.of(),
-            /* enableStringWhitelisting */ false,
-            /* whitelistedStringDirs */ ImmutableSet.of());
+            /* packagedLocales */ packagedLocales,
+            enableStringsAsAssetsFiltering,
+            notFilteredStringDirs);
 
     FilteredDirectoryCopier.copyDirs(root, inResDirToOutResDirMap, filteringPredicate);
 
