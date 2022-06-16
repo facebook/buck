@@ -65,7 +65,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -89,7 +88,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final CxxBuckConfig cxxBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
-  private final Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
+  private final Optional<ImmutableMap<String, ImmutableList<Pattern>>> nativeLibraryMergeMap;
   private final Optional<BuildTarget> nativeLibraryMergeGlue;
   private final Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols;
   private final ImmutableList<Pattern> relinkerWhitelist;
@@ -107,7 +106,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ImmutableSet<TargetCpuType> cpuFilters,
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
-      Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
+      Optional<ImmutableMap<String, ImmutableList<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       RelinkerMode relinkerMode,

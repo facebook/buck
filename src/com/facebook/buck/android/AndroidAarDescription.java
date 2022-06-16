@@ -292,7 +292,7 @@ public class AndroidAarDescription
             ImmutableSet.of(),
             cxxBuckConfig,
             downwardApiConfig,
-            Optional.of(args.getNativeLibraryMergeMap()),
+            args.getNativeLibraryMergeMap(),
             args.getNativeLibraryMergeGlue(),
             args.getNativeLibraryMergeLocalizedSymbols(),
             args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,

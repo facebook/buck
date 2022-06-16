@@ -128,7 +128,7 @@ class NativeLibraryMergeEnhancer {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
-      Map<String, List<Pattern>> mergeMap,
+      Map<String, ImmutableList<Pattern>> mergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       ImmutableMap<TargetCpuType, NativeLinkableEnhancementResult> nativeLinkables) {
@@ -329,12 +329,12 @@ class NativeLibraryMergeEnhancer {
 
   private static Map<NativeLinkable, MergedNativeLibraryConstituents> makeConstituentMap(
       BuildTarget buildTarget,
-      Map<String, List<Pattern>> mergeMap,
+      Map<String, ImmutableList<Pattern>> mergeMap,
       Iterable<NativeLinkable> allLinkables,
       ImmutableSet<NativeLinkable> linkableAssetSet) {
     List<MergedNativeLibraryConstituents> allConstituents = new ArrayList<>();
 
-    for (Map.Entry<String, List<Pattern>> mergeConfigEntry : mergeMap.entrySet()) {
+    for (Map.Entry<String, ImmutableList<Pattern>> mergeConfigEntry : mergeMap.entrySet()) {
       String mergeSoname = mergeConfigEntry.getKey();
       List<Pattern> patterns = mergeConfigEntry.getValue();
 

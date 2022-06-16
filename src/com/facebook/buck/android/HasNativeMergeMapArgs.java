@@ -17,14 +17,14 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 public interface HasNativeMergeMapArgs {
-  Map<String, List<Pattern>> getNativeLibraryMergeMap();
+  Optional<ImmutableMap<String, ImmutableList<Pattern>>> getNativeLibraryMergeMap();
 
   Optional<BuildTarget> getNativeLibraryMergeGlue();
 

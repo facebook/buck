@@ -82,7 +82,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -201,7 +200,7 @@ public class AndroidBinaryGraphEnhancer {
       int xzCompressionLevel,
       boolean trimResourceIds,
       boolean ignoreAaptProguardConfig,
-      Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
+      Optional<ImmutableMap<String, ImmutableList<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<BuildTarget> nativeLibraryMergeCodeGenerator,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
