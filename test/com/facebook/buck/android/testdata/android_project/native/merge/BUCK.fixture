@@ -37,6 +37,7 @@ cxx_library(
     srcs = ["B.c"],
     can_be_asset = True,
     soname = "lib1b.so",
+    visibility = ["PUBLIC"],
     deps = [
         ":D",
     ],
@@ -56,6 +57,7 @@ cxx_library(
 cxx_library(
     name = "D",
     srcs = ["D.c"],
+    visibility = ["PUBLIC"],
     deps = [
         ":E",
         ":F",
@@ -66,6 +68,7 @@ cxx_library(
     name = "E",
     srcs = ["E.c"],
     soname = "lib2e.so",
+    visibility = ["PUBLIC"],
     deps = [
     ],
 )
@@ -74,6 +77,7 @@ cxx_library(
     name = "F",
     srcs = ["F.c"],
     soname = "lib2f.so",
+    visibility = ["PUBLIC"],
     deps = [
         ":prebuilt_for_F",
         ":static_for_F",

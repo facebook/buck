@@ -871,7 +871,7 @@ android_instrumentation_apk(
 )
 
 android_binary(
-    name = "app_with_merged_libs",
+    name = "app_with_merge_map",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_code_generator = "//native/merge:codegen",
@@ -888,7 +888,7 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_merged_libs_modular",
+    name = "app_with_merge_map_modular",
     application_module_configs = {
         "native.merge.A": ["//native/merge:A"],
     },
@@ -908,16 +908,16 @@ android_binary(
 )
 
 genrule(
-    name = "disassemble_app_with_merged_libs_gencode",
+    name = "disassemble_app_with_merge_map_gencode",
     out = "disassembled_gencode.smali",
     bash = " && ".join([
-        "$(exe //third-party/smali:baksmali) d -o $TMP $(location :app_with_merged_libs)",
+        "$(exe //third-party/smali:baksmali) d -o $TMP $(location :app_with_merge_map)",
         "cat $TMP/com/gen/*.smali > $OUT",
     ]),
 )
 
 android_binary(
-    name = "app_with_merge_lib_into_two_targets",
+    name = "app_with_merge_map_merging_target_into_two_libraries",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_map = {
@@ -932,7 +932,7 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_circular_merged_libs",
+    name = "app_with_circular_merge_map",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_map = {
@@ -946,7 +946,7 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_circular_merged_libs_including_root",
+    name = "app_with_circular_merge_map_including_root",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_map = {
@@ -960,7 +960,7 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_cross_asset_merged_libs",
+    name = "app_with_cross_asset_merge_map",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_map = {
@@ -974,7 +974,7 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_alternate_merge_glue",
+    name = "app_with_merge_map_and_alternate_merge_glue",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_glue = "//native/merge:glue_2",
@@ -990,7 +990,7 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_alternate_merge_glue_and_localized_symbols",
+    name = "app_with_merge_map_and_alternate_merge_glue_and_localized_symbols",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_glue = "//native/merge:glue_2",
@@ -1007,7 +1007,7 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_invalid_native_lib_merge_glue",
+    name = "app_with_merge_map_and_invalid_native_lib_merge_glue",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_glue = "//keystores:debug",
@@ -1023,7 +1023,7 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_merge_into_existing_lib",
+    name = "app_with_merge_map_merging_into_existing_lib",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_map = {
@@ -1037,7 +1037,7 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_different_merged_libs_per_platform",
+    name = "app_with_merge_map_different_merged_libs_per_platform",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_map = {
@@ -1051,7 +1051,7 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_header_only_merged",
+    name = "app_with_merge_map_header_only",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_map = {
@@ -1065,7 +1065,7 @@ android_binary(
 )
 
 android_binary(
-    name = "app_with_merge_and_supported_platforms",
+    name = "app_with_merge_map_and_supported_platforms",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",
     native_library_merge_map = {
@@ -1163,7 +1163,7 @@ genrule(
 )
 
 android_binary(
-    name = "native_merge_lib_with_pch",
+    name = "app_with_merge_map_and_pch",
     keystore = "//keystores:debug",
     manifest = "AndroidManifestNoRes.xml",
     native_library_merge_map = {

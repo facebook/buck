@@ -87,26 +87,34 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testNativeLibraryMerging() throws IOException, InterruptedException {
+  public void testNativeLibraryMergeMap() throws IOException, InterruptedException {
     SymbolGetter syms = getSymbolGetter();
-    SymbolsAndDtNeeded info;
 
     workspace.replaceFileContents(".buckconfig", "#cpu_abis", "cpu_abis = x86");
     ImmutableMap<String, Path> paths =
         workspace.buildMultipleAndReturnOutputs(
-            "//apps/sample:app_with_merged_libs",
-            "//apps/sample:app_with_alternate_merge_glue",
-            "//apps/sample:app_with_alternate_merge_glue_and_localized_symbols",
-            "//apps/sample:app_with_merged_libs_modular");
+            "//apps/sample:app_with_merge_map",
+            "//apps/sample:app_with_merge_map_and_alternate_merge_glue",
+            "//apps/sample:app_with_merge_map_and_alternate_merge_glue_and_localized_symbols",
+            "//apps/sample:app_with_merge_map_modular");
 
-    Path apkPath = paths.get("//apps/sample:app_with_merged_libs");
+    testNativeLibraryMergeMapGeneric(syms, paths);
+    testNativeLibraryMergeMapAlternateMergeGlue(syms, paths);
+    testNativeLibraryMergeMapAlternateMergeGlueAndLocalizedSymbols(syms, paths);
+    testNativeLibraryMergeMapModular(paths);
+  }
+
+  private static void testNativeLibraryMergeMapGeneric(
+      SymbolGetter syms, ImmutableMap<String, Path> paths)
+      throws IOException, InterruptedException {
+    Path apkPath = paths.get("//apps/sample:app_with_merge_map");
     ZipInspector zipInspector = new ZipInspector(apkPath);
     zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
     zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
     zipInspector.assertFileDoesNotExist("lib/x86/lib2e.so");
     zipInspector.assertFileDoesNotExist("lib/x86/lib2f.so");
 
-    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
+    SymbolsAndDtNeeded info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
     assertThat(info.symbols.global, Matchers.hasItem("A"));
     assertThat(info.symbols.global, Matchers.hasItem("B"));
     assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
@@ -138,32 +146,50 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
     assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
     assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
     assertThat(info.dtNeeded, Matchers.hasItem("libprebuilt_for_F.so"));
+  }
 
-    Path otherPath = paths.get("//apps/sample:app_with_alternate_merge_glue");
-    info = syms.getSymbolsAndDtNeeded(otherPath, "lib/x86/lib2.so");
+  private static void testNativeLibraryMergeMapAlternateMergeGlue(
+      SymbolGetter syms, ImmutableMap<String, Path> paths)
+      throws IOException, InterruptedException {
+    Path otherPath = paths.get("//apps/sample:app_with_merge_map_and_alternate_merge_glue");
+    SymbolsAndDtNeeded info = syms.getSymbolsAndDtNeeded(otherPath, "lib/x86/lib2.so");
     assertThat(info.symbols.global, not(Matchers.hasItem("glue_1")));
     assertThat(info.symbols.global, Matchers.hasItem("glue_2"));
     assertThat(info.dtNeeded, Matchers.hasItem("libprebuilt_for_F.so"));
+  }
 
+  private static void testNativeLibraryMergeMapAlternateMergeGlueAndLocalizedSymbols(
+      SymbolGetter syms, ImmutableMap<String, Path> paths)
+      throws IOException, InterruptedException {
     Path localizePath =
-        paths.get("//apps/sample:app_with_alternate_merge_glue_and_localized_symbols");
-    info = syms.getSymbolsAndDtNeeded(localizePath, "lib/x86/lib2.so");
+        paths.get(
+            "//apps/sample:app_with_merge_map_and_alternate_merge_glue_and_localized_symbols");
+    SymbolsAndDtNeeded info = syms.getSymbolsAndDtNeeded(localizePath, "lib/x86/lib2.so");
     assertThat(info.symbols.global, not(Matchers.hasItem("glue_1")));
     assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+  }
 
-    Path modularPath = paths.get("//apps/sample:app_with_merged_libs_modular");
+  private static void testNativeLibraryMergeMapModular(ImmutableMap<String, Path> paths)
+      throws IOException, InterruptedException {
+    Path modularPath = paths.get("//apps/sample:app_with_merge_map_modular");
     ZipInspector modularZipInspector = new ZipInspector(modularPath);
     modularZipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
     modularZipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
+    modularZipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_C.so");
+    modularZipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_D.so");
     modularZipInspector.assertFileDoesNotExist("lib/x86/lib2e.so");
     modularZipInspector.assertFileDoesNotExist("lib/x86/lib2f.so");
     modularZipInspector.assertFileExists("assets/native.merge.A/libs.txt");
     modularZipInspector.assertFileExists("assets/native.merge.A/libs.xzs");
     modularZipInspector.assertFileDoesNotExist("lib/x86/lib1.so");
     modularZipInspector.assertFileDoesNotExist("lib/x86/lib2.so");
+  }
 
+  @Test
+  public void testMergeMapDisassembly() throws IOException, InterruptedException {
+    workspace.replaceFileContents(".buckconfig", "#cpu_abis", "cpu_abis = x86");
     Path disassembly =
-        workspace.buildAndReturnOutput("//apps/sample:disassemble_app_with_merged_libs_gencode");
+        workspace.buildAndReturnOutput("//apps/sample:disassemble_app_with_merge_map_gencode");
     List<String> disassembledLines = filesystem.readLines(disassembly);
 
     Pattern fieldPattern =
@@ -188,10 +214,11 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testMergeWithPlatformSpecificDeps() throws Exception {
+  public void testMergeMapWithPlatformSpecificDeps() throws Exception {
     workspace.replaceFileContents(".buckconfig", "#cpu_abis", "cpu_abis = x86, armv7");
     Path apkPath =
-        workspace.buildAndReturnOutput("//apps/sample:app_with_different_merged_libs_per_platform");
+        workspace.buildAndReturnOutput(
+            "//apps/sample:app_with_merge_map_different_merged_libs_per_platform");
 
     ZipInspector zipInspector = new ZipInspector(apkPath);
 
@@ -200,9 +227,9 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testMergeHeaderOnly() throws Exception {
+  public void testMergeMapHeaderOnly() throws Exception {
     workspace.replaceFileContents(".buckconfig", "#cpu_abis", "cpu_abis = x86");
-    Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_with_header_only_merged");
+    Path apkPath = workspace.buildAndReturnOutput("//apps/sample:app_with_merge_map_header_only");
 
     ZipInspector zipInspector = new ZipInspector(apkPath);
     zipInspector.assertFileExists("lib/x86/liball.so");
@@ -211,7 +238,8 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void throwIfLibMergedIntoTwoTargets() {
     ProcessResult processResult =
-        workspace.runBuckBuild("//apps/sample:app_with_merge_lib_into_two_targets");
+        workspace.runBuckBuild(
+            "//apps/sample:app_with_merge_map_merging_target_into_two_libraries");
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
@@ -219,18 +247,18 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void throwIfLibMergedContainsAssetsAndNonAssets() {
+  public void throwIfMergedLibContainsAssetsAndNonAssets() {
     ProcessResult processResult =
-        workspace.runBuckBuild("//apps/sample:app_with_cross_asset_merged_libs");
+        workspace.runBuckBuild("//apps/sample:app_with_cross_asset_merge_map");
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(), containsString("contains both asset and non-asset libraries"));
   }
 
   @Test
-  public void throwIfMergeHasCircularDependency() {
+  public void throwIfMergeMapHasCircularDependency() {
     ProcessResult processResult =
-        workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs");
+        workspace.runBuckBuild("//apps/sample:app_with_circular_merge_map");
     processResult.assertFailure();
     String stderr = processResult.getStderr();
     assertThat(stderr, containsString("Error: Dependency cycle detected"));
@@ -249,9 +277,9 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void throwIfMergedHasCircularDependencyIncludeRoot() {
+  public void throwIfMergeMapHasCircularDependencyIncludeRoot() {
     ProcessResult processResult =
-        workspace.runBuckBuild("//apps/sample:app_with_circular_merged_libs_including_root");
+        workspace.runBuckBuild("//apps/sample:app_with_circular_merge_map_including_root");
     processResult.assertFailure();
     assertThat(processResult.getStderr(), containsString("Error: Dependency cycle detected"));
   }
@@ -259,7 +287,8 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void throwIfMergedWithInvalidGlue() {
     ProcessResult processResult =
-        workspace.runBuckBuild("//apps/sample:app_with_invalid_native_lib_merge_glue");
+        workspace.runBuckBuild(
+            "//apps/sample:app_with_merge_map_and_invalid_native_lib_merge_glue");
     processResult.assertExitCode(ExitCode.FATAL_GENERIC);
     assertThat(
         processResult.getStderr(),
@@ -396,9 +425,9 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testMergeAndSupportedPlatforms() throws IOException, InterruptedException {
+  public void testMergeMapAndSupportedPlatforms() throws IOException, InterruptedException {
     Path output =
-        workspace.buildAndReturnOutput("//apps/sample:app_with_merge_and_supported_platforms");
+        workspace.buildAndReturnOutput("//apps/sample:app_with_merge_map_and_supported_platforms");
 
     SymbolGetter symGetter = getSymbolGetter();
     Symbols syms;
@@ -412,9 +441,9 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void canBuildNativeMergedLibraryWithPrecompiledHeader() throws Exception {
+  public void testMergeMapAndPrecompiledHeader() throws Exception {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
-    ProcessResult result = workspace.runBuckBuild("//apps/sample:native_merge_lib_with_pch");
+    ProcessResult result = workspace.runBuckBuild("//apps/sample:app_with_merge_map_and_pch");
     result.assertSuccess();
   }
 
