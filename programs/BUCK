@@ -72,6 +72,7 @@ genrule(
     name = "gen_buck_version_info",
     out = "buck_version_info.json",
     cmd = get_gen_buck_info_command(":gen_buck_info"),
+    labels = ["uses_hg"],
 )
 
 build_type = read_config("build", "type", "LOCAL_PEX")
