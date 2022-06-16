@@ -17,13 +17,15 @@
 package com.facebook.buck.android.resources.filter;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.Predicate;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -53,16 +55,15 @@ public class FilterResourcesExecutableMain {
 
   private void run() throws IOException {
     AbsPath root = AbsPath.of(Paths.get(".").normalize().toAbsolutePath());
+    Map<String, ImmutableBiMap<Path, Path>> rawMap =
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(Paths.get(inResDirToOutResDirMapPath)),
+            new TypeReference<Map<String, ImmutableBiMap<Path, Path>>>() {});
+    ImmutableBiMap<Path, Path> inResDirToOutResDirMap = rawMap.get("res_dir_map");
     ImmutableSet<ResourceFilters.Density> targetDensitiesSet =
         Arrays.stream(targetDensities.split(","))
             .map(ResourceFilters.Density::from)
             .collect(ImmutableSet.toImmutableSet());
-    ImmutableBiMap<Path, Path> inResDirToOutResDirMap =
-        Files.lines(Paths.get(inResDirToOutResDirMapPath))
-            .map(s -> s.split(" "))
-            .collect(
-                ImmutableBiMap.toImmutableBiMap(
-                    arr -> Paths.get(arr[0]), arr -> Paths.get(arr[1])));
     Predicate<Path> filteringPredicate =
         FilteringPredicate.getFilteringPredicate(
             root,
