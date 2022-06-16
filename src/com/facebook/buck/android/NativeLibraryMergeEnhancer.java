@@ -173,12 +173,14 @@ class NativeLibraryMergeEnhancer {
               .build();
 
       Stream<? extends NativeLinkable> allModulesLinkables = Stream.empty();
-      ImmutableSet.Builder<NativeLinkable> linkableAssetSetBuilder = ImmutableSet.builder();
+      ImmutableMap.Builder<NativeLinkable, APKModule> linkableAssetMapBuilder =
+          ImmutableMap.builder();
       for (APKModule module : modules) {
         allModulesLinkables = Stream.concat(allModulesLinkables, linkables.get(module).stream());
         allModulesLinkables =
             Stream.concat(allModulesLinkables, assetLinkables.get(module).stream());
-        linkableAssetSetBuilder.addAll(assetLinkables.get(module));
+        assetLinkables.get(module).stream()
+            .forEach(assetLinkable -> linkableAssetMapBuilder.put(assetLinkable, module));
       }
 
       // Sort by build target here to ensure consistent behavior.
@@ -187,9 +189,9 @@ class NativeLibraryMergeEnhancer {
               .sorted(Comparator.comparing(NativeLinkable::getBuildTarget))
               .collect(ImmutableList.toImmutableList());
 
-      ImmutableSet<NativeLinkable> linkableAssetSet = linkableAssetSetBuilder.build();
+      ImmutableMap<NativeLinkable, APKModule> linkableAssetMap = linkableAssetMapBuilder.build();
       Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
-          makeConstituentMap(buildTarget, mergeMap, allLinkables, linkableAssetSet);
+          makeConstituentMap(buildTarget, mergeMap, allLinkables, linkableAssetMap);
 
       Iterable<MergedNativeLibraryConstituents> orderedConstituents =
           getOrderedMergedConstituents(buildTarget, graphBuilder, linkableMembership);
@@ -240,9 +242,9 @@ class NativeLibraryMergeEnhancer {
 
       for (MergedLibNativeLinkable linkable : mergedLinkables) {
         APKModule module = getModuleForLinkable(linkable, linkableToModuleMap);
-        if (Collections.disjoint(linkable.constituents.getLinkables(), linkableAssetSet)) {
+        if (Collections.disjoint(linkable.constituents.getLinkables(), linkableAssetMap.keySet())) {
           moduleLinkablesBuilder.put(module, linkable);
-        } else if (linkableAssetSet.containsAll(linkable.constituents.getLinkables())) {
+        } else if (linkableAssetMap.keySet().containsAll(linkable.constituents.getLinkables())) {
           moduleAssetLinkablesBuilder.put(module, linkable);
         }
 
@@ -331,10 +333,10 @@ class NativeLibraryMergeEnhancer {
       BuildTarget buildTarget,
       Map<String, ImmutableList<Pattern>> mergeMap,
       Iterable<NativeLinkable> allLinkables,
-      ImmutableSet<NativeLinkable> linkableAssetSet) {
+      ImmutableMap<NativeLinkable, APKModule> linkableAssetMap) {
     List<MergedNativeLibraryConstituents> allConstituents = new ArrayList<>();
-
-    for (Map.Entry<String, ImmutableList<Pattern>> mergeConfigEntry : mergeMap.entrySet()) {
+    for (ImmutableMap.Entry<String, ImmutableList<Pattern>> mergeConfigEntry :
+        mergeMap.entrySet()) {
       String mergeSoname = mergeConfigEntry.getKey();
       List<Pattern> patterns = mergeConfigEntry.getValue();
 
@@ -369,7 +371,7 @@ class NativeLibraryMergeEnhancer {
         }
         linkableMembership.put(linkable, constituents);
 
-        if (linkableAssetSet.contains(linkable)) {
+        if (linkableAssetMap.containsKey(linkable)) {
           hasAssets = true;
         } else {
           hasNonAssets = true;
@@ -385,7 +387,7 @@ class NativeLibraryMergeEnhancer {
           sb.append(
               String.format(
                   "  %s -> %s\n",
-                  linkable, linkableAssetSet.contains(linkable) ? "asset" : "not asset"));
+                  linkable, linkableAssetMap.containsKey(linkable) ? "asset" : "not asset"));
         }
         throw new HumanReadableException(sb.toString());
       }
