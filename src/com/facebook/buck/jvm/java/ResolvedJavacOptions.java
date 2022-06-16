@@ -20,7 +20,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 /** Resolved JavacOptions used in {@link JavacPipelineState} */
-@BuckStyleValue
+@BuckStyleValueWithBuilder
 public abstract class ResolvedJavacOptions {
 
   public abstract Optional<String> getBootclasspath();
@@ -50,6 +50,21 @@ public abstract class ResolvedJavacOptions {
 
   public boolean isJavaAnnotationProcessorParamsPresent() {
     return !getJavaAnnotationProcessorParams().isEmpty();
+  }
+
+  /**
+   * Like {@link JavacOptions#withJavaAnnotationProcessorParams(JavacPluginParams)}, but for after
+   * the options have been resolved.
+   */
+  public ResolvedJavacOptions withJavaAnnotationProcessorParams(
+      JavacPluginParams javaAnnotationProcessorParams) {
+    if (getJavaAnnotationProcessorParams().equals(javaAnnotationProcessorParams)) {
+      return this;
+    }
+    return ImmutableResolvedJavacOptions.builder()
+        .from(this)
+        .setJavaAnnotationProcessorParams(javaAnnotationProcessorParams)
+        .build();
   }
 
   /** Creates {@link ResolvedJavacOptions} */
@@ -95,15 +110,16 @@ public abstract class ResolvedJavacOptions {
       JavacPluginParams javaAnnotationProcessorParams,
       JavacPluginParams standardJavacPluginParams,
       List<String> extraArguments) {
-    return ImmutableResolvedJavacOptions.ofImpl(
-        bootclasspath,
-        bootclasspathList,
-        languageLevelOptions,
-        debug,
-        verbose,
-        javaAnnotationProcessorParams,
-        standardJavacPluginParams,
-        extraArguments);
+    return ImmutableResolvedJavacOptions.builder()
+        .setBootclasspath(bootclasspath)
+        .setBootclasspathList(bootclasspathList)
+        .setLanguageLevelOptions(languageLevelOptions)
+        .setDebug(debug)
+        .setVerbose(verbose)
+        .setJavaAnnotationProcessorParams(javaAnnotationProcessorParams)
+        .setStandardJavacPluginParams(standardJavacPluginParams)
+        .setExtraArguments(extraArguments)
+        .build();
   }
 
   /** Validates classpath */

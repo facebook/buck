@@ -39,6 +39,7 @@ import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.BuildTargetValue;
 import com.facebook.buck.jvm.core.BuildTargetValueExtraParams;
+import com.facebook.buck.jvm.java.BaseJavacToJarStepFactory;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerOutputPathsValue;
@@ -46,10 +47,11 @@ import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.FilesystemParamsUtils;
 import com.facebook.buck.jvm.java.JarParameters;
+import com.facebook.buck.jvm.java.JavaExtraParams;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginParams;
-import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.jvm.java.ResolvedJavac;
+import com.facebook.buck.jvm.java.ResolvedJavacOptions;
 import com.facebook.buck.jvm.java.ResolvedJavacPluginProperties;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.step.isolatedsteps.IsolatedStep;
@@ -180,12 +182,14 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
   public KotlinExtraParams createExtraParams(BuildContext context, AbsPath rootPath) {
     return KotlinExtraParams.of(
         context,
+        rootPath,
         standardLibraryClasspath,
         annotationProcessingClassPath,
         kotlinCompilerPlugins,
         kosabiPluginOptionsMappings,
         friendPaths,
-        kotlinHomeLibraries);
+        kotlinHomeLibraries,
+        javacOptions.withBootclasspathFromContext(extraClasspathProvider));
   }
 
   @Override
@@ -295,7 +299,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       Builder<String> annotationProcessingOptionsBuilder = ImmutableList.builder();
       Builder<IsolatedStep> postKotlinCompilationSteps = ImmutableList.builder();
 
-      JavacPluginParams annotationProcessorParams = javacOptions.getJavaAnnotationProcessorParams();
+      JavacPluginParams annotationProcessorParams =
+          extraParams.getResolvedJavacOptions().getJavaAnnotationProcessorParams();
 
       prepareKaptProcessorsIfNeeded(
           invokingRule,
@@ -390,8 +395,14 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       steps.addAll(postKotlinCompilationSteps.build());
     }
 
+    ResolvedJavacOptions resolvedJavacOptions = extraParams.getResolvedJavacOptions();
+    if (hasKotlinSources && annotationProcessingTool == AnnotationProcessingTool.KAPT) {
+      // Only disable javac annotation processing if KAPT definitely ran.
+      resolvedJavacOptions =
+          resolvedJavacOptions.withJavaAnnotationProcessorParams(JavacPluginParams.EMPTY);
+    }
+
     prepareJavaCompilationIfNeeded(
-        buildContext,
         invokingRule,
         rootPath,
         steps,
@@ -401,9 +412,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
         parameters,
         buildableContext,
         resolvedJavac,
+        resolvedJavacOptions,
         declaredClasspathEntries,
         outputDirectory,
-        hasKotlinSources,
         sourceBuilder);
   }
 
@@ -728,7 +739,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
    * compiles any Java files generated from annotation processors using KAPT and KSP.
    */
   private void prepareJavaCompilationIfNeeded(
-      BuildContext buildContext,
       BuildTargetValue invokingRule,
       AbsPath rootPath,
       Builder<IsolatedStep> steps,
@@ -738,30 +748,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       CompilerParameters parameters,
       BuildableContext buildableContext,
       ResolvedJavac resolvedJavac,
+      ResolvedJavacOptions resolvedJavacOptions,
       ImmutableSortedSet<RelPath> declaredClasspathEntries,
       RelPath outputDirectory,
-      boolean hasKotlinSources,
       ImmutableSortedSet.Builder<RelPath> sourceBuilder) {
-    final JavacOptions finalJavacOptions;
-
-    // TODO: Do we still need this? Where would we use JAVAC for Kotlin AP?
-    switch (annotationProcessingTool) {
-      case KAPT:
-        // If kapt was never invoked then do annotation processing with javac.
-        finalJavacOptions =
-            hasKotlinSources
-                ? javacOptions.withJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
-                : javacOptions;
-        break;
-
-      case JAVAC:
-        finalJavacOptions = javacOptions;
-        break;
-
-      default:
-        throw new IllegalStateException(
-            "Unexpected annotationProcessingTool " + annotationProcessingTool);
-    }
 
     // Kotlin source-only-abi is only available for pure-kotlin targets
     // It's not applicable for:
@@ -797,8 +787,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
             .setSourceFilePaths(javaSourceFiles)
             .build();
 
-    JavacToJarStepFactory javacToJarStepFactory =
-        new JavacToJarStepFactory(finalJavacOptions, extraClasspathProvider, withDownwardApi);
+    // Indicate no annotation processing required from this factory.  It is already handled by the
+    // Kotlin factory, when it resolves javac's options.
+    BaseJavacToJarStepFactory javacToJarStepFactory =
+        new BaseJavacToJarStepFactory(false, withDownwardApi);
 
     javacToJarStepFactory.createCompileStep(
         filesystemParams,
@@ -809,7 +801,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
         steps,
         buildableContext,
         resolvedJavac,
-        javacToJarStepFactory.createExtraParams(buildContext, rootPath));
+        JavaExtraParams.of(resolvedJavacOptions));
   }
 
   @Override
