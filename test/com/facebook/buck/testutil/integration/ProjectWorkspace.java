@@ -236,6 +236,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
             "apple",
             ImmutableMap.of("macosx_target_sdk_version", "10.15")));
 
+    addBuckConfigLocalOption("build", "are_external_actions_enabled", Boolean.FALSE.toString());
+
     buckDaemonState = new BuckGlobalStateLifecycleManager();
 
     isSetUp = true;
