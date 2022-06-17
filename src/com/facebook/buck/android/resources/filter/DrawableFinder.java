@@ -21,6 +21,7 @@ import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -39,7 +40,8 @@ public class DrawableFinder {
   /** Utility class: do not instantiate. */
   private DrawableFinder() {}
 
-  public static ImmutableSet<Path> findDrawables(Collection<Path> dirs, AbsPath projectRoot)
+  public static ImmutableSet<Path> findDrawables(
+      AbsPath projectRoot, Collection<Path> dirs, DirectoryStream.Filter<? super Path> ignoreFilter)
       throws IOException {
     ImmutableSet.Builder<Path> drawableBuilder = ImmutableSet.builder();
     for (Path dir : dirs) {
@@ -59,7 +61,7 @@ public class DrawableFinder {
               return FileVisitResult.CONTINUE;
             }
           },
-          ProjectFilesystemUtils.getEmptyIgnoreFilter());
+          ignoreFilter);
     }
     return drawableBuilder.build();
   }

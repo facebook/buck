@@ -20,6 +20,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -43,14 +44,22 @@ public class FilteredDirectoryCopier {
   private FilteredDirectoryCopier() {}
 
   public static void copyDirs(
-      AbsPath projectRoot, Map<Path, Path> sourcesToDestinations, Predicate<Path> pred)
+      AbsPath projectRoot,
+      DirectoryStream.Filter<? super Path> ignoreFilter,
+      Map<Path, Path> sourcesToDestinations,
+      Predicate<Path> pred)
       throws IOException {
     for (Map.Entry<Path, Path> e : sourcesToDestinations.entrySet()) {
-      copyDir(projectRoot, e.getKey(), e.getValue(), pred);
+      copyDir(projectRoot, ignoreFilter, e.getKey(), e.getValue(), pred);
     }
   }
 
-  private static void copyDir(AbsPath projectRoot, Path srcDir, Path destDir, Predicate<Path> pred)
+  private static void copyDir(
+      AbsPath projectRoot,
+      DirectoryStream.Filter<? super Path> ignoreFilter,
+      Path srcDir,
+      Path destDir,
+      Predicate<Path> pred)
       throws IOException {
 
     // Remove existing contents if any.
@@ -75,6 +84,6 @@ public class FilteredDirectoryCopier {
             return FileVisitResult.CONTINUE;
           }
         },
-        ProjectFilesystemUtils.getEmptyIgnoreFilter());
+        ignoreFilter);
   }
 }

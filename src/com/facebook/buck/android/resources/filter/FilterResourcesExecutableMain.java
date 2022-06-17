@@ -17,6 +17,7 @@
 package com.facebook.buck.android.resources.filter;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableBiMap;
@@ -95,6 +96,7 @@ public class FilterResourcesExecutableMain {
     Predicate<Path> filteringPredicate =
         FilteringPredicate.getFilteringPredicate(
             root,
+            ProjectFilesystemUtils.getEmptyIgnoreFilter(),
             inResDirToOutResDirMap,
             !targetDensitiesSet.isEmpty(),
             targetDensitiesSet,
@@ -105,7 +107,11 @@ public class FilterResourcesExecutableMain {
             enableStringsAsAssetsFiltering,
             notFilteredStringDirs);
 
-    FilteredDirectoryCopier.copyDirs(root, inResDirToOutResDirMap, filteringPredicate);
+    FilteredDirectoryCopier.copyDirs(
+        root,
+        ProjectFilesystemUtils.getEmptyIgnoreFilter(),
+        inResDirToOutResDirMap,
+        filteringPredicate);
 
     System.exit(0);
   }

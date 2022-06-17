@@ -22,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,7 @@ public class FilteringPredicate {
 
   public static Predicate<Path> getFilteringPredicate(
       AbsPath projectRoot,
+      DirectoryStream.Filter<? super Path> ignoreFilter,
       ImmutableBiMap<Path, Path> inResDirToOutResDirMap,
       boolean filterByDensity,
       Set<ResourceFilters.Density> targetDensities,
@@ -61,7 +63,8 @@ public class FilteringPredicate {
 
       pathPredicates.add(ResourceFilters.createDensityFilter(projectRoot, targetDensities));
 
-      Set<Path> drawables = DrawableFinder.findDrawables(rootResourceDirs, projectRoot);
+      Set<Path> drawables =
+          DrawableFinder.findDrawables(projectRoot, rootResourceDirs, ignoreFilter);
       pathPredicates.add(
           ResourceFilters.createImageDensityFilter(drawables, targetDensities, canDownscale));
     }
