@@ -197,7 +197,7 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
     var process = getDownwardApiLaunchedProcess(launchedProcess);
     Result result;
-    try (process) {
+    try (var processCopy = process) {
       result =
           getDelegate().execute(process.getDelegate(), options, stdin, timeOutMs, timeOutHandler);
     } catch (InterruptedException e) {

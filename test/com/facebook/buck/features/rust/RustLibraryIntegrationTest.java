@@ -519,10 +519,8 @@ public class RustLibraryIntegrationTest {
             .get()
             .toString();
 
-    if (!ruleOutput.endsWith(".so")) {
-      // .dll and .dylib can't be tested this way
-      assertTrue(true);
-    } else {
+    // .dll and .dylib can't be tested this way
+    if (ruleOutput.endsWith(".so")) {
       String[] objdumpOutput =
           workspace
               .runCommand("objdump", "-x", ruleOutput.toString())
@@ -563,10 +561,8 @@ public class RustLibraryIntegrationTest {
             .get()
             .toString();
 
-    if (!ruleOutput.endsWith(".so")) {
-      // .dll and .dylib can't be tested this way
-      assertTrue(true);
-    } else {
+    // .dll and .dylib can't be tested this way
+    if (ruleOutput.endsWith(".so")) {
       String[] objdumpOutput =
           workspace
               .runCommand("objdump", "-x", ruleOutput.toString())

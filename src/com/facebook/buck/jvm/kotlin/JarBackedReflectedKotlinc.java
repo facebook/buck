@@ -138,8 +138,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
   private Object loadCompilerShim(
       IsolatedExecutionContext context, ImmutableSortedSet<AbsPath> kotlinHomeLibraries)
       throws IOException {
-    ClassLoaderCache classLoaderCache = context.getClassLoaderCache();
-    try (classLoaderCache) {
+    try (ClassLoaderCache classLoaderCache = context.getClassLoaderCache()) {
       classLoaderCache.addRef();
       ClassLoader classLoader =
           classLoaderCache.getClassLoaderForClassPath(
