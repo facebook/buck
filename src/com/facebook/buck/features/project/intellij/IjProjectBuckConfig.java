@@ -162,6 +162,9 @@ public class IjProjectBuckConfig {
         .setGeneratingBinaryTargetInfoEnabled(
             buckConfig.getBooleanValue(
                 INTELLIJ_BUCK_CONFIG_SECTION, "generate_binary_target_info", false))
+        .setGeneratingTargetConfigurationMapEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate_target_configuration_map", false))
         .setGeneratingModuleInfoBinaryIndexEnabled(
             buckConfig.getBooleanValue(
                 INTELLIJ_BUCK_CONFIG_SECTION, "generate_module_info_binary_index", false))

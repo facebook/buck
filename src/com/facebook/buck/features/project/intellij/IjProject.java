@@ -179,10 +179,12 @@ public class IjProject {
     TargetConfigurationInfoManager targetConfigInfoManager =
         new TargetConfigurationInfoManager(projectConfig, outFilesystem);
 
-    targetConfigInfoManager.write(
-        templateDataPreparer.getModulesToBeWritten(),
-        templateDataPreparer.getAllLibraries(),
-        cleaner);
+    if (projectConfig.isGeneratingTargetConfigurationMapEnabled()) {
+      targetConfigInfoManager.write(
+          templateDataPreparer.getModulesToBeWritten(),
+          templateDataPreparer.getAllLibraries(),
+          cleaner);
+    }
 
     if (projectConfig.getGeneratedFilesListFilename().isPresent()) {
       cleaner.writeFilesToKeepToFile(projectConfig.getGeneratedFilesListFilename().get());
