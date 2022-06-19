@@ -74,7 +74,7 @@ public class TargetConfigurationInfoManagerTest {
 
     ImmutableSet<TargetNode<?>> targetNodes = ImmutableSet.of();
 
-    String targetInfoOutput = prepareTargetConfigurationInfoManagerAndTest(targetNodes);
+    String targetInfoOutput = prepareTargetConfigurationInfoManagerAndTest(targetNodes, false);
 
     assertEquals(toJson(ImmutableSortedMap.of()), targetInfoOutput);
   }
@@ -84,7 +84,7 @@ public class TargetConfigurationInfoManagerTest {
 
     ImmutableSet<TargetNode<?>> targetNodes = prepareTargetNodeInputsGraph1();
 
-    String targetInfoOutput = prepareTargetConfigurationInfoManagerAndTest(targetNodes);
+    String targetInfoOutput = prepareTargetConfigurationInfoManagerAndTest(targetNodes, false);
 
     assertEquals(
         toJson(
@@ -100,7 +100,7 @@ public class TargetConfigurationInfoManagerTest {
 
     ImmutableSet<TargetNode<?>> targetNodes = prepareTargetNodeInputsGraph2();
 
-    String targetInfoOutput = prepareTargetConfigurationInfoManagerAndTest(targetNodes);
+    String targetInfoOutput = prepareTargetConfigurationInfoManagerAndTest(targetNodes, false);
 
     assertEquals(
         toJson(
@@ -120,15 +120,50 @@ public class TargetConfigurationInfoManagerTest {
         targetInfoOutput);
   }
 
+  @Test
+  public void testWriteUpdateGraph3() throws IOException {
+    ImmutableSet<TargetNode<?>> targetNodes = prepareTargetNodeInputsGraph3();
+
+    String targetInfoOutput = prepareTargetConfigurationInfoManagerAndTest(targetNodes, false);
+
+    assertEquals(
+        toJson(
+            ImmutableSortedMap.of(
+                ruleTargetConfig1.toString(),
+                ImmutableSortedMap.of(
+                    TargetConfigurationInfoManager.CONFIG_HASH_KEY, RULE_CONFIG_TARGET_HASH1),
+                ruleTargetConfig2.toString(),
+                ImmutableSortedMap.of(
+                    TargetConfigurationInfoManager.CONFIG_HASH_KEY, RULE_CONFIG_TARGET_HASH2))),
+        targetInfoOutput);
+
+    ImmutableSet<TargetNode<?>> newTargetNodes = prepareTargetNodeInputsGraph3Update();
+    targetInfoOutput = prepareTargetConfigurationInfoManagerAndTest(newTargetNodes, true);
+
+    assertEquals(
+        toJson(
+            ImmutableSortedMap.of(
+                ruleTargetConfig1.toString(),
+                ImmutableSortedMap.of(
+                    TargetConfigurationInfoManager.CONFIG_HASH_KEY, RULE_CONFIG_TARGET_HASH1),
+                ruleTargetConfig2.toString(),
+                ImmutableSortedMap.of(
+                    TargetConfigurationInfoManager.CONFIG_HASH_KEY, RULE_CONFIG_TARGET_HASH2),
+                ruleTargetConfig3.toString(),
+                ImmutableSortedMap.of(
+                    TargetConfigurationInfoManager.CONFIG_HASH_KEY, RULE_CONFIG_TARGET_HASH3))),
+        targetInfoOutput);
+  }
+
   private String prepareTargetConfigurationInfoManagerAndTest(
-      ImmutableSet<TargetNode<?>> targetNodes) throws IOException {
+      ImmutableSet<TargetNode<?>> targetNodes, boolean isUpdate) throws IOException {
     IjProjectTemplateDataPreparer dataPreparer =
         getDataPreparer(IjModuleGraphTest.createModuleGraph(targetNodes));
     IjProjectConfig projectConfig = getProjectConfig();
     IJProjectCleaner cleaner = new IJProjectCleaner(filesystem);
 
     TargetConfigurationInfoManager targetConfigInfoManager =
-        new TargetConfigurationInfoManager(projectConfig, filesystem);
+        new TargetConfigurationInfoManager(projectConfig, filesystem, isUpdate);
     targetConfigInfoManager.write(
         dataPreparer.getModulesToBeWritten(), dataPreparer.getAllLibraries(), cleaner);
 
@@ -183,6 +218,30 @@ public class TargetConfigurationInfoManagerTest {
             .build();
 
     return ImmutableSet.of(errorConfigNode, baseTargetNode1, baseTargetNode2, baseTargetNode3);
+  }
+
+  private ImmutableSet<TargetNode<?>> prepareTargetNodeInputsGraph3() {
+    TargetNode<?> baseTargetNode1 =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//fake:rule1", ruleTargetConfig1))
+            .build();
+
+    TargetNode<?> baseTargetNode2 =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//fake:rule2", ruleTargetConfig2))
+            .build();
+
+    return ImmutableSet.of(baseTargetNode1, baseTargetNode2);
+  }
+
+  private ImmutableSet<TargetNode<?>> prepareTargetNodeInputsGraph3Update() {
+
+    TargetNode<?> baseTargetNode3 =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//fake:rule3", ruleTargetConfig3))
+            .build();
+
+    return ImmutableSet.of(baseTargetNode3);
   }
 
   private IjProjectConfig getProjectConfig() {

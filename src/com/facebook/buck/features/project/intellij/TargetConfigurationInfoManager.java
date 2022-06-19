@@ -18,23 +18,25 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.TargetConfigurationHasher;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /** This will create a JSON file containing mapping between configuration and buck-out hash. */
 public class TargetConfigurationInfoManager {
-
+  private static final Logger logger = Logger.get(TargetConfigurationInfoManager.class);
   static final String TARGET_CONFIG_INFO_FILENAME = "target-configuration-info.json";
   static final String CONFIG_HASH_KEY = "hash";
   private final ProjectFilesystem outFilesystem;
@@ -42,11 +44,12 @@ public class TargetConfigurationInfoManager {
   private final Map<String, Map<String, String>> targetConfigInfoMap;
 
   public TargetConfigurationInfoManager(
-      IjProjectConfig projectConfig, ProjectFilesystem outFilesystem) {
+      IjProjectConfig projectConfig, ProjectFilesystem outFilesystem, boolean isUpdate) {
     this.outFilesystem = outFilesystem;
     this.targetConfigInfoMapPath =
         projectConfig.getProjectPaths().getIdeaConfigDir().resolve(TARGET_CONFIG_INFO_FILENAME);
-    this.targetConfigInfoMap = Maps.newTreeMap();
+    this.targetConfigInfoMap =
+        readTargetConfigInfoMap(targetConfigInfoMapPath, outFilesystem, isUpdate);
   }
 
   /**
@@ -67,10 +70,23 @@ public class TargetConfigurationInfoManager {
     }
   }
 
+  private static Map<String, Map<String, String>> readTargetConfigInfoMap(
+      Path targetConfigInfoMapPath, ProjectFilesystem outFilesystem, boolean isUpdate) {
+    if (isUpdate && outFilesystem.exists(targetConfigInfoMapPath)) {
+      try {
+        return ObjectMappers.createParser(outFilesystem.newFileInputStream(targetConfigInfoMapPath))
+            .readValueAs(new TypeReference<TreeMap<String, TreeMap<String, String>>>() {});
+      } catch (IOException ioException) {
+        logger.warn("Exception on reading file: " + TARGET_CONFIG_INFO_FILENAME, ioException);
+      }
+    }
+    return Maps.newTreeMap();
+  }
+
   private void addTargetConfigToMap(BuildTarget target) {
     String targetConfigKey = target.getTargetConfiguration().toString();
     if (!targetConfigInfoMap.containsKey(targetConfigKey)) {
-      Map<String, String> targetConfigMap = new HashMap<>();
+      Map<String, String> targetConfigMap = new TreeMap<>();
       targetConfigMap.put(
           CONFIG_HASH_KEY, TargetConfigurationHasher.hash(target.getTargetConfiguration()));
       targetConfigInfoMap.put(targetConfigKey, targetConfigMap);

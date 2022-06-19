@@ -177,7 +177,7 @@ public class IjProject {
     pregeneratedCodeWriter.write();
 
     TargetConfigurationInfoManager targetConfigInfoManager =
-        new TargetConfigurationInfoManager(projectConfig, outFilesystem);
+        new TargetConfigurationInfoManager(projectConfig, outFilesystem, updateOnly);
 
     if (projectConfig.isGeneratingTargetConfigurationMapEnabled()) {
       targetConfigInfoManager.write(
