@@ -176,6 +176,14 @@ public class IjProject {
         new PregeneratedCodeWriter(templateDataPreparer, projectConfig, outFilesystem, cleaner);
     pregeneratedCodeWriter.write();
 
+    TargetConfigurationInfoManager targetConfigInfoManager =
+        new TargetConfigurationInfoManager(projectConfig, outFilesystem);
+
+    targetConfigInfoManager.write(
+        templateDataPreparer.getModulesToBeWritten(),
+        templateDataPreparer.getAllLibraries(),
+        cleaner);
+
     if (projectConfig.getGeneratedFilesListFilename().isPresent()) {
       cleaner.writeFilesToKeepToFile(projectConfig.getGeneratedFilesListFilename().get());
     }
