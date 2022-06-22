@@ -16,18 +16,16 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.resources.filter.GetStringsFiles;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.pathformat.PathFormatter;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  * Generates a list of strings.xml files
@@ -35,10 +33,6 @@ import java.util.regex.Pattern;
  * <p>The ordering of strings files is consistent with the order of the input resource directories
  */
 public class GetStringsFilesStep implements Step {
-  @VisibleForTesting
-  static final Pattern STRINGS_FILE_PATH =
-      Pattern.compile("(\\b|.*/)res/values(-.+)*/strings.xml", Pattern.CASE_INSENSITIVE);
-
   private final ProjectFilesystem filesystem;
   private final ImmutableList<Path> resDirs;
   private final ImmutableList.Builder<Path> stringFilesBuilder;
@@ -55,15 +49,13 @@ public class GetStringsFilesStep implements Step {
 
   @Override
   public StepExecutionResult execute(StepExecutionContext context) throws IOException {
-    Predicate<Path> filter =
-        pathRelativeToProjectRoot -> {
-          String filePath = PathFormatter.pathWithUnixSeparators(pathRelativeToProjectRoot);
-          return STRINGS_FILE_PATH.matcher(filePath).matches();
-        };
+    stringFilesBuilder.addAll(
+        GetStringsFiles.getFiles(
+            filesystem.getRootPath(),
+            ProjectFilesystemUtils.getIgnoreFilter(
+                filesystem.getRootPath(), true, filesystem.getIgnoredPaths()),
+            resDirs));
 
-    for (Path resDir : resDirs) {
-      stringFilesBuilder.addAll(filesystem.getFilesUnderPath(resDir, filter));
-    }
     return StepExecutionResults.SUCCESS;
   }
 

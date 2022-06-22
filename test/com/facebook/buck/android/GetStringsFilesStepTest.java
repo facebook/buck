@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.resources.filter.GetStringsFiles;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -94,6 +95,6 @@ public class GetStringsFilesStepTest {
   }
 
   private static boolean matchesRegex(String input) {
-    return GetStringsFilesStep.STRINGS_FILE_PATH.matcher(input).matches();
+    return GetStringsFiles.STRINGS_FILE_PATH.matcher(input).matches();
   }
 }
