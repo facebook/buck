@@ -72,6 +72,7 @@ public class KotlincStep extends IsolatedStep {
   private final ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings;
   private final ImmutableMap<String, AbsPath> resolvedKosabiPluginOptionPath;
   private final ImmutableSortedSet<AbsPath> sourceOnlyAbiClasspath;
+  private final boolean verifySourceOnlyAbiConstraints;
 
   KotlincStep(
       BuildTargetValue invokingRule,
@@ -89,7 +90,8 @@ public class KotlincStep extends IsolatedStep {
       RelPath configuredBuckOut,
       ImmutableMap<CanonicalCellName, RelPath> cellToPathMappings,
       ImmutableMap<String, AbsPath> resolvedKosabiPluginOptionPath,
-      ImmutableSortedSet<AbsPath> sourceOnlyAbiClasspath) {
+      ImmutableSortedSet<AbsPath> sourceOnlyAbiClasspath,
+      boolean verifySourceOnlyAbiConstraints) {
     this.invokingRule = invokingRule;
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
@@ -106,6 +108,7 @@ public class KotlincStep extends IsolatedStep {
     this.cellToPathMappings = cellToPathMappings;
     this.resolvedKosabiPluginOptionPath = resolvedKosabiPluginOptionPath;
     this.sourceOnlyAbiClasspath = sourceOnlyAbiClasspath;
+    this.verifySourceOnlyAbiConstraints = verifySourceOnlyAbiConstraints;
   }
 
   @Override
@@ -231,6 +234,19 @@ public class KotlincStep extends IsolatedStep {
       throw new Error("Source ABI flavor is not supported for Kotlin targets");
     } else if (!buildClasspathEntries.isEmpty()) {
       addClasspath(builder, buildClasspathEntries);
+    }
+
+    // We expect Kosabi/Applicability to generate a compilation error if
+    // a library target verification fails.
+    // User will see a broken compilation with the following message:
+    // Kosabi/Applicability FAILED on this target ...
+    if (verifySourceOnlyAbiConstraints && invokingRule.isLibraryJar()) {
+      if (resolvedKosabiPluginOptionPath.containsKey(
+          KosabiConfig.PROPERTY_KOSABI_APPLICABILITY_PLUGIN)) {
+        AbsPath applicabilityPlugin =
+            resolvedKosabiPluginOptionPath.get(KosabiConfig.PROPERTY_KOSABI_APPLICABILITY_PLUGIN);
+        builder.add(X_PLUGIN_ARG + applicabilityPlugin);
+      }
     }
 
     builder.add(INCLUDE_RUNTIME_FLAG);

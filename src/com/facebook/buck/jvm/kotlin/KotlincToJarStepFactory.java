@@ -142,6 +142,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
 
   @AddToRuleKey private final ImmutableMap<String, SourcePath> kosabiPluginOptionsMappings;
 
+  @AddToRuleKey private final boolean verifySourceOnlyAbiConstraints;
+
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
       ImmutableSortedSet<SourcePath> kotlinHomeLibraries,
@@ -156,7 +158,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       JavacOptions javacOptions,
       boolean withDownwardApi,
       boolean shouldGenerateAnnotationProcessingStats,
-      ImmutableMap<String, SourcePath> kosabiPluginOptionsMappings) {
+      ImmutableMap<String, SourcePath> kosabiPluginOptionsMappings,
+      boolean verifySourceOnlyAbiConstraints) {
     super(CompileToJarStepFactory.hasAnnotationProcessing(javacOptions), withDownwardApi);
     this.javacOptions = javacOptions;
     this.kotlinc = kotlinc;
@@ -171,6 +174,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
     this.extraClasspathProvider = extraClasspathProvider;
     this.shouldGenerateAnnotationProcessingStats = shouldGenerateAnnotationProcessingStats;
     this.kosabiPluginOptionsMappings = kosabiPluginOptionsMappings;
+    this.verifySourceOnlyAbiConstraints = verifySourceOnlyAbiConstraints;
   }
 
   @Override
@@ -390,7 +394,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
               RelPath.get(filesystemParams.getConfiguredBuckOut().getPath()),
               cellToPathMappings,
               extraParams.getResolvedKosabiPluginOptionPath(),
-              sourceOnlyAbiClasspath));
+              sourceOnlyAbiClasspath,
+              verifySourceOnlyAbiConstraints));
 
       steps.addAll(postKotlinCompilationSteps.build());
     }
@@ -694,7 +699,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
             configuredBuckOut,
             cellToPathMappings,
             resolvedKosabiPluginOptionPath,
-            ImmutableSortedSet.of()));
+            ImmutableSortedSet.of(),
+            false));
 
     steps.add(
         CopyIsolatedStep.forDirectory(

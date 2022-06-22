@@ -37,6 +37,11 @@ public class Kosabi {
     //
     // A -> B#source-only-abi -> C
     kosabiConfig
+        .getApplicabilityPlugin(buildTarget.getTargetConfiguration())
+        .filter(BuildTargetSourcePath.class::isInstance)
+        .map(sourcePath -> ((BuildTargetSourcePath) sourcePath).getTarget())
+        .ifPresent(targetGraphOnlyDepsBuilder::add);
+    kosabiConfig
         .getStubsGenPlugin(buildTarget.getTargetConfiguration())
         .filter(BuildTargetSourcePath.class::isInstance)
         .map(sourcePath -> ((BuildTargetSourcePath) sourcePath).getTarget())
@@ -54,14 +59,18 @@ public class Kosabi {
 
     ImmutableMap.Builder<String, SourcePath> builder = ImmutableMap.builder();
     kosabiConfig
+        .getApplicabilityPlugin(targetConfiguration)
+        .ifPresent(
+            plugin -> builder.put(KosabiConfig.PROPERTY_KOSABI_APPLICABILITY_PLUGIN, plugin));
+    kosabiConfig
         .getStubsGenPlugin(targetConfiguration)
         .ifPresent(plugin -> builder.put(KosabiConfig.PROPERTY_KOSABI_STUBS_GEN_PLUGIN, plugin));
     kosabiConfig
         .getJvmAbiGenPlugin(targetConfiguration)
         .ifPresent(plugin -> builder.put(KosabiConfig.PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN, plugin));
     ImmutableMap<String, SourcePath> sourcePathImmutableMap = builder.build();
-    // Kosabi needs both plugins to work correctly
-    if (sourcePathImmutableMap.size() == 2) {
+    // Kosabi needs multiple plugins to work correctly
+    if (sourcePathImmutableMap.size() == 3) {
       return sourcePathImmutableMap;
     } else {
       return ImmutableMap.<String, SourcePath>builder().build();

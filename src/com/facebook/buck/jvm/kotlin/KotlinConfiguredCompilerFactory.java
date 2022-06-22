@@ -98,7 +98,11 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         downwardApiConfig.isEnabledForKotlin(),
         kotlinBuckConfig.shouldGenerateAnnotationProcessingStats(),
         Kosabi.getPluginOptionsMappings(
-            targetConfiguration, KosabiConfig.of(kotlinBuckConfig.getDelegate())));
+            targetConfiguration, KosabiConfig.of(kotlinBuckConfig.getDelegate())),
+        kotlinArgs
+            .getAbiGenerationMode()
+            .map(mode -> mode.equals(AbiGenerationMode.SOURCE_ONLY))
+            .orElse(false));
   }
 
   @Override

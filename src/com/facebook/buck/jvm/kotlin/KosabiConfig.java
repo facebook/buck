@@ -28,11 +28,19 @@ import org.immutables.value.Value;
 @BuckStyleValue
 public abstract class KosabiConfig implements ConfigView<BuckConfig> {
   public static final String SECTION = "kotlin";
+  public static final String PROPERTY_KOSABI_APPLICABILITY_PLUGIN = "kosabi_applicability_plugin";
   public static final String PROPERTY_KOSABI_STUBS_GEN_PLUGIN = "kosabi_stubs_gen_plugin";
   public static final String PROPERTY_KOSABI_JVM_ABI_GEN_PLUGIN = "kosabi_jvm_abi_gen_plugin";
 
   public static KosabiConfig of(BuckConfig delegate) {
     return ImmutableKosabiConfig.ofImpl(delegate);
+  }
+
+  /** Return an build target defining Kosabi applicability plugin. */
+  @Value.Lazy
+  public Optional<SourcePath> getApplicabilityPlugin(TargetConfiguration targetConfiguration) {
+    return getDelegate()
+        .getSourcePath(SECTION, PROPERTY_KOSABI_APPLICABILITY_PLUGIN, targetConfiguration);
   }
 
   /** Return an build target defining Kosabi stub generator plugin. */
