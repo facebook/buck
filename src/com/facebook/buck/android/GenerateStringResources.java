@@ -101,7 +101,8 @@ public class GenerateStringResources extends AbstractBuildRule {
                                     fileSystem, buildContext.getSourcePathResolver())
                                 .stream())
                     .collect(ImmutableList.toImmutableList());
-            StringResourcesUtils.copyResources(fileSystem, resDirs, outputDirPath.getPath());
+            StringResourcesUtils.copyResources(
+                fileSystem.getRootPath(), resDirs, outputDirPath.getPath());
             return StepExecutionResults.SUCCESS;
           }
         });

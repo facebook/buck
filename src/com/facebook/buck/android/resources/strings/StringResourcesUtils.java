@@ -16,7 +16,8 @@
 
 package com.facebook.buck.android.resources.strings;
 
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -32,19 +33,19 @@ public class StringResourcesUtils {
   // "4 digit hex" => 65536 files
 
   public static void copyResources(
-      ProjectFilesystem fileSystem, ImmutableList<Path> resDirs, Path outputDirPath)
-      throws IOException {
+      AbsPath projectRoot, ImmutableList<Path> resDirs, Path outputDirPath) throws IOException {
     int i = 0;
     for (Path resDir : resDirs) {
       Path stringsFilePath = resDir.resolve(VALUES).resolve(STRINGS_XML);
-      if (fileSystem.exists(stringsFilePath)) {
+      if (ProjectFilesystemUtils.exists(projectRoot, stringsFilePath)) {
         // create <output_dir>/<new_res_dir>/values
         Path newStringsFileDir =
             outputDirPath.resolve(String.format(NEW_RES_DIR_FORMAT, i++)).resolve(VALUES);
-        fileSystem.mkdirs(newStringsFileDir);
+        ProjectFilesystemUtils.mkdirs(projectRoot, newStringsFileDir);
         // copy <res_dir>/values/strings.xml ->
         // <output_dir>/<new_res_dir>/values/strings.xml
-        fileSystem.copyFile(stringsFilePath, newStringsFileDir.resolve(STRINGS_XML));
+        ProjectFilesystemUtils.copyFile(
+            projectRoot, stringsFilePath, newStringsFileDir.resolve(STRINGS_XML));
       }
     }
   }
