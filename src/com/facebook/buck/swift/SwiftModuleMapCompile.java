@@ -26,6 +26,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -37,6 +38,7 @@ import com.facebook.buck.swift.toolchain.ExplicitModuleOutput;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.UnmodifiableIterator;
 import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -126,13 +128,18 @@ public class SwiftModuleMapCompile extends ModernBuildRule<SwiftModuleMapCompile
       SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
       ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();
-
-      // We need relative paths here otherwise the absolute paths will end up serialized in the pcm
-      // files, which will cause size differences and fail module validation.
-      for (Arg arg : swiftArgs) {
+      UnmodifiableIterator<Arg> iterator = swiftArgs.iterator();
+      while (iterator.hasNext()) {
+        Arg arg = iterator.next();
         if (arg instanceof SourcePathArg) {
+          // We need relative paths here otherwise the absolute paths will end up serialized in the
+          // pcm files, which will cause size differences and fail module validation.
           ((SourcePathArg) arg)
               .appendToCommandLineRel(argsBuilder::add, buildTarget.getCell(), resolver, false);
+        } else if (arg.equals(StringArg.of("-module-cache-path"))) {
+          // Setting a module cache path with implicit modules disabled will output a compiler
+          // warning about unused arguments, so skip setting this.
+          iterator.next();
         } else {
           arg.appendToCommandLine(argsBuilder::add, resolver);
         }
