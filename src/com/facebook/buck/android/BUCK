@@ -196,6 +196,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/android/dex:dex",
         "//src/com/facebook/buck/android/resources:merge_android_resources",
         "//src/com/facebook/buck/android/resources:resources",
+        "//src/com/facebook/buck/android/resources/strings:strings",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/command/config:config",

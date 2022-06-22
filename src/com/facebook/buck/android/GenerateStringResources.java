@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.resources.strings.StringResourcesUtils;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
@@ -54,12 +55,6 @@ public class GenerateStringResources extends AbstractBuildRule {
   private final ImmutableList<FilteredResourcesProvider> filteredResourcesProviders;
   private final SourcePathRuleFinder ruleFinder;
 
-  private static final String VALUES = "values";
-  private static final String STRINGS_XML = "strings.xml";
-  private static final String NEW_RES_DIR_FORMAT = "%04x";
-  // "4 digit hex" => 65536 files
-  // we currently have around 1000 "values/strings.xml" files in fb4a
-
   protected GenerateStringResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -97,8 +92,7 @@ public class GenerateStringResources extends AbstractBuildRule {
           @Override
           public StepExecutionResult execute(StepExecutionContext context) throws IOException {
             ProjectFilesystem fileSystem = getProjectFilesystem();
-            int i = 0;
-            for (Path resDir :
+            ImmutableList<Path> resDirs =
                 filteredResourcesProviders.stream()
                     .flatMap(
                         provider ->
@@ -106,18 +100,8 @@ public class GenerateStringResources extends AbstractBuildRule {
                                 .getRelativeResDirectories(
                                     fileSystem, buildContext.getSourcePathResolver())
                                 .stream())
-                    .collect(ImmutableList.toImmutableList())) {
-              Path stringsFilePath = resDir.resolve(VALUES).resolve(STRINGS_XML);
-              if (fileSystem.exists(stringsFilePath)) {
-                // create <output_dir>/<new_res_dir>/values
-                Path newStringsFileDir =
-                    outputDirPath.resolve(String.format(NEW_RES_DIR_FORMAT, i++)).resolve(VALUES);
-                fileSystem.mkdirs(newStringsFileDir);
-                // copy <res_dir>/values/strings.xml ->
-                // <output_dir>/<new_res_dir>/values/strings.xml
-                fileSystem.copyFile(stringsFilePath, newStringsFileDir.resolve(STRINGS_XML));
-              }
-            }
+                    .collect(ImmutableList.toImmutableList());
+            StringResourcesUtils.copyResources(fileSystem, resDirs, outputDirPath.getPath());
             return StepExecutionResults.SUCCESS;
           }
         });
