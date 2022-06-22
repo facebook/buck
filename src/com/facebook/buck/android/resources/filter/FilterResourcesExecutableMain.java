@@ -20,6 +20,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
@@ -52,6 +53,12 @@ public class FilterResourcesExecutableMain {
 
   @Option(name = "--packaged-locales")
   private String packagedLocalesString;
+
+  @Option(name = "--post-filter-resources-cmd")
+  private String postFilterResourcesCmd;
+
+  @Option(name = "--post-filter-resources-cmd-override-symbols-output")
+  private String postFilterResourcesCmdOverrideSymbols;
 
   public static void main(String[] args) throws IOException {
     FilterResourcesExecutableMain main = new FilterResourcesExecutableMain();
@@ -112,6 +119,28 @@ public class FilterResourcesExecutableMain {
         ProjectFilesystemUtils.getEmptyIgnoreFilter(),
         inResDirToOutResDirMap,
         filteringPredicate);
+
+    if (postFilterResourcesCmd != null) {
+      Preconditions.checkState(
+          postFilterResourcesCmdOverrideSymbols != null,
+          "Must specify an override symbols file if a post-filter-resources-cmd is specified!");
+      Process postFilterResourcesProcess =
+          new ProcessBuilder()
+              .command(
+                  postFilterResourcesCmd,
+                  inResDirToOutResDirMapPath,
+                  postFilterResourcesCmdOverrideSymbols)
+              .start();
+      try {
+        int exitCode = postFilterResourcesProcess.waitFor();
+        if (exitCode != 0) {
+          String error = new String(postFilterResourcesProcess.getErrorStream().readAllBytes());
+          throw new RuntimeException("post_filter_resources_cmd failed with error: " + error);
+        }
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+    }
 
     System.exit(0);
   }
