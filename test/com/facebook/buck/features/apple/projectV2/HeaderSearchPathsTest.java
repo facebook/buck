@@ -201,4 +201,12 @@ public class HeaderSearchPathsTest {
         ImmutableList.of("-Wno-unknown-warning-option"), builder);
     assertEquals(ImmutableList.of("-Wno-unknown-warning-option"), builder.build());
   }
+
+  @Test
+  public void testIncludeSystemFramework() {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    headerSearchPaths.parseCommandAndAddToIncludeFlags(
+        ImmutableList.of("-include", "Foundation/Foundation.h"), builder);
+    assertEquals(ImmutableList.of("-include", "Foundation/Foundation.h"), builder.build());
+  }
 }

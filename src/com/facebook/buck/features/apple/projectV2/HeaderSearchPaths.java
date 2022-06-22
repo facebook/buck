@@ -414,8 +414,13 @@ class HeaderSearchPaths {
       }
 
       if (isIncludeOption(flag)) {
+        String include = iterator.next();
         includeFlags.add(flag);
-        includeFlags.add(projectFilesystem.resolve(iterator.next()).toString());
+        if (isSystemFrameworkInclude(flag, include)) {
+          includeFlags.add(include);
+        } else {
+          includeFlags.add(projectFilesystem.resolve(include).toString());
+        }
       }
     }
   }
@@ -447,6 +452,17 @@ class HeaderSearchPaths {
             // Include resource dir
             "-resource-dir")
         .contains(flag);
+  }
+
+  /**
+   * Check to see if we are `-include`ing a system framework header, such as Foundation or UIKit or
+   * AppKit. If we are, then we should not append filesystem path to include, since system
+   * frameworks include paths are already added to header search paths.
+   */
+  private boolean isSystemFrameworkInclude(String flag, String include) {
+    return flag.equals("-include")
+        && ImmutableList.of("Foundation/Foundation.h", "UIKit/UIKit.h", "AppKit/AppKit.h")
+            .contains(include);
   }
 
   public String getModuleName(TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
