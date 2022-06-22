@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "buck_java_library")
 
 buck_java_library(
     name = "strings",
@@ -7,6 +7,19 @@ buck_java_library(
     deps = [
         "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/io/filesystem/impl:utils",
+        "//third-party/java/args4j:args4j",
         "//third-party/java/guava:guava",
     ],
 )
+
+buck_java_binary(
+    name = "copy_string_resources_binary",
+    main_class = "com.facebook.buck.android.resources.strings.CopyStringResourcesExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":strings",
+    ],
+)
+
