@@ -34,14 +34,18 @@ import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -60,6 +64,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -606,6 +611,26 @@ public class CommandAliasDescriptionTest {
       CommandTool tool = new CommandTool.Builder().addArg(arg).addEnv("env", env).build();
       return new TestBinary(target, context.getProjectFilesystem(), tool);
     }
+  }
+
+  @Test
+  public void supportsResources() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePath resource = FakeSourcePath.of("foo");
+    ExportFile exe =
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//inner:command"))
+            .setOut("cmd.exe")
+            .build(graphBuilder);
+    CommandAlias commandAlias =
+        builder()
+            .subBuilder(delegate)
+            .setExe(exe.getBuildTarget())
+            .setResources(ImmutableSortedSet.<SourcePath>naturalOrder().add(resource).build())
+            .build(graphBuilder);
+    assertThat(
+        BuildableSupport.deriveInputs(commandAlias.getExecutableCommand(OutputLabel.defaultLabel()))
+            .collect(Collectors.toList()),
+        hasItem(resource));
   }
 
   private static class TestBinaryBuilder

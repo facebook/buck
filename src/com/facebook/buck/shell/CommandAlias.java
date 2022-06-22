@@ -41,6 +41,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -74,6 +75,8 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
   /** Additional arguments to pass to the command when running it. */
   @AddToRuleKey private final ImmutableList<Arg> args;
 
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> resources;
+
   /** Additional environment variables to set when running the command. */
   @AddToRuleKey private final ImmutableSortedMap<String, Arg> env;
 
@@ -87,13 +90,15 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
       ImmutableSortedMap<Platform, BuildRule> platformDelegates,
       ImmutableList<Arg> args,
       ImmutableSortedMap<String, Arg> env,
-      Platform platform) {
+      Platform platform,
+      ImmutableSortedSet<SourcePath> resources) {
     super(buildTarget, projectFilesystem);
     this.genericDelegate = genericDelegate;
     this.platformDelegates = platformDelegates;
     this.args = args;
     this.env = env;
     this.platform = platform;
+    this.resources = resources;
 
     BuildRule exe = platformDelegates.get(platform);
     this.exe = exe != null ? exe : genericDelegate.orElse(null);
@@ -148,6 +153,7 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
               String.format("Cannot run %s as command. It has no output.", rule.getBuildTarget()));
       tool = new CommandTool.Builder().addArg(SourcePathArg.of(output));
     }
+    resources.forEach(tool::addInput);
     args.forEach(tool::addArg);
     env.forEach(tool::addEnv);
     return tool.build();

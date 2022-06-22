@@ -24,6 +24,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.ExecutableMacro;
@@ -38,6 +39,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -105,7 +107,8 @@ public class CommandAliasDescription
         platformExe.build(),
         toolArgs.build(),
         toolEnv.build(),
-        platform);
+        platform,
+        args.getResources());
   }
 
   @RuleArg
@@ -113,6 +116,9 @@ public class CommandAliasDescription
     ImmutableList<StringWithMacros> getArgs();
 
     Optional<BuildTarget> getExe();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<SourcePath> getResources();
 
     @Value.NaturalOrder
     ImmutableSortedMap<Platform, BuildTarget> getPlatformExe();

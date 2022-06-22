@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.MacroContainer;
@@ -37,6 +38,7 @@ import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -100,6 +102,11 @@ public class CommandAliasBuilder
   private CommandAliasBuilder setArgs(Collection<StringWithMacros> args) {
     getArgForPopulating().setArgs(args);
     addTargetsForMacros(args.stream());
+    return this;
+  }
+
+  public CommandAliasBuilder setResources(ImmutableSortedSet<SourcePath> resources) {
+    getArgForPopulating().setResources(resources);
     return this;
   }
 
