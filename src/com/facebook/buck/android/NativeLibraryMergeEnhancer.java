@@ -425,6 +425,25 @@ class NativeLibraryMergeEnhancer {
     return allConstituents;
   }
 
+  private static boolean doesLinkableHaveLinkTargetInput(
+      final NativeLinkable linkable, final ActionGraphBuilder graphBuilder) {
+    final Optional<NativeLinkTarget> nativeLinkTarget =
+        linkable.getNativeLinkTarget(graphBuilder, true, false);
+    if (!nativeLinkTarget.isPresent()) {
+      return false;
+    }
+
+    // NativeLinkTargetInput lookup can throw.
+    try {
+      return nativeLinkTarget
+              .get()
+              .getNativeLinkTargetInput(graphBuilder, graphBuilder.getSourcePathResolver())
+          != null;
+    } catch (RuntimeException e) {
+      return false;
+    }
+  }
+
   /** A simple helper interface for building the soname map. */
   interface SonameMapBuilder {
     void accept(
