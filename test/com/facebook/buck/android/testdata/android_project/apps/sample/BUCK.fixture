@@ -1093,6 +1093,107 @@ android_binary(
 )
 
 android_binary(
+    name = "app_with_merge_sequence",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_code_generator = "//native/merge:codegen",
+    native_library_merge_glue = "//native/merge:glue_1",
+    native_library_merge_sequence = [
+        ("lib1.so", [".*/merge:A"]),
+    ],
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_with_merge_sequence_modular",
+    application_module_configs = {
+        "native.merge.C": ["//native/merge:C"],
+        "native.merge.D": ["//native/merge:D"],
+        "native.merge.F": ["//native/merge:F"],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_code_generator = "//native/merge:codegen",
+    native_library_merge_glue = "//native/merge:glue_1",
+    native_library_merge_sequence = [
+        ("lib1.so", [".*/merge:A"]),
+    ],
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_with_redundant_merge_sequence",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_code_generator = "//native/merge:codegen",
+    native_library_merge_glue = "//native/merge:glue_1",
+    native_library_merge_sequence = [
+        ("lib1.so", [".*/merge:A"]),
+        ("lib2.so", [".*/merge:B"]),
+    ],
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_with_merge_sequence_and_exclusions",
+    application_module_configs = {
+        "native.merge.C": [
+            "//native/merge:C",
+            "//native/merge:D",
+        ],
+    },
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_code_generator = "//native/merge:codegen",
+    native_library_merge_glue = "//native/merge:glue_1",
+    native_library_merge_sequence = [
+        ("no-merge", [".*/merge:E"]),
+        ("lib1.so", [".*/merge:D"]),
+        ("no-merge", [".*/merge:B"]),
+        ("lib2.so", [".*/merge:A"]),
+    ],
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:A",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_with_merge_sequence_and_root_non_root_root_module_dependencies",
+    application_module_configs = {
+        "native.merge.H": ["//native/merge:H"],
+    },
+    application_module_blacklist = [
+        "//native/merge:I",
+    ],
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    native_library_merge_code_generator = "//native/merge:codegen",
+    native_library_merge_glue = "//native/merge:glue_1",
+    native_library_merge_sequence = [
+        ("lib1.so", [".*/merge:G"]),
+    ],
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//native/merge:G",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
     name = "app_with_merge_map_and_merge_sequence",
     keystore = "//keystores:debug",
     manifest = "AndroidManifest.xml",

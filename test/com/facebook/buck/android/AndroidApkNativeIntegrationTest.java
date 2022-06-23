@@ -318,6 +318,203 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testNativeLibraryMergeSequence() throws IOException, InterruptedException {
+    SymbolGetter syms = getSymbolGetter();
+
+    workspace.replaceFileContents(".buckconfig", "#cpu_abis", "cpu_abis = x86");
+    ImmutableMap<String, Path> paths =
+        workspace.buildMultipleAndReturnOutputs(
+            "//apps/sample:app_with_merge_sequence",
+            "//apps/sample:app_with_merge_sequence_modular",
+            "//apps/sample:app_with_redundant_merge_sequence",
+            "//apps/sample:app_with_merge_sequence_and_exclusions",
+            "//apps/sample:app_with_merge_sequence_and_root_non_root_root_module_dependencies");
+
+    testNativeLibraryMergeSequenceGeneric(syms, paths);
+    testNativeLibraryMergeSequenceModular(syms, paths);
+    testNativeLibraryMergeSequenceRedundant(syms, paths);
+    testNativeLibraryMergeSequenceWithExclusions(syms, paths);
+    testNativeLibraryMergeSequenceWithRootNonRootRootModuleDependencies(syms, paths);
+  }
+
+  private static void testNativeLibraryMergeSequenceGeneric(
+      SymbolGetter syms, ImmutableMap<String, Path> paths)
+      throws IOException, InterruptedException {
+    Path apkPath = paths.get("//apps/sample:app_with_merge_sequence");
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
+    zipInspector.assertFileExists("lib/x86/libnative_merge_C.so");
+    zipInspector.assertFileExists("lib/x86/libnative_merge_D.so");
+    zipInspector.assertFileExists("lib/x86/lib2e.so");
+    zipInspector.assertFileExists("lib/x86/lib2f.so");
+
+    // Library 1: Root module linkables with no module dependencies
+    SymbolsAndDtNeeded info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
+    assertThat(info.symbols.global, Matchers.hasItem("A"));
+    assertThat(info.symbols.global, Matchers.hasItem("B"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("C")));
+    assertThat(info.symbols.global, not(Matchers.hasItem("D")));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, Matchers.hasItem("libnative_merge_C.so"));
+    assertThat(info.dtNeeded, Matchers.hasItem("libnative_merge_D.so"));
+  }
+
+  private static void testNativeLibraryMergeSequenceModular(
+      SymbolGetter syms, ImmutableMap<String, Path> paths)
+      throws IOException, InterruptedException {
+    Path apkPath = paths.get("//apps/sample:app_with_merge_sequence_modular");
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_C.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_D.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib2e.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib2f.so");
+    zipInspector.assertFileExists("assets/native.merge.C/libs.txt");
+    zipInspector.assertFileExists("assets/native.merge.C/libs.xzs");
+    zipInspector.assertFileExists("assets/native.merge.D/libs.txt");
+    zipInspector.assertFileExists("assets/native.merge.D/libs.xzs");
+    zipInspector.assertFileExists("assets/native.merge.F/libs.txt");
+    zipInspector.assertFileExists("assets/native.merge.F/libs.xzs");
+
+    // Root of library 1: Root-module linkables depending on modules C, D, and F
+    SymbolsAndDtNeeded info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
+    assertThat(info.symbols.global, Matchers.hasItem("A"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("B")));
+    assertThat(info.symbols.global, not(Matchers.hasItem("C")));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib1_1.so"));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib1_2.so"));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("lib1b.so")));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_C.so")));
+
+    // Library 1, sub-library 1: Module C linkables depending on modules D and F
+    zipInspector.assertFileContains("assets/native.merge.C/libs.txt", "lib1_1.so");
+
+    // Library 1, sub-library 2: Root-module linkables depending on modules D and F
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1_2.so");
+    assertThat(info.symbols.global, Matchers.hasItem("B"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("D")));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib1_3.so"));
+    assertThat(info.dtNeeded, not(Matchers.hasItem("libnative_merge_D.so")));
+
+    // Library 1, sub-library 3: Module D linkables depending on module F
+    zipInspector.assertFileContains("assets/native.merge.D/libs.txt", "lib1_3.so");
+
+    // Library 1, sub-library 4: Module D linkables with no module dependencies
+    zipInspector.assertFileContains("assets/native.merge.D/libs.txt", "lib1_4.so");
+
+    // Unmerged library F - this target is behind the unmergeable :precompiled_for_D.
+    zipInspector.assertFileContains("assets/native.merge.F/libs.txt", "lib2f.so");
+  }
+
+  private static void testNativeLibraryMergeSequenceRedundant(
+      SymbolGetter syms, ImmutableMap<String, Path> paths)
+      throws IOException, InterruptedException {
+    Path apkPath = paths.get("//apps/sample:app_with_redundant_merge_sequence");
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1b.so");
+    zipInspector.assertFileExists("lib/x86/libnative_merge_C.so");
+    zipInspector.assertFileExists("lib/x86/libnative_merge_D.so");
+    zipInspector.assertFileExists("lib/x86/lib2e.so");
+    zipInspector.assertFileExists("lib/x86/lib2f.so");
+
+    // Library 1: Root module linkables with no module dependencies
+    SymbolsAndDtNeeded info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
+    assertThat(info.symbols.global, Matchers.hasItem("A"));
+    assertThat(info.symbols.global, Matchers.hasItem("B"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("C")));
+    assertThat(info.symbols.global, not(Matchers.hasItem("D")));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, Matchers.hasItem("libnative_merge_C.so"));
+    assertThat(info.dtNeeded, Matchers.hasItem("libnative_merge_D.so"));
+
+    // There is no library 2, as the higher-priority sequence entry completely covers its roots.
+  }
+
+  private static void testNativeLibraryMergeSequenceWithExclusions(
+      SymbolGetter syms, ImmutableMap<String, Path> paths)
+      throws IOException, InterruptedException {
+    Path apkPath = paths.get("//apps/sample:app_with_merge_sequence_and_exclusions");
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileDoesNotExist("lib/x86/lib1a.so");
+    zipInspector.assertFileExists("lib/x86/lib1b.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_C.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_D.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib2e.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/lib2f.so");
+    zipInspector.assertFileExists("assets/native.merge.C/libs.txt");
+    zipInspector.assertFileExists("assets/native.merge.C/libs.xzs");
+
+    // Library 1: Module C dependencies of :D but not of :E
+    zipInspector.assertFileContains("assets/native.merge.C/libs.txt", "lib1.so");
+
+    // Unmerged library F
+    zipInspector.assertFileContains("assets/native.merge.C/libs.txt", "lib2f.so");
+
+    // Unmerged library E
+    zipInspector.assertFileContains("assets/native.merge.C/libs.txt", "lib2e.so");
+
+    // Root of library 2: Root module dependencies of :A, but not of :B or :E, depending on module C
+    SymbolsAndDtNeeded info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib2.so");
+    assertThat(info.symbols.global, Matchers.hasItem("A"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("B")));
+    assertThat(info.symbols.global, not(Matchers.hasItem("C")));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib1b.so"));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib2_1.so"));
+
+    // Library 2, sub-library 1: Module C dependencies of :A, but not of :B or :E
+    zipInspector.assertFileContains("assets/native.merge.C/libs.txt", "lib2_1.so");
+
+    // Unmerged library B
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1b.so");
+    assertThat(info.symbols.global, Matchers.hasItem("B"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("D")));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_1")));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib1.so"));
+  }
+
+  private static void testNativeLibraryMergeSequenceWithRootNonRootRootModuleDependencies(
+      SymbolGetter syms, ImmutableMap<String, Path> paths)
+      throws IOException, InterruptedException {
+    Path apkPath =
+        paths.get(
+            "//apps/sample:app_with_merge_sequence_and_root_non_root_root_module_dependencies");
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_G.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_H.so");
+    zipInspector.assertFileDoesNotExist("lib/x86/libnative_merge_I.so");
+    zipInspector.assertFileExists("assets/native.merge.H/libs.txt");
+    zipInspector.assertFileExists("assets/native.merge.H/libs.xzs");
+
+    // Root of library 1: Root module linkables depending on module H
+    SymbolsAndDtNeeded info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1.so");
+    assertThat(info.symbols.global, Matchers.hasItem("G"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("H")));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+    assertThat(info.dtNeeded, Matchers.hasItem("lib1_1.so"));
+
+    // Library 1, sub-library 1: Module H linkables depending on the root module
+    zipInspector.assertFileContains("assets/native.merge.H/libs.txt", "lib1_1.so");
+
+    // Library 1, sub-library 2: Root module linkables with no module dependencies
+    info = syms.getSymbolsAndDtNeeded(apkPath, "lib/x86/lib1_2.so");
+    assertThat(info.symbols.global, Matchers.hasItem("I"));
+    assertThat(info.symbols.global, Matchers.hasItem("glue_1"));
+    assertThat(info.symbols.global, not(Matchers.hasItem("glue_2")));
+  }
+
+  @Test
   public void throwIfBothMergeArgumentsSpecified() {
     String targetString = "//apps/sample:app_with_merge_map_and_merge_sequence";
     ProcessResult processResult = workspace.runBuckBuild(targetString);
