@@ -398,6 +398,66 @@ use_split_dex = True
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name : 'native_library_merge_sequence' /}
+  {{param default : '[]' /}}
+  {param desc}
+  <p>Defines a prioritized sequence of instructions for merging native libraries. Sequence entries
+  are tuples comprised of a merged library name and a list of regular expressions for which
+  matching native library targets and their dependencies will be added to the merged library,
+  unless an earlier entry already matched them.
+
+  {literal}<pre class="prettyprint lang-py">
+  android_binary(
+      # ... other args ...
+      native_library_merge_sequence = [
+          # libmerged1.so contains :lib1, :lib2, and any dependencies
+          ("libmerged1.so", [
+              "^//my_libs:lib1$",
+              "^//my_libs:lib2$",
+          ]),
+          # libmerged2.so contains all targets in the build file
+          # beginning with "lib", as well as their dependencies,
+          # except for any targets added to libmerged1.so
+          ("libmerged2.so", [
+              "^//my_libs:lib.*$",
+          ]),
+          ...
+      ],
+  )</pre>{/literal}
+
+  <p>Merged library names must begin with <code>lib</code> and end with <code>.so</code>.
+
+  <p>Using <code>no-merge</code> in place of a merged library name causes any previously unmerged
+  targets matched by that sequence entry's patterns to not be added to any merged libraries.
+
+  {literal}<pre class="prettyprint lang-py">
+  android_binary(
+      # ... other args ...
+      native_library_merge_sequence = [
+          ("no-merge", [
+              "^//my_libs:lib1$",
+          ]),
+          # libmerged1.so does not contain :lib1 or its dependencies
+          ("libmerged1.so", [
+              "^//my_libs:lib1$",
+              "^//my_libs:lib2$",
+          ]),
+          # :lib2 was already added to libmerged1.so and is unaffected
+          ("no-merge", [
+              "^//my_libs:lib2$",
+              "^//my_libs:lib3$",
+          ]),
+          ...
+      ],
+  )</pre>{/literal}
+
+  <p>This is an advanced option for apps with many native libraries.
+  For more details,
+  see <a href="https://github.com/fbsamples/android-native-library-merging-demo">this article</a>.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}
