@@ -277,6 +277,28 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void throwIfMergeMapHasCircularDependencyIncludingPrecompiledHeader() {
+    ProcessResult processResult =
+        workspace.runBuckBuild(
+            "//apps/sample:app_with_circular_merge_map_including_precompiled_header");
+    processResult.assertFailure();
+    String stderr = processResult.getStderr();
+    assertThat(stderr, containsString("Error: Dependency cycle detected"));
+    assertThat(
+        stderr,
+        containsString(
+            "Dependencies between merge:libbroken.so and no-merge://native/merge:precompiled_for_D:\n"
+                + "  //native/merge:D -> //native/merge:precompiled_for_D\n"));
+    // We need to split the assertion because the order in which
+    // these occur in the output is not deterministic.
+    assertThat(
+        stderr,
+        containsString(
+            "Dependencies between no-merge://native/merge:precompiled_for_D and merge:libbroken.so:\n"
+                + "  //native/merge:precompiled_for_D -> //native/merge:F"));
+  }
+
+  @Test
   public void throwIfMergeMapHasCircularDependencyIncludeRoot() {
     ProcessResult processResult =
         workspace.runBuckBuild("//apps/sample:app_with_circular_merge_map_including_root");

@@ -18,7 +18,8 @@
 #    |
 #    2(EF)
 #
-# Also, C and F each depend on a static and prebuilt library.
+# C and F each depend on a static and prebuilt library.
+# D shares its dependency on F with a precompiled header.
 
 cxx_library(
     name = "A",
@@ -56,11 +57,12 @@ cxx_library(
 
 cxx_library(
     name = "D",
+    precompiled_header = ":precompiled_for_D",
     srcs = ["D.c"],
     visibility = ["PUBLIC"],
     deps = [
         ":E",
-        ":F",
+        ":F", # TODO T123289901: This dependency shouldn't be necessary.
     ],
 )
 
@@ -76,6 +78,7 @@ cxx_library(
 cxx_library(
     name = "F",
     srcs = ["F.c"],
+    exported_headers = ["F.h"],
     soname = "lib2f.so",
     visibility = ["PUBLIC"],
     deps = [
@@ -97,6 +100,14 @@ cxx_library(
     srcs = ["static_for_F.c"],
     force_static = True,
     deps = [
+    ],
+)
+
+cxx_precompiled_header(
+    name = "precompiled_for_D",
+    src = "precompiled_for_D.h",
+    deps = [
+        ":F"
     ],
 )
 

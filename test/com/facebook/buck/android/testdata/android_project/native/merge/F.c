@@ -1,3 +1,5 @@
+#include "F.h"
+
 void static_func_F();
 void prebuilt_func_F();
 void F() {
