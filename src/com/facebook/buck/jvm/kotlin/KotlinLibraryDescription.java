@@ -197,6 +197,11 @@ public class KotlinLibraryDescription
         targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
     extraDepsBuilder.addAll(
         kotlinBuckConfig.getKotlinHomeLibraryTargets(buildTarget.getTargetConfiguration()));
+
+    if (javaBuckConfig != null) {
+      Kosabi.addParseTimeDeps(
+          targetGraphOnlyDepsBuilder, buildTarget, KosabiConfig.of(javaBuckConfig.getDelegate()));
+    }
   }
 
   public enum AnnotationProcessingTool {
