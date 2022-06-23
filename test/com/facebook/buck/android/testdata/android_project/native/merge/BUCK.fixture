@@ -145,6 +145,49 @@ cxx_library(
     ],
 )
 
+# This graph validates native_library_merge_sequence behavior
+# separating non-root-module linkables that depend on the
+# root module from those linkables' root-module dependents.
+#
+#    G
+#    |
+#    H
+#    |
+#    I
+#
+# G and I can_be_asset.
+# Putting H in an application_module_config and I in the
+# application_module_blacklist will produce the
+# root-non-root-root module dependency graph described above.
+
+cxx_library(
+    name = "G",
+    srcs = ["G.c"],
+    can_be_asset = True,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":H",
+    ],
+)
+
+cxx_library(
+    name = "H",
+    srcs = ["H.c"],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":I",
+    ],
+)
+
+cxx_library(
+    name = "I",
+    srcs = ["I.c"],
+    can_be_asset = True,
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+)
+
 cxx_library(
     name = "glue_1",
     srcs = ["glue_1.c"],
