@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -25,6 +26,8 @@ import java.util.regex.Pattern;
 
 public interface HasNativeMergeMapArgs {
   Optional<ImmutableMap<String, ImmutableList<Pattern>>> getNativeLibraryMergeMap();
+
+  Optional<ImmutableList<Pair<String, ImmutableList<Pattern>>>> getNativeLibraryMergeSequence();
 
   Optional<BuildTarget> getNativeLibraryMergeGlue();
 

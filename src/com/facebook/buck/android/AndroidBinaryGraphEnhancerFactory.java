@@ -203,6 +203,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.isTrimResourceIds(),
         args.isIgnoreAaptProguardConfig(),
         args.getNativeLibraryMergeMap(),
+        args.getNativeLibraryMergeSequence(),
         args.getNativeLibraryMergeGlue(),
         args.getNativeLibraryMergeCodeGenerator(),
         args.getNativeLibraryMergeLocalizedSymbols(),

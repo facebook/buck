@@ -318,6 +318,19 @@ public class AndroidApkNativeIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void throwIfBothMergeArgumentsSpecified() {
+    String targetString = "//apps/sample:app_with_merge_map_and_merge_sequence";
+    ProcessResult processResult = workspace.runBuckBuild(targetString);
+    processResult.assertExitCode(ExitCode.BUILD_ERROR);
+    assertThat(
+        processResult.getStderr(),
+        containsString(
+            targetString
+                + " specifies mutually exclusive native_library_merge_map "
+                + "and native_library_merge_sequence arguments"));
+  }
+
+  @Test
   public void testNativeRelinker() throws IOException, InterruptedException {
     SymbolGetter syms = getSymbolGetter();
     Symbols sym;

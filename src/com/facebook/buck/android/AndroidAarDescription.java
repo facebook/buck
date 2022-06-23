@@ -293,6 +293,7 @@ public class AndroidAarDescription
             cxxBuckConfig,
             downwardApiConfig,
             args.getNativeLibraryMergeMap(),
+            args.getNativeLibraryMergeSequence(),
             args.getNativeLibraryMergeGlue(),
             args.getNativeLibraryMergeLocalizedSymbols(),
             args.isEnableRelinker() ? RelinkerMode.ENABLED : RelinkerMode.DISABLED,

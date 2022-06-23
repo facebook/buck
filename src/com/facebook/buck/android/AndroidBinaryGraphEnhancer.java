@@ -64,6 +64,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -201,6 +202,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean trimResourceIds,
       boolean ignoreAaptProguardConfig,
       Optional<ImmutableMap<String, ImmutableList<Pattern>>> nativeLibraryMergeMap,
+      Optional<ImmutableList<Pair<String, ImmutableList<Pattern>>>> nativeLibraryMergeSequence,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<BuildTarget> nativeLibraryMergeCodeGenerator,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
@@ -264,6 +266,7 @@ public class AndroidBinaryGraphEnhancer {
             cxxBuckConfig,
             downwardApiConfig,
             nativeLibraryMergeMap,
+            nativeLibraryMergeSequence,
             nativeLibraryMergeGlue,
             nativeLibraryMergeLocalizedSymbols,
             relinkerMode,

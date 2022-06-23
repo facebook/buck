@@ -128,7 +128,8 @@ class NativeLibraryMergeEnhancer {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
-      Map<String, ImmutableList<Pattern>> mergeMap,
+      Optional<ImmutableMap<String, ImmutableList<Pattern>>> mergeMap,
+      Optional<ImmutableList<Pair<String, ImmutableList<Pattern>>>> mergeSequence,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       ImmutableMap<TargetCpuType, NativeLinkableEnhancementResult> nativeLinkables) {
@@ -191,7 +192,7 @@ class NativeLibraryMergeEnhancer {
 
       ImmutableMap<NativeLinkable, APKModule> linkableAssetMap = linkableAssetMapBuilder.build();
       Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership =
-          makeConstituentMap(buildTarget, mergeMap, allLinkables, linkableAssetMap);
+          makeConstituentMap(buildTarget, mergeMap, mergeSequence, allLinkables, linkableAssetMap);
 
       Iterable<MergedNativeLibraryConstituents> orderedConstituents =
           getOrderedMergedConstituents(buildTarget, graphBuilder, linkableMembership);
@@ -331,30 +332,22 @@ class NativeLibraryMergeEnhancer {
 
   private static Map<NativeLinkable, MergedNativeLibraryConstituents> makeConstituentMap(
       BuildTarget buildTarget,
-      Map<String, ImmutableList<Pattern>> mergeMap,
+      Optional<ImmutableMap<String, ImmutableList<Pattern>>> mergeMap,
+      Optional<ImmutableList<Pair<String, ImmutableList<Pattern>>>> mergeSequence,
       Iterable<NativeLinkable> allLinkables,
       ImmutableMap<NativeLinkable, APKModule> linkableAssetMap) {
-    List<MergedNativeLibraryConstituents> allConstituents = new ArrayList<>();
-    for (ImmutableMap.Entry<String, ImmutableList<Pattern>> mergeConfigEntry :
-        mergeMap.entrySet()) {
-      String mergeSoname = mergeConfigEntry.getKey();
-      List<Pattern> patterns = mergeConfigEntry.getValue();
-
-      ImmutableMergedNativeLibraryConstituents.Builder constituentsBuilder =
-          ImmutableMergedNativeLibraryConstituents.builder().setSoname(mergeSoname);
-
-      for (Pattern pattern : patterns) {
-        for (NativeLinkable linkable : allLinkables) {
-          // TODO(dreiss): Might be a good idea to cache .getBuildTarget().toString().
-          if (pattern
-              .matcher(linkable.getBuildTarget().getUnflavoredBuildTarget().toString())
-              .find()) {
-            constituentsBuilder.addLinkables(linkable);
-          }
-        }
-      }
-
-      allConstituents.add(constituentsBuilder.build());
+    final List<MergedNativeLibraryConstituents> allConstituents;
+    if (mergeMap.isPresent() && mergeSequence.isPresent()) {
+      throw new HumanReadableException(
+          String.format(
+              "Error: %s specifies mutually exclusive native_library_merge_map "
+                  + "and native_library_merge_sequence arguments",
+              buildTarget));
+    } else if (mergeMap.isPresent()) {
+      allConstituents = makeConstituentListFromMergeMap(mergeMap.get(), allLinkables);
+    } else {
+      // TODO: Immediately clean this up.
+      throw new HumanReadableException("Temporarily unimplemented.");
     }
 
     Map<NativeLinkable, MergedNativeLibraryConstituents> linkableMembership = new HashMap<>();
@@ -401,6 +394,35 @@ class NativeLibraryMergeEnhancer {
       }
     }
     return linkableMembership;
+  }
+
+  private static List<MergedNativeLibraryConstituents> makeConstituentListFromMergeMap(
+      ImmutableMap<String, ImmutableList<Pattern>> mergeMap,
+      Iterable<NativeLinkable> allLinkables) {
+    List<MergedNativeLibraryConstituents> allConstituents = new ArrayList<>();
+    for (ImmutableMap.Entry<String, ImmutableList<Pattern>> mergeConfigEntry :
+        mergeMap.entrySet()) {
+      String mergeSoname = mergeConfigEntry.getKey();
+      List<Pattern> patterns = mergeConfigEntry.getValue();
+
+      ImmutableMergedNativeLibraryConstituents.Builder constituentsBuilder =
+          ImmutableMergedNativeLibraryConstituents.builder().setSoname(mergeSoname);
+
+      for (Pattern pattern : patterns) {
+        for (NativeLinkable linkable : allLinkables) {
+          // TODO(dreiss): Might be a good idea to cache .getBuildTarget().toString().
+          if (pattern
+              .matcher(linkable.getBuildTarget().getUnflavoredBuildTarget().toString())
+              .find()) {
+            constituentsBuilder.addLinkables(linkable);
+          }
+        }
+      }
+
+      allConstituents.add(constituentsBuilder.build());
+    }
+
+    return allConstituents;
   }
 
   /** A simple helper interface for building the soname map. */

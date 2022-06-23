@@ -52,6 +52,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -89,6 +90,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final CxxBuckConfig cxxBuckConfig;
   private final DownwardApiConfig downwardApiConfig;
   private final Optional<ImmutableMap<String, ImmutableList<Pattern>>> nativeLibraryMergeMap;
+  private final Optional<ImmutableList<Pair<String, ImmutableList<Pattern>>>>
+      nativeLibraryMergeSequence;
   private final Optional<BuildTarget> nativeLibraryMergeGlue;
   private final Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols;
   private final ImmutableList<Pattern> relinkerWhitelist;
@@ -107,6 +110,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       CxxBuckConfig cxxBuckConfig,
       DownwardApiConfig downwardApiConfig,
       Optional<ImmutableMap<String, ImmutableList<Pattern>>> nativeLibraryMergeMap,
+      Optional<ImmutableList<Pair<String, ImmutableList<Pattern>>>> nativeLibraryMergeSequence,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
       RelinkerMode relinkerMode,
@@ -123,6 +127,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.cxxBuckConfig = cxxBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
     this.nativeLibraryMergeMap = nativeLibraryMergeMap;
+    this.nativeLibraryMergeSequence = nativeLibraryMergeSequence;
     this.nativeLibraryMergeGlue = nativeLibraryMergeGlue;
     this.relinkerMode = relinkerMode;
     this.relinkerWhitelist = relinkerWhitelist;
@@ -248,9 +253,11 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
     ImmutableSortedMap<String, NativeLibraryMergeEnhancer.SonameMergeData> sonameMapping = null;
     ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets = null;
-    if (nativeLibraryMergeMap.isPresent()
-        && !nativeLibraryMergeMap.get().isEmpty()
-        && !nativePlatforms.isEmpty()) {
+    boolean hasNativeLibraryMergeMap =
+        nativeLibraryMergeMap.isPresent() && !nativeLibraryMergeMap.get().isEmpty();
+    boolean hasNativeLibraryMergeSequence =
+        nativeLibraryMergeSequence.isPresent() && !nativeLibraryMergeSequence.get().isEmpty();
+    if ((hasNativeLibraryMergeMap || hasNativeLibraryMergeSequence) && !nativePlatforms.isEmpty()) {
       NativeLibraryMergeEnhancer.NativeLibraryMergeEnhancementResult enhancement =
           NativeLibraryMergeEnhancer.enhance(
               cellPathResolver,
@@ -260,7 +267,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               originalBuildTarget,
               projectFilesystem,
               nativePlatforms,
-              nativeLibraryMergeMap.get(),
+              nativeLibraryMergeMap,
+              nativeLibraryMergeSequence,
               nativeLibraryMergeGlue,
               nativeLibraryMergeLocalizedSymbols,
               nativeLinkables);

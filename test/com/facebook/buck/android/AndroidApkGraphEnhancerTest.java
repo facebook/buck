@@ -1063,6 +1063,7 @@ public class AndroidApkGraphEnhancerTest {
         args.getTrimResourceIds(),
         false,
         /* nativeLibraryMergeMap */ Optional.empty(),
+        /* nativeLibraryMergeSequence */ Optional.empty(),
         /* nativeLibraryMergeGlue */ Optional.empty(),
         /* nativeLibraryMergeCodeGenerator */ Optional.empty(),
         Optional.empty(),
