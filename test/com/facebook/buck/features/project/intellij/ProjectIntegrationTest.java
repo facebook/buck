@@ -648,6 +648,11 @@ public class ProjectIntegrationTest {
     secondary.verify();
   }
 
+  @Test
+  public void testLibraryNameGeneration() throws IOException {
+    runBuckProjectAndVerify("library_name_generation");
+  }
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws IOException {
 

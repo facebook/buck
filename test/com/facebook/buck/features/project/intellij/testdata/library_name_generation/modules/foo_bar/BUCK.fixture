@@ -1,0 +1,16 @@
+java_library(
+    name = "foo_bar",
+    srcs = [
+        "LibNameGenTest.java",
+    ],
+    deps = [
+        ":baz",
+    ],
+)
+
+prebuilt_jar(
+    name = "baz",
+    binary_jar = "baz.jar",
+    javadoc_url = "http://baz.com/baz/",
+    source_jar = "bazsrc.jar",
+)

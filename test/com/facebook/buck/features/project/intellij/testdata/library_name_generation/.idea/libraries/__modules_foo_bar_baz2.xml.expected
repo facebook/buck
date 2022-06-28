@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="//modules/foo_bar:baz">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/modules/foo_bar/baz.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="http://baz.com/baz/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/modules/foo_bar/bazsrc.jar!/" />
+    </SOURCES>
+  </library>
+</component>
