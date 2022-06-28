@@ -3,14 +3,15 @@ version: 2.1
 orbs:
   win: circleci/windows@2.2.0
 
-install_openjdk8: &install_openjdk8
-  name: Install OpenJDK8
+install_openjdk11: &install_openjdk11
+  name: Install OpenJDK11
   command: |
     if [ "${PLATFORM}" == "linux" ]; then
-      sudo apt-get update && sudo apt-get install openjdk-8-jdk
-      sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
+      sudo apt-get update && sudo apt-get install openjdk-11-jdk
+      sudo update-java-alternatives -s java-1.11.0-openjdk-amd64
     elif [ "${PLATFORM}" == "macos" ]; then
-      brew cask install adoptopenjdk8
+      brew install openjdk@11
+      export PATH="/usr/local/opt/openjdk@11/bin:$PATH"
     fi
     java -version
 
@@ -69,7 +70,7 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - run:
           # android_sdk needed to build java docs.
           <<: *install_android_sdk
