@@ -21,7 +21,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -206,11 +205,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
     Flavor moduleFlavor =
         InternalFlavor.of(
             String.format("swiftmodule-%s-%s", sdkDependencies.getSdkVersion(), module.getName()));
-    BuildTarget buildTarget =
-        toolchainTarget
-            .getUnconfiguredBuildTarget()
-            .configure(UnconfiguredTargetConfiguration.INSTANCE)
-            .withFlavors(moduleFlavor);
+    BuildTarget buildTarget = toolchainTarget.withFlavors(moduleFlavor);
     BuildRule rule =
         graphBuilder.computeIfAbsent(
             buildTarget,
@@ -289,11 +284,7 @@ public class SwiftSdkDependencies implements SwiftSdkDependenciesProvider {
             String.format(
                 "pcm-%s-%s-%s",
                 sdkDependencies.getSdkVersion(), clangModule.getName(), targetVersion));
-    BuildTarget buildTarget =
-        toolchainTarget
-            .getUnconfiguredBuildTarget()
-            .configure(UnconfiguredTargetConfiguration.INSTANCE)
-            .withFlavors(moduleFlavor);
+    BuildTarget buildTarget = toolchainTarget.withFlavors(moduleFlavor);
 
     ExplicitModuleInput moduleMapInput =
         replacePathPrefix(clangModule.getModulemapPath(), sdkPath, platformPath, swiftResourceDir);
