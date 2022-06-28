@@ -54,6 +54,8 @@ public class IjProjectWriter {
   private final BuckOutPathConverter buckOutPathConverter;
   private final ModuleInfoManager moduleInfoManager;
 
+  private final IjLibraryNameConflictResolver nameConflictResolver;
+
   public IjProjectWriter(
       IjProjectTemplateDataPreparer projectDataPreparer,
       IjProjectConfig projectConfig,
@@ -61,7 +63,8 @@ public class IjProjectWriter {
       IntellijModulesListParser modulesParser,
       IJProjectCleaner cleaner,
       ProjectFilesystem outFilesystem,
-      BuckOutPathConverter buckOutPathConverter) {
+      BuckOutPathConverter buckOutPathConverter,
+      IjLibraryNameConflictResolver nameConflictResolver) {
     this.projectDataPreparer = projectDataPreparer;
     this.projectConfig = projectConfig;
     this.projectPaths = projectConfig.getProjectPaths();
@@ -71,6 +74,7 @@ public class IjProjectWriter {
     this.outFilesystem = outFilesystem;
     this.buckOutPathConverter = buckOutPathConverter;
     this.moduleInfoManager = new ModuleInfoManager(projectConfig, cleaner);
+    this.nameConflictResolver = nameConflictResolver;
   }
 
   /** Write entire project to disk */
@@ -78,30 +82,7 @@ public class IjProjectWriter {
     outFilesystem.mkdirs(getIdeaConfigDir());
 
     writeProjectSettings();
-
-    projectDataPreparer
-        .getModulesToBeWritten()
-        .parallelStream()
-        .forEach(
-            module -> {
-              try {
-                writeModule(module);
-              } catch (IOException exception) {
-                throw new RuntimeException(exception);
-              }
-            });
-    projectDataPreparer
-        .getProjectLibrariesToBeWritten()
-        .parallelStream()
-        .forEach(
-            library -> {
-              try {
-                writeLibrary(library);
-              } catch (IOException exception) {
-                throw new RuntimeException(exception);
-              }
-            });
-
+    writeModulesAndLibraries();
     writeModulesIndex(projectDataPreparer.getModuleIndexEntries());
     writeWorkspace();
     moduleInfoManager.write();
@@ -237,7 +218,7 @@ public class IjProjectWriter {
     contents.add("javadocUrls", library.getJavadocUrls());
     // TODO(mkosiba): support res and assets for aar.
 
-    Path path = projectPaths.getLibraryXmlFilePath(library, projectConfig);
+    Path path = projectPaths.getLibraryXmlFilePath(library, projectConfig, nameConflictResolver);
     writeTemplate(contents, path);
   }
 
@@ -280,28 +261,11 @@ public class IjProjectWriter {
   public void update() throws IOException {
     outFilesystem.mkdirs(getIdeaConfigDir());
 
-    projectDataPreparer
-        .getModulesToBeWritten()
-        .parallelStream()
-        .forEach(
-            module -> {
-              try {
-                writeModule(module);
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            });
-    projectDataPreparer
-        .getProjectLibrariesToBeWritten()
-        .parallelStream()
-        .forEach(
-            library -> {
-              try {
-                writeLibrary(library);
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-            });
+    // In this method, we make use of the IjLibraryNameConflictResolver to resolve conflicts in
+    // project library names just similar to the `write` workflow. Here we make assumption that
+    // there are no existing conflicts in the current library names.
+    writeModulesAndLibraries();
+
     updateModulesIndex(projectDataPreparer.getModulesToBeWritten());
     moduleInfoManager.update();
   }
@@ -341,5 +305,32 @@ public class IjProjectWriter {
 
     // Write out the merged set to disk
     writeModulesIndex(finalModulesBuilder.build());
+  }
+
+  private void writeModulesAndLibraries() {
+
+    projectDataPreparer
+        .getModulesToBeWritten()
+        .parallelStream()
+        .forEach(
+            module -> {
+              try {
+                writeModule(module);
+              } catch (IOException exception) {
+                throw new RuntimeException(exception);
+              }
+            });
+
+    projectDataPreparer
+        .getProjectLibrariesToBeWritten()
+        .parallelStream()
+        .forEach(
+            library -> {
+              try {
+                writeLibrary(library);
+              } catch (IOException exception) {
+                throw new RuntimeException(exception);
+              }
+            });
   }
 }

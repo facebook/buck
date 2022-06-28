@@ -42,6 +42,7 @@ import java.util.Collections;
 import org.junit.Test;
 
 public class TargetInfoMapManagerTest {
+
   @Test
   public void testTargetInfoMapForModuleGraph1() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -278,6 +279,7 @@ public class TargetInfoMapManagerTest {
         dataPreparer.getModulesToBeWritten(),
         dataPreparer.getAllLibraries(),
         new BuckOutPathConverter(projectConfig),
+        new IjLibraryNameConflictResolver(dataPreparer),
         cleaner);
     return targetInfoMapManager.readTargetInfoMapAsString();
   }

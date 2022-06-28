@@ -130,7 +130,8 @@ public class IjProjectWriterTest {
         parser,
         cleaner,
         outFilesystem,
-        new BuckOutPathConverter(config));
+        new BuckOutPathConverter(config),
+        new IjLibraryNameConflictResolver(dataPreparer));
   }
 
   private IjProjectTemplateDataPreparer dataPreparer(

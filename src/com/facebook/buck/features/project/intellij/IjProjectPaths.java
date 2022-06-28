@@ -107,12 +107,22 @@ public class IjProjectPaths {
   }
 
   /** @return path where the XML describing the IntelliJ library will be written to. */
-  public Path getLibraryXmlFilePath(IjLibrary library, IjProjectConfig projectConfig) {
+  public Path getLibraryXmlFilePath(
+      IjLibrary library,
+      IjProjectConfig projectConfig,
+      IjLibraryNameConflictResolver nameConflictResolver) {
+
+    String normalizedLibName;
+    if (library.getLevel() == IjLibrary.Level.PROJECT) {
+      normalizedLibName = nameConflictResolver.resolve(library.getName());
+    } else {
+      normalizedLibName = Util.normalizeIntelliJName(library.getName());
+    }
+
     return getLibrariesDir()
         .resolve(
             truncateNameWithHash(
-                    Util.normalizeIntelliJName(library.getName()),
-                    projectConfig.getMaxLibraryNameLengthBeforeTruncate())
+                    normalizedLibName, projectConfig.getMaxLibraryNameLengthBeforeTruncate())
                 + ".xml");
   }
 

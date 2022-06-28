@@ -140,6 +140,8 @@ public class IjProject {
             parsingJavaPackageFinder, moduleGraph, projectFilesystem, projectConfig);
     IntellijModulesListParser modulesParser = new IntellijModulesListParser();
     BuckOutPathConverter buckOutPathConverter = new BuckOutPathConverter(projectConfig);
+    IjLibraryNameConflictResolver nameConflictResolver =
+        new IjLibraryNameConflictResolver(templateDataPreparer);
     IjProjectWriter writer =
         new IjProjectWriter(
             templateDataPreparer,
@@ -148,7 +150,8 @@ public class IjProject {
             modulesParser,
             cleaner,
             outFilesystem,
-            buckOutPathConverter);
+            buckOutPathConverter,
+            nameConflictResolver);
 
     if (updateOnly) {
       writer.update();
@@ -161,6 +164,7 @@ public class IjProject {
           templateDataPreparer.getModulesToBeWritten(),
           templateDataPreparer.getAllLibraries(),
           buckOutPathConverter,
+          nameConflictResolver,
           cleaner);
     }
 
@@ -169,7 +173,8 @@ public class IjProject {
           templateDataPreparer.getModulesToBeWritten(),
           templateDataPreparer.getAllLibraries(),
           buckOutPathConverter,
-          cleaner);
+          cleaner,
+          nameConflictResolver);
     }
 
     PregeneratedCodeWriter pregeneratedCodeWriter =

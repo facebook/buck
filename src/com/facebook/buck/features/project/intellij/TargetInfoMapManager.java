@@ -110,10 +110,11 @@ public class TargetInfoMapManager {
       ImmutableSet<IjModule> modules,
       ImmutableSet<IjLibrary> libraries,
       BuckOutPathConverter buckOutPathConverter,
+      IjLibraryNameConflictResolver nameConflictResolver,
       IJProjectCleaner cleaner)
       throws IOException {
     writeModuleTargetInfo(modules, buckOutPathConverter);
-    writeLibraryTargetInfo(libraries);
+    writeLibraryTargetInfo(libraries, nameConflictResolver);
     try (JsonGenerator generator =
         ObjectMappers.createGenerator(outFilesystem.newFileOutputStream(targetInfoMapPath))
             .useDefaultPrettyPrinter()) {
@@ -152,10 +153,11 @@ public class TargetInfoMapManager {
       ImmutableSet<IjModule> modules,
       ImmutableSet<IjLibrary> libraries,
       BuckOutPathConverter buckOutPathConverter,
-      IJProjectCleaner cleaner)
+      IJProjectCleaner cleaner,
+      IjLibraryNameConflictResolver nameConflictResolver)
       throws IOException {
     writeModuleTargetInfo(modules, buckOutPathConverter);
-    writeLibraryTargetInfo(libraries);
+    writeLibraryTargetInfo(libraries, nameConflictResolver);
 
     // TODO: use TargetInfo everywhere.
     Map<String, TargetInfo> converted = new HashMap<String, TargetInfo>();
@@ -228,7 +230,8 @@ public class TargetInfoMapManager {
         });
   }
 
-  private void writeLibraryTargetInfo(ImmutableSet<IjLibrary> libraries) {
+  private void writeLibraryTargetInfo(
+      ImmutableSet<IjLibrary> libraries, IjLibraryNameConflictResolver nameConflictResolver) {
     libraries.forEach(
         library -> {
           library
@@ -246,7 +249,7 @@ public class TargetInfoMapManager {
                         INTELLIJ_FILE_PATH,
                         projectConfig
                             .getProjectPaths()
-                            .getLibraryXmlFilePath(library, projectConfig)
+                            .getLibraryXmlFilePath(library, projectConfig, nameConflictResolver)
                             .toString());
                     targetInfo.put(BUCK_TYPE, getRuleNameForBuildTarget(target));
                     targetInfoMap.put(target.getFullyQualifiedName(), targetInfo);
