@@ -10,3 +10,50 @@ buck_java_library(
         "//src-gen:installer-proto",
     ]
 )
+
+buck_java_library(
+    name = "options_handler",
+    srcs = ["ConsumeAllOptionsHandler.java"],
+    deps = ["//third-party/java/args4j:args4j"],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+buck_java_library(
+    name = "buckv1_installer_apple_lib",
+    srcs = glob(["Apple*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/apple/simulator:simulator",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:environment",
+        "//src/com/facebook/buck/util/stream:stream",
+        "//src/com/facebook/buck/apple:apple",
+        "//src/com/facebook/buck/apple/simulator:simulator",
+        "//src/com/facebook/buck/apple/platform_type:type",
+        "//src/com/facebook/buck/android/device:device",
+        "//src/com/facebook/buck/apple/device:device",
+        "//third-party/java/args4j:args4j",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/infer-annotations:infer-annotations",
+        "//third-party/java/grpc:grpc-netty-shaded",
+        "//src/com/facebook/buck/util/json:json",
+        "//src-gen:installer-proto",
+        ":installer_server",
+        ":options_handler",
+])
+
+java_binary(
+    name = "apple_installer",
+    main_class = "com.facebook.buck.installer.AppleMain",
+    deps = [
+        ":buckv1_installer_apple_lib"
+    ],
+    visibility = [
+        "PUBLIC",
+    ]
+)

@@ -27,28 +27,32 @@ import io.grpc.netty.shaded.io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.grpc.netty.shaded.io.netty.channel.unix.DomainSocketAddress;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.logging.Level;
+import java.util.logging.Logger; // NOPMD
 
 public class InstallerServer {
   private final Server server;
   private final InstallerService service;
   static int DEFAULT_PORT = 50055;
   public boolean uds = false;
+  public Logger log;
 
-  public InstallerServer(String unix_domain_socket, InstallType installer)
+  public InstallerServer(String unix_domain_socket, InstallType installer, Logger log)
       throws IOException, RuntimeException, InterruptedException {
-    this.service = new InstallerService(installer);
+    this.service = new InstallerService(installer, log);
+    this.log = log;
     this.server = buildServer(unix_domain_socket);
     new Thread(
             () -> {
               try {
                 if (this.service.installFinished.get()) {
-                  System.out.println("Installer Server shutting down...");
+                  log.log(Level.INFO, "Installer Server shutting down...");
                 }
               } catch (InterruptedException e) {
-                System.out.printf("Interrupted...", e);
+                log.log(Level.WARNING, "Interrupted...", e);
                 Thread.currentThread().interrupt();
               } catch (ExecutionException e) {
-                System.out.printf("Execution exception...", e);
+                log.log(Level.WARNING, "Execution exception...", e);
               } finally {
                 stopServer();
               }
@@ -75,7 +79,7 @@ public class InstallerServer {
               .addService(this.service)
               .build()
               .start();
-      System.out.printf("Server Listening on uds %s", unix_domain_socket);
+      log.log(Level.INFO, String.format("Server Listening on uds %s", unix_domain_socket));
 
     } else {
       EventLoopGroup group = new NioEventLoopGroup();
@@ -87,7 +91,8 @@ public class InstallerServer {
               .addService(this.service)
               .build()
               .start();
-      System.out.printf("Server Listening on uds %s", 50055);
+
+      log.log(Level.INFO, String.format("Server Listening on uds %s", DEFAULT_PORT));
     }
     return server;
   }

@@ -22,26 +22,33 @@ import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger; // NOPMD
 
 public class InstallerService extends InstallerGrpc.InstallerImplBase {
   /** Installer Service that implemts Installer.proto */
   public final InstallType installer;
 
   public SettableFuture<Boolean> installFinished = SettableFuture.create();;
+  public Logger log;
 
-  public InstallerService(InstallType installer) {
+  public InstallerService(InstallType installer, Logger log) {
     this.installer = installer;
+    this.log = log;
   }
 
   @Override
   public void fileReadyRequest(FileReady request, StreamObserver<FileResponse> responseObserver) {
     Boolean err;
-    String errMsg = "";
+    String errMsg;
     FileResponse rep;
     try {
-      System.out.printf("About to install:%s %s\n", request.getName(), request.getPath());
+      log.log(
+          Level.INFO,
+          String.format(
+              "\nRecieved artifact %s located at %s\n", request.getName(), request.getPath()));
       Path path = Paths.get(request.getPath());
-      InstallResult res = installer.install(path);
+      InstallResult res = installer.install(request.getName(), path);
       err = res.isErr;
       errMsg = res.errMsg;
     } catch (IOException | InterruptedException ex) {

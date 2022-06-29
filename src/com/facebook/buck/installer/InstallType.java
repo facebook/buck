@@ -24,5 +24,6 @@ import java.nio.file.Path;
  * InstallResult
  */
 public abstract class InstallType {
-  public abstract InstallResult install(Path app) throws IOException, InterruptedException;
+  public abstract InstallResult install(String name, Path app)
+      throws IOException, InterruptedException;
 }
