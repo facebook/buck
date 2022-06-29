@@ -100,6 +100,24 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
     return parseContext.hasRule(name);
   }
 
+  /** {@code oncall} */
+  @StarlarkMethod(
+      name = "oncall",
+      doc = "Sets the oncall for this file.",
+      parameters = {
+        @Param(
+            name = "name",
+            allowedTypes = @ParamType(type = String.class),
+            doc = "The name of the oncall.")
+      },
+      allowReturnNones = true,
+      useStarlarkThread = true)
+  @SuppressWarnings({"unused"})
+  public @Nullable Object oncall(String name, StarlarkThread env) throws EvalException {
+    ParseContext.getParseContext(env, "oncall");
+    return null;
+  }
+
   /** {@code glob} */
   @StarlarkMethod(
       name = "glob",

@@ -1080,6 +1080,16 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void oncallWorks() throws Exception {
+    AbsPath buildFile = projectFilesystem.resolve("pkg").resolve("BUCK");
+    Files.createDirectories(buildFile.getParent().getPath());
+    Files.write(
+        buildFile.getPath(),
+        Arrays.asList("oncall('hello')", "prebuilt_jar(name='x', binary_jar='foo')"));
+    getSingleRule(buildFile);
+  }
+
+  @Test
   public void ruleDoesNotExistIfNotDefined() throws Exception {
     AbsPath buildFile = projectFilesystem.resolve("pkg").resolve("BUCK");
     Files.createDirectories(buildFile.getParent().getPath());
