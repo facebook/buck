@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.features.alias.AliasDescriptionArg;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
 import com.google.common.collect.ImmutableSet;
@@ -71,6 +72,9 @@ public class ExportedDepsClosureResolver {
       AndroidPrebuiltAarDescriptionArg arg =
           (AndroidPrebuiltAarDescriptionArg) targetNode.getConstructorArg();
       exportedDeps = arg.getDeps();
+    } else if (targetNode.getConstructorArg() instanceof AliasDescriptionArg) {
+      AliasDescriptionArg arg = (AliasDescriptionArg) targetNode.getConstructorArg();
+      exportedDeps = ImmutableSet.of(arg.getActual());
     }
 
     ImmutableSet<BuildTarget> exportedDepsClosure =
