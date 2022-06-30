@@ -25,9 +25,11 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,6 +41,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.jar.Attributes;
@@ -49,17 +52,66 @@ import javax.annotation.Nullable;
 
 public class JarBuilder {
 
-  private enum MergeableResource implements Predicate<String> {
-    SERVICES("META-INF/services/"),
-    SPRING_SCHEMAS("META-INF/spring.schemas"),
-    SPRING_HANDLERS("META-INF/spring.handlers"),
-    SPRING_FACTORIES("META-INF/spring.factories"),
-    SPRING_TOOLING("META-INF/spring.tooling");
+  private interface ResourceMergeStrategy {
+    byte[] merge(Set<String> files);
+
+    static final ResourceMergeStrategy JOIN_MERGE_STRATEGY =
+        new ResourceMergeStrategy() {
+          private Joiner joiner = Joiner.on("\n");
+
+          @Override
+          public byte[] merge(Set<String> files) {
+            return joiner.join(files).getBytes();
+          }
+        };
+
+    /**
+     * Property files in Spring have unique keys, some of them containing comma-seprated lists.
+     * These lists have to be merged together.
+     */
+    static final ResourceMergeStrategy PROPERTIES_MERGE_STRATEGY =
+        new ResourceMergeStrategy() {
+          @Override
+          public byte[] merge(Set<String> files) {
+            Properties mergedProps = new Properties();
+            for (String file : files) {
+              Properties props = new Properties();
+              try {
+                props.load(new StringReader(file));
+                for (String propName : props.stringPropertyNames()) {
+                  String values = props.getProperty(propName);
+                  String mergedValues = mergedProps.getProperty(propName);
+                  mergedProps.setProperty(
+                      propName, mergedValues == null ? values : mergedValues + "," + values);
+                }
+              } catch (IOException ex) {
+                throw new HumanReadableException("Unable to merge properties", file, ex);
+              }
+            }
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            try {
+              mergedProps.store(byteArrayOutputStream, "");
+              return byteArrayOutputStream.toByteArray();
+            } catch (IOException ex) {
+              throw new HumanReadableException("Unable to merge properties", ex);
+            }
+          }
+        };
+  }
+
+  private enum MergeableResource implements Predicate<String>, ResourceMergeStrategy {
+    SERVICES("META-INF/services/", ResourceMergeStrategy.JOIN_MERGE_STRATEGY),
+    SPRING_SCHEMAS("META-INF/spring.schemas", ResourceMergeStrategy.JOIN_MERGE_STRATEGY),
+    SPRING_HANDLERS("META-INF/spring.handlers", ResourceMergeStrategy.JOIN_MERGE_STRATEGY),
+    SPRING_FACTORIES("META-INF/spring.factories", ResourceMergeStrategy.PROPERTIES_MERGE_STRATEGY),
+    SPRING_TOOLING("META-INF/spring.tooling", ResourceMergeStrategy.JOIN_MERGE_STRATEGY);
 
     private final Predicate<String> predicate;
+    private final ResourceMergeStrategy mergeStrategy;
 
-    MergeableResource(String pathPrefix) {
+    MergeableResource(String pathPrefix, ResourceMergeStrategy mergeStrategy) {
       this.predicate = entryName -> entryName.startsWith(pathPrefix) && !entryName.endsWith("/");
+      this.mergeStrategy = mergeStrategy;
     }
 
     @Override
@@ -68,8 +120,19 @@ public class JarBuilder {
     }
 
     public static boolean check(String entryName) {
+      return MergeableResource.fromFileName(entryName) != null;
+    }
+
+    public static MergeableResource fromFileName(String entryName) {
       return Arrays.stream(MergeableResource.values())
-          .anyMatch(mergeableResource -> mergeableResource.test(entryName));
+          .filter(mergeableResource -> mergeableResource.predicate.test(entryName))
+          .findAny()
+          .orElse(null);
+    }
+
+    @Override
+    public byte[] merge(Set<String> files) {
+      return mergeStrategy.merge(files);
     }
   }
 
@@ -210,11 +273,11 @@ public class JarBuilder {
   }
 
   private void addMergeableResources(CustomJarOutputStream jar) throws IOException {
-    Joiner joiner = Joiner.on("\n");
     for (String entryName : mergeableResources.keySet()) {
       CustomZipEntry entry = new CustomZipEntry(entryName);
       jar.putNextEntry(entry);
-      jar.write(joiner.join(mergeableResources.get(entryName)).getBytes());
+      Set<String> files = mergeableResources.get(entryName);
+      jar.write(MergeableResource.fromFileName(entryName).merge(files));
       jar.closeEntry();
     }
   }
