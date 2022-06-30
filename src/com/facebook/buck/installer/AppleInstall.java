@@ -79,7 +79,7 @@ public class AppleInstall {
     this.log = log;
     this.xcodeDeveloperPath = Optional.of(Paths.get(appInstallOptions.xcodeDeveloperPath));
     setAppleBundleID(app.getParent());
-    if (deviceHelperPath != null) {
+    if (appInstallOptions.deviceHelperPath != null) {
       this.deviceHelperPath = Optional.of(Paths.get(appInstallOptions.deviceHelperPath));
     } else {
       deviceHelperPath = Optional.empty();
