@@ -16,49 +16,42 @@
 
 package com.facebook.buck.android;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.resources.strings.StringResources.Gender;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.xml.XmlDomParser;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.io.Files;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileAttribute;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class CompileStringsStepTest {
+
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private static final String XML_HEADER = "<?xml version='1.0' encoding='utf-8'?>";
 
@@ -407,11 +400,14 @@ public class CompileStringsStepTest {
 
   @Test
   public void testSuccessfulStepExecution() throws IOException {
-    Path destinationDir = Paths.get("");
-    Path rDotJavaSrcDir = Paths.get("");
+    AbsPath root = tmpFolder.getRoot();
+    Path destinationDir = Paths.get("destinationDir");
+    ProjectFilesystemUtils.mkdirs(root, destinationDir);
+    Path rDotTxt = Paths.get("").resolve("R.txt");
+    ProjectFilesystemUtils.touch(root, rDotTxt);
 
     StepExecutionContext context = TestExecutionContext.newInstance();
-    FakeProjectFileSystem fileSystem = new FakeProjectFileSystem();
+    DefaultProjectFilesystem fileSystem = new FakeProjectFilesystem(root);
 
     ImmutableList<Path> stringFiles =
         ImmutableList.of(firstFile, secondFile, thirdFile, fourthFile, fifthFile);
@@ -420,78 +416,21 @@ public class CompileStringsStepTest {
         new CompileStringsStep(
             fileSystem,
             stringFiles,
-            rDotJavaSrcDir.resolve("R.txt"),
+            rDotTxt,
             input ->
                 destinationDir.resolve(input + PackageStringAssets.STRING_ASSET_FILE_EXTENSION));
     assertEquals(0, step.execute(context).getExitCode());
-    Map<String, byte[]> fileContentsMap = fileSystem.getFileContents();
-    assertEquals("Incorrect number of string files written.", 4, fileContentsMap.size());
-    for (Map.Entry<String, byte[]> entry : fileContentsMap.entrySet()) {
-      File expectedFile = testdataDir.resolve(entry.getKey()).toFile();
-      assertArrayEquals(createBinaryStream(expectedFile), fileContentsMap.get(entry.getKey()));
-    }
-  }
-
-  private byte[] createBinaryStream(File expectedFile) throws IOException {
-    try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        DataOutputStream stream = new DataOutputStream(bos)) {
-      for (String line : Files.readLines(expectedFile, Charset.defaultCharset())) {
-        for (String token : Splitter.on('|').split(line)) {
-          char dataType = token.charAt(0);
-          String value = token.substring(2);
-          switch (dataType) {
-            case 'i':
-              stream.writeInt(Integer.parseInt(value));
-              break;
-            case 's':
-              stream.writeShort(Integer.parseInt(value));
-              break;
-            case 'b':
-              stream.writeByte(Integer.parseInt(value));
-              break;
-            case 't':
-              stream.write(value.getBytes(StandardCharsets.UTF_8));
-              break;
-            default:
-              throw new RuntimeException("Unexpected data type in .fbstr file: " + dataType);
-          }
-        }
-      }
-
-      return bos.toByteArray();
-    }
-  }
-
-  private class FakeProjectFileSystem extends DefaultProjectFilesystem {
-
-    private final ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder =
-        ImmutableMap.builder();
-
-    public FakeProjectFileSystem() {
-      this(AbsPath.of(Paths.get(".").toAbsolutePath()));
-    }
-
-    private FakeProjectFileSystem(AbsPath root) {
-      super(
-          CanonicalCellName.rootCell(),
-          root,
-          new DefaultProjectFilesystemDelegate(root.getPath(), Optional.empty()),
-          TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST);
-    }
-
-    @Override
-    public List<String> readLines(Path path) throws IOException {
-      Path fullPath = testdataDir.resolve(path);
-      return Files.readLines(fullPath.toFile(), Charset.defaultCharset());
-    }
-
-    @Override
-    public void writeBytesToPath(byte[] content, Path path, FileAttribute<?>... attrs) {
-      fileContentsMapBuilder.put(path.getFileName().toString(), content);
-    }
-
-    public Map<String, byte[]> getFileContents() {
-      return fileContentsMapBuilder.build();
+    ImmutableSet<String> destContents =
+        ProjectFilesystemUtils.getDirectoryContents(root, ImmutableList.of(), destinationDir)
+            .stream()
+            .map(destinationDir::relativize)
+            .map(Object::toString)
+            .collect(ImmutableSet.toImmutableSet());
+    assertEquals("Incorrect number of string files written.", 4, destContents.size());
+    for (String written : ImmutableSet.of("en.fbstr", "es.fbstr", "pt.fbstr", "pt_BR.fbstr")) {
+      assertTrue(
+          "destContents " + destContents + " does not contain " + written,
+          destContents.contains(written));
     }
   }
 }

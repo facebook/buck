@@ -18,7 +18,8 @@ package com.facebook.buck.android.resources.strings;
 
 import com.facebook.buck.android.resources.strings.StringResources.Gender;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.filesystem.impl.ProjectFilesystemUtils;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.annotations.VisibleForTesting;
@@ -125,13 +126,13 @@ public class CompileStrings {
    * @param pathBuilder Builds a path to store a .fbstr file at.
    */
   public void compileStrings(
-      ProjectFilesystem filesystem,
+      AbsPath root,
       ImmutableList<Path> stringFiles,
       Path rDotTxtFile,
       Function<String, Path> pathBuilder)
       throws IOException, SAXException {
     buildResourceNameToIdMap(
-        filesystem,
+        root,
         rDotTxtFile,
         stringResourceNameToIdMap,
         pluralsResourceNameToIdMap,
@@ -140,7 +141,7 @@ public class CompileStrings {
     ImmutableMultimap<String, Path> filesByLocale = groupFilesByLocale(stringFiles);
     Map<String, StringResources> resourcesByLocale = new HashMap<>();
     for (String locale : filesByLocale.keySet()) {
-      resourcesByLocale.put(locale, compileStringFiles(filesystem, filesByLocale.get(locale)));
+      resourcesByLocale.put(locale, compileStringFiles(root, filesByLocale.get(locale)));
     }
 
     // Merge region specific locale resources with the corresponding base locale resources.
@@ -165,7 +166,8 @@ public class CompileStrings {
     }
 
     for (String locale : filesByLocale.keySet()) {
-      filesystem.writeBytesToPath(
+      ProjectFilesystemUtils.writeBytesToPath(
+          root,
           Objects.requireNonNull(resourcesByLocale.get(locale)).getBinaryFileContent(),
           pathBuilder.apply(locale));
     }
@@ -230,13 +232,13 @@ public class CompileStrings {
    * plurals} and {@code array}, and builds a map of resource names to their corresponding ids.
    */
   private static void buildResourceNameToIdMap(
-      ProjectFilesystem filesystem,
+      AbsPath root,
       Path pathToRDotTxtFile,
       Map<String, Integer> stringResourceNameToIdMap,
       Map<String, Integer> pluralsResourceNameToIdMap,
       Map<String, Integer> arrayResourceNameToIdMap)
       throws IOException {
-    List<String> fileLines = filesystem.readLines(pathToRDotTxtFile);
+    List<String> fileLines = ProjectFilesystemUtils.readLines(root, pathToRDotTxtFile);
     for (String line : fileLines) {
       Matcher matcher = R_DOT_TXT_STRING_RESOURCE_PATTERN.matcher(line);
       if (!matcher.matches()) {
@@ -262,14 +264,15 @@ public class CompileStrings {
     }
   }
 
-  private StringResources compileStringFiles(
-      ProjectFilesystem filesystem, Collection<Path> filepaths) throws IOException, SAXException {
+  private StringResources compileStringFiles(AbsPath root, Collection<Path> filepaths)
+      throws IOException, SAXException {
     TreeMap<Integer, EnumMap<Gender, String>> stringsMap = new TreeMap<>();
     TreeMap<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = new TreeMap<>();
     TreeMap<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = new TreeMap<>();
 
     for (Path stringFilePath : filepaths) {
-      Document dom = XmlDomParser.parse(filesystem.getPathForRelativePath(stringFilePath));
+      Document dom =
+          XmlDomParser.parse(ProjectFilesystemUtils.getPathForRelativePath(root, stringFilePath));
 
       NodeList stringNodes = dom.getElementsByTagName("string");
       scrapeStringNodes(stringNodes, stringsMap);

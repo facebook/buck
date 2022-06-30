@@ -119,7 +119,8 @@ public class CompileStringsStep implements Step {
   public StepExecutionResult execute(StepExecutionContext context) throws IOException {
     CompileStrings compileStrings = new CompileStrings();
     try {
-      compileStrings.compileStrings(filesystem, stringFiles, rDotTxtFile, pathBuilder);
+      compileStrings.compileStrings(
+          filesystem.getRootPath(), stringFiles, rDotTxtFile, pathBuilder);
     } catch (SAXException e) {
       context.logError(e, "Error parsing string file");
       return StepExecutionResults.ERROR;
