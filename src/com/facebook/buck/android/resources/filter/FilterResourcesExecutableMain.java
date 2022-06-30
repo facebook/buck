@@ -22,6 +22,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -47,6 +49,9 @@ public class FilterResourcesExecutableMain {
 
   @Option(name = "--not-filtered-string-dirs")
   private String notFilteredStringDirsFile;
+
+  @Option(name = "--string-files-list-output")
+  private String stringFilesListOutput;
 
   @Option(name = "--locales")
   private String localesString;
@@ -140,6 +145,20 @@ public class FilterResourcesExecutableMain {
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
       }
+    }
+
+    // We need to output a list of all the string files if and only if we are doing
+    // strings-as-assets filtering.
+    Preconditions.checkState(enableStringsAsAssetsFiltering == (stringFilesListOutput != null));
+    if (stringFilesListOutput != null) {
+      ImmutableList<Path> allStringFiles =
+          GetStringsFiles.getFiles(
+              root,
+              ProjectFilesystemUtils.getEmptyIgnoreFilter(),
+              inResDirToOutResDirMap.keySet().asList());
+      Files.write(
+          Paths.get(stringFilesListOutput),
+          allStringFiles.stream().map(Path::toString).collect(Collectors.toList()));
     }
 
     System.exit(0);
