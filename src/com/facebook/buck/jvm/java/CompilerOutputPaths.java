@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.jvm.core.JavaAbis;
+import java.nio.file.Path;
 import java.util.Optional;
 
 /** Provides access to the various output paths for a java library. */
@@ -88,9 +89,19 @@ public abstract class CompilerOutputPaths {
     return outputJarDirPath.resolveRel("used-classes.json");
   }
 
-  /** Returns a path to a file that contains dependencies used in Kotlin the compilation */
+  /** Returns a path to a file that contains all dependencies used in Kotlin compilation */
   public static RelPath getKotlinDepFilePath(RelPath outputJarDirPath) {
     return outputJarDirPath.resolveRel("kotlin-used-classes.json");
+  }
+
+  /** Returns a path to the temp file that contains dependencies directly used in Kotlin compiler */
+  public static Path getKotlinTempDepFilePath(RelPath outputJarDirPath) {
+    return outputJarDirPath.resolve("kotlin-used-classes-tmp.json");
+  }
+
+  /** Returns a path to a file that contains files accessed by KAPT in Kotlin compilation */
+  public static RelPath getKAPTDepFilePath(RelPath outputJarDirPath) {
+    return outputJarDirPath.resolveRel("kapt-used-classes-tmp.txt");
   }
 
   public static ImmutableCompilerOutputPaths.Builder builder() {

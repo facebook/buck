@@ -124,6 +124,7 @@ standard_java_test(
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/util/json:json",
         "//src/com/facebook/buck/core/rules:rules",
