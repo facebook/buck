@@ -107,6 +107,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             Optional.of(swiftStdTool),
             true,
             false,
+            false,
             triple);
     assertThat(swiftPlatform.getSwiftStdlibTool().get(), equalTo(swiftStdTool));
     assertThat(swiftPlatform.getSwiftc(), equalTo(swiftcTool));
@@ -129,6 +130,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             Optional.of(swiftStdTool),
             true,
             false,
+            false,
             triple);
     assertThat(
         swiftPlatform.getSwiftTarget().getVersionedTriple(),
@@ -146,6 +148,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
+            false,
             false,
             AppleCompilerTargetTriple.of(
                 "x86_64", "apple", "ios", Optional.of("9.3"), Optional.empty()));
@@ -171,6 +174,7 @@ public class SwiftPlatformFactoryIntegrationTest {
             swiftcTool,
             Optional.of(swiftStdTool),
             true,
+            false,
             false,
             AppleCompilerTargetTriple.of(
                 "x86_64", "apple", "ios", Optional.of("9.3"), Optional.empty()));

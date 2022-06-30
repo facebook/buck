@@ -52,11 +52,13 @@ public class SwiftPlatformFactory {
       Optional<VersionedTool> swiftStdLibTool,
       boolean shouldLinkSystemSwift,
       boolean shouldEmbedBitcode,
+      boolean prefixSerializedDebuggingOptions,
       AppleCompilerTargetTriple swiftTarget) {
     String platformName = sdk.getApplePlatform().getName();
     Set<Path> toolchainPaths = sdkPaths.getToolchainPaths();
     SwiftPlatform.Builder builder =
         SwiftPlatform.builder()
+            .setPrefixSerializedDebuggingOptions(prefixSerializedDebuggingOptions)
             .setSwiftc(swiftc)
             .setSwiftStdlibTool(swiftStdLibTool)
             .setSwiftSharedLibraryRunPaths(buildSharedRunPaths(platformName, shouldLinkSystemSwift))

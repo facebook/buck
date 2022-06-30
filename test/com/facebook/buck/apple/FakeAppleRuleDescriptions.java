@@ -77,7 +77,9 @@ public class FakeAppleRuleDescriptions {
               "[apple]",
               "default_debug_info_format_for_tests = NONE",
               "default_debug_info_format_for_binaries = NONE",
-              "default_debug_info_format_for_libraries = NONE")
+              "default_debug_info_format_for_libraries = NONE",
+              "[swift]",
+              "prefix_serialized_debugging_options = true")
           .build();
 
   public static final AppleSdk DEFAULT_MACOSX_SDK =

@@ -273,9 +273,7 @@ public abstract class SwiftCompileBase extends AbstractBuildRule
     this.debugPrefixMap = debugPrefixMap;
     this.useDebugPrefixMap = swiftBuckConfig.getUseDebugPrefixMap();
     this.shouldEmitClangModuleBreadcrumbs = swiftBuckConfig.getEmitClangModuleBreadcrumbs();
-    this.prefixSerializedDebuggingOptions =
-        hasPrefixSerializedDebuggingOptions
-            || swiftBuckConfig.getPrefixSerializedDebuggingOptions();
+    this.prefixSerializedDebuggingOptions = hasPrefixSerializedDebuggingOptions;
     this.serializeDebuggingOptions = serializeDebuggingOptions;
     this.moduleDeps = moduleDependencies;
 

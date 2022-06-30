@@ -64,6 +64,7 @@ import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.facebook.buck.util.Console;
@@ -210,6 +211,7 @@ public class AppleCxxPlatforms {
     }
 
     AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
+    SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(buckConfig);
 
     // TODO(beng): Add more and better cflags.
     ImmutableList.Builder<String> cflagsBuilder = ImmutableList.builder();
@@ -529,6 +531,7 @@ public class AppleCxxPlatforms {
             swiftSdkPathsBuilder.build(),
             appleConfig.shouldLinkSystemSwift(),
             shouldEmbedBitcode,
+            swiftBuckConfig.getPrefixSerializedDebuggingOptions(),
             swiftOverrideSearchPathBuilder.addAll(toolSearchPaths).build(),
             xcodeToolFinder,
             filesystem);
@@ -639,6 +642,7 @@ public class AppleCxxPlatforms {
       AppleSdkPaths sdkPaths,
       boolean shouldLinkSystemSwift,
       boolean shouldEmbedBitcode,
+      boolean prefixSerializedDebuggingOptions,
       ImmutableList<Path> toolSearchPaths,
       XcodeToolFinder xcodeToolFinder,
       ProjectFilesystem filesystem) {
@@ -682,6 +686,7 @@ public class AppleCxxPlatforms {
                 swiftStdLibTool,
                 shouldLinkSystemSwift,
                 shouldEmbedBitcode,
+                prefixSerializedDebuggingOptions,
                 swiftTarget));
   }
 
