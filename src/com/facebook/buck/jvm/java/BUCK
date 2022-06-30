@@ -99,6 +99,7 @@ java_immutables_library(
         "BuildsAnnotationProcessor.java",
         "ClassUsageFileWriter.java",
         "ClassUsageTracker.java",
+        "ClassUsageURIParser.java",
         "CompilerOutputPaths.java",
         "CompilerOutputPathsValue.java",
         "CompilerParameters.java",
