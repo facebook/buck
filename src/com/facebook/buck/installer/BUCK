@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_binary", "buck_java_library")
 
 buck_java_library(
     name = "installer_server",
@@ -47,7 +47,7 @@ buck_java_library(
         ":options_handler",
 ])
 
-java_binary(
+buck_java_binary(
     name = "apple_installer",
     main_class = "com.facebook.buck.installer.AppleMain",
     deps = [

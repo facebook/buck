@@ -600,14 +600,6 @@ public class AppleInstall {
     return new InstallResult(false, new String());
   }
 
-  private Path normalizePath(Path path) {
-    try {
-      return path.toRealPath();
-    } catch (IOException e) {
-      return path;
-    }
-  }
-
   private InstallResult installAppleBundleForDeviceIbd(Path appLoc)
       throws IOException, InterruptedException {
 

@@ -33,12 +33,10 @@ import java.util.logging.Logger; // NOPMD
 
 class AppleInstallerManager extends InstallType {
   private static volatile AppleInstallerManager instance;
-  public Path idbPath;
   public final ConcurrentHashMap<String, SettableFuture<AppleInstallAppOptions>> chm =
       new ConcurrentHashMap<>();
   private Logger log;
   private AppleCommandLineOptions cliOpts;
-  private String root;
 
   @Override
   public InstallResult install(String name, Path path) throws IOException, InterruptedException {
