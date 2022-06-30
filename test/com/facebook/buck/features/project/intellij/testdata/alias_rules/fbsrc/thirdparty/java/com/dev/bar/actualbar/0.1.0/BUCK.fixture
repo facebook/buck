@@ -1,0 +1,7 @@
+prebuilt_jar(
+    name = "actualbar",
+    binary_jar = "bar-0.1.0.jar",
+    javadoc_url = "http://bar.com/bar/",
+    source_jar = "bar-0.1.0-src.jar",
+    visibility = ["PUBLIC"],
+)

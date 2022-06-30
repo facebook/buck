@@ -1,0 +1,7 @@
+prebuilt_jar(
+    name = "baz",
+    binary_jar = "baz-1.0.0.jar",
+    javadoc_url = "http://baz.com/baz/",
+    source_jar = "baz-1.0.0-src.jar",
+    visibility = ["PUBLIC"],
+)

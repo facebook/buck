@@ -1,0 +1,7 @@
+alias(
+    name = "bar",
+    visibility = [
+        "PUBLIC",
+    ],
+    actual = "//fbsrc/thirdparty/java/com/dev/bar/actualbar:actualbar",
+)

@@ -1,0 +1,11 @@
+VERSION = "1.0.0"
+
+java_library(
+    name = "baz",
+    srcs = [],
+    visibility = ["PUBLIC"],
+    exported_deps = [
+        "//fbsrc/thirdparty/java/com/dev/baz/{}:baz".format(VERSION),
+        "//fbsrc/thirdparty/java/com/dev/bar:bar",
+    ],
+)

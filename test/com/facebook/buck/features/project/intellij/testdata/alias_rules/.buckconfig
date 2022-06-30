@@ -1,0 +1,6 @@
+[project]
+  ide = intellij
+
+[intellij]
+  module_library_threshold = 5
+  use_module_library = true

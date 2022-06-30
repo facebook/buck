@@ -1,0 +1,10 @@
+java_library(
+    name = "foo",
+    srcs = [
+        "AliasRulesTest.java",
+    ],
+    deps = [
+       "//fbsrc/thirdparty/baz:baz",
+       "//fbsrc/thirdparty/bax:bax",
+    ],
+)

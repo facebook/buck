@@ -1,0 +1,7 @@
+prebuilt_jar(
+    name = "bax",
+    binary_jar = "bax-1.0.0.jar",
+    javadoc_url = "http://bax.com/bax/",
+    source_jar = "bax-1.0.0-src.jar",
+    visibility = ["PUBLIC"],
+)

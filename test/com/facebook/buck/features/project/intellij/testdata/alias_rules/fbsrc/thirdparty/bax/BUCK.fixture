@@ -1,0 +1,7 @@
+alias(
+    name = "bax",
+    visibility = [
+        "PUBLIC",
+    ],
+    actual = "//fbsrc/thirdparty/java/com/dev/bax:bax",
+)

@@ -653,6 +653,18 @@ public class ProjectIntegrationTest {
     runBuckProjectAndVerify("library_name_generation");
   }
 
+  @Test
+  public void testAliasRules() throws IOException {
+    /*
+    Verifies the project generation in the case of aliases and exported dependencies in alias.
+    There are three main cases tested here:
+        1. Exported dependencies from alias: fbsrc/thirdparty/java/com/dev/baz
+        2. Alias inside an exported dependency: fbsrc/thirdparty/java/com/dev/bar/actualbar
+        3. Alias with no exported dependency: fbsrc/thirdparty/java/com/dev/bax
+     */
+    runBuckProjectAndVerify("alias_rules");
+  }
+
   private ProcessResult runBuckProjectAndVerify(String folderWithTestData, String... commandArgs)
       throws IOException {
 

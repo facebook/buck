@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+  <content url="file://$MODULE_DIR$/../../fbsrc/com/fb/foo">
+    <sourceFolder url="file://$MODULE_DIR$/../../fbsrc/com/fb/foo" isTestSource="false" packagePrefix="com.fb.foo" />
+  </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+
+    <orderEntry type="module-library" scope="COMPILE" >
+        <library name="//fbsrc/thirdparty/java/com/dev/bax/1.0.0:bax">
+            <CLASSES>
+                <root url="jar://$MODULE_DIR$/../../fbsrc/thirdparty/java/com/dev/bax/1.0.0/bax-1.0.0.jar!/" />
+            </CLASSES>
+            <JAVADOC>
+                <root url="http://bax.com/bax/" />
+            </JAVADOC>
+            <SOURCES>
+                <root url="jar://$MODULE_DIR$/../../fbsrc/thirdparty/java/com/dev/bax/1.0.0/bax-1.0.0-src.jar!/" />
+            </SOURCES>
+        </library>
+    </orderEntry>
+
+    <orderEntry type="module" module-name="fbsrc_thirdparty_java_com_dev_baz" scope="COMPILE" />
+    <orderEntry type="module" module-name="fbsrc_thirdparty_java_com_dev_bar_actualbar" scope="COMPILE" />
+
+    <orderEntry type="module-library" scope="COMPILE" >
+        <library name="//fbsrc/thirdparty/java/com/dev/bar/actualbar/0.1.0:actualbar">
+            <CLASSES>
+                <root url="jar://$MODULE_DIR$/../../fbsrc/thirdparty/java/com/dev/bar/actualbar/0.1.0/bar-0.1.0.jar!/" />
+            </CLASSES>
+            <JAVADOC>
+                <root url="http://bar.com/bar/" />
+            </JAVADOC>
+            <SOURCES>
+                <root url="jar://$MODULE_DIR$/../../fbsrc/thirdparty/java/com/dev/bar/actualbar/0.1.0/bar-0.1.0-src.jar!/" />
+            </SOURCES>
+        </library>
+    </orderEntry>
+    <orderEntry type="module-library" scope="COMPILE" >
+          <library name="//fbsrc/thirdparty/java/com/dev/baz/1.0.0:baz">
+            <CLASSES>
+                <root url="jar://$MODULE_DIR$/../../fbsrc/thirdparty/java/com/dev/baz/1.0.0/baz-1.0.0.jar!/" />
+            </CLASSES>
+            <JAVADOC>
+                <root url="http://baz.com/baz/" />
+            </JAVADOC>
+            <SOURCES>
+                <root url="jar://$MODULE_DIR$/../../fbsrc/thirdparty/java/com/dev/baz/1.0.0/baz-1.0.0-src.jar!/" />
+            </SOURCES>
+          </library>
+    </orderEntry>
+  </component>
+</module>

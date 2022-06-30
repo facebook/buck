@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fbsrc_com_fb_foo.iml" filepath="$PROJECT_DIR$/.idea/modules/fbsrc_com_fb_foo.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fbsrc_thirdparty_java_com_dev_bar_actualbar.iml" filepath="$PROJECT_DIR$/.idea/modules/fbsrc_thirdparty_java_com_dev_bar_actualbar.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/fbsrc_thirdparty_java_com_dev_baz.iml" filepath="$PROJECT_DIR$/.idea/modules/fbsrc_thirdparty_java_com_dev_baz.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/project_root.iml" filepath="$PROJECT_DIR$/.idea/modules/project_root.iml" />
+    </modules>
+  </component>
+</project>

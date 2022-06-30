@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+    <component name="NewModuleRootManager" inherit-compiler-output="true">
+        <exclude-output />
+        <content url="file://$MODULE_DIR$/../../fbsrc/thirdparty/java/com/dev/bar/actualbar">
+            <excludeFolder url="file://$MODULE_DIR$/../../fbsrc/thirdparty/java/com/dev/bar/actualbar/0.1.0" isTestSource="false" />
+        </content>
+
+        <orderEntry type="inheritedJdk" />
+        <orderEntry type="sourceFolder" forTests="false" />
+
+        <orderEntry type="module-library" scope="COMPILE" >
+            <library name="//fbsrc/thirdparty/java/com/dev/bar/actualbar/0.1.0:actualbar">
+            <CLASSES>
+                <root url="jar://$MODULE_DIR$/../../fbsrc/thirdparty/java/com/dev/bar/actualbar/0.1.0/bar-0.1.0.jar!/" />
+            </CLASSES>
+            <JAVADOC>
+                <root url="http://bar.com/bar/" />
+            </JAVADOC>
+            <SOURCES>
+                <root url="jar://$MODULE_DIR$/../../fbsrc/thirdparty/java/com/dev/bar/actualbar/0.1.0/bar-0.1.0-src.jar!/" />
+            </SOURCES>
+            </library>
+        </orderEntry>
+    </component>
+</module>

@@ -1,0 +1,10 @@
+VERSION = "0.1.0"
+
+java_library(
+    name = "actualbar",
+    srcs = [],
+    visibility = ["PUBLIC"],
+    exported_deps = [
+        "//fbsrc/thirdparty/java/com/dev/bar/actualbar/{}:actualbar".format(VERSION),
+    ],
+)
