@@ -33,7 +33,7 @@
 
 <p>
 The <code>glob()</code> function specifies a set of files
-using patterns. 
+using patterns.
 </p>
 
 <p>
@@ -59,7 +59,7 @@ foo&#x2F;**/bar
 </p>
 
 <p>
-is equivalent to 
+is equivalent to
 </p>
 
 <p>
@@ -72,9 +72,16 @@ is equivalent to
 
 <p>
 The patterns that specify the set of files to include&mdash;as well as
-the patterns that specify the files to <em>exclude</em> (see the <code>exclude</code> parameter 
-below)&mdash;must both be statically defined; you cannot generate these patterns 
-dynamically at build time. 
+the patterns that specify the files to <em>exclude</em> (see the <code>exclude</code> parameter
+below)&mdash;must both be statically defined; you cannot generate these patterns
+dynamically at build time.
+</p>
+
+<p>
+A hidden file with filename starting with <code>.</code> is ignored by both the
+<code>**</code> and the <code>*</code> wildcards. To match hidden files using patterns,
+your pattern needs to begin with a <code>.</code>. For example, <code>*</code> and <code>.*.txt</code>
+will match <code>.foo.txt</code>, but <code>*.txt</code> will not.
 </p>
 
 {/param}
@@ -92,19 +99,9 @@ dynamically at build time.
   {param default : '[]' /}
   {param desc}
     A list of patterns that identify files that should be removed from the set
-    specified by the first parameter. You cannot specify both 
-    the <code>exclude</code> parameter and the <code>excludes</code> parameter 
+    specified by the first parameter. You cannot specify both
+    the <code>exclude</code> parameter and the <code>excludes</code> parameter
     because they serve the same purpose.
-  {/param}
-{/call}
-
-{call buck.functionArg}
-  {param name : 'include_dotfiles' /}
-  {param default : 'False' /}
-  {param desc}
-  Specifies whether <code>*</code> and <code>**</code> patterns should capture file and directory names
-  that start with a dot (<code>.</code>). By default, this parameter is false, which
-  indicates that files that start with a dot are automatically excluded.
   {/param}
 {/call}
 
@@ -112,8 +109,8 @@ dynamically at build time.
   {param name : 'excludes' /}
   {param default : '[]' /}
   {param desc}
-    DEPRECATED 
-    <br/> 
+    DEPRECATED
+    <br/>
     This parameter is deprecated; use the <code>exclude</code> parameter instead of <code>excludes</code>.
     <br>
     A list of patterns that identify files that should be removed from the set
@@ -126,8 +123,8 @@ dynamically at build time.
 {param examples}
 
 <p>
-For the purposes of these examples, a <em>regular</em> file is one that 
-is not a <em>dotfile</em>; a file is a dotfile if its path&mdash;relative 
+For the purposes of these examples, a <em>regular</em> file is one that
+is not a <em>dotfile</em>; a file is a dotfile if its path&mdash;relative
 to the current directory&mdash;includes at least one path element
 that starts with a dot.
 </p>
