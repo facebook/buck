@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.android.StringResources.Gender;
+import com.facebook.buck.android.resources.strings.StringResources.Gender;
 import com.facebook.buck.core.build.execution.context.StepExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;

@@ -1,0 +1,11 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "strings",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/android/resources/strings:strings",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

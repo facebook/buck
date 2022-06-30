@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.resources.strings;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -42,7 +42,7 @@ public class StringResources {
    * The values here need to be lowercase as we follow the standard in android xml files of using
    * lower case
    */
-  enum Gender {
+  public enum Gender {
     unknown,
     female,
     male

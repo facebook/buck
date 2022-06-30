@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.android;
+package com.facebook.buck.android.resources.strings;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.android.StringResources.Gender;
+import com.facebook.buck.android.resources.strings.StringResources.Gender;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;

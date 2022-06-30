@@ -522,6 +522,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android/packageable:packageable",
         "//src/com/facebook/buck/android/proguard:translator",
         "//src/com/facebook/buck/android/resources/filter:filter",
+        "//src/com/facebook/buck/android/resources/strings:strings",
         "//src/com/facebook/buck/android/toolchain:toolchain",
         "//src/com/facebook/buck/android/toolchain/ndk:ndk",
         "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
