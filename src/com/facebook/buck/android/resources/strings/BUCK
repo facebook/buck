@@ -10,6 +10,7 @@ buck_java_library(
         "//src/com/facebook/buck/io/filesystem/impl:utils",
         "//src/com/facebook/buck/io/pathformat:pathformat",
         "//src/com/facebook/buck/util/xml:xml",
+        "//src/com/facebook/buck/util/zip:zip",
         "//third-party/java/args4j:args4j",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
@@ -19,6 +20,17 @@ buck_java_library(
 buck_java_binary(
     name = "copy_string_resources_binary",
     main_class = "com.facebook.buck.android.resources.strings.CopyStringResourcesExecutableMain",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":strings",
+    ],
+)
+
+buck_java_binary(
+    name = "package_strings_as_assets_binary",
+    main_class = "com.facebook.buck.android.resources.strings.PackageStringsAsAssetsExecutableMain",
     visibility = [
         "PUBLIC",
     ],
