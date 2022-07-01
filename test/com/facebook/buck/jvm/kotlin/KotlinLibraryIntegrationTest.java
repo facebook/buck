@@ -16,8 +16,10 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import static com.facebook.buck.io.file.MorePaths.pathWithPlatformSeparators;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -27,21 +29,22 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Functions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarFile;
@@ -326,73 +329,136 @@ public class KotlinLibraryIntegrationTest {
 
   @Test
   public void shouldGenerateClassUsageFile() throws IOException {
-    BuildTarget bizTarget = BuildTargetFactory.newInstance("//com/example/classusage:biz");
-    ProcessResult buildResult =
-        workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
+    String bizTargetFqn = "//com/example/classusage:biz";
+    ProcessResult buildResult = workspace.runBuckCommand("build", bizTargetFqn);
     buildResult.assertSuccess("Build should have succeeded.");
 
-    RelPath bizGenDir =
-        BuildPaths.getGenDir(workspace.getProjectFileSystem().getBuckPaths(), bizTarget)
-            .getParent();
-    Path kotlinClassUsageFilePath =
-        bizGenDir.resolve(
-            String.format("lib__%s__output/kotlin-used-classes.json", bizTarget.getShortName()));
-    Path javaClassUsageFilePath =
-        bizGenDir.resolve(
-            String.format("lib__%s__output/used-classes.json", bizTarget.getShortName()));
+    assertTrue(
+        "Should generate kotlin-used-classes-tmp.json",
+        Files.exists(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
+    assertFalse(
+        "Should not generate kapt-used-classes-tmp.txt for no-kapt target",
+        Files.exists(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kapt-used-classes-tmp.txt"))));
 
     List<String> kotlinClassUsageLines =
-        Files.readAllLines(workspace.getPath(kotlinClassUsageFilePath), UTF_8);
+        Files.readAllLines(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes.json")), UTF_8);
     List<String> javaClassUsageLines =
-        Files.readAllLines(workspace.getPath(javaClassUsageFilePath), UTF_8);
+        Files.readAllLines(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "used-classes.json")), UTF_8);
     assertEquals("Expected just one line of JSON", 1, kotlinClassUsageLines.size());
     assertEquals("Expected just one line of JSON", 1, javaClassUsageLines.size());
-    JsonNode kotlinClassUsage = ObjectMappers.READER.readTree(kotlinClassUsageLines.get(0));
-    JsonNode javaClassUsage = ObjectMappers.READER.readTree(javaClassUsageLines.get(0));
 
-    BuildTarget utilTarget = BuildTargetFactory.newInstance("//com/example/classusage:util");
-    String utilJarPath =
-        MorePaths.pathWithPlatformSeparators(
-            BuildPaths.getGenDir(workspace.getProjectFileSystem().getBuckPaths(), utilTarget)
-                .getParent()
-                .resolve(String.format("lib__%1$s__output/%1$s.jar", utilTarget.getShortName())));
-    String utilClassPath =
-        MorePaths.pathWithPlatformSeparators("com/example/classusage/Util.class");
+    Path utilJarPath = getOutputJarPath("//com/example/classusage:util");
+    assertEquals(
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(javaClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}),
+        Map.of(
+            pathWithPlatformSeparators(utilJarPath),
+            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1)));
 
     assertEquals(
-        javaClassUsage.toString(),
-        String.format("{\"%s\":{\"%s\":1}}", utilJarPath, utilClassPath));
-
-    String kotlinJarPath =
-        MorePaths.pathWithPlatformSeparators("kotlinc/libexec/lib/kotlin-stdlib.jar");
-    String kotlinClassPath = MorePaths.pathWithPlatformSeparators("kotlin/Unit.class");
-
-    assertEquals(
-        kotlinClassUsage.toString(),
-        String.format(
-            "{\"%s\":{\"%s\":1},\"%s\":{\"%s\":1}}",
-            utilJarPath, utilClassPath, kotlinJarPath, kotlinClassPath));
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(kotlinClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}),
+        Map.of(
+            pathWithPlatformSeparators(utilJarPath),
+                ImmutableMap.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1),
+            pathWithPlatformSeparators("kotlinc/libexec/lib/kotlin-stdlib.jar"),
+                ImmutableMap.of(pathWithPlatformSeparators("kotlin/Unit.class"), 1)));
   }
 
   @Test
-  public void shouldNotGenerateClassUsageFileForKAPTTarget() throws IOException {
-    BuildTarget bizTarget =
-        BuildTargetFactory.newInstance("//com/example/classusage:biz_with_kapt");
-    ProcessResult buildResult =
-        workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
+  public void shouldNotGenerateClassUsageFileForKaptTarget() throws IOException {
+    String bizTargetFqn = "//com/example/classusage:biz_with_kapt";
+    ProcessResult buildResult = workspace.runBuckCommand("build", bizTargetFqn);
     buildResult.assertSuccess("Build should have succeeded.");
 
-    RelPath bizGenDir =
-        BuildPaths.getGenDir(workspace.getProjectFileSystem().getBuckPaths(), bizTarget)
-            .getParent();
-    Path kotlinClassUsageFilePath =
-        bizGenDir.resolve(
-            String.format("lib__%s__output/kotlin-used-classes.json", bizTarget.getShortName()));
-    Path javaClassUsageFilePath =
-        bizGenDir.resolve(
-            String.format("lib__%s__output/used-classes.json", bizTarget.getShortName()));
+    assertFalse(
+        "Should not generate kotlin-used-classes-tmp.json",
+        Files.exists(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
+    assertFalse(
+        "Should not generate kapt-used-classes-tmp.txt",
+        Files.exists(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kapt-used-classes-tmp.txt"))));
+    assertFalse(
+        "Should not generate used-classes.json",
+        Files.exists(workspace.getPath(getOutputFilePath(bizTargetFqn, "used-classes.json"))));
+    assertFalse(
+        "Should not generate kotlin-used-classes.json",
+        Files.exists(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes.json"))));
+  }
 
-    assertTrue(Files.notExists(workspace.getPath(kotlinClassUsageFilePath)));
-    assertTrue(Files.notExists(workspace.getPath(javaClassUsageFilePath)));
+  @Test
+  public void shouldGenerateClassUsageFileForKaptTargetIfEnabled() throws IOException {
+    String bizTargetFqn = "//com/example/classusage:biz_with_kapt";
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", bizTargetFqn, "-c", "kotlin.track_class_usage_for_kapt_targets=true");
+    buildResult.assertSuccess("Build should have succeeded.");
+
+    assertTrue(
+        "Should generate kotlin-used-classes-tmp.json",
+        Files.exists(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
+    assertTrue(
+        "Should generate kapt-used-classes-tmp.txt for kapt target",
+        Files.exists(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kapt-used-classes-tmp.txt"))));
+
+    List<String> kotlinClassUsageLines =
+        Files.readAllLines(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes.json")), UTF_8);
+    List<String> javaClassUsageLines =
+        Files.readAllLines(
+            workspace.getPath(getOutputFilePath(bizTargetFqn, "used-classes.json")), UTF_8);
+    assertEquals("Expected just one line of JSON", 1, kotlinClassUsageLines.size());
+    assertEquals("Expected just one line of JSON", 1, javaClassUsageLines.size());
+
+    Path utilJarPath = getOutputJarPath("//com/example/classusage:util");
+    assertEquals(
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(javaClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}),
+        Map.of(
+            pathWithPlatformSeparators(utilJarPath),
+            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 1)));
+
+    assertEquals(
+        ObjectMappers.READER.readValue(
+            ObjectMappers.createParser(kotlinClassUsageLines.get(0)),
+            new TypeReference<Map<String, Map<String, Integer>>>() {}),
+        Map.of(
+            pathWithPlatformSeparators(utilJarPath),
+            Map.of(pathWithPlatformSeparators("com/example/classusage/Util.class"), 2),
+            pathWithPlatformSeparators("kotlinc/libexec/lib/annotations-13.0.jar"),
+            Map.of(pathWithPlatformSeparators("org/jetbrains/annotations/NotNull.class"), 1),
+            pathWithPlatformSeparators("kotlinc/libexec/lib/kotlin-stdlib.jar"),
+            Map.of(
+                pathWithPlatformSeparators("kotlin/Metadata.class"), 1,
+                pathWithPlatformSeparators("kotlin/SinceKotlin.class"), 1,
+                pathWithPlatformSeparators("kotlin/Unit.class"), 1,
+                pathWithPlatformSeparators("kotlin/annotation/AnnotationRetention.class"), 1,
+                pathWithPlatformSeparators("kotlin/annotation/AnnotationTarget.class"), 1,
+                pathWithPlatformSeparators("kotlin/annotation/Retention.class"), 1,
+                pathWithPlatformSeparators("kotlin/annotation/Target.class"), 1,
+                pathWithPlatformSeparators("kotlin/jvm/JvmName.class"), 1)));
+  }
+
+  private Path getOutputJarPath(String targetFqn) throws IOException {
+    BuildTarget utilTarget = BuildTargetFactory.newInstance(targetFqn);
+    return getOutputFilePath(targetFqn, utilTarget.getShortName() + ".jar");
+  }
+
+  private Path getOutputFilePath(String targetFqn, String fileName) throws IOException {
+    BuildTarget target = BuildTargetFactory.newInstance(targetFqn);
+    RelPath genDir =
+        BuildPaths.getGenDir(workspace.getProjectFileSystem().getBuckPaths(), target).getParent();
+    return genDir.resolve(String.format("lib__%s__output/" + fileName, target.getShortName()));
   }
 }

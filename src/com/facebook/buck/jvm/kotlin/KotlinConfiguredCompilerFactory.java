@@ -16,6 +16,9 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import static com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory.getKaptAnnotationProcessors;
+import static com.facebook.buck.jvm.kotlin.KotlincToJarStepFactory.getKspAnnotationProcessors;
+
 import com.facebook.buck.cd.model.java.AbiGenerationMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -165,10 +168,10 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   public boolean trackClassUsage(JavacOptions javacOptions) {
     JavacPluginParams annotationProcessorParams = javacOptions.getJavaAnnotationProcessorParams();
     return kotlinBuckConfig.trackClassUsage()
-        // Kotlin track class usage currently doesn't work well with KAPT or KSP, especially if they
-        // read from resource files. So we disabled it for targets with KAPT or KSP.
-        // TODO(T120014575): Fix class usage tracker for KAPT/KSP cases and re-enable those targets
-        && annotationProcessorParams.getPluginProperties().isEmpty();
+        && (kotlinBuckConfig.trackClassUsageForKaptTargets()
+            || getKaptAnnotationProcessors(annotationProcessorParams).isEmpty())
+        && (kotlinBuckConfig.trackClassUsageForKspTargets()
+            || getKspAnnotationProcessors(annotationProcessorParams).isEmpty());
   }
 
   @Override

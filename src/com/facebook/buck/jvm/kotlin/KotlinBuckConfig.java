@@ -254,6 +254,24 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
   }
 
   /**
+   * Determine whether dep-based rule keys are used for Kotlin targets with KAPT.
+   *
+   * @return true to use dep-based rule keys, false otherwise
+   */
+  boolean trackClassUsageForKaptTargets() {
+    return delegate.getBoolean(SECTION, "track_class_usage_for_kapt_targets").orElse(false);
+  }
+
+  /**
+   * Determine whether dep-based rule keys are used for Kotlin targets with KSP.
+   *
+   * @return true to use dep-based rule keys, false otherwise
+   */
+  boolean trackClassUsageForKspTargets() {
+    return delegate.getBoolean(SECTION, "track_class_usage_for_ksp_targets").orElse(false);
+  }
+
+  /**
    * Get the action to perform when unused dependencies are detected. This can be set in .buckconfig
    * via "unused_dependencies_action" property; possible values are "ignore", "warn", "fail",
    * "ignore_always", "warn_if_fail". Default is "ignore".
