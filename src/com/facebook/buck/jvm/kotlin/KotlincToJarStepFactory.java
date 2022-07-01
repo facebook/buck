@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import static com.facebook.buck.jvm.java.CompilerOutputPaths.getKAPTDepFilePath;
 import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterables.transform;
@@ -111,6 +112,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
   private static final String JAVAC_ARG = KAPT3_PLUGIN + "javacArguments=";
   private static final String AP_OPTIONS = KAPT3_PLUGIN + "apoptions=";
   private static final String AP_STATS_REPORT_ARG = KAPT3_PLUGIN + "dumpProcessorStats=";
+  private static final String AP_FILE_ACCESS_HIST_REPORT_ARG =
+      KAPT3_PLUGIN + "dumpFileAccessHistory=";
   private static final String KAPT_GENERATED = "kapt.kotlin.generated";
   private static final String MODULE_NAME = "-module-name";
   private static final String NO_STDLIB = "-no-stdlib";
@@ -320,6 +323,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
           sourcesOutput,
           classesOutput,
           reportsOutput,
+          parameters.getOutputPaths(),
+          parameters.shouldTrackClassUsage(),
           annotationProcessingOptionsBuilder,
           postKotlinCompilationSteps,
           annotationProcessorParams);
@@ -443,6 +448,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       RelPath sourcesOutput,
       RelPath classesOutput,
       RelPath reportsOutput,
+      CompilerOutputPaths compilerOutputPaths,
+      boolean shouldTrackClassUsage,
       Builder<String> annotationProcessingOptionsBuilder,
       Builder<IsolatedStep> postKotlinCompilationSteps,
       JavacPluginParams javaAnnotationProcessorParams) {
@@ -528,6 +535,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
 
     if (shouldGenerateAnnotationProcessingStats) {
       kaptPluginOptionsBuilder.add(AP_STATS_REPORT_ARG + annotationProcessorsStatsFilePath);
+    }
+
+    if (shouldTrackClassUsage) {
+      kaptPluginOptionsBuilder.add(
+          AP_FILE_ACCESS_HIST_REPORT_ARG
+              + rootPath.resolve(getKAPTDepFilePath(compilerOutputPaths.getOutputJarDirPath())));
     }
 
     annotationProcessingOptionsBuilder
