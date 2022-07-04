@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test", "buck_java_library")
+load("//tools/build_rules:java_rules.bzl", "buck_java_library")
 
 buck_java_library(
     name = "testutil",
@@ -14,14 +14,5 @@ buck_java_library(
     exported_deps = [
         "//src/com/facebook/buck/parser/api:api",
         "//third-party/java/guava:guava",
-    ],
-)
-
-standard_java_test(
-    name = "api",
-    deps = [
-        "//src/com/facebook/buck/parser/api:api",
-        "//third-party/java/guava:guava",
-        "//third-party/java/junit:junit",
     ],
 )
