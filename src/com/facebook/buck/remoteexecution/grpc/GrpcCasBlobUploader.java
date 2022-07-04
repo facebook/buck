@@ -27,6 +27,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.event.CasBlobUploadEvent;
+import com.facebook.buck.remoteexecution.event.CasFindMissingEvent;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
@@ -76,10 +77,12 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
       FindMissingBlobsRequest.Builder requestBuilder = FindMissingBlobsRequest.newBuilder();
       requestBuilder.setInstanceName(instanceName);
       requiredDigests.forEach(digest -> requestBuilder.addBlobDigests((GrpcProtocol.get(digest))));
-      return storageStub.findMissingBlobs(requestBuilder.build()).get().getMissingBlobDigestsList()
-          .stream()
-          .map(build.bazel.remote.execution.v2.Digest::getHash)
-          .collect(ImmutableSet.toImmutableSet());
+      try (Scope ignored = CasFindMissingEvent.sendEvent(buckEventBus, requiredDigests.size())) {
+        return storageStub.findMissingBlobs(requestBuilder.build()).get()
+            .getMissingBlobDigestsList().stream()
+            .map(build.bazel.remote.execution.v2.Digest::getHash)
+            .collect(ImmutableSet.toImmutableSet());
+      }
     } catch (InterruptedException | ExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
       throw new BuckUncheckedExecutionException(e);

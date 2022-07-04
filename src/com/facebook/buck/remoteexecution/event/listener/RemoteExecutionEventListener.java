@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.remoteexecution.event.CasBlobDownloadEvent;
 import com.facebook.buck.remoteexecution.event.CasBlobUploadEvent.Finished;
+import com.facebook.buck.remoteexecution.event.CasFindMissingEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent.Result;
 import com.facebook.buck.remoteexecution.event.LocalFallbackStats;
@@ -56,6 +57,7 @@ public class RemoteExecutionEventListener
   private final LongAdder downloadBytes;
   private final LongAdder uploads;
   private final LongAdder uploadBytes;
+  private final LongAdder findMissingCount;
 
   private final LongAdder remoteCpuTimeMs;
   private final LongAdder remoteQueueTimeMs;
@@ -155,6 +157,7 @@ public class RemoteExecutionEventListener
     this.downloadBytes = new LongAdder();
     this.uploads = new LongAdder();
     this.uploadBytes = new LongAdder();
+    this.findMissingCount = new LongAdder();
     this.remoteCpuTimeMs = new LongAdder();
     this.remoteQueueTimeMs = new LongAdder();
     this.totalRemoteTimeMs = new LongAdder();
@@ -209,6 +212,12 @@ public class RemoteExecutionEventListener
     hasFirstRemoteActionStarted.set(true);
     downloads.add(event.getStartedEvent().getBlobCount());
     downloadBytes.add(event.getStartedEvent().getSizeBytes());
+  }
+
+  @Subscribe
+  public void onFindMissingBlobsEvent(CasFindMissingEvent.Finished event) {
+    hasFirstRemoteActionStarted.set(true);
+    findMissingCount.add(event.getStartedEvent().getBlobCount());
   }
 
   /** Event specific subscriber method. */
@@ -328,6 +337,11 @@ public class RemoteExecutionEventListener
   @Override
   public long getCasUploadSizeBytes() {
     return uploadBytes.intValue();
+  }
+
+  @Override
+  public long getCasFindMissingCount() {
+    return findMissingCount.intValue();
   }
 
   @Override

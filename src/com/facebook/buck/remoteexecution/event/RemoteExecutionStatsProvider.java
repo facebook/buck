@@ -37,6 +37,9 @@ public interface RemoteExecutionStatsProvider {
   /** Total of uploaded bytes to CAS. */
   long getCasUploadSizeBytes();
 
+  /** Total number of digests that were sent in findMissing calls. */
+  long getCasFindMissingCount();
+
   /** Get the total number of BuildRules that are finished. (both local and remote) */
   int getTotalRulesBuilt();
 
