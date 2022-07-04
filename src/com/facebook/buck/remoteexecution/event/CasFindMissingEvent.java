@@ -30,23 +30,31 @@ public abstract class CasFindMissingEvent extends AbstractBuckEvent implements W
   }
 
   /** Send the Started and returns a Scoped object that sends the Finished event. */
-  public static Scope sendEvent(final BuckEventBus eventBus, int blobCount) {
-    final CasFindMissingEvent.Started startedEvent = new CasFindMissingEvent.Started(blobCount);
+  public static Scope sendEvent(final BuckEventBus eventBus, CasBlobBatchInfo info) {
+    final CasFindMissingEvent.Started startedEvent = new CasFindMissingEvent.Started(info);
     eventBus.post(startedEvent);
     return () -> eventBus.post(new CasFindMissingEvent.Finished(startedEvent));
   }
 
   /** FindMissing call has started. */
   public static final class Started extends CasFindMissingEvent {
-    private final int blobCount;
+    private final CasBlobBatchInfo batchInfo;
 
-    public Started(int blobCount) {
+    public Started(CasBlobBatchInfo batchInfo) {
       super(EventKey.unique());
-      this.blobCount = blobCount;
+      this.batchInfo = batchInfo;
     }
 
     public int getBlobCount() {
-      return blobCount;
+      return batchInfo.getBlobCount();
+    }
+
+    public int getSmallBlobCount() {
+      return batchInfo.getSmallBlobCount();
+    }
+
+    public int getLargeBlobCount() {
+      return batchInfo.getLargeBlobCount();
     }
 
     @Override

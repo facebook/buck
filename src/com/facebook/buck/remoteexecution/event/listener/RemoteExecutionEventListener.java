@@ -55,9 +55,19 @@ public class RemoteExecutionEventListener
 
   private final LongAdder downloads;
   private final LongAdder downloadBytes;
+  private final LongAdder downloadsLarge;
+  private final LongAdder downloadLargeBytes;
+  private final LongAdder downloadsSmall;
+  private final LongAdder downloadSmallBytes;
   private final LongAdder uploads;
   private final LongAdder uploadBytes;
+  private final LongAdder uploadsLarge;
+  private final LongAdder uploadLargeBytes;
+  private final LongAdder uploadsSmall;
+  private final LongAdder uploadSmallBytes;
   private final LongAdder findMissingCount;
+  private final LongAdder findMissingSmallCount;
+  private final LongAdder findMissingLargeCount;
 
   private final LongAdder remoteCpuTimeMs;
   private final LongAdder remoteQueueTimeMs;
@@ -155,9 +165,19 @@ public class RemoteExecutionEventListener
   public RemoteExecutionEventListener(Optional<String> reStatsDumpPath) {
     this.downloads = new LongAdder();
     this.downloadBytes = new LongAdder();
+    this.downloadsLarge = new LongAdder();
+    this.downloadLargeBytes = new LongAdder();
+    this.downloadsSmall = new LongAdder();
+    this.downloadSmallBytes = new LongAdder();
     this.uploads = new LongAdder();
     this.uploadBytes = new LongAdder();
+    this.uploadsLarge = new LongAdder();
+    this.uploadLargeBytes = new LongAdder();
+    this.uploadsSmall = new LongAdder();
+    this.uploadSmallBytes = new LongAdder();
     this.findMissingCount = new LongAdder();
+    this.findMissingSmallCount = new LongAdder();
+    this.findMissingLargeCount = new LongAdder();
     this.remoteCpuTimeMs = new LongAdder();
     this.remoteQueueTimeMs = new LongAdder();
     this.totalRemoteTimeMs = new LongAdder();
@@ -204,6 +224,10 @@ public class RemoteExecutionEventListener
     hasFirstRemoteActionStarted.set(true);
     uploads.add(event.getStartedEvent().getBlobCount());
     uploadBytes.add(event.getStartedEvent().getSizeBytes());
+    uploadsLarge.add(event.getStartedEvent().getLargeBlobCount());
+    uploadLargeBytes.add(event.getStartedEvent().getLargeSizeBytes());
+    uploadsSmall.add(event.getStartedEvent().getSmallBlobCount());
+    uploadSmallBytes.add(event.getStartedEvent().getSmallSizeBytes());
   }
 
   /** Event specific subscriber method. */
@@ -212,12 +236,18 @@ public class RemoteExecutionEventListener
     hasFirstRemoteActionStarted.set(true);
     downloads.add(event.getStartedEvent().getBlobCount());
     downloadBytes.add(event.getStartedEvent().getSizeBytes());
+    downloadsLarge.add(event.getStartedEvent().getLargeBlobCount());
+    downloadLargeBytes.add(event.getStartedEvent().getLargeSizeBytes());
+    downloadsSmall.add(event.getStartedEvent().getSmallBlobCount());
+    downloadSmallBytes.add(event.getStartedEvent().getSmallSizeBytes());
   }
 
   @Subscribe
   public void onFindMissingBlobsEvent(CasFindMissingEvent.Finished event) {
     hasFirstRemoteActionStarted.set(true);
     findMissingCount.add(event.getStartedEvent().getBlobCount());
+    findMissingLargeCount.add(event.getStartedEvent().getLargeBlobCount());
+    findMissingSmallCount.add(event.getStartedEvent().getSmallBlobCount());
   }
 
   /** Event specific subscriber method. */
@@ -325,8 +355,28 @@ public class RemoteExecutionEventListener
   }
 
   @Override
+  public int getCasSmallDownloads() {
+    return downloadsSmall.intValue();
+  }
+
+  @Override
+  public int getCasLargeDownloads() {
+    return downloadsLarge.intValue();
+  }
+
+  @Override
   public long getCasDownloadSizeBytes() {
     return downloadBytes.sum();
+  }
+
+  @Override
+  public long getCasSmallDownloadSizeBytes() {
+    return downloadSmallBytes.sum();
+  }
+
+  @Override
+  public long getCasLargeDownloadSizeBytes() {
+    return downloadLargeBytes.sum();
   }
 
   @Override
@@ -335,13 +385,43 @@ public class RemoteExecutionEventListener
   }
 
   @Override
+  public int getCasSmallUploads() {
+    return uploadsSmall.intValue();
+  }
+
+  @Override
+  public int getCasLargeUploads() {
+    return uploadsLarge.intValue();
+  }
+
+  @Override
   public long getCasUploadSizeBytes() {
     return uploadBytes.intValue();
   }
 
   @Override
+  public long getCasSmallUploadSizeBytes() {
+    return uploadSmallBytes.intValue();
+  }
+
+  @Override
+  public long getCasLargeUploadSizeBytes() {
+    return uploadLargeBytes.intValue();
+  }
+
+  @Override
   public long getCasFindMissingCount() {
     return findMissingCount.intValue();
+  }
+
+  @Override
+  public long getCasFindMissingSmallCount() {
+    return findMissingSmallCount.intValue();
+  }
+
+  @Override
+  public long getCasFindMissingLargeCount() {
+    return findMissingLargeCount.intValue();
   }
 
   @Override

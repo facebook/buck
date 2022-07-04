@@ -26,6 +26,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
+import com.facebook.buck.remoteexecution.event.CasBlobBatchInfo;
 import com.facebook.buck.remoteexecution.event.CasBlobUploadEvent;
 import com.facebook.buck.remoteexecution.event.CasFindMissingEvent;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
@@ -77,7 +78,10 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
       FindMissingBlobsRequest.Builder requestBuilder = FindMissingBlobsRequest.newBuilder();
       requestBuilder.setInstanceName(instanceName);
       requiredDigests.forEach(digest -> requestBuilder.addBlobDigests((GrpcProtocol.get(digest))));
-      try (Scope ignored = CasFindMissingEvent.sendEvent(buckEventBus, requiredDigests.size())) {
+      CasBlobBatchInfo info =
+          new CasBlobBatchInfo(
+              requiredDigests.stream().mapToLong(digest -> digest.getSize()).toArray());
+      try (Scope ignored = CasFindMissingEvent.sendEvent(buckEventBus, info)) {
         return storageStub.findMissingBlobs(requestBuilder.build()).get()
             .getMissingBlobDigestsList().stream()
             .map(build.bazel.remote.execution.v2.Digest::getHash)
@@ -94,9 +98,10 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
   @Override
   public ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadDataSupplier> blobs)
       throws IOException {
-    long totalBlobSizeBytes = blobs.stream().mapToLong(blob -> blob.getDigest().getSize()).sum();
-    try (Scope ignored =
-        CasBlobUploadEvent.sendEvent(buckEventBus, blobs.size(), totalBlobSizeBytes)) {
+    CasBlobBatchInfo info =
+        new CasBlobBatchInfo(
+            blobs.stream().mapToLong(blob -> blob.getDigest().getSize()).toArray());
+    try (Scope ignored = CasBlobUploadEvent.sendEvent(buckEventBus, info)) {
       BatchUpdateBlobsRequest.Builder requestBuilder = BatchUpdateBlobsRequest.newBuilder();
       requestBuilder.setInstanceName(instanceName);
       for (UploadDataSupplier blob : blobs) {
@@ -132,7 +137,8 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
   @Override
   public UploadResult uploadFromStream(UploadDataSupplier blob) throws IOException {
     long uploadSize = blob.getDigest().getSize();
-    try (Scope ignored = CasBlobUploadEvent.sendEvent(buckEventBus, 1, uploadSize)) {
+    CasBlobBatchInfo info = new CasBlobBatchInfo(new long[] {uploadSize});
+    try (Scope ignored = CasBlobUploadEvent.sendEvent(buckEventBus, info)) {
       InputStream dataStream = blob.get();
       String name = GrpcRemoteExecutionClients.getResourceName(instanceName, blob.getDigest());
 

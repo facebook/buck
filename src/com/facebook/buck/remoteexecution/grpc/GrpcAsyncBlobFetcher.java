@@ -23,6 +23,7 @@ import build.bazel.remote.execution.v2.Digest;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
+import com.facebook.buck.remoteexecution.event.CasBlobBatchInfo;
 import com.facebook.buck.remoteexecution.event.CasBlobDownloadEvent;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
@@ -93,8 +94,9 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
       return Futures.immediateFuture(data.get());
     }
 
+    CasBlobBatchInfo info = new CasBlobBatchInfo(new long[] {digest.getSize()});
     return closeScopeWhenFutureCompletes(
-        CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize()),
+        CasBlobDownloadEvent.sendEvent(buckEventBus, info),
         Futures.transform(
             GrpcRemoteExecutionClients.readByteStream(
                 instanceName, digest, byteStreamStub, data::concat, casDeadline),
@@ -108,8 +110,9 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
       return Futures.immediateFuture(Unit.UNIT);
     }
 
+    CasBlobBatchInfo info = new CasBlobBatchInfo(new long[] {digest.getSize()});
     return closeScopeWhenFutureCompletes(
-        CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize()),
+        CasBlobDownloadEvent.sendEvent(buckEventBus, info),
         GrpcRemoteExecutionClients.readByteStream(
             instanceName,
             digest,
@@ -126,11 +129,11 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
   public ListenableFuture<Unit> batchFetchBlobs(
       ImmutableMultimap<Protocol.Digest, Callable<WritableByteChannel>> requests,
       ImmutableMultimap<Protocol.Digest, SettableFuture<Unit>> futures) {
-    Scope scope =
-        CasBlobDownloadEvent.sendEvent(
-            buckEventBus,
-            requests.keySet().size(),
-            requests.keySet().stream().mapToLong(Protocol.Digest::getSize).sum());
+
+    CasBlobBatchInfo info =
+        new CasBlobBatchInfo(
+            requests.keySet().stream().mapToLong(Protocol.Digest::getSize).toArray());
+    Scope scope = CasBlobDownloadEvent.sendEvent(buckEventBus, info);
     BatchReadBlobsRequest.Builder requestBuilder = BatchReadBlobsRequest.newBuilder();
     requestBuilder.setInstanceName(instanceName);
     int emptyDigestsCountSoFar = 0;
