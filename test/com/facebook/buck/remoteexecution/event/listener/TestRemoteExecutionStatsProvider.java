@@ -52,6 +52,26 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
   }
 
   @Override
+  public int getCasSmallDownloads() {
+    return 0;
+  }
+
+  @Override
+  public int getCasLargeDownloads() {
+    return 0;
+  }
+
+  @Override
+  public long getCasSmallDownloadSizeBytes() {
+    return 0;
+  }
+
+  @Override
+  public long getCasLargeDownloadSizeBytes() {
+    return 0;
+  }
+
+  @Override
   public long getCasDownloadSizeBytes() {
     return casDownladedBytes;
   }
@@ -62,7 +82,42 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
   }
 
   @Override
+  public int getCasSmallUploads() {
+    return 0;
+  }
+
+  @Override
+  public int getCasLargeUploads() {
+    return 0;
+  }
+
+  @Override
+  public long getCasSmallUploadSizeBytes() {
+    return 0;
+  }
+
+  @Override
+  public long getCasLargeUploadSizeBytes() {
+    return 0;
+  }
+
+  @Override
   public long getCasUploadSizeBytes() {
+    return 0;
+  }
+
+  @Override
+  public long getCasFindMissingCount() {
+    return 0;
+  }
+
+  @Override
+  public long getCasFindMissingSmallCount() {
+    return 0;
+  }
+
+  @Override
+  public long getCasFindMissingLargeCount() {
     return 0;
   }
 
