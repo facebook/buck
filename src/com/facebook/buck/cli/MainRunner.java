@@ -680,6 +680,7 @@ public final class MainRunner {
       // statically configure Buck logging environment based on Buck config, usually buck-x.log
       // files
       setupLogging(command, filteredArgsForLogging);
+      LOG.info("Running build with id [%s]", buildId);
 
       ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
       UnconfiguredBuildTargetViewFactory buildTargetFactory =
