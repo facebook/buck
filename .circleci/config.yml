@@ -3,14 +3,15 @@ version: 2.1
 orbs:
   win: circleci/windows@2.2.0
 
-install_openjdk8: &install_openjdk8
-  name: Install OpenJDK8
+install_openjdk11: &install_openjdk11
+  name: Install OpenJDK11
   command: |
     if [ "${PLATFORM}" == "linux" ]; then
-      sudo apt-get update && sudo apt-get install openjdk-8-jdk
-      sudo update-java-alternatives -s java-1.8.0-openjdk-amd64
+      sudo apt-get update && sudo apt-get install openjdk-11-jdk
+      sudo update-java-alternatives -s java-1.11.0-openjdk-amd64
     elif [ "${PLATFORM}" == "macos" ]; then
-      brew cask install adoptopenjdk8
+      brew install openjdk@11
+      export PATH="/usr/local/opt/openjdk@11/bin:$PATH"
     fi
     java -version
 
@@ -19,14 +20,15 @@ install_android_sdk: &install_android_sdk
   command: |
     sdk_os="linux"
     if [ "${PLATFORM}" == "macos" ]; then
-      sdk_os="darwin"
+      sdk_os="mac"
     fi
-    sdk_zip_filename="sdk-tools-${sdk_os}-4333796.zip"
-    mkdir -p "${ANDROID_SDK}"
-    cd "${ANDROID_SDK}"
+    sdk_zip_filename="commandlinetools-${sdk_os}-8512546_latest.zip"
+    mkdir -p "${ANDROID_SDK}/cmdline-tools"
+    cd "${ANDROID_SDK}/cmdline-tools"
     curl -O "https://dl.google.com/android/repository/${sdk_zip_filename}"
     unzip "${sdk_zip_filename}"
-    export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+    mv cmdline-tools latest
+    export PATH="${ANDROID_SDK}/cmdline-tools/latest/bin:${PATH}"
     echo 'y' |sdkmanager --install tools
     echo 'y' |sdkmanager --install platform-tools
     echo 'y' |sdkmanager --install "build-tools;28.0.0"
@@ -40,15 +42,38 @@ install_android_sdk: &install_android_sdk
     fi
 
 install_python: &install_python
-  name: Install Python 3.6.2
+  name: Install Python 3.9.4
   command: |
     if [ "${PLATFORM}" == "macos" ]; then
       brew install pyenv
     fi
-    pyenv install -s 3.6.2
-    pyenv global 3.6.2 system
+    pyenv install -s 3.9.4
+    pyenv global 3.9.4 system
     export PATH="$(pyenv root)/shims:${PATH}"
     python --version
+
+run_ant_build: &run_ant_build
+  name: Run Ant Build
+  command: |
+    if [ "${PLATFORM}" == "macos" ]; then
+      # The latest ant depends on JDK13, install 1.9 instead.
+      brew install ant@1.9
+      export PATH="/usr/local/opt/ant@1.9/bin:${PATH}"
+    fi
+    cd "${BUCKROOT}"
+    set -ex
+    export ANT_OPTS='-Xmx1000m'
+    ant
+
+run_buck_build: &run_buck_build
+  name: Run Buck Build
+  command: |
+    cd "${BUCKROOT}"
+    echo '-Xmx1024m' > .buckjavaargs.local
+    export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+    export PATH="$(pyenv root)/shims:${PATH}"
+    set -ex
+    ./bin/buck build buck --out "./${BUCK_PEX_LOCATION}" || { cat "buck-out/log/buck-0.log"; exit 1; }
 
 linux_environment: &linux_environment
   # Use string constant for values, no environment variables
@@ -57,7 +82,7 @@ linux_environment: &linux_environment
   ANDROID_SDK: "/home/circleci/android-sdk"
   TERM: "dumb"
   BUCK_NUM_THREADS: 3
-  BUCK_PEX_LOCATION: "./new_buck.pex"
+  BUCK_PEX_LOCATION: "new_buck.pex"
 
 jobs:
   publish_docs:
@@ -69,26 +94,24 @@ jobs:
     steps:
       - checkout
       - run:
-          <<: *install_openjdk8
+          <<: *install_openjdk11
       - run:
           # android_sdk needed to build java docs.
           <<: *install_android_sdk
       - run:
           <<: *install_python
       - run:
-          # We do not want to build buck, install the latest release instead.
-          name: Install Buck
-          command: |
-            url=`curl -sH "Authorization: token ${GITHUB_TOKEN}" https://api.github.com/repos/facebook/buck/releases/latest |grep "browser_download_url.*deb" |awk '{gsub("\"", "", $2); print $2}'`
-            curl -L -O $url
-            filename=`basename ${url}`
-            sudo dpkg -i ${filename} || echo "Warning: Buck installed without dependencies."
+          <<: *run_ant_build
+      - restore_cache:
+          key: v-{{ .Environment.CACHE_VERSION }}-buck-build-{{ .Branch }}
+      - run:
+          <<: *run_buck_build
       - run:
           name: Publish docs
           command: |
             export ANDROID_HOME="${ANDROID_SDK}"
             cd docs
-            ./publish.sh --start-soyweb
+            ./publish.sh --buck-location "${BUCKROOT}/${BUCK_PEX_LOCATION}" --start-soyweb
 
 workflows:
   version: 2.1

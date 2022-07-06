@@ -18,7 +18,7 @@ set -e
 
 start_soyweb() {
   echo "Starting soyweb-prod.sh" >&2
-  ./soyweb-prod.sh >&2 &
+  ./soyweb-prod.sh --buck-location "${BUCK_LOCATION}" >&2 &
   local soyweb_pid=$!
   sleep 2
   if ! kill -0 "$soyweb_pid" >/dev/null 2>&1; then
@@ -31,10 +31,11 @@ start_soyweb() {
 
 show_help() {
   cat <<-EOF
-Usage: publish.sh [--start-soyweb] [--keep-files]
-  --start-soyweb Start soyweb and shut it down when the script is finished
-  --keep-files   Keep temporary files after attempting to publish
-  --help Show this help
+Usage: publish.sh [--buck-location BUCK_LOCATION] [--start-soyweb] [--keep-files]
+  --buck-location Sets the location of the Buck executable to use
+  --start-soyweb  Start soyweb and shut it down when the script is finished
+  --keep-files    Keep temporary files after attempting to publish
+  --help          Show this help
 
   Set the environment variables GIT_USER and GITHUB_TOKEN if you want to publish using another
   GitHub account. These variables are already set in CircleCI to automate publishing.
@@ -42,12 +43,17 @@ EOF
   exit 1
 }
 
+BUCK_LOCATION="buck"
 START_SOYWEB=0
 KEEP_FILES=0
 SOYWEB_PID=0
 for arg do
   shift
   case $arg in
+    --buck-location)
+      BUCK_LOCATION="$1"
+      shift
+      ;;
     --start-soyweb) START_SOYWEB=1 ;;
     --keep-files) KEEP_FILES=1 ;;
     --help) show_help ;;
@@ -66,7 +72,7 @@ STATIC_FILES_DIR=$(mktemp -d)
 
 # Always run this from the the docs dir
 cd "$DOCS_DIR"
-buck run //docs:generate_buckconfig_aliases
+"${BUCK_LOCATION}" run //docs:generate_buckconfig_aliases
 
 if ( [[ -n $IS_GIT ]] && ! git diff --quiet ) || hg status | grep -q .; then
   echo "Repository is not clean; refusing to publish"
