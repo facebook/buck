@@ -445,7 +445,8 @@ class NativeLibraryMergeEnhancer {
     //
     // Consequently, we must split up merged libraries by module dependencies so that we never
     // force a module to be loaded that would not be required by an unmerged library.
-    Map<NativeLinkable, Set<APKModule>> seenLinkablesToModuleDependencies = new HashMap<>();
+    Map<NativeLinkable, ImmutableSet<APKModule>> seenLinkablesToModuleDependencies =
+        new HashMap<>();
 
     // Two types of linkables and their dependencies will not be merged.
     // - NativeLinkables without NativeLinkTargetInputs cannot be merged at all. If any such target
@@ -553,9 +554,9 @@ class NativeLibraryMergeEnhancer {
     return allConstituents;
   }
 
-  private static Set<APKModule> traverseDependencyGraphAndRecordModuleDependencies(
+  private static ImmutableSet<APKModule> traverseDependencyGraphAndRecordModuleDependencies(
       final NativeLinkable linkable,
-      final Map<NativeLinkable, Set<APKModule>> seenLinkablesToModuleDependencies,
+      final Map<NativeLinkable, ImmutableSet<APKModule>> seenLinkablesToModuleDependencies,
       final ActionGraphBuilder graphBuilder,
       final ImmutableMap<NativeLinkable, APKModule> linkableAssetMap,
       final Optional<ImmutableMultimap.Builder<Pair<Set<APKModule>, APKModule>, NativeLinkable>>
@@ -565,12 +566,12 @@ class NativeLibraryMergeEnhancer {
       return seenLinkablesToModuleDependencies.get(linkable);
     }
 
-    final Set<APKModule> moduleDependencies = new HashSet<>();
+    final ImmutableSet.Builder<APKModule> moduleDependenciesBuilder = ImmutableSet.builder();
     for (NativeLinkable dep :
         Iterables.concat(
             linkable.getNativeLinkableDeps(graphBuilder),
             linkable.getNativeLinkableExportedDeps(graphBuilder))) {
-      moduleDependencies.addAll(
+      moduleDependenciesBuilder.addAll(
           traverseDependencyGraphAndRecordModuleDependencies(
               dep,
               seenLinkablesToModuleDependencies,
@@ -581,8 +582,9 @@ class NativeLibraryMergeEnhancer {
 
     final APKModule containingModule = linkableAssetMap.get(linkable);
     if (containingModule != null) {
-      moduleDependencies.add(containingModule);
+      moduleDependenciesBuilder.add(containingModule);
     }
+    final ImmutableSet<APKModule> moduleDependencies = moduleDependenciesBuilder.build();
 
     seenLinkablesToModuleDependencies.put(linkable, moduleDependencies);
     if (moduleDependenciesToSeenLinkablesInGraphBuilder.isPresent()) {
