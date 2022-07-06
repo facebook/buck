@@ -469,7 +469,7 @@ class NativeLibraryMergeEnhancer {
           seenLinkablesToModuleDependencies,
           graphBuilder,
           linkableAssetMap,
-          Optional.empty());
+          ImmutableSet.builder());
     }
 
     // Merge sequence entries are prioritized by order; later entries will not merge any targets
@@ -478,17 +478,10 @@ class NativeLibraryMergeEnhancer {
       String mergedSoName = mergedNativeLibraryDefinition.getFirst();
       List<Pattern> rootTargetPatterns = mergedNativeLibraryDefinition.getSecond();
 
-      final Optional<ImmutableMultimap.Builder<MergeSequenceLinkableGrouping, NativeLinkable>>
-          linkableGroupingsBuilder =
-              // "no-merge" root targets and their dependencies are not merged, so we don't need to
-              // group them for merged library creation.
-              NO_MERGE.equals(mergedSoName)
-                  ? Optional.empty()
-                  : Optional.of(ImmutableListMultimap.builder());
+      final ImmutableSet.Builder<NativeLinkable> newMergedLinkablesBuilder = ImmutableSet.builder();
 
       // Visit each previously-unvisited linkable in the dependency graphs of root targets,
-      // recording their module dependencies. If the sequence entry will be merged, also group the
-      // linkables by distinct module dependency sets, each of which will produce a merged library.
+      // recording their module dependencies.
       for (Pattern rootTargetPattern : rootTargetPatterns) {
         for (NativeLinkable linkable : allLinkables) {
           if (rootTargetPattern
@@ -499,20 +492,34 @@ class NativeLibraryMergeEnhancer {
                 seenLinkablesToModuleDependencies,
                 graphBuilder,
                 linkableAssetMap,
-                linkableGroupingsBuilder);
+                newMergedLinkablesBuilder);
           }
         }
       }
 
-      if (!linkableGroupingsBuilder.isPresent()) {
+      // "no-merge" root targets and their dependencies are not merged.
+      if (NO_MERGE.equals(mergedSoName)) {
         continue;
+      }
+
+      final ImmutableSet<NativeLinkable> newMergedLinkables = newMergedLinkablesBuilder.build();
+
+      final ImmutableMultimap.Builder<MergeSequenceLinkableGrouping, NativeLinkable>
+          linkableGroupingsBuilder = ImmutableListMultimap.builder();
+
+      for (NativeLinkable newMergedLinkable : newMergedLinkables) {
+        linkableGroupingsBuilder.put(
+            new MergeSequenceLinkableGrouping(
+                seenLinkablesToModuleDependencies.get(newMergedLinkable),
+                linkableAssetMap.get(newMergedLinkable).isRootModule()),
+            newMergedLinkable);
       }
 
       // To reduce churn, the linkable sets are sorted - see MergedSequenceLinkableGrouping for
       // details. The first set is the only one we expect for most merge sequence steps, so its SO
       // name is left unsuffixed. Each other linkable set's SO name is suffixed with its list index.
       Iterable<Collection<NativeLinkable>> sortedLinkableSets =
-          linkableGroupingsBuilder.get().build().asMap().entrySet().stream()
+          linkableGroupingsBuilder.build().asMap().entrySet().stream()
               .sorted(Map.Entry.comparingByKey())
               .map(Map.Entry::getValue)
               .collect(ImmutableList.toImmutableList());
@@ -541,8 +548,7 @@ class NativeLibraryMergeEnhancer {
       final Map<NativeLinkable, ImmutableSet<APKModule>> seenLinkablesToModuleDependencies,
       final ActionGraphBuilder graphBuilder,
       final ImmutableMap<NativeLinkable, APKModule> linkableAssetMap,
-      final Optional<ImmutableMultimap.Builder<MergeSequenceLinkableGrouping, NativeLinkable>>
-          linkableGroupingsBuilder) {
+      final ImmutableSet.Builder<NativeLinkable> newMergedLinkablesBuilder) {
     // Each seen linkable has been or is about to be assigned to a constituent builder.
     if (seenLinkablesToModuleDependencies.containsKey(linkable)) {
       return seenLinkablesToModuleDependencies.get(linkable);
@@ -559,7 +565,7 @@ class NativeLibraryMergeEnhancer {
               seenLinkablesToModuleDependencies,
               graphBuilder,
               linkableAssetMap,
-              linkableGroupingsBuilder));
+              newMergedLinkablesBuilder));
     }
 
     final APKModule containingModule = linkableAssetMap.get(linkable);
@@ -569,16 +575,7 @@ class NativeLibraryMergeEnhancer {
     final ImmutableSet<APKModule> moduleDependencies = moduleDependenciesBuilder.build();
 
     seenLinkablesToModuleDependencies.put(linkable, moduleDependencies);
-    if (linkableGroupingsBuilder.isPresent()) {
-      // Merged libraries are built only for asset linkables.
-      Preconditions.checkNotNull(containingModule);
-      linkableGroupingsBuilder
-          .get()
-          .put(
-              new MergeSequenceLinkableGrouping(
-                  moduleDependencies, containingModule.isRootModule()),
-              linkable);
-    }
+    newMergedLinkablesBuilder.add(linkable);
 
     return moduleDependencies;
   }
