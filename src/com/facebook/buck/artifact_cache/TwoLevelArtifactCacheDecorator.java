@@ -175,7 +175,9 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
                 // outputFileFetchResult,
                 // so that the client gets the correct metadata.
                 CacheResult finalResult =
-                    fetchResult.withTwoLevelContentHashKey(Optional.of(contentHashKey));
+                    fetchResult
+                        .withTwoLevelContentHashKey(Optional.of(contentHashKey))
+                        .withArtifactSizeBytes(outputFileFetchResult.artifactSizeBytes());
 
                 // The two level content hash was not part of the original metadata that was
                 // stored
