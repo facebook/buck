@@ -339,6 +339,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
           sourceBuilder,
           sourcesOutput,
           classesOutput,
+          reportsOutput,
           postKotlinCompilationSteps,
           allClasspaths,
           extraParams.getResolvedKotlinHomeLibraries(),
@@ -390,6 +391,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
               pathToSrcsList,
               allClasspaths,
               extraParams.getResolvedKotlinHomeLibraries(),
+              reportsOutput,
               kotlinc,
               extraArguments.build(),
               ImmutableList.of(VERBOSE),
@@ -539,8 +541,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
 
     if (shouldTrackClassUsage) {
       kaptPluginOptionsBuilder.add(
-          AP_FILE_ACCESS_HIST_REPORT_ARG
-              + rootPath.resolve(getKAPTDepFilePath(compilerOutputPaths.getOutputJarDirPath())));
+          AP_FILE_ACCESS_HIST_REPORT_ARG + rootPath.resolve(getKAPTDepFilePath(reportsOutput)));
     }
 
     annotationProcessingOptionsBuilder
@@ -600,6 +601,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
       ImmutableSortedSet.Builder<RelPath> sourceBuilder,
       RelPath sourcesOutput,
       RelPath classesOutput,
+      RelPath reportsOutput,
       Builder<IsolatedStep> postKotlinCompilationSteps,
       ImmutableSortedSet<AbsPath> allClasspaths,
       ImmutableSortedSet<AbsPath> kotlinHomeLibraries,
@@ -703,6 +705,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory<KotlinExtra
             pathToSrcsList,
             allClasspaths,
             kotlinHomeLibraries,
+            reportsOutput,
             kotlinc,
             kspTriggerBuilder.build(),
             ImmutableList.of(VERBOSE),

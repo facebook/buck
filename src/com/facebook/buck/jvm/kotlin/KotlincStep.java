@@ -62,6 +62,7 @@ public class KotlincStep extends IsolatedStep {
   private final ImmutableList<String> verboseModeOnlyExtraArguments;
   private final ImmutableSortedSet<RelPath> sourceFilePaths;
   private final Path pathToSrcsList;
+  private final RelPath reportDirPath;
   private final BuildTargetValue invokingRule;
   private final CompilerOutputPaths outputPaths;
   private final boolean withDownwardApi;
@@ -79,6 +80,7 @@ public class KotlincStep extends IsolatedStep {
       Path pathToSrcsList,
       ImmutableSortedSet<AbsPath> combinedClassPathEntries,
       ImmutableSortedSet<AbsPath> kotlinHomeLibraries,
+      RelPath reportDirPath,
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
       ImmutableList<String> verboseModeOnlyExtraArguments,
@@ -94,6 +96,7 @@ public class KotlincStep extends IsolatedStep {
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
     this.pathToSrcsList = pathToSrcsList;
+    this.reportDirPath = reportDirPath;
     this.kotlinc = kotlinc;
     this.combinedClassPathEntries = combinedClassPathEntries;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
@@ -163,7 +166,7 @@ public class KotlincStep extends IsolatedStep {
           RelPath outputJarDirPath = outputPaths.getOutputJarDirPath();
           new DefaultClassUsageFileWriter()
               .writeFile(
-                  KotlinClassUsageHelper.getClassUsageData(outputJarDirPath, ruleCellRoot),
+                  KotlinClassUsageHelper.getClassUsageData(reportDirPath, ruleCellRoot),
                   CompilerOutputPaths.getKotlinDepFilePath(outputJarDirPath),
                   ruleCellRoot,
                   configuredBuckOut,
@@ -251,7 +254,7 @@ public class KotlincStep extends IsolatedStep {
       builder.add(PLUGIN);
       builder.add(
           "plugin:buck_deps_tracker:out="
-              + ruleCellRoot.resolve(getKotlinTempDepFilePath(outputPaths.getOutputJarDirPath())));
+              + ruleCellRoot.resolve(getKotlinTempDepFilePath(reportDirPath)));
     }
 
     if (!extraArguments.isEmpty()) {

@@ -95,13 +95,13 @@ public abstract class CompilerOutputPaths {
   }
 
   /** Returns a path to the temp file that contains dependencies directly used in Kotlin compiler */
-  public static Path getKotlinTempDepFilePath(RelPath outputJarDirPath) {
-    return outputJarDirPath.resolve("kotlin-used-classes-tmp.json");
+  public static Path getKotlinTempDepFilePath(RelPath reportDirPath) {
+    return reportDirPath.resolve("kotlin-used-classes-tmp.json");
   }
 
   /** Returns a path to a file that contains files accessed by KAPT in Kotlin compilation */
-  public static RelPath getKAPTDepFilePath(RelPath outputJarDirPath) {
-    return outputJarDirPath.resolveRel("kapt-used-classes-tmp.txt");
+  public static RelPath getKAPTDepFilePath(RelPath reportDirPath) {
+    return reportDirPath.resolveRel("kapt-used-classes-tmp.txt");
   }
 
   public static ImmutableCompilerOutputPaths.Builder builder() {

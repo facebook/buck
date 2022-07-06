@@ -47,16 +47,16 @@ public class KotlinClassUsageHelper {
    * Returns a map of all the files used by the Kotlin compiler and the its annotation processors.
    */
   static ImmutableMap<Path, Map<Path, Integer>> getClassUsageData(
-      RelPath outputJarDirPath, AbsPath ruleCellRoot) throws IOException {
+      RelPath reportDirPath, AbsPath ruleCellRoot) throws IOException {
     // read compiler plugin generated class usage report file
     Path kotlinGeneralClassUsageReportPath =
-        ruleCellRoot.resolve(getKotlinTempDepFilePath(outputJarDirPath)).getPath();
+        ruleCellRoot.resolve(getKotlinTempDepFilePath(reportDirPath)).getPath();
     ImmutableMap<Path, Map<Path, Integer>> classUsages =
         readJsonBasedClassUsageReport(kotlinGeneralClassUsageReportPath);
 
     // merge kapt generated class usage report file if it exist
     Path kaptClassUsageReportPath =
-        ruleCellRoot.resolve(getKAPTDepFilePath(outputJarDirPath)).getPath();
+        ruleCellRoot.resolve(getKAPTDepFilePath(reportDirPath)).getPath();
     if (kaptClassUsageReportPath.toFile().exists()) {
       classUsages = merge(classUsages, readUriBasedClassUsageFile(kaptClassUsageReportPath));
     }

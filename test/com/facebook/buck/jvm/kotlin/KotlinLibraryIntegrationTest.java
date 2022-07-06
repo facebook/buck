@@ -336,11 +336,11 @@ public class KotlinLibraryIntegrationTest {
     assertTrue(
         "Should generate kotlin-used-classes-tmp.json",
         Files.exists(
-            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
+            workspace.getPath(getReportFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
     assertFalse(
         "Should not generate kapt-used-classes-tmp.txt for no-kapt target",
         Files.exists(
-            workspace.getPath(getOutputFilePath(bizTargetFqn, "kapt-used-classes-tmp.txt"))));
+            workspace.getPath(getReportFilePath(bizTargetFqn, "kapt-used-classes-tmp.txt"))));
 
     List<String> kotlinClassUsageLines =
         Files.readAllLines(
@@ -380,11 +380,11 @@ public class KotlinLibraryIntegrationTest {
     assertFalse(
         "Should not generate kotlin-used-classes-tmp.json",
         Files.exists(
-            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
+            workspace.getPath(getReportFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
     assertFalse(
         "Should not generate kapt-used-classes-tmp.txt",
         Files.exists(
-            workspace.getPath(getOutputFilePath(bizTargetFqn, "kapt-used-classes-tmp.txt"))));
+            workspace.getPath(getReportFilePath(bizTargetFqn, "kapt-used-classes-tmp.txt"))));
     assertFalse(
         "Should not generate used-classes.json",
         Files.exists(workspace.getPath(getOutputFilePath(bizTargetFqn, "used-classes.json"))));
@@ -405,11 +405,11 @@ public class KotlinLibraryIntegrationTest {
     assertTrue(
         "Should generate kotlin-used-classes-tmp.json",
         Files.exists(
-            workspace.getPath(getOutputFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
+            workspace.getPath(getReportFilePath(bizTargetFqn, "kotlin-used-classes-tmp.json"))));
     assertTrue(
         "Should generate kapt-used-classes-tmp.txt for kapt target",
         Files.exists(
-            workspace.getPath(getOutputFilePath(bizTargetFqn, "kapt-used-classes-tmp.txt"))));
+            workspace.getPath(getReportFilePath(bizTargetFqn, "kapt-used-classes-tmp.txt"))));
 
     List<String> kotlinClassUsageLines =
         Files.readAllLines(
@@ -460,5 +460,13 @@ public class KotlinLibraryIntegrationTest {
     RelPath genDir =
         BuildPaths.getGenDir(workspace.getProjectFileSystem().getBuckPaths(), target).getParent();
     return genDir.resolve(String.format("lib__%s__output/" + fileName, target.getShortName()));
+  }
+
+  private Path getReportFilePath(String targetFqn, String fileName) throws IOException {
+    BuildTarget target = BuildTargetFactory.newInstance(targetFqn);
+    RelPath annotationDir =
+        BuildPaths.getAnnotationDir(workspace.getProjectFileSystem(), target).getParent();
+    return annotationDir.resolve(
+        String.format("__%s_reports__/" + fileName, target.getShortName()));
   }
 }
