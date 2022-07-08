@@ -150,6 +150,8 @@ public abstract class IjProjectConfig {
 
   public abstract boolean isRustModuleEnabled();
 
+  public abstract boolean isTargetConfigurationInLibrariesEnabled();
+
   public static Builder builder() {
     return new Builder();
   }

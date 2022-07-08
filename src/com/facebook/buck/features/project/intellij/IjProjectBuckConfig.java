@@ -216,7 +216,10 @@ public class IjProjectBuckConfig {
         .setBuckOutPathForGeneratedProjectFiles(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "buck_out_path_for_generated_files"))
         .setRustModuleEnabled(
-            buckConfig.getBooleanValue(INTELLIJ_BUCK_CONFIG_SECTION, "enable_rust_module", false));
+            buckConfig.getBooleanValue(INTELLIJ_BUCK_CONFIG_SECTION, "enable_rust_module", false))
+        .setTargetConfigurationInLibrariesEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "target_configuration_in_libraries_enabled", true));
   }
 
   private static String getModuleGroupName(String moduleGroupName, BuckConfig buckConfig) {
